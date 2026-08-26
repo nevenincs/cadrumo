@@ -33,4 +33,4 @@ The matrix is deterministically complete and plan-bound, but this execution has 
 
 ## Recommendations
 
-Execute exactly one canonical plan Step for each matrix row after the independent review clears S175. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-pa
+Execute exactly one canonical plan Step for each matrix row after the independent review clears S175. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not start S173 or use the matrix as evidence of a completed hard move, privatization, or deletion before its corresponding follow-on Step has its own execution record and verification.

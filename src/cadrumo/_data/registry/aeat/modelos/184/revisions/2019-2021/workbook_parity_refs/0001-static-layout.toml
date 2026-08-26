@@ -1,0 +1,9 @@
+[[revisions."2019-2021".workbook_parity_refs]]
+id = "modelo-184-2019-static-layout"
+workbook_source = "boe-dr-184-2019-2021"
+fixture_id = "modelo-184-2019-boe-static-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2019-2021"]

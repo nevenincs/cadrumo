@@ -333,6 +333,41 @@ def matrix_document() -> dict[str, object]:
     }
 
 
+def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, object]:
+    """Refresh only derived fields in a reviewed matrix, keyed by c941 pair.
+
+    This intentionally cannot create an adjudication from the blank template:
+    the reviewed owner, evidence, disposition, terminal state, and plan binding
+    are copied verbatim from an existing exact 78-row artifact.
+    """
+    rows = document.get("rows")
+    if not isinstance(rows, list) or len(rows) != 78 or not all(isinstance(row, dict) for row in rows):
+        raise RuntimeError("only an existing exact 78-row reviewed matrix may be refreshed")
+    existing_by_pair = {(row.get("old_path"), row.get("new_path")): row for row in rows}
+    expected = generated_rows()
+    expected_pairs = {(row["old_path"], row["new_path"]) for row in expected}
+    if set(existing_by_pair) != expected_pairs or len(existing_by_pair) != 78:
+        raise RuntimeError("reviewed matrix pairs must exactly match the c941 family before refresh")
+    refreshed_rows: list[dict[str, object]] = []
+    derived_fields = {
+        "row_id",
+        "old_path",
+        "new_path",
+        "rename_similarity",
+        "facade_exported_symbols",
+        "current_symbol_locators",
+        "consumers",
+    }
+    for generated in expected:
+        pair = (generated["old_path"], generated["new_path"])
+        refreshed = dict(existing_by_pair[pair])
+        refreshed.update({field: generated[field] for field in derived_fields})
+        refreshed_rows.append(refreshed)
+    refreshed_document = dict(document)
+    refreshed_document["rows"] = refreshed_rows
+    return refreshed_document
+
+
 def _canonical_plan_step_ids() -> frozenset[str]:
     """Read the canonical Step IDs owned by the reviewed TUI architecture plan."""
     matches = re.findall(r"`(W\d{2}\.P\d{2}\.S\d+)`", PLAN_PATH.read_text(encoding="utf-8"))
@@ -459,13 +494,20 @@ def main(argv: list[str] | None = None) -> int:
     """Write the deterministic template or verify a fully reviewed matrix."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--write-template", action="store_true")
+    parser.add_argument("--refresh-reviewed", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     if args.write_template:
         MATRIX_PATH.write_text(json.dumps(matrix_document(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if args.refresh_reviewed:
+        reviewed = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+        MATRIX_PATH.write_text(
+            json.dumps(refresh_reviewed_matrix_document(reviewed), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     if args.check:
         check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
-    if not args.write_template and not args.check:
+    if not args.write_template and not args.refresh_reviewed and not args.check:
         print(json.dumps(matrix_document(), indent=2, sort_keys=True))
     return 0
 

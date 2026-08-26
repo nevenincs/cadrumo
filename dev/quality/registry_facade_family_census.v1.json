@@ -139,10 +139,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_aeat_hosts.py",
       "rename_similarity": 100,
+      "row_id": "R01",
       "semantic_evidence": "RAG and exact source review locate the remote-read host authority in src/cadrumo/core/remote_authority.py; c941 only mechanically exposed the predecessor registry surface. The future hard-move must leave one core definition and no registry aeat_hosts surface; this is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "core.remote_authority: remote-read host authority",
-      "terminal_state": "retired_after_hard_move",
-      "row_id": "R01"
+      "terminal_state": "retired_after_hard_move"
     },
     {
       "consumers": {
@@ -180,10 +180,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_aeat_nif_iva_oracle.py",
       "rename_similarity": 94,
+      "row_id": "R02",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py as the reviewed aeat_nif_iva_oracle family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.aeat_nif_iva_oracle: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R02"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -337,10 +337,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/applicability.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_applicability.py",
       "rename_similarity": 99,
+      "row_id": "R03",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/applicability.py as the reviewed applicability family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.applicability: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R03"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -562,10 +562,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/authority.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_authority.py",
       "rename_similarity": 98,
+      "row_id": "R04",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/authority.py as the reviewed authority family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.authority: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R04"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -644,10 +644,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_binding_selector_utils.py",
       "rename_similarity": 99,
+      "row_id": "R05",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/binding_selector_utils.py as the reviewed binding_selector_utils family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.binding_selector_utils: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R05"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1275,10 +1275,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/bindings.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_bindings.py",
       "rename_similarity": 99,
+      "row_id": "R06",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/bindings.py as the reviewed bindings family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.bindings: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R06"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1342,10 +1342,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_casilla_membership.py",
       "rename_similarity": 99,
+      "row_id": "R07",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/casilla_membership.py as the reviewed casilla_membership family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.casilla_membership: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R07"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1458,10 +1458,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_censo_modelos.py",
       "rename_similarity": 99,
+      "row_id": "R08",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/censo_modelos.py as the reviewed censo_modelos family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.censo_modelos: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R08"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1531,10 +1531,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_classification_coherence.py",
       "rename_similarity": 99,
+      "row_id": "R09",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/classification_coherence.py as the reviewed classification_coherence family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.classification_coherence: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R09"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1548,9 +1548,7 @@
         "package_attribute": [],
         "production": [],
         "registration": [],
-        "test": [
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py"
-        ],
+        "test": [],
         "tooling": [],
         "transitive": []
       },
@@ -1584,10 +1582,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/constructs.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_constructs.py",
       "rename_similarity": 98,
+      "row_id": "R10",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/constructs.py as the reviewed constructs family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.constructs: reviewed family owner",
-      "terminal_state": "deleted_no_surface",
-      "row_id": "R10"
+      "terminal_state": "deleted_no_surface"
     },
     {
       "consumers": {
@@ -1643,10 +1641,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/convenio.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_convenio.py",
       "rename_similarity": 99,
+      "row_id": "R11",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/convenio.py as the reviewed convenio family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.convenio: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R11"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1671,7 +1669,6 @@
           "dev/registry/tests/test_render_profile.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_record_design.py",
           "src/cadrumo/domain/calculations/registry/tests/test_record_design_source_selection.py"
         ],
@@ -1711,10 +1708,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/corpus_catalogue.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_corpus_catalogue.py",
       "rename_similarity": 98,
+      "row_id": "R12",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/corpus_catalogue.py as the reviewed corpus_catalogue family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.corpus_catalogue: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R12"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1728,9 +1725,7 @@
         "package_attribute": [],
         "production": [],
         "registration": [],
-        "test": [
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py"
-        ],
+        "test": [],
         "tooling": [],
         "transitive": []
       },
@@ -1804,10 +1799,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/coverage.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_coverage.py",
       "rename_similarity": 99,
+      "row_id": "R13",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/coverage.py as the reviewed coverage family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.coverage: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R13"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1850,10 +1845,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/cross_revision_divergence.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_cross_revision_divergence.py",
       "rename_similarity": 98,
+      "row_id": "R14",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/cross_revision_divergence.py as the reviewed cross_revision_divergence family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.cross_revision_divergence: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R14"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -1904,10 +1899,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/deadline_coordinate.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_deadline_coordinate.py",
       "rename_similarity": 98,
+      "row_id": "R15",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/deadline_coordinate.py as the reviewed deadline_coordinate family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.deadline_coordinate: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R15"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -1971,13 +1966,10 @@
           "src/cadrumo/domain/calculations/registry/tests/test_export_semantic_vocabulary.py",
           "src/cadrumo/domain/calculations/registry/tests/test_export_value_policy.py",
           "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_390_numbered_boxes_reach_the_record.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_record_design_modelo_131.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py"
+          "src/cadrumo/domain/calculations/registry/tests/test_record_design_modelo_131.py"
         ],
         "tooling": [
           "dev/readme/render_cli_demo.py",
@@ -2033,10 +2025,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/export.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_export.py",
       "rename_similarity": 98,
+      "row_id": "R16",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/export.py as the reviewed export family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.export: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R16"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -2063,7 +2055,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_dictionary_path_override.py",
           "src/cadrumo/domain/calculations/registry/tests/test_export_parse.py",
           "src/cadrumo/domain/calculations/registry/tests/test_export_value_policy.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py"
         ],
         "tooling": [
@@ -2117,10 +2108,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/export_parse.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_export_parse.py",
       "rename_similarity": 98,
+      "row_id": "R17",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/export_parse.py as the reviewed export_parse family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.export_parse: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R17"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -2617,7 +2608,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_historical_pagos_fraccionados.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_2025_legal_refs.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_legal_refs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py",
@@ -2641,7 +2631,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_cash_accounting.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_recargo_rung_identity.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_transitional_rate_percent.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_308_registry.py",
@@ -2687,12 +2676,10 @@
           "src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py",
           "src/cadrumo/domain/calculations/registry/tests/test_record_design_modelo_131.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part1.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part2.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part3.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part4.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_disk_cache_loader_fingerprint.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py",
           "src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py",
           "src/cadrumo/domain/calculations/registry/tests/test_relation_consistency.py",
@@ -2827,10 +2814,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_export_value_policy.py",
       "rename_similarity": 100,
+      "row_id": "R18",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/export_value_policy.py as the reviewed export_value_policy family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.export_value_policy: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R18"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -2924,10 +2911,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_external_grounding.py",
       "rename_similarity": 99,
+      "row_id": "R19",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/external_grounding.py as the reviewed external_grounding family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.external_grounding: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R19"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -2969,10 +2956,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/filed_state.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_filed_state.py",
       "rename_similarity": 97,
+      "row_id": "R20",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/filed_state.py as the reviewed filed_state family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.filed_state: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R20"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3064,10 +3051,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_fixed_width_codec.py",
       "rename_similarity": 99,
+      "row_id": "R21",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/fixed_width_codec.py as the reviewed fixed_width_codec family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.fixed_width_codec: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R21"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3081,9 +3068,7 @@
         "package_attribute": [],
         "production": [],
         "registration": [],
-        "test": [
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py"
-        ],
+        "test": [],
         "tooling": [],
         "transitive": []
       },
@@ -3105,10 +3090,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/formula_initial_values.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_formula_initial_values.py",
       "rename_similarity": 96,
+      "row_id": "R22",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/formula_initial_values.py as the reviewed formula_initial_values family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.formula_initial_values: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R22"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3277,10 +3262,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_formula_runtime.py",
       "rename_similarity": 98,
+      "row_id": "R23",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/formula_runtime.py as the reviewed formula_runtime family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.formula_runtime: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R23"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3343,10 +3328,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/formula_runtime_ops.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_formula_runtime_ops.py",
       "rename_similarity": 98,
+      "row_id": "R24",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/formula_runtime_ops.py as the reviewed formula_runtime_ops family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.formula_runtime_ops: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R24"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3386,10 +3371,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/formula_text_inputs.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_formula_text_inputs.py",
       "rename_similarity": 98,
+      "row_id": "R25",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/formula_text_inputs.py as the reviewed formula_text_inputs family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.formula_text_inputs: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R25"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3433,10 +3418,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/groi_oracle.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_groi_oracle.py",
       "rename_similarity": 94,
+      "row_id": "R26",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/groi_oracle.py as the reviewed groi_oracle family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.groi_oracle: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R26"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3486,10 +3471,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/handoff_paths.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_handoff_paths.py",
       "rename_similarity": 95,
+      "row_id": "R27",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/handoff_paths.py as the reviewed handoff_paths family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.handoff_paths: reviewed family owner",
-      "terminal_state": "deleted_no_surface",
-      "row_id": "R27"
+      "terminal_state": "deleted_no_surface"
     },
     {
       "consumers": {
@@ -3571,10 +3556,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/handoffs.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_handoffs.py",
       "rename_similarity": 97,
+      "row_id": "R28",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/handoffs.py as the reviewed handoffs family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.handoffs: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R28"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3652,10 +3637,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/identity.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_identity.py",
       "rename_similarity": 100,
+      "row_id": "R29",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/identity.py as the reviewed identity family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.identity: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R29"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3878,10 +3863,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/ids.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_ids.py",
       "rename_similarity": 100,
+      "row_id": "R30",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/ids.py as the reviewed ids family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.ids: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R30"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3931,10 +3916,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_iva_wallet_relation_targets.py",
       "rename_similarity": 97,
+      "row_id": "R31",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py as the reviewed iva_wallet_relation_targets family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.iva_wallet_relation_targets: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R31"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -3972,10 +3957,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py",
       "rename_similarity": 99,
+      "row_id": "R32",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py as the reviewed ledger_binding_resolution family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.ledger_binding_resolution: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R32"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -4046,10 +4031,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/legal.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_legal.py",
       "rename_similarity": 99,
+      "row_id": "R33",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/legal.py as the reviewed legal family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.legal: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R33"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4140,10 +4125,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/live_parity.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_live_parity.py",
       "rename_similarity": 99,
+      "row_id": "R34",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/live_parity.py as the reviewed live_parity family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.live_parity: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R34"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4225,13 +4210,11 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_210_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_mutable_tree_fingerprint_invalidation.py",
           "src/cadrumo/domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_disk_cache_loader_fingerprint.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_identity_resolution.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_identity_stamp_durability.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_revision_manifest_only_placement.py",
           "src/cadrumo/domain/calculations/registry/tests/test_semantic_role.py",
           "src/cadrumo/domain/contribuyente/tests/_registry_thresholds.py",
@@ -4304,10 +4287,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/loader.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_loader.py",
       "rename_similarity": 99,
+      "row_id": "R35",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/loader.py as the reviewed loader family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.loader: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R35"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -4353,10 +4336,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_differentiated_deduction_projection.py",
       "rename_similarity": 100,
+      "row_id": "R36",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py as the reviewed m303_differentiated_deduction_projection family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_differentiated_deduction_projection: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R36"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4402,10 +4385,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_exonerado_390_projection.py",
       "rename_similarity": 100,
+      "row_id": "R37",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py as the reviewed m303_exonerado_390_projection family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_exonerado_390_projection: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R37"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4455,10 +4438,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_census_artefact.py",
       "rename_similarity": 98,
+      "row_id": "R38",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py as the reviewed m303_orden_census_artefact family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_census_artefact: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R38"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4518,10 +4501,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_manifest.py",
       "rename_similarity": 98,
+      "row_id": "R39",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_manifest.py as the reviewed m303_orden_manifest family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_manifest: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R39"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4557,10 +4540,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_projection_compiler.py",
       "rename_similarity": 96,
+      "row_id": "R40",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py as the reviewed m303_orden_projection_compiler family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_projection_compiler: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R40"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -4620,10 +4603,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_projection_models.py",
       "rename_similarity": 99,
+      "row_id": "R41",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py as the reviewed m303_orden_projection_models family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_projection_models: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R41"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4667,10 +4650,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py",
       "rename_similarity": 99,
+      "row_id": "R42",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py as the reviewed m303_orden_raw_models family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_raw_models: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R42"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -4729,10 +4712,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_resolution.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_resolution.py",
       "rename_similarity": 97,
+      "row_id": "R43",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_resolution.py as the reviewed m303_orden_resolution family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_resolution: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R43"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4780,10 +4763,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_orden_source.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_orden_source.py",
       "rename_similarity": 99,
+      "row_id": "R44",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_orden_source.py as the reviewed m303_orden_source family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_orden_source: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R44"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -4797,9 +4780,7 @@
         "package_attribute": [],
         "production": [],
         "registration": [],
-        "test": [
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py"
-        ],
+        "test": [],
         "tooling": [],
         "transitive": []
       },
@@ -4829,10 +4810,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py",
       "rename_similarity": 100,
+      "row_id": "R45",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py as the reviewed m303_prorrata_activity_projection family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_prorrata_activity_projection: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R45"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4883,10 +4864,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py",
       "rename_similarity": 100,
+      "row_id": "R46",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py as the reviewed m303_regimen_simplificado_projection family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.m303_regimen_simplificado_projection: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R46"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4942,10 +4923,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_modelo_localization.py",
       "rename_similarity": 99,
+      "row_id": "R47",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/modelo_localization.py as the reviewed modelo_localization family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.modelo_localization: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R47"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -4999,10 +4980,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/observation_fold.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_observation_fold.py",
       "rename_similarity": 98,
+      "row_id": "R48",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/observation_fold.py as the reviewed observation_fold family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.observation_fold: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R48"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5040,10 +5021,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/period_offset_math.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_period_offset_math.py",
       "rename_similarity": 96,
+      "row_id": "R49",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/period_offset_math.py as the reviewed period_offset_math family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.period_offset_math: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R49"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5085,10 +5066,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/period_selector_match.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_period_selector_match.py",
       "rename_similarity": 100,
+      "row_id": "R50",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/period_selector_match.py as the reviewed period_selector_match family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.period_selector_match: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R50"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5148,10 +5129,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/profile_grounding.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_profile_grounding.py",
       "rename_similarity": 97,
+      "row_id": "R51",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/profile_grounding.py as the reviewed profile_grounding family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.profile_grounding: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R51"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5261,10 +5242,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/queries.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_queries.py",
       "rename_similarity": 98,
+      "row_id": "R52",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/queries.py as the reviewed queries family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.queries: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R52"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5324,10 +5305,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_rate_box_partition.py",
       "rename_similarity": 99,
+      "row_id": "R53",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/rate_box_partition.py as the reviewed rate_box_partition family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.rate_box_partition: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R53"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5364,7 +5345,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_210_record_length_split.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_322_designs_are_not_box_compatible.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_322_designs_straddle.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_347_designs_are_boundary_compatible.py",
@@ -5556,10 +5536,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/record_design.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_record_design.py",
       "rename_similarity": 100,
+      "row_id": "R54",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/record_design.py as the reviewed record_design family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.record_design: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R54"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5601,10 +5581,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/record_spec.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_record_spec.py",
       "rename_similarity": 95,
+      "row_id": "R55",
       "semantic_evidence": "RAG and exact symbol review locate ENCODING_ALIAS_MAP with the existing schema export contract in src/cadrumo/domain/calculations/registry/schema_exports.py. The record_spec precursor is not its semantic owner; this is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.schema_exports: ENCODING_ALIAS_MAP owner",
-      "terminal_state": "retired_after_hard_move",
-      "row_id": "R55"
+      "terminal_state": "retired_after_hard_move"
     },
     {
       "consumers": {
@@ -5646,10 +5626,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/relation_aggregation.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_relation_aggregation.py",
       "rename_similarity": 98,
+      "row_id": "R56",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/relation_aggregation.py as the reviewed relation_aggregation family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.relation_aggregation: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R56"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -5745,10 +5725,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/relations.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_relations.py",
       "rename_similarity": 96,
+      "row_id": "R57",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/relations.py as the reviewed relations family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.relations: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R57"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5774,8 +5754,7 @@
           "src/cadrumo/adapters/outbound/aeat/sede/tests/test_nif_iva_check.py",
           "src/cadrumo/adapters/outbound/aeat/sede/tests/test_notifications.py",
           "src/cadrumo/adapters/outbound/aeat/sede/tests/test_read_landing_guard.py",
-          "src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py"
+          "src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety.py"
         ],
         "tooling": [],
         "transitive": []
@@ -5830,10 +5809,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_remote_state_guard.py",
       "rename_similarity": 99,
+      "row_id": "R58",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/remote_state_guard.py as the reviewed remote_state_guard family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.remote_state_guard: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R58"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5923,10 +5902,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_runtime_graph.py",
       "rename_similarity": 97,
+      "row_id": "R59",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/runtime_graph.py as the reviewed runtime_graph family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.runtime_graph: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R59"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -5977,10 +5956,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/schedules.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schedules.py",
       "rename_similarity": 98,
+      "row_id": "R60",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/schedules.py as the reviewed schedules family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.schedules: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R60"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -6413,7 +6392,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_casilla_wiring_contract.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_cripto_1812_propagation.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_historical_pagos_fraccionados.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py",
@@ -6435,7 +6413,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_cash_accounting.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_recargo_rung_identity.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_308_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_309_registry.py",
@@ -6477,11 +6454,9 @@
           "src/cadrumo/domain/calculations/registry/tests/test_record_design_source_selection.py",
           "src/cadrumo/domain/calculations/registry/tests/test_record_spec.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part1.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part2.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part3.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part4.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py",
           "src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py",
           "src/cadrumo/domain/calculations/registry/tests/test_relation_consistency.py",
@@ -6773,7 +6748,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_cash_accounting.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_transitional_rate_percent.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_347_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py",
@@ -7018,6 +6992,7 @@
           "src/cadrumo/domain/calculations/registry/schema.py:238"
         ]
       },
+      "disposition": "hard_move_complete",
       "facade_exported_symbols": [
         "ApplicabilityRuleDefinition",
         "ApplicationLinkDefinition",
@@ -7079,20 +7054,19 @@
         "WorkbookParityReference",
         "export_semantic_payload_axis"
       ],
+      "follow_on_action": "Retain schema local definitions, migrate borrowed symbols to their canonical owners, and remove borrowed bindings",
       "follow_on_predecessors": [
         "W03.P20.S175"
       ],
+      "follow_on_scope": "src/cadrumo/domain/calculations/registry/schema.py; existing schema_*, export_semantics, and export_value_policy owners",
       "follow_on_step_id": "W03.P20.S236",
       "new_path": "src/cadrumo/domain/calculations/registry/schema.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schema.py",
       "rename_similarity": 97,
       "row_id": "R61",
-      "disposition": "hard_move_complete",
-      "terminal_state": "schema_local_definitions_only",
-      "follow_on_action": "Retain schema local definitions, migrate borrowed symbols to their canonical owners, and remove borrowed bindings",
-      "follow_on_scope": "src/cadrumo/domain/calculations/registry/schema.py; existing schema_*, export_semantics, and export_value_policy owners",
+      "semantic_evidence": "Source-defined local schema declarations and imported bindings were separated by AST locator analysis; not a filename inference.",
       "semantic_owner": "registry.schema: local schema definitions retained; borrowed symbols move to their canonical owners",
-      "semantic_evidence": "Source-defined local schema declarations and imported bindings were separated by AST locator analysis; not a filename inference."
+      "terminal_state": "schema_local_definitions_only"
     },
     {
       "consumers": {
@@ -7145,7 +7119,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_formula_operand_casilla_refs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_internal_only_casilla.py",
           "src/cadrumo/domain/calculations/registry/tests/test_inventory_casilla_binding_linkage.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_115_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_130_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_180_round_trip.py",
@@ -7157,7 +7130,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_cash_accounting.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_347_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry_bindings.py",
@@ -7353,10 +7325,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/schema_input_kind.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schema_input_kind.py",
       "rename_similarity": 100,
+      "row_id": "R62",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/schema_input_kind.py as the reviewed schema_input_kind family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.schema_input_kind: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R62"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7394,10 +7366,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/schema_rounding.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schema_rounding.py",
       "rename_similarity": 100,
+      "row_id": "R63",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/schema_rounding.py as the reviewed schema_rounding family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.schema_rounding: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R63"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7468,9 +7440,7 @@
           "src/cadrumo/domain/calculations/registry/tests/test_cross_reference_applicability.py",
           "src/cadrumo/domain/calculations/registry/tests/test_cross_reference_oracle_binding.py",
           "src/cadrumo/domain/calculations/registry/tests/test_filing_schedule_selection.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part1.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py",
           "src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_oracle.py",
           "src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_replay_parity.py",
@@ -7505,10 +7475,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/schema_scalars.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schema_scalars.py",
       "rename_similarity": 100,
+      "row_id": "R64",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/schema_scalars.py as the reviewed schema_scalars family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.schema_scalars: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R64"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7587,8 +7557,6 @@
           "src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety.py",
           "src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py",
           "src/cadrumo/domain/calculations/registry/tests/test_filing_schedule_selection.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_schedule_profile_paths.py",
           "src/cadrumo/domain/contribuyente/tests/_registry_thresholds.py",
           "src/cadrumo/domain/deadlines/tests/test_engine.py"
@@ -7638,6 +7606,7 @@
           "src/cadrumo/domain/calculations/registry/schema_verification.py:908"
         ]
       },
+      "disposition": "keep_public",
       "facade_exported_symbols": [
         "DiscrepancyCause",
         "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
@@ -7654,20 +7623,19 @@
         "parse_verification_predicate_expression",
         "verification_predicate_operator_name"
       ],
+      "follow_on_action": "Prove schema_verification remains public with locally defined symbols and direct consumer imports",
       "follow_on_predecessors": [
         "W03.P20.S175"
       ],
+      "follow_on_scope": "src/cadrumo/domain/calculations/registry/schema_verification.py",
       "follow_on_step_id": "W03.P20.S240",
       "new_path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_schema_verification.py",
       "rename_similarity": 99,
       "row_id": "R65",
-      "disposition": "keep_public",
-      "terminal_state": "public_local_definitions_only",
-      "follow_on_action": "Prove schema_verification remains public with locally defined symbols and direct consumer imports",
-      "follow_on_scope": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+      "semantic_evidence": "AST-derived public symbols, facade-export history, and consumer locators identify the reviewed owner; not a filename inference.",
       "semantic_owner": "registry.schema_verification: reviewed family owner",
-      "semantic_evidence": "AST-derived public symbols, facade-export history, and consumer locators identify the reviewed owner; not a filename inference."
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7712,7 +7680,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_111_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_115_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_registry.py",
@@ -7722,7 +7689,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_200_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_transitional_rate_percent.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_309_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_347_registry.py",
@@ -7732,7 +7698,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_720_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_840_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_orden_aplicabilidad.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py",
           "src/cadrumo/domain/calculations/registry/tests/test_scenario_bound_input_declaration.py",
           "src/cadrumo/domain/calculations/registry/tests/test_taxpayer_rate_schedules.py",
@@ -7762,10 +7727,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/snapshot.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_snapshot.py",
       "rename_similarity": 98,
+      "row_id": "R66",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/snapshot.py as the reviewed snapshot family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.snapshot: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R66"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -7807,10 +7772,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/snapshot_coordinate.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_snapshot_coordinate.py",
       "rename_similarity": 97,
+      "row_id": "R67",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/snapshot_coordinate.py as the reviewed snapshot_coordinate family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.snapshot_coordinate: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R67"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7876,10 +7841,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_static_inspection.py",
       "rename_similarity": 98,
+      "row_id": "R68",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/static_inspection.py as the reviewed static_inspection family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.static_inspection: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R68"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7939,10 +7904,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_support_matrix.py",
       "rename_similarity": 98,
+      "row_id": "R69",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/support_matrix.py as the reviewed support_matrix family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.support_matrix: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R69"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -7982,10 +7947,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/supported_filing_years.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_supported_filing_years.py",
       "rename_similarity": 94,
+      "row_id": "R70",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/supported_filing_years.py as the reviewed supported_filing_years family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.supported_filing_years: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R70"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -8069,10 +8034,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/temporal.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_temporal.py",
       "rename_similarity": 97,
+      "row_id": "R71",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/temporal.py as the reviewed temporal family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.temporal: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R71"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -8211,7 +8176,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_justificante_corpus_derivation.py",
           "src/cadrumo/domain/calculations/registry/tests/test_m202_provisional_profile_evidence.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_036_registry.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_constructs.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_115_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_130_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_registry.py",
@@ -8223,7 +8187,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_200_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_232_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_exonerado_390_endpoints.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_modelo_303_prorrata_activity_endpoints.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_308_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_309_registry.py",
           "src/cadrumo/domain/calculations/registry/tests/test_modelo_322_registry.py",
@@ -8238,7 +8201,6 @@
           "src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py",
           "src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_registry_legal_grounding.py",
-          "src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py",
           "src/cadrumo/domain/calculations/registry/tests/test_schema_hygiene.py",
           "src/cadrumo/domain/calculations/registry/tests/test_verification_expectation_source_tiers.py"
         ],
@@ -8267,10 +8229,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/validate.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_validate.py",
       "rename_similarity": 95,
+      "row_id": "R72",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/validate.py as the reviewed validate family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.validate: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R72"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -8323,10 +8285,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/validate_cross_revision.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_validate_cross_revision.py",
       "rename_similarity": 98,
+      "row_id": "R73",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/validate_cross_revision.py as the reviewed validate_cross_revision family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.validate_cross_revision: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R73"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -8370,10 +8332,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/validate_references.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_validate_references.py",
       "rename_similarity": 98,
+      "row_id": "R74",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/validate_references.py as the reviewed validate_references family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.validate_references: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R74"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -8415,10 +8377,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/validate_registry_scope.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_validate_registry_scope.py",
       "rename_similarity": 95,
+      "row_id": "R75",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/validate_registry_scope.py as the reviewed validate_registry_scope family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.validate_registry_scope: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R75"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -8461,10 +8423,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/validate_revision_identity.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_validate_revision_identity.py",
       "rename_similarity": 99,
+      "row_id": "R76",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/validate_revision_identity.py as the reviewed validate_revision_identity family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.validate_revision_identity: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R76"
+      "terminal_state": "public_local_definitions_only"
     },
     {
       "consumers": {
@@ -8502,10 +8464,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/verdict_cache.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_verdict_cache.py",
       "rename_similarity": 99,
+      "row_id": "R77",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/verdict_cache.py as the reviewed verdict_cache family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.verdict_cache: reviewed family owner",
-      "terminal_state": "private_same_package_only",
-      "row_id": "R77"
+      "terminal_state": "private_same_package_only"
     },
     {
       "consumers": {
@@ -8547,10 +8509,10 @@
       "new_path": "src/cadrumo/domain/calculations/registry/verification_tolerance.py",
       "old_path": "src/cadrumo/domain/calculations/registry/_verification_tolerance.py",
       "rename_similarity": 95,
+      "row_id": "R78",
       "semantic_evidence": "Semantic RAG discovery and exact source review identify src/cadrumo/domain/calculations/registry/verification_tolerance.py as the reviewed verification_tolerance family surface; its generated symbol locators and categorized current consumers supply the full evidence set beside the c941 historical rename. This is a reviewed semantic owner judgment, not a filename inference.",
       "semantic_owner": "registry.verification_tolerance: reviewed family owner",
-      "terminal_state": "public_local_definitions_only",
-      "row_id": "R78"
+      "terminal_state": "public_local_definitions_only"
     }
   ],
   "schema_version": 1

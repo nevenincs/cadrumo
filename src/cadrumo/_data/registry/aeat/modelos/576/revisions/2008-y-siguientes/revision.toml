@@ -39,9 +39,9 @@ lugar, plazo y forma de presentacion del modelo 576, asi como su ingreso, se reg
 lo dispuesto en la Orden EHA/1981/2005, de 21 de junio. The IEDMT autoliquidacion is \
 triggered by the matriculacion or the first definitive use of the medio de transporte, so \
 its plazo is anchored to that EVENT rather than to the calendar and no recurring window \
-exists to declare. Orden EHA/1981/2005 is not bundled in this corpus, so the concrete \
-period is cited by delegation through the bundled article rather than reproduced here; \
-declaring windows would require inventing dates this registry cannot evidence."""
+exists to declare. The bundled 2005 final provision establishes Modelo 576's use but does \
+not state a concrete recurring period; declaring windows would require inventing dates this \
+registry cannot evidence."""
 legal_refs = [
     "orden-eha-3851-2007:art-1",
 ]
@@ -51,7 +51,7 @@ source_refs = [
 
 [revisions."2008-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition records a transition between distinct revisions of the same modelo and is authored on the revision where that transition lands. The preceding 2007 revision contains no casillas because no fixed-width design has been acquired for that exercise. There is consequently no evidence-backed casilla identity to carry into 2008-y-siguientes, and the family is empty by construction rather than omission."""
+CasillaContinuidadEvolutionDefinition records a transition between distinct revisions of the same modelo and is authored on the revision where that transition lands. The preceding 2007 revision carries only the form-backed declaration year, without a fixed-width export identity. There is consequently no evidence-backed positional casilla identity to carry into 2008-y-siguientes, and the family is empty by construction rather than omission."""
 legal_refs = [
     "orden-eha-3851-2007:art-1",
     "ley-58-2003:art-93",
