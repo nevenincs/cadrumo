@@ -226,7 +226,7 @@ def work_create(
     resolved_period = resolve_year_period(year, period, modelo=modelo)
     resolved_year = resolved_period.filing_year
     _validate_registry_target_before_profile_if_needed(
-        modelo=modelo, filing_year=resolved_year, period=resolved_period, requested_revision_id=requested_revision
+        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
     )
     require_active_profile()
     guard_active_profile_foral_ccaa()
