@@ -11,8 +11,8 @@ from typing import Literal
 from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from ....core import CasillaId
-from .errors import RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
+from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId
 from .schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from .schema_scalars import DecimalValue
@@ -92,6 +92,12 @@ def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:
 
 
 class FormulaExpression(RegistryModel):
+    """Represent one formula leaf or operator node.
+
+    A leaf carries exactly one source, while an operator carries no leaf
+    source and must satisfy the canonical argument-count contract.
+    """
+
     op: FormulaOperator | None = None
     args: tuple[FormulaExpression, ...] = ()
     casilla_id: CasillaId | None = None
@@ -133,6 +139,8 @@ class FormulaExpression(RegistryModel):
 
 
 class DatedValue(RegistryModel):
+    """Map one decimal value to a date axis and validity window."""
+
     value: DecimalValue
     date_axis: DateAxis
     valid_from: date
@@ -264,6 +272,12 @@ def _keyed_bracket_windows_overlap(first: KeyedBracketEntry, second: KeyedBracke
 
 
 class ParameterDefinition(RegistryModel):
+    """Declare a dated or bracketed parameter with legal/source grounding.
+
+    The data type selects scalar values, numeric brackets, or keyed brackets;
+    validation rejects empty, mixed, or overlapping declarations.
+    """
+
     id: ParameterId
     data_type: Literal[
         "decimal",
