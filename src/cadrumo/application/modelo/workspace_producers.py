@@ -16,6 +16,7 @@ from ...core import (
     content_hash_hex,
 )
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import (
@@ -360,6 +361,14 @@ class ModeloWorkspaceRegistryProjectionV1(_WorkspaceProducerModel):
         if (self.inspection is None) == (self.snapshot is None):
             raise ValueError("registry workspace projection must carry exactly one admission shape")
         return self
+
+    @property
+    def revision_id(self) -> RevisionId:
+        """Return the one law-selected revision id, whichever admission shape carries it."""
+        if self.inspection is not None:
+            return self.inspection.revision_id
+        assert self.snapshot is not None
+        return self.snapshot.revision.id
 
 
 class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):
