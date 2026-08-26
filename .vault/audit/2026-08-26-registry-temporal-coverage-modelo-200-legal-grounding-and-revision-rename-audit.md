@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b42edad7576c1032c2068bd181651d4c0e43ab4c533d65e70a7106c854c3999'
+body_hash: 'sha256:2e2895a31733ece6948082d4a79546e9479e81212d46606945521d8884418138'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -63,6 +63,14 @@ The single validation refusal blocking the tree was a name, and it concealed a w
 ### close-the-export-withdrawal | The withdrawn export tree leaves dependent gates red by construction
 
 The generated export tree for this modelo has been withdrawn, so every gate reading its export layouts now fails, including the live filing proof and two schema regressions. The authoring inputs for the correct design exist. Publication belongs to the export campaign's own step and must run through the canonical publisher with its pre-cutover proof; it must not be reconstructed by hand.
+
+### modelo-165-layout-contract-conflict | high | An era with no AEAT design cannot satisfy a gate that requires layout authority unconditionally
+
+Modelo 165's `2023-2025` revision is reported by the model-law coverage audit as a `layout_authority` coverage gap, and every route to satisfying it was checked and is genuinely absent. The gate accepts any of three things: a cited source tiered `layout_authority`, a workbook parity reference of kind `record_design_layout`, `unsupported_binary_xls` or `static_layout`, or a live cross-reference tiered `layout_authority`. That revision has none of the three; its directory holds only application links, casillas, deadline windows and the revision declaration, and its two cited sources are both `official_source_guidance` pointing at the same orden HTML. It declares no reasoned disposition for the absence either, only a continuity one, so the audit is reporting an UNDECLARED absence, which is correct behaviour.
+
+The absence is nevertheless deliberate. That modelo's own historical-layout regression states AEAT published no record design for the era, and the third bundled design's own heading reads `Ejercicio 2026` despite a filename suggesting 2023, so it cannot be backdated to cover it. The era is declared applicability-only for exactly this reason.
+
+Exempting applicability-grade revisions from the layout tier was attempted and REVERTED: the gate's own mutation proof, which builds a synthetic corpus whose revision is itself applicability-grade with no layout authority, failed immediately. That proof encodes the gate's contract - an applicability revision lacking layout authority IS a reportable gap - so no grade or export-layout discriminator can separate the synthetic case from this one. The conflict is therefore genuine rather than a false positive: the coverage contract requires layout authority from every revision, and the era design deliberately includes a period that has none. Both positions are internally coherent and they contradict, so resolving it is a decision about which contract yields, not a patch.
 
 ### do-not-conflate-the-two-backlogs | Keep extraction, acquisition and adjudication separate in reporting
 
