@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import Period
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+
+from .....core import Period
 from .....tests.attribute_scope import scoped_attribute
 from .. import _profile_inspect
 from .._profile_inspect import _resolve_preflight_revision_id
@@ -73,8 +74,9 @@ def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal()
     diverge is what makes the first assertion about ambiguity rather than about "some
     refusal happened".
     """
-    from .....application import modelo as _modelo_module
     from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+
+    from .....application import modelo as _modelo_module
 
     def _unresolved(**_kwargs: object) -> str:
         raise NoRevisionForPeriodError(modelo_id="303", filing_year=1999, period="3T", revision_id=None)
