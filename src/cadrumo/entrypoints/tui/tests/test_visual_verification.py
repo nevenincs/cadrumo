@@ -32,8 +32,8 @@ from textual.widgets import Button, Input, Static
 
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import StatusFactRow, StatusPageData
 from ....core.bucket_pointer import require_active_bucket_id
@@ -173,13 +173,13 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
     choice list or a dropped preselection is the identical stand-in shape
     that bug was.
     """
-    from ....application.user_profile.login_session import logout_active_profile
-    from ....application.user_profile.registration import register_profile_with_credentials
     from ....application.user_profile.login_interaction import (
         attempt_profile_login,
         preselected_profile_login_id,
         profile_login_choices,
     )
+    from ....application.user_profile.login_session import logout_active_profile
+    from ....application.user_profile.registration import register_profile_with_credentials
     from ....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
