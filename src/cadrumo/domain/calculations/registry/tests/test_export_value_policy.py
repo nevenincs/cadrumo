@@ -241,7 +241,7 @@ def test_parser_accepts_exact_policy_wire_tokens_and_refuses_mutations(
 
 def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_the_projector() -> None:
     src_root = Path("src/cadrumo")
-    owner = src_root / "domain/calculations/registry/_export_value_policy.py"
+    owner = src_root / "domain/calculations/registry/export_value_policy.py"
     tokens = frozenset(policy.value for policy in ExportValuePolicy)
     redeclarations = {
         path.as_posix(): declared
@@ -251,7 +251,7 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     }
     assert redeclarations == {}
 
-    codec = src_root / "domain/calculations/registry/_fixed_width_codec.py"
+    codec = src_root / "domain/calculations/registry/fixed_width_codec.py"
     assert "project_export_value" in codec.read_text(encoding="utf-8")
 
     for consumer in (
@@ -260,7 +260,7 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     ):
         source = consumer.read_text(encoding="utf-8")
         assert "render_fixed_width_export_field" in source
-        assert "._export_value_policy" not in source
+        assert ".export_value_policy" not in source
 
 
 def _export_policy_declarations(source: str, *, tokens: frozenset[str]) -> frozenset[str]:

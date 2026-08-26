@@ -489,6 +489,6 @@ def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> 
                 caller_paths.add(module_path.relative_to(root))
 
     assert caller_paths - {_COMPILER_HOME} == {
-        Path("src/cadrumo/domain/calculations/registry/_loader.py"),
+        Path("src/cadrumo/domain/calculations/registry/loader.py"),
         Path("dev/registry/pipeline/_semantic_map_loader.py"),
     }
