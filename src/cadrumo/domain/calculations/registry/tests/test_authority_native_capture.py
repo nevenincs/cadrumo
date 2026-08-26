@@ -7,13 +7,13 @@ import json
 import os
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from shutil import copytree
 from threading import Barrier, Event, Lock, Thread
-from typing import cast
+from typing import Final, cast
 
 import pytest
 
@@ -134,7 +134,40 @@ def test_native_coordinate_values_expose_only_the_public_opaque_contract() -> No
     assert set(asdict(current)) == {"comparison_domain", "generation"}
 
 
-def test_process_state_rebuild_refuses_preexisting_public_coordinates(tmp_path: Path) -> None:
+_AUTHORITY_PROCESS_STATE_GLOBALS: Final = (
+    "_authority_process_pid",
+    "_authority_process_nonce",
+    "_authority_process_domains",
+    "_authority_state_lock",
+    "_authority_load_barrier",
+    "_authority_load_states",
+    "_authority_generation",
+    "_authority_reset_epoch",
+)
+
+
+@pytest.fixture
+def restored_authority_process_state() -> Iterator[None]:
+    """Confine an emulated after-fork rebuild to the test that performs it.
+
+    ``_rebuild_authority_process_state`` re-keys the module-global incarnation
+    nonce, and ``registry_authority`` is session-scoped, so a rebuild left
+    standing hands every later test in the session an authority the
+    creator-process guard refuses -- a failure that reads as a defect in
+    whichever test happens to run next rather than as leakage from this one.
+    """
+    saved = {name: getattr(authority_module, name) for name in _AUTHORITY_PROCESS_STATE_GLOBALS}
+    try:
+        yield
+    finally:
+        for name, value in saved.items():
+            setattr(authority_module, name, value)
+
+
+def test_process_state_rebuild_refuses_preexisting_public_coordinates(
+    tmp_path: Path,
+    restored_authority_process_state: None,
+) -> None:
     """Internal domain custody rejects inherited values without a DTO binding field."""
     registry_root = tmp_path / "registry-root"
     source_root = tmp_path / "source-root"

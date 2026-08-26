@@ -71,10 +71,13 @@ See Also:
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
+from secrets import token_bytes
+from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
@@ -95,6 +98,7 @@ from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
+from ..core.hashing import content_hash_hex
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
@@ -1156,6 +1160,185 @@ def _ensure_profile_key_registry_registered() -> None:
     ensure_profile_keys_registered()
 
 
+
+
+_READINESS_CAPTURE_MAX_ATTEMPTS = 8
+_readiness_capture_process_pid = os.getpid()
+_readiness_capture_process_nonce = token_bytes(32)
+_readiness_capture_domains: set[str] = set()
+_readiness_capture_lock = RLock()
+_readiness_capture_generations: dict[str, tuple[tuple[str, ...], int]] = {}
+_readiness_capture_generation = 0
+
+
+class ProjectionModeloReadinessCaptureError(CadrumoError, RuntimeError):
+    """Raised when readiness cannot be computed over one stable window."""
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionModeloReadinessCapture:
+    """One readiness report set and its currentness coordinate.
+
+    ``reports`` is exactly what the sole readiness producer returned: every
+    axis is carried whole, none is collapsed into a summary, and no capability
+    is inferred from a ready flag. The active profile pointer, profile record
+    and registry authority identity are folded into the opaque comparison
+    domain and never exposed.
+    """
+
+    reports: tuple[ProjectionModeloReadiness, ...]
+    comparison_domain: str
+    generation: int
+
+    def require_current(
+        self, current: ProjectionModeloReadinessCurrentCoordinate
+    ) -> ProjectionModeloReadinessCapture:
+        """Refuse a currentness comparison outside this owner process domain."""
+        _require_readiness_process_domain(self.comparison_domain)
+        current.require_current(self)
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionModeloReadinessCurrentCoordinate:
+    """Opaque same-process coordinate for one readiness owner scope."""
+
+    comparison_domain: str
+    generation: int
+
+    def require_current(
+        self, captured: ProjectionModeloReadinessCapture
+    ) -> ProjectionModeloReadinessCurrentCoordinate:
+        """Require a capture from this exact owner scope and process incarnation."""
+        _require_readiness_process_domain(self.comparison_domain)
+        _require_readiness_process_domain(captured.comparison_domain)
+        if self.comparison_domain != captured.comparison_domain:
+            raise ProjectionModeloReadinessCaptureError(
+                translated_message="errors.refused.modelo_readiness_capture_not_current",
+                context={"reason": "distinct_owner_scope"},
+            )
+        if self.generation != captured.generation:
+            raise ProjectionModeloReadinessCaptureError(
+                translated_message="errors.refused.modelo_readiness_capture_not_current",
+                context={"reason": "capture_superseded"},
+            )
+        return self
+
+
+def _require_readiness_process_domain(domain: str) -> None:
+    """Refuse a coordinate domain not minted in this process incarnation."""
+    if _readiness_capture_process_pid != os.getpid():
+        raise ProjectionModeloReadinessCaptureError(
+            translated_message="errors.refused.modelo_readiness_capture_not_current",
+            context={"reason": "forked_process"},
+        )
+    with _readiness_capture_lock:
+        known = domain in _readiness_capture_domains
+    if not known:
+        raise ProjectionModeloReadinessCaptureError(
+            translated_message="errors.refused.modelo_readiness_capture_not_current",
+            context={"reason": "foreign_process_incarnation"},
+        )
+
+
+def _readiness_comparison_domain(
+    *,
+    active_profile_id: str,
+    requests: tuple[ModeloReadinessRequest, ...],
+) -> str:
+    """Mint the non-persisted coordinate domain for one readiness owner scope."""
+    from ..core.config import load_settings
+
+    domain = content_hash_hex(
+        {
+            "owner": "application.state_projection.modelo_readiness",
+            "storage_root": str(load_settings().cadrumo_local_storage_root),
+            "namespace": "application.modelo_readiness",
+            "active_profile_id": active_profile_id,
+            "requests": tuple(request.model_dump(mode="json") for request in requests),
+            "process_incarnation": _readiness_capture_process_nonce.hex(),
+        }
+    )
+    with _readiness_capture_lock:
+        _readiness_capture_domains.add(domain)
+    return domain
+
+
+def _readiness_owner_observation(active_profile_id: str) -> tuple[str, ...]:
+    """Read the pointer, profile record and registry authority limbs."""
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
+    from ..domain.calculations.registry.authority import bundled_authority
+    from .user_profile.profile_record_repository import ProfileRecordRepository
+
+    pointer = read_profile_bucket_by_id(active_profile_id)
+    if pointer is None:
+        return ("absent-pointer",)
+    record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id)
+    registry_generation = bundled_authority().read_current_coordinate().generation
+    return (
+        pointer.bucket_id,
+        content_hash_hex(record.model_dump(mode="json")),
+        str(registry_generation),
+    )
+
+
+def _readiness_generation_for(domain: str, observation: tuple[str, ...]) -> int:
+    """Assign one injective, order-preserving generation per distinct observation."""
+    global _readiness_capture_generation
+    with _readiness_capture_lock:
+        recorded = _readiness_capture_generations.get(domain)
+        if recorded is not None and recorded[0] == observation:
+            return recorded[1]
+        _readiness_capture_generation += 1
+        _readiness_capture_generations[domain] = (observation, _readiness_capture_generation)
+        return _readiness_capture_generation
+
+
+def read_modelo_readiness_current_coordinate(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+) -> ProjectionModeloReadinessCurrentCoordinate:
+    """Return the typed current coordinate for same-domain capture validation."""
+    observation = _readiness_owner_observation(active_profile_id)
+    domain = _readiness_comparison_domain(active_profile_id=active_profile_id, requests=requests)
+    return ProjectionModeloReadinessCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_readiness_generation_for(domain, observation),
+    )
+
+
+def capture_modelo_readiness(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+) -> ProjectionModeloReadinessCapture:
+    """Compute readiness over a window in which none of its owner limbs moved.
+
+    The owner observation is read either side of the sole
+    :func:`_build_modelo_readiness` computation, so a profile or registry write
+    landing mid-computation is retried rather than published as a report set
+    stitched across two states. The reports are returned exactly as the
+    producer built them.
+    """
+    for _attempt in range(_READINESS_CAPTURE_MAX_ATTEMPTS):
+        before = _readiness_owner_observation(active_profile_id)
+        reports = _build_modelo_readiness(requests, active_profile_id=active_profile_id)
+        after = _readiness_owner_observation(active_profile_id)
+        if before != after:
+            continue
+        domain = _readiness_comparison_domain(active_profile_id=active_profile_id, requests=requests)
+        return ProjectionModeloReadinessCapture(
+            reports=reports,
+            comparison_domain=domain,
+            generation=_readiness_generation_for(domain, after),
+        )
+    raise ProjectionModeloReadinessCaptureError(
+        translated_message="errors.refused.modelo_readiness_capture_not_current",
+        context={"reason": "contended", "attempts": _READINESS_CAPTURE_MAX_ATTEMPTS},
+    )
+
 __all__ = [
     "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",
     "MODELO_READINESS_MISSING_PROFILE_ACTION",
@@ -1167,10 +1350,15 @@ __all__ = [
     "ProjectionAuthReadiness",
     "ProjectionModeloBindingRequirement",
     "ProjectionModeloReadiness",
+    "ProjectionModeloReadinessCapture",
+    "ProjectionModeloReadinessCaptureError",
+    "ProjectionModeloReadinessCurrentCoordinate",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
     "build_auth_readiness",
     "build_operator_state_projection",
     "build_pending_obligations",
+    "capture_modelo_readiness",
     "modelo_requires_ledger_preflight",
+    "read_modelo_readiness_current_coordinate",
 ]

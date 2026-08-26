@@ -21,6 +21,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
+from dataclasses import fields
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -53,10 +54,16 @@ from ..modelo._work_lifecycle import (
 from ..overview import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
+    ProjectionModeloReadinessCapture,
+    ProjectionModeloReadinessCaptureError,
+    ProjectionModeloReadinessCurrentCoordinate,
+    _build_modelo_readiness,
     _registry_readiness_refusal,
     _registry_readiness_revision_mismatch_refusal,
     build_operator_state_projection,
+    capture_modelo_readiness,
     modelo_requires_ledger_preflight,
+    read_modelo_readiness_current_coordinate,
 )
 from ..user_profile.login_session_port import profile_bind_bucket_session
 from ..user_profile.profile_record_repository import close_active_profile_record_session
@@ -742,3 +749,81 @@ def test_auth_readiness_health_severity_empty_only_when_no_provider() -> None:
 
     assert auth.provider == ""
     assert auth.health_severity == ""
+
+
+def _readiness_requests() -> tuple[ModeloReadinessRequest, ...]:
+    return (
+        ModeloReadinessRequest(
+            modelo="303",
+            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+        ),
+    )
+
+
+def test_readiness_capture_republishes_the_sole_producer_without_collapsing_axes() -> None:
+    """The capture carries the producer's records whole, axis for axis."""
+    bucket_id = _register_active_profile()
+    requests = _readiness_requests()
+
+    produced = _build_modelo_readiness(requests, active_profile_id=bucket_id)
+    captured = capture_modelo_readiness(requests, active_profile_id=bucket_id)
+
+    assert captured.reports == produced
+    assert len(captured.reports) == len(requests)
+    for report, expected in zip(captured.reports, produced, strict=True):
+        assert report.model_fields_set == expected.model_fields_set
+        assert report.model_dump(mode="json") == expected.model_dump(mode="json")
+
+
+def test_readiness_capture_exposes_no_inferred_capability_beyond_its_reports() -> None:
+    """The capture adds a coordinate only; it derives no new readiness verdict."""
+    bucket_id = _register_active_profile()
+
+    captured = capture_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
+
+    assert {field.name for field in fields(ProjectionModeloReadinessCapture)} == {
+        "reports",
+        "comparison_domain",
+        "generation",
+    }
+    assert {field.name for field in fields(ProjectionModeloReadinessCurrentCoordinate)} == {
+        "comparison_domain",
+        "generation",
+    }
+
+
+def test_readiness_capture_is_singleflight_and_refuses_a_superseded_coordinate() -> None:
+    """An unchanged owner window shares a generation; a profile write supersedes it."""
+    bucket_id = _register_active_profile()
+    requests = _readiness_requests()
+
+    first = capture_modelo_readiness(requests, active_profile_id=bucket_id)
+    second = capture_modelo_readiness(requests, active_profile_id=bucket_id)
+
+    assert first.generation == second.generation
+    assert first.comparison_domain == second.comparison_domain
+
+    current = read_modelo_readiness_current_coordinate(requests, active_profile_id=bucket_id)
+    assert first.require_current(current) is first
+
+    register_minimal_profile(profile_id=bucket_id, overrides={"identity.name": "Readiness Renamed"})
+
+    advanced = read_modelo_readiness_current_coordinate(requests, active_profile_id=bucket_id)
+
+    assert advanced.generation > first.generation
+    with pytest.raises(ProjectionModeloReadinessCaptureError):
+        first.require_current(advanced)
+
+
+def test_readiness_capture_contract_is_owned_by_its_defining_module() -> None:
+    """Every readiness capture symbol is defined by state_projection itself."""
+    for owned in (
+        ProjectionModeloReadinessCapture,
+        ProjectionModeloReadinessCurrentCoordinate,
+        ProjectionModeloReadinessCaptureError,
+        capture_modelo_readiness,
+        read_modelo_readiness_current_coordinate,
+    ):
+        assert owned.__module__ == "cadrumo.application.state_projection"
