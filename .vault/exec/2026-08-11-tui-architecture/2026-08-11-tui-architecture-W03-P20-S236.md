@@ -36,3 +36,21 @@ row specifically rather than passing for being merely unused.
 The surviving owner is asserted from the row's terminal destinations rather
 than its `new_path`, because a family that moved out of the registry entirely
 leaves a `new_path` nothing occupies.
+
+## Correction
+
+The row asks to retain schema's local definitions, migrate borrowed symbols to
+their canonical owners, and remove the borrowed bindings. Only the first clause
+had been done: schema still declared eighty-two names, sixty-six borrowed from
+schema_base, schema_surfaces, schema_formula, schema_exports and
+schema_references.
+
+Twenty-one modules reached those owners through schema and now import from the
+defining module. The export list is the sixteen locally defined symbols.
+
+Verified: every production module imports; 151 tests across the repointed
+consumers and the public-API boundary gate pass.
+
+Two consumers carried unrelated in-flight work from another session. The commit
+took their committed content plus the one repointed import each, through an
+isolated index, so that work stayed in the working tree.
