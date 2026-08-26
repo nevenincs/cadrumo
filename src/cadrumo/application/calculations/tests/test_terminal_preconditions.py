@@ -36,9 +36,9 @@ from ....domain.iva_compensation import (
     M303CompensationAvailableDerivation,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import errors as errors_module
 from .. import _m303_carry_ingress as m303_module
 from .. import _observations_repository as observations_module
+from .. import errors as errors_module
 from .._m303_carry_ingress import M303CarryIngressError, _resolve_available_compensation_formula_id
 from .._observations_repository import (
     CalculationObservationRepository,

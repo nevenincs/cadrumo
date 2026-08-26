@@ -8,13 +8,13 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 
 from ....core import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
+from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
     detail_row_binding_values_for_calculation,
     uncovered_detail_row_kinds,
     union_detail_rows_by_identity,
 )
-from .._action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,7 +58,7 @@ class _FakeWorkUnit:
         self.modelo = modelo
 
 
-def _m349_operador(*, nif_comunitario: str, clave_operacion: str, importe) -> "Modelo349OperadorRow":
+def _m349_operador(*, nif_comunitario: str, clave_operacion: str, importe) -> Modelo349OperadorRow:
     from cadrumo.domain.modelos import Modelo349OperadorRow
 
     return Modelo349OperadorRow(

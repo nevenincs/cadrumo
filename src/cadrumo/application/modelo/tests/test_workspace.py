@@ -1535,7 +1535,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
 
 def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() -> None:
     """S287: CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
-    from ....domain.modelos import CalculationRevisionState, WorkUnitState
+    from ....domain.modelos import CalculationRevisionState
     from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceCapabilityName
 
     work_unit_id = "f" * 64
