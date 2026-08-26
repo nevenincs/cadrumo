@@ -4,7 +4,7 @@ tags:
   - '#registry-completeness-closure'
 date: '2026-08-24'
 modified: '2026-08-26'
-body_hash: 'sha256:1e99ac19fafe0b0b56d9abafb502714c7ffa8528f312ca3e95a636d0542e9239'
+body_hash: 'sha256:5a30cc2d404924edf856e4833732e05f3e0c360e952bc4cae6af553b57992e85'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -145,6 +145,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
 - [x] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; `materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
 - [x] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; `it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
+- [ ] `W03.P05.S87` - Cut the registry closure CLI over from the disabled single-channel proof port to the canonical two-channel assessment, preserving typed per-channel refusals and public receipt secrecy, and prove an eligible two-receipt assessment can satisfy the filing-export limb without a second writer or payload digest projection; `src/cadrumo/application/registry/; src/cadrumo/application/filing/; dev/registry/conformance/; dev/registry/; src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
 
@@ -160,7 +161,7 @@ Run the derived release gate and an independent fresh-context honesty review, ac
 
 - [ ] `W03.P07.S37` - Run a fresh-context honesty review of the derived closure report and every predecessor close claim; `.vault/audit/`.
 - [ ] `W03.P07.S38` - Resolve or formally defer every honesty-review finding through its owning predecessor plan; `.vault/plan/`.
-- [ ] `W03.P07.S39` - First restore a green canonical bundled-registry validation at current HEAD without absorbing foreign in-flight lanes; then run the blocking cross-authority release predicate, publish the supported-versus-refused boundary, and close this roll-up plan only when both gates pass; `dev/registry/conformance/; src/cadrumo/_data/registry/aeat/; src/cadrumo/domain/calculations/registry/`.
+- [ ] `W03.P07.S39` - First restore a green canonical bundled-registry validation at current HEAD without absorbing foreign in-flight lanes, then run the blocking cross-authority release predicate, publish the supported-versus-refused boundary, and close this roll-up plan only when both gates pass; `dev/registry/conformance/; src/cadrumo/_data/registry/aeat/; src/cadrumo/domain/calculations/registry/`.
 
 ## Parallelization
 
