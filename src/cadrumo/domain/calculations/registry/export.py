@@ -11,12 +11,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
-    ModeloRevision,
-    RegistryModel,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_base import RegistryModel
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,

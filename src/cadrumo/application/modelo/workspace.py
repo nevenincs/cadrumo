@@ -26,7 +26,8 @@ from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage, RegistrySchemaFamilyDisposition, content_hash_hex
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
-from ...domain.calculations.registry.schema import FormulaDefinition, RelationDefinition
+from ...domain.calculations.registry.schema import FormulaDefinition
+from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import ModeloCode

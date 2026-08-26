@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, SourceCitation
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_base import SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from .....core.config import Settings

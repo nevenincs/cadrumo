@@ -8,8 +8,8 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import OneBasedExportOffset
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind

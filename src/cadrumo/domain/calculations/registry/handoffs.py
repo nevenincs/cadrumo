@@ -20,11 +20,13 @@ from cadrumo.domain.calculations.registry.schema import (
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    RelationDefinition,
     RelationPeriodAlignment,
     RelationRevisionSelector,
 )
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 
 from ....core import (
     STRICT_FROZEN_CONFIG,
