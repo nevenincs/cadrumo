@@ -76,11 +76,8 @@ from .donativo_bindings import validate_donativo_binding
 from .errors import RegistryValidationError
 from .gasto193_bindings import _Gasto193Selector, validate_gasto193_binding_selector_shape
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
-from .inventory_bindings import (
-    InventoryProjectionOperation,
-    InventorySelector,
-    validate_inventory_binding,
-)
+from .inventory_bindings import InventorySelector as _InventorySelector
+from .inventory_bindings import validate_inventory_binding
 from .invoice_bindings import (
     InvoiceObservation,
     InvoiceObservationRequirement,
@@ -201,8 +198,6 @@ __all__ = [
     "CasillaObservation",
     "DataBindingDefinition",
     "ImpatriadoIncomeObservationProtocol",
-    "InventoryProjectionOperation",
-    "InventorySelector",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IrnrIncomeObservationProtocol",
@@ -1380,7 +1375,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.GASTO193_CONTRIBUTOR: _Gasto193Selector,
     BindingSourceKind.WITHHOLDING296: _Withholding296Selector,
-    BindingSourceKind.INVENTORY: InventorySelector,
+    BindingSourceKind.INVENTORY: _InventorySelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
