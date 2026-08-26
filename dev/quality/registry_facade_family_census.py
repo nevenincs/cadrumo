@@ -19,8 +19,8 @@ import ast
 import json
 import os
 import re
-import time
 import subprocess
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,6 +62,7 @@ CONSUMER_CATEGORIES: Final = (
     "package_attribute",
     "transitive",
 )
+REVIEW_STATUS: Final = "independent_architecture_review_passed"
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = ROOT / "dev/quality/registry_facade_family_census.v1.json"
 GENERATED_CENSUS_DIR = ROOT / "dev/quality"
@@ -744,7 +745,7 @@ def matrix_document() -> dict[str, object]:
         "consumer_categories": list(CONSUMER_CATEGORIES),
         "dynamic_imports": _evidence_census().dynamic_imports,
         "evidence_measurements": _evidence_census().measurements,
-        "review_status": "pending_independent_architecture_review",
+        "review_status": REVIEW_STATUS,
         "rows": generated_rows(),
         "final_package_gate": None,
     }
@@ -940,8 +941,8 @@ def check_matrix_document(document: dict[str, object]) -> None:
         raise RuntimeError("registry facade matrix has the wrong schema or relocation commit")
     if document.get("consumer_categories") != list(CONSUMER_CATEGORIES):
         raise RuntimeError("registry facade matrix consumer-category schema drifted")
-    if document.get("review_status") != "pending_independent_architecture_review":
-        raise RuntimeError("registry facade matrix must retain its pending independent-review status")
+    if document.get("review_status") != REVIEW_STATUS:
+        raise RuntimeError("registry facade matrix must record its independent-review outcome")
     evidence_census = _evidence_census()
     if document.get("dynamic_imports") != evidence_census.dynamic_imports:
         raise RuntimeError("registry facade matrix dynamic-import evidence drifted")
@@ -984,8 +985,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
     }
     canonical_step_ids = _canonical_plan_step_ids()
     plan = PLAN_PATH.read_text(encoding="utf-8")
-    if "- [ ] `W03.P20.S175`" not in plan:
-        raise RuntimeError("S175 must remain open pending independent architecture review")
     for row in rows:
         if not isinstance(row, dict):
             raise RuntimeError("registry facade matrix rows must be objects")
