@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03411"
 number = "03411"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]
@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03412"
 number = "03412"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]
@@ -18,7 +18,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03413"
 number = "03413"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]
@@ -28,7 +28,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03414"
 number = "03414"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]
@@ -38,7 +38,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03415"
 number = "03415"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2025"]

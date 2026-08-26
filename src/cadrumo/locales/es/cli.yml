@@ -216,6 +216,32 @@ cli:
         iva_rate_help: Tipo de IVA aplicado como decimal
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
+        pull_actor_help: Etiqueta del operador.
+        pull_all_errors:
+          folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
+            contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
+            o su id.
+        pull_all_folder_help: URL de la carpeta de Drive o su id para obtener en bloque
+          las facturas PDF/imagen.
+        pull_all_help: Obtiene en lote todas las facturas PDF o imagen de una carpeta
+          de Drive y guarda cada una como evidencia cifrada, sin vincularla a ninguna
+          transacción.
+        pull_all_labels:
+          fetched: obtenidos
+          folder_id: id_carpeta
+          refused: rechazados
+          skipped: omitidos_no_documento
+          total: total_documentos
+        pull_all_note_help: Nota opcional registrada en cada archivo adjunto obtenido.
+        pull_all_notices:
+          files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
+            obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos.'
+        pull_help: Descarga un enlace de documento de Drive y guarda sus bytes como
+          evidencia cifrada en una fila del libro.
+        pull_id_help: Identificador de transacción del libro mayor.
+        pull_note_help: Nota opcional.
+        pull_reference_help: Referencia del enlace al documento.
+        pull_source_help: 'Origen del enlace: gmail, google_drive o url.'
         remove_help: Elimina un justificante de factura de compra
         review:
           advised_pending_message: Algunos documentos pendientes llevan avisos. No
@@ -1988,6 +2014,8 @@ cli:
         existente)
       logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente
         registrado
+      probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
+      probe_read_only_help: Comprueba Google Drive en modo solo lectura
       profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de
         flujo)
       refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
@@ -1996,21 +2024,6 @@ cli:
         el perfil activo
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
-      sync:
-        help: Sincroniza datos locales con la carpeta configurada de Google Drive
-        probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
-        probe_read_only_help: Comprueba Google Drive en modo solo lectura
-        push_dry_run_help: Planifica la subida sin enviar archivos
-        push_help: Sube los espacios de datos locales a Google Drive
-        push_limit_help: Número máximo de archivos que se subirán
-        push_namespace_help: Espacio de datos que quieres subir; se puede repetir
-        push_unmanifested_object_warning: '{count} objeto(s) no se pudieron eliminar
-          tras retener el manifiesto de su espacio de nombres; permanecen de forma
-          durable en el proveedor remoto sin un manifiesto que pueda enumerarlos ni
-          reconciliarlos. Investígalos y elimínalos manualmente, o repite el envío
-          una vez resuelto el fallo subyacente.'
-        root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
-          `aeat config google folder set <id>` primero
     init:
       activity_help: Descripción de la actividad económica (p. ej. 761.1, programador)
       auth_provider_help: Id del proveedor de autenticación a usar para el perfil
@@ -2097,6 +2110,15 @@ cli:
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta al archivo sellado que se va a inspeccionar.
+        push_dry_run_help: Planifica la subida sin enviar archivos
+        push_help: Sube los espacios de datos locales a Google Drive
+        push_limit_help: Número máximo de archivos que se subirán
+        push_namespace_help: Espacio de datos que quieres subir; se puede repetir
+        push_unmanifested_object_warning: '{count} objeto(s) no se pudieron eliminar
+          tras retener el manifiesto de su espacio de nombres; permanecen de forma
+          durable en el proveedor remoto sin un manifiesto que pueda enumerarlos ni
+          reconciliarlos. Investígalos y elimínalos manualmente, o repite el envío
+          una vez resuelto el fallo subyacente.'
         reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil
           interrumpidas. Se ha eliminado cualquier archivo temporal sin cifrar y las
           exportaciones ya escritas en disco han recibido su registro de auditoría
@@ -3052,14 +3074,6 @@ cli:
       attachment_help: Id del adjunto que se separa; repetible.
       help: Separa adjuntos de un movimiento del libro sin borrar sus bytes.
       id_help: Id de la transacción del libro (o un prefijo inequívoco).
-    doclink:
-      actor_help: Etiqueta del operador.
-      help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
-        cifrada en una fila del libro.
-      id_help: Identificador de transacción del libro mayor.
-      note_help: Nota opcional.
-      reference_help: Referencia del enlace al documento.
-      source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
         está fuera de rango. Introduce una proporción entre 0 y 1, p. ej. 0.5 para
@@ -3249,25 +3263,6 @@ cli:
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
         del perfil activo en un período dado. Local; nunca contacta con AEAT.
       year_help: Año de declaración (p. ej. 2024).
-    pull_folder:
-      errors:
-        folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
-          contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
-          o su id.
-      folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
-        PDF/imagen.
-      help: Obtiene en lote todas las facturas PDF o imagen de una carpeta de Drive
-        y guarda cada una como evidencia cifrada, sin vincularla a ninguna transacción.
-      labels:
-        fetched: obtenidos
-        folder_id: id_carpeta
-        refused: rechazados
-        skipped: omitidos_no_documento
-        total: total_documentos
-      note_help: Nota opcional registrada en cada archivo adjunto obtenido.
-      notices:
-        files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
-          obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos.'
     remove:
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
       help: Eliminar un movimiento del libro del perfil activo

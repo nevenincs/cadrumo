@@ -8,7 +8,7 @@
 # The bare number 00418 also occurs on an unrelated Estado de Cambios en el
 # Patrimonio Neto record; base-chain references MUST use this segment-qualified
 # id, never the bare number.
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "DP200013:00418"
 number = "00418"
 segmento = "DP200013"

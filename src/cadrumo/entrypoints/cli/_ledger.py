@@ -54,9 +54,9 @@ from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledge
 from ._ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
-    ledger_doclink,
+    ledger_evidence_pull,
+    ledger_evidence_pull_all,
     ledger_merge,
-    ledger_pull_folder,
     ledger_remove,
     ledger_reset,
     ledger_split,
@@ -91,9 +91,9 @@ _log = get_logger(__name__)
 __all__ = [
     "ledger_archive",
     "ledger_attach",
-    "ledger_doclink",
+    "ledger_evidence_pull",
+    "ledger_evidence_pull_all",
     "ledger_merge",
-    "ledger_pull_folder",
     "ledger_remove",
     "ledger_reset",
     "ledger_split",

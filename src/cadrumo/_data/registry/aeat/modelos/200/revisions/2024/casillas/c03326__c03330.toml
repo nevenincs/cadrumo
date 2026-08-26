@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03326"
 number = "03326"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
@@ -10,7 +10,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03327"
 number = "03327"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
@@ -22,7 +22,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03328"
 number = "03328"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
@@ -34,7 +34,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03329"
 number = "03329"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
@@ -44,7 +44,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "03330"
 number = "03330"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]

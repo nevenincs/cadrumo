@@ -9,7 +9,7 @@
 # drift re-verification test.
 
 
-[revisions."2024-y-siguientes".completeness_manifest]
+[revisions."2024".completeness_manifest]
 source_ref = "aeat-dr-200-2025"
 legal_refs = [
     "ley-27-2014:art-10",
@@ -35,284 +35,283 @@ legal_refs = [
     "ley-27-2014:art-39",
     "ley-27-2014:art-40",
     "ley-27-2014:art-41",
-    "ley-27-2014:dt-44",
     "ley-31-2022:art-39",
     "ley-49-2002:art-10",
     "rd-634-2015:art-3",
 ]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00552"
 segmento = "DP200014"
 number = "00552"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00558"
 segmento = "DP200014"
 number = "00558"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00562"
 segmento = "DP200014"
 number = "00562"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:01033"
 segmento = "DP200014"
 number = "01033"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:01034"
 segmento = "DP200014"
 number = "01034"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:01330"
 segmento = "DP200014"
 number = "01330"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00592"
 segmento = "DP200014B"
 number = "00592"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00599"
 segmento = "DP200014B"
 number = "00599"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00611"
 segmento = "DP200014B"
 number = "00611"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:01766"
 segmento = "DP200014B"
 number = "01766"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:01784"
 segmento = "DP200014B"
 number = "01784"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "00501"
 segmento = "DP200012"
 number = "00501"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200013:00417"
 segmento = "DP200013"
 number = "00417"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200013:00418"
 segmento = "DP200013"
 number = "00418"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00547"
 segmento = "DP200014"
 number = "00547"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00550"
 segmento = "DP200014"
 number = "00550"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01032"
 segmento = "DP200014"
 number = "01032"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "00670"
 segmento = "DP200015"
 number = "00670"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "00671"
 segmento = "DP200015"
 number = "00671"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01494"
 segmento = "DP200020D"
 number = "01494"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01495"
 segmento = "DP200020D"
 number = "01495"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01498"
 segmento = "DP200020D"
 number = "01498"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01499"
 segmento = "DP200020D"
 number = "01499"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "00573"
 segmento = "DP200014"
 number = "00573"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "00815"
 segmento = "DP200014"
 number = "00815"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01038"
 segmento = "DP200014"
 number = "01038"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01039"
 segmento = "DP200014B"
 number = "01039"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01040"
 segmento = "DP200014B"
 number = "01040"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01041"
 segmento = "DP200014B"
 number = "01041"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01280"
 segmento = "DP200014"
 number = "01280"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "01344"
 segmento = "DP200014"
 number = "01344"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "02314"
 segmento = "DP200014B"
 number = "02314"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "02315"
 segmento = "DP200014B"
 number = "02315"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00563"
 segmento = "DP200014"
 number = "00563"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00566"
 segmento = "DP200014"
 number = "00566"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00567"
 segmento = "DP200014"
 number = "00567"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00568"
 segmento = "DP200014"
 number = "00568"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00569"
 segmento = "DP200014"
 number = "00569"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00570"
 segmento = "DP200014"
 number = "00570"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00571"
 segmento = "DP200014"
 number = "00571"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00572"
 segmento = "DP200014"
 number = "00572"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00575"
 segmento = "DP200014"
 number = "00575"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00576"
 segmento = "DP200014"
 number = "00576"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00577"
 segmento = "DP200014"
 number = "00577"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00581"
 segmento = "DP200014"
 number = "00581"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00582"
 segmento = "DP200014"
 number = "00582"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00082"
 segmento = "DP200014B"
 number = "00082"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00399"
 segmento = "DP200014B"
 number = "00399"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00565"
 segmento = "DP200014B"
 number = "00565"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00583"
 segmento = "DP200014B"
 number = "00583"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00584"
 segmento = "DP200014B"
 number = "00584"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00585"
 segmento = "DP200014B"
 number = "00585"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00588"
 segmento = "DP200014B"
 number = "00588"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00590"
 segmento = "DP200014B"
 number = "00590"
 
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014B:00619"
 segmento = "DP200014B"
 number = "00619"

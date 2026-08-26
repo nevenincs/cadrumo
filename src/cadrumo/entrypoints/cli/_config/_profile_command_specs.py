@@ -33,6 +33,7 @@ from ._spec_policies import (
     ENCRYPTED_DESTRUCTIVE,
     ENCRYPTED_READ,
     ENCRYPTED_WRITE,
+    GOOGLE_WRITE,
     LIVE_PROFILE_WRITE,
     PROFILE_DESTRUCTIVE,
     PROFILE_READ,
@@ -164,6 +165,7 @@ def _leaf(
 
 _PAYLOADS = "cadrumo.entrypoints.cli._config_payloads"
 _PAYLOADS_ARCHIVE_RECONCILE = "cadrumo.entrypoints.cli._config._archive_reconcile_payloads"
+_PAYLOADS_ARCHIVE_PUSH = "cadrumo.entrypoints.cli._config._archive_push_payloads"
 _CONFIG = "cadrumo.entrypoints.cli._config"
 _WIZARD = "cadrumo.application.wizard"
 
@@ -360,6 +362,35 @@ PROFILE_COMMAND_SPECS = (
                 transport_role=TransportRole.PRIMARY,
             ),
             _LANGUAGE,
+        ),
+    ),
+    _leaf(
+        "config_profile_archive_push",
+        "config_profile_archive",
+        "push",
+        "cli.config.profile.archive.push_help",
+        "_google",
+        "profile_archive_push",
+        _PAYLOADS_ARCHIVE_PUSH,
+        "ProfileArchivePushResult",
+        GOOGLE_WRITE,
+        (
+            _option("namespace_filter", ("--namespace",), _STR, "cli.config.profile.archive.push_namespace_help"),
+            _option(
+                "limit",
+                ("--limit",),
+                _INT,
+                "cli.config.profile.archive.push_limit_help",
+                constraint=ParameterConstraint(minimum=1),
+            ),
+            _option(
+                "dry_run",
+                ("--dry-run/--no-dry-run",),
+                _BOOL,
+                "cli.config.profile.archive.push_dry_run_help",
+                default=False,
+                flag=True,
+            ),
         ),
     ),
     _leaf(

@@ -12,7 +12,7 @@
 # accounting result), LIS Art. 11 (devengo / imputación temporal), AEAT Manual
 # práctico de Sociedades 2024 Cap. 5 (Liquidación I → III), and the diseño de
 # registro 2024 (DP200012 pos 81, DP200013 pos 1560/1577, DP200014 pos 13).
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-base-imponible-previa"
 target_casilla_id = "DP200014:00550"
 expression = { op = "subtract", args = [
@@ -26,7 +26,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "correcciones al resultado de la cuenta de perdidas y ganancias",
@@ -42,7 +42,7 @@ required_text = [
 # 70% / EUR 1M BIN floor; the Art. 25 reserva uplift) are separate follow-on
 # sub-engines. Grounded against AEAT Manual de Sociedades 2024 Cap. 5 and LIS
 # Arts. 25, 26; diseño de registro 2024 DP200014 pos 13/64/115/166.
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-base-imponible"
 target_casilla_id = "DP200014:00552"
 expression = { op = "max", args = [
@@ -59,14 +59,14 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "compensacion de bases imponibles negativas",
     "reserva de capitalizacion",
 ]
 
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-base-imponible-despues-reserva-nivelacion"
 target_casilla_id = "DP200014:01330"
 expression = { op = "subtract", args = [
@@ -80,7 +80,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "base imponible despues de la reserva de nivelacion",
@@ -108,7 +108,7 @@ required_text = [
 # Casilla 00558 is the scalar rate echo used on the export layout; the
 # cuota íntegra 00562 is derived independently by
 # `modelo-200-cuota-integra` via bracket application.
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-tipo-gravamen-por-forma-juridica"
 target_casilla_id = "DP200014:00558"
 expression = { op = "if_then_else", args = [
@@ -182,10 +182,10 @@ expression = { op = "if_then_else", args = [
         ] },
     ] },
 ] }
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-31-2022:art-39", "ley-49-2002:art-10"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-31-2022:art-39", "ley-49-2002:art-10"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "tipo de gravamen",
@@ -225,7 +225,7 @@ required_text = [
 # dispatch (`modelo-200-tipo-gravamen-por-forma-juridica`) is
 # preserved for the export-layout rate echo, but the cuota integra
 # is no longer derived from 00558.
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-cuota-integra"
 target_casilla_id = "DP200014:00562"
 expression = { op = "if_then_else", args = [
@@ -300,17 +300,17 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-49-2002:art-10"]
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-49-2002:art-10"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "cuota integra (casilla 00562)",
     "tipo de gravamen",
 ]
 
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-cuota-integra-ajustada-positiva"
 target_casilla_id = "DP200014:00582"
 expression = { op = "max", args = [
@@ -344,7 +344,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-39"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "Cuota íntegra ajustada positiva se obtiene",
@@ -352,7 +352,7 @@ required_text = [
     "Si al efectuar esta operación se obtiene una cantidad negativa o cero",
 ]
 
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-cuota-liquida"
 target_casilla_id = "DP200014B:00592"
 expression = { op = "max", args = [
@@ -383,7 +383,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva",
@@ -391,7 +391,7 @@ required_text = [
     "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero",
 ]
 
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
 target_casilla_id = "DP200014B:00599"
 # Binding reference for DP200026:00625: the casilla stays manual (export
@@ -415,7 +415,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "cuota del ejercicio a ingresar o a devolver (casilla 00599)",
@@ -423,7 +423,7 @@ required_text = [
     "retenciones e ingresos a cuenta",
 ]
 
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-cuota-diferencial"
 target_casilla_id = "DP200014B:00611"
 # Pagos fraccionados credited = M202 instalments under EITHER modality: casilla 34
@@ -441,7 +441,7 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "cuota diferencial (casillas 00611 y 00612)",
@@ -455,7 +455,7 @@ required_text = [
 # reserva de capitalización (01032) and the applied compensación (00547). This
 # internal ceiling bounds the operator-elective applied amount 00547 via a
 # BLOCKING cap_le_when_positive predicate; it never forces 00547 to the cap.
-[[revisions."2024-y-siguientes".formulas]]
+[[revisions."2024".formulas]]
 id = "modelo-200-2024-bin-aplicada-maxima"
 target_casilla_id = "DP200014:bin-aplicada-maxima"
 expression = { op = "min", args = [
@@ -469,6 +469,6 @@ rounding = "money-2"
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".formulas.source_citations]]
+[[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["bases imponibles negativas"]

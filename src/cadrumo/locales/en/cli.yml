@@ -194,6 +194,31 @@ cli:
         iva_rate_help: Applied IVA rate as a decimal
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
+        pull_actor_help: Operator label.
+        pull_all_errors:
+          folder_id_unrecognised: Google Drive folder reference %{reference} does
+            not contain a recognisable folder id. Pass a Drive folder URL or its bare
+            folder id.
+        pull_all_folder_help: Drive folder URL or bare folder id to bulk-fetch invoice
+          PDFs/images from.
+        pull_all_help: Bulk-fetch every PDF/image invoice in a Drive folder and store
+          each as encrypted evidence, unlinked to any transaction.
+        pull_all_labels:
+          fetched: fetched_count
+          folder_id: folder_id
+          refused: refused_count
+          skipped: skipped_non_document_count
+          total: total_documents
+        pull_all_note_help: Optional note recorded on every fetched attachment.
+        pull_all_notices:
+          files_refused: '%{refused_count} file(s) in this folder could not be fetched
+            under the drive.file scope; download them manually and attach them.'
+        pull_help: Fetch a Drive document link and store its bytes as encrypted evidence
+          on a ledger row.
+        pull_id_help: Ledger transaction id.
+        pull_note_help: Optional note.
+        pull_reference_help: The document link reference.
+        pull_source_help: 'Link source: gmail, google_drive, or url.'
         remove_help: Delete purchase invoice evidence
         review:
           advised_pending_message: Some pending documents carry advisories. These
@@ -1832,6 +1857,8 @@ cli:
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
+      probe_help: Probe the configured Google Drive folder for read/write access
+      probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
       profile_help: Cadrumo profile name override (default = active profile on workflow
         state)
       refresh_only_help: Skip the consent screen and refresh an existing credential
@@ -1839,21 +1866,6 @@ cli:
       register_help: Register a Cloud Console Desktop OAuth client JSON for the active
         profile
       status_help: Show the current Google OAuth session state for the active profile
-      sync:
-        help: Push and probe local data against the configured Google Drive folder
-        probe_help: Probe the configured Google Drive folder for read/write access
-        probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
-        push_dry_run_help: Plan the push without uploading any files
-        push_help: Push the local data namespaces to the configured Google Drive folder
-        push_limit_help: Maximum number of files to push (defaults to no limit)
-        push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
-        push_unmanifested_object_warning: '{count} object(s) could not be removed
-          after their namespace''s manifest was withheld; they remain durable on the
-          remote provider with no manifest that can enumerate or reconcile them. Investigate
-          and remove them manually, or retry the push once the underlying failure
-          is resolved.'
-        root_folder_id_unset: No Google Drive root folder is configured; run `aeat
-          config google folder set <id>` first
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
@@ -1932,6 +1944,15 @@ cli:
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive to inspect.
+        push_dry_run_help: Plan the push without uploading any files
+        push_help: Push the local data namespaces to the configured Google Drive folder
+        push_limit_help: Maximum number of files to push (defaults to no limit)
+        push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
+        push_unmanifested_object_warning: '{count} object(s) could not be removed
+          after their namespace''s manifest was withheld; they remain durable on the
+          remote provider with no manifest that can enumerate or reconcile them. Investigate
+          and remove them manually, or retry the push once the underlying failure
+          is resolved.'
         reconcile_cleared_info: Cleared {count} interrupted profile-bundle export(s).
           Any leftover unencrypted staged file was removed, and an export that had
           already been written to disk received its missing audit record.
@@ -2820,14 +2841,6 @@ cli:
       attachment_help: Id of the attachment to detach; repeatable.
       help: Detach attachments from a ledger transaction without deleting their bytes.
       id_help: Ledger transaction id (or an unambiguous prefix).
-    doclink:
-      actor_help: Operator label.
-      help: Fetch a Drive document link and store its bytes as encrypted evidence
-        on a ledger row.
-      id_help: Ledger transaction id.
-      note_help: Optional note.
-      reference_help: The document link reference.
-      source_help: 'Link source: gmail, google_drive, or url.'
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
         of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.
@@ -3006,25 +3019,6 @@ cli:
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
       year_help: Filing year (e.g. 2024).
-    pull_folder:
-      errors:
-        folder_id_unrecognised: Google Drive folder reference %{reference} does not
-          contain a recognisable folder id. Pass a Drive folder URL or its bare folder
-          id.
-      folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
-        from.
-      help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
-        encrypted evidence, unlinked to any transaction.
-      labels:
-        fetched: fetched_count
-        folder_id: folder_id
-        refused: refused_count
-        skipped: skipped_non_document_count
-        total: total_documents
-      note_help: Optional note recorded on every fetched attachment.
-      notices:
-        files_refused: '%{refused_count} file(s) in this folder could not be fetched
-          under the drive.file scope; download them manually and attach them.'
     remove:
       dry_run_help: Report removal effects without deleting the ledger transaction
       help: Remove one ledger transaction from the active profile

@@ -214,6 +214,32 @@ cli:
         iva_rate_help: Tipus d'IVA aplicat com a decimal
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
+        pull_actor_help: Etiqueta de l'operador.
+        pull_all_errors:
+          folder_id_unrecognised: La referència de carpeta de Drive %{reference} no
+            conté un id de carpeta reconeixible. Indica una URL de carpeta de Drive
+            o el seu id.
+        pull_all_folder_help: URL de la carpeta de Drive o el seu id per obtenir en
+          bloc les factures PDF/imatge.
+        pull_all_help: Obté en lot totes les factures PDF o imatge d'una carpeta de
+          Drive i desa cadascuna com a evidència xifrada, sense vincular-la a cap
+          transacció.
+        pull_all_labels:
+          fetched: obtinguts
+          folder_id: id_carpeta
+          refused: rebutjats
+          skipped: omesos_no_document
+          total: documents_totals
+        pull_all_note_help: Nota opcional registrada a cada fitxer adjunt obtingut.
+        pull_all_notices:
+          files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han
+            pogut obtenir sota el permís drive.file; descàrrega''ls manualment i adjunta''ls.'
+        pull_help: Descàrrega un enllaç de document de Drive i desa'n els bytes com
+          a evidència xifrada en una fila del llibre.
+        pull_id_help: Identificador de transacció del llibre major.
+        pull_note_help: Nota opcional.
+        pull_reference_help: Referència de l'enllaç al document.
+        pull_source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
         remove_help: Elimina un justificant de factura de compra
         review:
           advised_pending_message: Alguns documents pendents porten avisos. No bloquegen
@@ -1969,6 +1995,8 @@ cli:
         existent)
       logout_help: Esborrar el token de refresc i les metadades; conservar el client
         registrat
+      probe_help: Comprova l'accés a la carpeta configurada de Google Drive
+      probe_read_only_help: Comprova Google Drive en mode només lectura
       profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
         flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
@@ -1976,21 +2004,6 @@ cli:
         al perfil actiu
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
-      sync:
-        help: Sincronitza dades locals amb la carpeta configurada de Google Drive
-        probe_help: Comprova l'accés a la carpeta configurada de Google Drive
-        probe_read_only_help: Comprova Google Drive en mode només lectura
-        push_dry_run_help: Planifica la pujada sense enviar fitxers
-        push_help: Puja els espais de dades locals a Google Drive
-        push_limit_help: Nombre màxim de fitxers que es pujaran
-        push_namespace_help: Espai de dades que vols pujar; es pot repetir
-        push_unmanifested_object_warning: '{count} objecte(s) no s''han pogut eliminar
-          després de retenir el manifest del seu espai de noms; queden de manera durable
-          al proveïdor remot sense cap manifest que els pugui enumerar ni reconciliar.
-          Investiga''ls i elimina''ls manualment, o repeteix la pujada un cop resolt
-          el fallo subjacent.'
-        root_folder_id_unset: No hi ha cap carpeta arrel de Google Drive configurada;
-          executa `aeat config google folder set <id>` primer
     init:
       activity_help: Econòmic activity description (e.g. 761.1, programador)
       auth_provider_help: Id del proveïdor d'autenticació que cal usar per al perfil
@@ -2074,6 +2087,15 @@ cli:
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
         inspect_path_help: Cami al fitxer segellat que s'inspeccionara.
+        push_dry_run_help: Planifica la pujada sense enviar fitxers
+        push_help: Puja els espais de dades locals a Google Drive
+        push_limit_help: Nombre màxim de fitxers que es pujaran
+        push_namespace_help: Espai de dades que vols pujar; es pot repetir
+        push_unmanifested_object_warning: '{count} objecte(s) no s''han pogut eliminar
+          després de retenir el manifest del seu espai de noms; queden de manera durable
+          al proveïdor remot sense cap manifest que els pugui enumerar ni reconciliar.
+          Investiga''ls i elimina''ls manualment, o repeteix la pujada un cop resolt
+          el fallo subjacent.'
         reconcile_cleared_info: S'han netejat {count} exportació(ns) de perfil interrompudes.
           S'ha eliminat qualsevol fitxer temporal sense xifrar i les exportacions
           ja escrites al disc han rebut el seu registre d'auditoria pendent.
@@ -3021,14 +3043,6 @@ cli:
       attachment_help: Id de l'adjunt que se separa; repetible.
       help: Separa adjunts d'un moviment del llibre sense esborrar-ne els bytes.
       id_help: Id de la transacció del llibre (o un prefix inequívoc).
-    doclink:
-      actor_help: Etiqueta de l'operador.
-      help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència
-        xifrada en una fila del llibre.
-      id_help: Identificador de transacció del llibre major.
-      note_help: Nota opcional.
-      reference_help: Referència de l'enllaç al document.
-      source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al
@@ -3218,25 +3232,6 @@ cli:
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         perfil actiu en un període donat. Local; mai contacta amb AEAT.
       year_help: Any de declaració (p. ex. 2024).
-    pull_folder:
-      errors:
-        folder_id_unrecognised: La referència de carpeta de Drive %{reference} no
-          conté un id de carpeta reconeixible. Indica una URL de carpeta de Drive
-          o el seu id.
-      folder_help: URL de la carpeta de Drive o el seu id per obtenir en bloc les
-        factures PDF/imatge.
-      help: Obté en lot totes les factures PDF o imatge d'una carpeta de Drive i desa
-        cadascuna com a evidència xifrada, sense vincular-la a cap transacció.
-      labels:
-        fetched: obtinguts
-        folder_id: id_carpeta
-        refused: rebutjats
-        skipped: omesos_no_document
-        total: documents_totals
-      note_help: Nota opcional registrada a cada fitxer adjunt obtingut.
-      notices:
-        files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han pogut
-          obtenir sota el permís drive.file; descàrrega''ls manualment i adjunta''ls.'
     remove:
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
       help: Eliminar un moviment del llibre del perfil actiu

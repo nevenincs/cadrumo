@@ -9,7 +9,7 @@
 # deliberately NOT enrolled. Complements the existing base-determination
 # soundness predicate (00501 -> 00552). Grounded in the modelo's own AEAT DR /
 # manual source_refs.
-[[revisions."2024-y-siguientes".verification_expectations]]
+[[revisions."2024".verification_expectations]]
 id = "modelo-200-cuota-chain-verification"
 computed_casilla_ids = [
     "DP200014:00562",

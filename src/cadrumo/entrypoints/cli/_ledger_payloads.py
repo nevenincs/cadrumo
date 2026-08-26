@@ -465,7 +465,7 @@ class LedgerDetachResult(_LedgerMutationResult):
     """
 
 
-class LedgerDocLinkPullFolderFilePayload(OutputSchema):
+class LedgerEvidencePullAllFilePayload(OutputSchema):
     """One Drive folder child's fetch outcome from ``ledger pull-folder``.
 
     ``fetched`` is ``True`` when the file's bytes were fetched and encrypted
@@ -482,12 +482,12 @@ class LedgerDocLinkPullFolderFilePayload(OutputSchema):
     refusal_reason: str | None = None
 
 
-class LedgerDocLinkPullFolderResult(OutputSchema):
+class LedgerEvidencePullAllResult(OutputSchema):
     """JSON envelope for ``aeat app ledger pull-folder``.
 
     Bulk-fetches every PDF/image child of a ``drive.file``-reachable Drive
     folder into encrypted attachment evidence (never a link-only pointer),
-    reporting one :class:`LedgerDocLinkPullFolderFilePayload` row per child.
+    reporting one :class:`LedgerEvidencePullAllFilePayload` row per child.
     Gmail bulk fetch is out of scope pending a separate ``gmail.readonly``
     scope-upgrade decision.
     """
@@ -498,7 +498,7 @@ class LedgerDocLinkPullFolderResult(OutputSchema):
     fetched_count: int
     refused_count: int
     skipped_non_document_count: int
-    files: list[LedgerDocLinkPullFolderFilePayload] = []
+    files: list[LedgerEvidencePullAllFilePayload] = []
 
 
 class LedgerArchiveResult(_LedgerMutationResult):

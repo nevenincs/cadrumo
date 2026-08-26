@@ -11,7 +11,7 @@
 # OPTIONS against the sede host the register serves, and every state-changing
 # verb forbidden. Nothing here permits a presentation, a signature or a payment.
 
-[[revisions."2024-y-siguientes".live_cross_references]]
+[[revisions."2024".live_cross_references]]
 id = "modelo-200-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"

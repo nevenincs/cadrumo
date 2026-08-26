@@ -209,6 +209,31 @@ cli:
         iva_rate_help: Alkalmazott IVA-kulcs tizedes törtként.
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
+        pull_actor_help: Operátor címke.
+        pull_all_errors:
+          folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
+            tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t
+            vagy a puszta mappaazonosítót.
+        pull_all_folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák
+          tömeges letöltéséhez.
+        pull_all_help: Kötegelten lekéri egy Drive-mappa összes PDF- vagy képszámláját,
+          és mindegyiket titkosított, tranzakcióhoz nem kapcsolt bizonyítékként tárolja.
+        pull_all_labels:
+          fetched: letoltott_db
+          folder_id: mappa_azonosito
+          refused: elutasitott_db
+          skipped: kihagyott_nem_dokumentum_db
+          total: osszes_dokumentum
+        pull_all_note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
+        pull_all_notices:
+          files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
+            a drive.file hatókörben; töltsd le őket kézzel, és csatold őket.
+        pull_help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított
+          bizonyítékként tárolja egy főkönyvi soron.
+        pull_id_help: Főkönyvi tranzakció azonosítója.
+        pull_note_help: Opcionális megjegyzés.
+        pull_reference_help: A dokumentumhivatkozás referenciája.
+        pull_source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
         remove_help: Vásárlásiszámla-bizonyíték törlése.
         review:
           advised_pending_message: Néhány függőben lévő dokumentum figyelmeztetéseket
@@ -1959,6 +1984,9 @@ cli:
         adat megújítása).
       logout_help: A megújítási token és metaadatok törlése; a regisztrált ügyfél
         megőrzése.
+      probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének vizsgálata.
+      probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
+        kísérlet).
       profile_help: 'AEAT-profilnév felülbírálása (alapértelmezés: a munkafolyamat-állapoton
         aktív profil).'
       refresh_only_help: A hozzájárulási képernyő kihagyása és csak a meglévő hitelesítő
@@ -1966,24 +1994,6 @@ cli:
       register_help: Cloud Console asztali OAuth ügyfél JSON regisztrálása az aktív
         profilhoz.
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
-      sync:
-        help: Helyi adatok feltolása és vizsgálata a beállított Google Drive mappában.
-        probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének
-          vizsgálata.
-        probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs
-          írási kísérlet).
-        push_dry_run_help: Feltolási terv készítése fájlok feltöltése nélkül.
-        push_help: Helyi adatnévterek feltolása a beállított Google Drive mappába.
-        push_limit_help: 'Feltolható fájlok maximális száma (alapértelmezés: korlátlan).'
-        push_namespace_help: 'Feltolható névtér (ismételhető; alapértelmezés: minden
-          névtér).'
-        push_unmanifested_object_warning: '{count} objektumot nem sikerült eltávolítani,
-          miután a névterük manifestje visszatartásra került; tartósan megmaradnak
-          a távoli szolgáltatónál olyan manifest nélkül, amely felsorolhatná vagy
-          egyeztethetné őket. Vizsgáld meg és távolítsd el őket manuálisan, vagy próbáld
-          meg újra a feltöltést, miután a mögöttes hiba megoldódott.'
-        root_folder_id_unset: 'Nincs beállított Google Drive gyökérmappa; futtassa:
-          `aeat config google folder set <azonosító>`.'
     init:
       activity_help: Gazdasági tevékenység leírása (pl. 761.1, programozó).
       auth_provider_help: A profilhoz használandó hitelesítési szolgáltató azonosítója.
@@ -2068,6 +2078,16 @@ cli:
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A vizsgalando lezart archivum utvonala.
+        push_dry_run_help: Feltolási terv készítése fájlok feltöltése nélkül.
+        push_help: Helyi adatnévterek feltolása a beállított Google Drive mappába.
+        push_limit_help: 'Feltolható fájlok maximális száma (alapértelmezés: korlátlan).'
+        push_namespace_help: 'Feltolható névtér (ismételhető; alapértelmezés: minden
+          névtér).'
+        push_unmanifested_object_warning: '{count} objektumot nem sikerült eltávolítani,
+          miután a névterük manifestje visszatartásra került; tartósan megmaradnak
+          a távoli szolgáltatónál olyan manifest nélkül, amely felsorolhatná vagy
+          egyeztethetné őket. Vizsgáld meg és távolítsd el őket manuálisan, vagy próbáld
+          meg újra a feltöltést, miután a mögöttes hiba megoldódott.'
         reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
           A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre
           már kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
@@ -3008,14 +3028,6 @@ cli:
       attachment_help: A leválasztandó csatolmány azonosítója; ismételhető.
       help: Csatolmányok leválasztása egy főkönyvi tételről a bájtjaik törlése nélkül.
       id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű előtagja).
-    doclink:
-      actor_help: Operátor címke.
-      help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként
-        tárolja egy főkönyvi soron.
-      id_help: Főkönyvi tranzakció azonosítója.
-      note_help: Opcionális megjegyzés.
-      reference_help: A dokumentumhivatkozás referenciája.
-      source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
     errors:
       business_pct_out_of_range: A(z) %{value} (= %{percent}) üzleti használati arány
         tartományon kívül esik. Adj meg 0 és 1 közötti arányt, pl. 0.5 az 50 százalékhoz.
@@ -3207,25 +3219,6 @@ cli:
         pénznem, arányossági hivatkozás) jelentése az aktív profil tranzakcióira egy
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
       year_help: Bevallási év (pl. 2024).
-    pull_folder:
-      errors:
-        folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
-          tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t vagy
-          a puszta mappaazonosítót.
-      folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges
-        letöltéséhez.
-      help: Kötegelten lekéri egy Drive-mappa összes PDF- vagy képszámláját, és mindegyiket
-        titkosított, tranzakcióhoz nem kapcsolt bizonyítékként tárolja.
-      labels:
-        fetched: letoltott_db
-        folder_id: mappa_azonosito
-        refused: elutasitott_db
-        skipped: kihagyott_nem_dokumentum_db
-        total: osszes_dokumentum
-      note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
-      notices:
-        files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
-          a drive.file hatókörben; töltsd le őket kézzel, és csatold őket.
     remove:
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
         nélkül.

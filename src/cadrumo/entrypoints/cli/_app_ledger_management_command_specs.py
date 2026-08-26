@@ -542,11 +542,11 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_pull_folder",
-        parent_key="app_ledger",
-        token="pull-folder",
+        key="app_ledger_evidence_pull_all",
+        parent_key="app_ledger_evidence",
+        token="pull-all",
         kind="leaf",
-        help_key=TranslationKey("cli.ledger.pull_folder.help"),
+        help_key=TranslationKey("cli.app.ledger.evidence.pull_all_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
@@ -555,7 +555,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--folder",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.ledger.pull_folder.folder_help"),
+                help_key=TranslationKey("cli.app.ledger.evidence.pull_all_folder_help"),
                 metavar=None,
                 is_flag=False,
                 flag_value=None,
@@ -574,7 +574,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--note",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(""),
-                help_key=TranslationKey("cli.ledger.pull_folder.note_help"),
+                help_key=TranslationKey("cli.app.ledger.evidence.pull_all_note_help"),
                 metavar=None,
                 is_flag=False,
                 flag_value=None,
@@ -588,12 +588,12 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_8,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_pull_folder")
+            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_evidence_pull_all")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerDocLinkPullFolderResult"),
-            identity="ledger.pull_folder",
+            identity="ledger.evidence.pull_all",
         ),
     ),
     CommandSpec(
