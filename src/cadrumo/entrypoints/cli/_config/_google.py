@@ -90,17 +90,19 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError
+from ._archive_push_payloads import (
+    ProfileArchivePushDegradedManifestPayload,
+    ProfileArchivePushFailedManifestPayload,
+    ProfileArchivePushFailedObjectPayload,
+    ProfileArchivePushPushResult,
+)
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleLoginResult,
     GoogleLogoutResult,
     GoogleRegisterResult,
     GoogleStatusResult,
-    GoogleSyncDegradedManifestPayload,
-    GoogleSyncFailedManifestPayload,
-    GoogleSyncFailedObjectPayload,
     GoogleSyncProbeResult,
-    GoogleSyncPushResult,
 )
 
 if TYPE_CHECKING:
@@ -411,7 +413,7 @@ def google_sync_probe(
     )
     emit_envelope(
         ctx,
-        command="config.google.sync.probe",
+        command="config.google.probe",
         result=probe_result,
         lines=(
             "operation\tconfig.google.sync.probe",
@@ -933,7 +935,7 @@ def _inspect_pushed_remote_mirror(
     return tuple(failures)
 
 
-def _google_sync_push_context() -> tuple[str, StorageProvider, str]:
+def _profile_archive_push_context() -> tuple[str, StorageProvider, str]:
     from ....application.user_profile.capabilities import resolve_active_capability
     from ....core import ServiceCapability
 
@@ -962,7 +964,7 @@ def _google_sync_push_result(
     namespace_filter: str | None,
     limit: int | None,
     mirror_result: _MirrorRowsResult,
-) -> GoogleSyncPushResult:
+) -> ProfileArchivePushPushResult:
     pushed_by_ns = mirror_result["pushed_by_namespace"]
     skipped_by_ns = mirror_result["skipped_by_namespace"]
     failed = mirror_result["failed_objects"]
@@ -970,7 +972,7 @@ def _google_sync_push_result(
     manifest_failed = mirror_result["failed_manifests"]
     manifest_degraded = mirror_result["degraded_manifests"]
     cleanup_failed = mirror_result["cleanup_failed_objects"]
-    return GoogleSyncPushResult(
+    return ProfileArchivePushPushResult(
         profile=active,
         root_folder_id=root_folder_id,
         dry_run=dry_run,
@@ -984,14 +986,18 @@ def _google_sync_push_result(
         manifest_degraded_total=len(manifest_degraded),
         pushed_by_namespace=dict(pushed_by_ns),
         skipped_by_namespace=dict(skipped_by_ns),
-        failed_objects=[GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed],
+        failed_objects=[
+            ProfileArchivePushFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed
+        ],
         manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
-        failed_manifests=[GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed],
+        failed_manifests=[
+            ProfileArchivePushFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed
+        ],
         degraded_manifests=[
-            GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
+            ProfileArchivePushDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
         ],
         cleanup_failed_objects=[
-            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in cleanup_failed
+            ProfileArchivePushFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in cleanup_failed
         ],
     )
 
@@ -1042,7 +1048,7 @@ def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[No
         severity=NoticeSeverity.WARNING,
         code="config.google.sync.push.unmanifested_object",
         message=tr(
-            "cli.config.google.sync.push_unmanifested_object_warning",
+            "cli.config.profile.archive.push_unmanifested_object_warning",
             count=str(len(cleanup_failed)),
         ),
         context={"namespaces": ",".join(sorted({ns for ns, _h, _err in cleanup_failed}))},
@@ -1050,7 +1056,7 @@ def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[No
     return [notice], []
 
 
-def google_sync_push(
+def profile_archive_push(
     ctx: typer.Context,
     namespace_filter: str | None = None,
     limit: int | None = None,
@@ -1064,7 +1070,7 @@ def google_sync_push(
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
     key never leaves the host — only ciphertext reaches Drive.
     """
-    active, provider, resolved_root_folder_id = _google_sync_push_context()
+    active, provider, resolved_root_folder_id = _profile_archive_push_context()
     repository = secure_object_repository_for_active_bucket()
     try:
         mirror_result = _push_secure_object_mirror_rows(
@@ -1093,7 +1099,7 @@ def google_sync_push(
         mirror_result=mirror_result,
     )
     notices, _unused = _google_sync_push_notices(mirror_result)
-    emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
+    emit_envelope(ctx, command="config.profile.archive.push", result=push_result, lines=tuple(lines), notices=notices)
 
 
 # Suppress unused-import false positive for `load_token` and `REQUIRED_SCOPES`;
@@ -1123,6 +1129,6 @@ __all__ = [
     "google_register",
     "google_status",
     "google_sync_probe",
-    "google_sync_push",
+    "profile_archive_push",
     *_SYNC_CALC_EXPORTS,
 ]

@@ -189,7 +189,7 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
     return guessed or "application/octet-stream"
 
 
-def ledger_doclink(
+def ledger_evidence_pull(
     ctx: typer.Context,
     transaction_id: str,
     source: DocumentLinkSource,
@@ -264,7 +264,7 @@ def ledger_doclink(
         result.transaction,
         result.ref.bucket_id,
         result.bucket_event_ids,
-        command="ledger.doclink",
+        command="ledger.evidence.pull",
         result_cls=LedgerAttachResult,
     )
 
@@ -283,12 +283,12 @@ def _parse_drive_folder_reference(reference: str) -> str:
     folder_id = parse_drive_file_id(reference)
     if folder_id is None:
         raise _bad(
-            tr("cli.ledger.pull_folder.errors.folder_id_unrecognised", reference=reference),
+            tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),
         )
     return folder_id
 
 
-def ledger_pull_folder(
+def ledger_evidence_pull_all(
     ctx: typer.Context,
     folder: str,
     note: str = "",
@@ -298,7 +298,7 @@ def ledger_pull_folder(
     Lists the folder's children through
     :func:`~adapters.outbound.google.list_drive_folder_documents` (the
     same ``drive.file``-scoped minimal-scope posture
-    :func:`ledger_doclink` uses for a single document), then fetches and
+    :func:`ledger_evidence_pull` uses for a single document), then fetches and
     encrypts each PDF/image child through
     :func:`~adapters.outbound.google.resolve_document_link` and
     :func:`~domain.attachments.add_attachment` — the identical
@@ -326,7 +326,7 @@ def ledger_pull_folder(
         AttachmentKind,
         add_attachment,
     )
-    from ._ledger_payloads import LedgerDocLinkPullFolderFilePayload, LedgerDocLinkPullFolderResult
+    from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
 
     folder_id = _parse_drive_folder_reference(folder)
     state = _state()
@@ -338,7 +338,7 @@ def ledger_pull_folder(
     listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
 
     store = AttachmentStore()
-    rows: list[LedgerDocLinkPullFolderFilePayload] = []
+    rows: list[LedgerEvidencePullAllFilePayload] = []
     fetched_count = 0
     refused_count = 0
     for document in listing.documents:
@@ -369,7 +369,7 @@ def ledger_pull_folder(
         )
         fetched_count += 1
         rows.append(
-            LedgerDocLinkPullFolderFilePayload(
+            LedgerEvidencePullAllFilePayload(
                 file_id=document.file_id,
                 name=document.name,
                 mime_type=document.mime_type,
@@ -378,7 +378,7 @@ def ledger_pull_folder(
             ),
         )
 
-    result = LedgerDocLinkPullFolderResult.model_validate(
+    result = LedgerEvidencePullAllResult.model_validate(
         {
             "bucket_id": bucket_id,
             "folder_id": folder_id,
@@ -390,11 +390,11 @@ def ledger_pull_folder(
         },
     )
     lines = [
-        f"{tr('cli.ledger.pull_folder.labels.folder_id')}\t{folder_id}",
-        f"{tr('cli.ledger.pull_folder.labels.total')}\t{len(listing.documents)}",
-        f"{tr('cli.ledger.pull_folder.labels.fetched')}\t{fetched_count}",
-        f"{tr('cli.ledger.pull_folder.labels.refused')}\t{refused_count}",
-        f"{tr('cli.ledger.pull_folder.labels.skipped')}\t{listing.skipped_non_document_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{folder_id}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{len(listing.documents)}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{fetched_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{refused_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{listing.skipped_non_document_count}",
     ]
     lines.extend(
         f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
@@ -408,7 +408,7 @@ def ledger_pull_folder(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.pull_folder.files_refused",
                 message=tr(
-                    "cli.ledger.pull_folder.notices.files_refused",
+                    "cli.app.ledger.evidence.pull_all_notices.files_refused",
                     refused_count=refused_count,
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
@@ -416,7 +416,7 @@ def ledger_pull_folder(
         )
     emit_envelope(
         ctx,
-        command="ledger.pull_folder",
+        command="ledger.evidence.pull_all",
         result=result,
         lines=lines,
         notices=notices or None,
@@ -1008,10 +1008,10 @@ def ledger_merge(
 __all__ = [
     "ledger_archive",
     "ledger_attach",
-    "ledger_doclink",
+    "ledger_evidence_pull",
+    "ledger_evidence_pull_all",
     "ledger_exclude",
     "ledger_merge",
-    "ledger_pull_folder",
     "ledger_remove",
     "ledger_reset",
     "ledger_restore",
