@@ -95,3 +95,7 @@ names.
 - For `historical-layout-hash-prose`, correct the historical layout comment to
   its BOE source's actual digest and byte count, then retain the existing
   independent hash and parser proof.
+
+## Closure
+
+Re-review of `255ac97952`: PASS. BOE-A-2023-24414 Article 2 and its final provision are independently present in the canonical HTML, enrolled as distinct legal authorities, and bound to the `2023-2024` applicability declaration. Article 2 is also bound to the inserted and shifted Type 1 fields, their corresponding casillas, the construct, and the export surface; the final provision remains present on the revision, construct, and layout authority. The annual `0A` route refuses the convention-only monthly route, and 2025 remains a visible refusal. The historical BOE hash comment now names its own source bytes; the 2013--2022 geometry/source, locale labels, and retired-alias absence remain sound. Focused parser, selector, mutation, coverage, validation, and lint checks pass. No unresolved Critical, High, or Medium finding remains.
