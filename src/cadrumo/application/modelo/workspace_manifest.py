@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping, Sequence, Set
+from dataclasses import dataclass
 from functools import cache
+from secrets import token_bytes
+from threading import RLock
 from types import NoneType, UnionType
 from typing import Annotated, Literal, TypeAliasType, TypeGuard, Union, cast, get_args, get_origin, get_type_hints
 
@@ -11,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, content_hash_hex
+from ...core.errors import CadrumoError
 from ...core.identity import ContentDigest
 from ...domain.calculations.registry.bindings import selector_model_for_source
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
@@ -22,6 +27,12 @@ from .workspace_producers import (
 )
 
 _MANIFEST_VERSION = 1
+_manifest_capture_process_pid = os.getpid()
+_manifest_capture_process_nonce = token_bytes(32)
+_manifest_capture_domains: set[str] = set()
+_manifest_capture_lock = RLock()
+_manifest_capture_generations: dict[str, tuple[tuple[str, ...], int]] = {}
+_manifest_capture_generation = 0
 _REGISTRY_ROOT_FIELDS = frozenset(
     {
         "modelo",
@@ -587,10 +598,133 @@ def _manifest_digest(
     )
 
 
+class ModeloWorkspaceManifestCaptureError(CadrumoError, RuntimeError):
+    """Raised when a field manifest cannot be captured over one stable window."""
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkspaceManifestCapture:
+    """One generated field manifest and its currentness coordinate.
+
+    ``manifest`` is exactly what the sole walker produced; the capture never
+    re-walks the schema to describe what it already holds. The snapshot
+    coordinate and process incarnation are folded into the opaque comparison
+    domain and never exposed.
+    """
+
+    manifest: ModeloWorkspaceFieldManifestV1
+    comparison_domain: str
+    generation: int
+
+    def require_current(self, current: ModeloWorkspaceManifestCurrentCoordinate) -> ModeloWorkspaceManifestCapture:
+        """Refuse a currentness comparison outside this owner process domain."""
+        _require_manifest_process_domain(self.comparison_domain)
+        current.require_current(self)
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkspaceManifestCurrentCoordinate:
+    """Opaque same-process coordinate for one manifest owner scope."""
+
+    comparison_domain: str
+    generation: int
+
+    def require_current(self, captured: ModeloWorkspaceManifestCapture) -> ModeloWorkspaceManifestCurrentCoordinate:
+        """Require a capture from this exact owner scope and process incarnation."""
+        _require_manifest_process_domain(self.comparison_domain)
+        _require_manifest_process_domain(captured.comparison_domain)
+        if self.comparison_domain != captured.comparison_domain:
+            raise ModeloWorkspaceManifestCaptureError(
+                translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
+                context={"reason": "distinct_owner_scope"},
+            )
+        if self.generation != captured.generation:
+            raise ModeloWorkspaceManifestCaptureError(
+                translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
+                context={"reason": "capture_superseded"},
+            )
+        return self
+
+
+def _require_manifest_process_domain(domain: str) -> None:
+    """Refuse a coordinate domain not minted in this process incarnation."""
+    if _manifest_capture_process_pid != os.getpid():
+        raise ModeloWorkspaceManifestCaptureError(
+            translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
+            context={"reason": "forked_process"},
+        )
+    with _manifest_capture_lock:
+        known = domain in _manifest_capture_domains
+    if not known:
+        raise ModeloWorkspaceManifestCaptureError(
+            translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
+            context={"reason": "foreign_process_incarnation"},
+        )
+
+
+def _manifest_comparison_domain(snapshot: RegistrySnapshot) -> str:
+    """Mint the non-persisted coordinate domain for one manifest owner scope."""
+    domain = content_hash_hex(
+        {
+            "owner": "application.modelo.workspace_manifest",
+            "namespace": "modelo.workspace_field_manifest",
+            "modelo": str(snapshot.modelo.id),
+            "revision": str(snapshot.revision.id),
+            "filing_year": snapshot.filing_year,
+            "period": str(snapshot.period),
+            "process_incarnation": _manifest_capture_process_nonce.hex(),
+        }
+    )
+    with _manifest_capture_lock:
+        _manifest_capture_domains.add(domain)
+    return domain
+
+
+def _manifest_generation_for(domain: str, observation: tuple[str, ...]) -> int:
+    """Assign one injective, order-preserving generation per distinct observation."""
+    global _manifest_capture_generation
+    with _manifest_capture_lock:
+        recorded = _manifest_capture_generations.get(domain)
+        if recorded is not None and recorded[0] == observation:
+            return recorded[1]
+        _manifest_capture_generation += 1
+        _manifest_capture_generations[domain] = (observation, _manifest_capture_generation)
+        return _manifest_capture_generation
+
+
+def read_modelo_workspace_manifest_current_coordinate(
+    snapshot: RegistrySnapshot,
+) -> ModeloWorkspaceManifestCurrentCoordinate:
+    """Return the typed current coordinate for same-domain capture validation."""
+    manifest = generate_modelo_workspace_field_manifest(snapshot)
+    domain = _manifest_comparison_domain(snapshot)
+    return ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
+def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorkspaceManifestCapture:
+    """Generate one manifest and pair it with the coordinate of that same walk.
+
+    The walk is atomic by construction: the sole generating authority runs once
+    and its own digest becomes the observation, so no second walk can pair a
+    manifest with a coordinate derived from different schema state.
+    """
+    manifest = generate_modelo_workspace_field_manifest(snapshot)
+    domain = _manifest_comparison_domain(snapshot)
+    return ModeloWorkspaceManifestCapture(
+        manifest=manifest,
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
 MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1 = ModeloWorkspaceProducerContractV1.declare(
     contributor_kind=ModeloWorkspaceContributorKindV1.FIELD_MANIFEST,
     contributor=ModeloWorkspaceContributorIdentityV1(
-        owner="domain.calculations.registry",
+        owner="application.modelo.workspace_manifest",
         producer="workspace_field_manifest",
     ),
     projection_discriminator="workspace_field_manifest",
@@ -603,6 +737,11 @@ __all__ = [
     "MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1",
     "ModeloWorkspaceFieldManifestEntryV1",
     "ModeloWorkspaceFieldManifestV1",
+    "ModeloWorkspaceManifestCapture",
+    "ModeloWorkspaceManifestCaptureError",
+    "ModeloWorkspaceManifestCurrentCoordinate",
+    "capture_modelo_workspace_manifest",
     "generate_modelo_workspace_field_manifest",
+    "read_modelo_workspace_manifest_current_coordinate",
     "validate_modelo_workspace_field_manifest",
 ]

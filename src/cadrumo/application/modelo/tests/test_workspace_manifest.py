@@ -13,14 +13,19 @@ from cadrumo.domain.calculations.registry.bindings import selector_model_for_sou
 
 from ....core import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
-from .._workspace_manifest import (
+from ..workspace_manifest import (
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,
+    ModeloWorkspaceManifestCapture,
+    ModeloWorkspaceManifestCaptureError,
+    ModeloWorkspaceManifestCurrentCoordinate,
     _manifest_digest,
     _Node,
     _walk_annotation,
+    capture_modelo_workspace_manifest,
     generate_modelo_workspace_field_manifest,
+    read_modelo_workspace_manifest_current_coordinate,
     validate_modelo_workspace_field_manifest,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
@@ -219,5 +224,106 @@ def test_workspace_field_manifest_declares_the_single_s126_contributor_contract(
     contract = MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1
 
     assert contract.contributor_kind is ModeloWorkspaceContributorKindV1.FIELD_MANIFEST
-    assert contract.contributor.owner == "domain.calculations.registry"
+    assert contract.contributor.owner == "application.modelo.workspace_manifest"
     assert contract.projection_discriminator == "workspace_field_manifest"
+
+
+def test_capture_republishes_the_sole_walker_manifest_without_rewalking() -> None:
+    """The capture carries exactly what the one generating authority produced."""
+    snapshot = _snapshot()
+
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    assert captured.manifest == generate_modelo_workspace_field_manifest(snapshot)
+    assert validate_modelo_workspace_field_manifest(captured.manifest, snapshot) is captured.manifest
+
+
+def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> None:
+    """An unchanged schema denominator shares one generation and stays current."""
+    snapshot = _snapshot()
+
+    first = capture_modelo_workspace_manifest(snapshot)
+    second = capture_modelo_workspace_manifest(snapshot)
+
+    assert first.generation == second.generation
+    assert first.comparison_domain == second.comparison_domain
+
+    current = read_modelo_workspace_manifest_current_coordinate(snapshot)
+    assert first.require_current(current) is first
+
+
+def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
+    """Two filing coordinates never validate each other's capture."""
+    snapshot = _snapshot()
+    other = bundled_authority().snapshot("303", filing_year=2025, period="3T")
+
+    captured = capture_modelo_workspace_manifest(snapshot)
+    other_coordinate = read_modelo_workspace_manifest_current_coordinate(other)
+
+    assert captured.comparison_domain != other_coordinate.comparison_domain
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        captured.require_current(other_coordinate)
+
+
+def test_a_superseded_generation_is_refused_within_one_owner_scope() -> None:
+    """A coordinate from a different manifest digest refuses the earlier capture."""
+    snapshot = _snapshot()
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    superseded = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=captured.comparison_domain,
+        generation=captured.generation + 1,
+    )
+
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        captured.require_current(superseded)
+
+
+def test_capture_exposes_no_snapshot_internals_and_no_second_manifest_shape() -> None:
+    """The capture adds a coordinate only; it derives no parallel manifest."""
+    from dataclasses import fields
+
+    snapshot = _snapshot()
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    assert {field.name for field in fields(ModeloWorkspaceManifestCapture)} == {
+        "manifest",
+        "comparison_domain",
+        "generation",
+    }
+    assert {field.name for field in fields(ModeloWorkspaceManifestCurrentCoordinate)} == {
+        "comparison_domain",
+        "generation",
+    }
+    assert str(snapshot.revision.id) not in captured.comparison_domain
+
+
+def test_manifest_authority_is_owned_by_its_public_defining_module() -> None:
+    """Every manifest symbol is defined here and bound nowhere in the package namespace."""
+    from ... import modelo as modelo_namespace
+
+    for owned in (
+        ModeloWorkspaceFieldManifestEntryV1,
+        ModeloWorkspaceFieldManifestV1,
+        ModeloWorkspaceManifestCapture,
+        ModeloWorkspaceManifestCurrentCoordinate,
+        ModeloWorkspaceManifestCaptureError,
+        capture_modelo_workspace_manifest,
+        generate_modelo_workspace_field_manifest,
+        read_modelo_workspace_manifest_current_coordinate,
+        validate_modelo_workspace_field_manifest,
+    ):
+        assert owned.__module__ == "cadrumo.application.modelo.workspace_manifest"
+        assert not hasattr(modelo_namespace, owned.__name__)
+
+
+def test_the_retired_private_manifest_module_is_gone() -> None:
+    """No private path, alias, or re-export survives the hard move."""
+    import importlib
+    from pathlib import Path
+
+    package = Path(importlib.import_module("cadrumo.application.modelo").__file__).parent
+
+    assert not (package / "_workspace_manifest.py").exists()
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("cadrumo.application.modelo._workspace_manifest")
