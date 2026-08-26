@@ -51,7 +51,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
         # Canonical constant home for XLS_EXTENSION / XLSX_EXTENSION / LATIN_1_ENCODING
         _SRC_ROOT / "core" / "external_constants.py",
         # OracleEnvironment StrEnum definition + match validator
-        _SRC_ROOT / "domain" / "calculations" / "registry" / "_live_parity.py",
+        _SRC_ROOT / "domain" / "calculations" / "registry" / "live_parity.py",
         _SRC_ROOT / "application" / "registry" / "__init__.py",
     ],
 )
@@ -92,29 +92,21 @@ def test_no_bare_ledger_transaction_literals() -> None:
 
 _RE_XLS_BARE = re.compile(r'"\.xls"')
 
-# ``Literal[...]`` accepts only literal forms, never a ``Final[Literal[...]]``
-# constant, so a static extension type alias cannot route through
-# XLS_EXTENSION. The alias and the assertion pinning it to the constant are
-# the one authorised escape; ``test_xls_escape_still_needs_its_escape`` fails
-# if the construct justifying it ever disappears.
-_XLS_LITERAL_ALIAS_ESCAPE: Path = _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity_models.py"
+# The one authorised escape was the workbook-parity Literal alias: ``Literal[...]``
+# accepts only literal forms, never a ``Final[Literal[...]]`` constant, so that
+# static extension type alias could not route through XLS_EXTENSION. The module
+# carrying it has since moved out of the package into dev/registry/parity/, and
+# this scan reads src/cadrumo/ only, so the escape excluded a path the scan can
+# no longer reach. Its guard said what to do when the justifying construct went
+# away -- remove the escape -- so there is no exclusion left to justify, and the
+# gate scans production whole.
 
 
 def test_no_bare_xls_extension_literals() -> None:
     """Runtime .xls usage must go through XLS_EXTENSION constant."""
-    files = tuple(p for p in _production_py_files() if p != _XLS_LITERAL_ALIAS_ESCAPE)
-    hits = _scan(files, _RE_XLS_BARE)
+    hits = _scan(_production_py_files(), _RE_XLS_BARE)
     assert not hits, f"Found {len(hits)} bare '.xls' literal(s) outside canonical definition:\n" + "\n".join(
         f"  {h}" for h in hits
-    )
-
-
-def test_xls_escape_still_needs_its_escape() -> None:
-    """The escaped module must still carry the Literal alias that justifies it."""
-    text = _XLS_LITERAL_ALIAS_ESCAPE.read_text(encoding="utf-8")
-    assert "Literal[" in text and _RE_XLS_BARE.search(text), (
-        f"{_XLS_LITERAL_ALIAS_ESCAPE} no longer carries a Literal-typed '.xls' alias, "
-        "so its escape from the bare-literal gate is unjustified — remove the escape."
     )
 
 
