@@ -83,7 +83,7 @@ def test_cross_scope_same_descriptor_refuses_but_distinct_descriptors_pass() -> 
 
 def test_graph_postures_keep_rotation_self_authenticating() -> None:
     rotation = _leaf("config.passphrase.change")
-    show = _leaf("config.profile.show")
+    show = _leaf("config.profile.view")
 
     assert rotation.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert show.profile_authentication is not ProfileAuthenticationPosture.SELF_AUTHENTICATING
@@ -118,7 +118,7 @@ def test_non_persistence_notice_is_delivered_on_a_post_login_refusal() -> None:
     rendered = render_error_payload(
         CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused"),
         as_json=True,
-        command="config.profile.show",
+        command="config.profile.view",
     )
     payload = json.loads(rendered)
     assert [notice["code"] for notice in payload["notices"]] == ["config.login.session_not_persisted"]
@@ -132,7 +132,7 @@ def test_non_persistence_notice_uses_the_notice_transport_in_text_refusals() -> 
     rendered = render_error_payload(
         CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused"),
         as_json=False,
-        command="config.profile.show",
+        command="config.profile.view",
     )
     assert rendered.startswith("notice\tconfig.login.session_not_persisted\t")
     assert drain_profile_authentication_notices() == ()
@@ -142,7 +142,7 @@ def test_non_persistence_notice_uses_the_notice_transport_in_text_refusals() -> 
 def test_click_terminal_refusal_drains_the_notice_once(as_json: bool) -> None:
     drain_profile_authentication_notices()
     stage_profile_session_not_persisted_notice()
-    arguments = ["config", "profile", "show", "--not-a-real-option"]
+    arguments = ["config", "profile", "view", "--not-a-real-option"]
     if as_json:
         arguments[:0] = ["--format", "json"]
     refused = invoke_cached_cli(arguments)

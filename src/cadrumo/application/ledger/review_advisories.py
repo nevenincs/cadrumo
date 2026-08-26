@@ -8,7 +8,7 @@ count, group and filter on.
 
 **The queue is where a non-blocking condition is either seen or lost.** An
 operator who never opens a document never meets an advisory attached only to
-``review show``, and the conditions on this axis are exactly the ones that reach
+``review view``, and the conditions on this axis are exactly the ones that reach
 the record without stopping anything --- so "reachable from the detail view" is
 indistinguishable from unreachable for any document the operator had no reason to
 open. Counting them on the queue row is what makes the reason to open it.

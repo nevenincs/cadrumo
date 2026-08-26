@@ -101,15 +101,15 @@ from ...domain.calculations.registry.ids import SourceRefId as _SourceRefId
 from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids as _enum_consumed_binding_ids
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs as _expression_binding_refs
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids as _revision_date_binding_ids
-from ...domain.calculations.registry.schema import CasillaDefinition as _CasillaDefinition
 from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
-from ...domain.calculations.registry.schema import RegistrySnapshotRef as _RegistrySnapshotRef
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef as _RegistrySnapshotRef
 from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type as _registry_scalar_value_type
 from ...domain.calculations.registry.schema_scalars import (
     validate_registry_text_scalar as _validate_registry_text_scalar,
 )
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
 from ...domain.filing import (
     CasillaCollection as _CasillaCollection,
 )

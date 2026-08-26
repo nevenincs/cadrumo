@@ -58,7 +58,7 @@ class ModeloReconciliationDiffPayload(OutputSchema):
 
 
 class ModeloReconcileResult(OutputSchema):
-    """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
+    """Result payload for ``modelo reconcile import`` and ``modelo reconcile pull``.
 
     Both verbs share
     :class:`ModeloReconciliationReport` from

@@ -20,6 +20,7 @@ Submodules
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
+   cadrumo.domain.calculations.registry._ledger_binding_resolution
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal
@@ -65,6 +66,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker
    cadrumo.domain.calculations.registry._validate_reference_sections
+   cadrumo.domain.calculations.registry._validate_references
    cadrumo.domain.calculations.registry._validate_relation_periods
    cadrumo.domain.calculations.registry._validate_relation_sources
    cadrumo.domain.calculations.registry._validate_revision_closure
@@ -81,6 +83,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_valid_from_ejercicio_convention
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._validation_memoization
+   cadrumo.domain.calculations.registry._verdict_cache
    cadrumo.domain.calculations.registry.aeat_nif_iva_oracle
    cadrumo.domain.calculations.registry.applicability
    cadrumo.domain.calculations.registry.applicability_modelo202
@@ -117,7 +120,6 @@ Submodules
    cadrumo.domain.calculations.registry.formula_text_inputs
    cadrumo.domain.calculations.registry.gasto193_bindings
    cadrumo.domain.calculations.registry.groi_oracle
-   cadrumo.domain.calculations.registry.handoff_paths
    cadrumo.domain.calculations.registry.handoffs
    cadrumo.domain.calculations.registry.identity
    cadrumo.domain.calculations.registry.ids
@@ -125,7 +127,6 @@ Submodules
    cadrumo.domain.calculations.registry.invoice_bindings
    cadrumo.domain.calculations.registry.irnr_ledger_bindings
    cadrumo.domain.calculations.registry.iva_wallet_relation_targets
-   cadrumo.domain.calculations.registry.ledger_binding_resolution
    cadrumo.domain.calculations.registry.ledger_bindings
    cadrumo.domain.calculations.registry.ledger_impatriado_bindings
    cadrumo.domain.calculations.registry.legal
@@ -146,6 +147,7 @@ Submodules
    cadrumo.domain.calculations.registry.period_offset_math
    cadrumo.domain.calculations.registry.period_selector_match
    cadrumo.domain.calculations.registry.profile_grounding
+   cadrumo.domain.calculations.registry.quantity_screen_enrolment
    cadrumo.domain.calculations.registry.queries
    cadrumo.domain.calculations.registry.query_reports
    cadrumo.domain.calculations.registry.rate_box_partition
@@ -178,10 +180,8 @@ Submodules
    cadrumo.domain.calculations.registry.validate
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
    cadrumo.domain.calculations.registry.validate_cross_revision_advisory
-   cadrumo.domain.calculations.registry.validate_references
    cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
-   cadrumo.domain.calculations.registry.verdict_cache
    cadrumo.domain.calculations.registry.verification_tolerance
    cadrumo.domain.calculations.registry.withholding296_bindings
    cadrumo.domain.calculations.registry.withholding_bindings

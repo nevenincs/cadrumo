@@ -705,7 +705,7 @@ class EvidenceReviewListResult(OutputSchema):
     rows: list[EvidenceReviewRowPayload] = []
 
 
-class EvidenceReviewShowResult(OutputSchema):
+class EvidenceReviewViewResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence review show``.
 
     Everything the review gate requires a person to have in front of them for

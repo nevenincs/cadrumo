@@ -15,10 +15,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def test_storage_spec_surface_and_parameter_contract_are_exact() -> None:
     by_token = {spec.token: spec for spec in CONFIG_STORAGE_COMMAND_SPECS}
 
-    assert set(by_token) == {"storage", "list", "show", "check", "init", "reclaim"}
+    assert set(by_token) == {"storage", "list", "view", "check", "init", "reclaim"}
     assert by_token["storage"].parent_key == "config"
     assert by_token["storage"].handler is None
-    assert tuple(parameter.name for parameter in by_token["show"].parameters) == (
+    assert tuple(parameter.name for parameter in by_token["view"].parameters) == (
         "area",
         "output_language",
     )

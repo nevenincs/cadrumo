@@ -15,8 +15,6 @@ See Also:
 
 from __future__ import annotations
 
-from ....application.modelo.m145_communication_period import M145CommunicationPeriod
-
 from datetime import UTC, datetime
 
 import pytest
@@ -29,6 +27,7 @@ from ....application.modelo._m145_communication_records import (
     M145CommunicationValidationIssueKind,
     M145CommunicationValidationResult,
 )
+from ....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .._modelo_m145_rendering import (
     m145_export_result_lines,
     m145_export_result_payload,

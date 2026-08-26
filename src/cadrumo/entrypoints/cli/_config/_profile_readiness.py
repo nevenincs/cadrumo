@@ -10,7 +10,7 @@ from ._status_rendering import precondition_action_lines
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
     from ....application.workflow.profile_health import unavailable_profile_record_verdict
-    from .._config_payloads import ConfigProfileShowResult
+    from .._config_payloads import ConfigProfileViewResult
 
     action = resolve_cli_precondition_action(
         unavailable_profile_record_verdict(
@@ -19,7 +19,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
             repairable_by_clearing_pointer=False,
         )
     )
-    result = ConfigProfileShowResult(
+    result = ConfigProfileViewResult(
         profile_id=profile_id,
         bucket_id=bucket_id,
         display_name=label,
@@ -53,7 +53,7 @@ def _emit_profile_record_unreadable(
     error: Exception,
 ) -> None:
     from ....application.workflow.profile_health import unavailable_profile_record_verdict
-    from .._config_payloads import ConfigProfileShowResult
+    from .._config_payloads import ConfigProfileViewResult
 
     action = resolve_cli_precondition_action(
         unavailable_profile_record_verdict(
@@ -62,7 +62,7 @@ def _emit_profile_record_unreadable(
             repairable_by_clearing_pointer=False,
         )
     )
-    result = ConfigProfileShowResult(
+    result = ConfigProfileViewResult(
         profile_id=profile_id,
         bucket_id=bucket_id,
         display_name=label,

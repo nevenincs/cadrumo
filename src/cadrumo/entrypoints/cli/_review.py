@@ -115,7 +115,7 @@ def review_queue(
     )
 
 
-def review_show(
+def review_view(
     ctx: typer.Context,
     item_id: str,
     explain: bool = False,
@@ -173,4 +173,4 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     return lines
 
 
-__all__ = ["parse_review_state", "review_queue", "review_show"]
+__all__ = ["parse_review_state", "review_queue", "review_view"]

@@ -1,4 +1,4 @@
-"""``counterparty show`` must reach the branch its own payload is justified by.
+"""``counterparty view`` must reach the branch its own payload is justified by.
 
 The show verb's payload docstring rests its whole design on the contradiction
 path: it reports what the LADDER will answer rather than what the repository
@@ -24,7 +24,7 @@ compute.
 See Also:
     :func:`~application.ledger.counterparty_establishment.resolve_confirmed_counterparty_facts`
         The single resolver both this verb and the ladder ask.
-    :class:`~entrypoints.cli._ledger_counterparty_payloads.CounterpartyShowResult`
+    :class:`~entrypoints.cli._ledger_counterparty_payloads.CounterpartyViewResult`
         The payload whose three-state contract is pinned here.
 """
 
@@ -49,8 +49,8 @@ _EVIDENCED = "es_mainland"
 
 
 def _show(*args: str) -> dict[str, object]:
-    """Run ``counterparty show`` through the real CLI and return its result payload."""
-    result = _invoke(["--format", "json", "app", "ledger", "counterparty", "show", *args])
+    """Run ``counterparty view`` through the real CLI and return its result payload."""
+    result = _invoke(["--format", "json", "app", "ledger", "counterparty", "view", *args])
     assert result.exit_code == 0, result.output
     raw_payload = unwrap_schema_envelope(result.output)
     payload: dict[str, object] = {}
@@ -182,7 +182,7 @@ def test_the_contradiction_reaches_the_operator_through_the_notice_channel(
                 "app",
                 "ledger",
                 "counterparty",
-                "show",
+                "view",
                 _COUNTERPARTY_CIF,
                 "--evidenced-scope",
                 _EVIDENCED,
@@ -211,7 +211,7 @@ def test_an_unknown_territory_is_refused_with_the_accepted_set(tmp_path: Path) -
     """
     with _open_ledger_ux_session(tmp_path):
         result = _invoke(
-            ["app", "ledger", "counterparty", "show", _COUNTERPARTY_CIF, "--evidenced-scope", "canarias"],
+            ["app", "ledger", "counterparty", "view", _COUNTERPARTY_CIF, "--evidenced-scope", "canarias"],
         )
 
     assert result.exit_code != 0

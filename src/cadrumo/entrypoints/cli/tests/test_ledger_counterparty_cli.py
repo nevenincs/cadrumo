@@ -83,7 +83,7 @@ def _ladder_scope() -> str | None:
     ladder asks, so what it reports and what the next document resolves to cannot
     differ.
     """
-    result = _invoke(["--format", "json", "app", "ledger", "counterparty", "show", _SUPPLIER_CIF])
+    result = _invoke(["--format", "json", "app", "ledger", "counterparty", "view", _SUPPLIER_CIF])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert isinstance(payload, dict), result.output

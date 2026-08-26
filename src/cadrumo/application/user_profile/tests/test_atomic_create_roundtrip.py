@@ -3,8 +3,8 @@
 Every profile-creation path lands on one atomic provisioner
 (``register_active_profile``). The contract this test pins: a profile
 created through the canonical create path must read back with the same
-immutable UUID identity through ``profile list``, ``profile show``,
-``config login``, and a second ``profile show``. The operator
+immutable UUID identity through ``profile list``, ``profile view``,
+``config login``, and a second ``profile view``. The operator
 addresses the profile by its display name; the UUID is the stable
 internal identity that must never drift between verbs.
 
@@ -114,7 +114,7 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     # The bucket id is redacted at the CLI boundary; the placeholder is stable.
     assert _json(listing)["profiles"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
-    show_first = _invoke(["--format", "json", "config", "profile", "show", "alice"])
+    show_first = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show_first.exit_code == 0, show_first.output
     assert _json(show_first)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     # display_name is the operator label — the positional create arg.
@@ -124,7 +124,7 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     assert unlock.exit_code == 0, unlock.output
     assert _json(unlock)["active_profile"] == "alice"
 
-    show_second = _invoke(["--format", "json", "config", "profile", "show", "alice"])
+    show_second = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show_second.exit_code == 0, show_second.output
     assert _json(show_second)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
@@ -133,7 +133,7 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
 
 
 def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> None:
-    """The facts written at create time read back through ``profile show``.
+    """The facts written at create time read back through ``profile view``.
 
     ``identity.tax_id`` is a sensitive operator identifier and is redacted to a
     stable ``sha256:<prefix>`` token at the CLI boundary per the centralised
@@ -142,7 +142,7 @@ def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> No
 
     _create("alice")
 
-    show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
+    show = _invoke(["--format", "json", "config", "profile", "view", "alice"])
     assert show.exit_code == 0, show.output
     facts = {row["path"]: row["value"] for row in _json(show)["facts"]}
     # The NIF is redacted at the CLI surface; assert the redaction shape, not
@@ -169,12 +169,12 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
 
     unlock_alice = _login("alice")
     assert unlock_alice.exit_code == 0, unlock_alice.output
-    show_alice = _invoke(["--format", "json", "config", "profile", "show"])
+    show_alice = _invoke(["--format", "json", "config", "profile", "view"])
     assert _json(show_alice)["display_name"] == "alice"
 
     unlock_bob = _login("bob")
     assert unlock_bob.exit_code == 0, unlock_bob.output
-    show_bob = _invoke(["--format", "json", "config", "profile", "show"])
+    show_bob = _invoke(["--format", "json", "config", "profile", "view"])
     assert _json(show_bob)["display_name"] == "bob"
     # The two profiles surface distinct operator-visible display_names; profile
     # UUIDs are redacted at the CLI boundary to the shared placeholder.

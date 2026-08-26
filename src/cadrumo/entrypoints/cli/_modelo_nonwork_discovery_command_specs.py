@@ -174,7 +174,9 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="input_kind",
                 declarations=("--input-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.calculations.registry.schema_input_kind", "InputKind")),
+                value=ValueContract(
+                    DeferredTarget("cadrumo.domain.calculations.registry.schema_input_kind", "InputKind")
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.casillas.input_kind_help"),
                 multiple=False,

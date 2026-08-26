@@ -18,10 +18,10 @@ from ....core.i18n import tr
 from .._common import bad, emit_envelope
 
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
-from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
+from ._capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult
 
 
-def capabilities_show(ctx: typer.Context) -> None:
+def capabilities_view(ctx: typer.Context) -> None:
     """Report the resolved posture of every service capability for the active profile."""
     from ....application.user_profile.capabilities import resolve_active_capability
 
@@ -44,7 +44,7 @@ def capabilities_show(ctx: typer.Context) -> None:
             else "cli.config.profile.capabilities.disabled"
         )
         lines.append(f"{capability.value}\t{state}\t{decision.source.value}\t{decision.reason}")
-    result = CapabilitiesShowResult.model_validate({"profile_id": profile_id, "capabilities": rows})
+    result = CapabilitiesViewResult.model_validate({"profile_id": profile_id, "capabilities": rows})
     emit_envelope(ctx, command="config.profile.capabilities.show", result=result, lines=lines)
 
 
@@ -76,4 +76,4 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: s
     emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
 
 
-__all__ = ["capabilities_set", "capabilities_show"]
+__all__ = ["capabilities_set", "capabilities_view"]

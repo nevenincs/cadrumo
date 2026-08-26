@@ -94,7 +94,7 @@ from ._archive_push_payloads import (
     ProfileArchivePushDegradedManifestPayload,
     ProfileArchivePushFailedManifestPayload,
     ProfileArchivePushFailedObjectPayload,
-    ProfileArchivePushPushResult,
+    ProfileArchivePushResult,
 )
 from ._google_errors import _google_refusal
 from ._google_payloads import (
@@ -964,7 +964,7 @@ def _google_sync_push_result(
     namespace_filter: str | None,
     limit: int | None,
     mirror_result: _MirrorRowsResult,
-) -> ProfileArchivePushPushResult:
+) -> ProfileArchivePushResult:
     pushed_by_ns = mirror_result["pushed_by_namespace"]
     skipped_by_ns = mirror_result["skipped_by_namespace"]
     failed = mirror_result["failed_objects"]
@@ -972,7 +972,7 @@ def _google_sync_push_result(
     manifest_failed = mirror_result["failed_manifests"]
     manifest_degraded = mirror_result["degraded_manifests"]
     cleanup_failed = mirror_result["cleanup_failed_objects"]
-    return ProfileArchivePushPushResult(
+    return ProfileArchivePushResult(
         profile=active,
         root_folder_id=root_folder_id,
         dry_run=dry_run,

@@ -36,7 +36,7 @@ from ._storage_payloads import (
     ConfigStorageInitResult,
     ConfigStorageListResult,
     ConfigStorageReclaimResult,
-    ConfigStorageShowResult,
+    ConfigStorageViewResult,
     StorageAreaIssuePayload,
     StorageAreaPayload,
 )
@@ -79,7 +79,7 @@ def config_storage_list(
     )
 
 
-def config_storage_show(
+def config_storage_view(
     ctx: typer.Context,
     area: StorageArea,
     output_language: _OutputLanguage | None = None,
@@ -90,7 +90,7 @@ def config_storage_show(
 
     report = collect_storage_area_inventory()
     row = _row_for(report, area)
-    result = ConfigStorageShowResult(
+    result = ConfigStorageViewResult(
         storage_root=str(report.storage_root),
         area=_area_payload(row),
     )
@@ -417,5 +417,5 @@ __all__ = [
     "config_storage_init",
     "config_storage_list",
     "config_storage_reclaim",
-    "config_storage_show",
+    "config_storage_view",
 ]

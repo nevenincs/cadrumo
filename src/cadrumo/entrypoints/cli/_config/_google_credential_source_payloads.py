@@ -64,8 +64,8 @@ class GoogleCredentialSourceSetResult(GoogleCredentialSourcePayload):
     operation: str = "config.google.credential_source.set"
 
 
-class GoogleCredentialSourceShowResult(GoogleCredentialSourcePayload):
-    """JSON envelope for ``aeat config google credential-source show``.
+class GoogleCredentialSourceViewResult(GoogleCredentialSourcePayload):
+    """JSON envelope for ``aeat config google credential-source view``.
 
     Projects the optional persisted
     :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` for the

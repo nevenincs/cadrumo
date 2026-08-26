@@ -172,13 +172,13 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
         assert patched.exit_code == 0, patched.output
 
         shown_direct = invoke_cached_cli(
-            ["--language", "en", "config", "profile", "show", "direct-profile"],
+            ["--language", "en", "config", "profile", "view", "direct-profile"],
         )
         assert shown_direct.exit_code == 0, shown_direct.output
         assert "objective_estimation_modulos" not in shown_direct.output
 
         shown = invoke_cached_cli(
-            ["--language", "en", "config", "profile", "show", "modulos-profile"],
+            ["--language", "en", "config", "profile", "view", "modulos-profile"],
         )
         assert shown.exit_code == 0, shown.output
         assert "irpf.objective_estimation_modulos_iae_epigraph" in shown.output

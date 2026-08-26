@@ -57,9 +57,7 @@ def _iter_deferred_targets(value: object, path: str) -> Iterator[tuple[str, Defe
 
 def _declared_targets() -> tuple[tuple[str, DeferredTarget], ...]:
     """Return every target the live command-spec graph declares."""
-    return tuple(
-        row for node in COMMAND_GRAPH.nodes() for row in _iter_deferred_targets(node.spec, node.spec.key)
-    )
+    return tuple(row for node in COMMAND_GRAPH.nodes() for row in _iter_deferred_targets(node.spec, node.spec.key))
 
 
 def test_the_walk_reaches_the_command_spec_graph() -> None:
@@ -80,9 +78,7 @@ def test_every_declared_command_target_resolves() -> None:
         except (RuntimeError, ImportError) as error:
             failures.append(f"{path}: {target.identity!r} -- {type(error).__name__}: {error}")
 
-    assert not failures, "command specs declare targets that do not resolve:\n" + "\n".join(
-        sorted(failures)
-    )
+    assert not failures, "command specs declare targets that do not resolve:\n" + "\n".join(sorted(failures))
 
 
 @pytest.mark.parametrize(

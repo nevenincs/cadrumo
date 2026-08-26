@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.s
 
 def _show_values() -> dict[str, str]:
     """Read the persisted facts back through the public profile-show door."""
-    shown = invoke_typer_app(root_app, ["--format", "json", "config", "profile", "show"])
+    shown = invoke_typer_app(root_app, ["--format", "json", "config", "profile", "view"])
     assert shown.exit_code == 0, shown.output
     payload = unwrap_schema_envelope(shown.output)
     facts = payload["facts"]

@@ -89,7 +89,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
 
 
 def _envelope() -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "show", _REFERENCE])
+    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
     assert result.exit_code == 0, result.output
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
 
@@ -150,7 +150,7 @@ def test_each_notice_names_the_code_the_document_stated_and_the_party() -> None:
 @pytest.mark.usefixtures("seeded_draft")
 def test_the_text_surface_carries_the_same_advisories_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "show", _REFERENCE])
+    result = _invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
 
     assert result.exit_code == 0, result.output
     assert _UNASSIGNED_CODE in result.output

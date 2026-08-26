@@ -326,8 +326,8 @@ def _config_storage_section() -> HelpSection:
                 description=tr("cli.operator_surface.help.config.storage_list"),
             ),
             HelpEntry(
-                command="aeat config storage show AREA",
-                description=tr("cli.operator_surface.help.config.storage_show"),
+                command="aeat config storage view AREA",
+                description=tr("cli.operator_surface.help.config.storage_view"),
             ),
             HelpEntry(
                 command="aeat config storage check",
@@ -405,8 +405,8 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_list"),
                     ),
                     HelpEntry(
-                        command="aeat config profile show [NAME]",
-                        description=tr("cli.operator_surface.help.config.profile_show"),
+                        command="aeat config profile view [NAME]",
+                        description=tr("cli.operator_surface.help.config.profile_view"),
                     ),
                     HelpEntry(
                         command="aeat config profile status",
@@ -611,8 +611,8 @@ def _app_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.app.modelo_m036"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo audit show",
-                        description=tr("cli.operator_surface.help.app.modelo_audit_show"),
+                        command="aeat app modelo audit view",
+                        description=tr("cli.operator_surface.help.app.modelo_audit_view"),
                     ),
                     HelpEntry(
                         command="aeat app modelo audit check",

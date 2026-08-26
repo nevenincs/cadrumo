@@ -25,7 +25,7 @@ def test_modelo_audit_specs_declare_the_exact_family() -> None:
         ("aeat", "app", "modelo", "audit"),
         ("aeat", "app", "modelo", "audit", "check"),
         ("aeat", "app", "modelo", "audit", "export"),
-        ("aeat", "app", "modelo", "audit", "show"),
+        ("aeat", "app", "modelo", "audit", "view"),
         ("aeat", "app", "modelo", "readiness"),
     }
 
@@ -35,7 +35,7 @@ def test_modelo_audit_specs_own_public_handlers_and_schema_identities() -> None:
     assert {spec.result_schema.identity for spec in leaves} == {
         "modelo.audit.check",
         "modelo.audit.export",
-        "modelo.audit.show",
+        "modelo.audit.view",
     }
     assert all(spec.result_schema.state is SchemaState.TARGET for spec in leaves)
     for spec in leaves:

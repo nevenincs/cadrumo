@@ -10,7 +10,7 @@ from pydantic import ConfigDict, Field, model_validator
 
 from ....core import Modelo
 from .errors import RegistryValidationError
-from .schema import RegistryModel
+from .schema_base import RegistryModel
 
 __all__ = [
     "AUXILIARY_ENVELOPE_HEADER_CONTENT",

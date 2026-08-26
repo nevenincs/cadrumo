@@ -91,7 +91,7 @@ def _invoke_create_with_recovery(
 
 
 def _fact_values(document: dict[str, object]) -> dict[str, str]:
-    """Project a ``config profile show`` envelope into a path -> value mapping."""
+    """Project a ``config profile view`` envelope into a path -> value mapping."""
     result = document["result"]
     assert isinstance(result, dict)
     facts = result["facts"]
@@ -161,7 +161,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
         assert json.loads(created.stdout)["result"]["status"] == "created"
 
         shown = invoke_cached_cli(
-            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "show"),
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
             input=json.dumps({"profile_passphrase": _PASSPHRASE}),
         )
 

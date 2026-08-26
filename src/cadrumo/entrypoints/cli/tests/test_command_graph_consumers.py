@@ -102,11 +102,11 @@ def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> 
 
 
 def test_retired_profile_transfer_leaves_do_not_resolve_or_register() -> None:
-    """The archive/export and restore doors replace the retired profile-root leaves."""
+    """The archive subject's export and import doors replace the retired profile-root leaves."""
     profile_path = ("aeat", "config", "profile")
     registrations = {row.cli_path: row.command for row in command_registration_metadata()}
 
-    for path in ((*profile_path, "archive", "export"), (*profile_path, "restore")):
+    for path in ((*profile_path, "archive", "export"), (*profile_path, "archive", "import")):
         spec = COMMAND_GRAPH.resolve_path(path)
         assert spec.result_schema.identity is not None
         assert registrations[path[1:]] == spec.result_schema.identity

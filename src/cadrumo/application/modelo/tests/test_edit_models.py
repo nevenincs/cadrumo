@@ -98,7 +98,9 @@ def _row_surface_entry(*, reorderable: bool = True) -> ModeloEditWritableRowGrou
     )
 
 
-def _baseline(*, mutation_family: ModeloEditMutationFamily = ModeloEditMutationFamily.CALCULATE) -> ModeloEditBaselineV1:
+def _baseline(
+    *, mutation_family: ModeloEditMutationFamily = ModeloEditMutationFamily.CALCULATE
+) -> ModeloEditBaselineV1:
     now = datetime.now(UTC)
     return ModeloEditBaselineV1(
         compatibility=_compatibility(),

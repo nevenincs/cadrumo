@@ -1160,8 +1160,6 @@ def _ensure_profile_key_registry_registered() -> None:
     ensure_profile_keys_registered()
 
 
-
-
 _READINESS_CAPTURE_MAX_ATTEMPTS = 8
 _readiness_capture_process_pid = os.getpid()
 _readiness_capture_process_nonce = token_bytes(32)
@@ -1190,9 +1188,7 @@ class ProjectionModeloReadinessCapture:
     comparison_domain: str
     generation: int
 
-    def require_current(
-        self, current: ProjectionModeloReadinessCurrentCoordinate
-    ) -> ProjectionModeloReadinessCapture:
+    def require_current(self, current: ProjectionModeloReadinessCurrentCoordinate) -> ProjectionModeloReadinessCapture:
         """Refuse a currentness comparison outside this owner process domain."""
         _require_readiness_process_domain(self.comparison_domain)
         current.require_current(self)
@@ -1206,9 +1202,7 @@ class ProjectionModeloReadinessCurrentCoordinate:
     comparison_domain: str
     generation: int
 
-    def require_current(
-        self, captured: ProjectionModeloReadinessCapture
-    ) -> ProjectionModeloReadinessCurrentCoordinate:
+    def require_current(self, captured: ProjectionModeloReadinessCapture) -> ProjectionModeloReadinessCurrentCoordinate:
         """Require a capture from this exact owner scope and process incarnation."""
         _require_readiness_process_domain(self.comparison_domain)
         _require_readiness_process_domain(captured.comparison_domain)
@@ -1338,6 +1332,7 @@ def capture_modelo_readiness(
         translated_message="errors.refused.modelo_readiness_capture_not_current",
         context={"reason": "contended", "attempts": _READINESS_CAPTURE_MAX_ATTEMPTS},
     )
+
 
 __all__ = [
     "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",

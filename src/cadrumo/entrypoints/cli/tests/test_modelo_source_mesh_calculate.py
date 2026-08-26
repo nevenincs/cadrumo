@@ -578,7 +578,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
         ],
     )
     assert attested.exit_code == 0, attested.output
-    shown = invoke_cached_cli(("config", "profile", "show", "operator"))
+    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
     assert shown.exit_code == 0, shown.output
     assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
 

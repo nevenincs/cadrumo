@@ -99,4 +99,4 @@ def test_config_help_entry_rejects_a_blank_command_or_description() -> None:
         ConfigHelpEntryPayload(command="", description="Show the active profile.")
 
     with pytest.raises(ValidationError):
-        ConfigHelpEntryPayload(command="profile show", description="")
+        ConfigHelpEntryPayload(command="profile view", description="")

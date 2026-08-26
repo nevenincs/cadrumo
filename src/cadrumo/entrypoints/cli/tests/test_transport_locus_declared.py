@@ -89,7 +89,9 @@ def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: Trans
         for shape, names in by_shape.items():
             if len(names) > 1:
                 offenders.append(f"{' '.join(node.path)} :: {shape.value} :: {', '.join(sorted(names))}")
-    assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(sorted(offenders))
+    assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(
+        sorted(offenders)
+    )
 
 
 def test_a_remote_handle_declares_neither_shape_nor_role() -> None:

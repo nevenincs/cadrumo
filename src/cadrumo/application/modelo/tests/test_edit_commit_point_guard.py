@@ -81,7 +81,9 @@ def _period() -> Period:
 
 def _work_unit() -> WorkUnit:
     period = _period()
-    revision_id = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    revision_id = (
+        bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    )
     now = datetime(2026, 1, 10, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -123,7 +125,9 @@ def test_a_real_conflicting_write_inside_the_reconfirm_to_commit_window_is_refus
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
 
         admitted = admit_modelo_edit(
-            ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
+            ModeloEditAdmissionRequestV1(
+                target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE
+            ),
             bucket_id=_BUCKET_ID,
             work_catalogue=work_unit_repository.load(),
             calculation_catalogue=CalculationRevisionCatalogue(),

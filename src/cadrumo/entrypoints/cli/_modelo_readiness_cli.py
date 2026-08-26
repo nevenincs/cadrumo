@@ -92,7 +92,7 @@ def _resolve_readiness_revision_id(
         modelo=modelo,
         filing_year=filing_year,
         period=target_period,
-        requested_revision_id=RevisionId(revision_id) if revision_id else None,
+        requested_revision_id=revision_id or None,
     )
 
 

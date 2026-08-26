@@ -32,7 +32,7 @@ def test_profile_create_show_round_trips_pareja_de_hecho_marital_status() -> Non
         },
     )
 
-    shown = invoke_cached_cli(["--format", "json", "config", "profile", "show"])
+    shown = invoke_cached_cli(["--format", "json", "config", "profile", "view"])
     assert shown.exit_code == 0, shown.output
     envelope = json.loads(_json_output(shown.output))
     facts = {row["path"]: row["value"] for row in envelope["result"]["facts"]}

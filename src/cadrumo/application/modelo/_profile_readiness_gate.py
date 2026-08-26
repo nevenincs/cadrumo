@@ -237,7 +237,7 @@ def modelo_work_profile_preflight_report(
             ``legal_refs`` and modelos. Passed by
             :func:`require_profile_ready_for_modelo_work` (the blocking
             work-creation gate) and by the explicitly-invoked readiness
-            surfaces (``config profile preflight``, ``app modelo readiness``)
+            surface (``app modelo readiness``)
             alike - ``build_profile_grounding_index`` memoises its
             registry-wide walk per authority instance, so the blocking gate's
             per-call cost stays bounded even though it runs on every

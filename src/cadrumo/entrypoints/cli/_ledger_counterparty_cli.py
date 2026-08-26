@@ -55,7 +55,7 @@ from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
-    CounterpartyShowResult,
+    CounterpartyViewResult,
     CounterpartyWithdrawResult,
 )
 
@@ -229,7 +229,7 @@ def counterparty_withdraw(
     )
 
 
-def counterparty_show(
+def counterparty_view(
     ctx: typer.Context,
     tax_identifier: str,
     country_code: str | None = None,
@@ -305,7 +305,7 @@ def counterparty_show(
     emit_envelope(
         ctx,
         command="ledger.counterparty.show",
-        result=CounterpartyShowResult(
+        result=CounterpartyViewResult(
             tax_identifier=tax_identifier,
             confirmed=fact is not None,
             territorial_scope=fact.value if fact is not None else None,

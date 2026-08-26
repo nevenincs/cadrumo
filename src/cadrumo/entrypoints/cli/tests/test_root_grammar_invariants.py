@@ -105,7 +105,7 @@ def test_modelo_audit_verbs_only_register_canonical_three() -> None:
         result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
         assert result.exit_code != 0, (leaf, result.output)
 
-    accepted_leaves = (("show",), ("check",), ("export",))
+    accepted_leaves = (("view",), ("check",), ("export",))
     for leaf in accepted_leaves:
         result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
         assert result.exit_code == 0, (leaf, result.output)

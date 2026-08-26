@@ -1,6 +1,6 @@
 """Real-CLI proof that a non-blocking advisory is visible from the QUEUE.
 
-Both advisories over a pending draft were reachable only from ``review show``.
+Both advisories over a pending draft were reachable only from ``review view``.
 An operator who never opens a document never meets one, and these are precisely
 the conditions that let a document through --- so "reachable from the detail
 view" and "unreachable" are the same thing for any draft nobody had a reason to

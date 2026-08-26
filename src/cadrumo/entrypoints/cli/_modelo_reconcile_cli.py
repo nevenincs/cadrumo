@@ -4,13 +4,13 @@
 
 * ``reconcile pull <work-unit>`` fetches the justificante from AEAT (the
   ``pull`` standard) and reconciles against it in one flow.
-* ``reconcile file <work-unit> --file PATH [--kind justificante|declaration]``
+* ``reconcile import <work-unit> --file PATH [--kind justificante|declaration]``
   reconciles against a local PDF (the ``--file`` standard); local-only, never
   contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
   the pull/file transport axis: ``justificante`` (the default, every modelo) or
   ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
   modelos only -- see :data:`application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`).
-* ``reconcile history`` lists past reconciliations.
+* ``reconcile list`` lists past reconciliations.
 """
 
 from __future__ import annotations
@@ -173,7 +173,7 @@ def reconcile_file_verb(
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
 
-def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
+def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
     from ...application.modelo.reconciliation_records import list_modelo_reconciliations
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
@@ -201,7 +201,7 @@ def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) 
             for entry in entries
         ],
     )
-    lines = ["operation\tmodelo.reconcile.history", f"bucket_id\t{bucket_id}", f"reconciliation_count\t{len(entries)}"]
+    lines = ["operation\tmodelo.reconcile.list", f"bucket_id\t{bucket_id}", f"reconciliation_count\t{len(entries)}"]
     if entries:
         lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tactor")
         lines.extend(
@@ -218,5 +218,5 @@ def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) 
             for entry in entries
         )
     else:
-        lines.append(tr("cli.app.modelo.reconcile.history_empty", default="No reconciliations recorded yet."))
-    emit_envelope(ctx, command="modelo.reconcile.history", result=result, lines=lines)
+        lines.append(tr("cli.app.modelo.reconcile.list_empty", default="No reconciliations recorded yet."))
+    emit_envelope(ctx, command="modelo.reconcile.list", result=result, lines=lines)

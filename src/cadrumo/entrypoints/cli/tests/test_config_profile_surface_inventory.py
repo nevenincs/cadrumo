@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _OPERATOR_VERBS = (
-    "show",
+    "view",
     "edit",
     "delete",
     "list",

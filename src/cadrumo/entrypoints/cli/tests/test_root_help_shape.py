@@ -178,7 +178,7 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
     assert "CADRUMO_SECRET_STORE_DIR" in config.output
-    assert "aeat config profile show [NAME]" in config.output
+    assert "aeat config profile view [NAME]" in config.output
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
     assert "Run aeat --help for the full overview." in config.output

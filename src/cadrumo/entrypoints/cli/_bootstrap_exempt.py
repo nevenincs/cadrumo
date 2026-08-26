@@ -302,7 +302,7 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
             "are refused outright by its own guard, so what it can reach is root-level "
             "regenerable material, never a bucket's encrypted state."
         ),
-        subtree=("check", "init", "list", "reclaim", "show"),
+        subtree=("check", "init", "list", "reclaim", "view"),
         cites_verbs=("config profile list",),
     ),
     BootstrapExemption(

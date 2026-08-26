@@ -438,7 +438,7 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["config", "auth", "configure", "--help"],
         ["config", "profile", "--help"],
         ["config", "profile", "edit", "--help"],
-        ["config", "profile", "show", "--help"],
+        ["config", "profile", "view", "--help"],
         ["config", "repair", "--help"],
         ["config", "repair", "connectivity", "--help"],
         ["app", "--help"],
@@ -742,16 +742,16 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     assert "hashed_lookup.compute" not in overview.output
 
 
-def test_config_profile_show_requires_active_profile_with_typed_error(
+def test_config_profile_view_requires_active_profile_with_typed_error(
     isolated_user_cli: Path,
 ) -> None:
-    """``aeat config profile show`` rejects inspection when no profile is selected.
+    """``aeat config profile view`` rejects inspection when no profile is selected.
 
     The show verb reads the active profile bucket; with no active
     profile, the operation is refused with a typed CLI usage error.
     """
 
-    result = _invoke(["config", "profile", "show"])
+    result = _invoke(["config", "profile", "view"])
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -837,7 +837,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
         },
     )
 
-    show_result = _invoke(["--format", "json", "config", "profile", "show"])
+    show_result = _invoke(["--format", "json", "config", "profile", "view"])
     assert show_result.exit_code == 0, show_result.output
     show_envelope = json.loads(_json_output(show_result))
     assert show_envelope["command"] == "config.profile.show"

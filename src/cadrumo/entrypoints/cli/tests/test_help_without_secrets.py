@@ -243,7 +243,7 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
     assert "create" in combined, combined
-    assert "show" in combined, combined
+    assert "view" in combined, combined
     assert "CADRUMO_SECRET_PASSPHRASE" not in combined
 
 

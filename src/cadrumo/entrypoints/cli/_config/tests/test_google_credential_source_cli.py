@@ -52,7 +52,7 @@ See Also:
         Factory dispatch that consumes the persisted selection.
     :exc:`~adapters.outbound.google.GoogleAuthAdcUnavailableError`
         Real ADC failure proving impersonation dispatch was selected.
-    :class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceShowResult`
+    :class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceViewResult`
         JSON envelope schema asserted for secret-free ``show`` output.
     :func:`~tests.secure_sql.isolated_runtime_profile`
         Real bucket-session harness used around direct repository reads.
@@ -123,7 +123,7 @@ def test_set_service_account_impersonation_then_show_reflects_it() -> None:
     assert GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value in set_result.output
     assert _TARGET_PRINCIPAL in set_result.output
 
-    show_result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "show"])
+    show_result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "view"])
     assert show_result.exit_code == 0, show_result.output
     assert '"configured":true' in show_result.output.replace(" ", "")
     assert GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value in show_result.output
@@ -134,7 +134,7 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     """The persisted selection roundtrips through secure storage with no secret field.
 
     Asserted through both surfaces: the CLI ``show`` JSON payload schema
-    (:class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceShowResult`)
+    (:class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceViewResult`)
     is itself the proof no secret
     field exists — it declares exactly `target_principal` / `target_scopes`
     / `delegates` / `subject` / `lifetime_s`, never a private key or access
@@ -162,7 +162,7 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
         )
         assert set_result.exit_code == 0, set_result.output
 
-        show_result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "show"])
+        show_result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "view"])
         assert show_result.exit_code == 0, show_result.output
         assert GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION.value in show_result.output
         assert _TARGET_PRINCIPAL in show_result.output
@@ -265,7 +265,7 @@ def test_set_oauth_desktop_restores_the_default_after_impersonation(tmp_path: Pa
 def test_show_before_any_set_reports_the_oauth_desktop_default() -> None:
     _create_profile()
 
-    result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "show"])
+    result = invoke_cached_cli(["--format", "json", "config", "google", "credential-source", "view"])
     assert result.exit_code == 0, result.output
     assert '"configured":false' in result.output.replace(" ", "")
     assert GoogleCredentialSourceKind.OAUTH_DESKTOP.value in result.output

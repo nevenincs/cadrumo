@@ -11,22 +11,14 @@ from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import BindingFixedExportSelector
 from ..errors import RegistryValidationError
-from ..schema import (
-    CasillaAlias,
-    DataBindingDefinition,
-    DatedValue,
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from ..schema import DataBindingDefinition, FormulaDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
-from ..schema_formula import FormulaExpression, ParameterDefinition
+from ..schema_formula import DatedValue, FormulaExpression, ParameterDefinition
 from ..schema_input_kind import InputKind
-from ..schema_surfaces import CasillaConstraints, RelationDefinition
+from ..schema_surfaces import CasillaAlias, CasillaConstraints, RelationDefinition
 from ..schema_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,

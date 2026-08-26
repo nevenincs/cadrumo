@@ -1,6 +1,6 @@
-"""Strict JSON payload checks for ``aeat config profile show``.
+"""Strict JSON payload checks for ``aeat config profile view``.
 
-``ConfigProfileShowResult`` used to declare ``profile_id``, ``display_name``,
+``ConfigProfileViewResult`` used to declare ``profile_id``, ``display_name``,
 ``status``, and ``schema_version`` as permissive optionals, so a malformed
 lifecycle status or a non-positive schema version could be reported as a
 valid profile row. It now bounds them at the same widths
@@ -16,7 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.user_profile.values import ProfileSetupState
-from .._config_payloads import ConfigProfileShowResult
+from .._config_payloads import ConfigProfileViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -37,16 +37,16 @@ def _success_kwargs(**overrides: object) -> dict[str, object]:
     return base
 
 
-def test_config_profile_show_result_round_trips_valid_success_row() -> None:
-    result = ConfigProfileShowResult.model_validate(_success_kwargs())
+def test_config_profile_view_result_round_trips_valid_success_row() -> None:
+    result = ConfigProfileViewResult.model_validate(_success_kwargs())
 
     assert result.setup_state is ProfileSetupState.COMPLETE
     assert result.schema_version == 3
 
 
-def test_config_profile_show_result_round_trips_unreadable_sentinel() -> None:
+def test_config_profile_view_result_round_trips_unreadable_sentinel() -> None:
     """The readiness-branch sentinel is not a lifecycle status, but is accepted."""
-    result = ConfigProfileShowResult(
+    result = ConfigProfileViewResult(
         profile_id=_PROFILE_ID,
         display_name="Operator",
         status="profile_record_unreadable",
@@ -57,9 +57,9 @@ def test_config_profile_show_result_round_trips_unreadable_sentinel() -> None:
     assert result.status == "profile_record_unreadable"
 
 
-def test_config_profile_show_result_round_trips_missing_record_branch() -> None:
+def test_config_profile_view_result_round_trips_missing_record_branch() -> None:
     """The missing-record branch carries no status at all."""
-    result = ConfigProfileShowResult(
+    result = ConfigProfileViewResult(
         profile_id=_PROFILE_ID,
         display_name="Operator",
         registered_bucket=True,
@@ -80,7 +80,7 @@ def test_config_profile_show_result_round_trips_missing_record_branch() -> None:
         ("schema_version", 0),
     ),
 )
-def test_config_profile_show_result_refuses_malformed_field(field: str, bad_value: object) -> None:
+def test_config_profile_view_result_refuses_malformed_field(field: str, bad_value: object) -> None:
     """A blank identity, unknown status, or non-positive schema version is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfileShowResult.model_validate(_success_kwargs(**{field: bad_value}))
+        ConfigProfileViewResult.model_validate(_success_kwargs(**{field: bad_value}))

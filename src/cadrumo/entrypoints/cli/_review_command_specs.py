@@ -119,7 +119,7 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_show")),
+        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_view")),
         ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("cadrumo.entrypoints.cli._review_payloads", "ReviewViewResult"),

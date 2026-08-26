@@ -482,7 +482,7 @@ def _source_tree_digest_at_commit(workspace_root: Path, commit: str) -> str:
         tuple(
             (
                 relative,
-                content_hash_hex(_run_git_bytes(workspace_root, "show", f"{commit}:{relative}").hex()),
+                content_hash_hex(_run_git_bytes(workspace_root, "view", f"{commit}:{relative}").hex()),
             )
             for relative in source_paths
         )
@@ -814,7 +814,7 @@ def _attest_committed_receipt_artifact_bytes(
     if not _working_tree_is_clean(workspace_root):
         raise ValueError("C0 receipt durable validation requires a clean current worktree")
     current_commit = _run_git(workspace_root, "rev-parse", "HEAD")
-    committed_artifact = _run_git_bytes(workspace_root, "show", f"{current_commit}:{_RECEIPT_PATH}")
+    committed_artifact = _run_git_bytes(workspace_root, "view", f"{current_commit}:{_RECEIPT_PATH}")
     if artifact_bytes != committed_artifact:
         raise ValueError("C0 receipt artifact bytes do not equal the clean current commit")
     return current_commit, committed_artifact

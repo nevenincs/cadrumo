@@ -13,7 +13,7 @@ can see it is missing.
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema
+from ....core.json_contract import OutputSchema
 
 
 class ProfileArchivePushFailedObjectPayload(OutputSchema):
@@ -54,7 +54,7 @@ class ProfileArchivePushDegradedManifestPayload(OutputSchema):
     detail: str
 
 
-class ProfileArchivePushPushResult(OutputSchema):
+class ProfileArchivePushResult(OutputSchema):
     """JSON envelope for ``aeat config profile archive push``.
 
     Summarizes the ciphertext mirror pass over the active bucket's secure-object

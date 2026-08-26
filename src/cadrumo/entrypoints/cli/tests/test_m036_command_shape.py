@@ -98,7 +98,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
     enums, bounds ``event_id``/``actor``, requires a non-negative ``diff_count``
     and a real ``reconciled_at``. The CLI row redeclared all of them as free
     strings and ints, so a malformed reconciliation could cross the
-    ``modelo.reconcile.history`` envelope.
+    ``modelo.reconcile.list`` envelope.
     """
     base = dict(
         event_id="e" * 32,

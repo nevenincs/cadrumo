@@ -764,6 +764,10 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
         else:
             moved_owner = {
                 f"{REGISTRY_PATH}/aeat_hosts.py": "src/cadrumo/core/remote_authority.py",
+                # The handoff-path classification was a thin layer over the
+                # relation handoff audit it imported; deleting the dedicated
+                # family folded its symbols into that canonical owner.
+                f"{REGISTRY_PATH}/handoff_paths.py": f"{REGISTRY_PATH}/handoffs.py",
             }.get(current_path)
             if moved_owner is None:
                 raise RuntimeError(f"current registry candidate has no defining owner: {current_path}")
@@ -843,6 +847,15 @@ def _terminal_destinations(row: dict[str, object]) -> list[dict[str, object]]:
     if new_path.endswith("/aeat_hosts.py"):
         return [
             {"path": "src/cadrumo/core/remote_authority.py", "allowed_absence": False, "role": "defining_owner"},
+            {"path": new_path, "allowed_absence": True, "role": "retired_candidate"},
+        ]
+    if new_path.endswith("/handoff_paths.py"):
+        return [
+            {
+                "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+                "allowed_absence": False,
+                "role": "defining_owner",
+            },
             {"path": new_path, "allowed_absence": True, "role": "retired_candidate"},
         ]
     if new_path.endswith("/record_spec.py"):

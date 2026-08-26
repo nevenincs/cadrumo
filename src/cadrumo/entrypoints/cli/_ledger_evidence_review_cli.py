@@ -2,7 +2,7 @@
 
 The operator-facing half of document ingestion. A draft is what a reader
 proposed; these verbs are where a person meets it before anything is minted.
-``review list`` is the queue and ``review show`` is the one-document surface,
+``review list`` is the queue and ``review view`` is the one-document surface,
 carrying every field with its value, origin, verbatim anchor, grounding outcome
 and competing candidates, every deterministic finding, and the blocking findings
 that must each be answered individually at confirm.
@@ -40,7 +40,7 @@ from ._ledger_business_payloads import (
     EvidenceReviewFieldPayload,
     EvidenceReviewListResult,
     EvidenceReviewRowPayload,
-    EvidenceReviewShowResult,
+    EvidenceReviewViewResult,
 )
 
 
@@ -458,7 +458,7 @@ def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: st
     )
 
 
-def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str]]:
+def _review_view_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str]]:
     """Return the non-blocking advisories for one draft, as notices and their text lines.
 
     Both channels are built from the same notice so the JSON envelope and the
@@ -479,7 +479,7 @@ def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
     return notices, lines
 
 
-def review_show(ctx: typer.Context, reference: str) -> None:
+def review_view(ctx: typer.Context, reference: str) -> None:
     """Show every reviewable field of one pending draft, with its blocking findings."""
     bucket_id = _tx_repo(_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
@@ -514,7 +514,7 @@ def review_show(ctx: typer.Context, reference: str) -> None:
     lines.extend(
         f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
     )
-    notices, advisory_lines = _review_show_advisories(draft)
+    notices, advisory_lines = _review_view_advisories(draft)
     lines.extend(advisory_lines)
     if blockers:
         notices.append(
@@ -528,7 +528,7 @@ def review_show(ctx: typer.Context, reference: str) -> None:
     emit_envelope(
         ctx,
         command="ledger.evidence.review.show",
-        result=EvidenceReviewShowResult.model_validate(payload),
+        result=EvidenceReviewViewResult.model_validate(payload),
         lines=lines,
         notices=notices,
     )
@@ -581,4 +581,4 @@ def parse_finding_resolution(raw: str) -> FindingResolution:
     return FindingResolution(blocker_id=blocker_id.strip(), action=action, value=payload.strip())
 
 
-__all__ = ["parse_finding_resolution", "review_list", "review_show"]
+__all__ = ["parse_finding_resolution", "review_list", "review_view"]

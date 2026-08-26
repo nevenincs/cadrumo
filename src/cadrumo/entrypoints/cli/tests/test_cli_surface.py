@@ -371,10 +371,10 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     assert revealed_payload["bucket_id"] != CLI_BUCKET_ID_PLACEHOLDER
 
 
-def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id() -> None:
-    """Default ``config profile show`` JSON redacts ``profile_id``; the opt-out reveals it.
+def test_config_profile_view_reveal_identifiers_opt_in_surfaces_real_profile_id() -> None:
+    """Default ``config profile view`` JSON redacts ``profile_id``; the opt-out reveals it.
 
-    ``config profile show`` is the profile inspection surface. The
+    ``config profile view`` is the profile inspection surface. The
     centralised-output-redaction policy rewrites the ``profile_id`` field to the
     paste-safe ``<profile-id>`` placeholder by default; the
     ``CADRUMO_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
@@ -383,12 +383,12 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     create_cli_surface_profile()
     profile_id = _active_bucket_id()
 
-    default_shown = _run_ledger_cli_json(["config", "profile", "show"])
+    default_shown = _run_ledger_cli_json(["config", "profile", "view"])
     assert default_shown["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert profile_id not in json.dumps(default_shown, sort_keys=True)
 
     with override_settings(cadrumo_cli_reveal_identifiers=True):
-        revealed = invoke_cached_cli(["--format", "json", "config", "profile", "show"])
+        revealed = invoke_cached_cli(["--format", "json", "config", "profile", "view"])
     assert revealed.exit_code == 0, revealed.output
     revealed_payload = _json(revealed)
     assert revealed_payload["profile_id"] == profile_id

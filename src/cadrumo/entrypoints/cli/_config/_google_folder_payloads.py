@@ -13,13 +13,13 @@ class GoogleFolderSetResult(OutputSchema):
     root_folder_id: str
 
 
-class GoogleFolderGetResult(OutputSchema):
-    """Current optional Drive-root selection returned by ``folder get``."""
+class GoogleFolderViewResult(OutputSchema):
+    """Current optional Drive-root selection returned by ``folder view``."""
 
-    operation: str = "config.google.folder.get"
+    operation: str = "config.google.folder.view"
     profile: str
     configured: bool
     root_folder_id: str | None = None
 
 
-__all__ = ["GoogleFolderGetResult", "GoogleFolderSetResult"]
+__all__ = ["GoogleFolderSetResult", "GoogleFolderViewResult"]

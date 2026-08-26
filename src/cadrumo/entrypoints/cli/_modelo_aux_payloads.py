@@ -87,7 +87,7 @@ class EvidenceBundleCheckFindingPayload(OutputSchema):
     detail: str = ""
 
 
-class ModeloAuditShowResult(OutputSchema):
+class ModeloAuditViewResult(OutputSchema):
     """Evidence bundle manifest render result (audit show)."""
 
     operation: str = "modelo.audit.show"

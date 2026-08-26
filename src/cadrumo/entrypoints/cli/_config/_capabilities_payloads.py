@@ -23,10 +23,10 @@ from ....core.json_contract import OutputSchema
 
 
 class CapabilityRowPayload(OutputSchema):
-    """One resolved capability row for the profile-capabilities show result.
+    """One resolved capability row for the profile-capabilities view result.
 
     Nested in
-    :class:`CapabilitiesShowResult`
+    :class:`CapabilitiesViewResult`
     and mirrors :class:`CapabilityDecision` after
     the resolver has combined the profile fact, global default, and safety
     floor. ``source`` is the JSON value of
@@ -39,8 +39,8 @@ class CapabilityRowPayload(OutputSchema):
     reason: str
 
 
-class CapabilitiesShowResult(OutputSchema):
-    """JSON envelope for ``aeat config profile capabilities show``.
+class CapabilitiesViewResult(OutputSchema):
+    """JSON envelope for ``aeat config profile capabilities view``.
 
     The resolved posture of every service capability for the active profile,
     each with its source (profile fact / global default / safety-floor bar).

@@ -1,6 +1,6 @@
 """Contract parity between auth-diagnostics application models and their CLI shells.
 
-``AuthDiagnosticsListResult``, ``AuthDiagnosticsShowResult``, and
+``AuthDiagnosticsListResult``, ``AuthDiagnosticsViewResult``, and
 ``AuthDiagnosticsReportResult`` must refuse the malformed nested-row,
 unknown-field, closed-state, and timestamp shapes the canonical
 ``AuthDiagnosticSummary`` / ``AuthDiagnosticDetail`` / ``AuthDiagnosticReportResult``
@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from ....application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ....tests.aeat_literal_fixtures import AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE
-from .._config_payloads import AuthDiagnosticsListResult, AuthDiagnosticsReportResult, AuthDiagnosticsShowResult
+from .._config_payloads import AuthDiagnosticsListResult, AuthDiagnosticsReportResult, AuthDiagnosticsViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -82,7 +82,7 @@ def test_list_result_rejects_a_non_datetime_captured_at() -> None:
 
 def test_show_result_accepts_a_real_detail_projection() -> None:
     """The show envelope reuses the detail model's own field set directly."""
-    result = AuthDiagnosticsShowResult(**_detail().model_dump())
+    result = AuthDiagnosticsViewResult(**_detail().model_dump())
 
     assert result.diagnostic_id == "diag-1"
     assert result.reason == "auth_completion_timeout"
@@ -104,7 +104,7 @@ def test_show_result_rejects_an_unknown_field() -> None:
     payload["unexpected"] = "value"
 
     with pytest.raises(ValidationError):
-        AuthDiagnosticsShowResult.model_validate_json(json.dumps(payload))
+        AuthDiagnosticsViewResult.model_validate_json(json.dumps(payload))
 
 
 def test_report_result_accepts_a_real_phone_state() -> None:

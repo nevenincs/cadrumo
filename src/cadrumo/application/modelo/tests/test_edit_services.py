@@ -179,11 +179,7 @@ def test_admission_refuses_a_stale_compatibility_tuple() -> None:
     work_unit = _work_unit()
     work_catalogue = WorkUnitCatalogue.from_work_units((work_unit,))
     stale_compatibility = _compatibility().model_copy(
-        update={
-            "request_schema": _compatibility().request_schema.model_copy(
-                update={"schema_fingerprint": "f" * 64}
-            )
-        }
+        update={"request_schema": _compatibility().request_schema.model_copy(update={"schema_fingerprint": "f" * 64})}
     )
     result = admit_modelo_edit(
         ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
@@ -244,12 +240,16 @@ def test_admission_never_double_surfaces_a_binding_as_both_row_group_and_binding
     work_unit = _work_unit()
     admitted = _admit(work_unit)
     row_binding_ids = {
-        e.binding_id for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
+        e.binding_id
+        for e in admitted.baseline.permitted_surface
+        if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
     }
     override_binding_ids = {
         e.binding_id
         for e in admitted.baseline.permitted_surface
-        if isinstance(e, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1))
+        if isinstance(
+            e, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
+        )
     }
     assert row_binding_ids.isdisjoint(override_binding_ids)
 
@@ -277,7 +277,9 @@ def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifes
     assert completeness_digest != field_manifest_digest
 
     edit_identity = ModeloEditSchemaIdentityV1(
-        schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, completeness_manifest_digest=completeness_digest
+        schema_id="modelo-131-cross-producer",
+        schema_fingerprint="a" * 64,
+        completeness_manifest_digest=completeness_digest,
     )
     workspace_identity = ModeloWorkspaceSchemaIdentityV1(
         schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, field_manifest_digest=field_manifest_digest
@@ -334,9 +336,10 @@ def test_parse_refuses_a_non_writable_casilla_and_a_malformed_lexeme() -> None:
         e.casilla_id for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
     }
     non_writable = next(
-        c.id for c in bundled_authority().snapshot(
-            _MODELO, filing_year=_FILING_YEAR, period=_period().registry_token
-        ).revision.casillas
+        c.id
+        for c in bundled_authority()
+        .snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+        .revision.casillas
         if c.id not in writable_ids
     )
     refused = parse_modelo_edit_value(

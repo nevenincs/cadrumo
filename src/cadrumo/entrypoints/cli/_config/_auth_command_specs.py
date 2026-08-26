@@ -249,13 +249,13 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_READ,
     ),
     _leaf(
-        "config_auth_diagnostics_show",
+        "config_auth_diagnostics_view",
         "config_auth_diagnostics",
-        "show",
-        "cli.config.auth.diagnostics.show_help",
+        "view",
+        "cli.config.auth.diagnostics.view_help",
         "_auth_diagnostics",
-        "auth_diagnostics_show",
-        "AuthDiagnosticsShowResult",
+        "auth_diagnostics_view",
+        "AuthDiagnosticsViewResult",
         ENCRYPTED_READ,
         (
             ArgumentSpec(

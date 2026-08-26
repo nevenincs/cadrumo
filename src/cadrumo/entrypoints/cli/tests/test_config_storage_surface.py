@@ -74,7 +74,7 @@ class TestListAggregatesByArea:
 class TestShowUsesAreaVocabulary:
     def test_show_reports_one_aggregate_area(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            envelope = _json_envelope(["config", "storage", "show", StorageArea.CACHE.value])
+            envelope = _json_envelope(["config", "storage", "view", StorageArea.CACHE.value])
 
         assert envelope["result"]["area"]["area"] == StorageArea.CACHE.value
         assert envelope["result"]["area"]["disposition"] == "mixed"
@@ -82,7 +82,7 @@ class TestShowUsesAreaVocabulary:
 
     def test_unknown_area_failure_names_the_four_accepted_values(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            result = invoke_cached_cli(["config", "storage", "show", "not-an-area"])
+            result = invoke_cached_cli(["config", "storage", "view", "not-an-area"])
 
         assert result.exit_code != 0
         output = semantic_cli_output(result)
@@ -108,7 +108,7 @@ class TestTextOutputIsReadable:
 
     def test_show_uses_aligned_aggregate_fields(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            result = invoke_cached_cli(["config", "storage", "show", StorageArea.LOGS.value, "--output-language", "en"])
+            result = invoke_cached_cli(["config", "storage", "view", StorageArea.LOGS.value, "--output-language", "en"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
         assert any(line.startswith("Area") and line.endswith("logs") for line in result.output.splitlines())
