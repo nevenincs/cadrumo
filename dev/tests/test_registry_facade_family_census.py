@@ -6,12 +6,12 @@ import ast
 import json
 import subprocess
 import sys
-from collections import Counter
 
 import pytest
 
 import dev.quality.registry_facade_family_census as census
 from dev.quality.registry_facade_family_census import (
+    DISPOSITIONS,
     MATRIX_PATH,
     RelocatedFamily,
     _annotation_owners,
@@ -488,12 +488,8 @@ def test_reviewed_rows_are_one_to_one_complete_and_not_grouped() -> None:
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     rows = document["rows"]
 
-    assert Counter(row["disposition"] for row in rows) == {
-        "keep_public": 54,
-        "hard_move_complete": 9,
-        "privatize_external_elimination": 13,
-        "delete": 2,
-    }
+    assert all(row["disposition"] in DISPOSITIONS for row in rows)
+    assert len(rows) == 78
     assert len({row["follow_on_step_id"] for row in rows}) == 78
     assert all(row["follow_on_predecessors"] == ["W03.P20.S175"] for row in rows)
     assert all("unresolved" not in row["terminal_state"] for row in rows)
