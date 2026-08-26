@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application.modelo._reconciliation_records import (
+from ....application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,

@@ -1,0 +1,375 @@
+# Modelo 270 fichero BOE — registro de perceptor (tipo 2), 500 positions.
+#
+# Every field below is transcribed from the bundled AEAT Diseño de Registro
+# aeat-dr-270-2023, record "Tipo 2 - Registro de Perceptor". The design
+# declares 23 campos whose lengths sum to exactly 500 with no holes
+# (1+3+4+9+9+9+40+40+1+1+2+8+8+15+15+15+1+251+20+8+37+2+1 = 500); all 23 are
+# declared here, at the design's own (posición, longitud) coordinates.
+
+[[revisions."2023-2024".export_layouts]]
+id = "modelo-270-fichero-boe"
+
+[[revisions."2023-2024".export_layouts.records]]
+id = "modelo-270-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "270"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-year"
+offset = 5
+length = 4
+kind = "draft"
+# "Consignar lo contenido en estas mismas posiciones del registro de tipo 1",
+# which is the same draft filing_year the declarante record writes.
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+# "Consignar lo contenido en estas mismas posiciones del registro de tipo 1."
+# Same shape as the declarante NIF: a NIF exactly fills its 9-byte slot, so
+# left_zero would strip real leading digits from a low-numbered DNI on parse.
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-nif"
+offset = 18
+length = 9
+kind = "casilla"
+casilla_id = "perc.nif"
+# Same NIF shape as above. Blank only where TIPO DE PERCEPTOR is clave 5 and
+# the perceptor has no Spanish NIF, in which case the design requires the
+# país-de-residencia identifier at 433-452 instead.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-nif-representante-legal"
+offset = 27
+length = 9
+kind = "casilla"
+casilla_id = "perc.nif-representante-legal"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-nombre"
+offset = 36
+length = 40
+kind = "casilla"
+casilla_id = "perc.nombre"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-nombre-representante"
+offset = 76
+length = 40
+kind = "casilla"
+casilla_id = "perc.nombre-representante"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-tipo-perceptor"
+offset = 116
+length = 1
+kind = "casilla"
+casilla_id = "perc.tipo-perceptor"
+# The design enumerates the whole domain ("se consignara la clave numerica que
+# en cada caso corresponda de las siguientes: 1 ... 5"), so the closed set is
+# declared rather than left to a free digit.
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+value_policy = "enumerated-digits"
+allowed_values = ["1", "2", "3", "4", "5"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-clave-personalidad"
+offset = 117
+length = 1
+kind = "casilla"
+casilla_id = "perc.clave-personalidad"
+# "F" persona fisica / "J" persona juridica -- alphabetic, so this is not an
+# enumerated-digit domain and no digit policy applies.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-provincia"
+offset = 118
+length = 2
+kind = "casilla"
+casilla_id = "perc.provincia"
+# The design's own wording ("se consignaran los dos digitos numericos que
+# correspondan a la Provincia") makes this always exactly two digits from a
+# closed table (01-52 plus 98 and 99), not a zero-fillable quantity --
+# left_zero never pads a present value here but its parse side strips the
+# genuine leading "0" from provinces 01-09.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-fecha-sorteo"
+offset = 120
+length = 8
+kind = "casilla"
+casilla_id = "perc.fecha-sorteo"
+data_type = "date"
+date_format = "aaaammdd"
+value_policy = "yyyymmdd"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-fecha-pago"
+offset = 128
+length = 8
+kind = "casilla"
+casilla_id = "perc.fecha-pago"
+data_type = "date"
+date_format = "aaaammdd"
+value_policy = "yyyymmdd"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-importe-premio"
+offset = 136
+length = 15
+kind = "casilla"
+casilla_id = "perc.importe-premio"
+# 15 positions subdivided by the design into 136-148 parte entera and 149-150
+# parte decimal -- the money type's implied-two-decimal shape. "Sin signo ni
+# coma decimal", so the slot is unsigned.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-base-retencion"
+offset = 151
+length = 15
+kind = "casilla"
+casilla_id = "perc.base-retencion"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-retencion"
+offset = 166
+length = 15
+kind = "casilla"
+casilla_id = "perc.retencion"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-gestor-cobro"
+offset = 181
+length = 1
+kind = "casilla"
+casilla_id = "perc.gestor-cobro"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-blancos"
+offset = 182
+length = 251
+kind = "filler"
+# Design campo 18, declared "BLANCOS" -- no datum.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-nif-pais-residencia"
+offset = 433
+length = 20
+kind = "casilla"
+casilla_id = "perc.nif-pais-residencia"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-fecha-nacimiento"
+offset = 453
+length = 8
+kind = "casilla"
+casilla_id = "perc.fecha-nacimiento"
+data_type = "date"
+date_format = "aaaammdd"
+value_policy = "yyyymmdd"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-lugar-nacimiento"
+offset = 461
+length = 37
+kind = "casilla"
+casilla_id = "perc.lugar-nacimiento"
+# AEAT declares 461-497 as ONE campo subdivided in its own prose into
+# 461-495 CIUDAD (35) and 496-497 CODIGO PAIS (2). Written at the design's own
+# coordinate rather than split, because splitting would address two
+# coordinates the design does not declare; the composite value carries the
+# ciudad in its 35 leading positions followed by the two-character country
+# code from Anexo II of Orden EHA/3496/2011.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-pais-residencia"
+offset = 498
+length = 2
+kind = "casilla"
+casilla_id = "perc.pais-residencia"
+# Two alphabetic characters from Anexo II of Orden EHA/3496/2011.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2023-2024".export_layouts.records.fields]]
+id = "modelo-270-perc-blanco-final"
+offset = 500
+length = 1
+kind = "filler"
+# Design campo 23, declared "BLANCO" -- the record's closing position.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]

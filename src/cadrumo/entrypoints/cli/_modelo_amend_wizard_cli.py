@@ -51,6 +51,8 @@ from uuid import uuid4
 import typer
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+
 from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
 from ...application.flows.engine import FlowState
@@ -72,13 +74,12 @@ from ...application.modelo._action_errors import (
 from ...application.modelo._amendment_actions import amend_modelo_revision
 from ...application.modelo._calculation_actions import get_calculation_revision
 from ...application.modelo._filing_actions import get_filing_record
-from ...application.modelo._registry_discovery import registry_casillas_for_registry_scope
+from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ...core import STRICT_FROZEN_CONFIG, Modelo, Period, permitted_amendment_kind_values
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,

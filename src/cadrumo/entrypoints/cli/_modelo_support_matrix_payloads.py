@@ -8,16 +8,17 @@ domain report unchanged; this module only pins the JSON transport shape.
 See Also:
     :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
         Domain query-service envelope this payload serializes.
-    :func:`~application.modelo.registry_support_matrix`
-        Application facade the CLI command calls to obtain the report.
+    :func:`~application.modelo.registry_discovery.registry_support_matrix`
+        Application query the CLI command calls to obtain the report.
     :func:`~entrypoints.cli._modelo_discovery_cli._support_matrix_entry_payload`
         Transport mapper from a domain row to this module's payload schema.
 """
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema
 from cadrumo.domain.calculations.registry.ids import RevisionId
+
+from ...core.json_contract import OutputSchema
 
 
 class ModeloRenamePayload(OutputSchema):

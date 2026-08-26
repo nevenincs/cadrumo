@@ -8,7 +8,55 @@ modelo:
         title: IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis,
           sujetos pasivos ocasionales)
       revision:
-        2009-y-siguientes:
+        2009-2011-junio:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseno de registro
+                oficial.
+              label: Devengo. Periodo
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: Modelo 308 IVA solicitud de devolucion
+          field:
+            label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
+              segun tipo de operador)
+        2011-julio-2015:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseno de registro
+                oficial.
+              label: Devengo. Periodo
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: Modelo 308 IVA solicitud de devolucion
+          field:
+            label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
+              segun tipo de operador)
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseno de registro
+                oficial.
+              label: Devengo. Periodo
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: Modelo 308 IVA solicitud de devolucion
+          field:
+            label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
+              segun tipo de operador)
+        2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
               help: Casilla 966-976 del modelo 308, ejercicio 2009.

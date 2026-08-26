@@ -427,7 +427,6 @@ ignore_imports =
     # pinned at the narrower `persistence.storage`, so the new target is named
     # exactly rather than widening the existing pin.
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
-    cadrumo.application.modelo._reconciliation_records -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
@@ -660,9 +659,6 @@ ignore_imports =
     # INBOUND adapter parses; this module consumes those parses and owns only
     # the comparison. Same class as the einvoice pins, previously admitted by
     # a broad wildcard without review.
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.declaracion
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.justificante
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.**
     cadrumo.application.prorrata_register -> cadrumo.adapters.persistence.**
     cadrumo.application.registry -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.repair_integrity -> cadrumo.adapters.persistence.**
@@ -776,7 +772,6 @@ ignore_imports =
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._work_lifecycle -> cadrumo.adapters.persistence.profile.buckets
     # ── transactions catalogue repository ports-inversion (W02.P07.S09):

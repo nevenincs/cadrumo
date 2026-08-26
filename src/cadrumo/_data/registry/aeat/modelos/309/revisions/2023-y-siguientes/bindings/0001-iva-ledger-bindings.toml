@@ -1,0 +1,29 @@
+# Ledger IVA aggregation bindings for the non-periodic IVA triggers covered by
+# Modelo 309. The autorepercutido binding covers
+# intra-community acquisitions of medios de transporte nuevos and similar
+# triggers; the soportado binding covers recargo-de-equivalencia retailers
+# claiming devolución on traveler exports.
+
+[[revisions."2023-y-siguientes".bindings]]
+id = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+
+[[revisions."2023-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-309-procedure"
+required_text = ["modelo 309"]
+
+[[revisions."2023-y-siguientes".bindings]]
+id = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["recargo_equivalencia"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+
+[[revisions."2023-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-309-procedure"
+required_text = ["modelo 309"]

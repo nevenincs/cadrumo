@@ -1,0 +1,15 @@
+[[revisions."2004-2015".application_links]]
+id = "modelo-309-historical-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2004-2015".application_links]]
+id = "modelo-309-historical-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]

@@ -16,7 +16,7 @@ reserved mesh classification to application-layer gates.
 See Also:
     :class:`~domain.calculations.registry.RegistryQueryService`
         Builder of every report class defined here.
-    :mod:`~application.modelo._registry_discovery`
+    :mod:`~application.modelo.registry_discovery`
         Application facade used by CLI discovery commands.
     :mod:`~entrypoints.cli._modelo_discovery_cli`
         Typer command group that renders these reports to text and JSON.

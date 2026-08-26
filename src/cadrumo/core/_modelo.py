@@ -29,7 +29,8 @@ declared on registry data such as
 branching on this enum.
 
 A gate test in ``src/cadrumo/core/tests/test_modelo.py`` binds the registry-backed
-members to :func:`application.modelo.registry_modelo_codes` (enum minus
+members to :func:`application.modelo.registry_discovery.registry_modelo_codes`
+(enum minus
 :data:`NON_REGISTRY_MODELOS`) so the two cannot drift silently, and pins every
 non-registry member to its deliberately-absent registry definition.
 """
@@ -54,7 +55,8 @@ class Modelo(StrEnum):
         Modelo.M303 == Modelo.M303   # True
 
     The registry-backed members are bound to the registry directory listing by
-    :func:`application.modelo.registry_modelo_codes`; adding a new modelo
+    :func:`application.modelo.registry_discovery.registry_modelo_codes`; adding a
+    new modelo
     to the registry without updating this enum will fail the core parity test.
     Members in :data:`NON_REGISTRY_MODELOS` (the retired :data:`M037` and the
     recognized-but-not-yet-modeled obligations in :data:`UNMODELED_OBLIGATIONS`)
@@ -226,7 +228,8 @@ class Modelo(StrEnum):
 #: (registry-unmodeled → investigate) row rather than leaving it invisible.
 #: Promoting one to a full registry definition (deadline windows + applicability
 #: rule) removes it from this delta and folds it into
-#: :func:`application.modelo.registry_modelo_codes`. The mapping is the
+#: :func:`application.modelo.registry_discovery.registry_modelo_codes`. The mapping
+#: is the
 #: extensible edge of AEAT-wide enrollment: it ratchets up as obligations are
 #: recognized and shrinks as they are modeled.
 #:
@@ -397,7 +400,8 @@ _SUPPRESSED_MODELOS: Mapping[Modelo, str] = {
 #: :data:`UNMODELED_OBLIGATIONS`, and every recognized non-registry obligation
 #: declared out of scope (:data:`_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS`). The parity
 #: gate compares the remaining members to
-#: :func:`application.modelo.registry_modelo_codes`, so the enum can carry
+#: :func:`application.modelo.registry_discovery.registry_modelo_codes`, so the
+#: enum can carry
 #: suppressed codes, recognized-unmodeled obligations, and out-of-scope
 #: non-registry forms without implying the registry can load them.
 NON_REGISTRY_MODELOS: frozenset[Modelo] = (

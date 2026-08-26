@@ -8,7 +8,8 @@ the calendar keeps it). A modelo that lacks either is otherwise dropped without 
 default-visible trace, so an operator or machine-readable caller
 trusting the surface would under-file.
 
-This module reconciles the full :func:`~application.modelo.registry_modelo_codes`
+This module reconciles the full
+:func:`~application.modelo.registry_discovery.registry_modelo_codes`
 set against what the calendar positively resolved and classifies every registry
 modelo into exactly one disposition:
 
@@ -91,7 +92,8 @@ class AdvisedObligation(BaseModel):
 class ObligationCoverageReport(BaseModel):
     """Total partition of the registry modelo set by coverage disposition.
 
-    Every :func:`~application.modelo.registry_modelo_codes` code lands in
+    Every :func:`~application.modelo.registry_discovery.registry_modelo_codes`
+    code lands in
     exactly one of the four tuples. ``advised`` is the load-bearing field: a
     non-empty ``advised`` means the default surface would otherwise have hidden a
     filing obligation the operator must investigate.
@@ -139,7 +141,8 @@ def build_obligation_coverage(
 ) -> ObligationCoverageReport:
     """Reconcile surfaced obligations against the full registry modelo set.
 
-    Walks every :func:`~application.modelo.registry_modelo_codes` code and
+    Walks every :func:`~application.modelo.registry_discovery.registry_modelo_codes`
+    code and
     assigns it to exactly one disposition (see :class:`ObligationCoverageReport`).
     The classification is total, so a modelo can never be silently absent: one
     that is neither surfaced, nor confidently excluded, nor explicitly out of
@@ -161,7 +164,7 @@ def build_obligation_coverage(
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
     # import graph to it. The lookup itself is cheap (cached authority).
-    from ..modelo._registry_discovery import registry_modelo_codes
+    from ..modelo.registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
     registry_codes = frozenset(registry_modelo_codes())

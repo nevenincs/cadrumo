@@ -17,30 +17,21 @@ from typing import TYPE_CHECKING, cast
 import typer
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+
 from ...application.modelo._action_errors import WorkUnitNotFoundError
 from ...application.modelo._calculate_input import (
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
     is_detail_casilla_override_key,
 )
-from ...application.modelo._registry_discovery import declared_modelo_period_tokens
 from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
 )
 from ...application.modelo._work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.modelo._work_lifecycle import get_work_unit
-from ...domain.modelos import (
-    Modelo184MemberRow,
-    Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
-    Modelo349CountryPrefixContextError,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
-    ModeloDetailRow,
-    validate_m349_country_prefix_context,
-    validate_m349_nif_format,
-)
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -61,7 +52,17 @@ from ...core.i18n import tr
 from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from ...domain.modelos import (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+    validate_m349_country_prefix_context,
+    validate_m349_nif_format,
+)
 from ._common import active_bucket_id_or_refuse, active_profile_label
 from ._modelo_rendering import short_id
 from .errors import CliRefusedBoundaryError

@@ -7,7 +7,7 @@ modelo:
         title: Resumen anual de retenciones del gravamen especial sobre premios de
           loterías
       revision:
-        2013-y-siguientes:
+        2013-2022:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Se consigna una C cuando la declaración incluye registros completamente
@@ -151,4 +151,149 @@ modelo:
               field:
                 title: Modelo 270 declaración informativa
           field:
-            label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 y siguientes
+            label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 a 2022
+        2023-2024:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Se consigna una C cuando la declaración incluye registros completamente
+                omitidos en otra del mismo ejercicio presentada anteriormente.
+              label: Declaración complementaria
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: Número secuencial de 13 posiciones cuyos tres primeros dígitos
+                se corresponden con el código 270.
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: Número identificativo de la declaración a la que esta complementa
+                o sustituye. En cualquier otro caso se rellena a ceros.
+              label: Número identificativo de la declaración anterior
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Primer apellido, un espacio, segundo apellido, un espacio y nombre
+                completo, necesariamente en este orden.
+              label: Apellidos y nombre de la persona con quien relacionarse
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Campo numérico de 9 posiciones con el teléfono de contacto del
+                declarante.
+              label: Teléfono de la persona con quien relacionarse
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Se consigna una S cuando la presentación anula y sustituye completamente
+                a una única declaración anterior del mismo ejercicio.
+              label: Declaración sustitutiva
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Suma de las bases de retención o ingreso a cuenta reflejadas en
+                los registros de perceptor, en euros.
+              label: Total importe base de retención o ingreso a cuenta
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Suma de los importes íntegros de los premios reflejados en los
+                registros de perceptor, en euros, sin signo ni coma decimal.
+              label: Total importe o valoración de los premios
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Número total de perceptores relacionados en los registros de detalle
+                de tipo 2. Si un mismo perceptor figura en varios registros, se computa
+                tantas veces como figure relacionado.
+              label: Número total de registros de perceptor declarados
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Suma de las retenciones o ingresos a cuenta reflejados en los
+                registros de perceptor, en euros.
+              label: Total importe de la retención o ingreso a cuenta
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Base de retención o ingreso a cuenta determinada conforme a los
+                apartados 3 y 6 de la disposición adicional trigésima tercera de la
+                Ley 35/2006, reguladora del IRPF.
+              label: Base de retención o ingreso a cuenta
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Solo se cumplimenta cuando el tipo de perceptor es la clave 5:
+                F si el perceptor es persona física y J si se trata de una persona
+                jurídica o una entidad.'
+              label: Clave de personalidad del perceptor no residente
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Solo se cumplimenta cuando el tipo de perceptor es la clave 5
+                y la clave de personalidad es F.
+              label: Fecha de nacimiento del perceptor no residente
+            x-e1in4opecpim6q315lo62prf:
+              help: Fecha en la que se haya satisfecho o abonado al perceptor el premio
+                obtenido.
+              label: Fecha de pago del premio
+            x-e1in4opecpim6q315lpmusjkclng:
+              help: Fecha en la que se haya celebrado el sorteo o haya tenido lugar
+                el evento sobre el cual se haya realizado la apuesta que determina
+                la obtención del premio.
+              label: Fecha de celebración del sorteo o apuesta
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Se consigna una X exclusivamente cuando se presentan al cobro
+                premios previamente distribuidos en forma de participaciones, de modo
+                que quien cobra el premio no es su beneficiario último.
+              label: Gestor de cobro del premio
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: Parte del importe íntegro del premio dinerario o del valor del
+                premio en especie que corresponde individualmente al perceptor. Si
+                en un mismo sorteo obtuvo varios premios, la suma de todos ellos.
+              label: Importe íntegro del premio o valor individual del premio en especie
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Solo cuando el tipo de perceptor es la clave 5 y la clave de personalidad
+                es F. Municipio y, en su caso, provincia, región o departamento del
+                lugar de nacimiento, seguidos del código de país o territorio del
+                Anexo II de la Orden EHA/3496/2011.
+              label: Lugar de nacimiento del perceptor no residente
+            x-e1in4opedpkmc:
+              help: NIF del perceptor del premio. Solo se deja en blanco si el tipo
+                de perceptor es la clave 5 y el perceptor no dispone de NIF español,
+                en cuyo caso se cumplimenta obligatoriamente el número de identificación
+                fiscal en el país de residencia.
+              label: NIF del perceptor
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Solo cuando el tipo de perceptor es la clave 5 y no dispone de
+                NIF español: número de pasaporte o, en su defecto, del documento de
+                identidad válido en el país de origen si es persona física, o el número
+                o código identificador asignado por la autoridad fiscal del país de
+                origen si es entidad.'
+              label: Número de identificación fiscal en el país de residencia fiscal
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: NIF de la persona o entidad que, en su caso, intervenga como representante
+                del perceptor. En cualquier otro caso se rellena a blancos.
+              label: NIF del representante legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: Para personas físicas, primer apellido, un espacio, segundo apellido,
+                un espacio y nombre completo, en este orden. Para personas jurídicas
+                o entidades, la denominación o razón social completa, sin anagramas.
+              label: Apellidos y nombre, razón social o denominación del perceptor
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Apellidos y nombre del representante si es persona física, o su
+                denominación o razón social completa si es persona jurídica o entidad.
+                En cualquier otro caso se rellena a blancos.
+              label: Apellidos y nombre, razón social o denominación del representante
+                del perceptor
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Solo cuando el tipo de perceptor es la clave 5: dos caracteres
+                alfabéticos indicativos del país o territorio de residencia del perceptor
+                según el Anexo II de la Orden EHA/3496/2011. En cualquier otro caso
+                se rellena a blancos.'
+              label: País o territorio de residencia fiscal del perceptor
+            x-e1in4opee1p6utj9dphmio8:
+              help: Dos dígitos de la provincia o ciudad autónoma del domicilio del
+                perceptor. Se consignan los dígitos 98 para contribuyentes del IRPF
+                con residencia habitual en el extranjero y 99 cuando el tipo de perceptor
+                es la clave 5.
+              label: Código de provincia del domicilio del perceptor
+            x-e1in4opee9in8pbecdkmurg:
+              help: Importe de la retención o ingreso a cuenta efectivamente practicados
+                por la entidad pagadora del premio.
+              label: Importe de la retención o ingreso a cuenta
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Clave 1 persona física contribuyente del IRPF, 2 entidad en régimen
+                de atribución de rentas residente en territorio español, 3 persona
+                jurídica o entidad residente sujeto pasivo del Impuesto sobre Sociedades,
+                4 establecimiento permanente en territorio español, 5 persona o entidad
+                no residente que opera sin mediación de establecimiento permanente.
+              label: Tipo de perceptor
+          construct:
+            modelo-270-informative:
+              field:
+                title: Modelo 270 declaración informativa
+          field:
+            label: Modelo 270 (orden-hap-2368-2013), ejercicios 2023 a 2024

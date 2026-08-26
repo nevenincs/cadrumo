@@ -9,7 +9,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID
 
 from .....core import StorageCategory, is_link_like, storage_location
@@ -51,7 +51,8 @@ from ._capsule_data import (
     write_posix_data_files as _write_posix_data_files,
 )
 from ._capsule_discovery import (
-    anchored_current_capsule_ids,
+    AnchoredCurrentCapsuleCommit,
+    anchored_current_capsule_commits,
     refuse_retired_profile_custody_paths,
 )
 from ._capsule_records import (
@@ -71,7 +72,6 @@ from ._capsule_records import (
 from ._capsule_records import (
     parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
 )
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,
@@ -167,6 +167,7 @@ from ._recovery import (
 )
 from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
 from ._sentinel_contract import ProfileCustodySentinelRecord
+from .errors import ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -748,14 +749,63 @@ def list_current_profile_custody_capsule_ids(
     settings: Settings | None = None,
     root: Path | None = None,
 ) -> tuple[UUID, ...]:
-    """Discover only UUID capsules whose current commit validates.
+    """Project only UUIDs from current-marker observations.
 
-    This is the sole inventory seam for application profile projections.  A
-    directory name is merely a candidate: it becomes visible only after the
+    A directory name is merely a candidate: it becomes visible only after the
     exact current-format commit has been opened and bound back to that UUID.
     Staging directories, deletion tombstones, retired buckets, links and
-    malformed names therefore never enter the lifecycle surface.
+    malformed names therefore never enter the lifecycle surface.  The summary
+    inventory below consumes the same observations when label provenance is
+    also required.
     """
+    return tuple(observation.profile_id for observation in _current_capsule_commits(settings=settings, root=root))
+
+
+def list_current_profile_custody_capsule_summary_witnesses(
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> tuple[ProfileCustodyCapsuleSummaryWitness, ...]:
+    """Observe each current capsule's commit and UUID-bound label exactly once.
+
+    Discovery retains the bounded, anchored commit parse it performed instead of
+    handing this reader a UUID that would require opening that marker again.
+    The remaining read is only the label provenance required for the summary;
+    no custody, recovery, session, encrypted-fact, or label-head authority is
+    entered here.
+    """
+    return tuple(
+        _summary_witness_from_anchored_commit(observation)
+        for observation in _current_capsule_commits(settings=settings, root=root, include_label=True)
+    )
+
+
+def _summary_witness_from_anchored_commit(
+    observation: AnchoredCurrentCapsuleCommit,
+) -> ProfileCustodyCapsuleSummaryWitness:
+    """Build the S22 witness from bytes the discovery anchor already observed."""
+    if observation.label_payload is None:
+        raise ProfileCustodyRecordError("summary discovery omitted the required label provenance")
+    try:
+        label = parse_profile_custody_capsule_label(observation.label_payload)
+    except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
+        raise ProfileCustodyRecordError("profile capsule summary witness is invalid") from exc
+    if label.profile_id != observation.profile_id:
+        raise ProfileCustodyRecordError("profile capsule label UUID differs from its committed capsule")
+    return ProfileCustodyCapsuleSummaryWitness(
+        capsule_path=observation.capsule_path,
+        commit=cast(ProfileCustodyCommit, observation.commit),
+        label=label,
+    )
+
+
+def _current_capsule_commits(
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+    include_label: bool = False,
+) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
+    """Return current observations after the one retired-layout refusal."""
     storage_root = effective_storage_root(root, settings=settings)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     keystore_root = storage_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
@@ -766,11 +816,13 @@ def list_current_profile_custody_capsule_ids(
     refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
     if not os.path.lexists(capsules_root):
         return ()
-    return anchored_current_capsule_ids(
+    return anchored_current_capsule_commits(
         capsules_root,
         parse_commit=parse_profile_custody_commit,
         commit_filename=PROFILE_CUSTODY_COMMIT_FILENAME,
         maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+        label_filename=PROFILE_CUSTODY_LABEL_FILENAME if include_label else None,
+        label_maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES if include_label else None,
     )
 
 
@@ -1164,6 +1216,7 @@ __all__ = [
     "ProfileCustodyPasswordMaterial",
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
+    "list_current_profile_custody_capsule_summary_witnesses",
     "load_committed_profile_custody_data_file",
     "load_committed_profile_custody_label_record",
     "load_committed_profile_custody_summary_witness",

@@ -138,7 +138,7 @@
             "src/cadrumo/application/modelo/_projection.py::_best_revision_for_compare": 14,
             "src/cadrumo/application/modelo/_projection.py::compare_modelo_years": 13,
             "src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py::collect_prorrata_regularizacion_diagnostics": 11,
-            "src/cadrumo/application/modelo/_reconcile.py::_reconcile_declaracion_casillas": 12,
+            "src/cadrumo/application/modelo/reconciliation.py::_reconcile_declaracion_casillas": 12,
             "src/cadrumo/application/modelo/_required_binding_gate.py::resolved_required_profile_binding_values": 11,
             "src/cadrumo/application/modelo/_revision_replay_inputs.py::_m349_detail_row_replay_inputs": 16,
             "src/cadrumo/application/modelo/_revision_replay_inputs.py::_not_applicable_relation_zero_inputs": 13,

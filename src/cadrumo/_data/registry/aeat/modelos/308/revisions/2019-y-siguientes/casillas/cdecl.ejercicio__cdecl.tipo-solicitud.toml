@@ -1,0 +1,22 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-solicitud"
+number = "tipo-solicitud"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_solicitud"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+

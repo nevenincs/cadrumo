@@ -369,7 +369,10 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
 
     current = load_committed_profile_custody_label_record(profile_id, root=resolved_root)
     heads = ProfileLabelHeadRepository(root=resolved_root)
-    current_head = heads.recover_advance(profile_id=profile_id, current_label=current)
+    heads.recover_pending(profile_id=profile_id, current_label=current)
+    current_head = heads.verify(label=current)
+    if current_head is None:
+        raise RuntimeError("forging a capsule label requires an existing label head")
     replacement = ProfileCustodyCapsuleLabel.create(
         profile_id=profile_id,
         label=label,
@@ -388,7 +391,9 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
         expected_sha256=prefixed_digest(current.canonical_json_bytes()),
         root=resolved_root,
     )
-    heads.recover_advance(profile_id=profile_id, current_label=replacement)
+    heads.recover_pending(profile_id=profile_id, current_label=replacement)
+    if heads.verify(label=replacement) is None:
+        raise RuntimeError("forged replacement label did not retain its head")
 
 
 __all__ = [

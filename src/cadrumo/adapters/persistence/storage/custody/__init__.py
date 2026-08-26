@@ -70,16 +70,6 @@ if TYPE_CHECKING:
         parse_profile_custody_commit,
     )
     from ._envelope import create_profile_custody_password_envelope
-    from .errors import (
-        ProfileCustodyError,
-        ProfileCustodyPasswordError,
-        ProfileCustodyRecordError,
-        ProfileCustodyRecoveryGuidance,
-        ProfileCustodyRecoverySecretError,
-        ProfileCustodyRefusal,
-        ProfileCustodyRefusedError,
-        WipeTypeError,
-    )
     from ._filesystem import (
         PROFILE_CUSTODY_COMMIT_FILENAME,
         PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
@@ -178,6 +168,16 @@ if TYPE_CHECKING:
         verify_profile_custody_sentinel,
     )
     from ._zeroise import zeroise
+    from .errors import (
+        ProfileCustodyError,
+        ProfileCustodyPasswordError,
+        ProfileCustodyRecordError,
+        ProfileCustodyRecoveryGuidance,
+        ProfileCustodyRecoverySecretError,
+        ProfileCustodyRefusal,
+        ProfileCustodyRefusedError,
+        WipeTypeError,
+    )
 
 
 # Name -> the one submodule that owns it. Binding these eagerly cost 1.02 s,

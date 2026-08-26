@@ -189,7 +189,10 @@ def counterparty_withdraw(
     country_code: str | None = None,
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
-    from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
+    from ...application.ledger.counterparty_establishment import (
+        confirmed_counterparty_facts_key,
+        forget_confirmed_counterparty_facts,
+    )
 
     bucket_id = _counterparty_bucket_id()
     if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:

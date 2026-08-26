@@ -1,0 +1,266 @@
+# Exact numeric [01]–[24] slots in the 1,300-position 2004–15 record.
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-base-01"
+number = "01"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_01"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-base-01"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-tipo-02"
+number = "02"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "rg_tipo_02"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-tipo-02"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-cuota-03"
+number = "03"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_03"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-cuota-03"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-base-04"
+number = "04"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_04"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-base-04"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-tipo-05"
+number = "05"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "rg_tipo_05"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-tipo-05"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-cuota-06"
+number = "06"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_06"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-cuota-06"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-base-07"
+number = "07"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_07"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-base-07"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-tipo-08"
+number = "08"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "rg_tipo_08"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-tipo-08"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.rg-cuota-09"
+number = "09"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_09"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-rg-cuota-09"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-base-10"
+number = "10"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_base_10"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-base-10"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-tipo-11"
+number = "11"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "re_tipo_11"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-tipo-11"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-cuota-12"
+number = "12"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_12"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-cuota-12"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-base-13"
+number = "13"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_base_13"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-base-13"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-tipo-14"
+number = "14"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "re_tipo_14"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-tipo-14"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-cuota-15"
+number = "15"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_15"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-cuota-15"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-base-16"
+number = "16"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_base_16"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-base-16"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-tipo-17"
+number = "17"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "re_tipo_17"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-tipo-17"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-cuota-18"
+number = "18"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_18"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-cuota-18"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-base-19"
+number = "19"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_base_19"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-base-19"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-tipo-20"
+number = "20"
+section = ["declarante","liquidacion"]
+data_type = "decimal"
+semantic_role = "re_tipo_20"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-tipo-20"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.re-cuota-21"
+number = "21"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_21"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-re-cuota-21"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.cuota-devengada-22"
+number = "22"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "cuota_devengada_22"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-cuota-devengada-22"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.a-deducir-23"
+number = "23"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "a_deducir_23"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-a-deducir-23"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.resultado-24"
+number = "24"
+section = ["declarante","liquidacion"]
+data_type = "money"
+semantic_role = "resultado_24"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-resultado-24"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+

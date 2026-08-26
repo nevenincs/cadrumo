@@ -520,9 +520,14 @@ class _PersistenceProfileCustody:
         root: Path,
     ) -> ProfileCustodyLabelHeadPort:
         try:
-            return custody.ProfileLabelHeadRepository(root=root).verify_or_recover_initial(
-                label=_substrate_handle(label, custody.ProfileCustodyCapsuleLabel, "capsule label"),
-                source_witness=source_witness,
+            repository = custody.ProfileLabelHeadRepository(root=root)
+            custody_label = _substrate_handle(label, custody.ProfileCustodyCapsuleLabel, "capsule label")
+            repository.recover_pending(profile_id=custody_label.profile_id, current_label=custody_label)
+            verified = repository.verify(label=custody_label)
+            return (
+                verified
+                if verified is not None
+                else repository.publish_initial(label=custody_label, source_witness=source_witness)
             )
         except custody.ProfileCustodyRecordError as exc:
             raise ProfileCustodyRecordIntegrityError(str(exc)) from exc

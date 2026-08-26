@@ -1,0 +1,1022 @@
+[[revisions."2016-2017".export_layouts]]
+id = "modelo-309-fichero-boe"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-309-page-00"
+record_type = "page_00"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+required = true
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-record-type"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+# Design constante '<T'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "309"
+# Design constante '309'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-constante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+# Design constante '0'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+# Design ejercicio devengo (AAAA).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-periodo"
+offset = 11
+length = 2
+kind = "casilla"
+casilla_id = "decl.periodo"
+# Design periodo (PP).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-fin"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+# Design constante '0000>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-aux-inicio"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+# Design constante '<AUX>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p0-aux-fin"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+# Design constante '</AUX>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-309-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+required = true
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-record-type"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+# Design inicio identificador '<T'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "309"
+# Design modelo '309'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-pagina"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+# Design pagina '01'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-fin-id"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+# Design fin de identificador '000>'.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-tipo-declaracion"
+offset = 13
+length = 1
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+# Design tipo de declaracion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-nif"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+# Design identificacion NIF.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-apellidos"
+offset = 23
+length = 60
+kind = "header"
+producer_key = "taxpayer.full_name"
+# Design apellidos o denominacion social.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-nombre"
+offset = 83
+length = 20
+kind = "casilla"
+casilla_id = "decl.nombre"
+# Design nombre.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-devengo-ejercicio"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+# Design devengo ejercicio.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-devengo-periodo"
+offset = 107
+length = 2
+kind = "casilla"
+casilla_id = "decl.periodo"
+# Design devengo periodo (PP).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-fin-registro"
+offset = 1489
+length = 12
+kind = "literal"
+literal = "</T30901000>"
+# Design indicador de fin de registro.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-transmitente-nif"
+offset = 109
+length = 9
+kind = "casilla"
+casilla_id = "decl.transmitente-nif"
+# Design transmitente NIF.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-transmitente-apellidos"
+offset = 118
+length = 60
+kind = "casilla"
+casilla_id = "decl.transmitente-apellidos"
+# Design transmitente apellidos o denominacion social.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-transmitente-nombre"
+offset = 178
+length = 20
+kind = "casilla"
+casilla_id = "decl.transmitente-nombre"
+# Design transmitente nombre.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-transmitente-pais"
+offset = 198
+length = 2
+kind = "casilla"
+casilla_id = "decl.transmitente-pais"
+# Design transmitente pais.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-situacion-tributaria"
+offset = 200
+length = 1
+kind = "casilla"
+casilla_id = "decl.situacion-tributaria"
+# Design situacion tributaria (5).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-hecho-imponible"
+offset = 201
+length = 1
+kind = "casilla"
+casilla_id = "decl.hecho-imponible"
+# Design hecho imponible (6).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-vehiculo-marca"
+offset = 202
+length = 40
+kind = "casilla"
+casilla_id = "decl.vehiculo-marca"
+# Design vehiculo marca.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-vehiculo-tipo"
+offset = 242
+length = 40
+kind = "casilla"
+casilla_id = "decl.vehiculo-tipo"
+# Design vehiculo tipo.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-vehiculo-modelo"
+offset = 282
+length = 40
+kind = "casilla"
+casilla_id = "decl.vehiculo-modelo"
+# Design vehiculo modelo.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-vehiculo-bastidor"
+offset = 322
+length = 22
+kind = "casilla"
+casilla_id = "decl.vehiculo-bastidor"
+# Design vehiculo bastidor.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-vehiculo-clasificacion"
+offset = 344
+length = 6
+kind = "casilla"
+casilla_id = "decl.vehiculo-clasificacion"
+# Design vehiculo clasificacion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-embarcacion-fabricante"
+offset = 350
+length = 40
+kind = "casilla"
+casilla_id = "decl.embarcacion-fabricante"
+# Design embarcacion fabricante.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-embarcacion-tipo"
+offset = 390
+length = 80
+kind = "casilla"
+casilla_id = "decl.embarcacion-tipo"
+# Design embarcacion tipo-modelo.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-embarcacion-identificacion"
+offset = 470
+length = 22
+kind = "casilla"
+casilla_id = "decl.embarcacion-identificacion"
+# Design embarcacion numero de construccion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-embarcacion-eslora"
+offset = 492
+length = 5
+kind = "casilla"
+casilla_id = "decl.embarcacion-eslora"
+# Design embarcacion eslora maxima.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-aeronave-fabricante"
+offset = 497
+length = 40
+kind = "casilla"
+casilla_id = "decl.aeronave-fabricante"
+# Design aeronave fabricante.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-aeronave-marca"
+offset = 537
+length = 80
+kind = "casilla"
+casilla_id = "decl.aeronave-marca"
+# Design aeronave marca-tipo-modelo.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-aeronave-serie"
+offset = 617
+length = 22
+kind = "casilla"
+casilla_id = "decl.aeronave-serie"
+# Design aeronave numero de serie.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-aeronave-ano"
+offset = 639
+length = 4
+kind = "casilla"
+casilla_id = "decl.aeronave-ano"
+# Design aeronave ano de fabricacion.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-aeronave-peso"
+offset = 643
+length = 10
+kind = "casilla"
+casilla_id = "decl.aeronave-peso"
+# Design aeronave peso maximo despegue.
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-complementaria"
+offset = 977
+length = 1
+kind = "casilla"
+casilla_id = "decl.complementaria"
+# Design declaracion complementaria (9).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-justificante-anterior"
+offset = 978
+length = 13
+kind = "casilla"
+casilla_id = "decl.justificante-anterior"
+# Design numero de justificante de la declaracion anterior (9).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-iban"
+offset = 991
+length = 34
+kind = "casilla"
+casilla_id = "decl.iban"
+# Design IBAN (10).
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+
+
+
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-base-01"
+offset = 653
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-base-01"
+# Design regimen general base imponible [01].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-tipo-02"
+offset = 670
+length = 5
+kind = "casilla"
+casilla_id = "decl.rg-tipo-02"
+# Design regimen general tipo % [02].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-cuota-03"
+offset = 675
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-cuota-03"
+# Design regimen general cuota [03].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+
+
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-base-04"
+offset = 692
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-base-04"
+# Design regimen general base imponible [04].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-tipo-05"
+offset = 709
+length = 5
+kind = "casilla"
+casilla_id = "decl.rg-tipo-05"
+# Design regimen general tipo % [05].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-cuota-06"
+offset = 714
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-cuota-06"
+# Design regimen general cuota [06].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-base-07"
+offset = 731
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-base-07"
+# Design regimen general base imponible [07].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-tipo-08"
+offset = 748
+length = 5
+kind = "casilla"
+casilla_id = "decl.rg-tipo-08"
+# Design regimen general tipo % [08].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-rg-cuota-09"
+offset = 753
+length = 17
+kind = "casilla"
+casilla_id = "decl.rg-cuota-09"
+# Design regimen general cuota [09].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-base-10"
+offset = 770
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-base-10"
+# Design recargo equivalencia base imponible [10].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-tipo-11"
+offset = 787
+length = 5
+kind = "casilla"
+casilla_id = "decl.re-tipo-11"
+# Design recargo equivalencia tipo % [11].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-cuota-12"
+offset = 792
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-cuota-12"
+# Design recargo equivalencia cuota [12].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-base-13"
+offset = 809
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-base-13"
+# Design recargo equivalencia base imponible [13].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-tipo-14"
+offset = 826
+length = 5
+kind = "casilla"
+casilla_id = "decl.re-tipo-14"
+# Design recargo equivalencia tipo % [14].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-cuota-15"
+offset = 831
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-cuota-15"
+# Design recargo equivalencia cuota [15].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-base-16"
+offset = 848
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-base-16"
+# Design recargo equivalencia base imponible [16].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-tipo-17"
+offset = 865
+length = 5
+kind = "casilla"
+casilla_id = "decl.re-tipo-17"
+# Design recargo equivalencia tipo % [17].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-cuota-18"
+offset = 870
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-cuota-18"
+# Design recargo equivalencia cuota [18].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-base-19"
+offset = 887
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-base-19"
+# Design recargo equivalencia base imponible [19].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-tipo-20"
+offset = 904
+length = 5
+kind = "casilla"
+casilla_id = "decl.re-tipo-20"
+# Design recargo equivalencia tipo % [20].
+data_type = "decimal"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+decimals = 2
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-re-cuota-21"
+offset = 909
+length = 17
+kind = "casilla"
+casilla_id = "decl.re-cuota-21"
+# Design recargo equivalencia cuota [21].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-cuota-devengada-22"
+offset = 926
+length = 17
+kind = "casilla"
+casilla_id = "decl.cuota-devengada-22"
+# Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-a-deducir-23"
+offset = 943
+length = 17
+kind = "casilla"
+casilla_id = "decl.a-deducir-23"
+# Design a deducir [23].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-309-p1-resultado-24"
+offset = 960
+length = 17
+kind = "casilla"
+casilla_id = "decl.resultado-24"
+# Design resultado a ingresar [24]: the design's own [22]-[23].
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]

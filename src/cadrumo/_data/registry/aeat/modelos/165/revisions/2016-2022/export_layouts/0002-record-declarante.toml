@@ -230,27 +230,12 @@ signed = true
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
-# Posicion 184. EMPRESA EMERGENTE: 'X' when the declarante qualifies under
-# Ley 28/2022 art. 3.1, blank otherwise.
-[[revisions."2016-2022".export_layouts.records.fields]]
-id = "modelo-165-t1-empresa-emergente"
-offset = 184
-length = 1
-kind = "casilla"
-casilla_id = "empresa-emergente"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
-
-# Posiciones 185-500. BLANCOS.
+# Posiciones 184-500. BLANCOS. The 2016 source has no later
+# EMPRESA EMERGENTE field at its first blank byte.
 [[revisions."2016-2022".export_layouts.records.fields]]
 id = "modelo-165-t1-blancos"
-offset = 185
-length = 316
+offset = 184
+length = 317
 kind = "filler"
 data_type = "text"
 required = false

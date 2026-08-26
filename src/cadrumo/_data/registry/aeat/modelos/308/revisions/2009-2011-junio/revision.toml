@@ -1,0 +1,27 @@
+[revisions."2009-2011-junio"]
+authority_grade = "applicability"
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26
+id = "2009-2011-junio"
+valid_from = 2009-01-01
+valid_to = 2011-06-30
+period_selector = { year_from = 2009, year_to = 2011, periods = ["AD-HOC"] }
+orden_aplicabilidad = ["orden-eha-3786-2008:art-2"]
+legal_refs = [
+    "ley-37-1992:art-21",
+    "rd-1624-1992:art-30-bis",
+    "orden-eha-3786-2008:art-2",
+    "orden-eha-3786-2008:art-11",
+    "ley-37-1992:art-161",
+]
+source_refs = [
+    "aeat-dr-308-2009",
+    "aeat-modelo-308-procedure",
+    "boe-modelo-308-2008-form",
+]
+
+[revisions."2009-2011-junio".family_dispositions.casilla_continuidad_evolutions]
+reason = "Modelo 308's earliest registered epoch has no preceding sibling. No within-modelo casilla continuity can land here."
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-dr-308-2009"]

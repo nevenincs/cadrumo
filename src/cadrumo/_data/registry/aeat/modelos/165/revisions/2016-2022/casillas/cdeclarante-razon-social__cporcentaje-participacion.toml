@@ -142,22 +142,6 @@ export_refs = ["modelo-165-t1-importe-fondos-propios"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
-# Campo 15. Position 184, alfabetico. "Se consignara 'X' cuando el declarante
-# tenga la consideracion de empresa emergente, segun lo establecido en el
-# apartado 1 del articulo 3 de la Ley 28/2022, de 21 de diciembre, de fomento
-# del ecosistema de las empresas emergentes." In any other case it goes blank.
-[[revisions."2016-2022".casillas]]
-id = "empresa-emergente"
-number = "tipo1.184"
-section = ["declarante"]
-data_type = "text"
-semantic_role = "m165_empresa_emergente"
-required = false
-input_kind = "manual"
-export_refs = ["modelo-165-t1-empresa-emergente"]
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
-
 # Campo 5. Positions 18-26. N.I.F. DEL SOCIO O PARTICIPE de la entidad de nueva
 # o reciente creacion.
 [[revisions."2016-2022".casillas]]

@@ -23,8 +23,8 @@ from ...core.time import now, today_madrid
 # this module does not trigger the ~870ms ValidatedRegistryAuthority
 # parse — load it only when a deadline computation actually runs.
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
-    from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
+    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+    from ..calculations.registry.schema_verification import ProfilePredicateDefinition
 
 from ._models import (
     ModeloDeadline,
@@ -150,8 +150,8 @@ class DeadlineEngine:
             return
         self._source_root = source_root if source_root is not None else bundled_path()
         root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-        from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-        from cadrumo.domain.calculations.registry.errors import RegistryError
+        from ..calculations.registry.authority import ValidatedRegistryAuthority
+        from ..calculations.registry.errors import RegistryError
 
         try:
             self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
@@ -246,7 +246,7 @@ class DeadlineEngine:
         ≥1 day late, a registry-backed recovery payload (None when
         the recovery registry has no entry for the modelo).
         """
-        from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
+        from ..calculations.registry.schedules import applicable_filing_schedules
 
         if window.resultado_scope is not None or window.tipo_renta_scope is not None:
             return None
@@ -339,7 +339,7 @@ class DeadlineEngine:
         )
 
     def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
-        from cadrumo.domain.calculations.registry.errors import RegistryError
+        from ..calculations.registry.errors import RegistryError
 
         try:
             return self._registry.deadline_windows(year)
@@ -367,7 +367,7 @@ class DeadlineEngine:
 
     @staticmethod
     def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
-        from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
+        from ..calculations.registry.schedules import applicable_filing_schedules
 
         if not revision.filing_schedules:
             return True
@@ -397,8 +397,8 @@ class DeadlineEngine:
         *,
         mode: str,
     ) -> str | None:
-        from cadrumo.domain.calculations.registry.errors import RegistryError
-        from cadrumo.domain.calculations.registry.schedules import evaluate_profile_conditions
+        from ..calculations.registry.errors import RegistryError
+        from ..calculations.registry.schedules import evaluate_profile_conditions
 
         if not conditions:
             return "Aplica segun la ventana registral del modelo."

@@ -1,0 +1,10 @@
+[[revisions."2004-2015".workbook_parity_refs]]
+id = "modelo-309-2004-2015-record-design"
+workbook_source = "aeat-dr-309-2004"
+fixture_id = "modelo-309-2004-2015-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+

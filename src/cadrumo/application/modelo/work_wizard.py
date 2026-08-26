@@ -28,14 +28,14 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
-from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._binding_readiness import profile_resolvable_binding_ids
-from ._registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
+from .registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 
 if TYPE_CHECKING:
     from ...application.flows.engine import FlowState
@@ -105,7 +105,7 @@ def _copy_ref_id(run_token: str, step: ModeloWorkWizardStep, facet: str) -> str:
 def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return frozenset()
+        return frozenset[str]()
     try:
         values = profile_resolvable_binding_ids(
             modelo=str(unit.modelo),
@@ -114,7 +114,7 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
             period=unit.period,
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-        return frozenset()
+        return frozenset[str]()
     if not isinstance(values, (set, frozenset, tuple, list)) or not all(isinstance(value, str) for value in values):
         raise TypeError("binding-id projection must be a collection of text")
     return frozenset(values)

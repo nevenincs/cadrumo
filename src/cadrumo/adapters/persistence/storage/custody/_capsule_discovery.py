@@ -18,17 +18,12 @@ import os
 import stat
 from collections.abc import Callable
 from contextlib import ExitStack
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 from uuid import UUID
 
 from .....core import StorageCategory, storage_location
-from .errors import (
-    ProfileCustodyRecordError,
-    ProfileCustodyRecoveryGuidance,
-    ProfileCustodyRefusal,
-    ProfileCustodyRefusedError,
-)
 from ._filesystem import (
     anchor_directory,
     lexists,
@@ -39,10 +34,30 @@ from ._filesystem import (
     read_regular_file_fd,
 )
 from ._paths import profile_custody_directory_name
+from .errors import (
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
 
 
 class _CommitIdentity(Protocol):
     profile_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class AnchoredCurrentCapsuleCommit:
+    """One current-marker observation, optionally carrying its anchored label bytes."""
+
+    capsule_path: Path
+    commit: _CommitIdentity
+    label_payload: bytes | None = None
+
+    @property
+    def profile_id(self) -> UUID:
+        """Return the UUID proved by the canonical directory and parsed marker."""
+        return self.commit.profile_id
 
 
 PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS: tuple[str, ...] = (
@@ -226,37 +241,53 @@ def _anchored_retired_member_paths_windows(scan_root: Path, member_paths: tuple[
     return tuple(sorted(detected))
 
 
-def anchored_current_capsule_ids(
+def anchored_current_capsule_commits(
     capsules_root: Path,
     *,
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
-) -> tuple[UUID, ...]:
-    """Discover UUID capsules whose current commit validates while anchored."""
+    label_filename: str | None = None,
+    label_maximum_bytes: int | None = None,
+) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
+    """Discover current capsules while retaining anchored marker observations.
+
+    An identity-only caller leaves the label arguments absent.  A summary
+    caller supplies both and receives the label's bounded bytes from the same
+    candidate anchor as the parsed commit, so a directory replacement cannot
+    splice one generation's marker to another generation's provenance.
+    """
+    if (label_filename is None) is not (label_maximum_bytes is None):
+        raise ValueError("summary discovery requires both label filename and byte ceiling")
     if os.name != "nt":
-        return _anchored_current_capsule_ids_posix(
+        return _anchored_current_capsule_commits_posix(
             capsules_root,
             parse_commit=parse_commit,
             commit_filename=commit_filename,
             maximum_bytes=maximum_bytes,
+            label_filename=label_filename,
+            label_maximum_bytes=label_maximum_bytes,
         )
-    return _anchored_current_capsule_ids_windows(
+    return _anchored_current_capsule_commits_windows(
         capsules_root,
         parse_commit=parse_commit,
         commit_filename=commit_filename,
         maximum_bytes=maximum_bytes,
+        label_filename=label_filename,
+        label_maximum_bytes=label_maximum_bytes,
     )
 
 
-def _anchored_current_capsule_ids_posix(
+def _anchored_current_capsule_commits_posix(
     capsules_root: Path,
     *,
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
-) -> tuple[UUID, ...]:
-    discovered: list[UUID] = []
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
+) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
+    discovered: list[AnchoredCurrentCapsuleCommit] = []
     with posix_directory_fd(capsules_root) as root_fd:
         for candidate_name in os.listdir(root_fd):
             if not _is_posix_directory(root_fd, candidate_name):
@@ -286,7 +317,27 @@ def _anchored_current_capsule_ids_posix(
                     )
                 )
                 if commit.profile_id == profile_id:
-                    discovered.append(profile_id)
+                    label_payload = None
+                    if label_filename is not None:
+                        assert label_maximum_bytes is not None
+                        data_fd = posix_open_child_directory(candidate_fd, "data")
+                        try:
+                            label_payload = read_regular_file_fd(
+                                data_fd,
+                                label_filename,
+                                display_path=capsules_root / candidate_name / "data" / label_filename,
+                                maximum_bytes=label_maximum_bytes,
+                                trace=None,
+                            )
+                        finally:
+                            os.close(data_fd)
+                    discovered.append(
+                        AnchoredCurrentCapsuleCommit(
+                            capsule_path=capsules_root / candidate_name,
+                            commit=commit,
+                            label_payload=label_payload,
+                        )
+                    )
             except ProfileCustodyRecordError:
                 # A final UUID candidate with a current marker is no longer an
                 # ignorable directory once its marker fails validation.  It is
@@ -295,7 +346,7 @@ def _anchored_current_capsule_ids_posix(
                 raise
             finally:
                 os.close(candidate_fd)
-    return tuple(sorted(discovered, key=str))
+    return tuple(sorted(discovered, key=lambda observation: str(observation.profile_id)))
 
 
 def _is_posix_directory(root_fd: int, candidate_name: str) -> bool:
@@ -317,41 +368,47 @@ def _open_posix_candidate(root_fd: int, candidate_name: str) -> int | None:
         return None
 
 
-def _anchored_current_capsule_ids_windows(
+def _anchored_current_capsule_commits_windows(
     capsules_root: Path,
     *,
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
-) -> tuple[UUID, ...]:
-    discovered: list[UUID] = []
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
+) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
+    discovered: list[AnchoredCurrentCapsuleCommit] = []
     with ExitStack() as anchors:
         anchor_directory(anchors, capsules_root, final_access=0x80000000)
         try:
             with os.scandir(capsules_root) as entries:
                 for entry in entries:
-                    profile_id = _windows_candidate_profile_id(
+                    observation = _windows_candidate_commit(
                         capsules_root,
                         entry,
                         parse_commit=parse_commit,
                         commit_filename=commit_filename,
                         maximum_bytes=maximum_bytes,
+                        label_filename=label_filename,
+                        label_maximum_bytes=label_maximum_bytes,
                     )
-                    if profile_id is not None:
-                        discovered.append(profile_id)
+                    if observation is not None:
+                        discovered.append(observation)
         except OSError as exc:
             raise ProfileCustodyRecordError("profile capsule root cannot be safely enumerated") from exc
-    return tuple(sorted(discovered, key=str))
+    return tuple(sorted(discovered, key=lambda observation: str(observation.profile_id)))
 
 
-def _windows_candidate_profile_id(
+def _windows_candidate_commit(
     capsules_root: Path,
     entry: os.DirEntry[str],
     *,
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
-) -> UUID | None:
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
+) -> AnchoredCurrentCapsuleCommit | None:
     try:
         if not entry.is_dir(follow_symlinks=False):
             return None
@@ -368,13 +425,24 @@ def _windows_candidate_profile_id(
         profile_id = _canonical_profile_id(entry.name)
         if profile_id is None:
             return None
+        label_path = candidate / "data" / label_filename if label_filename is not None else None
+        if label_path is not None:
+            anchor_directory(candidate_anchors, label_path.parent, final_access=0x80000000)
         marker_path = candidate / commit_filename
         if not lexists(marker_path, trace=None):
             return None
         commit = parse_commit(read_regular_file(marker_path, maximum_bytes=maximum_bytes, trace=None))
         if commit.profile_id != profile_id:
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-        return profile_id
+        label_payload = None
+        if label_path is not None:
+            assert label_maximum_bytes is not None
+            label_payload = read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
+        return AnchoredCurrentCapsuleCommit(
+            capsule_path=candidate,
+            commit=commit,
+            label_payload=label_payload,
+        )
 
 
 def _canonical_profile_id(candidate_name: str) -> UUID | None:
@@ -401,7 +469,8 @@ def _canonical_profile_id(candidate_name: str) -> UUID | None:
 __all__ = [
     "PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS",
     "PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS",
-    "anchored_current_capsule_ids",
+    "AnchoredCurrentCapsuleCommit",
+    "anchored_current_capsule_commits",
     "detect_retired_profile_custody_member_paths",
     "refuse_retired_profile_custody_paths",
 ]

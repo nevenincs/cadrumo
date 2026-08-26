@@ -23,7 +23,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from ...application.modelo._reconciliation_records import (
+from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )

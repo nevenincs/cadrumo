@@ -1,0 +1,79 @@
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-portal"
+surface = "portal"
+consumer = "portal_m309_iva_no_periodica"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-approval"
+surface = "approval"
+consumer = "cadrumo.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["boe-modelo-309-2003-form", "aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-309-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2016"]

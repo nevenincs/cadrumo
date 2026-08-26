@@ -1,0 +1,36 @@
+[[revisions."2023-y-siguientes".casillas]]
+id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
+required = false
+input_kind = "bound"
+binding = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "iva.soportado.recargo-equivalencia"
+number = "iva.soportado.recargo-equivalencia"
+section = ["iva", "no_periodica", "soportado"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_recargo_equivalencia"
+required = false
+input_kind = "bound"
+binding = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "iva.cuota-no-periodica-total"
+internal_only = true
+number = "iva.cuota-no-periodica-total"
+section = ["iva", "no_periodica", "totales"]
+data_type = "money"
+semantic_role = "iva_cuota_no_periodica_total"
+required = false
+input_kind = "computed"
+formula = "modelo-309-iva-cuota-no-periodica-total"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]

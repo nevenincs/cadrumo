@@ -1,14 +1,10 @@
 # Modelo 165 fichero -- transcribed from the bundled AEAT Diseno de Registro
 # (source aeat-dr-165-2016-2022, corpus/aeat_official/disenos_registro/modelo_165/
-# files/01-165-diseno-de-registro-actualizado-en-2023.pdf, sha256
-# bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263).
-#
-# This is the only Modelo 165 record design AEAT publishes: one artefact, on the
-# current Disenos de Registro index, with no earlier era offered anywhere. The
-# layout mirrors it position for position.
+# files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf,
+# sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5).
 #
 # The design declares exactly two records of 500 bytes each: registro de tipo 1
-# (declarante) with 15 numbered campos plus a BLANCOS trailer, and registro de
+# (declarante) with numbered campos plus a BLANCOS trailer, and registro de
 # tipo 2 (socios o participes) with 10 numbered campos plus a BLANCOS trailer.
 # All 27 positions are declared in the record files beside this one, and each
 # record's declared field lengths sum to exactly 500 contiguously from 1.
@@ -16,25 +12,9 @@
 # ---------------------------------------------------------------------------
 # ERA NOTE -- read before filing an older ejercicio
 # ---------------------------------------------------------------------------
-# The revision this layout is authored on, 2013-y-siguientes, declares
-# year_from = 2013 with no year_to, while the design itself is footered
-# "Ejercicio 2026" and its source declares applies_from 2026-01-01. AEAT
-# publishes nothing for the intervening years, so this is the only design that
-# can be mirrored and it is mirrored here rather than left unbuilt.
-#
-# One position dates itself and should be understood before this layout is used
-# for an older ejercicio: position 184, EMPRESA EMERGENTE, is defined by the
-# design by reference to "el apartado 1 del articulo 3 de la Ley 28/2022, de 21
-# de diciembre, de fomento del ecosistema de las empresas emergentes". That
-# concept did not exist before December 2022, so for an ejercicio earlier than
-# 2022 the campo has no subject and goes blank, which is also what the design's
-# own rule prescribes ("En el supuesto de que el declarante no tenga la
-# consideracion de empresa emergente, este campo ira a blanco").
-#
-# Whether this revision should be split so an older ejercicio resolves a design
-# of its own is a registry-structure question recorded in the campaign's
-# structural-decisions audit; it is not answerable from the design, because AEAT
-# publishes no other.
+# This revision is limited to 2016--2022, the interval covered by this complete
+# source.  Its type-1 trailer begins at position 184; it has no later EMPRESA
+# EMERGENTE field.
 #
 # Global rules the design states once, applied throughout:
 #   "Todos los importes seran positivos."

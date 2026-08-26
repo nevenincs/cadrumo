@@ -1,0 +1,7 @@
+[[revisions."2018-2022".filing_schedules]]
+id = "modelo-309-ad-hoc"
+period_kind = "ad_hoc"
+periods = ["AD-HOC"]
+profile_condition_mode = "all"
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["boe-modelo-309-2003-form", "aeat-modelo-309-procedure"]

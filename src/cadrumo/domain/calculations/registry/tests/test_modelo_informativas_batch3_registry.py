@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # membership the tree deliberately does not grant.
 _MODELOS = [
     ("181", "2009-y-siguientes", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
-    ("270", "2013-y-siguientes", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
+    ("270", "2023-2024", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
 ]
 
 

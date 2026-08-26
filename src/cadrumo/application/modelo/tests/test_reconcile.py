@@ -25,7 +25,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
-from .._reconcile import (
+from ..reconciliation import (
     ModeloReconciliationCommand,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
@@ -33,7 +33,7 @@ from .._reconcile import (
     _reconcile_parsed_justificante,
     modelo_reconcile,
 )
-from .._reconciliation_records import (
+from ..reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )

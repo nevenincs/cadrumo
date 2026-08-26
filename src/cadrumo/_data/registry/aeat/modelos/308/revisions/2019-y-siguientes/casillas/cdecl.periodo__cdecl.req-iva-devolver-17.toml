@@ -1,0 +1,602 @@
+# Modelo 308 casillas: the AD-HOC declaracion's operator values. Every
+# value is the operator's own per-operation datum -- the modelo consumes
+# no Cadrumo store, which is why the binding family stays empty.
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "11-12"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_periodo"
+export_refs = ["modelo-308-p0-periodo", "modelo-308-p1-devengo-periodo"]
+# The settlement period code (PP), AD-HOC.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.devolucion-iban"
+number = "932-965"
+section = ["declarante", "liquidacion"]
+data_type = "iban"
+semantic_role = "devolucion_iban"
+export_refs = ["modelo-308-p1-devolucion-iban"]
+# Design devolucion IBAN.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.devolucion-bic"
+number = "966-976"
+section = ["declarante", "liquidacion"]
+data_type = "bic"
+semantic_role = "devolucion_bic"
+export_refs = ["modelo-308-p1-devolucion-bic"]
+# Design devolucion SWIFT-BIC.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_tipo"
+export_refs = ["modelo-308-p1-tipo-declaracion"]
+# Design tipo de declaracion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.nombre"
+number = "83-102"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "declarante_nombre"
+export_refs = ["modelo-308-p1-nombre"]
+# The person declarante's given name; blank for companies.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-tributacion"
+number = "109"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "tipo_tributacion_sujeto_pasivo"
+export_refs = ["modelo-308-p1-tipo-tributacion"]
+# Design tipo de tributacion segun el sujeto pasivo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-nif"
+number = "110-118"
+section = ["declarante", "liquidacion"]
+data_type = "nif"
+semantic_role = "mtn_adquirente_nif"
+export_refs = ["modelo-308-p1-mtn-adquirente-nif"]
+# MTN adquirente NIF.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-apellidos"
+number = "119-178"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_apellidos"
+export_refs = ["modelo-308-p1-mtn-adquirente-apellidos"]
+# MTN adquirente apellidos o razon social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-nombre"
+number = "179-198"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_nombre"
+export_refs = ["modelo-308-p1-mtn-adquirente-nombre"]
+# MTN adquirente nombre.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-pais"
+number = "199-200"
+section = ["declarante", "liquidacion"]
+data_type = "country_code"
+semantic_role = "mtn_adquirente_pais"
+export_refs = ["modelo-308-p1-mtn-adquirente-pais"]
+# MTN adquirente pais.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-marca"
+number = "201-240"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_marca"
+export_refs = ["modelo-308-p1-mtn-vehiculo-marca"]
+# MTN vehiculo marca.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-tipo"
+number = "241-280"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_tipo"
+export_refs = ["modelo-308-p1-mtn-vehiculo-tipo"]
+# MTN vehiculo tipo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-modelo"
+number = "281-320"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_modelo"
+export_refs = ["modelo-308-p1-mtn-vehiculo-modelo"]
+# MTN vehiculo denominacion comercial.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-bastidor"
+number = "321-342"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_bastidor"
+export_refs = ["modelo-308-p1-mtn-vehiculo-bastidor"]
+# MTN vehiculo numero de identificacion del bastidor.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-clasificacion"
+number = "343-348"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_clasificacion"
+export_refs = ["modelo-308-p1-mtn-vehiculo-clasificacion"]
+# MTN vehiculo clasificacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-fabricante"
+number = "349-388"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_fabricante"
+export_refs = ["modelo-308-p1-mtn-embarcacion-fabricante"]
+# MTN embarcacion fabricante.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-tipo"
+number = "389-468"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_tipo"
+export_refs = ["modelo-308-p1-mtn-embarcacion-tipo"]
+# MTN embarcacion tipo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-identificacion"
+number = "469-490"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_identificacion"
+export_refs = ["modelo-308-p1-mtn-embarcacion-identificacion"]
+# MTN embarcacion identificacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-eslora"
+number = "491-495"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_eslora"
+export_refs = ["modelo-308-p1-mtn-embarcacion-eslora"]
+# MTN embarcacion eslora maxima.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-fabricante"
+number = "496-535"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_fabricante"
+export_refs = ["modelo-308-p1-mtn-aeronave-fabricante"]
+# MTN aeronave fabricante.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-marca"
+number = "536-615"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_marca"
+export_refs = ["modelo-308-p1-mtn-aeronave-marca"]
+# MTN aeronave marca.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-serie"
+number = "616-637"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_serie"
+export_refs = ["modelo-308-p1-mtn-aeronave-serie"]
+# MTN aeronave numero de serie.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-ano"
+number = "638-641"
+section = ["declarante", "liquidacion"]
+data_type = "year"
+semantic_role = "mtn_aeronave_ano"
+export_refs = ["modelo-308-p1-mtn-aeronave-ano"]
+# MTN aeronave ano de fabricacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-peso"
+number = "642-651"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_peso"
+export_refs = ["modelo-308-p1-mtn-aeronave-peso"]
+# MTN aeronave peso maximo al despegue.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-precio-adquisicion"
+number = "652-668"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_precio_adquisicion"
+export_refs = ["modelo-308-p1-mtn-precio-adquisicion"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [01] precio de adquisicion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-tipo-01"
+number = "669-673"
+form_number = "01"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "mtn_tipo_01"
+export_refs = ["modelo-308-p1-mtn-tipo-01"]
+# MTN liquidacion [02] tipo (%).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-soportado"
+number = "674-690"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_iva_soportado"
+export_refs = ["modelo-308-p1-mtn-iva-soportado"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [03] IVA soportado.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-precio-venta"
+number = "691-707"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_precio_venta"
+export_refs = ["modelo-308-p1-mtn-precio-venta"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [04] precio de venta.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-tipo-04"
+number = "708-712"
+form_number = "04"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "mtn_tipo_04"
+export_refs = ["modelo-308-p1-mtn-tipo-04"]
+# MTN liquidacion [05] tipo (%).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-maximo-devolver"
+number = "713-729"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_maximo_devolver"
+export_refs = ["modelo-308-p1-mtn-maximo-devolver"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [06] maximo a devolver.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-eib"
+number = "730-746"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_iva_devolver_eib"
+export_refs = ["modelo-308-p1-mtn-iva-devolver-eib"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [07] IVA a devolver por entregas intracomunitarias.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-transporte"
+number = "747-763"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_iva_devolver_transporte"
+export_refs = ["modelo-308-p1-mtn-iva-devolver-transporte"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [18] IVA a devolver actividad de transporte.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-soportado-art21"
+number = "764-780"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_iva_soportado_art21"
+export_refs = ["modelo-308-p1-mtn-iva-soportado-art21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [19] IVA soportado art. 21.4 parrafo 2 LIVA.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-art21"
+number = "781-797"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "mtn_iva_devolver_art21"
+export_refs = ["modelo-308-p1-mtn-iva-devolver-art21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# MTN liquidacion [20] IVA a devolver art. 21.4 parrafo 2 LIVA.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-08"
+number = "798-814"
+form_number = "08"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_base_08"
+export_refs = ["modelo-308-p1-req-base-08"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [08] base imponible.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-09"
+number = "815-819"
+form_number = "09"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_09"
+export_refs = ["modelo-308-p1-req-tipo-09"]
+# REQ liquidacion [09] tipo (%).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-10"
+number = "820-836"
+form_number = "10"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_cuota_10"
+export_refs = ["modelo-308-p1-req-cuota-10"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [10] cuota.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-11"
+number = "837-853"
+form_number = "11"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_base_11"
+export_refs = ["modelo-308-p1-req-base-11"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [11] base imponible.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-12"
+number = "854-858"
+form_number = "12"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_12"
+export_refs = ["modelo-308-p1-req-tipo-12"]
+# REQ liquidacion [12] tipo (%).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-13"
+number = "859-875"
+form_number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_cuota_13"
+export_refs = ["modelo-308-p1-req-cuota-13"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [13] cuota.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-14"
+number = "876-892"
+form_number = "14"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_base_14"
+export_refs = ["modelo-308-p1-req-base-14"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [14] base imponible.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-15"
+number = "893-897"
+form_number = "15"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_15"
+export_refs = ["modelo-308-p1-req-tipo-15"]
+# REQ liquidacion [15] tipo (%).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-16"
+number = "898-914"
+form_number = "16"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_cuota_16"
+export_refs = ["modelo-308-p1-req-cuota-16"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [16] cuota.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-iva-devolver-17"
+number = "915-931"
+form_number = "17"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "req_iva_devolver_17"
+export_refs = ["modelo-308-p1-req-iva-devolver-17"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"] }
+# REQ liquidacion [17] IVA a devolver.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]

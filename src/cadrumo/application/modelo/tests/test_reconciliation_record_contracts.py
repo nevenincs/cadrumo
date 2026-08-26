@@ -27,7 +27,7 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.modelos import ModeloCode, derive_work_unit_id
-from .._reconciliation_records import (
+from ..reconciliation_records import (
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,

@@ -1,0 +1,9 @@
+[[revisions."2009-2011-junio".workbook_parity_refs]]
+id = "modelo-308-dr-2009-2011-junio-static-layout"
+workbook_source = "aeat-dr-308-2009"
+fixture_id = "modelo-308-2009-2011-junio-record-design"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-dr-308-2009"]

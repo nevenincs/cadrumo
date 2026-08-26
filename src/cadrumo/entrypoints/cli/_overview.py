@@ -787,7 +787,7 @@ def overview_prepare(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
-    from ...application.modelo._registry_discovery import registry_describe_modelo_for_scope
+    from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
 
     current = _state()

@@ -5,7 +5,146 @@ modelo:
         official_name: null
         title: null
       revision:
-        2013-y-siguientes:
+        2013-2022:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
+                korábbi, azonos évi bevallásból teljesen kimaradtak.
+              label: Kiegészítő bevallás
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
+                kód.
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
+                helyettesít. Minden más esetben nullákkal kell kitölteni.
+              label: A korábbi bevallás azonosító száma
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes
+                utónév, kötelezően ebben a sorrendben.
+              label: A kapcsolattartó vezeték- és utóneve
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
+              label: A kapcsolattartó telefonszáma
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
+                teljes egészében érvénytelenít és helyettesít.
+              label: Helyettesítő bevallás
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
+                összege euróban.
+              label: A forrásadó vagy adóelőleg alapjának teljes összege
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
+                összege euróban, előjel és tizedesjel nélkül.
+              label: A nyeremények teljes összege vagy értéke
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek
+                teljes száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
+                külön kell számolni.
+              label: A bevallott kedvezményezetti rekordok teljes száma
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
+                összege euróban.
+              label: A forrásadó vagy adóelőleg teljes összege
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
+                kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
+                forrásadó- vagy adóelőleg-alap.
+              label: A forrásadó vagy adóelőleg alapja
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
+                F természetes személy, J jogi személy vagy szervezet esetén.'
+              label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód
+                és a jogi személyiség kódja F.
+              label: A külföldi illetőségű kedvezményezett születési ideje
+            x-e1in4opecpim6q315lo62prf:
+              help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
+                kifizették vagy jóváírták.
+              label: A nyeremény kifizetésének időpontja
+            x-e1in4opecpim6q315lpmusjkclng:
+              help: A sorsolás megtartásának napja, illetve annak az eseménynek a
+                napja, amelyre a nyereményt eredményező fogadást megkötötték.
+              label: A sorsolás vagy fogadás időpontja
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Csak akkor kell X-szel jelölni, ha a korábban részjegyekre osztott
+                nyereményt veszik fel, így a nyereményt felvevő nem annak végső jogosultja.
+              label: A nyeremény beszedési megbízottja
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
+                nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
+                sorsoláson több nyereményt is nyert, ezek összege.
+              label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
+                értéke
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Csak akkor, ha a kedvezményezett típusa 5-ös kód és a jogi személyiség
+                kódja F. A születési hely települése és adott esetben tartománya,
+                régiója vagy megyéje, majd az EHA/3496/2011. sz. rendelet II. melléklete
+                szerinti ország- vagy területkód.
+              label: A külföldi illetőségű kedvezményezett születési helye
+            x-e1in4opedpkmc:
+              help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
+                marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+                adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
+                kötelező.
+              label: A kedvezményezett adóazonosító száma
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+                adóazonosítója: természetes személynél az útlevélszám vagy ennek hiányában
+                a származási országban érvényes személyazonosító okmány száma, szervezetnél
+                a származási ország adóhatósága által kiadott azonosító.'
+              label: Adóazonosító szám az adóügyi illetőség szerinti országban
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
+                adóazonosító száma, ha van ilyen. Minden más esetben üres.
+              label: A kedvezményezett törvényes képviselőjének adóazonosító száma
+            x-e1in4opedpnmqojick:
+              help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
+                szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy
+                szervezetnél a teljes cégnév vagy elnevezés, logó nélkül.
+              label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
+                a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
+                Minden más esetben üres.
+              label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
+                vagy elnevezése
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód: a kedvezményezett
+                illetősége szerinti ország vagy terület két betűs kódja az EHA/3496/2011.
+                sz. rendelet II. melléklete szerint. Minden más esetben üres.'
+              label: A kedvezményezett adóügyi illetőségének országa vagy területe
+            x-e1in4opee1p6utj9dphmio8:
+              help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
+                kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
+                98, az 5-ös kedvezményezetti típusnál 99 a kód.
+              label: A kedvezményezett lakcíme szerinti tartomány kódja
+            x-e1in4opee9in8pbecdkmurg:
+              help: A nyereményt kifizető szervezet által ténylegesen levont forrásadó
+                vagy adóelőleg összege.
+              label: A forrásadó vagy adóelőleg összege
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: '1-es kód: a személyi jövedelemadó alanyát képező természetes
+                személy; 2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési
+                szervezet; 3: társasági adó alanyát képező jogi személy vagy belföldi
+                szervezet; 4: spanyolországi állandó telephely; 5: állandó telephely
+                nélkül működő külföldi illetőségű személy vagy szervezet.'
+              label: A kedvezményezett típusa
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
+          field:
+            label: null
+        2023-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy

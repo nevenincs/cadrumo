@@ -1,0 +1,9 @@
+[[revisions."2018-2022".workbook_parity_refs]]
+id = "modelo-309-dr-2018"
+workbook_source = "aeat-dr-309-2018"
+fixture_id = "modelo-309-2018-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2018"]

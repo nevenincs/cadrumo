@@ -18,7 +18,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....application.modelo._reconciliation_records import (
+from ....application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
@@ -139,8 +139,10 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
 def test_reconciliation_history_result_refuses_a_negative_count() -> None:
     """``reconciliation_count`` is a cardinality, so a negative value is not representable."""
     with pytest.raises(ValidationError):
-        ModeloReconciliationHistoryResult(
-            bucket_id="b" * 64,
-            reconciliation_count=-1,
-            reconciliations=[],
+        ModeloReconciliationHistoryResult.model_validate(
+            {
+                "bucket_id": "b" * 64,
+                "reconciliation_count": -1,
+                "reconciliations": [],
+            },
         )

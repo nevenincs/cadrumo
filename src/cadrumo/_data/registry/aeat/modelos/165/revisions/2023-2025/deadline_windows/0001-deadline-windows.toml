@@ -1,0 +1,19 @@
+[[revisions."2023-2025".deadline_windows]]
+id = "modelo-165-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2023-2025".deadline_windows]]
+id = "modelo-165-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]

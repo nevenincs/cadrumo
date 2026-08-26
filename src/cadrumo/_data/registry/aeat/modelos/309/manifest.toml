@@ -5,10 +5,14 @@ cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
 legal_refs = [
+    "orden-hfp-1245-2022:art-unico",
     "orden-hac-3625-2003:apartado-1",
     "orden-hac-3625-2003:apartado-3",
 ]
 source_refs = [
+    "aeat-dr-309-2004",
+    "aeat-dr-309-2016",
+    "aeat-dr-309-2018",
     "aeat-dr-309-2023",
     "aeat-modelo-309-instructions",
     "aeat-modelo-309-procedure",

@@ -1,0 +1,7 @@
+[[revisions."2009-2011-junio".filing_schedules]]
+id = "modelo-308-ad-hoc"
+period_kind = "ad_hoc"
+periods = ["AD-HOC"]
+profile_condition_mode = "all"
+legal_refs = ["orden-eha-3786-2008:art-11"]
+source_refs = ["boe-modelo-308-2008-form", "aeat-modelo-308-procedure"]

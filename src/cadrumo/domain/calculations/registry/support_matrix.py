@@ -32,8 +32,8 @@ See Also:
     :class:`~domain.calculations.registry._query_reports.ModeloSupportMatrixReport`
         Query-service envelope returned by
         :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
-    :func:`~application.modelo.registry_support_matrix`
-        Application facade used by CLI discovery without re-reading registry
+    :func:`~application.modelo.registry_discovery.registry_support_matrix`
+        Application query used by CLI discovery without re-reading registry
         authority directly.
 """
 

@@ -1,7 +1,0 @@
-[[revisions."2013-y-siguientes".application_links]]
-id = "modelo-270-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023"]

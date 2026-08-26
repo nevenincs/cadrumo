@@ -64,7 +64,6 @@ from ._preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,
 )
-from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
@@ -74,6 +73,7 @@ from ._selectors import (
     resolve_modelo_calculation_revision_pick,
 )
 from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .registry_discovery import declared_modelo_period_tokens
 
 _BucketId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
