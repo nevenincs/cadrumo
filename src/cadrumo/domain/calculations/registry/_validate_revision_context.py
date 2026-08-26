@@ -11,7 +11,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.schema import (
+from ....core import CasillaId
+from .casilla_membership import casillas_by_id, declared_casilla_ids
+from .ids import BindingId, RelationId
+from .schema import (
     ApplicationLinkDefinition,
     ConstructDefinition,
     DataBindingDefinition,
@@ -21,16 +24,11 @@ from cadrumo.domain.calculations.registry.schema import (
     ModeloRevision,
     ModeloScheduleDefinition,
 )
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-
-from ....core import CasillaId
-from .casilla_membership import casillas_by_id, declared_casilla_ids
-from .ids import BindingId, RelationId
-from .schema_verification import VerificationExpectationDefinition
+from .schema_exports import ExportLayoutDefinition
+from .schema_extraction import ExtractionProfileDefinition
+from .schema_formula import ParameterDefinition
+from .schema_surfaces import CasillaDefinition, RelationDefinition
+from .schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
 from .validate_revision_identity import collect_record_id_lists
 
 
