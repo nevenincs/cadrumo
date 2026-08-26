@@ -765,6 +765,8 @@ errors:
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
+    modelo_work_review_capture_not_current: A munkaattekintes mar nem aktualis. Olvassa
+      be ujra a munkacelt, es probalja meg ismet.
     modelo_work_selector_ambiguous: Több modell munkaegység is illeszkedik a választóra.
     modelo_work_selector_contradiction: A modell munkaválasztó argumentumai ellentmondanak
       egymásnak.

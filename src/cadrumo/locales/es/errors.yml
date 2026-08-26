@@ -809,6 +809,8 @@ errors:
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
+    modelo_work_review_capture_not_current: La revision de trabajo ya no es actual.
+      Vuelva a leer el objetivo de trabajo e intentelo de nuevo.
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
       con el selector.
     modelo_work_selector_contradiction: Los argumentos del selector de trabajo de

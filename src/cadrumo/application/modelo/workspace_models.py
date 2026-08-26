@@ -35,7 +35,7 @@ from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
 from ..registry import RegistryClosureLimb
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
-from .work_review_projection import ModeloWorkReview
+from .work_review import ModeloWorkReview
 
 _MAX_FACET_PAGE_SIZE = 200
 _MAX_FACET_CURSOR_LENGTH = 256

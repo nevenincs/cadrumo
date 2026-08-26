@@ -748,6 +748,8 @@ errors:
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
+    modelo_work_review_capture_not_current: The work review is no longer current.
+      Re-read the work target and retry.
     modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
     modelo_work_selector_contradiction: The modelo work selector arguments contradict
       each other.
