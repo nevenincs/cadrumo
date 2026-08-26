@@ -16,16 +16,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, OperationCancellation, OperationClosePolicy, OperationDeadline, OperationDurability, OperationEffect, OperationInteractionKind, Period, ServiceCapability
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.time import now
-from ...domain.calculations.registry.ids import (
-    ModeloId,
-    RevisionId,
-)
-from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.authority import bundled_authority
-from ..calculations import resolve_relations_from_local_store
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -45,6 +35,27 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    Period,
+    ServiceCapability,
+)
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.time import now
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.ids import (
+    ModeloId,
+    RevisionId,
+)
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ..calculations import resolve_relations_from_local_store
 from ..operations.owner import OperationExecutorContext
 from ..storage.calc_sheets import (
     OperatorInputs,
