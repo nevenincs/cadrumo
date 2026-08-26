@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfb80efd8c848088279f0858a1d8aafc2749e4ab76f86c11f33e41541b8d9944'
+body_hash: 'sha256:0e531ce2d6fe06d339468f89c2e5f9d6c67b327864ec0424a5d7dfe48907175c'
 step_id: 'S14'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Rename config profile restore to config profile archive import
 

@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:c9202bd027a388e797b107a7b79b227406f4347d4321b678dc9b60416ac9fd1e'
+body_hash: 'sha256:c66bcb0d93dd75173c1f90f122f15a953b2b5e12c9b210ee82889f6ffce2aa31'
 ---
 
 # `cli-root-verb-homes` plan
@@ -80,21 +80,21 @@ Split the custody backup surface by blast radius: archive keeps the recoverable 
 
 Move remote evidence intake into the evidence subgroup as pull and pull-all, retaining the source enum untouched.
 
-- [ ] `W03.P07.S17` - Rename app ledger doclink to app ledger evidence pull, retaining the source enum; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W03.P07.S18` - Rename app ledger pull-folder to app ledger evidence pull-all; `src/cadrumo/entrypoints/cli/`.
+- [x] `W03.P07.S17` - Rename app ledger doclink to app ledger evidence pull, retaining the source enum; `src/cadrumo/entrypoints/cli/`.
+- [x] `W03.P07.S18` - Rename app ledger pull-folder to app ledger evidence pull-all; `src/cadrumo/entrypoints/cli/`.
 
 ### Phase `W03.P08` - File token renames
 
 Rename the two transport uses of the file token to import so file retains only its filing meaning.
 
-- [ ] `W03.P08.S19` - Rename app modelo reconcile file to reconcile import; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W03.P08.S20` - Rename config profile censo file to censo import; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W03.P08.S19` - Rename app modelo reconcile file to reconcile import; `src/cadrumo/entrypoints/cli/`.
+- [x] `W03.P08.S20` - Rename config profile censo file to censo import; `src/cadrumo/entrypoints/cli/_config/`.
 
 ### Phase `W03.P09` - Primary and auxiliary local inputs
 
 Apply the D3 role axis to the two non-conformant leaves.
 
-- [ ] `W03.P09.S21` - Convert review-package import-feedback package option to a positional subject; `src/cadrumo/entrypoints/cli/`.
+- [x] `W03.P09.S21` - Convert review-package import-feedback package option to a positional subject; `src/cadrumo/entrypoints/cli/`.
 - [x] `W03.P09.S22` - Declare which of archive import file and artifact is the primary local input; `src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W04` - Retirements
@@ -105,15 +105,15 @@ Remove the three duplicated surfaces D5 rules out, each conditional on its named
 
 Retire config repair integrity registry in favour of app registry verify, having first proven the reports coincide.
 
-- [ ] `W04.P10.S23` - Prove config repair integrity registry and app registry verify report the same authority state; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W04.P10.S24` - Retire config repair integrity registry; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W04.P10.S23` - Prove config repair integrity registry and app registry verify report the same authority state; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W04.P10.S24` - Keep config repair integrity registry: the S23 proof shows it exercises the snapshot-build gate that app registry verify does not; `src/cadrumo/entrypoints/cli/_config/`.
 
 ### Phase `W04.P11` - Preflight retirement
 
 Make readiness revision-id optional with law-determined resolution and adopt the exit-2 contract, then retire config profile preflight and re-point every calling sequence contract.
 
-- [ ] `W04.P11.S25` - Make app modelo readiness revision-id optional with law-determined resolution; `src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py`.
-- [ ] `W04.P11.S26` - Adopt the exit-2 missing-field contract on app modelo readiness; `src/cadrumo/entrypoints/cli/`.
+- [x] `W04.P11.S25` - Make app modelo readiness revision-id optional with law-determined resolution; `src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py`.
+- [x] `W04.P11.S26` - Adopt the exit-2 missing-field contract on app modelo readiness; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W04.P11.S27` - Retire config profile preflight and re-point the ten calling sequence contracts; `src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W05` - Gates, rule amendment and charter
@@ -131,7 +131,7 @@ Land D6 gate two over the declared locus and prove it bites.
 
 Amend the enumerated aeat-cli-contract sentences on the rule source, propagate by sync, and correct the two root help strings.
 
-- [ ] `W05.P13.S30` - Amend the four enumerated aeat-cli-contract sentences on the rule source and propagate by sync; `.vaultspec/rules/aeat-cli-contract.md`.
+- [x] `W05.P13.S30` - Amend the four enumerated aeat-cli-contract sentences on the rule source and propagate by sync; `.vaultspec/rules/aeat-cli-contract.md`.
 - [ ] `W05.P13.S31` - Correct the config and app root help strings in all four catalogues; `src/cadrumo/locales/`.
 
 ### Phase `W05.P14` - Sweep verification

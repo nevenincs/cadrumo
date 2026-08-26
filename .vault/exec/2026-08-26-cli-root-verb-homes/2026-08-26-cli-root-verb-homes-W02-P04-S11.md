@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:43545064f31e8071335aa9cc46ec9d1b953fd9b9b1a44a9f3fb7f4043f8e7086'
+body_hash: 'sha256:c3959931b06d5fe87bf3f1f64912be08f2dc9c07bd483970da775cb43d951c43'
 step_id: 'S11'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Update the operator-actions catalogue target command key
 

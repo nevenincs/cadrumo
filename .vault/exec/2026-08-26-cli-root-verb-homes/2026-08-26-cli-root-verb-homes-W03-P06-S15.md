@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:00c783734a275ffeb3d4facd62b2886d3eb753d5db397227803aebaa97e141b4'
+body_hash: 'sha256:14bb187db812e6a5ba950e33b07996a46d266817bc053559ee7a7688ac2d6ffe'
 step_id: 'S15'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move config google sync push to config profile mirror push
 

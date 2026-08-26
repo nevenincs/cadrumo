@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:1513bc64b25b8a7f136bd9610d0bac513f2aec30af3e67c5133f2705d1e550d8'
+body_hash: 'sha256:c008a8fbfc1cc38a9d7207fa782c1303860d833ed89419f7d04ab50b4c90a86a'
 related: []
 ---
 
@@ -143,7 +143,15 @@ only leaf outside `app` declaring the `registry` capability". It declares
 `app` with none under `config`. The error had the same root cause as the count
 correction above.
 
-What actually holds: `aeat config repair integrity registry`
+**Second correction, 2026-08-26.** The remaining claim — that the two verbs
+duplicate each other — is also false. `app registry verify` validates the
+authority and runs `required_text` corpus checks; `config repair integrity
+registry` additionally builds a representative `M100` snapshot, exercising the
+snapshot-build gate that `verify` never reaches. Neither subsumes the other, and
+the finding is downgraded from duplication to discoverability: two places answer
+"is the registry healthy", with different answers.
+
+What holds of the original text: `aeat config repair integrity registry`
 (`src/cadrumo/entrypoints/cli/_config/_repair_command_specs.py:171`, handler
 `src/cadrumo/entrypoints/cli/_config/_repair_cli.py:344`) reports calculation
 registry authority and bundled snapshot integrity — the same subject that

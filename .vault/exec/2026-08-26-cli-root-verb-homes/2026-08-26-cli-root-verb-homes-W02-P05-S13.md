@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:1148af04ad94ce8e8147649379b67ed70c0a23e985581311981fee8754efdf9c'
+body_hash: 'sha256:82864ed5be59bcb1de5dbbca779e6c7d702f70c69734c0e38fa09cbd92273dc2'
 step_id: 'S13'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove the placement gate bites by mounting a filing leaf under config from outside the repository
 

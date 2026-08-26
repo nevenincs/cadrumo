@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:14573a40d4b96ec40543db0bf6e793c6b65a207198994643483cd622d1c02597'
+body_hash: 'sha256:1e5d199d0334447cf4b3868afafc5eb732862f0ee5bb7b690ed832eb1ccc5cee'
 step_id: 'S08'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Re-key the four envelope command identifiers and their result schemas
 

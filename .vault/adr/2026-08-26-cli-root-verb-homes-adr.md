@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:189105287a2d2ce64d874c4fdeb8725c5e3ec4322c4ee646fec55d8a86a600ed'
+body_hash: 'sha256:23b1b7d5341142933003a668ee9633dccfb960d42eda3722cd059a7404a24f8e'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
 ---
@@ -329,11 +329,24 @@ transport: `build` and the `sign`/`encrypt-*` leaves write with `--output`;
 positional to match its six siblings; `<ENVELOPE_PATH>`, `<RECEIPT_PATH>` and
 `<SIGNATURE>` declare their locus and keep positional subject form.
 
-**Duplicates retire.** `app maintenance reconcile` folds into `config repair` and
-the one-verb family retires. `config repair integrity registry` retires in favour
-of `app registry verify`; note its duplication is behavioural, not visible in its
-declared capability, so D6's gate does not catch it and it retires by this ruling
-alone. `config profile preflight` retires in favour of `app modelo readiness`,
+**Duplicates retire, where they are duplicates.** `app maintenance reconcile`
+folds into the custody-backup subject and the one-verb family retires.
+
+**`config repair integrity registry` is NOT retired. Amended 2026-08-26 on the
+execution proof.** This record first ruled it a duplicate of `app registry
+verify`. The proof step that was required before deleting it showed the two do
+different work, and neither subsumes the other: `verify_registry_tree` validates
+the authority and runs `required_text` corpus checks over every legal reference,
+while `build_registry_integrity_report` additionally builds a representative
+`M100` snapshot and so exercises the snapshot-build gate — typed-ID existence,
+renta first-slice routing, per-binding selector shape. Retiring the config verb
+would have silently dropped that coverage.
+
+The audit finding that prompted the retirement was already once corrected for
+false evidence, and this is its second correction: the verbs are not duplicates
+at all. What remains true is that an operator has two places to ask about
+registry health, which is a discoverability defect rather than a duplication
+one, and it is left open rather than fixed by deletion. `config profile preflight` retires in favour of `app modelo readiness`,
 **conditional on readiness first making `--revision-id` optional** with
 law-determined resolution — cheap, because the projection already resolves
 law-determined and asserts equality — and on adopting preflight's exit-2 contract.

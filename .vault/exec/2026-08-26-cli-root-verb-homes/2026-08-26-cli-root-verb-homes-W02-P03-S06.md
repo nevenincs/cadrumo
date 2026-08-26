@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:82936703874291877d4c87acbd6b2f7578a0d6d555a336dd99713bbaf11b21b3'
+body_hash: 'sha256:734f3f720ff089b0f88626e222e54a13db9e092db45e59b46dbd42ba8f8a025e'
 step_id: 'S06'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move the four sync calc leaves to app modelo spreadsheet with push and calculate renames
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a234b59e81207f875be69f5a2c535d987c49322e965b9c9cf04e43719618f00'
+body_hash: 'sha256:e7370049941b2ff2dd3d808eee6a04616113e115d20cbc5c82eff63a4ab18044'
 step_id: 'S10'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Fold app maintenance reconcile into config repair and retire the family
 
