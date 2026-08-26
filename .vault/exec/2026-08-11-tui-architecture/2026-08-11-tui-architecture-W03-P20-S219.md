@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:d1f5427de2439cacee7f015f4db5f6752887962a83883e56549755c1d85dfc3e'
+body_hash: 'sha256:1d181229aea886d6878593e7acf5b8ff012d81b134f961348191306999984fa0'
 step_id: 'S219'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the m303_orden_source implementation after eliminating every external consumer and public package reach
 

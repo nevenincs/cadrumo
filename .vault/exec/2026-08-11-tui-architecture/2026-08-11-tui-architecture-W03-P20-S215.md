@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:58b170bd666207d35b7832d1a6852c053f0e52b69517e1ff9ee7e04b84d32123'
+body_hash: 'sha256:1842343649b409d999e281b6b454b0e7f8a958955c6eadc1a1e6dbf85c9ae361'
 step_id: 'S215'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the m303_orden_projection_compiler implementation after eliminating every external consumer and public package reach
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c10902ea5a01867e96af06740a5c3f8178f7ca1c5091f34d8bb63233a3cf5f8a'
+body_hash: 'sha256:2a558b53a9803c60117f5a2b71779785c72cb1f1606b0d5115bd548cc56e472b'
 step_id: 'S217'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the m303_orden_raw_models implementation after eliminating every external consumer and public package reach
 

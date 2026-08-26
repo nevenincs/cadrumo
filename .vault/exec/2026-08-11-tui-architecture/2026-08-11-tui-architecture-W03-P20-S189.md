@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:dbacab86429325776d4235442edbed3e0f9638f2d316bbf7a158575e16ecf59e'
+body_hash: 'sha256:d3f6bb18c7650bb94e3a34601c204827c35530bbc7b72d997f3da2f3f8b1bd94'
 step_id: 'S189'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the cross_revision_divergence implementation after eliminating every external consumer and public package reach
 

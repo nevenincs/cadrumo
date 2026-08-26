@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ffd22f7df9c438c3a2b91266a4239f260f1fba2d6d1be320bb1a8bdfcab5dbe2'
+body_hash: 'sha256:24c406c983888d88172e59c19db31e6e16cd6c7a4a2335c1f5832e10cde7642a'
 step_id: 'S248'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach
 

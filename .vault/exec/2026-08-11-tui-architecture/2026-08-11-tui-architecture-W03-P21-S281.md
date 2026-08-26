@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:be65d4bba5a32df14a3fc8cdc67017b0a34cfeb4b9e5a59b105376bd7fb2f49b'
+body_hash: 'sha256:f083ded7d1b60ce088234e38e4f75b6564c717602d8aa1ea152aa4bc6150f9ab'
 step_id: 'S281'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Correct the permitted-surface row-group category, which admits ADD_ROW, UPDATE_ROW and DELETE_ROW for every MANUAL_INPUT binding although every such binding in the registry is a statically positioned scalar copy with no row set: decide whether the repeatable-row surface is the per-modelo ModeloDetailRow union the calculate boundary already carries, retire or re-address the binding-keyed row-group entry accordingly, and amend the edit-contract decision record in the same change so no intent can address a static field under a row semantic
 

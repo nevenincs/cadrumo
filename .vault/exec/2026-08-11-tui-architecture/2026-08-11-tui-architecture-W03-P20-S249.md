@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a41f295287e0b42c6e8094df1fa265ac72d0271fe4bd563d6d328d4172689e15'
+body_hash: 'sha256:a70c0a984a4192a203ab285387130aadfa20a9688122997e4456e00dbbb4e963'
 step_id: 'S249'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the validate_references implementation after eliminating every external consumer and public package reach
 

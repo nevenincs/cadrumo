@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e09750df8a6d8943a237c82b48c869242f93cacc58eaa1b7793ab332fe3ee0bf'
+body_hash: 'sha256:abb47c99806f6c455aa4f0e8c366279bba5606f8626260ebad5ef97eae1bfc25'
 step_id: 'S245'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the supported_filing_years implementation after eliminating every external consumer and public package reach
 

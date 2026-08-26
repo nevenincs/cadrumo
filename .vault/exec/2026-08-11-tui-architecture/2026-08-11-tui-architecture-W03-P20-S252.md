@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:12de28ee78ad8ec797b9f4ed6871024d80fa4c4fc62edb46727594d75d377e43'
+body_hash: 'sha256:27c2abf5ee88804beb0b869b98644e963f48c3081c72bea7117e754edab61df2'
 step_id: 'S252'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the verdict_cache implementation after eliminating every external consumer and public package reach
 

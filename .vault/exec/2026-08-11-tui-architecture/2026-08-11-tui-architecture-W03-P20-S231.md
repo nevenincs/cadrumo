@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a1fd87094b7c37fea48d0320ed0070a25a46ec6081f7589a10ec9c8110256a9'
+body_hash: 'sha256:44bd5de8aef9e6da5b58179a2ba3810c09eb181677288c73158d08ce339bb3bc'
 step_id: 'S231'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the relation_aggregation implementation after eliminating every external consumer and public package reach
 

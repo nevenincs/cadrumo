@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:8ff759cfd5d02f98389c43dc6ff43480ded7f39dde00b6bcc15887db3a3bedb8'
+body_hash: 'sha256:14adb30306e61747fdf0e25385d4974404fafb9b98f79817b2c849d38a3d8e60'
 ---
 
 # `tui-architecture` plan
@@ -390,7 +390,7 @@ Join the independently green backend and frontend lanes, migrate every reverse c
 
 Enroll rename, discard, verify, local file, export, and amend one by one through their existing application writers, each with an independently proven capability, interaction, effect receipt, and typed Workspace refresh result.
 
-- [ ] `W06.P24.S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
+- [x] `W06.P24.S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
 - [ ] `W06.P24.S151` - Enroll modelo.work.discard through the existing discard_work_unit single writer with exact destructive approval, no-effect refusal, declared atomic write set, safe effect receipt, and typed selection refresh target without recreating lifecycle policy; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_work_lifecycle.py`.
 - [ ] `W06.P24.S152` - Enroll modelo.work.verify through the existing verify_modelo_revision authority with exact capability evidence, progress and REVIEW declarations, guarded persistence and event effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_verification_actions.py`.
 - [ ] `W06.P24.S153` - Enroll modelo.work.file through the existing file_modelo_revision authority as local filing and human handoff only, with precondition refusal, exact approval, atomic filing effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_filing_actions.py`.
