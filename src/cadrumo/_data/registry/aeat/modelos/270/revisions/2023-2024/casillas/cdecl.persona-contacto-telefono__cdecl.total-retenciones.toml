@@ -113,7 +113,7 @@ semantic_role = "total_perceptores_count"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-270-decl-total-perceptores"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-2024".casillas]]
@@ -125,9 +125,9 @@ semantic_role = "m270_total_importe_premios"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-270-decl-total-importe-premios"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2023-2024".casillas]]
 id = "decl.total-base-retencion"
@@ -138,9 +138,9 @@ semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-270-decl-total-base-retencion"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2023-2024".casillas]]
 id = "decl.total-retenciones"
@@ -151,6 +151,6 @@ semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-270-decl-total-retenciones"]
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }

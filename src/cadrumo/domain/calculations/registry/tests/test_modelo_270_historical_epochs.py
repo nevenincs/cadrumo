@@ -18,6 +18,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _HISTORICAL_SOURCE_REF = "boe-dr-270-2013-2022"
 _CURRENT_SOURCE_REF = "aeat-dr-270-2023"
+_AMENDMENT_LAYOUT_REF = "orden-hfp-1286-2023:art-2"
+_AMENDMENT_APPLICABILITY_REF = "orden-hfp-1286-2023:df-unica"
 
 
 def test_modelo_270_official_designs_are_hash_pinned_and_completely_extracted() -> None:
@@ -109,6 +111,12 @@ def test_modelo_270_selects_each_proven_epoch_and_refuses_2025() -> None:
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2025, period="0A", on=date(2025, 1, 1))
 
+    # HFP/1286/2023 reserves monthly period codes for convention-backed SELAE
+    # and ONCE reporting. This ordinary annual Modelo 270 surface deliberately
+    # does not invent a selector for that external route.
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2023, period="01", on=date(2023, 1, 1))
+
 
 def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -> None:
     """Pin the Type 1 PERIODO insertion and the corresponding shifted summary."""
@@ -136,6 +144,50 @@ def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -
     assert current_fields["modelo-270-decl-total-base-retencion"] == (164, 17)
     assert current_fields["modelo-270-decl-total-retenciones"] == (181, 17)
     assert current_fields["modelo-270-decl-blancos"] == (198, 303)
+
+
+def test_modelo_270_2023_type_1_change_is_legally_load_bearing() -> None:
+    """Removing the amendment reference makes the shifted geometry ungrounded."""
+    modelo, catalogues = _committed_modelo("270")
+    current = modelo.revisions["2023-2024"]
+    layout = next(layout for layout in current.export_layouts if layout.id == "modelo-270-fichero-boe")
+    record = next(record for record in layout.records if record.record_type == "declarante")
+    shifted_ids = {
+        "modelo-270-decl-periodo",
+        "modelo-270-decl-total-perceptores",
+        "modelo-270-decl-total-importe-premios",
+        "modelo-270-decl-total-base-retencion",
+        "modelo-270-decl-total-retenciones",
+        "modelo-270-decl-blancos",
+    }
+
+    assert {_AMENDMENT_LAYOUT_REF, _AMENDMENT_APPLICABILITY_REF} <= set(current.legal_refs)
+    assert {_AMENDMENT_LAYOUT_REF, _AMENDMENT_APPLICABILITY_REF} <= set(current.orden_aplicabilidad)
+    assert _AMENDMENT_LAYOUT_REF in layout.legal_refs
+    assert all(
+        _AMENDMENT_LAYOUT_REF in field.legal_refs
+        for field in record.fields
+        if field.id in shifted_ids
+    )
+    assert _AMENDMENT_LAYOUT_REF in catalogues.legal
+    assert _AMENDMENT_APPLICABILITY_REF in catalogues.legal
+
+
+def test_modelo_270_historical_layout_comment_matches_the_pinned_boe_source() -> None:
+    """The historical human evidence trace must not borrow the 2023 digest."""
+    _modelo, catalogues = _committed_modelo("270")
+    historical = catalogues.sources[_HISTORICAL_SOURCE_REF]
+    current = catalogues.sources[_CURRENT_SOURCE_REF]
+    layout_path = (
+        bundled_path()
+        / "registry/aeat/modelos/270/revisions/2013-2022/export_layouts/0003-modelo-270-fichero-boe.toml"
+    )
+    layout_text = layout_path.read_text(encoding="utf-8")
+
+    assert historical.sha256 in layout_text
+    assert str(historical.bytes) in layout_text
+    assert current.sha256 not in layout_text
+    assert str(current.bytes) not in layout_text
 
 
 def test_modelo_270_split_epochs_have_shipped_locale_labels() -> None:

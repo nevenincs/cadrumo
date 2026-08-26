@@ -7,10 +7,12 @@ authority_grade = "applicability"
 valid_from = 2023-01-01
 valid_to = 2024-12-31
 period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }
-orden_aplicabilidad = ["orden-hap-2368-2013:art-1"]
+orden_aplicabilidad = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "orden-hfp-1286-2023:df-unica"]
 legal_refs = [
     "orden-hap-2368-2013:art-1",
     "orden-hap-2368-2013:art-3",
+    "orden-hfp-1286-2023:art-2",
+    "orden-hfp-1286-2023:df-unica",
     "ley-58-2003:art-93",
 ]
 source_refs = [
@@ -19,10 +21,13 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: the AEAT 2023 design is hash-pinned and its Type 1 positions match the \
-PERIODO addition and shifted summary. The exact 2025 BOE amendment changes Type 2 \
-province terminology only; absent a complete 2025 record-design binary, this \
-revision stops at exercise 2024 rather than extrapolating its layout."""
+agent: BOE-A-2023-24414 art 2 (ocho/nueve) and its final provision govern the \
+PERIODO addition, shifted Type 1 summary, and 2023--2024 applicability. The \
+ordinary annual surface selects only 0A: its special SELAE/ONCE convention routes \
+are not model-specific selectors and must not be inferred as supported monthly \
+Modelo 270 filings. The exact 2025 BOE amendment changes Type 2 province \
+terminology only; absent a complete 2025 record-design binary, this revision stops \
+at exercise 2024 rather than extrapolating its layout."""
 reviewed_at = 2026-08-21
 
 [revisions."2023-2024".family_dispositions.casilla_continuidad_evolutions]
@@ -32,6 +37,8 @@ casilla identity, so no renumbering, split, merge, or retirement transition exis
 legal_refs = [
     "orden-hap-2368-2013:art-1",
     "orden-hap-2368-2013:art-3",
+    "orden-hfp-1286-2023:art-2",
+    "orden-hfp-1286-2023:df-unica",
     "ley-58-2003:art-93",
 ]
 source_refs = [

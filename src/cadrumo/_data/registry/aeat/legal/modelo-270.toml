@@ -36,6 +36,46 @@ required_text = [
     "premios satisfechos en el año inmediato anterior",
 ]
 
+[legal."orden-hfp-1286-2023:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1286-2023.html#a2"
+document_id = "BOE-A-2023-24414"
+article = "2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24414"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-authored from official BOE-A-2023-24414 article 2 and bundled canonical HTML extraction"
+notes = "Orden HFP/1286/2023 art 2, apartados ocho y nueve: inserta PERIODO en posiciones 136-137 del Tipo 1 y desplaza los cinco campos de resumen subsiguientes. El apartado cuatro y la excepción ONCE del apartado ocho tienen la aplicación diferida que precisa la disposición final única."
+required_text = [
+    "Modificación de la Orden HAP/2368/2013",
+    "Se introducen las siguientes modificaciones en la Orden HAP/2368/2013",
+]
+
+[legal."orden-hfp-1286-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1286-2023.html#df-unica"
+document_id = "BOE-A-2023-24414"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24414"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-authored from official BOE-A-2023-24414 final provision and bundled canonical HTML extraction"
+notes = "La disposición final única aplica por primera vez la reforma al ejercicio 2023 presentado desde 2024 y difiere al ejercicio 2024 la disposición adicional segunda y la excepción ONCE del apartado ocho del artículo 2."
+required_text = [
+    "Disposición final única",
+    "modelos 190 y 270 correspondientes al ejercicio 2023",
+    "referencia a la Organización Nacional de Ciegos Españoles",
+    "modelo 270 correspondiente al ejercicio 2024",
+]
+
 [sources."enrolled-modelo-270-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
