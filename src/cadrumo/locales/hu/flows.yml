@@ -280,6 +280,7 @@ flows:
     header: Áttekintés - {answered} megválaszolt kérdés.
     header_tui: 'Áttekintés - {answered} megválaszolva, {remaining} kötelező még nyitva,
       beküldésre kész: {eligible}'
+    header_tui_stage_label: Áttekintés
     mode_create: létrehozási mód
     mode_modify: módosítási mód
     orphan_marker: (már nem kérdezzük)

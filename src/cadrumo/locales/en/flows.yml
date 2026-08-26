@@ -278,6 +278,7 @@ flows:
     header: Review - {answered} questions answered.
     header_tui: 'Review - {answered} answered, {remaining} required still open, ready
       to submit: {eligible}'
+    header_tui_stage_label: Review
     mode_create: profile creation
     mode_modify: profile editing
     orphan_marker: (no longer asked)

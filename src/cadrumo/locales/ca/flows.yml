@@ -279,6 +279,7 @@ flows:
     header: Revisió - {answered} preguntes respostes.
     header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
       a punt per enviar: {eligible}'
+    header_tui_stage_label: Revisió
     mode_create: mode de creació
     mode_modify: mode de modificació
     orphan_marker: (ja no es pregunta)

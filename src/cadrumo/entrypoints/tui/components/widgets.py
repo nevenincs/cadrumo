@@ -81,6 +81,24 @@ class StageNavigationStrip(Horizontal, can_focus=False):
         self._stages = tuple(stages)
         self._current_index = current_index
 
+    @property
+    def current_index(self) -> int:
+        """Return the stage currently marked as active."""
+        return self._current_index
+
+    def set_current_index(self, current_index: int) -> None:
+        """Advance the strip's own position and recompose in place.
+
+        A host tracking its own cursor (a wizard, a guided flow) updates
+        the SAME mounted strip instance rather than tearing it down and
+        remounting a fresh one each step -- `refresh(recompose=True)` is
+        the sync, in-place primitive for exactly that.
+        """
+        if not 0 <= current_index < len(self._stages):
+            raise ValueError("current_index must name a declared stage")
+        self._current_index = current_index
+        self.refresh(recompose=True)
+
     @override
     def compose(self) -> ComposeResult:
         for index, label in enumerate(self._stages):

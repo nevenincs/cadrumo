@@ -278,6 +278,7 @@ flows:
     header: Revisión - {answered} preguntas respondidas.
     header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
       listo para enviar: {eligible}'
+    header_tui_stage_label: Revisión
     mode_create: creación del perfil
     mode_modify: edición del perfil
     orphan_marker: (ya no se pregunta)
