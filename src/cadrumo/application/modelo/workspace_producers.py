@@ -67,12 +67,21 @@ class _ProducerContractValues(TypedDict):
 
 
 def modelo_workspace_projection_schema_fingerprint(projection_type: type[BaseModel]) -> ContentDigest:
-    """Derive one deterministic closed-schema fingerprint for a producer projection."""
-    validation_schema = projection_type.model_json_schema(mode="validation")
-    serialization_schema = projection_type.model_json_schema(mode="serialization")
-    if validation_schema != serialization_schema:
-        raise ValueError("workspace producer projection schema must have identical validation and serialization shapes")
-    return content_hash_hex(validation_schema)
+    """Derive one deterministic fingerprint over the contract a consumer actually receives.
+
+    A port projects outward: the caller reads the SERIALIZATION shape, never
+    the validation shape, so the serialization schema alone is the contract
+    the fingerprint has to identify. Fingerprinting BOTH schemas and demanding
+    they coincide was standing in for a round-trip guarantee it never tested
+    and does not need: a bare ``Decimal`` field validates as
+    ``anyOf[number, string]`` but serializes as ``string`` alone, which is a
+    faithful, round-trippable representation (``model_validate_json`` parses
+    the dumped string straight back to ``Decimal``), not a broken contract.
+    Refuse it here and every Decimal-bearing domain model -- the registry
+    snapshot, the work review, the calculation revision -- becomes
+    unregisterable for a shape difference that never breaks a round trip.
+    """
+    return content_hash_hex(projection_type.model_json_schema(mode="serialization"))
 
 
 class ModeloWorkspaceProducerContractV1(_WorkspaceProducerModel):

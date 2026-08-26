@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ec6a72523a8f9cfcb151e5237f28d06bd413cb46896b8d5abd9859af7199c45'
+body_hash: 'sha256:316a15a6c5a330a9017a2c2f25b4e7327b181f68bafcb4f7b83f86b2ee169b39'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -394,6 +394,27 @@ The contributor fixed point is exact:
 `ModeloWorkspaceProducerContractInventoryV1` inventories these eight
 application-owned S126 registrations, not contracts implemented by lower-layer
 owners. Each contract fingerprints the safe application projection schema.
+
+**Amendment (S274):** the fingerprint is derived from the projection's
+SERIALIZATION JSON schema alone, not from requiring the validation and
+serialization schemas to coincide. A port projects outward, so the
+serialization shape is the contract a consumer actually receives; the
+validation shape is an input-acceptance detail the fingerprint does not need
+to identify. The property this fingerprint must hold is a round trip --
+`model_validate_json(instance.model_dump_json())` reproduces the instance --
+not shape coincidence between the two schemas. A bare `Decimal` field
+validates as `anyOf[number, string]` but serializes as `string` alone; that
+string parses straight back to the same `Decimal`, so it round-trips cleanly
+and was never a broken contract, only an equality check with the wrong
+proxy. The original equality requirement was exercised only against a
+string-and-enum manifest and had never met a Decimal-bearing model before
+S167 tried to register the registry snapshot, the work review, and the
+calculation revision -- the three contributors that carry financial data by
+nature and were consequently unregisterable. Retyping their Decimal fields to
+satisfy the fingerprint was rejected: it would change how financial amounts
+serialize everywhere those models are used, far beyond Workspace, which
+inverts which of the two is load-bearing.
+
 One S126 capture calls its canonical owner's native capture exactly once,
 projects only that captured value, and returns the application projection,
 contract-derived stamp, and unchanged native generation. The second-pass read

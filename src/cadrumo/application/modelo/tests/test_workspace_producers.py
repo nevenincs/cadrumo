@@ -91,6 +91,78 @@ def test_workspace_producer_contract_and_stamp_reproduce_the_exact_projection_sc
         ).require_contract(contract)
 
 
+def test_fingerprint_admits_a_decimal_bearing_domain_model() -> None:
+    """S274: a bare Decimal field must no longer refuse registration.
+
+    RegistrySnapshot, ModeloWorkReview and CalculationRevision all carry
+    Decimal fields and were the real, motivating failures -- exercised here
+    with an equivalent locally-defined Decimal field, since importing any of
+    the three real models into this focused unit test would pull in the
+    whole registry/ledger graph.
+    """
+    from decimal import Decimal
+
+    from pydantic import BaseModel
+
+    class _DecimalBearingProjection(BaseModel):
+        amount: Decimal
+
+    modelo_workspace_projection_schema_fingerprint(_DecimalBearingProjection)
+
+
+def test_fingerprint_admits_the_real_motivating_calculation_revision_model() -> None:
+    """The real production model that surfaced this, not just a synthetic stand-in."""
+    from ....domain.modelos import CalculationRevision
+
+    modelo_workspace_projection_schema_fingerprint(CalculationRevision)
+
+
+def test_fingerprint_proves_the_round_trip_it_actually_needs() -> None:
+    """The corrected fingerprint's real guarantee: dump, then re-validate.
+
+    Equality between the validation and serialization schemas was standing in
+    for this property without ever testing it. A Decimal field is the
+    sharpest case: it accepts int/str/Decimal on input but always emits a
+    string, and that string parses straight back to the same Decimal.
+    """
+    from decimal import Decimal
+
+    from pydantic import BaseModel
+
+    class _DecimalBearingProjection(BaseModel):
+        amount: Decimal
+
+    original = _DecimalBearingProjection(amount=Decimal("42.50"))
+    round_tripped = _DecimalBearingProjection.model_validate_json(original.model_dump_json())
+
+    assert round_tripped == original
+    assert isinstance(round_tripped.amount, Decimal)
+
+
+def test_fingerprint_still_refuses_genuine_schema_drift() -> None:
+    """Deriving from serialization alone must not turn the fingerprint into a no-op.
+
+    Two structurally different projections -- and one projection before and
+    after a real field is added -- must still fingerprint differently. A
+    fingerprint that stopped discriminating shape would be a guard removed,
+    not a guard fixed.
+    """
+    from pydantic import BaseModel
+
+    class _NarrowProjection(BaseModel):
+        value: str
+
+    class _WiderProjection(BaseModel):
+        value: str
+        extra: int
+
+    narrow_fingerprint = modelo_workspace_projection_schema_fingerprint(_NarrowProjection)
+    wider_fingerprint = modelo_workspace_projection_schema_fingerprint(_WiderProjection)
+
+    assert narrow_fingerprint != wider_fingerprint
+    assert modelo_workspace_projection_schema_fingerprint(_NarrowProjection) == narrow_fingerprint
+
+
 def test_workspace_contributing_capture_refuses_owner_and_projection_schema_drift() -> None:
     contract = _contract(ModeloWorkspaceContributorKindV1.REGISTRY)
     stamp = ModeloWorkspaceProducerStampV1.from_contract(contract)
