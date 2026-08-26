@@ -61,3 +61,7 @@ The locale help leaves were regenerated through `dev.locales set-batch` from eac
   prose with the actual four-era topology and record shape. State that no
   continuity IDs are declared if that is the real reason the advisory family is
   empty; do not claim that predecessor revisions do not exist.
+
+## Closure
+
+Re-review of `78577f578d` and audit hygiene `9d1ad6a479`: PASS. The former Medium locale finding is remediated: all 644 nonempty historical help leaves in the four shipped locales contain a coordinate span from their own revision's loaded export layout, including the independent `a-deducir-23` witnesses `792-804`, `943-959`, and `982-998`. The former Medium narrative finding is remediated: every successor now names its actual predecessor topology and the M30900/M30901 pair where that is the official record shape. The four source hashes, complete extraction shapes, manifest selection, generic layout coverage, formula surfaces, and visible pre-design refusal remain sound; no Modelo 309-specific selector, validator, or source resolver was introduced. The focused epoch suite and lint pass. The broad locale-revision parity gate remains independently blocked by the concurrent Modelo 165 migration, not by Modelo 309. No unresolved Critical, High, or Medium finding remains.
