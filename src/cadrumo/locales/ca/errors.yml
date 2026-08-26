@@ -810,6 +810,8 @@ errors:
       selecciona un perfil i torna-ho a provar.
     modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
       un import decimal vàlid.
+    modelo_readiness_capture_not_current: L'informe de disponibilitat ja no es actual.
+      Torneu a llegir l'objectiu de model i proveu-ho de nou.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
     modelo_work_capture_not_current: La seleccio de treball ja no es actual. Torneu
       a llegir l'objectiu de treball i proveu-ho de nou.

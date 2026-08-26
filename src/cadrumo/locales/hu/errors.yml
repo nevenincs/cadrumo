@@ -759,6 +759,8 @@ errors:
       létre vagy válasszon ki egy profilt, és próbálja újra.
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
+    modelo_readiness_capture_not_current: A keszultsegi jelentes mar nem aktualis.
+      Olvassa be ujra a modelo celt, es probalja meg ismet.
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
       be ujra a munkacelt, es probalja meg ismet.

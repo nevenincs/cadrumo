@@ -803,6 +803,8 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
+    modelo_readiness_capture_not_current: El informe de disponibilidad ya no es actual.
+      Vuelva a leer el objetivo de modelo e intentelo de nuevo.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_capture_not_current: La seleccion de trabajo ya no es actual. Vuelva
       a leer el objetivo de trabajo e intentelo de nuevo.
