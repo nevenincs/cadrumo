@@ -17,11 +17,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_PACKAGE = Path(__file__).resolve().parent.parent
 _RECOVERY_PROSE_MODULES = (
-    "_applicability.py",
-    "_applicability_modelo202.py",
-    "_queries.py",
-    "_snapshot.py",
-    "_loader.py",
+    "applicability.py",
+    "applicability_modelo202.py",
+    "queries.py",
+    "snapshot.py",
+    "loader.py",
     "loader_cache.py",
     "loader_fingerprints.py",
 )
@@ -57,7 +57,7 @@ def test_recovery_prose_scan_rejects_each_reintroduced_directive(tmp_path: Path,
     """Mutation proof: none of the exact retired directives can evade the census."""
     for name in _RECOVERY_PROSE_MODULES:
         (tmp_path / name).write_text("pass\n", encoding="utf-8")
-    (tmp_path / "_queries.py").write_text(f"directive = {fragment!r}\n", encoding="utf-8")
+    (tmp_path / "queries.py").write_text(f"directive = {fragment!r}\n", encoding="utf-8")
 
     with pytest.raises(AssertionError):
         assert _recovery_prose_fragments(tmp_path) == {}
