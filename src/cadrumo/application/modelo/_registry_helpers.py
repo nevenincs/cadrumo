@@ -14,8 +14,8 @@ payloads by re-deriving their content-addressed identifiers and checking
 before stored payloads are trusted by verification or filing workflows.
 
 See Also:
-    :func:`cadrumo.application.modelo._registry_resources.authority_via_resources`
-        Central registry authority loader used by snapshot-backed guards.
+    :func:`cadrumo.domain.calculations.registry.authority.bundled_authority`
+        Canonical registry authority used by snapshot-backed guards.
     :func:`validate_casilla_input_ids`
         Boundary validator for operator-supplied casilla maps.
     :func:`assert_revision_content_integrity`
@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision, Registry
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ...core import CasillaId, Period, validated_casilla_id
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
@@ -55,7 +56,6 @@ from ._action_errors import (
     StoredCalculationDriftError,
 )
 from ._registry_resources import (
-    authority_via_resources,
     registry_root,
     reject_unknown_period_for_revision,
     reject_unknown_revision,
@@ -97,7 +97,7 @@ class _ResolvedRegistryCasillaInputs:
 
 def _resolve_registry_snapshot(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshot:
     """Resolve the law-selected registry snapshot for one filing target."""
-    return authority_via_resources().snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period.registry_token)
 
 
 def _normalise_registry_casilla_inputs[CasillaKey](
@@ -590,7 +590,6 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 __all__ = [
     "assert_revision_content_integrity",
-    "authority_via_resources",
     "registry_root",
     "reject_incomplete_amendment_casillas",
     "reject_unknown_import_casillas",

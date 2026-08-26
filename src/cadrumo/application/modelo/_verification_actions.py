@@ -73,6 +73,7 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -150,7 +151,6 @@ from ._objective_estimation_advisory import _objective_estimation_exclusion_advi
 from ._preconditions import ModeloPreconditionFailure
 from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
-from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -1436,7 +1436,7 @@ def _resolve_verification_snapshot(
     )
 
     try:
-        authority = _authority_via_resources()
+        authority = bundled_authority()
         return authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,

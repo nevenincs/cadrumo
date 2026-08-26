@@ -917,7 +917,6 @@ def _lexical_tokens(value: str) -> frozenset[str]:
 
 def discover_lexical_destination_advisories(repo_root: Path) -> tuple[LexicalDestinationAdvisory, ...]:
     """Emit report-only token overlaps; never infer binding identity or equivalence."""
-
     capability_phrases: list[tuple[str, str, str]] = []
     capability_phrases.extend(
         ("secure_repository", row.evidence_locator, " ".join((row.repository_name, *row.payload_types)))
