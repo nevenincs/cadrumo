@@ -11,53 +11,74 @@ filing readiness.
 
 Every classification is read from application-owned facts already computed
 elsewhere -- the schema's own `required` declaration, the conditional
-completeness rules in :mod:`completeness`, and the schema-declared
-`provenance.source` token on the effective fact -- never guessed from locale
-or presentation state, per D6's explicit instruction. A conditionally
-required field whose trigger fact is itself unanswered is `NEEDS_APPLICABILITY`,
-never silently folded into `NOT_APPLICABLE`: that collapse is exactly the
-anti-pattern D6 names ("Unknown applicability is displayed as unassessed,
-never silently treated as ... not applicable").
+completeness rules in :mod:`completeness`, the domain's Modelo-IVA claiming
+rules, and the schema-declared `provenance.source` token on the effective
+fact -- never guessed from locale or presentation state, per D6's explicit
+instruction. A conditionally required field whose trigger fact is itself
+unanswered is `NEEDS_APPLICABILITY`, never silently folded into
+`NOT_APPLICABLE`: that collapse is exactly the anti-pattern D6 names
+("Unknown applicability is displayed as unassessed, never silently treated
+as ... not applicable").
 
-Scope for this pass: conditional-requirement triggers are resolved only for
-the known named trigger paths in :data:`_CONDITIONAL_TRIGGERS`
-(`auth.clave_movil_route`, the legal-entity fields, and the IRNR
-fiscal-representative fields); the IVA-regime conditional block and every
-repeatable section are presented as `OPTIONAL` rather than assessed for
-conditional applicability, since their trigger conditions are multi-field and
-out of this Step's bounded scope. `Review`'s unresolved-proposal/conflict row
-is not built here: it belongs to whichever registered acquisition/reconciliation
-operation proposes the divergence (censal review, previous-filing evidence),
-not to this static per-field projection.
+Conditional-applicability triggers resolved here: the single-field triggers
+in :data:`_CONDITIONAL_TRIGGERS` (`auth.clave_movil_route`, the legal-entity
+fields, the IRNR fiscal-representative fields); the multi-field Modelo-IVA
+block, resolved through the domain's own
+:func:`~domain.deadlines.profile_claims_modelo_iva_block` and
+:func:`~domain.deadlines.modelo_iva_profile_required_paths` rather than a
+reimplemented claiming-path set; and the repeatable
+`attribution_entity_socios` section's per-row country field, gated by that
+row's own `participe_clave` (`completeness.PARTICIPE_CLAVE_BEARING_COUNTRY`).
+Every other repeatable section reports its declared rows' fields by static
+schema requiredness alone -- no conditional rule is currently declared for
+them anywhere in this package, so `OPTIONAL` there is the correct answer,
+not a narrowed one. `Review`'s unresolved-proposal/conflict row is not built
+here: it belongs to whichever registered acquisition/reconciliation operation
+proposes the divergence (censal review, previous-filing evidence), not to
+this static per-field projection.
 """
 
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from ...core.identity import ProfileId
+from ...domain.deadlines import (
+    MODELO_IVA_BLOCK_REQUIRED_PATHS,
+    modelo_iva_profile_required_paths,
+    profile_claims_modelo_iva_block,
+)
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
 from .completeness import (
+    ATRIBUCION_SOCIOS_SECTION,
     AUTH_PROVIDER_PATH,
     CLAVE_MOVIL_ROUTE_PATH,
     ENTITY_TYPE_PATH,
     FISCAL_RESIDENCY_PATH,
     LEGAL_ENTITY_FORM_PATH,
     LEGAL_NAME_PATH,
+    PARTICIPE_CLAVE_BEARING_COUNTRY,
+    PARTICIPE_CLAVE_FIELD,
     REPRESENTANTE_FISCAL_NIF_PATH,
     REPRESENTANTE_FISCAL_NOMBRE_PATH,
+    SOCIO_COUNTRY_FIELD,
     conditional_profile_required_paths,
     profile_value_is_present,
 )
 from .projections import EffectiveFact, record_to_effective_facts
 
+if TYPE_CHECKING:
+    from ...domain.user_profile.schema import ProfileSectionDefinition
+
 _PRESENTATION_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-#: Every conditionally required path this Step resolves applicability for,
-#: mapped to the trigger path whose answer decides whether it applies at all.
+#: Every single-field-triggered conditionally required path this module
+#: resolves applicability for, mapped to the trigger path whose answer
+#: decides whether it applies at all.
 _CONDITIONAL_TRIGGERS: dict[str, str] = {
     CLAVE_MOVIL_ROUTE_PATH: AUTH_PROVIDER_PATH,
     LEGAL_ENTITY_FORM_PATH: ENTITY_TYPE_PATH,
@@ -65,6 +86,8 @@ _CONDITIONAL_TRIGGERS: dict[str, str] = {
     REPRESENTANTE_FISCAL_NIF_PATH: FISCAL_RESIDENCY_PATH,
     REPRESENTANTE_FISCAL_NOMBRE_PATH: FISCAL_RESIDENCY_PATH,
 }
+
+_MODELO_IVA_BLOCK_PATHS = frozenset(MODELO_IVA_BLOCK_REQUIRED_PATHS)
 
 
 class ProfileFieldSourceClass(StrEnum):
@@ -142,7 +165,8 @@ class ProfileFieldPresentationV1(BaseModel):
             raise ValueError("a present field must carry a source class")
         if not self.present and self.source is not None:
             raise ValueError("a blank field cannot carry a source class")
-        if (self.classification is ProfileFieldClassification.NEEDS_APPLICABILITY) != (not self.applicability_assessed):
+        needs_applicability = self.classification is ProfileFieldClassification.NEEDS_APPLICABILITY
+        if needs_applicability != (not self.applicability_assessed):
             raise ValueError("needs_applicability and applicability_assessed=False must agree exactly")
         if self.blocks_ready != (self.classification in _BLOCKING_CLASSIFICATIONS):
             raise ValueError("blocks_ready must match the classification's declared readiness effect")
@@ -173,52 +197,125 @@ def build_profile_presentation(record: UserProfileRecord) -> ProfilePresentation
 
     Reads only application-owned facts: the schema's own `required`
     declaration, :func:`completeness.conditional_profile_required_paths`,
-    and the effective fact's own declared source -- never infers a
-    classification from a value's shape or a locale string.
+    the domain's Modelo-IVA claiming rules, and the effective fact's own
+    declared source -- never infers a classification from a value's shape
+    or a locale string.
     """
     schema = load_user_profile_schema()
     effective = record_to_effective_facts(record)
     values = {path: fact.value for path, fact in effective.items()}
     conditional_required = frozenset(conditional_profile_required_paths(values))
+    iva_claimed = profile_claims_modelo_iva_block(values)
+    iva_required = frozenset(modelo_iva_profile_required_paths(values))
 
     rows: list[ProfileFieldPresentationV1] = []
     for section in schema.sections:
         if section.repeatable:
+            rows.extend(_repeatable_section_rows(section, effective=effective))
             continue
         for field in section.fields:
             path = f"{section.key}.{field.key}"
-            fact = effective.get(path)
-            present = fact is not None and profile_value_is_present(fact.value)
-            source = profile_field_source_class(fact.source) if present and fact is not None else None
-            trigger = _CONDITIONAL_TRIGGERS.get(path)
-
-            if field.required:
-                classification = _required_classification(present)
-                applicability_assessed = True
-            elif trigger is not None and not _path_answered(effective, trigger):
-                classification = ProfileFieldClassification.NEEDS_APPLICABILITY
-                applicability_assessed = False
-            elif path in conditional_required:
-                classification = _required_classification(present)
-                applicability_assessed = True
-            elif trigger is not None:
-                classification = ProfileFieldClassification.NOT_APPLICABLE
-                applicability_assessed = True
-            else:
-                classification = ProfileFieldClassification.OPTIONAL
-                applicability_assessed = True
-
-            rows.append(
-                ProfileFieldPresentationV1(
-                    path=path,
-                    classification=classification,
-                    present=present,
-                    applicability_assessed=applicability_assessed,
-                    source=source,
-                    blocks_ready=classification in _BLOCKING_CLASSIFICATIONS,
-                )
+            classification, applicability_assessed = _classify_static_or_conditional(
+                path=path,
+                required=field.required,
+                present=_path_answered(effective, path),
+                effective=effective,
+                conditional_required=conditional_required,
+                iva_claimed=iva_claimed,
+                iva_required=iva_required,
             )
+            rows.append(_row(path, classification, applicability_assessed, effective))
     return ProfilePresentationV1(profile_id=record.profile_id, fields=tuple(rows))
+
+
+def _classify_static_or_conditional(
+    *,
+    path: str,
+    required: bool,
+    present: bool,
+    effective: dict[str, EffectiveFact],
+    conditional_required: frozenset[str],
+    iva_claimed: bool,
+    iva_required: frozenset[str],
+) -> tuple[ProfileFieldClassification, bool]:
+    if required:
+        return _required_classification(present), True
+    if path in _MODELO_IVA_BLOCK_PATHS:
+        if not iva_claimed:
+            return ProfileFieldClassification.NEEDS_APPLICABILITY, False
+        if path in iva_required:
+            return _required_classification(present), True
+        return ProfileFieldClassification.NOT_APPLICABLE, True
+    trigger = _CONDITIONAL_TRIGGERS.get(path)
+    if trigger is not None:
+        if not _path_answered(effective, trigger):
+            return ProfileFieldClassification.NEEDS_APPLICABILITY, False
+        if path in conditional_required:
+            return _required_classification(present), True
+        return ProfileFieldClassification.NOT_APPLICABLE, True
+    if path in conditional_required:
+        return _required_classification(present), True
+    return ProfileFieldClassification.OPTIONAL, True
+
+
+def _repeatable_section_rows(
+    section: ProfileSectionDefinition, *, effective: dict[str, EffectiveFact]
+) -> list[ProfileFieldPresentationV1]:
+    """Presentation rows for every declared instance of one repeatable section.
+
+    A repeatable section with no declared rows contributes nothing -- a
+    taxpayer with no attribution entities is not incomplete for lacking
+    one, the same rule :mod:`overview` applies.
+    """
+    prefix = f"{section.key}."
+    indices: dict[str, None] = {}
+    for existing_path in effective:
+        if not existing_path.startswith(prefix):
+            continue
+        index = existing_path[len(prefix) :].split(".", 1)[0]
+        if index.isdigit():
+            indices.setdefault(index, None)
+
+    rows: list[ProfileFieldPresentationV1] = []
+    for index in indices:
+        clave_path = f"{section.key}.{index}.{PARTICIPE_CLAVE_FIELD}"
+        clave_answered = _path_answered(effective, clave_path)
+        clave_value = effective[clave_path].value if clave_answered else None
+        for field in section.fields:
+            path = f"{section.key}.{index}.{field.key}"
+            present = _path_answered(effective, path)
+            if section.key == ATRIBUCION_SOCIOS_SECTION and field.key == SOCIO_COUNTRY_FIELD and not field.required:
+                if not clave_answered:
+                    classification, applicability_assessed = ProfileFieldClassification.NEEDS_APPLICABILITY, False
+                elif clave_value == PARTICIPE_CLAVE_BEARING_COUNTRY:
+                    classification, applicability_assessed = _required_classification(present), True
+                else:
+                    classification, applicability_assessed = ProfileFieldClassification.NOT_APPLICABLE, True
+            elif field.required:
+                classification, applicability_assessed = _required_classification(present), True
+            else:
+                classification, applicability_assessed = ProfileFieldClassification.OPTIONAL, True
+            rows.append(_row(path, classification, applicability_assessed, effective))
+    return rows
+
+
+def _row(
+    path: str,
+    classification: ProfileFieldClassification,
+    applicability_assessed: bool,
+    effective: dict[str, EffectiveFact],
+) -> ProfileFieldPresentationV1:
+    fact = effective.get(path)
+    present = fact is not None and profile_value_is_present(fact.value)
+    source = profile_field_source_class(fact.source) if present and fact is not None else None
+    return ProfileFieldPresentationV1(
+        path=path,
+        classification=classification,
+        present=present,
+        applicability_assessed=applicability_assessed,
+        source=source,
+        blocks_ready=classification in _BLOCKING_CLASSIFICATIONS,
+    )
 
 
 def _required_classification(present: bool) -> ProfileFieldClassification:
