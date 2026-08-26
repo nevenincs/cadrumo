@@ -211,7 +211,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
         modelo="200",
         filing_year=2025,
         period="0A",
-        revision="2024-y-siguientes",
+        revision="2024",
     )
 
     result = invoke_cached_cli(
@@ -586,7 +586,7 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
         modelo="200",
         filing_year=2024,
         period="0A",
-        revision="2024-y-siguientes",
+        revision="2024",
     )
 
     result = invoke_cached_cli(

@@ -29,16 +29,33 @@ from .errors import CliRefusedBoundaryError
 def modelo_readiness(
     ctx: typer.Context,
     modelo: str,
-    revision_id: str,
     filing_year: int,
+    revision_id: str | None = None,
     period: str | None = None,
 ) -> None:
-    """Report active-profile readiness for one modelo target."""
+    """Report active-profile readiness for one modelo target.
+
+    ``--revision-id`` is an explicit override for exact replay. When it is
+    omitted the revision is resolved law-determined from the natural key, which
+    is the only direction ``aeat-registry-authority-flow`` permits: a supplied
+    id may be asserted equal to the resolution, never injected as the selector.
+
+    Exits with code ``2`` when the target is not ready, so an operator driving
+    the CLI from a script discovers the gap through the shell status and not
+    only by reading the payload.
+    """
+    resolved_period = _resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period)
+    revision_id = _resolve_readiness_revision_id(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=resolved_period,
+        revision_id=revision_id,
+    )
     request = ModeloReadinessRequest(
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
-        period=_resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period),
+        period=resolved_period,
     )
     report = _readiness_report(request)
     readiness_result = _readiness_result(
@@ -59,6 +76,23 @@ def modelo_readiness(
             period=period,
         ),
         notices=_readiness_notices(report),
+    )
+    if not report.ready:
+        raise typer.Exit(code=2)
+
+
+def _resolve_readiness_revision_id(
+    *, modelo: str, filing_year: int, period: Period | None, revision_id: str | None
+) -> str:
+    """Resolve the revision law-determined, or assert a supplied override equal to it."""
+    from ...application.modelo.work_addressing import law_selected_revision_for_work_target
+
+    target_period = period or Period.from_year_and_code(filing_year, "0A")
+    return law_selected_revision_for_work_target(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=target_period,
+        requested_revision_id=RevisionId(revision_id) if revision_id else None,
     )
 
 

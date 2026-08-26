@@ -6,10 +6,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import CasillaId, validated_casilla_id
-from .._config._google_payloads import (
-    GoogleSyncCalcComputeResult,
-    GoogleSyncCalcPullResult,
-    GoogleSyncCalcVerifyResult,
+from .._modelo_spreadsheet_payloads import (
+    ModeloSpreadsheetCalculateResult,
+    ModeloSpreadsheetPullResult,
+    ModeloSpreadsheetVerifyResult,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -77,13 +77,13 @@ def _base_compute_payload() -> dict[str, object]:
 
 
 def test_google_calc_pull_payload_types_casilla_rows() -> None:
-    payload = GoogleSyncCalcPullResult.model_validate(_base_pull_payload())
+    payload = ModeloSpreadsheetPullResult.model_validate(_base_pull_payload())
 
     assert _casilla_id_from_payload(payload.operator_edits[0].casilla_id) == _INGRESOS_CASILLA
 
 
 def test_google_calc_compute_payload_types_casilla_rows() -> None:
-    payload = GoogleSyncCalcComputeResult.model_validate(_base_compute_payload())
+    payload = ModeloSpreadsheetCalculateResult.model_validate(_base_compute_payload())
 
     assert _casilla_id_from_payload(payload.computed[0].casilla_id) == _RENDIMIENTO_NETO_CASILLA
 
@@ -93,7 +93,7 @@ def test_google_calc_pull_payload_rejects_invalid_casilla_ids() -> None:
     raw["operator_edits"] = [{"casilla_id": _EMPTY_CASILLA_ID, "label": "Ingresos", "value": "100.00"}]
 
     with pytest.raises(ValidationError):
-        GoogleSyncCalcPullResult.model_validate(raw)
+        ModeloSpreadsheetPullResult.model_validate(raw)
 
 
 def test_google_calc_pull_payload_rejects_generic_casilla_key() -> None:
@@ -101,11 +101,11 @@ def test_google_calc_pull_payload_rejects_generic_casilla_key() -> None:
     raw["operator_edits"] = [{"casilla": _INGRESOS_CASILLA, "label": "Ingresos", "value": "100.00"}]
 
     with pytest.raises(ValidationError):
-        GoogleSyncCalcPullResult.model_validate(raw)
+        ModeloSpreadsheetPullResult.model_validate(raw)
 
 
 def test_google_calc_verify_payload_emits_casilla_id() -> None:
-    payload = GoogleSyncCalcVerifyResult.model_validate(
+    payload = ModeloSpreadsheetVerifyResult.model_validate(
         {
             "profile": "default",
             "modelo": "130",
@@ -134,7 +134,7 @@ def test_google_calc_verify_payload_emits_casilla_id() -> None:
 
 def test_google_calc_verify_payload_rejects_generic_casilla_key() -> None:
     with pytest.raises(ValidationError):
-        GoogleSyncCalcVerifyResult.model_validate(
+        ModeloSpreadsheetVerifyResult.model_validate(
             {
                 "profile": "default",
                 "modelo": "130",
@@ -172,7 +172,7 @@ def test_google_calc_compute_payload_rejects_computed_rows_without_provenance() 
     ]
 
     with pytest.raises(ValidationError):
-        GoogleSyncCalcComputeResult.model_validate(raw)
+        ModeloSpreadsheetCalculateResult.model_validate(raw)
 
     raw = _base_compute_payload()
     raw["computed"] = [
@@ -185,13 +185,13 @@ def test_google_calc_compute_payload_rejects_computed_rows_without_provenance() 
     ]
 
     with pytest.raises(ValidationError):
-        GoogleSyncCalcComputeResult.model_validate(raw)
+        ModeloSpreadsheetCalculateResult.model_validate(raw)
 
     raw = _base_compute_payload()
     raw["computed"] = [{"casilla_id": _EMPTY_CASILLA_ID, "value": "20.00", "formula_id": "m130-test-formula"}]
 
     with pytest.raises(ValidationError):
-        GoogleSyncCalcComputeResult.model_validate(raw)
+        ModeloSpreadsheetCalculateResult.model_validate(raw)
 
 
 class TestPullRelationEditGrounding:
@@ -233,7 +233,7 @@ class TestPullRelationEditGrounding:
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1
         raw["relation_edits"] = [relation_edit_payload(edit)]
-        result = GoogleSyncCalcPullResult.model_validate(raw)
+        result = ModeloSpreadsheetPullResult.model_validate(raw)
 
         (row,) = result.relation_edits
         assert row.relation == "m130-cuota-carry"
@@ -260,7 +260,7 @@ class TestPullRelationEditGrounding:
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1
         raw["relation_edits"] = [relation_edit_payload(RelationEdit(relation="m130-cuota-carry"))]
-        result = GoogleSyncCalcPullResult.model_validate(raw)
+        result = ModeloSpreadsheetPullResult.model_validate(raw)
 
         (row,) = result.relation_edits
         assert row.provenance is None
@@ -276,7 +276,7 @@ class TestPullRelationEditGrounding:
         raw["relation_edits"] = [{"relation": "m130-cuota-carry", "provenance": "guessed"}]
 
         with pytest.raises(ValidationError):
-            GoogleSyncCalcPullResult.model_validate(raw)
+            ModeloSpreadsheetPullResult.model_validate(raw)
 
     def test_a_malformed_casilla_reference_is_refused(self) -> None:
         """Grounding is typed, so an anonymous casilla string cannot ride along."""
@@ -285,4 +285,4 @@ class TestPullRelationEditGrounding:
         raw["relation_edits"] = [{"relation": "m130-cuota-carry", "source_casilla_ids": [_EMPTY_CASILLA_ID]}]
 
         with pytest.raises(ValidationError):
-            GoogleSyncCalcPullResult.model_validate(raw)
+            ModeloSpreadsheetPullResult.model_validate(raw)

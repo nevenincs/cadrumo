@@ -996,8 +996,6 @@ cli:
         app_help: 'Concilia una unitat de treball de model amb el seu justificant
           AEAT: pull descàrrega el justificant d''AEAT i concilia; file concilia un
           PDF local; history llista les conciliacions anteriors.'
-        file_help: Concilia una unitat de treball contra un PDF de justificant o declaració
-          local. Només local; mai contacta amb AEAT.
         file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
           tots els models) o declaration (PDF de declaració presentada, conciliació
           a nivell de casella, només models habilitats). Per defecte justificante.'
@@ -1007,6 +1005,8 @@ cli:
         history_help: Llista les conciliacions registrades per al perfil actiu.
         history_work_unit_id_help: Id d'unitat de treball opcional per acotar l'historial
           a una unitat.
+        import_help: Concilia una unitat de treball contra un PDF de justificant o
+          declaració local. Només local; mai contacta amb AEAT.
         pull_help: Descàrrega d'AEAT el justificant d'una unitat de treball i concilia-hi.
           Contacta amb AEAT (només lectura).
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
@@ -2144,11 +2144,11 @@ cli:
           baixa aquestes dades, pot tractar-se d''una descàrrega parcial: torna a
           executar la descàrrega del cens o reintrodueix els valors; la proporció
           d''afectació de l''habitatge podria deixar de resoldre''s.'
-        file_help: Llegeix un Certificado de Situación Censal descarregat i previsualitza
-          o registra les seves dades censals.
         file_option_help: Ruta al PDF del Certificado de Situación Censal descarregat
           de la Seu (tràmit G313).
         help: Ingesta d'artefactes censals per al perfil actiu.
+        import_help: Llegeix un Certificado de Situación Censal descarregat i previsualitza
+          o registra les seves dades censals.
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.

@@ -7,7 +7,7 @@ modelo:
           constituidas en el extranjero con presencia en territorio español). Declaración-liquidación.
         title: IS autoliquidación anual
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             '00001':
               help: null

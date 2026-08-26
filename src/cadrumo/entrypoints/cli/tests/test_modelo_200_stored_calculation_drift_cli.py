@@ -44,7 +44,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "create",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024-y-siguientes", "--name", "SA M200 2026", "--by", "s421",
+            "--revision", "2024", "--name", "SA M200 2026", "--by", "s421",
         ],
     )  # fmt: skip
     assert work.exit_code == 0, work.output
@@ -53,7 +53,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "calculate",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024-y-siguientes",
+            "--revision", "2024",
             "--casilla", "00501=100000",
             "--casilla", "DP200013:00417=0",
             "--casilla", "DP200013:00418=0",
@@ -91,7 +91,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "verify",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024-y-siguientes", "--by", "s421",
+            "--revision", "2024", "--by", "s421",
         ],
     )  # fmt: skip
 

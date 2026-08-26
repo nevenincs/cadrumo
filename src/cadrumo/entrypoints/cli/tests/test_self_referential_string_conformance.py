@@ -271,9 +271,9 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")
 
 
-def _doclink_source_advertised() -> frozenset[str]:
-    """The ``ledger doclink --source`` advertised member set, read live."""
-    return _advertised_option_choices(("app", "ledger", "doclink"), "--source")
+def _evidence_pull_source_advertised() -> frozenset[str]:
+    """The ``ledger evidence pull --source`` advertised member set, read live."""
+    return _advertised_option_choices(("app", "ledger", "evidence", "pull"), "--source")
 
 
 # The doclink handler accepts exactly the three link sources it maps to an
@@ -311,8 +311,8 @@ def _verify_select_advertised() -> frozenset[str]:
 def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
     return (
         _EnumChoiceSurface(
-            label="aeat app ledger doclink --source",
-            advertised=_doclink_source_advertised(),
+            label="aeat app ledger evidence pull --source",
+            advertised=_evidence_pull_source_advertised(),
             accepted=_DOCLINK_ACCEPTED_SOURCES,
         ),
         _EnumChoiceSurface(

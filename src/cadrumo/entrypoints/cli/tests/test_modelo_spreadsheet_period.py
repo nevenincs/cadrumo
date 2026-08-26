@@ -5,13 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from .._config._google_sync_calc import filing_period_or_refusal, load_snapshot
+from .._modelo_spreadsheet_cli import filing_period_or_refusal, load_snapshot
 from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_google_sync_calc_snapshot_loader_accepts_typed_period() -> None:
+def test_modelo_spreadsheet_cli_snapshot_loader_accepts_typed_period() -> None:
     """The local snapshot loader receives a typed Period, not raw year/period text."""
 
     period = filing_period_or_refusal(modelo="303", period="1T", year=2026)
@@ -24,7 +24,7 @@ def test_google_sync_calc_snapshot_loader_accepts_typed_period() -> None:
     assert snapshot.period == period.registry_token
 
 
-def test_google_sync_calc_period_refuses_combined_shape() -> None:
+def test_modelo_spreadsheet_cli_period_refuses_combined_shape() -> None:
     """Calendar-shaped period input refuses before registry snapshot lookup."""
     year = 2026
     combined_period = f"{year}Q1"

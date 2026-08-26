@@ -29,13 +29,13 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
         "config_google_folder_set",
         "config_google_folder_get",
         "config_google_sync",
-        "config_google_sync_probe",
-        "config_google_sync_push",
-        "config_google_sync_calc",
-        "config_google_sync_calc_export",
-        "config_google_sync_calc_verify",
-        "config_google_sync_calc_pull",
-        "config_google_sync_calc_compute",
+        "config_google_probe",
+        "config_profile_archive_push",
+        "config_modelo_spreadsheet_cli",
+        "config_modelo_spreadsheet_cli_export",
+        "config_modelo_spreadsheet_cli_verify",
+        "config_modelo_spreadsheet_cli_pull",
+        "config_modelo_spreadsheet_cli_compute",
     }
     leaves = [spec for spec in GOOGLE_COMMAND_SPECS if spec.kind == "leaf"]
     assert all(spec.handler is not None and spec.handler.state is BindingState.TARGET for spec in leaves)
@@ -49,7 +49,7 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
         "_google.py",
         "_google_credential_source_cli.py",
         "_google_folder.py",
-        "_google_sync_calc.py",
+        "_modelo_spreadsheet_cli.py",
     )
 
     for module in modules:
@@ -78,7 +78,7 @@ def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> Non
 
     probe = {
         parameter.name: parameter
-        for parameter in by_key["config_google_sync_probe"].parameters
+        for parameter in by_key["config_google_probe"].parameters
         if isinstance(parameter, OptionSpec)
     }
     assert probe["read_only"].declarations == ("--read-only/--no-read-only",)
@@ -86,7 +86,7 @@ def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> Non
 
     export = {
         parameter.name: parameter
-        for parameter in by_key["config_google_sync_calc_export"].parameters
+        for parameter in by_key["config_modelo_spreadsheet_cli_export"].parameters
         if isinstance(parameter, OptionSpec)
     }
     assert export["year"].constraint.minimum == 2000

@@ -69,9 +69,9 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
     resolver reads, not from a hand-copied literal: a registry edit that
     moves the active revision moves this expectation with it.
     """
-    from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
+    from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 
-    return resolve_registry_revision_for_work_target(
+    return law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

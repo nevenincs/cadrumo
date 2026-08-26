@@ -2,147 +2,150 @@ modelo:
   schema:
     '576':
       field:
-        official_name: null
-        title: null
+        official_name: 576-os modell. Egyes szállítóeszközöket terhelő különadó. Önadózás.
+        title: IEDMT - egyes szállítóeszközök nyilvántartásba vételi önadózása
       revision:
         '2007':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az adókötelezettség keletkezésének éve
           field:
-            label: null
+            label: EHA/1981/2005. rendelet, 2007. adóév
         2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
               help: null
-              label: null
+              label: C.M.T. Légi járművek. Gyártási év
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: null
-              label: null
+              label: C.M.T. Légi járművek. Gyártó
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
               help: null
-              label: null
+              label: C.M.T. Légi járművek. Modell
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
               help: null
-              label: null
+              label: C.M.T. Légi járművek. Legnagyobb felszállótömeg (kg)
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               help: null
-              label: null
+              label: C.M.T. Légi járművek. Sorozatszám
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: null
-              label: null
+              label: C.M.T. Vízi járművek. Legnagyobb hossz (méterben)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: null
-              label: null
+              label: C.M.T. Vízi járművek. Gyártó vagy importőr
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: null
-              label: null
+              label: C.M.T. Vízi járművek. Azonosító (gyártási szám)
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
               help: null
-              label: null
+              label: C.M.T. Vízi járművek. Modell
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
               help: null
-              label: null
+              label: C.M.T. Vízi járművek. Megjegyzések
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. A használt szállítóeszköz első nyilvántartásba vételének
+                dátuma
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
               help: null
-              label: null
+              label: Futott kilométer vagy üzemóra
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Spanyolországban vagy attól eltérő államban szerezték
+                be
             x-cdmn8bjeelincrpdelpm2p3f:
               help: null
-              label: null
+              label: C.M.T. Új vagy használt szállítóeszköz
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Azonosító szám (alváz)
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Besorolás a 70/156/EGK irányelv szerint
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Hengerűrtartalom (cm3)
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Besorolás gyártási és használati szempont
+                szerint (RD 2822/1998)
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Műszaki vizsgakód
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. CO2-kibocsátás
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Adótétel
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Műszaki vizsgakártya sorozatszáma
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Műszaki vizsgakártya típusa
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Gyártmány
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Modell-típus
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Benzin-, dízel- vagy egyéb motor
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
               help: null
-              label: null
+              label: C.M.T. Gépjárművek. Megjegyzések
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: null
-              label: null
+              label: Az adóköteles esemény oka
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Az adókötelezettség keletkezésének éve
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: null
-              label: null
+              label: Kiegészítő bevallás. Az előző bevallás bizonylatszáma
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: null
+              label: Bevallás típusa
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
               help: null
-              label: null
+              label: 'Szállítóeszköz típusa (V: gépjármű, E: vízi jármű, A: légi jármű)'
             x-d5n78sjfchqm6t3fe8n6sqb6:
               help: null
-              label: null
+              label: A szállítóeszközt Spanyolországba behozó személy adószáma
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               help: null
-              label: null
+              label: A Spanyolországba behozó vezeték- és utóneve vagy cégneve
             x-dhkn2bj15li6ap3lcdkn4:
               help: null
-              label: null
+              label: Adómegállapítás. Levonandó
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
               help: null
-              label: null
+              label: Adómegállapítás. Adóalap
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               help: null
-              label: null
+              label: Adómegállapítás. Csökkentett adóalap
             x-dhkn2bj3elnn8o8:
               help: null
-              label: null
+              label: Adómegállapítás. Adóösszeg
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               help: null
-              label: null
+              label: Adómegállapítás. Fizetendő adó
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
               help: null
-              label: null
+              label: Adómegállapítás. Lineáris levonás
             x-dhkn2bjiclpnar3kc5i6u:
               help: null
-              label: null
+              label: Adómegállapítás. Az adómegállapítás eredménye
             x-dhkn2bjkd5o6u:
               help: null
-              label: null
+              label: Adómegállapítás. Adókulcs %
           construct:
             modelo-576-autoliquidacion:
               field:
-                title: null
+                title: Az egyes szállítóeszközöket terhelő különadó önadózása
           field:
-            label: null
+            label: EHA/3851/2007. rendelet, 2008. adóévtől

@@ -40,6 +40,16 @@ def _required(name: str, flag: str, value: ValueContract, help_key: str) -> Opti
     )
 
 
+def _option(name: str, flag: str, value: ValueContract, help_key: str) -> OptionSpec:
+    return OptionSpec(
+        name=name,
+        declarations=(flag,),
+        value=value,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+    )
+
+
 MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_modelo_readiness",
@@ -51,8 +61,8 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
             _required("modelo", "--modelo", _MODELO, "cli.app.modelo.readiness.modelo_help"),
-            _required("revision_id", "--revision-id", _STR, "cli.app.modelo.readiness.revision_help"),
             _required("filing_year", "--year", _INT, "cli.app.modelo.readiness.year_help"),
+            _option("revision_id", "--revision-id", _STR, "cli.app.modelo.readiness.revision_help"),
             OptionSpec(
                 name="period",
                 declarations=("--period",),

@@ -333,7 +333,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", "200",
-            "--revision-id", "2024-y-siguientes",
+            "--revision-id", "2024",
             "--year", "2026",
             "--period", "0A",
         ],
@@ -354,7 +354,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--modelo", "200",
             "--year", "2026",
             "--period", "0A",
-            "--revision", "2024-y-siguientes",
+            "--revision", "2024",
         ],
     )  # fmt: skip
 
@@ -372,7 +372,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--modelo", "200",
             "--year", "2026",
             "--period", "0A",
-            "--revision", "2024-y-siguientes",
+            "--revision", "2024",
             "--allow-not-applicable",
         ],
     )  # fmt: skip
