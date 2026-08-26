@@ -83,7 +83,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m303_2026_tree():
-    return next(tree for tree in _GENERATED_TREES if tree.modelo == "303" and tree.revision == "2026-y-siguientes")
+    return next(
+        tree
+        for tree in _GENERATED_TREES
+        if tree.modelo == "303"
+        and tree.source_ref == "aeat-dr-303-2026"
+        and tree.epoch == "2026"
+        and tree.year == 2026
+        and tree.period == "4T"
+    )
 
 
 def _tree_bytes(export_root: Path) -> dict[str, bytes]:
@@ -541,7 +549,7 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
 
 
 @pytest.mark.parametrize(
-    ("case", "mutation", "refusal"),
+    ("_case", "mutation", "refusal"),
     (
         (
             "cross-snapshot",
@@ -553,7 +561,7 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
             lambda request: {
                 "draft": request.draft.model_copy(update={"period": Period.from_year_and_code(2026, "2T")}),
             },
-            "filing-envelope draft period must match the selected registry snapshot",
+            "draft period token '2T' does not match its snapshot_ref period '1T'",
         ),
         ("opaque-bytes", lambda _request: {"opaque_bytes": b"not-an-envelope"}, "Extra inputs are not permitted"),
         ("open-map", lambda _request: {"open_map": {}}, "Extra inputs are not permitted"),
@@ -608,7 +616,7 @@ def _extra_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]
 
 
 @pytest.mark.parametrize(
-    ("case", "mutation", "refusal"),
+    ("_case", "mutation", "refusal"),
     (
         ("reorder", _reordered_occurrences, "filing-envelope occurrences must retain reviewed record-family order"),
         (
