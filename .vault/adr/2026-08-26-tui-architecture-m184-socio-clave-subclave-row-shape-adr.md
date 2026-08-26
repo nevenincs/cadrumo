@@ -5,9 +5,10 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:1be69ff6c2528c857811bdeb2f7c49fe101e2e80d0edf52db7656d2b74e052e2'
+body_hash: 'sha256:ea529ce07ce4ad987d5db12cc50a4c544b439a9248e8daf16f64527c67703d48'
 related:
   - "[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]"
+  - "[[2026-07-09-m184-socio-attribution-handoff-adr]]"
 ---
 
 # `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `proposed`)
@@ -23,6 +24,14 @@ clave and subclave the row declares. The row shape itself has to change before a
 export wiring or profile input surface can be built correctly. This ADR decides that
 shape and what it does to the accepted S288 edit contract, which was built against the
 one-row-per-member assumption.
+
+This record does not overlap `2026-07-09-m184-socio-attribution-handoff-adr`. That
+accepted decision governs how the entity's already-computed attributed base reaches a
+member's own, separate M100 filing (a cross-bucket transport question); this record
+governs how the entity's own M184 socio record represents its income lines in the first
+place (a row-shape question). The handoff ADR's `Modelo184MemberRow` usage is read-only
+downstream of whatever shape this record settles on; neither decision requires the other
+to change.
 
 ## Considerations
 
@@ -88,12 +97,26 @@ one-row-per-member assumption.
 `Modelo184MemberRow` gains `clave` and `subclave` fields (following the row's own
 existing validation pattern for its current fields), and its identity becomes the tuple
 `(nif, clave, subclave)` rather than `nif` alone — the same shape 349's `operador` row
-already uses. The clave-conditional fields (inmueble sub-block under clave C, the
-rendimiento-neto sub-fields under clave D's subclaves 03/04, the reduccion fields
-enumerated per clave) become fields on the same row, each populated only when its
-governing clave/subclave applies; a row declaring a value for a field its clave does not
-license is a validation refusal at the row's own boundary, the same shape the row's
-current share-percentage bound check already uses.
+already uses. The clave-conditional fields (inmueble sub-block under clave C; the
+rendimiento-neto sub-fields under clave D's subclaves 03/04; the clave-C and clave-D
+reduccion fields, grounded on LIRPF arts. 23.2/23.3 and 32.1 respectively, both verified)
+become fields on the same row, each populated only when its governing clave/subclave
+applies; a row declaring a value for a field its clave does not license is a validation
+refusal at the row's own boundary, the same shape the row's current share-percentage
+bound check already uses.
+
+**The clave-A reducción field is explicitly BLOCKED, not merely flagged.** Its governing
+provision is unresolved: the diseño cites LIRPF art. 24.2, which does not exist as such
+(art. 24 is an unrelated related-party rule) — see the research document's citation
+cross-check. Art. 26.2 is a candidate by cross-reference match, but was identified from a
+single consolidated bundled file rather than a per-article authoritative source, and
+adopting the nearest plausible article is exactly what the grounding rule forbids for a
+value whose specific binding provision is not correctly identified. **The clave-A
+reducción field on `Modelo184MemberRow` MUST NOT be implemented, and no export or
+resolver wiring may target it, until a dedicated follow-up research pass identifies and
+verifies its governing provision.** Every other clave-conditional field in this ADR's
+scope has a verified citation and may proceed; this one field alone is gated on that
+separate research pass.
 
 `provisiones-gastos-dificil-justificacion` is NOT collected as row input. It is computed
 from the entity's own régimen fact (read from the sibling tipo-2 entidad record) and the
@@ -108,12 +131,18 @@ building one is a further, separately-scoped Step. Until it exists, a clave-E ro
 accepted at face value without that eligibility check — a known, stated limitation, not
 an invented default.
 
-The S288 edit contract survives with one change: `_DETAIL_ROW_NATURAL_KEY_FIELDS` for the
-`miembro` row kind widens from `("nif",)` to `("nif", "clave", "subclave")`, exactly
-mirroring the `operador` kind's existing `("nif_comunitario", "clave_operacion")` entry.
-Whole-set replacement, absence-as-deletion, the ADD/UPDATE/DELETE intent kinds and
-MOVE_ROW's retirement all apply unchanged under the wider key; nothing else in the edit
-contract depends on a row kind's specific field set.
+The S288 edit contract requires no contract change, only a configuration change: the
+compound-natural-key mechanism `_DETAIL_ROW_NATURAL_KEY_FIELDS` already generalizes to,
+and today already carries, a multi-field tuple for the `operador` row kind
+(`("nif_comunitario", "clave_operacion")`). Widening the `miembro` row kind's entry from
+`("nif",)` to `("nif", "clave", "subclave")` exercises that existing mechanism rather
+than extending it — no new code path, no new validation shape, nothing S288 did not
+already have to handle for a different row kind. Whole-set replacement,
+absence-as-deletion, the ADD/UPDATE/DELETE intent kinds and MOVE_ROW's retirement all
+apply unchanged under the wider key; nothing else in the edit contract depends on a row
+kind's specific field set. This materially lowers the risk of the row-shape redesign:
+the riskiest-looking consequence (does the edit contract need to change?) resolves to "no
+— configure the existing mechanism differently."
 
 ## Rationale
 
@@ -141,3 +170,7 @@ typed-boundary and grounding mandates outright.
 - `repeat = "binding_rows"` on the socio export record still cannot ship until every
   clave/subclave-conditional field that carries a money value has a real per-row source
   reaching the export boundary — this ADR enables that state without shipping it itself.
+- The clave-A reducción field is explicitly excluded from what "every field has a
+  verified grounding" covers here: it is blocked pending its own follow-up research pass,
+  and the row shape must accommodate a member declaring clave A / subclave 02 without
+  that one field being populated until the block lifts.

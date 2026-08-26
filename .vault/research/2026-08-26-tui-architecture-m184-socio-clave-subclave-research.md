@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c36cc05a907858a835909baac0ce4b45bdca441ffae31bd3146ffe07350b104a'
+body_hash: 'sha256:03fdfb78002f744a25519b760b4f77819b0169667e5bd8dcaf7b59af41f8b749'
 related: []
 ---
 
@@ -61,18 +61,23 @@ excerpted, not taken on the diseño's word):
   arrendamiento-vivienda reduction (90/70/60/50%); art. 23.3 is the >2-year or
   notoriamente-irregular 30% reduction capped at EUR 300,000/year. Both are genuine
   capital-inmobiliario reductions matching the diseño's clave-C usage.
-- **LIRPF art. 24.2 (clave A/subclave 02 reducción) — CONFIRMED WRONG.** Art. 24 is
-  "Rendimiento en caso de parentesco" (a related-party imputed-rent rule), one paragraph,
-  no numbered subsections at all — it cannot be the reduction the diseño describes. The
-  correct provision is **LIRPF art. 26.2**: "Los rendimientos netos previstos en el
-  apartado 4 del artículo 25 de esta Ley con un período de generación superior a dos
-  años... se reducirán en un 30 por ciento... [capped at] 300.000 euros anuales." This
-  is an exact match: clave A/subclave 02 is itself defined in the diseño's own subclave
-  table as "Rendimientos del capital mobiliario previstos en el apartado 4 del artículo
-  25 de la LIRPF" — so art. 26.2's cross-reference to "apartado 4 del artículo 25" lines
-  up precisely with the subclave the reducción field is conditioned on. The diseño's
-  "24.2" is a citation error (most likely a transcription slip between the visually
-  similar "26" and "24"); the ADR must ground this field on **art. 26.2**, not art. 24.2.
+- **LIRPF art. 24.2 (clave A/subclave 02 reducción) — CONFIRMED WRONG, and NOT YET
+  RESOLVED to a replacement.** Art. 24 is "Rendimiento en caso de parentesco" (a
+  related-party imputed-rent rule), one paragraph, no numbered subsections at all — it
+  cannot be the reduction the diseño describes. **Art. 26.2 is a strong CANDIDATE, not a
+  confirmed answer**: "Los rendimientos netos previstos en el apartado 4 del artículo 25
+  de esta Ley con un período de generación superior a dos años... se reducirán en un 30
+  por ciento... [capped at] 300.000 euros anuales" cross-references "apartado 4 del
+  artículo 25", which is exactly how the diseño's own subclave table defines clave
+  A/subclave 02 ("Rendimientos del capital mobiliario previstos en el apartado 4 del
+  artículo 25 de la LIRPF"). That correspondence is suggestive, not dispositive: this was
+  identified by reading the single bundled CONSOLIDATED `ley-35-2006.html` file, not a
+  per-article authoritative source, and picking the nearest plausible article by subject
+  match is precisely the shortcut the grounding rule warns against for a citing a general
+  or nearby provision when a more specific one governs. This citation is **UNRESOLVED**
+  and requires a dedicated follow-up research pass (per-article sourcing, and/or a
+  different authority) before any field cites a replacement article. See the ADR's
+  explicit block on the clave-A reducción field pending that resolution.
 - **LIRPF art. 32 (clave D reducción) — CONFIRMED correct.** "Reducciones" for
   rendimientos de actividades económicas, including the same >2-year/irregular 30%
   reduction (apartado 1) alongside the reduced-workload reductions (apartado 2). The
@@ -89,9 +94,10 @@ excerpted, not taken on the diseño's word):
   for cross-check are verified against live bundled text, not merely restated from the
   diseño.
 
-No further legal cross-check is outstanding for these four citations. The ADR should cite
-`ley-35-2006.html` arts. 23.2, 23.3, 26.2 (NOT 24.2) and 32.1, and `rd-439-2007-art-30.html`
-regla 2ª.
+Three of the four citations are resolved: the ADR should cite `ley-35-2006.html` arts.
+23.2, 23.3 and 32.1, and `rd-439-2007-art-30.html` regla 2ª. The fourth — the clave-A
+reducción's governing provision — remains open and needs a dedicated follow-up research
+pass, not a same-pass substitution.
 
 ### M349 already models an equivalent axis correctly; M347 and M232 do not have it
 
