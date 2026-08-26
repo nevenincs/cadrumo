@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
@@ -56,6 +57,7 @@ from ._validate_surfaces import (
     validate_workbook_parity_section,
 )
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
+from .export import derive_export_layouts_from_bindings
 from .validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )
@@ -64,6 +66,21 @@ from .validate_revision_identity import (
 )
 
 _REVISION_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
+
+def _requires_workbook_parity_coverage(revision: ModeloRevision) -> bool:
+    """Whether the revision asserts a filing output that needs a parity anchor.
+
+    A declared filing grade promises a draft/export even when a malformed
+    revision currently materialises no layout; it must therefore retain the
+    parity prerequisite.  Conversely, an applicability-only revision with no
+    materialised layout makes no output claim, and requiring it to cite a
+    layout would force an unsupported era to backdate an unrelated design.
+    Binding-derived layouts count because they are the layout the renderer uses.
+    """
+    return revision.effective_authority_grade is RegistryAuthorityGrade.FILING or bool(
+        derive_export_layouts_from_bindings(revision)
+    )
 
 
 def _validate_revision_surface_sections(
@@ -290,7 +307,7 @@ def validate_revision_definition(
         evidence=evidence,
     )
     context = build_revision_validation_context(revision)
-    if not context.ids_by_kind["workbook parity reference"]:
+    if _requires_workbook_parity_coverage(revision) and not context.ids_by_kind["workbook parity reference"]:
         failures.append(f"{prefix}: revision must declare official workbook parity coverage")
     failures.extend(revision_reference_identity_failures(prefix, revision))
     _emit_revision_payload_failures(failures, prefix, revision)
