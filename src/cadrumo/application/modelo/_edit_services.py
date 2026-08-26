@@ -24,14 +24,13 @@ from ...core.decimal import (
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
-from ...domain.calculations.registry.schema import (
-    CalculationCompletenessManifest,
-    ModeloRevision,
-)
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import CalculationRevisionCatalogue, WorkUnit, WorkUnitCatalogue
+from ...domain.modelos import CalculationRevisionCatalogue, ModeloDetailRow, WorkUnit, WorkUnitCatalogue
 from ..operations.registry import OperationSchemaIdentityV1
+from ._calculation_modelo_adjustments import _DETAIL_ROW_OWNING_MODELO
 from ._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ._edit_models import (
     ModeloEditAddressV1,
@@ -43,6 +42,8 @@ from ._edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
+    ModeloEditDetailRowAddressV1,
+    ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditFindingV1,
@@ -68,6 +69,7 @@ from ._edit_models import (
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableDetailRowSurfaceEntryV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
@@ -197,15 +199,51 @@ def _writable_binding_override_entries(revision: ModeloRevision) -> tuple[Modelo
     return tuple(entries)
 
 
-def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
-    return tuple(sorted(
-        (
-            *_writable_scalar_entries(revision),
-            *_writable_row_group_entries(revision),
-            *_writable_binding_override_entries(revision),
-        ),
-        key=lambda entry: (entry.kind, getattr(entry, "casilla_id", getattr(entry, "binding_id", ""))),
-    ))
+def _writable_detail_row_entries(*, modelo: str) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
+    """Classify every ``ModeloDetailRow`` kind this modelo owns as writable.
+
+    Grounded in :data:`_DETAIL_ROW_OWNING_MODELO`
+    (`_calculation_modelo_adjustments.py`) -- the same real, enforced table
+    :func:`~._calculation_modelo_adjustments.require_detail_rows_declared_for_their_owning_modelo`
+    refuses a mismatched row against -- rather than a second, independently
+    authored eligibility rule.
+    """
+    owned_kinds = sorted(
+        {
+            row_type.model_fields["row_type"].default
+            for row_type, owner in _DETAIL_ROW_OWNING_MODELO.items()
+            if owner == modelo
+        }
+    )
+    return tuple(
+        ModeloEditWritableDetailRowSurfaceEntryV1(
+            detail_row_kind=kind,
+            allowed_intents=(
+                ModeloEditDetailRowIntentKind.ADD_ROW,
+                ModeloEditDetailRowIntentKind.UPDATE_ROW,
+                ModeloEditDetailRowIntentKind.DELETE_ROW,
+                ModeloEditDetailRowIntentKind.MOVE_ROW,
+            ),
+        )
+        for kind in owned_kinds
+    )
+
+
+def _permitted_surface(revision: ModeloRevision, *, modelo: str) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
+    return tuple(
+        sorted(
+            (
+                *_writable_scalar_entries(revision),
+                *_writable_row_group_entries(revision),
+                *_writable_binding_override_entries(revision),
+                *_writable_detail_row_entries(modelo=modelo),
+            ),
+            key=lambda entry: (
+                entry.kind,
+                getattr(entry, "casilla_id", getattr(entry, "binding_id", getattr(entry, "detail_row_kind", ""))),
+            ),
+        )
+    )
 
 
 def _completeness_manifest_digest(manifest: CalculationCompletenessManifest | None) -> str:
@@ -309,10 +347,8 @@ def admit_modelo_edit(
         revision_id=law_selected_revision_id,
     )
     revision = snapshot.revision
-    permitted_surface = _permitted_surface(revision)
-    permitted_surface_digest = content_hash_hex(
-        [entry.model_dump(mode="json") for entry in permitted_surface]
-    )
+    permitted_surface = _permitted_surface(revision, modelo=str(work_unit.modelo))
+    permitted_surface_digest = content_hash_hex([entry.model_dump(mode="json") for entry in permitted_surface])
     schema_identity = ModeloEditSchemaIdentityV1(
         schema_id=f"modelo-{work_unit.modelo}-{revision.id}".lower(),
         schema_fingerprint=content_hash_hex(
@@ -413,13 +449,42 @@ def _writable_binding_override_entry(
     return None
 
 
+def _writable_detail_row_entry(
+    baseline: ModeloEditBaselineV1, detail_row_kind: str
+) -> ModeloEditWritableDetailRowSurfaceEntryV1 | None:
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableDetailRowSurfaceEntryV1) and entry.detail_row_kind == detail_row_kind:
+            return entry
+    return None
+
+
+_DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
+    "miembro": ("nif",),
+    "vinculada": ("nif",),
+    "operador": ("nif_comunitario", "clave_operacion"),
+    "rectificacion": ("nif_comunitario", "clave_operacion"),
+    "contraparte": ("nif",),
+    "agrupacion_renta": ("source_id",),
+}
+
+
+def detail_row_natural_key(row: ModeloDetailRow) -> str:
+    """Return the row's own already-declared business key, joined for compound keys.
+
+    Never a minted or positional identity -- see :class:`ModeloEditDetailRowAddressV1`.
+    """
+    fields = _DETAIL_ROW_NATURAL_KEY_FIELDS[row.row_type]
+    return "|".join(str(getattr(row, field)) for field in fields)
+
+
 def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusalV1:
     return ModeloEditDomainRefusalV1(
         code=ModeloEditRefusalCode.DISALLOWED_INTENT,
         address=address,
         responsible_owner=_RESPONSIBLE_OWNER,
         reconsideration_condition=(
-            "address only a casilla, binding override, or row group the baseline's permitted surface admits"
+            "address only a casilla, binding override, detail row, or row group the baseline's permitted"
+            " surface admits"
         ),
     )
 
@@ -512,6 +577,15 @@ def _validate_binding_intent(
     return None
 
 
+def _validate_detail_row_intent(
+    baseline: ModeloEditBaselineV1, address: ModeloEditDetailRowAddressV1, kind: ModeloEditDetailRowIntentKind
+) -> ModeloEditRefusalV1 | None:
+    entry = _writable_detail_row_entry(baseline, address.detail_row_kind)
+    if entry is None or kind not in entry.allowed_intents:
+        return _disallowed_intent_refusal(address)
+    return None
+
+
 def preflight_modelo_edit(
     request: ModeloEditPreflightRequestV1,
     *,
@@ -545,11 +619,16 @@ def preflight_modelo_edit(
         refusal = _validate_row_intent(baseline, row_intent.address, row_intent.kind)
         if refusal is not None:
             return ModeloEditRefusedV1(refusal=refusal)
+    for detail_row_intent in submission.detail_row_intents:
+        refusal = _validate_detail_row_intent(baseline, detail_row_intent.address, detail_row_intent.kind)
+        if refusal is not None:
+            return ModeloEditRefusedV1(refusal=refusal)
     return ModeloEditPreflightEvaluatedV1(baseline_id=baseline.baseline_id, findings=tuple(findings))
 
 
 __all__ = [
     "admit_modelo_edit",
+    "detail_row_natural_key",
     "modelo_edit_request_schema_identity",
     "modelo_edit_result_schema_identity",
     "parse_modelo_edit_value",

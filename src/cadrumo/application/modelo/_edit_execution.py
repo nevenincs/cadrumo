@@ -36,24 +36,33 @@ from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditRece
 from ...core import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol, ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ._edit_models import (
+    ModeloDetailRowEditIntentV1,
     ModeloEditApplyRequestV1,
     ModeloEditBindingIntentKind,
+    ModeloEditDetailRowIntentKind,
+    ModeloEditDomainRefusalV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
+    ModeloEditRefusalCode,
     ModeloEditRowIntentKind,
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
 )
-from ._edit_services import _validate_scalar_intent, _writable_scalar_entry, reconfirm_modelo_edit_baseline
+from ._edit_services import (
+    _validate_scalar_intent,
+    _writable_scalar_entry,
+    detail_row_natural_key,
+    reconfirm_modelo_edit_baseline,
+)
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectWrite
@@ -130,6 +139,66 @@ def _reachable_scalar_inputs(
     return casilla_inputs, text_casilla_inputs, tuple(cleared_casilla_ids)
 
 
+def _detail_row_natural_key_refusal(address: object) -> ModeloEditExecutionNoEffectV1:
+    return ModeloEditExecutionNoEffectV1(
+        refusal=ModeloEditDomainRefusalV1(
+            code=ModeloEditRefusalCode.DISALLOWED_INTENT,
+            address=address,
+            responsible_owner=_RESPONSIBLE_OWNER,
+            reconsideration_condition="address only a detail row currently declared under this natural key",
+        )
+    )
+
+
+def _reconstruct_detail_rows(
+    *,
+    current_detail_rows: tuple[ModeloDetailRow, ...],
+    detail_row_intents: tuple[ModeloDetailRowEditIntentV1, ...],
+) -> tuple[ModeloDetailRow, ...] | ModeloEditExecutionNoEffectV1:
+    """Rebuild the complete ``detail_rows`` tuple the memoryless calculate boundary requires.
+
+    Rows are grouped by ``row_type`` (a distinct fichero record per kind;
+    cross-kind ordering is not structurally significant, only order WITHIN
+    one kind is) and addressed by their own natural key, never position or a
+    minted identity -- mirroring ``RetencionObservationRepository.replace_observations``'s
+    established whole-set-replacement convention. A row absent from the
+    result is simply not declared; there is no separate "explicitly deleted"
+    axis, because a row (unlike a scalar) has no ambiguous middle state
+    between "declared" and "absent".
+    """
+    by_kind: dict[str, list[ModeloDetailRow]] = {}
+    for row in current_detail_rows:
+        by_kind.setdefault(row.row_type, []).append(row)
+
+    for intent in detail_row_intents:
+        kind = intent.address.detail_row_kind
+        rows = by_kind.setdefault(kind, [])
+        keys = [detail_row_natural_key(row) for row in rows]
+        if intent.kind is ModeloEditDetailRowIntentKind.ADD_ROW:
+            assert intent.row is not None
+            rows.append(intent.row)
+        elif intent.kind is ModeloEditDetailRowIntentKind.UPDATE_ROW:
+            assert intent.row is not None
+            if intent.address.natural_key not in keys:
+                return _detail_row_natural_key_refusal(intent.address)
+            rows[keys.index(intent.address.natural_key)] = intent.row
+        elif intent.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
+            if intent.address.natural_key not in keys:
+                return _detail_row_natural_key_refusal(intent.address)
+            rows.pop(keys.index(intent.address.natural_key))
+        elif intent.kind is ModeloEditDetailRowIntentKind.MOVE_ROW:
+            if intent.address.natural_key not in keys:
+                return _detail_row_natural_key_refusal(intent.address)
+            assert intent.move_to_index is not None
+            moved = rows.pop(keys.index(intent.address.natural_key))
+            rows.insert(min(intent.move_to_index - 1, len(rows)), moved)
+
+    result: list[ModeloDetailRow] = []
+    for kind in sorted(by_kind):
+        result.extend(by_kind[kind])
+    return tuple(result)
+
+
 def apply_modelo_edit(
     request: ModeloEditApplyRequestV1,
     *,
@@ -175,11 +244,21 @@ def apply_modelo_edit(
     if stale is not None:
         return ModeloEditExecutionNoEffectV1(refusal=stale)
 
+    current_revision = (
+        calculation_catalogue.get(baseline.current_calculation_revision_id)
+        if baseline.current_calculation_revision_id is not None
+        else None
+    )
+    reconstructed_detail_rows = _reconstruct_detail_rows(
+        current_detail_rows=current_revision.detail_rows if current_revision is not None else (),
+        detail_row_intents=submission.detail_row_intents,
+    )
+    if isinstance(reconstructed_detail_rows, ModeloEditExecutionNoEffectV1):
+        return reconstructed_detail_rows
+
     captured_receipt: list[ModeloEditMutationResultReceiptV1] = []
 
-    def _co_commit_receipt(
-        calculation_revision_id: str, bucket_event_id: str | None
-    ) -> tuple[SecureObjectWrite, ...]:
+    def _co_commit_receipt(calculation_revision_id: str, bucket_event_id: str | None) -> tuple[SecureObjectWrite, ...]:
         receipt_id = content_hash_hex(
             {
                 "operation_id": request.operation_id,
@@ -208,6 +287,7 @@ def apply_modelo_edit(
         casilla_inputs=casilla_inputs or None,
         text_casilla_inputs=text_casilla_inputs or None,
         cleared_casilla_ids=cleared_casilla_ids,
+        detail_rows=reconstructed_detail_rows,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
