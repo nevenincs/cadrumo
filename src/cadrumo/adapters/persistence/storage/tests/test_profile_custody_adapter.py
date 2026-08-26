@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -12,6 +13,7 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordEncryptedBlob,
 )
 from .. import build_profile_custody_port
+from ..custody import ProfileCustodyCapsuleLabel, ProfileLabelHeadRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -78,3 +80,48 @@ def test_passphrase_crypto_returns_the_application_dto_and_refuses_tampering() -
             parameters=sealed.parameters,
             associated_data=associated_data,
         )
+
+
+def test_label_head_caller_explicitly_recovers_then_verifies_or_publishes(tmp_path: Path) -> None:
+    """The adapter composes explicit repository operations for its port contract."""
+    port = build_profile_custody_port()
+    profile_id = UUID("ba7ecf09-72af-4b38-8c59-03119fdc477c")
+    initial = ProfileCustodyCapsuleLabel.create(profile_id=profile_id, label="Initial label")
+
+    initial_head = port.verify_or_recover_initial_label_head(
+        label=initial,
+        source_witness="sha256:" + "d" * 64,
+        root=tmp_path,
+    )
+    assert initial_head.label_revision == 1
+    assert (
+        port.verify_or_recover_initial_label_head(
+            label=initial,
+            source_witness="sha256:" + "d" * 64,
+            root=tmp_path,
+        )
+        == initial_head
+    )
+
+    replacement = ProfileCustodyCapsuleLabel.create(
+        profile_id=profile_id,
+        label="Replacement label",
+        label_revision=2,
+        previous_label_digest=initial.content_digest,
+    )
+    repository = ProfileLabelHeadRepository(root=tmp_path)
+    repository.begin_advance(
+        current_head=initial_head,
+        current_label=initial,
+        replacement_label=replacement,
+    )
+
+    recovered_head = port.verify_or_recover_initial_label_head(
+        label=replacement,
+        source_witness="sha256:" + "d" * 64,
+        root=tmp_path,
+    )
+
+    assert recovered_head.label_revision == 2
+    assert repository.verify(label=replacement) == recovered_head
+    assert not repository.pending_path(profile_id).exists()

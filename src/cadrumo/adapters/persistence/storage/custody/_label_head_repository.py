@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from .....core import StorageCategory, storage_location
 from .....core.paths import effective_storage_root
 from ._capsule_records import ProfileCustodyCapsuleLabel
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     clear_profile_custody_local_record,
     ensure_profile_custody_local_directory,
@@ -19,6 +18,7 @@ from ._filesystem import (
     write_profile_custody_local_record,
 )
 from ._label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadPendingAdvance
+from .errors import ProfileCustodyRecordError
 
 
 def _read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str) -> bytes:
@@ -51,24 +51,25 @@ class ProfileLabelHeadRepository:
             raise ProfileCustodyRecordError("profile label head is absent")
         return head
 
-    def verify_or_recover_initial(
+    def verify(self, *, label: ProfileCustodyCapsuleLabel) -> ProfileLabelHead | None:
+        """Read and verify the durable head without publishing or repairing it."""
+        current = self._load_head(label.profile_id)
+        if current is None:
+            return None
+        if not current.verifies(label):
+            raise ProfileCustodyRecordError("profile label differs from its trusted head")
+        return current
+
+    def publish_initial(
         self,
         *,
         label: ProfileCustodyCapsuleLabel,
         source_witness: str,
     ) -> ProfileLabelHead:
-        """Return a matching head or publish exactly the journal-bound first head."""
-        pending = self._load_pending(label.profile_id)
-        if pending is not None:
-            self._recover_pending(pending, label)
-        current = self._load_head(label.profile_id)
-        if current is None:
-            head = ProfileLabelHead.create_initial(label=label, source_witness=source_witness)
-            self._write_head_exclusive(head)
-            return head
-        if not current.verifies(label):
-            raise ProfileCustodyRecordError("profile label differs from its trusted head")
-        return current
+        """Publish exactly the initial head a verified caller has decided is absent."""
+        head = ProfileLabelHead.create_initial(label=label, source_witness=source_witness)
+        self._write_head_exclusive(head)
+        return head
 
     def begin_advance(
         self,
@@ -89,19 +90,16 @@ class ProfileLabelHeadRepository:
         self._write_pending_exclusive(pending)
         return pending
 
-    def recover_advance(
+    def recover_pending(
         self,
         *,
         profile_id: UUID,
         current_label: ProfileCustodyCapsuleLabel,
-    ) -> ProfileLabelHead:
+    ) -> None:
+        """Repair one durable pending advance; verification remains a separate read."""
         pending = self._load_pending(profile_id)
         if pending is not None:
             self._recover_pending(pending, current_label)
-        head = self._load_head(profile_id)
-        if head is None or not head.verifies(current_label):
-            raise ProfileCustodyRecordError("profile label differs from its trusted head")
-        return head
 
     def _recover_pending(
         self,

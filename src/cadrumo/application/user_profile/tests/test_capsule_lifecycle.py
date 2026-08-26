@@ -105,7 +105,10 @@ def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -
     with composed_profile_persistence_ports(), profile_custody_transaction_lock(root, profile_id):
         current = load_committed_profile_custody_label_record(profile_id, root=root)
         heads = ProfileLabelHeadRepository(root=root)
-        current_head = heads.recover_advance(profile_id=profile_id, current_label=current)
+        heads.recover_pending(profile_id=profile_id, current_label=current)
+        current_head = heads.verify(label=current)
+        if current_head is None:
+            raise RuntimeError("crash fixture requires the initial label head")
         replacement = ProfileCustodyCapsuleLabel.create(
             profile_id=profile_id,
             label="Recovered after crash",
