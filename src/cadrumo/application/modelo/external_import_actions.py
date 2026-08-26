@@ -102,7 +102,7 @@ from .work_addressing import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkVisibleTargetAmbiguousError,
-    resolve_registry_revision_for_work_target,
+    law_selected_revision_for_work_target,
     select_modelo_work_resolution,
 )
 from .work_unit_repository import work_unit_catalogue_repository
@@ -253,11 +253,11 @@ def import_external_filing_source(
     if resolution.work_unit is not None:
         work_unit = resolution.work_unit
     else:
-        revision_id = resolve_registry_revision_for_work_target(
+        revision_id = law_selected_revision_for_work_target(
             modelo=source.modelo,
             filing_year=source.filing_year,
             period=source.period,
-            registry_revision_id=source.registry_revision_id,
+            requested_revision_id=source.registry_revision_id,
         )
         work_unit = create_work_unit(
             bucket_id=bucket_id,

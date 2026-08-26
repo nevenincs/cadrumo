@@ -1,6 +1,6 @@
 """Modelo 200 must resolve for the ejercicio its own orden approves.
 
-The revision named ``2024-y-siguientes`` once carried
+The revision named ``2024`` once carried
 ``period_selector = { year_from = 2025 }``, so the law-determined resolution
 found no revision for Impuesto sobre Sociedades ejercicio 2024 and refused.
 The refusal was CORRECT behaviour -- the non-overlap window gate declining to
@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _APPROVED_EJERCICIO = 2024
 
 #: The revision whose name asserts it covers that ejercicio.
-_REVISION_ID = "2024-y-siguientes"
+_REVISION_ID = "2024"
 
 #: An ejercicio this revision must NOT claim. 2023 is served by no revision of
 #: this modelo, so a selector that matches it has been widened rather than

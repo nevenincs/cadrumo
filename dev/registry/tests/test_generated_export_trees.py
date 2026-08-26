@@ -114,7 +114,7 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # Enrolled with the layout, not after it, which is the whole lesson of the 347
     # entry above: a published tree that nothing compares against a fresh render
     # is free to drift, and 347's map did exactly that unnoticed.
-    _GeneratedTree("200", "2024-y-siguientes", "aeat-dr-200-2025", "2025", 2025, "0A"),
+    _GeneratedTree("200", "2024", "aeat-dr-200-2025", "2025", 2025, "0A"),
     _GeneratedTree("296", "2024-y-siguientes", "aeat-dr-296-2024", "2024", 2024, "0A"),
     # Enrolled in the same change that authored the layout, per the m347 entry
     # above. Modelo 185 is monthly, so its period is a month code rather than
@@ -364,7 +364,7 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     # drift -- which is exactly what 347's map did unnoticed, per the note
     # above. The entry retires itself the day the split lands and check mode
     # passes.
-    "m200-2024-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
+    "m200-2024": "cannot satisfy the requested 'filing' snapshot authority",
     # 185 and 222 are STALE grades, not wrong ones. Each revision carries a
     # human applicability review stamped 2026-08-21 recording "no export layout
     # of either kind is declared" and reaching "scheduling and applicability

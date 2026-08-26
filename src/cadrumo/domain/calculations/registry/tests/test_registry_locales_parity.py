@@ -44,9 +44,9 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_100_01.get_label("hu") == "Jövedelmet megszerző adózó"
     assert casilla_100_01.get_help("en") == "Selector for the taxpayer obtaining the business yield."
 
-    # Verify Modelo 200 (revision 2024-y-siguientes)
+    # Verify Modelo 200 (revision 2024)
     m200 = modelos_by_id["200"]
-    rev200 = m200.revisions["2024-y-siguientes"]
+    rev200 = m200.revisions["2024"]
     casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
     assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002"
     assert casilla_200_01.get_label("ca") == (

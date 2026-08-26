@@ -38,11 +38,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
-from ...core.resources import bundled_path
-from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader import load_registry_tree
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,
@@ -1095,71 +1092,72 @@ def project_modelo_work_target(
     return project_modelo_work_unit(resolution.work_unit)
 
 
-def resolve_registry_revision_for_work_target(
+def assert_work_target_revision(
+    capture: RegistryAuthorityCapture,
+    *,
+    requested_revision_id: RevisionId | None,
+    stored_revision_id: RevisionId | None,
+) -> RevisionId:
+    """Assert both work-target revision axes against one law-selected capture.
+
+    ``capture`` carries the single law-determined projection for the visible
+    filing target.  The ``requested`` axis is an operator ``--revision``
+    assertion; the ``stored`` axis is the revision already recorded on a work
+    unit.  The axes are independent: either may be absent, and each is checked
+    against the same captured law-determined revision rather than against the
+    other, so a stored value can never select the revision a request is judged
+    by.
+
+    Returns:
+        The law-determined revision id carried by ``capture``.
+
+    Raises:
+        ModeloWorkRegistryYearMismatchError: An supplied axis diverges from the
+            law-determined revision.
+    """
+    law_revision_id = capture.projection.revision_id
+    for axis, candidate in (
+        ("requested", requested_revision_id),
+        ("stored", stored_revision_id),
+    ):
+        if candidate is None:
+            continue
+        asserted = candidate.strip()
+        if asserted != law_revision_id:
+            raise ModeloWorkRegistryYearMismatchError(
+                f"{axis} registry revision {asserted!r} is not the law-determined revision "
+                f"for this filing target. The law-determined revision is {law_revision_id!r}. "
+                f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
+                f"you cannot override it. Re-create the work unit without --revision to use "
+                f"the correct revision, or omit --revision to accept the law-determined default.",
+            )
+    return law_revision_id
+
+
+def law_selected_revision_for_work_target(
     *,
     modelo: str,
     filing_year: int,
     period: Period,
-    registry_revision_id: RevisionId | None,
-) -> str:
-    """Resolve and validate the registry revision for a visible filing target.
+    requested_revision_id: RevisionId | None = None,
+    stored_revision_id: RevisionId | None = None,
+) -> RevisionId:
+    """Capture the law-selected revision once and assert every supplied axis.
 
-    When ``registry_revision_id`` is ``None`` the law-determined revision for
-    ``(modelo, filing_year, period)`` is returned unconditionally.
-
-    When ``registry_revision_id`` is supplied it is treated as an
-    *assertion parameter* (per :func:`~cadrumo.domain.calculations.registry.temporal.select_revision`):
-    an explicit ``--revision`` is accepted only when it names exactly the revision
-    that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
-    the supplied id diverges from the law-determined revision the call refuses with
-    an instructive error naming both the requested and the law-determined revision
-    and stating that the binding is fixed by law (per the CLI-boundary
-    instructive-refusal mandate in ``aeat-architecture-boundaries``).
-
-    ``--revision`` is thereby demoted from a free override to an
-    idempotence/assertion handle, mirroring the same shape used by
-    ``preflight --revision-id``.
-
-    Returns:
-        The revision id selected by
-        :func:`~cadrumo.domain.calculations.registry.temporal.select_revision`.
-
-    Raises:
-        ModeloWorkRegistryYearMismatchError: The supplied revision id is not the
-            law-determined revision for the visible filing period.
+    Exactly one :class:`RegistryAuthorityCapture` is taken for
+    ``(modelo, filing_year, period)``, so the work path performs one registry
+    read and both axes are judged against the same atomic projection.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    stripped_modelo = modelo.strip()
-    definition = next((candidate for candidate in modelos if candidate.id == stripped_modelo), None)
-    if definition is None:
-        raise RegistrySnapshotError(f"modelo {stripped_modelo!r} is not present in the calculation registry")
-    if registry_revision_id is None:
-        return select_revision(definition, filing_year=filing_year, period=period.registry_token).id
-    revision_id = registry_revision_id.strip()
-    try:
-        # Delegate the assertion to select_revision itself.  Within a valid
-        # registry the non-overlap gate guarantees uniqueness, so narrowing by
-        # an id that genuinely covers (filing_year, period) returns the same
-        # revision the unconstrained call would; narrowing by any other id raises
-        # RegistrySnapshotError.  This makes the structural property do the work
-        # instead of re-implementing a weaker year-only coverage check.
-        select_revision(definition, filing_year=filing_year, period=period.registry_token, revision_id=revision_id)
-    except RegistrySnapshotError:
-        # Determine the law-determined revision for a clear instructive message.
-        try:
-            law_revision = select_revision(definition, filing_year=filing_year, period=period.registry_token)
-            law_id = law_revision.id
-        except RegistrySnapshotError:
-            law_id = "<no revision found for this period>"
-        raise ModeloWorkRegistryYearMismatchError(
-            f"registry revision {revision_id!r} is not the law-determined revision for "
-            f"modelo {modelo.strip()!r} {filing_year} {period.registry_token!r}. "
-            f"The law-determined revision is {law_id!r}. "
-            f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
-            f"you cannot override it. Re-create the work unit without --revision to use "
-            f"the correct revision, or omit --revision to accept the law-determined default.",
-        ) from None
-    return revision_id
+    capture = bundled_authority().capture_law_selected_projection(
+        modelo.strip(),
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+    return assert_work_target_revision(
+        capture,
+        requested_revision_id=requested_revision_id,
+        stored_revision_id=stored_revision_id,
+    )
 
 
 def ensure_modelo_work_unit_for_active_target(
@@ -1209,11 +1207,11 @@ def ensure_modelo_work_unit_for_active_target(
             name_applied = unit.name
         return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
 
-    revision_id = resolve_registry_revision_for_work_target(
+    revision_id = law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        registry_revision_id=requested_revision,
+        requested_revision_id=requested_revision,
     )
     unit = create_work_unit(
         bucket_id=bucket_id,
@@ -1549,7 +1547,9 @@ __all__ = [
     "ModeloWorkUnitCandidate",
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
+    "assert_work_target_revision",
     "ensure_modelo_work_unit_for_active_target",
+    "law_selected_revision_for_work_target",
     "modelo_work_address_from_operator_target",
     "project_modelo_work_target",
     "project_modelo_work_unit",
@@ -1565,7 +1565,6 @@ __all__ = [
     "resolve_modelo_work_unit_for_operator_target",
     "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
-    "resolve_registry_revision_for_work_target",
     "resolve_verifiable_modelo_calculation_revision_address",
     "select_modelo_work_resolution",
     "work_address_for_modelo_target",

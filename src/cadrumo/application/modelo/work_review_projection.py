@@ -672,7 +672,6 @@ def build_modelo_work_review(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,
-        revision_id=selected_revision.id,
         grade=selected_revision.effective_authority_grade,
     )
     work_units = work_unit_repository.load()

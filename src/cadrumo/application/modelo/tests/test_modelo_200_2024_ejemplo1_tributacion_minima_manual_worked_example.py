@@ -50,7 +50,7 @@ printed tables are quoted verbatim below and both are graded in this module
       "Cuota liquida [00592] 300.000 -"
       "Resultado de la liquidacion [01586] 300.000 -"
 
-Registry mapping (M200 2024-y-siguientes revision):
+Registry mapping (M200 2024 revision):
 
     casilla DP200014:00562 "Cuota integra" = formula
       `modelo-200-cuota-integra`: BI despues de la reserva de nivelacion

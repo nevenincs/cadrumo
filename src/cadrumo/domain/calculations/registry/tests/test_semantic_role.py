@@ -411,103 +411,103 @@ class TestTypoTwinWarning:
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "00827",
                 "is_deduccion_di_internacional_rdleg_pendiente",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "00848",
                 "is_deduccion_di_interna_rdleg_pendiente",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02511",
                 "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02512",
                 "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02513",
                 "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02516",
                 "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02517",
                 "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02518",
                 "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03321",
                 "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03322",
                 "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03323",
                 "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03326",
                 "is_correccion_operaciones_a_plazos_dt1_permanente_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03327",
                 "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03328",
                 "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03396",
                 "is_correccion_otras_correcciones_resultado_permanente_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "03397",
                 "is_correccion_otras_correcciones_resultado_temporaria_ejercicio_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "00501",
                 "is_liquidacion_i_importe",
             ),
@@ -572,73 +572,73 @@ class TestTypoTwinWarning:
             ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02631",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02632",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02633",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02636",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02637",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02638",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02641",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02642",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02643",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02646",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02647",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion",
             ),
             (
                 "200",
-                "2024-y-siguientes",
+                "2024",
                 "02648",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion",
             ),
@@ -926,7 +926,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
         )
-        m = _registry_modelo("200", "2024-y-siguientes", [aumento, disminucion])
+        m = _registry_modelo("200", "2024", [aumento, disminucion])
         assert _validate_semantic_role_typo_twins([m]) == ()
 
     def test_quarter_axis_siblings_do_not_warn_as_typos(self) -> None:
@@ -970,7 +970,7 @@ class TestTypoTwinWarning:
             cid="b",
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
         )
-        m = _registry_modelo("200", "2024-y-siguientes", [typo, canonical])
+        m = _registry_modelo("200", "2024", [typo, canonical])
         failures = _validate_semantic_role_typo_twins([m])
         assert any("permanent_aumento" in failure for failure in failures)
 
@@ -1170,7 +1170,7 @@ class TestSignedCuotaResultadoRoles:
         assert signed_roles == {
             ("100", "2024", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
             ("100", "2025", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
-            ("200", "2024-y-siguientes", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
+            ("200", "2024", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
         }
 
         stale_is_role_members = [item for item in signed_roles if item[3] == "resultado_ingresar_o_devolver_is"]

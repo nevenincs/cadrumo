@@ -164,7 +164,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
 ) -> None:
     snapshot = registry_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
-    assert revision.id == "2024-y-siguientes"
+    assert revision.id == "2024"
     relation_ids = {relation.id for relation in revision.relations}
     assert relation_ids == {
         "modelo-200-2024-rel-202-pagos-fraccionados",

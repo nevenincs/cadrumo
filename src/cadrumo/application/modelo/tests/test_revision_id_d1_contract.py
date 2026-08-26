@@ -2,7 +2,7 @@
 
 Covers:
 
-- Creation gate: ``resolve_registry_revision_for_work_target`` refuses an
+- Creation gate: ``law_selected_revision_for_work_target`` refuses an
   explicit ``--revision`` that diverges from the law-determined revision with an
   instructive message naming both the requested and law-determined revision.
 
@@ -13,7 +13,7 @@ Covers:
   revision) and refuses with an instructive message directing re-creation.
 
 - Door reconfirmation: ``create_work_unit`` itself -- not just the
-  ``resolve_registry_revision_for_work_target`` wrapper the one production
+  ``law_selected_revision_for_work_target`` wrapper the one production
   caller (``ensure_modelo_work_unit_for_active_target``) routes through --
   refuses a syntactically valid, period-declared ``revision_id`` that is not
   the law-determined revision for its ``(modelo, filing_year, period)``. This
@@ -48,7 +48,7 @@ from .._action_errors import WorkUnitRevisionDivergenceError
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import (
     ModeloWorkRegistryYearMismatchError,
-    resolve_registry_revision_for_work_target,
+    law_selected_revision_for_work_target,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -73,26 +73,26 @@ def work_unit_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepos
 
 
 class TestS01CreationGate:
-    """``resolve_registry_revision_for_work_target`` must enforce resolver-equality."""
+    """``law_selected_revision_for_work_target`` must enforce resolver-equality."""
 
     def test_returns_law_determined_revision_when_no_explicit_revision_given(self) -> None:
         """Without an explicit revision the resolver picks the law-determined one."""
         # M130 2026 1T -> only one revision: 2019-y-siguientes
-        result = resolve_registry_revision_for_work_target(
+        result = law_selected_revision_for_work_target(
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            registry_revision_id=None,
+            requested_revision_id=None,
         )
         assert result == "2019-y-siguientes"
 
     def test_accepts_explicit_revision_that_matches_law_determined(self) -> None:
         """An explicit --revision equal to the law-determined revision is idempotent."""
-        result = resolve_registry_revision_for_work_target(
+        result = law_selected_revision_for_work_target(
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            registry_revision_id="2019-y-siguientes",
+            requested_revision_id="2019-y-siguientes",
         )
         assert result == "2019-y-siguientes"
 
@@ -109,11 +109,11 @@ class TestS01CreationGate:
         must be refused.
         """
         with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
-            resolve_registry_revision_for_work_target(
+            law_selected_revision_for_work_target(
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id="2022",
+                requested_revision_id="2022",
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -134,11 +134,11 @@ class TestS01CreationGate:
         ``aeat-architecture-boundaries``.
         """
         with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
-            resolve_registry_revision_for_work_target(
+            law_selected_revision_for_work_target(
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id="2022",
+                requested_revision_id="2022",
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -152,11 +152,11 @@ class TestS01CreationGate:
 
     def test_returns_correct_law_determined_revision_for_m303_2026(self) -> None:
         """Smoke test: M303 2026 1T resolves to the 2026-y-siguientes revision."""
-        result = resolve_registry_revision_for_work_target(
+        result = law_selected_revision_for_work_target(
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            registry_revision_id=None,
+            requested_revision_id=None,
         )
         assert result == "2026-y-siguientes"
 
@@ -187,21 +187,21 @@ class TestS01CreationGate:
         resolver-equality implementation — proving the fix closes the actual D1 hole.
         """
         # Sanity-anchor the law-determined revision for the period.
-        law_determined = resolve_registry_revision_for_work_target(
+        law_determined = law_selected_revision_for_work_target(
             modelo="369",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            registry_revision_id=None,
+            requested_revision_id=None,
         )
         assert law_determined == "esquema-union"
 
         # The hole: a revision covering the YEAR but not the PERIOD must be refused.
         with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
-            resolve_registry_revision_for_work_target(
+            law_selected_revision_for_work_target(
                 modelo="369",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id="esquema-importacion",
+                requested_revision_id="esquema-importacion",
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -384,7 +384,7 @@ class TestS02RevisionForWorkUnitAssertion:
         default_repo.save(upsert_work_unit(default_repo.load(), stale_unit))
 
         with pytest.raises(WorkUnitRevisionDivergenceError) as exc_info:
-            _revision_for_work_unit(work_unit_id)
+            _revision_for_work_unit(stale_unit)
 
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -425,7 +425,7 @@ class TestS02RevisionForWorkUnitAssertion:
         default_repo = WorkUnitCatalogueRepository()
         default_repo.save(upsert_work_unit(default_repo.load(), correct_unit))
 
-        revision = _revision_for_work_unit(work_unit_id)
+        revision = _revision_for_work_unit(correct_unit)
         assert revision.id == correct_revision_id
 
 
@@ -478,7 +478,7 @@ def _seed_m303_ready_profile(bucket_id: str) -> None:
 class TestS03CreateWorkUnitDoorReconfirmation:
     """``create_work_unit`` re-confirms the law-determined revision itself.
 
-    ``resolve_registry_revision_for_work_target`` (the sibling contract above) only guards
+    ``law_selected_revision_for_work_target`` (the sibling contract above) only guards
     callers that route through it. The population census for this gap found
     exactly one production caller doing so (``ensure_modelo_work_unit_for_active_target``)
     against roughly ninety direct ``create_work_unit`` call sites -- nearly all
@@ -498,7 +498,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         real M303 revision declaring the ``1T`` period token, but it covers
         2022, not 2026. Calling ``create_work_unit`` directly -- the shape
         every one of the ~90 direct callers uses -- must refuse exactly as
-        ``resolve_registry_revision_for_work_target`` would, not silently
+        ``law_selected_revision_for_work_target`` would, not silently
         build a 2026 work unit under 2022 norms.
         """
         bucket_id, repo = door_reconfirmation_repo
@@ -539,7 +539,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         """The correctly-resolved revision id still creates a work unit.
 
         Proves the door reconfirmation is not over-broad: the exact revision
-        ``resolve_registry_revision_for_work_target`` would itself return for
+        ``law_selected_revision_for_work_target`` would itself return for
         this ``(modelo, filing_year, period)`` triple must pass unchanged.
         """
         bucket_id, repo = door_reconfirmation_repo

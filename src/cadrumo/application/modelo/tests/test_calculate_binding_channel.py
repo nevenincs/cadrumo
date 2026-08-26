@@ -10,7 +10,7 @@ Decimal, so a malformed amount REFUSES instead of silently reclassifying. An
 unknown binding id refuses with the accepted set.
 
 These tests exercise the real registry authority (no mocks): the Modelo 200
-``2024-y-siguientes`` revision declares both an enum-channel binding
+``2024`` revision declares both an enum-channel binding
 (``modelo-200-2024-profile-legal-entity-form``, an ``args[1]`` enum-key argument
 of a dispatch op) and decimal-channel bindings (e.g.
 ``modelo-200-2024-pagos-fraccionados-anuales``), so the channel discriminator is
@@ -34,7 +34,7 @@ from .._calculate_input import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "200"
-_REVISION = "2024-y-siguientes"
+_REVISION = "2024"
 _ENUM_BINDING: BindingId = "modelo-200-2024-profile-legal-entity-form"
 _DECIMAL_BINDING: BindingId = "modelo-200-2024-pagos-fraccionados-anuales"
 

@@ -447,7 +447,7 @@ def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     transition at 24/23/22/21 for periods initiated in 2025-2028, before
     the current art. 29 20% rate applies from 2029. The 2024 value stays
     25% so the dated parameter can be used safely by the shared
-    2024-y-siguientes revision before DT 44ª takes effect.
+    2024 revision before DT 44ª takes effect.
     """
     parameters = _parameters()
     assert "is.modelo-200.tipo-gravamen-erd-art101" in parameters

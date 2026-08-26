@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _KNOWN_UNSUPPORTED_SPANS = frozenset(
     {
-        ("200", "2024-y-siguientes"),
+        ("200", "2024"),
     },
 )
 
@@ -45,7 +45,7 @@ def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
 
     error = exc_info.value
     assert str(error) == (
-        "modelo 200 revision 2024-y-siguientes declares 'calculation' authority grade, "
+        "modelo 200 revision 2024 declares 'calculation' authority grade, "
         "which cannot satisfy the requested 'filing' snapshot authority."
     )
     failure = error.registry_failure
@@ -53,7 +53,7 @@ def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
     assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
     assert failure.facts == {
         "modelo": "200",
-        "revision_id": "2024-y-siguientes",
+        "revision_id": "2024",
         "requested_authority_grade": "filing",
         "declared_authority_grade": "calculation",
         "authority_grade_declared": True,

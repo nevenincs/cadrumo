@@ -5,7 +5,7 @@ read back, and reconstructed by every surface that copies a layout to adjust one
 field. A model whose own ``model_dump()`` its validator rejects cannot do that,
 and the failure is invisible until something actually tries -- which is how this
 went unnoticed. Seven of the tree's eighty-six layouts were in that state:
-Modelo 200's ``2024-y-siguientes`` and all six Modelo 303 revisions, every one of
+Modelo 200's ``2024`` and all six Modelo 303 revisions, every one of
 them a layout carrying ``projection_ref`` fields.
 
 The cause was an exact-type guard in the projection-reference compiler refusing
