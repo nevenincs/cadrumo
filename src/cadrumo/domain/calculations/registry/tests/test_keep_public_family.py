@@ -30,13 +30,35 @@ _PLAN = _ROOT / ".vault" / "plan" / "2026-08-11-tui-architecture-plan.md"
 _PACKAGE = "cadrumo.domain.calculations.registry"
 
 
+def _rows(disposition: str) -> tuple[dict[str, object], ...]:
+    """Return every reviewed matrix row carrying one disposition."""
+    document = json.loads(_MATRIX.read_text(encoding="utf-8"))
+    rows = tuple(row for row in document["rows"] if row["disposition"] == disposition)
+    if not rows:
+        pytest.fail(f"the census matrix records no {disposition} rows to hold")
+    return rows
+
+
 def _keep_public_paths() -> tuple[str, ...]:
     """Return every module the reviewed matrix adjudicated as keep-public."""
-    document = json.loads(_MATRIX.read_text(encoding="utf-8"))
-    paths = sorted(str(row["new_path"]) for row in document["rows"] if row["disposition"] == "keep_public")
-    if not paths:
-        pytest.fail("the census matrix records no keep-public rows to hold")
-    return tuple(paths)
+    return tuple(sorted(str(row["new_path"]) for row in _rows("keep_public")))
+
+
+def _hard_move_pairs() -> tuple[tuple[str, str], ...]:
+    """Return each completed hard move as its retired path and its real owner.
+
+    The owner is read from the row's terminal destinations, not from
+    ``new_path``. A family that moved out of the registry entirely keeps a
+    ``new_path`` nothing occupies, and asserting that path exists would fail an
+    honest row for having finished its move.
+    """
+    pairs: set[tuple[str, str]] = set()
+    for row in _rows("hard_move_complete"):
+        destinations = row["terminal_destinations"]
+        owners = [str(item["path"]) for item in destinations if not item["allowed_absence"]]
+        owner = owners[0] if owners else str(row["new_path"])
+        pairs.add((str(row["old_path"]), owner))
+    return tuple(sorted(pairs))
 
 
 def _locally_bound_names(path: Path) -> frozenset[str]:
@@ -101,3 +123,23 @@ def test_the_gate_covers_every_open_keep_public_disposition_step() -> None:
     ]
 
     assert not unbound, f"keep-public rows name Steps the plan does not carry: {unbound}"
+
+
+@pytest.mark.parametrize(("retired_path", "surviving_path"), _hard_move_pairs())
+def test_a_completed_hard_move_left_no_private_module_behind(retired_path: str, surviving_path: str) -> None:
+    """The move is complete only when the private path is gone, not merely unused."""
+    retired = _ROOT / retired_path
+    surviving = _ROOT / surviving_path
+
+    assert not retired.is_file(), f"the retired private module still exists: {retired_path}"
+    assert surviving.is_file(), f"the adjudicated owner is absent: {surviving_path}"
+
+
+@pytest.mark.parametrize(("retired_path", "surviving_path"), _hard_move_pairs())
+def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str, surviving_path: str) -> None:
+    """No consumer may still reach the retired module by its old dotted name."""
+    del surviving_path
+    dotted = retired_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module(dotted)
