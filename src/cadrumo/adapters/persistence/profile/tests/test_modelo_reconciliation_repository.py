@@ -32,21 +32,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....application.workflow.persistence import workflow_state_repository
-
-from ....inbound.justificante import parse_justificante
-from ..buckets import BucketEventHistoryRepository
-from ..modelos_work_units import WorkUnitCatalogueRepository
-from ...storage import (
-    MODELO_RECONCILIATION_RECORDS_NAMESPACE,
-    SecureObjectRevisionConflictError,
-)
-from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
-from .....core.resources import resources
-from .....domain.buckets import BucketEventType
-from .....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
-from .....tests import FIXTURES_DIR
-from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     _reconcile_parsed_justificante,
@@ -61,7 +46,21 @@ from .....application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
+from .....application.workflow.persistence import workflow_state_repository
+from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
+from .....core.resources import resources
+from .....domain.buckets import BucketEventType
+from .....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+from .....tests import FIXTURES_DIR
+from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....inbound.justificante import parse_justificante
+from ...storage import (
+    MODELO_RECONCILIATION_RECORDS_NAMESPACE,
+    SecureObjectRevisionConflictError,
+)
+from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -430,7 +429,7 @@ def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back() -> None:
     )
     assert len(events_before) == 1
 
-    from ....domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
+    from .....domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
 
     second_at = _RECONCILED_AT + timedelta(hours=1)
     payload = {"work_unit_id": work_unit_id, "verdict": ModeloReconciliationVerdict.MATCHES.value, "diffs": "0"}

@@ -162,9 +162,9 @@ class ModeloReconciliationRecord(BaseModel):
 
     The durable, auditable copy of a reconciliation: verdict, evidence kind and
     reference, work unit, the grounded diffs, the advisories, the instant and
-    the actor. It is written to the encrypted profile-scoped
-    :data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
-    store in the same unit of work as the ``MODELO_RECONCILED``
+    the actor. It is written to the encrypted profile-scoped reconciliation
+    store selected by :class:`ModeloReconciliationPersistencePort` in the same
+    unit of work as the ``MODELO_RECONCILED``
     :class:`~domain.buckets.BucketEvent` whose id it carries, so the event log
     and the detail store cannot disagree about what was reconciled.
 
@@ -213,8 +213,8 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
     ``modelo_reconcile`` DOES persist a stored record. Each run writes a
     :class:`ModeloReconciliationRecord` into the encrypted profile-scoped
-    :data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
-    store, in the same unit of work as the slim ``MODELO_RECONCILED``
+    reconciliation store selected by :class:`ModeloReconciliationPersistencePort`,
+    in the same unit of work as the slim ``MODELO_RECONCILED``
     :class:`~domain.buckets.BucketEvent` it emits. This typed entry projects one
     such record so the operator can enumerate past reconciliation verdicts, and
     the grounded divergences behind them, without re-parsing any evidence.
@@ -306,8 +306,8 @@ def list_modelo_reconciliations(
 ) -> tuple[ModeloReconciliationHistoryEntry, ...]:
     """Return every recorded reconciliation in ``bucket_id`` as typed entries.
 
-    Reads the encrypted :class:`ModeloReconciliationRecordRepository` store the
-    write path co-writes with each ``MODELO_RECONCILED``
+    Reads the encrypted store the bound :class:`ModeloReconciliationPersistencePort`
+    co-writes with each ``MODELO_RECONCILED``
     :class:`~domain.buckets.BucketEvent`, filtered to ``bucket_id`` and ordered
     oldest-first by the reconciliation instant. Each record is projected onto a
     typed :class:`ModeloReconciliationHistoryEntry` — verdict, source kind, diff

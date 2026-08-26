@@ -72,8 +72,14 @@ class ModeloReconciliationPersistence(ModeloReconciliationPersistencePort):
         yield from ModeloReconciliationRecordRepository().iter_records()
 
 
+def build_modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
+    """Construct the concrete reconciliation persistence adapter."""
+    return ModeloReconciliationPersistence()
+
+
 __all__ = [
     "ModeloReconciliationPersistence",
     "ModeloReconciliationRecordRepository",
+    "build_modelo_reconciliation_persistence",
     "modelo_reconciliation_record_key",
 ]

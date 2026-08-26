@@ -146,17 +146,17 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
 @pytest.fixture(scope="session", autouse=True)
 def compose_runtime_ports() -> Iterator[None]:
     """Compose real persistence and authentication adapters for tests."""
+    from .adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.outbound.aeat.auth.session_store import build_session_store
-    from .adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from .adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
     from .adapters.persistence.profile.justificante import JustificanteRepository
     from .adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+    from .adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
     from .adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from .adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
     from .adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from .adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from .adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
@@ -192,7 +192,7 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_justificante_repository_factory(JustificanteRepository),
         bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),
         bind_reconciliation_evidence_parser(InboundReconciliationEvidenceParser()),
-        bind_modelo_reconciliation_persistence_factory(ModeloReconciliationPersistence),
+        bind_modelo_reconciliation_persistence_factory(build_modelo_reconciliation_persistence),
         bind_auth_provider_selector(select_outbound_auth_provider),
         bind_session_store(build_session_store()),
     ):

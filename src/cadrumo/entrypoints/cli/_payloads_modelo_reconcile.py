@@ -20,12 +20,12 @@ from typing import Annotated
 
 from pydantic import Field
 
+from ...application.modelo._taxation_comparison import TaxationRecommendation
 from ...application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
-from ...application.modelo._taxation_comparison import TaxationRecommendation
 from ...core import Modelo
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema

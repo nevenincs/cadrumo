@@ -33,9 +33,8 @@ justificante bytes in secure storage.
 
 Both paths persist their outcome twice over, in ONE unit of work: a
 :class:`ModeloReconciliationRecord` carrying the grounded diffs and the
-advisories into the encrypted
-:data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
-store, and a slim ``MODELO_RECONCILED``
+advisories into the encrypted reconciliation record store selected by the
+bound :class:`ModeloReconciliationPersistencePort`, and a slim ``MODELO_RECONCILED``
 :class:`~domain.buckets.BucketEvent` carrying the verdict and the divergence
 count. The detail lives in the record because a bucket-event payload value is
 capped at 500 characters and one grounded Modelo 100 casilla diff already
@@ -77,13 +76,13 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
 )
-from .work_unit_repository import work_unit_catalogue_repository
 from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     ModeloWorkUnitNotFoundError,
     select_modelo_work_resolution,
 )
+from .work_unit_repository import work_unit_catalogue_repository
 
 #: Width of a bucket-event payload value. Mirrors the constraint declared on the
 #: payload-value alias in the buckets domain, which is module-private there and
@@ -306,9 +305,8 @@ def _require_declaration_enrolled_modelo(
     an unrelated reason.
 
     Returns the loaded :class:`~domain.modelos.WorkUnit` so the caller can
-    reuse its already-known modelo/filing_year/period as
-    :func:`adapters.inbound.declaracion.parse_declaracion` overrides,
-    rather than reloading the catalogue a second time.
+    reuse its already-known modelo/filing_year/period as evidence-parser
+    overrides, rather than reloading the catalogue a second time.
     """
     work_unit = _resolve_work_unit_for_reconciliation(
         work_unit_id=work_unit_id,
@@ -331,15 +329,14 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
 
-    For a justificante, reimplements the metadata comparison inline against the
-    justificante parser at :mod:`adapters.inbound.justificante`. The
-    receipt totals ARE reconciled against the persisted revision's computed
-    result where the revision declares ``reconciliation_total_casilla_ids``.
+    For a justificante, compares the neutral observation returned by the bound
+    :class:`ReconciliationEvidenceParserPort`. The receipt totals ARE reconciled
+    against the persisted revision's computed result where the revision declares
+    ``reconciliation_total_casilla_ids``.
 
-    For a declaración, parses via
-    :func:`adapters.inbound.declaracion.parse_declaracion` and — for
-    modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` — compares
-    every registry-reconciled casilla against the persisted revision's
+    For a declaración, consumes the parser port's structural observation and —
+    for modelos enrolled in :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` —
+    compares every registry-reconciled casilla against the persisted revision's
     ``casilla_values``, surfacing each divergence as a typed ``casilla`` diff. A
     modelo outside that set raises
     :class:`ReconciliationDeclaracionSourceUnsupportedError`.
@@ -625,12 +622,9 @@ def _finalise_reconciliation(
     on the same verdict derivation, report assembly, and persistence.
 
     The :class:`ModeloReconciliationRecord` and the append-only
-    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` land in ONE SQL
-    unit of work. Both repositories prepare a
-    :class:`~adapters.persistence.storage.SecureObjectWrite` and hand it to the
-    single
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many` call
-    on the shared backend — the same co-emit discipline
+    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` land in ONE
+    persistence unit of work through the bound
+    :class:`ModeloReconciliationPersistencePort` — the same co-emit discipline
     :func:`~application.modelo._revision_persistence.persist_filed_revision`
     uses to keep the participation index from drifting from the filing
     catalogue. Writing them separately would let a crash between the two leave
@@ -922,7 +916,7 @@ def _reconcile_declaracion_casillas(
     Reads the persisted filed / verified
     :class:`~domain.modelos.CalculationRevision` (never a fresh
     calculation), decodes the declaración's
-    :class:`~adapters.inbound.pdf.ExtractedCasilla` rows into decimals, and
+    :class:`ReconciliationCasillaObservation` rows into decimals, and
     delegates the comparison to
     :func:`application.modelo._reconcile_casilla.detect_casilla_divergences`.
     Every branch that cannot perform the comparison returns a
@@ -1055,7 +1049,7 @@ def _casilla_divergence_diff(
 def _decimal_declaracion_values(declaracion: ReconciliationDeclaracionObservation) -> dict[str, Decimal]:
     """Return decimal printed values keyed by canonical casilla id.
 
-    A declaración's :class:`~adapters.inbound.pdf.ExtractedCasilla` rows may
+    A declaración's :class:`ReconciliationCasillaObservation` rows may
     carry a ``Decimal``, an ``int``, or a non-numeric printed value (text/enum
     casillas); only the numeric rows participate in a value-level reconcile.
     """

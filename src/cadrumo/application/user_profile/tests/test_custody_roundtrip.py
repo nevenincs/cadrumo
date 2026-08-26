@@ -184,13 +184,13 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
 
 def _seed_reconciliation_record(bucket_id: str) -> str:
     """Persist one grounded reconciliation record in the active bucket."""
+    from ....adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ...modelo.reconciliation_records import (
         ModeloReconciliationAdvisory,
         ModeloReconciliationDiff,
         ModeloReconciliationDiffKind,
         ModeloReconciliationEvidenceKind,
         ModeloReconciliationRecord,
-        ModeloReconciliationRecordRepository,
         ModeloReconciliationVerdict,
     )
 
@@ -243,11 +243,9 @@ def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_pat
     for this to pass — which is exactly what the bound resolver does, and why
     the composite key is no obstacle.
     """
+    from ....adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ....core import StorageCustodyProfile
-    from ...modelo.reconciliation_records import (
-        ModeloReconciliationRecordRepository,
-        list_modelo_reconciliations,
-    )
+    from ...modelo.reconciliation_records import list_modelo_reconciliations
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         source_bucket = runtime.primary.bucket_id

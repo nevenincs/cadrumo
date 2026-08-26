@@ -56,17 +56,17 @@ def root_command(
         _emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
         return
+    from ...adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
-    from ...adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ...adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+    from ...adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
     from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
@@ -105,7 +105,7 @@ def root_command(
     ctx.with_resource(bind_justificante_repository_factory(JustificanteRepository))
     ctx.with_resource(bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository))
     ctx.with_resource(bind_reconciliation_evidence_parser(InboundReconciliationEvidenceParser()))
-    ctx.with_resource(bind_modelo_reconciliation_persistence_factory(ModeloReconciliationPersistence))
+    ctx.with_resource(bind_modelo_reconciliation_persistence_factory(build_modelo_reconciliation_persistence))
     ctx.with_resource(bind_auth_provider_selector(select_outbound_auth_provider))
     ctx.with_resource(bind_session_store(build_session_store()))
     register_language_resolver()
