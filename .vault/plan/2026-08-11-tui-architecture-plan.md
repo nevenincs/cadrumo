@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:42e3be6b8f148081e7ff124a0d1cca683dcd27ece250b3aa6334c795d5a36706'
+body_hash: 'sha256:96d985de4a923cb825a1a0216c913ca084b86454cad2d41df8d89b2931b0b597'
 ---
 
 # `tui-architecture` plan
@@ -435,7 +435,7 @@ Close the migration manifest and delete cadrumo.adapters.inbound.tui without a c
 - [x] `W06.P15.S88` - Replace the historical generated migration manifest with a planted zero-remnant fixed point proving every retired TUI file, import, qualified reference, and repository path is absent; `dev/quality/import_hygiene_scan.py and focused migration fixed-point tests`.
 - [x] `W06.P15.S89` - Delete the legacy inbound TUI implementation and tests without a compatibility facade; `src/cadrumo/adapters/inbound/tui`.
 - [x] `W06.P15.S90` - Remove legacy TUI exports and package registrations from the inbound adapter namespace; `src/cadrumo/adapters/inbound/__init__.py`.
-- [ ] `W06.P15.S91` - Prove zero production or shared-test imports of the TUI, zero Textual outside its root, and a fully importable canonical package; `src/cadrumo/tests/test_import_hygiene_gate.py`.
+- [x] `W06.P15.S91` - Prove zero production or shared-test imports of the TUI, zero Textual outside its root, and a fully importable canonical package; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 
 ## Wave `W07` - Real-behavior closure
 
