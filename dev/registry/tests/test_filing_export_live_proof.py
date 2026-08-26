@@ -200,9 +200,7 @@ def test_live_authority_rehashes_each_canonical_generation_semantic(
     entry = _m200_entry()
     _copy_m200_authored_proof_surface(tmp_path)
     manifest = (
-        tmp_path
-        / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export"
-        / "_generation.provenance.json"
+        tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export" / "_generation.provenance.json"
     )
     raw = manifest.read_bytes()
     marker = f'"{digest_field}":"'.encode()

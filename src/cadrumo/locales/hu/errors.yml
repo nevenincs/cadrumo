@@ -760,6 +760,8 @@ errors:
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
+    modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
+      be ujra a munkacelt, es probalja meg ismet.
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.

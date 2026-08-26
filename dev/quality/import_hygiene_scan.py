@@ -136,9 +136,7 @@ class CanonicalAuthoritySpec:
     retired_modules: frozenset[str] = frozenset()
     facade_modules: frozenset[str] = frozenset()
     inert_modules: frozenset[str] = frozenset()
-    export_container_names: frozenset[str] = frozenset(
-        {"__all__", "_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"}
-    )
+    export_container_names: frozenset[str] = frozenset({"__all__", "_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"})
     wrapper_rules: tuple[DelegatingWrapperRule, ...] = ()
     natural_scan_rules: tuple[SubstitutableWorkSelectorRule, ...] = ()
     forbidden_text_references: frozenset[str] = frozenset()
@@ -235,9 +233,7 @@ def _literal_strings(node: ast.AST, scope: _AuthorityScope, seen: frozenset[str]
             for value in _literal_strings(item, scope, seen)
         }
     if isinstance(node, ast.Call) and _bare_callable_name(node.func) == "dict":
-        return {
-            value for argument in node.args for value in _literal_strings(argument, scope, seen)
-        } | {
+        return {value for argument in node.args for value in _literal_strings(argument, scope, seen)} | {
             value
             for keyword in node.keywords
             for value in (({keyword.arg} if keyword.arg else set()) | _literal_strings(keyword.value, scope, seen))
@@ -283,9 +279,7 @@ class _CanonicalAuthorityAnalyzer:
         self.module = _authority_module_name(path)
         self.targets = {symbol: target for target in spec.targets for symbol in target.symbols}
         self.target_modules = {target.module for target in spec.targets}
-        self.qualified_targets = {
-            f"{target.module}.{symbol}" for target in spec.targets for symbol in target.symbols
-        }
+        self.qualified_targets = {f"{target.module}.{symbol}" for target in spec.targets for symbol in target.symbols}
         self.violations: list[CanonicalAuthorityViolation] = []
 
     def add(self, kind: str, node: ast.AST, detail: str = "") -> None:
@@ -335,9 +329,7 @@ class _CanonicalAuthorityAnalyzer:
                     bound = alias.asname or alias.name.split(".", 1)[0]
                     scope.qualified[bound] = alias.name if alias.asname else bound
             elif isinstance(node, ast.ImportFrom):
-                target = resolve_relative_import(
-                    self.module, self.path.name == "__init__.py", node.level, node.module
-                )
+                target = resolve_relative_import(self.module, self.path.name == "__init__.py", node.level, node.module)
                 if target:
                     for alias in node.names:
                         scope.qualified[alias.asname or alias.name] = f"{target}.{alias.name}"
@@ -427,9 +419,7 @@ class _CanonicalAuthorityAnalyzer:
             attribute = _static_string(node.args[1], scope)
             expression = f"{base}.{attribute}" if base and attribute else None
             if expression in self.qualified_targets or any(
-                expression == f"{facade}.{symbol}"
-                for facade in self.spec.facade_modules
-                for symbol in self.targets
+                expression == f"{facade}.{symbol}" for facade in self.spec.facade_modules for symbol in self.targets
             ):
                 self.add("dynamic authority export", node, expression or "")
         if function in {"importlib.import_module", "__import__"} and node.args:
@@ -512,14 +502,10 @@ class _CanonicalAuthorityAnalyzer:
         if isinstance(value, ast.Name) and value.id not in seen:
             source = scope.literals.get(value.id)
             if source is not None:
-                return _CanonicalAuthorityAnalyzer._keyword_source_calls(
-                    source, scope, seen | {value.id}
-                )
+                return _CanonicalAuthorityAnalyzer._keyword_source_calls(source, scope, seen | {value.id})
         return ()
 
-    def _check_natural_scan(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef, _parent: _AuthorityScope
-    ) -> None:
+    def _check_natural_scan(self, node: ast.FunctionDef | ast.AsyncFunctionDef, _parent: _AuthorityScope) -> None:
         if "tests" in self.path.parts or self.path.name.startswith("test_"):
             return
         for rule in self.spec.natural_scan_rules:
@@ -569,10 +555,7 @@ def _catalogue_aliases(
         targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
         for target in targets:
             path = _expression_path(target)
-            if path is None and (
-                isinstance(target, (ast.Tuple, ast.List))
-                and target.elts
-            ):
+            if path is None and (isinstance(target, (ast.Tuple, ast.List)) and target.elts):
                 path = _expression_path(target.elts[0])
             if path is not None:
                 assignments.append((path, assignment.value))
@@ -619,11 +602,18 @@ def _selection_decision(
                 selected_names.update(target_names)
                 changed = True
     for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return) and item.value):
-        if (
-            isinstance(returned.value, ast.Call)
-            and _bare_callable_name(returned.value.func)
-            in {"dict", "frozenset", "len", "list", "max", "min", "set", "sorted", "sum", "tuple"}
-        ):
+        if isinstance(returned.value, ast.Call) and _bare_callable_name(returned.value.func) in {
+            "dict",
+            "frozenset",
+            "len",
+            "list",
+            "max",
+            "min",
+            "set",
+            "sorted",
+            "sum",
+            "tuple",
+        }:
             continue
         names = {child.id for child in ast.walk(returned.value) if isinstance(child, ast.Name)}
         if names & selected_names:
@@ -669,8 +659,7 @@ def _direct_repository_first_match(
     )
     for decision in decisions:
         if not any(
-            isinstance(call, ast.Call) and _bare_callable_name(call.func) == "next"
-            for call in ast.walk(decision.value)
+            isinstance(call, ast.Call) and _bare_callable_name(call.func) == "next" for call in ast.walk(decision.value)
         ):
             continue
         for call in ast.walk(decision.value):
@@ -771,9 +760,7 @@ def _function_has_work_selector(
     return False
 
 
-def source_contains_substitutable_work_selector(
-    source: str, rule: SubstitutableWorkSelectorRule
-) -> bool:
+def source_contains_substitutable_work_selector(source: str, rule: SubstitutableWorkSelectorRule) -> bool:
     """Return whether a source snippet contains a substitutable work selector."""
     try:
         tree = ast.parse(source)
@@ -802,9 +789,7 @@ def scan_canonical_authority(
                 text = ""
             for reference in spec.forbidden_text_references:
                 if reference in text:
-                    violations.append(
-                        CanonicalAuthorityViolation(path, "retired authority string", detail=reference)
-                    )
+                    violations.append(CanonicalAuthorityViolation(path, "retired authority string", detail=reference))
         if path.suffix.lower() not in {".py", ".pyi"}:
             continue
         try:
@@ -841,9 +826,7 @@ def definition_names(path: Path) -> tuple[str, ...]:
     """Return top-level function and class definitions from one module."""
     tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
     return tuple(
-        node.name
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
     )
 
 

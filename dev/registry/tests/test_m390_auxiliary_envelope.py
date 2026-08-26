@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..pipeline import _m390_auxiliary_envelope

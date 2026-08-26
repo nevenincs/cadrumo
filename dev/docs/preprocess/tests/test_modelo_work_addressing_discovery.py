@@ -18,9 +18,7 @@ from ....quality.import_hygiene_scan import (
 
 _ROOT = Path(__file__).resolve().parents[4]
 _CANONICAL_OWNER = "src/cadrumo/application/modelo/work_addressing.py"
-_OWNER_SYMBOLS = frozenset(
-    {"ModeloWorkResolution", "ModeloWorkSelectorRequest", "select_modelo_work_resolution"}
-)
+_OWNER_SYMBOLS = frozenset({"ModeloWorkResolution", "ModeloWorkSelectorRequest", "select_modelo_work_resolution"})
 _NATURAL_SCAN_RULE = SubstitutableWorkSelectorRule(
     "parallel natural catalogue scan",
     collection_methods=frozenset({"values", "items"}),
@@ -127,10 +125,7 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
         },
         {
             "path": "src/cadrumo/application/modelo/direct_first.py",
-            "snippet": (
-                "def resolve(repo: WorkUnitCatalogueRepository):\n"
-                "    return next(iter(repo.load().values()))"
-            ),
+            "snippet": ("def resolve(repo: WorkUnitCatalogueRepository):\n    return next(iter(repo.load().values()))"),
         },
         {
             "path": "src/cadrumo/application/modelo/yield_selector.py",

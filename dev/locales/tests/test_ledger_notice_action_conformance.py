@@ -246,7 +246,7 @@ def test_ledger_runtime_command_literals_are_provenance_only() -> None:
     assert failures == []
 
 
-def test_pull_folder_does_not_flatten_typed_storage_errors() -> None:
+def test_evidence_pull_all_does_not_flatten_typed_storage_errors() -> None:
     """The shared boundary, not the ledger callback, projects storage refusals."""
     tree = ast.parse(inspect.getsource(_ledger_lifecycle_cli))
     caught_names = {

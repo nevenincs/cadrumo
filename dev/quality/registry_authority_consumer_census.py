@@ -149,12 +149,9 @@ def census_document() -> dict[str, object]:
             if isinstance(node, ast.Constant) and isinstance(node.value, str) and TARGET_MODULE in node.value:
                 hits["dynamic_target"].add(relative)
             if isinstance(node, ast.Call) and "register" in (_dotted(node.func) or "").lower():
-                registration_references = (
-                    name for item in ast.walk(node) if (name := _dotted(item)) is not None
-                )
+                registration_references = (name for item in ast.walk(node) if (name := _dotted(item)) is not None)
                 if any(
-                    aliases.get(name.split(".")[0], name).startswith(TARGET_MODULE)
-                    for name in registration_references
+                    aliases.get(name.split(".")[0], name).startswith(TARGET_MODULE) for name in registration_references
                 ):
                     hits["registration"].add(relative)
         annotation_nodes: list[ast.AST] = []

@@ -1778,14 +1778,14 @@ enclosing_function = "ledger_detach"
 
 [[disposition]]
 path = "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py"
-enclosing_symbol = "ledger_doclink"
+enclosing_symbol = "ledger_evidence_pull"
 candidate_role = "command_literal"
 alias = "<command-literal>"
-action_identity = "aeat app ledger doclink"
+action_identity = "aeat app ledger evidence pull"
 role = "excluded"
-reason = "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:257 ledger_doclink: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
+reason = "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:257 ledger_evidence_pull: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
 symbol = "<command-literal>"
-enclosing_function = "ledger_doclink"
+enclosing_function = "ledger_evidence_pull"
 
 [[disposition]]
 path = "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py"

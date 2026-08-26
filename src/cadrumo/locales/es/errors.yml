@@ -804,6 +804,8 @@ errors:
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
+    modelo_work_capture_not_current: La seleccion de trabajo ya no es actual. Vuelva
+      a leer el objetivo de trabajo e intentelo de nuevo.
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.

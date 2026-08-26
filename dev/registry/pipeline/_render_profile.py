@@ -22,7 +22,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_valida
 from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
-from cadrumo.domain.calculations.registry.record_design import ABSENT_NATURALEZA_TYPE_CODE
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import (
     ExportValuePolicy,
     RequiredExportValuePolicyValue,
@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design import ABSENT_NATURALEZA_TYPE_CODE
 
 from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign

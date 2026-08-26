@@ -49,8 +49,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
-from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.application.ledger.grounding_anchor import printed_excerpt_occurs_in_text
+from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 
 __all__ = [

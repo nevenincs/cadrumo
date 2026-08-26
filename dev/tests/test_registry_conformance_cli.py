@@ -57,13 +57,13 @@ from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.external_grounding import (
     UnattributedOraclePayload,
     load_bundled_external_oracle_inventory,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
 
 from ..registry.conformance._stamp import (
     GOVERNANCE_KEYS,

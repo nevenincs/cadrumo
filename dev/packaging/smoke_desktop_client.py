@@ -33,7 +33,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from cadrumo.core.directory_scan import iter_directory   # noqa: E402
+from cadrumo.core.directory_scan import iter_directory  # noqa: E402
 
 from . import desktop_capture as dc  # noqa: E402
 from ._acquire_common import capture_owned_server_launch  # noqa: E402

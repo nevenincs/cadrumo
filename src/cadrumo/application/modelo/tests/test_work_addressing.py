@@ -46,9 +46,14 @@ from ..work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
+    ModeloWorkCapture,
+    ModeloWorkCaptureError,
+    ModeloWorkCurrentCoordinate,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
+    capture_modelo_work_resolution,
     project_modelo_work_target,
+    read_modelo_work_current_coordinate,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
     resolve_modelo_work_unit_id,
@@ -504,3 +509,194 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+
+
+def _capture_period() -> Period:
+    return Period.from_year_and_code(2026, "1T")
+
+
+def _capture_request(bucket_id: str | None) -> ModeloWorkSelectorRequest:
+    return ModeloWorkSelectorRequest(bucket_id=bucket_id, modelo="130", filing_year=2026, period=_capture_period())
+
+
+def _capture_source_imports() -> str:
+    """Return the capture region source so a registry reach would be visible."""
+    import inspect
+
+    from .. import work_addressing
+
+    return "".join(
+        inspect.getsource(member)
+        for member in (
+            work_addressing.capture_modelo_work_resolution,
+            work_addressing.read_modelo_work_current_coordinate,
+            work_addressing._work_capture_observation,
+        )
+    )
+
+
+def test_work_capture_is_singleflight_for_one_unchanged_observation(tmp_path: Path) -> None:
+    """Two captures over one unchanged catalogue share their generation."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        request = _capture_request(profile.bucket_id)
+
+        first = capture_modelo_work_resolution(request, catalogue_repository=repository)
+        second = capture_modelo_work_resolution(request, catalogue_repository=repository)
+
+        assert first.generation == second.generation
+        assert first.comparison_domain == second.comparison_domain
+        coordinate = read_modelo_work_current_coordinate(request, catalogue_repository=repository)
+        assert first.require_current(coordinate) is first
+
+
+def test_work_capture_generation_advances_and_refuses_a_superseded_capture(tmp_path: Path) -> None:
+    """A catalogue write supersedes an earlier capture through its coordinate."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        first_unit = _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        request = _capture_request(profile.bucket_id)
+        stale = capture_modelo_work_resolution(request, catalogue_repository=repository)
+
+        successor_revision_id = "2019-y-siguientes-successor"
+        payload = first_unit.model_dump()
+        payload.update(
+            work_unit_id=derive_work_unit_id(
+                bucket_id=first_unit.bucket_id,
+                modelo=first_unit.modelo,
+                filing_year=first_unit.filing_year,
+                period=first_unit.period,
+                revision_id=successor_revision_id,
+            ),
+            revision_id=successor_revision_id,
+            name="130-2026-1T-successor",
+            created_at=_T0 + timedelta(seconds=1),
+            updated_at=_T0 + timedelta(seconds=1),
+        )
+        repository.save(WorkUnitCatalogue.from_work_units((first_unit, WorkUnit(**payload))))
+
+        current = read_modelo_work_current_coordinate(request, catalogue_repository=repository)
+
+        assert current.generation > stale.generation
+        with pytest.raises(ModeloWorkCaptureError):
+            stale.require_current(current)
+
+
+def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(tmp_path: Path) -> None:
+    """A pointer rewritten away and back is not mistaken for an unchanged limb."""
+    from ....core.bucket_pointer import read_pointer, write_pointer
+    from ....core.config import load_settings
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        implicit_request = _capture_request(None)
+        root = load_settings().cadrumo_local_storage_root
+        original = read_pointer(root)
+        before = capture_modelo_work_resolution(implicit_request, catalogue_repository=repository)
+
+        write_pointer(root, original.model_copy(update={"bucket_id": "99999999-0000-4000-8000-000000000999"}))
+        write_pointer(root, original)
+
+        after = capture_modelo_work_resolution(implicit_request, catalogue_repository=repository)
+
+        assert after.resolution.bucket_id == before.resolution.bucket_id
+        assert after.generation > before.generation
+
+
+def test_explicit_bucket_capture_excludes_the_pointer_limb(tmp_path: Path) -> None:
+    """An explicit operand keeps its catalogue generation across pointer churn."""
+    from ....core.bucket_pointer import read_pointer, write_pointer
+    from ....core.config import load_settings
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        explicit_request = _capture_request(profile.bucket_id)
+        root = load_settings().cadrumo_local_storage_root
+        original = read_pointer(root)
+        before = capture_modelo_work_resolution(explicit_request, catalogue_repository=repository)
+
+        write_pointer(root, original.model_copy(update={"bucket_id": "99999999-0000-4000-8000-000000000999"}))
+        write_pointer(root, original)
+
+        after = capture_modelo_work_resolution(explicit_request, catalogue_repository=repository)
+
+        assert after.generation == before.generation
+
+
+def test_work_capture_reads_the_catalogue_exactly_once_and_touches_no_registry(tmp_path: Path) -> None:
+    """One capture is one encrypted-SQL catalogue read and no registry access."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        request = _capture_request(profile.bucket_id)
+        selects: list[str] = []
+
+        def _record_secure_object_select(
+            _connection: object,
+            _cursor: object,
+            statement: str,
+            _parameters: object,
+            _context: object,
+            _executemany: bool,
+        ) -> None:
+            normalized = " ".join(statement.split()).upper()
+            if normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} ":
+                selects.append(statement)
+
+        event.listen(profile.repository.engine, "after_cursor_execute", _record_secure_object_select)
+        try:
+            capture = capture_modelo_work_resolution(request, catalogue_repository=repository)
+        finally:
+            event.remove(profile.repository.engine, "after_cursor_execute", _record_secure_object_select)
+
+        assert capture.resolution.bucket_id == profile.bucket_id
+        assert len(selects) == 1
+        assert "cadrumo.domain.calculations.registry" not in _capture_source_imports()
+
+
+def test_distinct_storage_roots_cannot_compare_their_coordinates(tmp_path: Path) -> None:
+    """Coordinates from two physical roots are refused, not silently equal."""
+    with isolated_runtime_profile(tmp_path=tmp_path / "one", bucket_id=_ADDRESSING_PROFILE_ID) as first_profile:
+        _seed_ready_profile(first_profile.repository, bucket_id=first_profile.bucket_id)
+        first_repository = WorkUnitCatalogueRepository(objects=first_profile.repository)
+        _seed_work_unit(first_repository, bucket_id=first_profile.bucket_id)
+        first_capture = capture_modelo_work_resolution(
+            _capture_request(first_profile.bucket_id),
+            catalogue_repository=first_repository,
+        )
+
+    with isolated_runtime_profile(tmp_path=tmp_path / "two", bucket_id=_ADDRESSING_PROFILE_ID) as second_profile:
+        _seed_ready_profile(second_profile.repository, bucket_id=second_profile.bucket_id)
+        second_repository = WorkUnitCatalogueRepository(objects=second_profile.repository)
+        _seed_work_unit(second_repository, bucket_id=second_profile.bucket_id)
+        second_coordinate = read_modelo_work_current_coordinate(
+            _capture_request(second_profile.bucket_id),
+            catalogue_repository=second_repository,
+        )
+
+    assert first_capture.comparison_domain != second_coordinate.comparison_domain
+    with pytest.raises(ModeloWorkCaptureError):
+        first_capture.require_current(second_coordinate)
+
+
+def test_work_capture_contract_is_owned_by_its_defining_module() -> None:
+    """Every capture symbol is defined here and bound nowhere in the package namespace."""
+    from .. import __init__ as modelo_namespace
+
+    for owned in (
+        ModeloWorkCapture,
+        ModeloWorkCurrentCoordinate,
+        ModeloWorkCaptureError,
+        capture_modelo_work_resolution,
+        read_modelo_work_current_coordinate,
+    ):
+        assert owned.__module__ == "cadrumo.application.modelo.work_addressing"
+        assert not hasattr(modelo_namespace, owned.__name__)

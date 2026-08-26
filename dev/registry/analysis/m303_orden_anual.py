@@ -13,14 +13,14 @@ import argparse
 from pathlib import Path
 
 from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.m303_orden_census_artefact import m303_orden_census_artefact_path
 from cadrumo.domain.calculations.registry.m303_orden_manifest import (
     check_m303_annual_orden_census_artefact,
     check_m303_annual_orden_manifest,
     render_m303_annual_orden_census_artefact,
     render_m303_annual_orden_manifest,
 )
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.m303_orden_census_artefact import m303_orden_census_artefact_path
 
 
 def _registry_root() -> Path:
