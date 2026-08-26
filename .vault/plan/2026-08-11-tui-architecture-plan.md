@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:947a0e47d447a865ab672751751884e4bc97eac4889bea86156e0af47d79a705'
+body_hash: 'sha256:a70473f60ab1d30d95f5f9cd7457c6769d7d11ae3b60f0470afef67964d5418c'
 ---
 
 # `tui-architecture` plan
@@ -296,7 +296,7 @@ Implement edit admission, parsing, preflight, exact mutation baselines, typed sc
 - [x] `W03.P21.S135` - Replace calculation-revision persistence with guarded work-and-calculation compare-and-swap so duplicate-existing and new-revision branches recheck the same edit baseline and co-commit immutable revision, work pointer, lifecycle event, and edit result receipt without any unguarded pointer advance; `src/cadrumo/application/modelo/_revision_persistence.py`.
 - [x] `W03.P21.S136` - Implement the application-owned edit executor that rechecks every ModeloEditBaselineV1 coordinate at the guarded commit point, refuses stale or incompatible intent without rebasing, delegates canonical calculation and guarded persistence, and returns only typed result receipts; `src/cadrumo/application/modelo/_edit_execution.py`.
 - [x] `W03.P21.S137` - Expose the edit facade and prove schema, parsing, preflight, scalar and row intent, guarded compare-and-swap, duplicate-result, rollback, compatibility refusal, persistence round-trip, non-retention, and redeclaration behavior while leaving operation-enrollment capability UNMEASURED until its C3 receipt exists; `src/cadrumo/application/modelo/_edit_facade.py and src/cadrumo/application/modelo/tests/test_edit_contract.py`.
-- [ ] `W03.P21.S138` - Implement the sole ModeloEditContractC3DependencyReceiptV1 validator with exact C2 predecessor, contract schema, baseline, guarded persistence, result-receipt, conformance, financial-handoff, production-definition, no-legacy, and redeclaration checks while leaving receipt minting to the C3 custody phase; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
+- [x] `W03.P21.S138` - Implement the sole ModeloEditContractC3DependencyReceiptV1 validator with exact C2 predecessor, contract schema, baseline, guarded persistence, result-receipt, conformance, financial-handoff, production-definition, no-legacy, and redeclaration checks while leaving receipt minting to the C3 custody phase; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
 - [ ] `W03.P21.S275` - Extend the canonical calculation input surface to express explicit CLEAR_DECLARED_VALUE and REMOVE_OVERRIDE for manual scalar casillas, so an edit that withdraws a previously declared value reaches the engine through the same orchestrator every other input uses rather than a second write path, and prove a cleared casilla is distinguishable from one never declared; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused clear-versus-never-declared tests`.
 - [ ] `W03.P21.S276` - Extend the canonical calculation input surface to express repeatable-row ADD_ROW, UPDATE_ROW, DELETE_ROW and MOVE_ROW against MANUAL_INPUT binding groups so row edits reach the engine through the owning orchestrator rather than the edit executor materializing rows itself, and prove row ordering and deletion survive a real calculate and guarded persist; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused row-intent calculation and persistence tests`.
 
