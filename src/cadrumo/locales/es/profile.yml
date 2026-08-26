@@ -33,6 +33,9 @@ profile:
         description: Lee el registro censal del contribuyente y revisa los cambios
           propuestos antes de adoptarlos.
         title: Censo de la AEAT
+      credential_requirement:
+        held: Credencial de la AEAT registrada
+        missing: Requiere autenticación con la AEAT (no configurada)
       filed_history:
         action: Obtener historial
         description: Obtén el historial de declaraciones del contribuyente en la AEAT

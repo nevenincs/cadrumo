@@ -35,6 +35,9 @@ profile:
         description: Olvassa be az adózó saját nyilvántartási adatait, és tekintse
           át a javasolt módosításokat elfogadás előtt.
         title: AEAT nyilvántartás
+      credential_requirement:
+        held: AEAT hitelesítő adat rögzítve
+        missing: AEAT hitelesítés szükséges (nincs beállítva)
       filed_history:
         action: Előzmények lekérése
         description: Kérje le az adózó korábbi bevallási előzményeit az AEAT-tól a

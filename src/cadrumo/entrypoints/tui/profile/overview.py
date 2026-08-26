@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from contextvars import copy_context
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
@@ -40,6 +40,7 @@ from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList,
 from textual.worker import Worker, WorkerState
 
 from ....application.user_profile.acquisition_sources import (
+    AcquisitionSourceCredentialPostureV1,
     ProfileAcquisitionSourceKey,
     ProfileAcquisitionSourceV1,
     known_profile_acquisition_sources,
@@ -58,6 +59,7 @@ from ....entrypoints.tui.components.widgets import (
     ContentDataTable,
     ContentScroll,
     NoticeBand,
+    RequirementStatus,
     SourceActionCard,
     SourceActionDescriptor,
 )
@@ -319,6 +321,7 @@ class ProfileManagerApp(App[None]):
         persist: Callable[[str, str], ProfileOverview],
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
+        credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
@@ -331,6 +334,15 @@ class ProfileManagerApp(App[None]):
         ``OperationController`` or know how a source actually runs. A host
         that supplies none renders every source action as present but
         disabled, never as a silent no-op button."""
+        self._credential_postures: dict[ProfileAcquisitionSourceKey, AcquisitionSourceCredentialPostureV1] = {
+            posture.source: posture for posture in (credential_postures or ())
+        }
+        """Whether each source's declared AEAT-authentication requirement is
+        currently met, keyed by source. Injected from
+        :func:`resolve_acquisition_source_credential_postures` against the
+        real :class:`AuthState`, never guessed here. A host that supplies
+        none renders every source without a credential badge -- an unknown
+        posture is not the same claim as "credential missing"."""
         self._validate_field = validate
         """Why the write door would refuse one path's value, or ``None``.
 
@@ -383,11 +395,14 @@ class ProfileManagerApp(App[None]):
             yield Vertical(id="manager-context")
             with Vertical(id="manager-sources", classes="cadrumo-panel"):
                 for source in known_profile_acquisition_sources():
+                    requirement_label, requirement_status = self._credential_requirement_badge(source.key)
                     yield SourceActionCard(
                         SourceActionDescriptor(
                             title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
                             description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
                             action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                            credential_requirement_label=requirement_label,
+                            credential_requirement_status=requirement_status,
                         ),
                         id=f"source-{source.key.value}",
                     )
@@ -401,18 +416,33 @@ class ProfileManagerApp(App[None]):
         self._sync_source_actions()
         await self._render()
 
+    def _credential_requirement_badge(
+        self, key: ProfileAcquisitionSourceKey
+    ) -> tuple[str | None, RequirementStatus | None]:
+        """Resolve one source's credential badge from its real posture, if supplied."""
+        posture = self._credential_postures.get(key)
+        if posture is None or not posture.requires_aeat_authentication:
+            return None, None
+        if posture.credential_held:
+            return tr("profile.journey.source.credential_requirement.held"), RequirementStatus.REQUIRED_PRESENT
+        return tr("profile.journey.source.credential_requirement.missing"), RequirementStatus.REQUIRED_MISSING
+
     def _sync_source_actions(self) -> None:
-        """Disable every launch button when no launch door was injected.
+        """Disable a launch button when the door or the credential is missing.
 
         A present-but-inert button is honest about "this source is known but
         not runnable from here"; a hidden action would look like the source
         does not exist at all, and a silently-inert button would look like a
-        bug the first time an operator presses it.
+        bug the first time an operator presses it. A missing credential
+        disables the button regardless of the injected door: the door would
+        only fail the same way the source's own implementation already does.
         """
-        enabled = self._launch_source is not None
+        door_ready = self._launch_source is not None
         for source in known_profile_acquisition_sources():
+            posture = self._credential_postures.get(source.key)
+            credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
             card = self.query_one(f"#source-{source.key.value}", SourceActionCard)
-            card.query_one(Button).disabled = not enabled
+            card.query_one(Button).disabled = not (door_ready and credential_ready)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Launch the pressed source's operation through the injected door only."""
