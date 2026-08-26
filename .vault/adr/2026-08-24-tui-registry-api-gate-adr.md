@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:f890c93d1877829f6419a234b19c7b186f4daddc93184a431c39e36cb2bb3513'
+body_hash: 'sha256:b783b74e7bc4b949b0566dedd2f8f25054de2b320d73e0897db4c14e9f0100ec'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1108,3 +1108,24 @@ close by building anything analogous, because there is nothing analogous to
 build against. Whoever reviews this record should read `FILING_EXPORT_READINESS`
 as "not yet reachable" and `FILING_DRAFT_READINESS` as "not yet possible",
 and treat only the first as a queued implementation task.
+
+## Amendment (S296): the graded schema_facet's constraint arm is presence-only, not value-bearing
+
+`graded_snapshot_casilla_schema_records` populates a CASILLA row's
+`constraints` arm with a single self-referential
+`ModeloWorkspaceConstraintReferenceV1(casilla_id=...)` when
+`CasillaDefinition.constraints is not None`, never `None` itself, per S283's
+`None`-vs-`()` distinction now applied on the admission that DOES carry the
+data. **This is a real limitation, not merely a type-shape note.**
+`ModeloWorkspaceConstraintReferenceV1` carries only `kind` and `casilla_id`
+-- it has no field for `CasillaConstraints.sign`, `min_value`, `max_value`,
+`pattern`, `min_length`, `max_length` or `enum`. The graded admission can
+therefore tell a consumer THAT a casilla declares constraints and never
+WHAT they are; `min_value`, `max_value` and `enum` remain unreachable
+through this surface even on the one admission that carries the underlying
+definitions. A future reader must not assume "populated" means "complete"
+here: S283's ruling that the graded arm is populated is correct as far as
+it goes, but "populated" currently means "presence flagged", not "value
+exposed". Widening `ModeloWorkspaceConstraintReferenceV1` to carry the real
+constraint values is a legitimate future Step; it is explicitly out of
+S296's scope.
