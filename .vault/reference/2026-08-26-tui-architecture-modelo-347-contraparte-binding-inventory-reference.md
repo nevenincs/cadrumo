@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7c821036881fbc84a5bcda203b782d55a4fbd3c7ba298c1ef4de4e486b7b5d0'
+body_hash: 'sha256:0b45d4edbd82683931803c172acab1fba6c79bc23eca2559c1a890de0a92804d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -137,3 +137,17 @@ M349's? Locators for whoever picks this up: `_m349_ledger_guard.py`
 M347 answer), and the CLAVE OPERACIÓN field inventory above (the candidate
 operation-kind boundary a grouping would need to cover, itself still
 unverified against RD 1065/2007's consolidated text).
+
+## Open finding: the row model cannot represent per-quarter transmisiones amounts
+
+Confirmed against the tree while scoping this inventory:
+`Modelo347ContraparteRow` (`src/cadrumo/domain/modelos/_row_models.py:620-623`)
+declares only `importe_Q1..Q4`, so the diseño's paired "PERCIBIDO POR
+TRANSMISIONES" sub-fields have no representation in the row shape at all.
+
+The full finding, its consequence and the open legitimacy question live in
+`2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit`.
+It is recorded there rather than here because it is a different class of problem
+from this document's subject: the binding family is unbuilt capability, visible
+and tracked, while an amount the model cannot represent is invisible from every
+operator-facing surface.
