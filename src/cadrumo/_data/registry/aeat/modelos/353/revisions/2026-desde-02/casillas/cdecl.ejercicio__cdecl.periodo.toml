@@ -1,0 +1,24 @@
+[[revisions."2026-desde-02".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+export_refs = ["m353-2026.pagina01.f010"]
+
+[[revisions."2026-desde-02".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+export_refs = ["m353-2026.pagina01.f011"]
+

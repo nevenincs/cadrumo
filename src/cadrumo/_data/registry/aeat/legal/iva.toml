@@ -287,9 +287,31 @@ corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/01-353-eje
 sha256 = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"
 bytes = 130282
 retrieved_at = 2026-05-06
-applies_from = 2026-01-01
+# Orden HAC/27/2026's final provision makes this form first applicable to
+# February 2026.  January remains deliberately unserved: its preceding form
+# has no separately grounded, complete writer in this registry.
+applies_from = 2026-02-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx"
 review_status = "reviewed"
+
+[legal."orden-hac-27-2026:disposicion-final-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-27-2026.html#disposicion-final-unica"
+document_id = "BOE-A-2026-1761"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-1761"
+published_at = 2026-01-26
+effective_from = 2026-01-27
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Disposición final única de la Orden HAC/27/2026: el anexo II que sustituye el modelo 353 se aplica por primera vez a las autoliquidaciones mensuales de febrero de 2026. No autoriza retrotraer ese diseño a enero."
+required_text = [
+    "modelos 303, 322 y 353",
+    "mes de febrero de 2026",
+]
 
 [sources."aeat-dr-353-2021-2025"]
 evidence_tier = "layout_authority"

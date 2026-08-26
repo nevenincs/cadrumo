@@ -1,4 +1,4 @@
-[[revisions."2008-2025".constructs]]
+[[revisions."2021-2025".constructs]]
 id = "modelo-353-iva-grupo-agregado"
 legal_refs = [
     "orden-eha-3434-2007:art-2",
@@ -126,7 +126,7 @@ deadline_windows = [
     "modelo-353-2025-12",
 ]
 
-# Calculation-completeness manifest for revision 2008-2025: the
+# Calculation-completeness manifest for revision 2021-2025: the
 # casillas in this revision's calculation closure (formula targets,
 # formula-expression refs, formula/binding endpoints, verification
 # operands), keyed by canonical casilla_id plus reviewed segment/number

@@ -12,6 +12,9 @@ legal_refs = [
 source_refs = [
     "aeat-dr-353-2021-2025",
     "aeat-dr-353-2026",
+    "aeat-dr-353-2015-2016",
+    "aeat-dr-353-2017-2019",
+    "aeat-dr-353-2020",
     "aeat-modelo-353-procedure",
     "boe-modelo-353-2007-form",
 ]

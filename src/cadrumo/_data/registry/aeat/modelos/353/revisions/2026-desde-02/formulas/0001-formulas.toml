@@ -1,0 +1,64 @@
+# Modelo 353 liquidacion formulas. Every expression is the arithmetic AEAT prints
+# in the field's own description on aeat-dr-353-2026, record 35301:
+#   [09]  "Cuotas a compensar de periodos previos pendientes para periodos
+#          posteriores ([02]-[08])"
+#   [03]  "Resultado ([01] - [08])"
+#   [05]  "Resultado de la autoliquidacion ([03] - [04])"
+# None is inferred, and [05] deliberately does not subtract [10] -- the design
+# states ([03] - [04]) and no wider expression is invented here.
+#
+# The former ledger-direct chain (modelo-353-iva-cuota-devengada-total,
+# -cuota-deducible-total, -resultado-regimen-general) is deliberately absent from
+# this revision. It computed a cuota devengada/deducible liquidation from the
+# filer's own ledger, which Modelo 353 does not have: this design carries no
+# devengado, repercutido, soportado, deducible or recargo slot anywhere. It also
+# duplicated a fold-in this revision already models correctly through the
+# per_grupo_member previous_filing bindings, and aeat-calculation-aggregation
+# admits exactly one mechanism per fold-in. That chain remains on the 2021-2025
+# sibling, where the AEAT Manual practico worked example that grounds it
+# (filing_year 2024) resolves.
+
+[[revisions."2026-desde-02".formulas]]
+id = "modelo-353-2026-compensar-pendientes-posteriores"
+target_casilla_id = "09"
+expression = { op = "subtract", args = [
+    { casilla_id = "02" },
+    { casilla_id = "08" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-desde-02".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2026-desde-02".formulas]]
+id = "modelo-353-2026-resultado"
+target_casilla_id = "03"
+expression = { op = "subtract", args = [
+    { casilla_id = "01" },
+    { casilla_id = "08" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-desde-02".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2026-desde-02".formulas]]
+id = "modelo-353-2026-resultado-autoliquidacion"
+target_casilla_id = "05"
+expression = { op = "subtract", args = [
+    { casilla_id = "03" },
+    { casilla_id = "04" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-desde-02".formulas.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]

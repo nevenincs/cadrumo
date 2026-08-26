@@ -9,7 +9,7 @@
 # resolve time. op = sum. Grounded in Orden EHA/3434/2007 art. 2 + LIVA arts.
 # 88/92/84 (the same casilla shapes 322 and 353 share).
 
-[[revisions."2008-2025".bindings]]
+[[revisions."2021-2025".bindings]]
 id = "modelo-353-prev-322-cuota-devengada-total"
 source = "previous_filing"
 selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-devengada-total"] }
@@ -17,11 +17,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".bindings.source_citations]]
+[[revisions."2021-2025".bindings.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".bindings]]
+[[revisions."2021-2025".bindings]]
 id = "modelo-353-prev-322-cuota-deducible-total"
 source = "previous_filing"
 selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-deducible-total"] }
@@ -29,11 +29,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".bindings.source_citations]]
+[[revisions."2021-2025".bindings.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".bindings]]
+[[revisions."2021-2025".bindings]]
 id = "modelo-353-prev-322-resultado-regimen-general"
 source = "previous_filing"
 selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.resultado-regimen-general"] }
@@ -41,6 +41,6 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".bindings.source_citations]]
+[[revisions."2021-2025".bindings.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]

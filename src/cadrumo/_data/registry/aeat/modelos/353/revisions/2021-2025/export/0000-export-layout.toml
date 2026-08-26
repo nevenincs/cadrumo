@@ -1,11 +1,11 @@
-[[revisions.2008-2025.export_layouts]]
-id = 'generated-modelo-353-2008-2025-fichero'
+[[revisions.2021-2025.export_layouts]]
+id = 'generated-modelo-353-2021-2025-fichero'
 format = 'fixed_width'
 source_refs = ['aeat-dr-353-2021-2025']
 legal_refs = ['orden-eha-3434-2007:art-8']
 dictionary_path_overrides = []
 
-[revisions.2008-2025.export_layouts.filing_envelope]
+[revisions.2021-2025.export_layouts.filing_envelope]
 schema_version = 1
 source_ref = 'aeat-dr-353-2021-2025'
 source_sha256 = '37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d'
@@ -16,54 +16,54 @@ closer_derivation = 'relative-closer-v1'
 total_derivation = 'emitted-byte-total-v1'
 body_record_ids = ['m353-declaracion']
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'opening_tag'
 length = 2
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'modelo'
 length = 3
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'discriminant'
 length = 1
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'filing_year'
 length = 4
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'period'
 length = 2
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'record_type'
 length = 5
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'aux_opening_tag'
 length = 5
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'pre_program_filler'
 length = 70
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'program_identifier'
 length = 4
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'between_identities_filler'
 length = 4
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'developer_tax_id'
 length = 9
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'post_developer_filler'
 length = 213
 
-[[revisions.2008-2025.export_layouts.filing_envelope.prefix_fields]]
+[[revisions.2021-2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'aux_closing_tag'
 length = 6

@@ -6,7 +6,7 @@
 # only the sum of their results, through [01]. These casillas therefore carry
 # not_in_record_design: they are calculation support that reconciles against
 # the members, never boxes the operator files.
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
 section = ["iva", "regimen_general", "devengado"]
@@ -19,7 +19,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
 section = ["iva", "regimen_general", "devengado"]
@@ -32,7 +32,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
 section = ["iva", "regimen_general", "devengado"]
@@ -45,7 +45,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
 section = ["iva", "regimen_general", "deducible"]
@@ -58,7 +58,7 @@ legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
@@ -71,7 +71,7 @@ legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", 
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 section = ["iva", "regimen_general", "totales"]
@@ -84,7 +84,7 @@ legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
 section = ["iva", "regimen_general", "totales"]
@@ -97,7 +97,7 @@ legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:a
 source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
-[[revisions."2008-2025".casillas]]
+[[revisions."2021-2025".casillas]]
 id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
 section = ["iva", "regimen_general", "totales"]

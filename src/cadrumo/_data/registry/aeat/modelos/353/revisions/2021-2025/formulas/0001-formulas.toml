@@ -1,4 +1,4 @@
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-iva-cuota-devengada-total"
 target_casilla_id = "iva.cuota-devengada-total"
 expression = { op = "add", args = [
@@ -11,11 +11,11 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-iva-cuota-deducible-total"
 target_casilla_id = "iva.cuota-deducible-total"
 expression = { op = "add", args = [
@@ -26,11 +26,11 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-iva-resultado-regimen-general"
 target_casilla_id = "iva.resultado-regimen-general"
 expression = { op = "subtract", args = [
@@ -41,6 +41,6 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]

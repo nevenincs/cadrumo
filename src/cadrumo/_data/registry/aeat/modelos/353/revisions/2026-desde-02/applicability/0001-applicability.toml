@@ -1,0 +1,8 @@
+[[revisions."2026-desde-02".applicability]]
+id = "m353-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "iva_group_dominant_entity"
+applicable_reason = "Modelo 353 (IVA grupo de entidades, modelo agregado): el contribuyente esta inscrito como entidad dominante de un grupo de IVA y presenta la autoliquidacion mensual agregada."
+not_applicable_reason = "Modelo 353 no aplica: solo corresponde a la entidad dominante de un grupo de IVA que agrega las autoliquidaciones individuales de las entidades del grupo."
+cuota_bearing = false
+legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]

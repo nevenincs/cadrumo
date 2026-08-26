@@ -1,7 +1,7 @@
 # Modelo 353 is the dominant entity's monthly aggregate settlement under the
 # IVA group regime. The three same-period M322 member carries feed the group
 # aggregate; they are not informational evidence or an independent filing.
-[[revisions."2008-2025".dependency_classifications]]
+[[revisions."2021-2025".dependency_classifications]]
 id = "modelo-353-dep-322"
 source_modelo = "322"
 treatment = "direct_annual_settlement"
