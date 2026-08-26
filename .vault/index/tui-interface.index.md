@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac47a8e10e91fc598ccec201755e98af3ca842fcb41c7112b932d9cbedbe6af0'
+body_hash: 'sha256:f4f1f5a37d060a1660ead6921ed0095ab75c5ea4d0b6adff74f146a4a1a34089'
 related:
   - '[[2026-08-11-tui-interface-W01-P01-S01]]'
   - '[[2026-08-11-tui-interface-W01-P01-S02]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-08-11-tui-interface-W01-P02-S04]]'
   - '[[2026-08-11-tui-interface-W01-P02-S05]]'
   - '[[2026-08-11-tui-interface-W01-P02-S06]]'
+  - '[[2026-08-11-tui-interface-W01-P02-S94]]'
   - '[[2026-08-11-tui-interface-W05-P10-S24]]'
   - '[[2026-08-11-tui-interface-W05-P10-S25]]'
   - '[[2026-08-11-tui-interface-W05-P10-S38]]'
@@ -44,6 +45,7 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 - `2026-08-11-tui-interface-W01-P02-S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns
 - `2026-08-11-tui-interface-W01-P02-S05` - Publish the settled profile presentation contract through the application facade
 - `2026-08-11-tui-interface-W01-P02-S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference
+- `2026-08-11-tui-interface-W01-P02-S94` - Complete conditional-applicability assessment in the profile presentation contract for the cases W01.P02.S04 left classified as OPTIONAL rather than assessed: the multi-field IVA-regime trigger resolved through modelo_iva_profile_required_paths, and every repeatable section, so a field is reported not_applicable or applicable_required_missing on its real trigger instead of defaulting to optional
 - `2026-08-11-tui-interface-W05-P10-S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route
 - `2026-08-11-tui-interface-W05-P10-S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable
 - `2026-08-11-tui-interface-W05-P10-S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence
