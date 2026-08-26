@@ -17,7 +17,9 @@ if __package__ in {None, ""} and sys.path and sys.path[0].replace("\\", "/").end
 import argparse
 import ast
 import json
+import os
 import re
+import time
 import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
@@ -62,6 +64,10 @@ CONSUMER_CATEGORIES: Final = (
 )
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = ROOT / "dev/quality/registry_facade_family_census.v1.json"
+GENERATED_CENSUS_DIR = ROOT / "dev/quality"
+GENERATED_CENSUS_SUFFIX: Final = ".v1.json"
+_MATRIX_WRITE_CHUNK: Final = 1 << 20
+_MATRIX_WRITE_ATTEMPTS: Final = 8
 PLAN_PATH = ROOT / ".vault/plan/2026-08-11-tui-architecture-plan.md"
 
 
@@ -205,6 +211,17 @@ def _base_category(relative_path: str) -> str:
 _EVIDENCE_FILE_CACHE: tuple[EvidenceFile, ...] | None = None
 
 
+def _is_generated_census_artifact(path: Path) -> bool:
+    """Report whether a path is a generated census output rather than evidence.
+
+    A census artifact records every module path it adjudicates, so scanning one
+    as evidence makes the census a consumer of every row it owns.  That edge
+    then re-enters the next generation through the transitive closure and the
+    artifact never reaches a fixed point.
+    """
+    return path.parent == GENERATED_CENSUS_DIR and path.name.endswith(GENERATED_CENSUS_SUFFIX)
+
+
 def _evidence_files() -> tuple[EvidenceFile, ...]:
     """Return one deterministic current-tree snapshot for the census run."""
     global _EVIDENCE_FILE_CACHE
@@ -214,7 +231,7 @@ def _evidence_files() -> tuple[EvidenceFile, ...]:
     for root_name in EVIDENCE_ROOTS:
         root = ROOT / root_name
         for path in root.rglob("*"):
-            if path.is_file() and path.suffix in EVIDENCE_FILE_SUFFIXES:
+            if path.is_file() and path.suffix in EVIDENCE_FILE_SUFFIXES and not _is_generated_census_artifact(path):
                 files.append(
                     EvidenceFile(
                         path=path.relative_to(ROOT).as_posix(),
@@ -1122,6 +1139,29 @@ def check_matrix_document(document: dict[str, object]) -> None:
     _bound_plan_step(final_gate["step_id"], final_gate["action"], final_gate["scope"], plan)
 
 
+def _write_matrix_text(text: str) -> None:
+    """Write the matrix atomically in bounded chunks.
+
+    The artifact is tens of megabytes and this tree is backed by a network
+    share that rejects a single write of that size with ``EINVAL``.  Streaming
+    into a sibling temporary file and replacing keeps the committed artifact
+    whole even when a write fails part way.
+    """
+    temporary = MATRIX_PATH.with_suffix(MATRIX_PATH.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        for start in range(0, len(text), _MATRIX_WRITE_CHUNK):
+            handle.write(text[start : start + _MATRIX_WRITE_CHUNK])
+    for attempt in range(_MATRIX_WRITE_ATTEMPTS):
+        try:
+            os.replace(temporary, MATRIX_PATH)
+        except OSError:
+            if attempt == _MATRIX_WRITE_ATTEMPTS - 1:
+                raise
+            time.sleep(1)
+        else:
+            return
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the deterministic template or verify a fully reviewed matrix."""
     parser = argparse.ArgumentParser()
@@ -1130,13 +1170,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     if args.write_template:
-        MATRIX_PATH.write_text(json.dumps(matrix_document(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        _write_matrix_text(json.dumps(matrix_document(), indent=2, sort_keys=True) + "\n")
     if args.refresh_reviewed:
         reviewed = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
-        MATRIX_PATH.write_text(
-            json.dumps(refresh_reviewed_matrix_document(reviewed), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        _write_matrix_text(json.dumps(refresh_reviewed_matrix_document(reviewed), indent=2, sort_keys=True) + "\n")
     if args.check:
         check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
     if not args.write_template and not args.refresh_reviewed and not args.check:

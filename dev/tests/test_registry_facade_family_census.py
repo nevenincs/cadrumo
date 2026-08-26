@@ -251,6 +251,27 @@ def test_fully_qualified_package_access_and_aliased_registration_keep_exact_prov
     )
 
 
+def _defining_owner_path(row: dict[str, object]) -> str:
+    """Return the one path whose source carries this row's reviewed owner.
+
+    A row whose family was already terminally relocated carries its owner at
+    the adjudicated destination rather than at the c941 new path, so the
+    retired candidate may legitimately be absent from the current tree.
+    """
+    destinations = row["terminal_destinations"]
+    assert isinstance(destinations, list)
+    owners = [item["path"] for item in destinations if not item["allowed_absence"]]
+    assert len(owners) <= 1
+    return str(owners[0]) if owners else str(row["new_path"])
+
+
+def _adjudicated_paths(row: dict[str, object]) -> set[str]:
+    """Return every path this row adjudicates: its c941 path and destinations."""
+    destinations = row["terminal_destinations"]
+    assert isinstance(destinations, list)
+    return {str(row["new_path"])} | {str(item["path"]) for item in destinations}
+
+
 def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
     """Each row records owner, competing-site, and substitutability evidence."""
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
@@ -267,7 +288,7 @@ def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
         }
         assert isinstance(evidence["owner_definition_locators"], list)
         assert isinstance(evidence["competing_site_census"], dict)
-        assert evidence["substitutability"]["result"] == "no_substitutable_c941_owner"
+        assert evidence["substitutability"]["result"] == "no_substitutable_owner"
 
 
 def test_current_measurements_cover_relative_import_and_type_alias_regressions() -> None:
@@ -280,7 +301,7 @@ def test_current_measurements_cover_relative_import_and_type_alias_regressions()
     type_alias = getattr(ast, "TypeAlias", None)
     exported_aliases = 0
     for row in document["rows"]:
-        tree = ast.parse(_evidence_text(row["new_path"]))
+        tree = ast.parse(_evidence_text(_defining_owner_path(row)))
         aliases: set[str] = set()
         for node in tree.body:
             name = getattr(node, "name", None) if type_alias is not None and isinstance(node, type_alias) else None
@@ -350,10 +371,11 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
         assert isinstance(row, dict)
         result = row["rag_result"]
         assert isinstance(result, dict)
-        location = f"{result['path']}:{result['line_start']}"
+        location = f"{result['path']}::{result['symbol']}"
 
-        assert row["rag_query"].endswith("public defining owner")
-        assert result["path"] == row["new_path"]
+        assert "defining owner" in row["rag_query"]
+        assert row["rag_query"].endswith("only:prod")
+        assert result["path"] in _adjudicated_paths(row)
         assert location in row["alternative_owner_evidence"]
         assert row["semantic_owner"] in row["alternative_owner_evidence"]
         rationale = row["semantic_evidence"]["substitutability"]["rationale"]
@@ -411,15 +433,21 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
     row = document["rows"][0]
     original_symbol = row["rag_result"]["symbol"]
     row["rag_result"]["symbol"] = "irrelevant_symbol"
+    row["alternative_owner_evidence"] += f" {row['rag_result']['path']}::irrelevant_symbol"
+    row["rag_query"] += " irrelevant_symbol"
     with pytest.raises(RuntimeError, match="unrelated to its exported symbols"):
         check_matrix_document(document)
     row["rag_result"]["symbol"] = original_symbol
 
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     first, second = document["rows"][:2]
-    second["semantic_evidence"]["substitutability"]["rationale"] = first["semantic_evidence"]["substitutability"][
-        "rationale"
-    ].replace(first["rag_query"], second["rag_query"])
+    template = first["semantic_evidence"]["substitutability"]["rationale"]
+    first["semantic_evidence"]["substitutability"]["rationale"] = template.replace(
+        first["rag_query"], f"`{first['rag_query']}`"
+    )
+    second["semantic_evidence"]["substitutability"]["rationale"] = template.replace(
+        first["rag_query"], f"`{second['rag_query']}`"
+    )
     with pytest.raises(RuntimeError, match=r"normalized rationale template|templated substitutability evidence"):
         check_matrix_document(document)
 
