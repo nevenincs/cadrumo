@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:da59b0803ece511a43c3112495032ca5efdbdd259840bb86120f0c5f860d69cd'
+body_hash: 'sha256:f890c93d1877829f6419a234b19c7b186f4daddc93184a431c39e36cb2bb3513'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1091,3 +1091,20 @@ answerable dispositions (`SCHEMA_INSPECTION`, `CALCULATION_MATERIALIZATION`,
 `FILING_DRAFT_READINESS` and `FILING_EXPORT_READINESS` both `UNMEASURED` for
 the reasons above), mirroring the existing STATIC_INSPECTION capability
 table's shape.
+
+**Two of the five capabilities are unmeasured for two DIFFERENT structural
+reasons, and an operator-facing surface must not let that read as one
+undifferentiated implementation gap.** `FILING_DRAFT_READINESS` has NO
+producer anywhere in this codebase — `build_draft` is pure and stateless, so
+there is nothing to build; this disposition is permanent until someone
+builds a producer or retires the capability. `FILING_EXPORT_READINESS` HAS
+an approved, named stamp (a `MODELO_EXPORTED` bucket event carrying the
+exact revision id) and a real producer that already writes it
+(`application/modelo/_export.py`) — the gap is that no S126 contributor port
+currently reads bucket event history, so the workspace cannot yet reach a
+stamp that exists. This is a wiring gap, not a stamp gap, and it closes the
+moment a ninth contributor port is built; `FILING_DRAFT_READINESS` does not
+close by building anything analogous, because there is nothing analogous to
+build against. Whoever reviews this record should read `FILING_EXPORT_READINESS`
+as "not yet reachable" and `FILING_DRAFT_READINESS` as "not yet possible",
+and treat only the first as a queued implementation task.
