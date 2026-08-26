@@ -34,6 +34,7 @@ from ._spec_policies import (
     ENCRYPTED_READ,
     ENCRYPTED_WRITE,
     LIVE_PROFILE_WRITE,
+    PROFILE_DESTRUCTIVE,
     PROFILE_READ,
     STATE_FREE,
 )
@@ -162,6 +163,7 @@ def _leaf(
 
 
 _PAYLOADS = "cadrumo.entrypoints.cli._config_payloads"
+_PAYLOADS_ARCHIVE_RECONCILE = "cadrumo.entrypoints.cli._config._archive_reconcile_payloads"
 _CONFIG = "cadrumo.entrypoints.cli._config"
 _WIZARD = "cadrumo.application.wizard"
 
@@ -359,6 +361,18 @@ PROFILE_COMMAND_SPECS = (
             ),
             _LANGUAGE,
         ),
+    ),
+    _leaf(
+        "config_profile_archive_reconcile",
+        "config_profile_archive",
+        "reconcile",
+        "cli.config.profile.archive.reconcile_help",
+        "_archive_reconcile",
+        "profile_archive_reconcile",
+        _PAYLOADS_ARCHIVE_RECONCILE,
+        "ProfileBundleReconcileResult",
+        PROFILE_DESTRUCTIVE,
+        (_LANGUAGE,),
     ),
     _leaf(
         "config_profile_archive_inspect",
@@ -629,22 +643,22 @@ PROFILE_COMMAND_SPECS = (
         ),
     ),
     _leaf(
-        "config_profile_restore",
-        "config_profile",
-        "restore",
-        "cli.config.profile.restore.help",
+        "config_profile_archive_import",
+        "config_profile_archive",
+        "import",
+        "cli.config.profile.archive.import_help",
         "_restore_cli",
-        "profile_restore",
+        "profile_archive_import",
         _PAYLOADS,
-        "ConfigProfileRestoreResult",
+        "ConfigProfileArchiveImportResult",
         BOOTSTRAP_WRITE,
         (
-            _argument("label", _STR, "cli.config.profile.restore.label_help"),
+            _argument("label", _STR, "cli.config.profile.archive.import_label_help"),
             _option(
                 "file",
                 ("--file",),
                 _PATH,
-                "cli.config.profile.restore.file_help",
+                "cli.config.profile.archive.import_file_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True),
                 transport_locus=TransportLocus.LOCAL_IN,
@@ -655,7 +669,7 @@ PROFILE_COMMAND_SPECS = (
                 "artifact",
                 ("--artifact",),
                 _PATH,
-                "cli.config.profile.restore.artifact_help",
+                "cli.config.profile.archive.import_artifact_help",
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,

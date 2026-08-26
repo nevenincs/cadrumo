@@ -22,7 +22,6 @@ from ._spec_policies import (
     CALCULATION_READ,
     ENCRYPTED_READ,
     LOCAL_READ,
-    PROFILE_DESTRUCTIVE,
     REGISTRY_READ,
     STATE_FREE,
 )
@@ -216,27 +215,6 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         policy=BOOTSTRAP_WRITE,
         handler=_handler("_repair_profile", "repair_profile"),
         result_schema=_schema("RepairProfileResult", "config.repair.profile"),
-    ),
-    CommandSpec(
-        key="config_repair_prepared_exports",
-        parent_key="config_repair",
-        token="prepared-exports",  # noqa: S106 - CLI token, not a credential.
-        kind="leaf",
-        help_key=TranslationKey("cli.config.repair.prepared_exports_help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="output_language",
-                declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.repair.prepared_exports_output_language_help"),
-            ),
-        ),
-        policy=PROFILE_DESTRUCTIVE,
-        handler=_handler("_repair_prepared_exports", "repair_prepared_exports"),
-        result_schema=_schema("ProfileBundleReconcileResult", "config.repair.prepared_exports"),
     ),
 )
 

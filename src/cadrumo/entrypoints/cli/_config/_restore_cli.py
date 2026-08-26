@@ -54,7 +54,7 @@ from ._secure_input import MachineSecretPayload, MachineSecretSelection
 if TYPE_CHECKING:
     from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
 
-_RECOVERY_LIMIT_NOTICE_CODE = "config.profile.restore.password_unchanged"
+_RECOVERY_LIMIT_NOTICE_CODE = "config.profile.archive.import.password_unchanged"
 
 
 class RestorePassphraseSecrets(MachineSecretPayload):
@@ -90,7 +90,7 @@ def _collect_recovery_secret(*, selection: MachineSecretSelection | None) -> str
             RestoreRecoverySecrets,
             selection=selection,
         ).recovery_secret.get_secret_value()
-    return prompt_secret_no_echo(tr("cli.config.profile.restore.recovery_secret_prompt"))
+    return prompt_secret_no_echo(tr("cli.config.profile.archive.import_recovery_secret_prompt"))
 
 
 def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
@@ -129,7 +129,7 @@ def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:
     )
 
 
-def profile_restore(
+def profile_archive_import(
     ctx: typer.Context,
     label: str,
     file: Path,
@@ -144,7 +144,7 @@ def profile_restore(
         restore_profile_capsule_with_password,
         restore_profile_capsule_with_recovery_artifact,
     )
-    from .._config_payloads import ConfigProfileRestoreResult
+    from .._config_payloads import ConfigProfileArchiveImportResult
     from ._secure_input import select_machine_secret_channel
 
     # Refuse an ambiguous source before reading the capsule, prompting, proving
@@ -179,14 +179,14 @@ def profile_restore(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=_RECOVERY_LIMIT_NOTICE_CODE,
-                message=tr("cli.config.profile.restore.password_unchanged"),
+                message=tr("cli.config.profile.archive.import_password_unchanged"),
             ),
         )
 
     emit_envelope(
         ctx,
-        command="config.profile.restore",
-        result=ConfigProfileRestoreResult(
+        command="config.profile.archive.import",
+        result=ConfigProfileArchiveImportResult(
             profile_id=outcome.profile_id,
             label=outcome.label,
             authority=outcome.authority,
@@ -198,4 +198,4 @@ def profile_restore(
     )
 
 
-__all__ = ["profile_restore"]
+__all__ = ["profile_archive_import"]

@@ -1114,6 +1114,52 @@ cli:
           a manifeszt-integritás ellenőrzését). Csak helyi; soha nem lép kapcsolatba
           az AEAT-tal.
         work_unit_id_help: Munkaegység azonosító (SHA-256 vagy egyértelmű előtag).
+      spreadsheet:
+        app_help: Séma-tábla számítási felület (exportálás, visszatöltés és számítás).
+        calculate_help: Visszatölti a calc-sheets munkafüzet üzemeltetői cellaszerkesztéseit,
+          lefuttatja rajtuk a helyi Decimal futásidőt, és kiadja a számított mezőértékeket
+          (nem ment semmit)
+        compute:
+          refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
+            metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
+            exportálja újra, majd töltse vissza újra.'
+        modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
+        period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
+        pull:
+          assemble_observations_help: Visszatöltés után a Detalle-lap sorcsoportjait
+            típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök,
+            kapcsolt felek műveletei, attribúciós tagok, visszatérítési műveletek),
+            és azokat a hasznos adatban a nyers sor-szerkesztések mellett közli.
+        pull_help: Az üzemeltető által szerkesztett cellák visszaolvasása egy számítási
+          munkafüzetből típusos rekordokba (a munkafüzet nyilvántartás-SHA-bélyegének
+          ellenőrzése után).
+        push:
+          capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
+            engedélyezd a 'aeat config profile capabilities set google_export on'
+            paranccsal.
+          dry_run_help: Előnézetben mutatja, mit törölne és írna újra ez az exportálás
+            a munkafüzetben, anélkül hogy bármit írna
+          prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a helyi
+            megfigyelési tárból exportálás előtt (éves összesítések, előző negyedévre
+            átvitt értékek stb.).
+          root_folder_required: 'Nincs beállított Drive gyökérmappa-azonosító; futtassa:
+            `aeat config google folder set <azonosító>`.'
+          snapshot_failure: A(z) {modelo} modell ({period}, {year}) beállításjegyzék-pillanatképe
+            nem készíthető el.
+          unknown_modelo: 'Ismeretlen nyomtatvány: {modelo!r}; elérhető nyomtatványok:
+            {available}'
+        push_help: A nyilvántartási számítási felület exportálása egy nyomtatvány+időszak
+          kombinációhoz Google Sheets munkafüzetbe az üzemeltető `cadrumo-vault/`
+          mappájában.
+        spreadsheet_id_help: Az üzemeltetői szerkesztéseket tartalmazó munkafüzet
+          Drive-fájlazonosítója (az alkalmazásnak kell tulajdonolnia és a megadott
+          pillanatképhez kell kötnie).
+        verify:
+          scenario_help: Egy JSON-forgatókönyv-fájl elérési útja üzemeltetői bemenetekkel
+            és opcionális AEAT-közzétett elvárt kimenettérképpel.
+        verify_help: Háromirányú paritásellenőrzés egy nyomtatvány számítási felületéről
+          (AEAT-orákulum vs helyi Decimal futásidő vs Sheets munkafüzet).
+        year_help: Benyújtási év (pl. 2025).
       support_matrix:
         help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot:
           számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség,
@@ -1901,6 +1947,8 @@ cli:
           módban fut valódi NIF-el rendelkező profil esetén.
         validation: 'A Google-hoz megadott adatok nem feleltek meg az érvényesítésnek:
           {detail}'
+      export_capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
+        engedélyezd a 'aeat config profile capabilities set google_export on' paranccsal.
       folder:
         folder_id_help: Google Drive mappa azonosítója.
         get_help: A beállított Google Drive gyökérmappa megjelenítése.
@@ -1919,55 +1967,6 @@ cli:
         profilhoz.
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
       sync:
-        calc:
-          compute:
-            refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
-              metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
-              exportálja újra, majd töltse vissza újra.'
-            spreadsheet_id_help: Az üzemeltetői szerkesztéseket tartalmazó munkafüzet
-              Drive fájlazonosítója (az alkalmazás tulajdonában kell lennie, és a
-              megadott pillanatképhez kell kötődnie)
-          compute_help: Visszatölti a calc-sheets munkafüzet üzemeltetői cellaszerkesztéseit,
-            lefuttatja rajtuk a helyi Decimal futásidőt, és kiadja a számított mezőértékeket
-            (nem ment semmit)
-          export:
-            capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
-              engedélyezd a 'aeat config profile capabilities set google_export on'
-              paranccsal.
-            dry_run_help: Előnézetben mutatja, mit törölne és írna újra ez az exportálás
-              a munkafüzetben, anélkül hogy bármit írna
-            modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
-            period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
-            prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
-              helyi megfigyelési tárból exportálás előtt (éves összesítések, előző
-              negyedévre átvitt értékek stb.).
-            root_folder_required: 'Nincs beállított Drive gyökérmappa-azonosító; futtassa:
-              `aeat config google folder set <azonosító>`.'
-            snapshot_failure: A(z) {modelo} modell ({period}, {year}) beállításjegyzék-pillanatképe
-              nem készíthető el.
-            unknown_modelo: 'Ismeretlen nyomtatvány: {modelo!r}; elérhető nyomtatványok:
-              {available}'
-            year_help: Benyújtási év (pl. 2025).
-          export_help: A nyilvántartási számítási felület exportálása egy nyomtatvány+időszak
-            kombinációhoz Google Sheets munkafüzetbe az üzemeltető `cadrumo-vault/`
-            mappájában.
-          help: Séma-tábla számítási felület (exportálás, visszatöltés és számítás).
-          pull:
-            assemble_observations_help: Visszatöltés után a Detalle-lap sorcsoportjait
-              típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök,
-              kapcsolt felek műveletei, attribúciós tagok, visszatérítési műveletek),
-              és azokat a hasznos adatban a nyers sor-szerkesztések mellett közli.
-            spreadsheet_id_help: Az üzemeltetői szerkesztéseket tartalmazó munkafüzet
-              Drive-fájlazonosítója (az alkalmazásnak kell tulajdonolnia és a megadott
-              pillanatképhez kell kötnie).
-          pull_help: Az üzemeltető által szerkesztett cellák visszaolvasása egy számítási
-            munkafüzetből típusos rekordokba (a munkafüzet nyilvántartás-SHA-bélyegének
-            ellenőrzése után).
-          verify:
-            scenario_help: Egy JSON-forgatókönyv-fájl elérési útja üzemeltetői bemenetekkel
-              és opcionális AEAT-közzétett elvárt kimenettérképpel.
-          verify_help: Háromirányú paritásellenőrzés egy nyomtatvány számítási felületéről
-            (AEAT-orákulum vs helyi Decimal futásidő vs Sheets munkafüzet).
         help: Helyi adatok feltolása és vizsgálata a beállított Google Drive mappában.
         probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének
           vizsgálata.
@@ -2055,9 +2054,31 @@ cli:
         export_out_help: Az archívum célútvonala.
         help: 'Profil biztonsagi mentese lezart, AEAD-titkositott archivumba, vagy
           egy archivum vizsgalata; visszaallitas: ''aeat config profile restore''.'
+        import_artifact_help: Helyreallitasi elemfajl; akkor hasznalja, ha a profil
+          jelszava elveszett.
+        import_file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.
+        import_help: Profilkapszula ujrakozzetetele egy konyvtarbol; az --artifact
+          kapcsoloval a 24 szavas kifejezessel allithato helyre.
+        import_label_help: A helyreallitott profil megjeleno neve.
+        import_password_unchanged: 'A rekordjai helyreallitak, de a profil jelszava
+          valtozatlan: ez az utvonal az adatokat allitja helyre, nem a hitelesito
+          adatot. Jelentkezzen be az eredeti jelszoval, vagy valtoztassa meg, amint
+          tudja.'
+        import_recovery_secret_prompt: 'Helyreallitasi kifejezes (24 szo): '
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A vizsgalando lezart archivum utvonala.
+        reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
+          A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre
+          már kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
+        reconcile_failures_warning: '{count} félbemaradt profilcsomag-exportot nem
+          sikerült kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez
+          maradhat a lemezen egy titkosítatlan ideiglenes fájl.'
+        reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
+          eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve
+          az elmaradt naplóbejegyzéseket.
+        reconcile_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
+          futás nem hagyott hátra semmit.
       bundle_flow:
         export_section_title: Profilcsomag exportálása
         import_section_title: Profilcsomag importálása
@@ -2344,17 +2365,6 @@ cli:
         követi.
       rename_source_help: A meglévő profilnév.
       rename_target_help: Az új profilnév.
-      restore:
-        artifact_help: Helyreallitasi elemfajl; akkor hasznalja, ha a profil jelszava
-          elveszett.
-        file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.
-        help: Profilkapszula ujrakozzetetele egy konyvtarbol; az --artifact kapcsoloval
-          a 24 szavas kifejezessel allithato helyre.
-        label_help: A helyreallitott profil megjeleno neve.
-        password_unchanged: 'A rekordjai helyreallitak, de a profil jelszava valtozatlan:
-          ez az utvonal az adatokat allitja helyre, nem a hitelesito adatot. Jelentkezzen
-          be az eredeti jelszoval, vagy valtoztassa meg, amint tudja.'
-        recovery_secret_prompt: 'Helyreallitasi kifejezes (24 szo): '
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
@@ -2418,19 +2428,6 @@ cli:
       logs_lines_help: A megjelenítendő legújabb naplósorok száma.
       plan_help: Száraz-futtatásos megőrzés-elsőbbségű helyreállítási terv az olvashatatlan
         biztonságos-objektum-sorokhoz.
-      prepared_exports_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
-        A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre már
-        kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
-      prepared_exports_failures_warning: '{count} félbemaradt profilcsomag-exportot
-        nem sikerült kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez
-        maradhat a lemezen egy titkosítatlan ideiglenes fájl.'
-      prepared_exports_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
-        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
-        elmaradt naplóbejegyzéseket.
-      prepared_exports_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
-        futás nem hagyott hátra semmit.
-      prepared_exports_output_language_help: A válasz szövegének nyelve (es, en, ca,
-        hu).
       profile_clear_active_help: A mutató-fájl aktív profilmutatójának törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
       profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót

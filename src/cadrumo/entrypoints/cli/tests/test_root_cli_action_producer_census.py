@@ -13,7 +13,7 @@ from .. import _app_diagnostics as diagnostics_module
 from .. import _app_diagnostics_telemetry as telemetry_module
 from .. import _app_live as live_module
 from .. import _log_levels as log_levels_module
-from .._config import _repair_prepared_exports as maintenance_module
+from .._config import _archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,10 +41,10 @@ _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
         ("diagnostics_telemetry_flush", "'diagnostics.telemetry.flush.consent_refused'", None),
         ("diagnostics_telemetry_flush", "'diagnostics.telemetry.flush.no_endpoint'", None),
     },
-    "cadrumo.entrypoints.cli._config._repair_prepared_exports": {
-        ("_reconcile_notices", "'config.repair.prepared_exports.nothing_to_reconcile'", None),
-        ("_reconcile_notices", "'config.repair.prepared_exports.cleared'", None),
-        ("_reconcile_notices", "'config.repair.prepared_exports.failures'", "operator.repair.prepared_exports"),
+    "cadrumo.entrypoints.cli._config._archive_reconcile": {
+        ("_reconcile_notices", "'config.profile.archive.reconcile.nothing_to_reconcile'", None),
+        ("_reconcile_notices", "'config.profile.archive.reconcile.cleared'", None),
+        ("_reconcile_notices", "'config.profile.archive.reconcile.failures'", "operator.profile.archive.reconcile"),
     },
     "cadrumo.entrypoints.cli._app_live": {
         ("_filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),

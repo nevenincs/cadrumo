@@ -13,6 +13,7 @@ from ._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 from ._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from ._modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
 from ._modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
+from ._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
 from ._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 from ._overview_command_specs import OVERVIEW_COMMAND_SPECS
 from ._registry_command_specs import REGISTRY_COMMAND_SPECS
@@ -31,6 +32,7 @@ COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *MODELO_NONWORK_COMMAND_SPECS,
     *MODELO_PROJECTION_COMMAND_SPECS,
     *MODELO_READINESS_COMMAND_SPECS,
+    *MODELO_SPREADSHEET_COMMAND_SPECS,
     *MODELO_WORK_COMMAND_SPECS,
     *OVERVIEW_COMMAND_SPECS,
     *QUICKFILE_COMMAND_SPECS,

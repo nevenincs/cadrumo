@@ -76,7 +76,7 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.login",
         "config.passphrase.change",
         "config.profile.create",
-        "config.profile.restore",
+        "config.profile.archive.import",
         "config.auth.certificate.secret.set",
     }
     for node in adopters:
@@ -133,7 +133,7 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     assert postures["config.passphrase.change"] is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert postures["config.login"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.create"] is ProfileAuthenticationPosture.NOT_APPLICABLE
-    assert postures["config.profile.restore"] is ProfileAuthenticationPosture.NOT_APPLICABLE
+    assert postures["config.profile.archive.import"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["ledger.list"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}

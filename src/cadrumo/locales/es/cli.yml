@@ -1128,6 +1128,50 @@ cli:
           repite la comprobación de integridad del manifiesto). Solo local; nunca
           contacta con la AEAT.
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
+      spreadsheet:
+        app_help: Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)
+        calculate_help: Recupera las ediciones de las celdas del libro de calc-sheets,
+          ejecuta el motor Decimal local sobre ellas y emite los valores calculados
+          de las casillas (no persiste nada)
+        compute:
+          refused_stale: rechazó a calcular contra un libro cuyas marcas de metadatos
+            no coinciden con el snapshot suministrado (metadata_match={metadata_match});
+            reexporte y vuelva a recuperar
+        modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
+        period_help: Código de período (p. ej. 1T, 2T, 0A)
+        pull:
+          assemble_observations_help: Tras recuperar, reensambla las celdas de filas
+            de la pestaña Detalle en observaciones tipadas (perceptores, bienes en
+            el extranjero, operaciones vinculadas, miembros de atribución, operaciones
+            de devolución) y emítelas en el payload junto a los row_set_edits brutos
+        pull_help: Lee las celdas editadas por el operador de una hoja calc-sheets
+          a registros tipados (tras validar la marca registry-SHA del libro)
+        push:
+          capability_disabled: La exportación a Google está desactivada para este
+            perfil; actívala con 'aeat config profile capabilities set google_export
+            on'.
+          dry_run_help: Previsualiza lo que esta exportación borraría y reescribiría
+            en el libro, sin escribir nada
+          prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
+            desde el almacén local de observaciones antes de exportar (resúmenes anuales,
+            arrastre de trimestres anteriores, etc.)
+          root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
+            `aeat config google folder set <id>` primero
+          snapshot_failure: No se puede construir la instantánea del registro para
+            el modelo {modelo} ({period} {year}).
+          unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles son
+            {available}
+        push_help: Exporta la superficie de cálculo del registro para un modelo y
+          período a una hoja de Google Sheets dentro de `cadrumo-vault/`
+        spreadsheet_id_help: Identificador del archivo de Drive del libro del que
+          leer las ediciones del operador (debe estar marcado como propio de la app
+          y vinculado al snapshot suministrado)
+        verify:
+          scenario_help: Ruta a un archivo JSON con entradas del operador y, si está
+            disponible, un mapa de salidas esperadas publicadas por AEAT
+        verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs motor
+          Decimal local vs hoja de Sheets)
+        year_help: Año de declaración (p. ej. 2025)
       support_matrix:
         help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado
           de cálculo, manifiesto de completitud, formatos de exportación, cobertura
@@ -1932,6 +1976,8 @@ cli:
           funciona en modo no seguro para un perfil con un NIF real.
         validation: 'Los datos proporcionados para Google no superaron la validación:
           {detail}'
+      export_capability_disabled: La exportación a Google está desactivada para este
+        perfil; actívala con 'aeat config profile capabilities set google_export on'.
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Muestra la carpeta raíz de Google Drive configurada
@@ -1951,53 +1997,6 @@ cli:
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
       sync:
-        calc:
-          compute:
-            refused_stale: rechazó a calcular contra un libro cuyas marcas de metadatos
-              no coinciden con el snapshot suministrado (metadata_match={metadata_match});
-              reexporte y vuelva a recuperar
-            spreadsheet_id_help: Identificador del archivo de Drive del libro del
-              que leer las ediciones del operador (debe pertenecer a la app y estar
-              vinculado al snapshot suministrado)
-          compute_help: Recupera las ediciones de las celdas del libro de calc-sheets,
-            ejecuta el motor Decimal local sobre ellas y emite los valores calculados
-            de las casillas (no persiste nada)
-          export:
-            capability_disabled: La exportación a Google está desactivada para este
-              perfil; actívala con 'aeat config profile capabilities set google_export
-              on'.
-            dry_run_help: Previsualiza lo que esta exportación borraría y reescribiría
-              en el libro, sin escribir nada
-            modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
-            period_help: Código de período (p. ej. 1T, 2T, 0A)
-            prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
-              desde el almacén local de observaciones antes de exportar (resúmenes
-              anuales, arrastre de trimestres anteriores, etc.)
-            root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
-              `aeat config google folder set <id>` primero
-            snapshot_failure: No se puede construir la instantánea del registro para
-              el modelo {modelo} ({period} {year}).
-            unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
-              son {available}
-            year_help: Año de declaración (p. ej. 2025)
-          export_help: Exporta la superficie de cálculo del registro para un modelo
-            y período a una hoja de Google Sheets dentro de `cadrumo-vault/`
-          help: Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)
-          pull:
-            assemble_observations_help: Tras recuperar, reensambla las celdas de filas
-              de la pestaña Detalle en observaciones tipadas (perceptores, bienes
-              en el extranjero, operaciones vinculadas, miembros de atribución, operaciones
-              de devolución) y emítelas en el payload junto a los row_set_edits brutos
-            spreadsheet_id_help: Identificador del archivo de Drive del libro del
-              que leer las ediciones del operador (debe estar marcado como propio
-              de la app y vinculado al snapshot suministrado)
-          pull_help: Lee las celdas editadas por el operador de una hoja calc-sheets
-            a registros tipados (tras validar la marca registry-SHA del libro)
-          verify:
-            scenario_help: Ruta a un archivo JSON con entradas del operador y, si
-              está disponible, un mapa de salidas esperadas publicadas por AEAT
-          verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs
-            motor Decimal local vs hoja de Sheets)
         help: Sincroniza datos locales con la carpeta configurada de Google Drive
         probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
         probe_read_only_help: Comprueba Google Drive en modo solo lectura
@@ -2084,9 +2083,32 @@ cli:
         export_out_help: Ruta de destino del archivo.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
           o inspeccion de uno; restauralo con 'aeat config profile restore'.
+        import_artifact_help: Archivo de artefacto de recuperacion; uselo cuando se
+          haya perdido la contrasena del perfil.
+        import_file_help: Ruta al directorio de la capsula sin publicar que se va
+          a restaurar.
+        import_help: Vuelve a publicar una capsula de perfil desde un directorio;
+          anade --artifact para recuperar con la frase de 24 palabras.
+        import_label_help: Nombre visible del perfil restaurado.
+        import_password_unchanged: 'Tus registros estan restaurados, pero la contrasena
+          del perfil no ha cambiado: esta via recupera los datos, no la credencial.
+          Inicia sesion con la contrasena original o cambiala en cuanto puedas.'
+        import_recovery_secret_prompt: 'Frase de recuperacion (24 palabras): '
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta al archivo sellado que se va a inspeccionar.
+        reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil
+          interrumpidas. Se ha eliminado cualquier archivo temporal sin cifrar y las
+          exportaciones ya escritas en disco han recibido su registro de auditoría
+          pendiente.
+        reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
+          de perfil interrumpidas y se han conservado para un intento posterior. Puede
+          quedar en disco un archivo temporal sin cifrar por cada una.
+        reconcile_help: Limpia las exportaciones de perfil que un fallo dejó a medias,
+          eliminando cualquier archivo temporal sin cifrar y registrando los eventos
+          de auditoría pendientes.
+        reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
+          Ninguna ejecución anterior ha dejado nada pendiente.
       bundle_flow:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
@@ -2368,17 +2390,6 @@ cli:
       rename_help: Renombra un perfil y mueve el puntero activo automáticamente
       rename_source_help: Nombre actual del perfil
       rename_target_help: Nuevo nombre del perfil
-      restore:
-        artifact_help: Archivo de artefacto de recuperacion; uselo cuando se haya
-          perdido la contrasena del perfil.
-        file_help: Ruta al directorio de la capsula sin publicar que se va a restaurar.
-        help: Vuelve a publicar una capsula de perfil desde un directorio; anade --artifact
-          para recuperar con la frase de 24 palabras.
-        label_help: Nombre visible del perfil restaurado.
-        password_unchanged: 'Tus registros estan restaurados, pero la contrasena del
-          perfil no ha cambiado: esta via recupera los datos, no la credencial. Inicia
-          sesion con la contrasena original o cambiala en cuanto puedas.'
-        recovery_secret_prompt: 'Frase de recuperacion (24 palabras): '
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
@@ -2444,19 +2455,6 @@ cli:
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       plan_help: Planificación de reparación en seco y preservación primero para filas
         de objetos seguros no legibles.
-      prepared_exports_cleared_info: Se han limpiado {count} exportación(es) de perfil
-        interrumpidas. Se ha eliminado cualquier archivo temporal sin cifrar y las
-        exportaciones ya escritas en disco han recibido su registro de auditoría pendiente.
-      prepared_exports_failures_warning: No se han podido limpiar {count} exportación(es)
-        de perfil interrumpidas y se han conservado para un intento posterior. Puede
-        quedar en disco un archivo temporal sin cifrar por cada una.
-      prepared_exports_help: Limpia las exportaciones de perfil que un fallo dejó
-        a medias, eliminando cualquier archivo temporal sin cifrar y registrando los
-        eventos de auditoría pendientes.
-      prepared_exports_none_info: No se ha encontrado ninguna exportación de perfil
-        interrumpida. Ninguna ejecución anterior ha dejado nada pendiente.
-      prepared_exports_output_language_help: Idioma del texto de salida (es, en, ca,
-        hu).
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del

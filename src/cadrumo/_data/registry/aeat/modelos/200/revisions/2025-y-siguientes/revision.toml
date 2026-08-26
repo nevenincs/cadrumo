@@ -21,13 +21,11 @@ reviewed_at = 2026-08-19
 # available, while filing refuses until the canonical generator publishes the
 # exact 2025 design under downstream step W04.P08.S22.
 authority_grade = "calculation"
-# valid_from tracks the ejercicio this revision computes (2024), matching the
-# registry-wide convention (holds for 44/52 annual-cadence revisions) and its
-# own sibling M220 (identical orden, byte-identical deadline windows), not
-# the orden's own publication/effective year. The prior 2025-01-01 value
-# self-contradicted the revision's own declared filing_year=2024 deadline
-# window and excluded any 2024-dated `on=` selection with no basis in law.
-#
+# valid_from tracks the ejercicio this revision computes (2025), matching the
+# registry-wide convention (holds for 44/52 annual-cadence revisions), not the
+# orden's own publication/effective year. The span is left open ('y siguientes')
+# because no later ejercicio has its own approving orden yet; the sibling
+# 2024 revision is bounded because 2025 succeeds it.
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["0A"] }
 legal_refs = [
@@ -71,8 +69,8 @@ source_refs = [
 
 [revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025-y-siguientes' of modelo 200 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
-transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025-y-siguientes' of modelo 200 DOES have a strictly-earlier sibling, the 2024 revision, so it could in principle be the landing point of a transition; the family is empty because no casilla identity CHANGES between them. The two \
+revisions declare the same 3,462 casilla entries under the same 707 section paths, with no renumbering, no split and no merge, so there is no transition to record. This family must be revisited the moment a successor revision alters a casilla identity."""
 legal_refs = [
     "ley-27-2014:art-40",
     "ley-27-2014:art-41",

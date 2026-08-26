@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:1f2b6494327899799c3aff4b863403637b47c4be544651e195277c3a5201037c'
+body_hash: 'sha256:456fc943d8696e31f47ad17dd84baad6208bffda56efc681f58c46e84fd847ac'
 ---
 
 # `cli-root-verb-homes` plan
@@ -45,10 +45,10 @@ Execute D1's two refusals: the workbook subject moves to app, the one-verb maint
 
 Move config google sync calc to app modelo spreadsheet, renaming export to push and compute to calculate, adopting canonical defining-module imports on the way.
 
-- [ ] `W02.P03.S06` - Move the four sync calc leaves to app modelo spreadsheet with push and calculate renames; `src/cadrumo/entrypoints/cli/`.
+- [x] `W02.P03.S06` - Move the four sync calc leaves to app modelo spreadsheet with push and calculate renames; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W02.P03.S07` - Replace facade imports with canonical defining-module imports in the moved handlers; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P03.S08` - Re-key the four envelope command identifiers and their result schemas; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P03.S09` - Move the sync calc locale keys to the new namespace in all four catalogues; `src/cadrumo/locales/`.
+- [x] `W02.P03.S08` - Re-key the four envelope command identifiers and their result schemas; `src/cadrumo/entrypoints/cli/`.
+- [x] `W02.P03.S09` - Move the sync calc locale keys to the new namespace in all four catalogues; `src/cadrumo/locales/`.
 
 ### Phase `W02.P04` - Maintenance family move
 
@@ -61,8 +61,8 @@ Fold app maintenance reconcile into config repair and retire the one-verb family
 
 Land D6 gate one at narrowest-subject granularity, scoped to refusal only, and prove it bites.
 
-- [ ] `W02.P05.S12` - Land the placement gate encoding D1 at narrowest-subject granularity; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W02.P05.S13` - Prove the placement gate bites by mounting a filing leaf under config from outside the repository; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W02.P05.S12` - Land the placement gate encoding D1 at narrowest-subject granularity; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W02.P05.S13` - Prove the placement gate bites by mounting a filing leaf under config from outside the repository; `src/cadrumo/entrypoints/cli/tests/`.
 
 ## Wave `W03` - Transport verb and subject renames
 

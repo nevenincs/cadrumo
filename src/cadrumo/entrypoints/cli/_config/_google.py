@@ -372,7 +372,7 @@ def google_sync_probe(
     # Google export egress gated on the same capability as `push` / `export`.
     if not read_only and not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
         raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+            translated_message="cli.config.google.export_capability_disabled",
         )
 
     try:
@@ -939,7 +939,7 @@ def _google_sync_push_context() -> tuple[str, StorageProvider, str]:
 
     if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
         raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+            translated_message="cli.config.google.export_capability_disabled",
         )
     try:
         active = resolve_active_profile()

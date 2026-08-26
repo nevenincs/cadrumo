@@ -117,13 +117,7 @@ def test_every_refusal_states_its_grounds() -> None:
 #: surface when it lands". They are recorded rather than merely tolerated so
 #: that the leaf-resolution check below can hold every OTHER entry to existing,
 #: and so a path that is never mounted cannot sit here unnoticed forever.
-_NOT_YET_MOUNTED: dict[str, str] = {
-    "config profile export": (
-        "The profile export/import surface is mid-rebuild: it carries a registered result schema "
-        "and no Click command. Another owner is mounting these verbs. When it lands, this entry "
-        "must be removed -- the staleness check below is what forces that."
-    ),
-}
+_NOT_YET_MOUNTED: dict[str, str] = {}
 
 
 def _live_verb_paths() -> frozenset[str]:

@@ -27,7 +27,7 @@ _COMMANDS = {
     "config.login",
     "config.passphrase.change",
     "config.profile.create",
-    "config.profile.restore",
+    "config.profile.archive.import",
     "config.auth.certificate.secret.set",
 }
 
@@ -124,7 +124,7 @@ def test_verb_schemas_preserve_secret_shapes_and_root_posture_without_values() -
         ).lower()
         assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
 
-    restore = schemas["config.profile.restore"].machine_secret_payloads
+    restore = schemas["config.profile.archive.import"].machine_secret_payloads
     assert tuple(
         (payload.condition.option_name, payload.condition.presence)
         for payload in restore

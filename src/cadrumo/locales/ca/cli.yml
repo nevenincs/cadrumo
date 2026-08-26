@@ -1111,6 +1111,50 @@ cli:
           la comprovació d'integritat del manifest). Només local; mai contacta amb
           l'AEAT.
         work_unit_id_help: Id de la unitat de treball (SHA-256 o prefix inequívoc).
+      spreadsheet:
+        app_help: Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)
+        calculate_help: Recupera les edicions de les cel·les del llibre de calc-sheets,
+          executa el motor Decimal local sobre elles i emet els valors calculats de
+          les caselles (no persisteix res)
+        compute:
+          refused_stale: rebutjant calcular contra un llibre les marques de metadades
+            del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
+            reexporteu i torneu a recuperar
+        modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
+        period_help: Codi de període (p. ex. 1T, 2T, 0A)
+        pull:
+          assemble_observations_help: Després de recuperar, reensambla les cel·les
+            de files de la pestanya Detalle en observacions tipades (perceptors, béns
+            a l'estranger, operacions vinculades, membres d'atribució, operacions
+            de devolució) i emet-les al payload al costat dels row_set_edits crus
+        pull_help: Llegeix les cel·les editades per l'operador d'un full calc-sheets
+          cap a registres tipats (després de validar la marca registry-SHA del llibre)
+        push:
+          capability_disabled: L'exportació a Google està desactivada per a aquest
+            perfil; activa-la amb 'aeat config profile capabilities set google_export
+            on'.
+          dry_run_help: Previsualitza el que aquesta exportació esborraria i reescriuria
+            al llibre, sense escriure res
+          prefill_relations_help: Preomple els valors de relacions entre revisions
+            des del magatzem local d'observacions abans d'exportar (resums anuals,
+            arrossegament de trimestres anteriors, etc.)
+          root_folder_required: No hi ha cap carpeta arrel de Drive configurada; executeu
+            `aeat config google folder set <id>` primer
+          snapshot_failure: No es pot construir la instantània del registre per al
+            model {modelo} ({period} {year}).
+          unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
+            {available}
+        push_help: Exporta la superfície de càlcul del registre per a un model i període
+          a un full de Google Sheets dins de `cadrumo-vault/`
+        spreadsheet_id_help: Identificador del fitxer de Drive del llibre del qual
+          llegir les edicions de l'operador (ha d'estar marcat com a propi de l'app
+          i lligat al snapshot subministrat)
+        verify:
+          scenario_help: Ruta a un fitxer JSON amb entrades de l'operador i, si està
+            disponible, un mapa de sortides esperades publicades per AEAT
+        verify_help: Comprovació de paritat triple del model (oracle AEAT vs motor
+          Decimal local vs full de Sheets)
+        year_help: Any de declaració (p. ex. 2025)
       support_matrix:
         help: 'Mostra la matriu de suport per model a nivell de registre: grau de
           càlcul, manifest de completesa, formats d''exportació, cobertura d''extractors,
@@ -1912,6 +1956,9 @@ cli:
           funciona en mode no segur per a un perfil amb un NIF real.
         validation: 'Les dades proporcionades per a Google no han superat la validació:
           {detail}'
+      export_capability_disabled: L'exportació a Google està desactivada per a aquest
+        perfil; activa-la amb 'aeat config profile capabilities set google_export
+        on'.
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Mostra la carpeta arrel de Google Drive configurada
@@ -1930,53 +1977,6 @@ cli:
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
       sync:
-        calc:
-          compute:
-            refused_stale: rebutjant calcular contra un llibre les marques de metadades
-              del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
-              reexporteu i torneu a recuperar
-            spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
-              qual llegir les edicions de l'operador (ha de pertànyer a l'app i estar
-              vinculat al snapshot subministrat)
-          compute_help: Recupera les edicions de les cel·les del llibre de calc-sheets,
-            executa el motor Decimal local sobre elles i emet els valors calculats
-            de les caselles (no persisteix res)
-          export:
-            capability_disabled: L'exportació a Google està desactivada per a aquest
-              perfil; activa-la amb 'aeat config profile capabilities set google_export
-              on'.
-            dry_run_help: Previsualitza el que aquesta exportació esborraria i reescriuria
-              al llibre, sense escriure res
-            modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
-            period_help: Codi de període (p. ex. 1T, 2T, 0A)
-            prefill_relations_help: Preomple els valors de relacions entre revisions
-              des del magatzem local d'observacions abans d'exportar (resums anuals,
-              arrossegament de trimestres anteriors, etc.)
-            root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
-              executeu `aeat config google folder set <id>` primer
-            snapshot_failure: No es pot construir la instantània del registre per
-              al model {modelo} ({period} {year}).
-            unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
-              {available}
-            year_help: Any de declaració (p. ex. 2025)
-          export_help: Exporta la superfície de càlcul del registre per a un model
-            i període a un full de Google Sheets dins de `cadrumo-vault/`
-          help: Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)
-          pull:
-            assemble_observations_help: Després de recuperar, reensambla les cel·les
-              de files de la pestanya Detalle en observacions tipades (perceptors,
-              béns a l'estranger, operacions vinculades, membres d'atribució, operacions
-              de devolució) i emet-les al payload al costat dels row_set_edits crus
-            spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
-              qual llegir les edicions de l'operador (ha d'estar marcat com a propi
-              de l'app i lligat al snapshot subministrat)
-          pull_help: Llegeix les cel·les editades per l'operador d'un full calc-sheets
-            cap a registres tipats (després de validar la marca registry-SHA del llibre)
-          verify:
-            scenario_help: Ruta a un fitxer JSON amb entrades de l'operador i, si
-              està disponible, un mapa de sortides esperades publicades per AEAT
-          verify_help: Comprovació de paritat triple del model (oracle AEAT vs motor
-            Decimal local vs full de Sheets)
         help: Sincronitza dades locals amb la carpeta configurada de Google Drive
         probe_help: Comprova l'accés a la carpeta configurada de Google Drive
         probe_read_only_help: Comprova Google Drive en mode només lectura
@@ -2061,9 +2061,30 @@ cli:
         export_out_help: Camí de destinació de l'arxiu.
         help: Copia de seguretat d'un perfil en un fitxer segellat i xifrat AEAD,
           o inspeccio d'un; restaura'l amb 'aeat config profile restore'.
+        import_artifact_help: Fitxer d'artefacte de recuperacio; utilitza'l quan s'hagi
+          perdut la contrasenya del perfil.
+        import_file_help: Cami al directori de la capsula sense publicar que es restaurara.
+        import_help: Torna a publicar una capsula de perfil des d'un directori; afegeix
+          --artifact per recuperar amb la frase de 24 paraules.
+        import_label_help: Nom visible del perfil restaurat.
+        import_password_unchanged: 'Els teus registres estan restaurats, pero la contrasenya
+          del perfil no ha canviat: aquesta via recupera les dades, no la credencial.
+          Inicia la sessio amb la contrasenya original o canvia-la quan puguis.'
+        import_recovery_secret_prompt: 'Frase de recuperacio (24 paraules): '
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
         inspect_path_help: Cami al fitxer segellat que s'inspeccionara.
+        reconcile_cleared_info: S'han netejat {count} exportació(ns) de perfil interrompudes.
+          S'ha eliminat qualsevol fitxer temporal sense xifrar i les exportacions
+          ja escrites al disc han rebut el seu registre d'auditoria pendent.
+        reconcile_failures_warning: No s'han pogut netejar {count} exportació(ns)
+          de perfil interrompudes i s'han conservat per a un intent posterior. Pot
+          quedar al disc un fitxer temporal sense xifrar per a cadascuna.
+        reconcile_help: Neteja les exportacions de perfil que una fallada va deixar
+          a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant
+          els esdeveniments d'auditoria pendents.
+        reconcile_none_info: No s'ha trobat cap exportació de perfil interrompuda.
+          Cap execució anterior no ha deixat res pendent.
       bundle_flow:
         export_section_title: Exporta el paquet de perfil
         import_section_title: Importa el paquet de perfil
@@ -2341,17 +2362,6 @@ cli:
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
       rename_source_help: Nom actual del perfil
       rename_target_help: Nou nom del perfil
-      restore:
-        artifact_help: Fitxer d'artefacte de recuperacio; utilitza'l quan s'hagi perdut
-          la contrasenya del perfil.
-        file_help: Cami al directori de la capsula sense publicar que es restaurara.
-        help: Torna a publicar una capsula de perfil des d'un directori; afegeix --artifact
-          per recuperar amb la frase de 24 paraules.
-        label_help: Nom visible del perfil restaurat.
-        password_unchanged: 'Els teus registres estan restaurats, pero la contrasenya
-          del perfil no ha canviat: aquesta via recupera les dades, no la credencial.
-          Inicia la sessio amb la contrasenya original o canvia-la quan puguis.'
-        recovery_secret_prompt: 'Frase de recuperacio (24 paraules): '
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
@@ -2416,19 +2426,6 @@ cli:
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
       plan_help: Planificació de reparació en sec i amb preservació primer per a files
         d'objectes segurs no llegibles.
-      prepared_exports_cleared_info: S'han netejat {count} exportació(ns) de perfil
-        interrompudes. S'ha eliminat qualsevol fitxer temporal sense xifrar i les
-        exportacions ja escrites al disc han rebut el seu registre d'auditoria pendent.
-      prepared_exports_failures_warning: No s'han pogut netejar {count} exportació(ns)
-        de perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
-        al disc un fitxer temporal sense xifrar per a cadascuna.
-      prepared_exports_help: Neteja les exportacions de perfil que una fallada va
-        deixar a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant
-        els esdeveniments d'auditoria pendents.
-      prepared_exports_none_info: No s'ha trobat cap exportació de perfil interrompuda.
-        Cap execució anterior no ha deixat res pendent.
-      prepared_exports_output_language_help: Idioma del text de sortida (es, en, ca,
-        hu).
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del

@@ -91,7 +91,7 @@ class GoogleSheetsExportCapabilityDisabledError(ValueError):
     __bare_base_rationale__: ClassVar[str] = (
         "internal-google-export-capability-carrier: the CLI sync door catches this by name "
         "and re-raises CliRefusedBoundaryError with the registered "
-        "cli.config.google.sync.calc.export.capability_disabled message, so it never reaches "
+        "cli.app.modelo.spreadsheet.push.capability_disabled message, so it never reaches "
         "an operator as itself"
     )
 
@@ -102,7 +102,7 @@ class GoogleSheetsExportRootFolderRequiredError(ValueError):
     __bare_base_rationale__: ClassVar[str] = (
         "internal-google-export-root-folder-carrier: the CLI sync door catches this by name "
         "and re-raises CliRefusedBoundaryError with the registered "
-        "cli.config.google.sync.calc.export.root_folder_required message"
+        "cli.app.modelo.spreadsheet.push.root_folder_required message"
     )
 
 

@@ -1041,6 +1041,47 @@ cli:
           against a signer's public key (authenticity check; re-runs the checksum-manifest
           integrity check first). Local-only; never contacts AEAT.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      spreadsheet:
+        app_help: Schema-to-sheet calc surface (export, pull, and compute)
+        calculate_help: Pull operator-edited cells from a calc-sheets workbook, run
+          the local Decimal runtime over them, and emit the computed casilla values
+          (persists nothing)
+        compute:
+          refused_stale: refusing to compute against a workbook whose metadata stamps
+            do not match the supplied snapshot (metadata_match={metadata_match});
+            re-export, then re-pull
+        modelo_help: Modelo id to export (e.g. 130, 303, 100)
+        period_help: Filing period code (e.g. 1T, 2T, 0A)
+        pull:
+          assemble_observations_help: After pulling, reassemble Detalle-tab row-set
+            cells into typed observations (perceptors, foreign assets, related-party
+            operations, atribución members, refund operations) and emit them in the
+            payload alongside the raw row_set_edits
+        pull_help: Read operator-edited cells back from a calc-sheets workbook into
+          typed records (after validating the workbook's registry-SHA stamp)
+        push:
+          capability_disabled: Google export is disabled for this profile; enable
+            it with 'aeat config profile capabilities set google_export on'.
+          dry_run_help: Preview what this export would clear and rewrite in the workbook,
+            without writing anything
+          prefill_relations_help: Prefill cross-revision relation values from the
+            local observation store before exporting (annual roll-ups, prior-quarter
+            carry-forward etc.)
+          root_folder_required: No Drive root folder id is configured; run `aeat config
+            google folder set <id>` first
+          snapshot_failure: Cannot build the registry snapshot for modelo {modelo}
+            ({period} {year}).
+          unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
+        push_help: Export the registry calculation surface for a modelo+period to
+          a Google Sheets workbook in the operator's `cadrumo-vault/`
+        spreadsheet_id_help: Drive file id of the workbook to read operator edits
+          from (must be app-owned and bound to the supplied snapshot)
+        verify:
+          scenario_help: Path to a JSON scenario file with operator inputs and an
+            optional AEAT-published expected-output map
+        verify_help: Three-way parity check of a modelo's calculation surface (AEAT
+          oracle vs local Decimal runtime vs Sheets workbook)
+        year_help: Filing year (e.g. 2025)
       support_matrix:
         help: 'Show the registry-wide per-modelo support matrix: calc-grade, completeness
           manifest, export formats, extractor coverage, declared casilla renames,
@@ -1781,6 +1822,8 @@ cli:
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
         validation: 'The data supplied for Google did not pass validation: {detail}'
+      export_capability_disabled: Google export is disabled for this profile; enable
+        it with 'aeat config profile capabilities set google_export on'.
       folder:
         folder_id_help: Google Drive folder id
         get_help: Show the configured Google Drive root folder
@@ -1797,49 +1840,6 @@ cli:
         profile
       status_help: Show the current Google OAuth session state for the active profile
       sync:
-        calc:
-          compute:
-            refused_stale: refusing to compute against a workbook whose metadata stamps
-              do not match the supplied snapshot (metadata_match={metadata_match});
-              re-export, then re-pull
-            spreadsheet_id_help: Drive file id of the workbook to read operator edits
-              from (must be app-owned and bound to the supplied snapshot)
-          compute_help: Pull operator-edited cells from a calc-sheets workbook, run
-            the local Decimal runtime over them, and emit the computed casilla values
-            (persists nothing)
-          export:
-            capability_disabled: Google export is disabled for this profile; enable
-              it with 'aeat config profile capabilities set google_export on'.
-            dry_run_help: Preview what this export would clear and rewrite in the
-              workbook, without writing anything
-            modelo_help: Modelo id to export (e.g. 130, 303, 100)
-            period_help: Filing period code (e.g. 1T, 2T, 0A)
-            prefill_relations_help: Prefill cross-revision relation values from the
-              local observation store before exporting (annual roll-ups, prior-quarter
-              carry-forward etc.)
-            root_folder_required: No Drive root folder id is configured; run `aeat
-              config google folder set <id>` first
-            snapshot_failure: Cannot build the registry snapshot for modelo {modelo}
-              ({period} {year}).
-            unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
-            year_help: Filing year (e.g. 2025)
-          export_help: Export the registry calculation surface for a modelo+period
-            to a Google Sheets workbook in the operator's `cadrumo-vault/`
-          help: Schema-to-sheet calc surface (export, pull, and compute)
-          pull:
-            assemble_observations_help: After pulling, reassemble Detalle-tab row-set
-              cells into typed observations (perceptors, foreign assets, related-party
-              operations, atribución members, refund operations) and emit them in
-              the payload alongside the raw row_set_edits
-            spreadsheet_id_help: Drive file id of the workbook to read operator edits
-              from (must be app-owned and bound to the supplied snapshot)
-          pull_help: Read operator-edited cells back from a calc-sheets workbook into
-            typed records (after validating the workbook's registry-SHA stamp)
-          verify:
-            scenario_help: Path to a JSON scenario file with operator inputs and an
-              optional AEAT-published expected-output map
-          verify_help: Three-way parity check of a modelo's calculation surface (AEAT
-            oracle vs local Decimal runtime vs Sheets workbook)
         help: Push and probe local data against the configured Google Drive folder
         probe_help: Probe the configured Google Drive folder for read/write access
         probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
@@ -1919,9 +1919,29 @@ cli:
         export_out_help: Destination path for the archive.
         help: Back up a profile to a sealed, AEAD-encrypted archive, or inspect one;
           restore it with 'aeat config profile restore'.
+        import_artifact_help: Recovery artifact file; use it when the profile password
+          is lost.
+        import_file_help: Path to the unpublished capsule directory to restore.
+        import_help: Republish a profile capsule from a directory; add --artifact
+          to recover with the 24-word phrase.
+        import_label_help: Display name for the restored profile.
+        import_password_unchanged: 'Your records are restored, but the profile password
+          is unchanged: this door recovers data, not the credential. Log in with the
+          original password, or change it as soon as you can.'
+        import_recovery_secret_prompt: 'Recovery phrase (24 words): '
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive to inspect.
+        reconcile_cleared_info: Cleared {count} interrupted profile-bundle export(s).
+          Any leftover unencrypted staged file was removed, and an export that had
+          already been written to disk received its missing audit record.
+        reconcile_failures_warning: '{count} interrupted profile-bundle export(s)
+          could not be cleared and were kept for a later attempt. An unencrypted staged
+          file may remain on disk for each.'
+        reconcile_help: Clear profile-bundle exports left unfinished by a crash, removing
+          any leftover cleartext staged file and recording owed audit events.
+        reconcile_none_info: No interrupted profile-bundle export was found. Nothing
+          was left behind by a previous run.
       bundle_flow:
         export_section_title: Export profile bundle
         import_section_title: Import profile bundle
@@ -2194,17 +2214,6 @@ cli:
       rename_help: Rename a profile in place; the active-profile pointer follows automatically
       rename_source_help: Existing profile name
       rename_target_help: New profile name
-      restore:
-        artifact_help: Recovery artifact file; use it when the profile password is
-          lost.
-        file_help: Path to the unpublished capsule directory to restore.
-        help: Republish a profile capsule from a directory; add --artifact to recover
-          with the 24-word phrase.
-        label_help: Display name for the restored profile.
-        password_unchanged: 'Your records are restored, but the profile password is
-          unchanged: this door recovers data, not the credential. Log in with the
-          original password, or change it as soon as you can.'
-        recovery_secret_prompt: 'Recovery phrase (24 words): '
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
@@ -2263,18 +2272,6 @@ cli:
       logs_lines_help: Number of recent log lines to show
       plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
         rows.
-      prepared_exports_cleared_info: Cleared {count} interrupted profile-bundle export(s).
-        Any leftover unencrypted staged file was removed, and an export that had already
-        been written to disk received its missing audit record.
-      prepared_exports_failures_warning: '{count} interrupted profile-bundle export(s)
-        could not be cleared and were kept for a later attempt. An unencrypted staged
-        file may remain on disk for each.'
-      prepared_exports_help: Clear profile-bundle exports left unfinished by a crash,
-        removing any leftover cleartext staged file and recording owed audit events.
-      prepared_exports_none_info: No interrupted profile-bundle export was found.
-        Nothing was left behind by a previous run.
-      prepared_exports_output_language_help: Output language for the response text
-        (es, en, ca, hu).
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
       profile_clear_active_mismatch: --clear-active can only clear the active profile

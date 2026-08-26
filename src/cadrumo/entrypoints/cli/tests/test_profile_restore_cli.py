@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RESTORED_LABEL = "Restored From Backup"
-_ADVISORY_CODE = "config.profile.restore.password_unchanged"
+_ADVISORY_CODE = "config.profile.archive.import.password_unchanged"
 
 
 def _test_passphrase() -> str:
