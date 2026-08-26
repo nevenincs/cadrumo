@@ -799,6 +799,8 @@ errors:
       estan incompletes.
     modelo_calculate_text_input: El valor de sobreescriptura de --casilla indicat
       no és vàlid per a una casella de text.
+    modelo_calculation_capture_not_current: La revisio de calcul ja no es actual.
+      Torneu a llegir la revisio i proveu-ho de nou.
     modelo_calculation_revision_selector_ambiguous: El selector de revisió de càlcul
       coincideix amb més d'una revisió; refineu el selector.
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada

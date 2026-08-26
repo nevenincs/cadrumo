@@ -18,6 +18,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.calculation.ModeloCalculationCaptureError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATION_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculation_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_review.ModeloWorkReviewCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_REVIEW_CAPTURE_NOT_CURRENT",

@@ -791,6 +791,8 @@ errors:
       incompletas.
     modelo_calculate_text_input: El valor de sobrescritura de --casilla indicado no
       es válido para una casilla de texto.
+    modelo_calculation_capture_not_current: La revision de calculo ya no es actual.
+      Vuelva a leer la revision e intentelo de nuevo.
     modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada

@@ -746,6 +746,8 @@ errors:
       hiányosak.
     modelo_calculate_text_input: A megadott --casilla felülírási érték nem érvényes
       egy szöveges casillához.
+    modelo_calculation_capture_not_current: A szamitasi revizio mar nem aktualis.
+      Olvassa be ujra a reviziot, es probalja meg ismet.
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs

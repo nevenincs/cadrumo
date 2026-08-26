@@ -731,6 +731,8 @@ errors:
     modelo_calculate_shortcut_input: The grouped calculation shortcut inputs are incomplete.
     modelo_calculate_text_input: The supplied --casilla override value is not valid
       for a text casilla.
+    modelo_calculation_capture_not_current: The calculation revision is no longer
+      current. Re-read the revision and retry.
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
