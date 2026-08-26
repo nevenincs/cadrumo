@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:a5f8eb40c1d142f71807e8fe354db1e3470a30271ee7bfb1fbb2d31e499f7a25'
+body_hash: 'sha256:010fa61c6a6e803ed4a27e0cc1a35a4eb9eb132b7d67780d8452b60df8c5ea0f'
 ---
 
 # `tui-architecture` plan
@@ -269,7 +269,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 
 Implement edit admission, parsing, preflight, exact mutation baselines, typed scalar and row intents, guarded calculation persistence, mutation capability, and safe result receipts while leaving operation custody for the later C3 gate.
 
-- [ ] `W03.P21.S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt; `src/cadrumo/application/modelo/_edit_models.py`.
+- [x] `W03.P21.S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt; `src/cadrumo/application/modelo/_edit_models.py`.
 - [ ] `W03.P21.S133` - Implement edit admission, registry-backed schema projection, locale-neutral parsing, typed-intent normalization, and preflight services that issue exact ModeloEditBaselineV1 coordinates and never treat a Workspace safe-read baseline as mutation authority; `src/cadrumo/application/modelo/_edit_services.py`.
 - [ ] `W03.P21.S134` - Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction; `src/cadrumo/adapters/persistence/profile/modelos_edit_receipts.py`.
 - [ ] `W03.P21.S135` - Replace calculation-revision persistence with guarded work-and-calculation compare-and-swap so duplicate-existing and new-revision branches recheck the same edit baseline and co-commit immutable revision, work pointer, lifecycle event, and edit result receipt without any unguarded pointer advance; `src/cadrumo/application/modelo/_revision_persistence.py`.

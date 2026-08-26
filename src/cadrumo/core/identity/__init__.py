@@ -153,6 +153,25 @@ by sibling domains (notably :mod:`domain.invoices` for reconciliation
 models), the application ledger service, and the persistence adapters.
 """
 
+ModeloEditBaselineId = _Hex64Str
+"""Hex-64 opaque identity of one admitted Modelo edit compare-and-swap baseline.
+
+Declared here rather than in the modelo application package because it adds
+no constraint beyond :data:`Hex64Str`, which is the discipline every hex-64
+identity concept in this codebase follows; the persistence adapter and any
+future cross-package consumer resolve the same canonical identity.
+"""
+
+ModeloEditMutationResultReceiptId = _Hex64Str
+"""Hex-64 content-addressed identity of one Modelo edit mutation result receipt.
+
+Minted when a guarded edit compare-and-swap commits. Declared here rather than
+in the modelo application package because it adds no constraint beyond
+:data:`Hex64Str`, which is the discipline every hex-64 identity concept in
+this codebase follows, and because the encrypted receipt repository resolves
+the same canonical identity as the application execution service.
+"""
+
 ContinuidadId = Annotated[
     str,
     Field(
@@ -222,6 +241,8 @@ __all__ = [
     "IdentityDocument",
     "IdentityError",
     "InvoiceId",
+    "ModeloEditBaselineId",
+    "ModeloEditMutationResultReceiptId",
     "NifIvaFormatSpec",
     "NifIvaPrefix",
     "PrefixedContentDigest",
