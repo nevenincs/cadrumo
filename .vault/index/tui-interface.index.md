@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4a294cfa20008d16364c87cc979734a0a663c71c8400c618ecddf98e2c00d64'
+body_hash: 'sha256:972c420c6a0a99a08aee8f1aafb7cd85fb5b6347f03247a8849fc31ae6360191'
 related:
   - '[[2026-08-11-tui-interface-W01-P01-S01]]'
   - '[[2026-08-11-tui-interface-W01-P01-S02]]'
@@ -21,6 +21,9 @@ related:
   - '[[2026-08-11-tui-interface-W02-P03-S08]]'
   - '[[2026-08-11-tui-interface-W02-P04-S09]]'
   - '[[2026-08-11-tui-interface-W02-P04-S10]]'
+  - '[[2026-08-11-tui-interface-W03-P05-S11]]'
+  - '[[2026-08-11-tui-interface-W03-P05-S12]]'
+  - '[[2026-08-11-tui-interface-W03-P05-S13]]'
   - '[[2026-08-11-tui-interface-W05-P10-S24]]'
   - '[[2026-08-11-tui-interface-W05-P10-S25]]'
   - '[[2026-08-11-tui-interface-W05-P10-S38]]'
@@ -54,6 +57,9 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 - `2026-08-11-tui-interface-W02-P03-S08` - Prove reusable navigation disclosure grouping focus and narrow-terminal behavior
 - `2026-08-11-tui-interface-W02-P04-S09` - Extend settled status error and log renderers for distinct advisories safe failures bounded history spinner and final outcomes
 - `2026-08-11-tui-interface-W02-P04-S10` - Prove render-only status error log and operation-feedback components consume public safe projections
+- `2026-08-11-tui-interface-W03-P05-S11` - Compose the five-stage profile journey with only the active stage body expanded
+- `2026-08-11-tui-interface-W03-P05-S12` - Render overview required optional not-applicable and readiness summaries from the application projection
+- `2026-08-11-tui-interface-W03-P05-S13` - Prove linear navigation progressive disclosure and stage completion without duplicating requirement policy
 - `2026-08-11-tui-interface-W05-P10-S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route
 - `2026-08-11-tui-interface-W05-P10-S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable
 - `2026-08-11-tui-interface-W05-P10-S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence

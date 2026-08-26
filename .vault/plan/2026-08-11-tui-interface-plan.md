@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:6bd2e00c35541d9c4dd287c7fc5f8aead8d545a5cca294ef20f8a67d16fd886c'
+body_hash: 'sha256:4d4f2829bed467a6154f45b28f18dbf3baf5f839d3092baacccdd9ac6246c265'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -84,9 +84,9 @@ Build the five-stage profile journey on settled application projections, with ex
 
 Compose Overview, Get data, Required, Review, and Ready as a linear journey whose inactive bodies are hidden.
 
-- [ ] `W03.P05.S11` - Compose the five-stage profile journey with only the active stage body expanded; `src/cadrumo/entrypoints/tui/profile/app.py`.
-- [ ] `W03.P05.S12` - Render overview required optional not-applicable and readiness summaries from the application projection; `src/cadrumo/entrypoints/tui/profile/status.py`.
-- [ ] `W03.P05.S13` - Prove linear navigation progressive disclosure and stage completion without duplicating requirement policy; `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`.
+- [x] `W03.P05.S11` - Compose the five-stage profile journey with only the active stage body expanded; `src/cadrumo/entrypoints/tui/profile/app.py`.
+- [x] `W03.P05.S12` - Render overview required optional not-applicable and readiness summaries from the application projection; `src/cadrumo/entrypoints/tui/profile/status.py`.
+- [x] `W03.P05.S13` - Prove linear navigation progressive disclosure and stage completion without duplicating requirement policy; `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`.
 
 ### Phase `W03.P06` - Profile acquisition and reconciliation views
 
