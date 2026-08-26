@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:324ab2b5411e6b182d1ed39573a3e767fa465c469377e750c1d4e31e5515b7c9'
+body_hash: 'sha256:63fe7831474260ceb3a4a325b326c632abefabc2867b8b768f526bdf06031d65'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -46,6 +46,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S199]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S200]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S201]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S202]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S203]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S204]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S205]]'
@@ -255,8 +256,10 @@ related:
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]'
   - '[[2026-08-26-tui-architecture-detail-record-repetition-audit]]'
+  - '[[2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference]]'
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr]]'
+  - '[[2026-08-26-tui-architecture-modelo-347-contraparte-binding-inventory-reference]]'
   - '[[2026-08-26-tui-architecture-narrow-step-closes-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit]]'
@@ -281,7 +284,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 ### adr
 
 - `2026-08-11-tui-architecture-adr` - `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
-- `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` - `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `proposed`)
+- `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` - `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `accepted`)
 
 ### audit
 
@@ -419,6 +422,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S199` - Prove formula_runtime_ops remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S200` - Prove formula_text_inputs remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S201` - Prove groi_oracle remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S202` - Delete the dedicated handoff_paths family after eliminating every definition, test, documentation, and import
 - `2026-08-11-tui-architecture-W03-P20-S203` - Prove handoffs remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S204` - Prove identity remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S205` - Prove ids remains public with locally defined symbols and direct consumer imports
@@ -550,6 +554,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-s127-workspace-field-manifest-reference` - `tui-architecture` reference: `S127 Workspace field-manifest derivation`
 - `2026-08-25-tui-architecture-s128-workspace-projection-composition-reference` - `tui-architecture` reference: `S128 Workspace projection composition`
 - `2026-08-25-tui-architecture-workspace-v1-contract-reference` - `tui-architecture` reference: `Workspace V1 contract blueprint`
+- `2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference` - `tui-architecture` reference: `graded snapshot assembly sizing`
+- `2026-08-26-tui-architecture-modelo-347-contraparte-binding-inventory-reference` - `tui-architecture` reference: `modelo 347 contraparte binding inventory`
 
 ### research
 
