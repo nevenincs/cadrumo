@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:54f0547e6f74dfe7dccd2f00eb4fcb1e68faf7fdf83da88a368b81a652063703'
+body_hash: 'sha256:d4a1979d294f8875667af18524610da7d5decdb35c470fcb828c8abc83f711f7'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -39,6 +39,14 @@ Modelo 128 has a 2015--2019 design, and Modelo 181 has distinct 2009, 2016, and
 2017 artefacts. Live SHA-256 and byte-count checks match every recorded value.
 Corpus/hash tests pass 6 of 6 and source-grounding plus referential-integrity
 tests pass 30 of 30.
+
+Current HEAD later attached the exact 2015--2019 and 2020 sources to the M126
+and M128 parent layouts. Commit `f662296b22` proves 2019 selection, 2018
+refusal, full Page-1 geometry, the narrowly governed combined trailing
+`En blanco` filler, and a mutation that reopens the mandatory offset-12 byte.
+The isolated selection passes six tests and the existing focused modelo
+selection passes twelve. This resolves the original 2019 claimed-year
+divergences without backdating selection into 2015--2018.
 
 Commit `2c327ae64c` then added the official Modelo 165 original 2013 design and
 official 2016 update with exact hashes and applicability windows of 2013--2015
@@ -76,14 +84,10 @@ criterion, not the acquisition count.
 
 ## Notes
 
-The M126 and M128 historical PDFs parse to the shipped business geometry, but
-the generic coverage validator currently misclassifies the combined label
-`Indicador de pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡gina complementaria. Obligatorio En blanco` as a missing
-required field even though the authored layout emits the exact blank filler at
-offset 12. The generic validator and its test are actively owned by another
-dirty lane, so this execution did not overwrite them or add a modelo-specific
-exception. Reconsider M126/M128 attachment only after that owner lands generic,
-mutation-sensitive blank-field normalization and the claimed-year gate passes.
+The former M126/M128 combined-blank parser blocker is resolved by the generic
+coverage authority and the direct isolated proof above. Their pre-2019 years
+remain deliberately unselected; the evidence acquisition is not authority to
+rewrite legal history or widen a calculation-grade revision.
 
 M181 remains unsupported for 2010--2015 and 2018--2021. The acquired historical
 files do not justify backdating or closing those years. The remaining S51
