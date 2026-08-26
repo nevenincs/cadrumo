@@ -28,7 +28,7 @@ DISPOSITIONS: Final = (
     "delete",
 )
 RAG_RESULT_FIELDS: Final = frozenset({"path", "line_start", "line_end", "node_type", "symbol"})
-EVIDENCE_FILE_SUFFIXES: Final = frozenset({".md", ".py", ".rst"})
+EVIDENCE_FILE_SUFFIXES: Final = frozenset({".json", ".md", ".py", ".rst", ".toml", ".yaml", ".yml"})
 EVIDENCE_ROOTS: Final = ("src", "dev", "docs")
 TERMINAL_STATES: Final = {
     "keep_public": frozenset({"public_local_definitions_only"}),
@@ -414,14 +414,12 @@ def _package_attribute_owners(
             owners.update(member_owners.values())
         elif owner := member_owners.get(member):
             owners.add(owner)
+    package_locals = {local for local, target in aliases.items() if target == package}
     for node in ast.walk(tree):
         reference = _dotted_name(node)
-        if reference is None:
+        if reference is None or reference.partition(".")[0] not in package_locals:
             continue
-        resolved = _resolve_import_alias(reference, aliases)
-        if not resolved.startswith(f"{package}."):
-            continue
-        member = resolved.removeprefix(f"{package}.").split(".", maxsplit=1)[0]
+        member = reference.removeprefix(f"{reference.partition('.')[0]}").removeprefix(".").split(".", maxsplit=1)[0]
         if owner := member_owners.get(member):
             owners.add(owner)
     return owners
@@ -542,10 +540,12 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
             if not isinstance(node, ast.Call):
                 continue
             callee = _dynamic_import_call(node, aliases)
-            if callee is None or not node.args:
+            argument = (
+                node.args[0] if node.args else next((item.value for item in node.keywords if item.arg == "name"), None)
+            )
+            if callee is None or argument is None:
                 continue
             site = f"{relative}:{node.lineno}"
-            argument = node.args[0]
             if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
                 target = _resolve_dynamic_target(argument.value, module=module, is_package=is_package)
                 candidate = _candidate_for_reference(target, by_new_module)
@@ -740,35 +740,6 @@ def _symbol_terminal_destinations(
     }
 
 
-def _rag_result_from_evidence(generated: dict[str, object]) -> dict[str, object]:
-    """Pin the reviewed per-row RAG result to a current AST locator."""
-    locators = generated["current_symbol_locators"]
-    if not isinstance(locators, dict):
-        raise RuntimeError("generated RAG evidence lacks symbol locators")
-    for symbol in sorted(locators):
-        values = locators[symbol]
-        if isinstance(symbol, str) and isinstance(values, list) and values:
-            path, _, line = values[0].rpartition(":")
-            if path and line.isdigit():
-                return {
-                    "path": path,
-                    "line_start": int(line),
-                    "line_end": int(line),
-                    "node_type": "ast_top_level_binding",
-                    "symbol": symbol,
-                }
-    new_path = generated.get("new_path")
-    if isinstance(new_path, str):
-        return {
-            "path": new_path,
-            "line_start": 1,
-            "line_end": 1,
-            "node_type": "module",
-            "symbol": "<module>",
-        }
-    raise RuntimeError(f"generated RAG evidence has no defining module for {generated['old_path']}")
-
-
 def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, object]:
     """Refresh only derived fields in a reviewed matrix, keyed by c941 pair.
 
@@ -812,12 +783,6 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         existing = existing_by_pair[pair]
         refreshed = {field: existing[field] for field in reviewed_fields}
         refreshed.update({field: generated[field] for field in derived_fields})
-        refreshed["rag_result"] = _rag_result_from_evidence(generated)
-        refreshed["alternative_owner_evidence"] = (
-            f"Current-tree evidence anchors {refreshed['semantic_owner']} at "
-            f"{refreshed['rag_result']['path']}:{refreshed['rag_result']['line_start']}; "
-            "the competing-site census and no-substitutability rationale are in semantic_evidence."
-        )
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
         refreshed_rows.append(refreshed)

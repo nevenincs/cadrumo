@@ -101,6 +101,16 @@ def test_package_attributes_have_one_member_owner_and_transitive_closure_crosses
         from_members=(),
         member_owners={"Authority": "old-authority", "Other": "old-other"},
     )
+    leaf_tree = ast.parse("from cadrumo.domain.calculations.registry.authority import Authority")
+    _, leaf_aliases, leaf_members = _python_import_context(
+        leaf_tree, current_module="application.consumer", is_package=False
+    )
+    assert not _package_attribute_owners(
+        leaf_tree,
+        aliases=leaf_aliases,
+        from_members=leaf_members,
+        member_owners={"Authority": "old-authority", "authority": "old-authority"},
+    )
     assert _transitive_consumer_paths(
         "registry.authority",
         direct_modules={"application.bridge"},
@@ -126,6 +136,14 @@ def test_dynamic_imports_keep_literal_and_nonliteral_sites_distinct() -> None:
     assert isinstance(dynamic_imports, dict)
     assert {"literal", "unresolved"} == set(dynamic_imports)
     assert all({"site", "callee", "expression"} == set(site) for site in dynamic_imports["unresolved"])
+    keyword_tree = ast.parse(
+        "import importlib\nimportlib.import_module(name='cadrumo.domain.calculations.registry.authority')"
+    )
+    _, keyword_aliases, _ = _python_import_context(
+        keyword_tree, current_module="application.consumer", is_package=False
+    )
+    keyword_call = next(node for node in ast.walk(keyword_tree) if isinstance(node, ast.Call))
+    assert _dynamic_import_call(keyword_call, keyword_aliases) == "importlib.import_module"
 
 
 def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
