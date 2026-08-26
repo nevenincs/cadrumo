@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # after DAC7 absorbed it into 238. Listing them here asserted a registry
 # membership the tree deliberately does not grant.
 _MODELOS = [
-    ("181", "2009-y-siguientes", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
+    ("181", "2022-y-siguientes", "orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "BOE-A-2009-21165", True),
     ("270", "2023-2024", "orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "BOE-A-2013-13228", True),
 ]
 

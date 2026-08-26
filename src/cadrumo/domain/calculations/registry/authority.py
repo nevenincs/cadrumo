@@ -33,6 +33,13 @@ from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._validate_evidence import flush_corpus_text_cache
+from ._verdict_cache import (
+    certify_registry_validation,
+    compute_verdict_key,
+    registry_validation_is_certified,
+    shipped_verdict_location,
+    stamp_bundled_verdict,
+)
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .identity import (
@@ -56,13 +63,6 @@ from .snapshot import (
 from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .validate import RegistryValidator
-from .verdict_cache import (
-    certify_registry_validation,
-    compute_verdict_key,
-    registry_validation_is_certified,
-    shipped_verdict_location,
-    stamp_bundled_verdict,
-)
 
 
 def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:

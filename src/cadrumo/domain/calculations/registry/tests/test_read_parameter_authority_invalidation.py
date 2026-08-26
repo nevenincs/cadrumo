@@ -34,11 +34,11 @@ from .....core import resources as core_resources
 from .....core.config import override_settings
 from .....tests.attribute_scope import scoped_attribute
 from .._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from .._verdict_cache import certify_registry_validation, compute_verdict_key
 from ..convenio import collect_convenio_fingerprints
 from ..identity import compute_walked_tree_digest
 from ..loader_cache import _bundled_registry_root
 from ..m303_orden_manifest import collect_m303_annual_orden_fingerprints
-from ..verdict_cache import certify_registry_validation, compute_verdict_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

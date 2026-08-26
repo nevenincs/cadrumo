@@ -26,6 +26,7 @@ from .schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
+    SchemaFamilyDispositionDeclaration,
 )
 from .schema_base import RegistryModel
 from .schema_exports import ProjectionEndpointDeclaration
@@ -163,6 +164,10 @@ class RegistryRevisionInspection(RegistryModel):
     """The revision's own governance stamp -- not filing-grade content, so it
     stays in scope for a static inspection whose job is validating generated
     static artefacts against a revision it may or may not trust yet."""
+    family_dispositions: Mapping[str, SchemaFamilyDispositionDeclaration]
+    """The revision's declared not-applicable schema families and their
+    grounding reason/legal_refs/source_refs -- classification metadata, not
+    filing-grade content, so it stays in scope for a static inspection."""
     source_root: Path
     revision_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     sources: Mapping[SourceRefId, SourceReference]
@@ -221,6 +226,7 @@ class RegistryRevisionInspection(RegistryModel):
             modelo_id=modelo.id,
             revision_id=revision.id,
             review_status=revision.review_status,
+            family_dispositions=revision.family_dispositions,
             source_root=source_root,
             revision_source_refs=revision.source_refs,
             sources=selected_sources,
