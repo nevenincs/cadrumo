@@ -174,14 +174,14 @@
             {
                 "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry.validate_references",
+                "target_mod": "cadrumo.domain.calculations.registry._validate_references",
                 "imported_names": ["_CROSS_DOMAIN_SNAPSHOT_CHECKS"],
                 "reason": "White-box test confirming the renta first-slice routing validator is registered in the private cross-domain snapshot-check dispatch table. Internal registry-build validator wiring, not a public contract."
             },
             {
                 "importer_path": "src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry.validate_references",
+                "target_mod": "cadrumo.domain.calculations.registry._validate_references",
                 "imported_names": ["_CROSS_DOMAIN_SNAPSHOT_CHECKS"],
                 "reason": "White-box test confirming the renta retenciones output-casilla validator is registered in the private cross-domain snapshot-check dispatch table by `renta` package import. Internal registry-build validator wiring, not a public contract. Same shape and disposition as the `test_first_slice_routing.py` entry against the same table."
             },

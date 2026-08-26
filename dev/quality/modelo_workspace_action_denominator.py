@@ -544,10 +544,10 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         evidence_reference=".vault/adr/2026-08-24-tui-modelo-workspace-interface-adr.md",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
-    "modelo.reconcile.history": _classification(
-        "modelo.reconcile.history",
+    "modelo.reconcile.list": _classification(
+        "modelo.reconcile.list",
         ModeloWorkspaceActionDisposition.C1_OR_C2_READ_PENDING,
-        command_key="app_modelo_reconcile_history",
+        command_key="app_modelo_reconcile_list",
         write_route="none",
         side_effects=("none",),
         has_action_catalogue_entry=False,
