@@ -10,6 +10,7 @@ from ..quality.import_hygiene_scan import (
     CanonicalAuthorityTarget,
     DelegatingWrapperRule,
     SubstitutableWorkSelectorRule,
+    definition_names,
     public_definition_names,
     scan_canonical_authority,
     tracked_live_files,
@@ -29,6 +30,7 @@ _NATURAL_SCAN_RULE = SubstitutableWorkSelectorRule(
     "parallel natural catalogue scan",
     collection_methods=frozenset({"values", "items"}),
     catalogue_types=frozenset({"WorkUnitCatalogue"}),
+    repository_types=frozenset({"WorkUnitCatalogueRepository"}),
     natural_coordinates=frozenset({"modelo", "filing_year", "period"}),
     exact_coordinates=frozenset({"work_unit_id"}),
     operator_methods=frozenset({"startswith", "endswith"}),
@@ -75,6 +77,13 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
     assert scan_canonical_authority(_SPEC, _tracked_live_corpus()) == []
 
 
+def test_canonical_module_has_no_fragmented_exact_or_operator_selector_helpers() -> None:
+    names = definition_names(_CANONICAL)
+    assert names.count("select_modelo_work_resolution") == 1
+    assert "_select_exact_modelo_work_resolution" not in names
+    assert "_select_operator_work_unit_resolution" not in names
+
+
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
@@ -108,14 +117,50 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
         "repository-owning selector wrapper",
     ),
     (
-        "def parallel(catalogue, modelo, filing_year):\n"
+        "def parallel(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " for unit in catalogue.values():\n"
         "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
         "   return unit",
         "parallel natural catalogue scan",
     ),
     (
-        "def parallel(catalogue, modelo, filing_year):\n"
+        "def parallel(inventory: WorkUnitCatalogue, modelo, filing_year):\n"
+        " for unit in inventory.values():\n"
+        "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
+        "   return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(catalogue: WorkUnitCatalogue, holder, modelo, filing_year):\n"
+        " holder.units = catalogue\n"
+        " for unit in holder.units.values():\n"
+        "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
+        "   return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(inventory: WorkUnitCatalogue, wanted):\n"
+        " for unit in inventory.values():\n"
+        "  if unit.work_unit_id == wanted:\n"
+        "   return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(inventory: WorkUnitCatalogue, token):\n"
+        " for unit in inventory.values():\n"
+        "  if unit.work_unit_id.startswith(token) or unit.work_unit_id.endswith(token):\n"
+        "   return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(repo: WorkUnitCatalogueRepository):\n"
+        " inventory = repo.load()\n"
+        " for unit in inventory.values():\n"
+        "  return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " units = catalogue\n"
         " for unit in units.values():\n"
         "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
@@ -123,7 +168,7 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
         "parallel natural catalogue scan",
     ),
     (
-        "def parallel(catalogue, modelo, filing_year):\n"
+        "def parallel(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " for key, unit in catalogue.items():\n"
         "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
         "   return key, unit",
@@ -157,9 +202,22 @@ def test_adversarial_import_authority_mutants_are_rejected(source: str, expected
 def test_projection_loop_is_not_a_selector_mutant(tmp_path: Path) -> None:
     path = tmp_path / "projection.py"
     path.write_text(
-        "def project(catalogue):\n"
+        "def project(catalogue: WorkUnitCatalogue):\n"
         " for unit in catalogue.values():\n"
         "  yield unit.modelo, unit.filing_year, unit.period\n",
+        encoding="utf-8",
+    )
+    assert scan_canonical_authority(_MUTANT_SPEC, (_CANONICAL, path)) == []
+
+
+def test_counting_comparisons_are_not_a_selector_mutant(tmp_path: Path) -> None:
+    path = tmp_path / "analytics.py"
+    path.write_text(
+        "def count_matching(inventory: WorkUnitCatalogue, modelo, filing_year):\n"
+        " return sum(\n"
+        "  1 for unit in inventory.values()\n"
+        "  if unit.modelo == modelo and unit.filing_year == filing_year\n"
+        " )\n",
         encoding="utf-8",
     )
     assert scan_canonical_authority(_MUTANT_SPEC, (_CANONICAL, path)) == []
@@ -168,11 +226,11 @@ def test_projection_loop_is_not_a_selector_mutant(tmp_path: Path) -> None:
 def test_only_exact_canonical_selector_is_exempt_from_natural_scan(tmp_path: Path) -> None:
     owner = tmp_path / "work_addressing.py"
     owner.write_text(
-        "def select_modelo_work_resolution(catalogue, modelo, filing_year):\n"
+        "def select_modelo_work_resolution(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " for unit in catalogue.values():\n"
         "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
         "   return unit\n"
-        "def extra_selector(catalogue, modelo, filing_year):\n"
+        "def extra_selector(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " for unit in catalogue.values():\n"
         "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
         "   return unit\n",

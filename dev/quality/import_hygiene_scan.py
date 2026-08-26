@@ -121,6 +121,7 @@ class SubstitutableWorkSelectorRule:
     kind: str
     collection_methods: frozenset[str]
     catalogue_types: frozenset[str]
+    repository_types: frozenset[str]
     natural_coordinates: frozenset[str]
     exact_coordinates: frozenset[str]
     operator_methods: frozenset[str]
@@ -556,10 +557,11 @@ def _catalogue_aliases(
         for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
         if _annotation_names(argument.annotation) & rule.catalogue_types
     }
-    parameters = {
-        argument.arg for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+    repositories = {
+        argument.arg
+        for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        if _annotation_names(argument.annotation) & rule.repository_types
     }
-    aliases.update(parameters)
     assignments: list[tuple[str, ast.AST]] = []
     for assignment in _scope_nodes(node.body):
         if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
@@ -575,23 +577,16 @@ def _catalogue_aliases(
         changed = False
         for target, value in assignments:
             source = _expression_path(value)
-            is_load = isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute) and value.func.attr in {
-                "load",
-                "load_revisioned",
-            }
+            is_load = (
+                isinstance(value, ast.Call)
+                and isinstance(value.func, ast.Attribute)
+                and value.func.attr in {"load", "load_revisioned"}
+                and (receiver := _expression_path(value.func.value)) is not None
+                and receiver in repositories
+            )
             if target not in aliases and (source in aliases or is_load):
                 aliases.add(target)
                 changed = True
-    # An untyped parameter becomes a catalogue by being the receiver of the declared collection protocol.
-    aliases.update(
-        path
-        for call in ast.walk(node)
-        if isinstance(call, ast.Call)
-        and isinstance(call.func, ast.Attribute)
-        and call.func.attr in rule.collection_methods
-        and (path := _expression_path(call.func.value)) is not None
-        and path.split(".", 1)[0] in parameters
-    )
     return frozenset(aliases)
 
 
@@ -620,13 +615,20 @@ def _selection_decision(
                 selected_names.update(target_names)
                 changed = True
     for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return) and item.value):
+        if (
+            isinstance(returned.value, ast.Call)
+            and _bare_callable_name(returned.value.func)
+            in {"dict", "frozenset", "len", "list", "max", "min", "set", "sorted", "sum", "tuple"}
+        ):
+            continue
         names = {child.id for child in ast.walk(returned.value) if isinstance(child, ast.Name)}
         if names & selected_names:
             return True
         if (
             names & produced_collections
             and isinstance(returned.value, ast.Call)
-            and _bare_callable_name(returned.value.func) not in {"len", "sum", "min", "max", "sorted"}
+            and _bare_callable_name(returned.value.func)
+            not in {"dict", "frozenset", "len", "list", "max", "min", "set", "sorted", "sum", "tuple"}
         ):
             return True
         if any(
@@ -643,6 +645,19 @@ def _function_has_work_selector(
     node: ast.FunctionDef | ast.AsyncFunctionDef, rule: SubstitutableWorkSelectorRule
 ) -> bool:
     catalogue_aliases = _catalogue_aliases(node, rule)
+    repository_parameters = {
+        argument.arg
+        for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        if _annotation_names(argument.annotation) & rule.repository_types
+    }
+    repository_load = any(
+        isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Attribute)
+        and call.func.attr in {"load", "load_revisioned"}
+        and (receiver := _expression_path(call.func.value)) is not None
+        and receiver in repository_parameters
+        for call in ast.walk(node)
+    )
     loops = (
         item
         for item in _scope_nodes(node.body)
@@ -697,13 +712,7 @@ def _function_has_work_selector(
                 or bool(compared_fields & rule.exact_coordinates)
                 or operator_selection
             )
-            repository_first_match = any(
-                isinstance(value, ast.Call)
-                and isinstance(value.func, ast.Attribute)
-                and value.func.attr in {"load", "load_revisioned"}
-                for value in ast.walk(node)
-            )
-            if (predicate or repository_first_match) and _selection_decision(
+            if (predicate or repository_load) and _selection_decision(
                 node, candidates, frozenset(produced_collections)
             ):
                 return True
@@ -776,15 +785,19 @@ def scan_canonical_authority(
     return sorted(violations, key=lambda item: (item.path.as_posix(), item.lineno, item.kind, item.detail))
 
 
-def public_definition_names(path: Path) -> frozenset[str]:
-    """Return public top-level function and class definitions from one module."""
+def definition_names(path: Path) -> tuple[str, ...]:
+    """Return top-level function and class definitions from one module."""
     tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-    return frozenset(
+    return tuple(
         node.name
         for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-        and not node.name.startswith("_")
     )
+
+
+def public_definition_names(path: Path) -> frozenset[str]:
+    """Return public top-level function and class definitions from one module."""
+    return frozenset(name for name in definition_names(path) if not name.startswith("_"))
 
 
 class TuiRetirementRemnantKind(StrEnum):
