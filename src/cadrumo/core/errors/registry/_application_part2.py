@@ -1233,4 +1233,14 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.modelo.operation_definitions.ModeloWorkDiscardApprovalStaleError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_DISCARD_APPROVAL_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_work_discard_approval_stale",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
