@@ -37,7 +37,7 @@ _KEY_PATTERN = re.compile(r"[\"'](flows\.[a-z0-9_.]+)[\"']")
 _SRC = Path(__file__).resolve().parents[4]
 _FLOW_MODULE_DIRS = (
     _SRC / "cadrumo" / "application" / "flows",
-    _SRC / "cadrumo" / "adapters" / "inbound" / "tui",
+    _SRC / "cadrumo" / "entrypoints" / "tui",
 )
 
 
@@ -51,7 +51,16 @@ def _referenced_flow_keys() -> tuple[frozenset[str], frozenset[str]]:
     """
     keys: set[str] = set()
     for directory in _FLOW_MODULE_DIRS:
-        for module in scan_directory(directory, pattern="*.py"):
+        # A directory that is not there yields nothing rather than failing, and
+        # the sweep's non-vacuity guard only fires when EVERY root comes back
+        # empty -- so one live root masks a dead one indefinitely.
+        assert directory.is_dir(), f"flow module root {directory} does not exist, so its keys are never swept"
+        for module in scan_directory(directory, pattern="*.py", recursive=True):
+            # The TUI keeps its keys in subpackages, so the sweep recurses; its
+            # test modules carry synthetic flows.test.* keys that name no
+            # catalogue entry by design and would be read as real references.
+            if "tests" in module.parts or module.name.startswith("test_") or module.name == "conftest.py":
+                continue
             keys |= set(_KEY_PATTERN.findall(module.read_text(encoding="utf-8")))
     prefixes = {key for key in keys if key.endswith(".")}
     return frozenset(keys - prefixes), frozenset(prefixes)
