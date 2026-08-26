@@ -96,7 +96,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.invoices._wizard",
         "cadrumo.application.ledger.actions_common",
         "cadrumo.application.ledger.actions_import",
-        "cadrumo.application.ledger.actions_split_merge",
         "cadrumo.application.ledger.aeat_record_projection",
         "cadrumo.application.ledger.batch_ingest",
         "cadrumo.application.ledger.confirmation_record",
