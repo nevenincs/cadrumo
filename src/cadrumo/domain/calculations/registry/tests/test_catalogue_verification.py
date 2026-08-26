@@ -814,7 +814,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         # non-conflicting filing period relative to the actively selected
         # design. The source rows deliberately remain resolver-unreachable
         # until the temporal-design owner supplies that authority.
-        "aeat-dr-036-v42-provisional": "AEAT calls the 2025 edition provisional; no successor boundary is evidenced",
         "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
         "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
         "aeat-dr-202-2025-mar-update": "AEAT's March 2026 update has no selection boundary against the active 2025 design",
