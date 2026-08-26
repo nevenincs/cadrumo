@@ -712,6 +712,16 @@ mcp:
       porque el entorno de ejecución en caliente estaba {reason}; el resultado es
       idéntico, solo más lento. La atención en caliente se reanuda cuando termina
       la llamada lenta.'
+operation:
+  modal:
+    action:
+      apply: Aplicar
+      cancel: Cancelar
+      close: Cerrar
+      detach: Desvincular
+      reject: Rechazar
+    status:
+      running: En curso
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
