@@ -11,6 +11,7 @@ executor composes -- in the SAME encrypted transaction.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -54,7 +55,9 @@ def _work_unit() -> WorkUnit:
     )
 
 
-def _receipt(*, receipt_id: str, calculation_revision_id: str) -> ModeloEditMutationResultReceiptV1:
+def _receipt(
+    *, receipt_id: str, calculation_revision_id: str, bucket_event_id: str | None = "c" * 64
+) -> ModeloEditMutationResultReceiptV1:
     return ModeloEditMutationResultReceiptV1(
         receipt_id=receipt_id,
         operation_id="0" * 64,
@@ -62,7 +65,7 @@ def _receipt(*, receipt_id: str, calculation_revision_id: str) -> ModeloEditMuta
         baseline_id="b" * 64,
         work_unit_id=_work_unit().work_unit_id,
         calculation_revision_id=calculation_revision_id,
-        bucket_event_id="c" * 64,
+        bucket_event_id=bucket_event_id,
         committed_at=datetime(2026, 1, 10, 1, 0, tzinfo=UTC),
         result_destination="modelo/130/2025/1T/edit-result",
     )
@@ -78,7 +81,9 @@ def _persist(
     bucket_event_repository: BucketEventHistoryRepository,
     now: datetime,
     input_value: str,
-    additional_secure_object_writes: tuple[SecureObjectWrite, ...] = (),
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ):
     return persist_calculation_revision(
         work_unit_id=work_unit.work_unit_id,
@@ -105,7 +110,7 @@ def _persist(
         calculation_repository=calculation_repository,
         work_unit_repository=work_unit_repository,
         bucket_event_repository=bucket_event_repository,
-        additional_secure_object_writes=additional_secure_object_writes,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
 
 
@@ -132,9 +137,13 @@ def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) ->
             bucket_event_repository=bucket_event_repository,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
-            additional_secure_object_writes=(
+            additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
                 receipt_repository.to_secure_object_write(
-                    _receipt(receipt_id="1" * 64, calculation_revision_id="1" * 64),
+                    _receipt(
+                        receipt_id="1" * 64,
+                        calculation_revision_id=revision_id,
+                        bucket_event_id=bucket_event_id,
+                    ),
                 ),
             ),
         )
@@ -143,6 +152,7 @@ def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) ->
         loaded_work_units = work_unit_repository.load()
 
     assert loaded_receipt is not None
+    assert loaded_receipt.calculation_revision_id == revision.calculation_revision_id
     reloaded_work_unit = loaded_work_units.get(work_unit.work_unit_id)
     assert reloaded_work_unit is not None
     assert reloaded_work_unit.current_calculation_revision_id == revision.calculation_revision_id
@@ -174,9 +184,6 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
         advanced_work_unit = work_unit_repository.load().get(work_unit.work_unit_id)
         assert advanced_work_unit is not None
         work_units, work_units_revision_id = work_unit_repository.load_revisioned()
-        second_receipt = receipt_repository.to_secure_object_write(
-            _receipt(receipt_id="2" * 64, calculation_revision_id=first.calculation_revision_id),
-        )
         second = _persist(
             work_unit=advanced_work_unit,
             work_units=work_units,
@@ -186,7 +193,15 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
             bucket_event_repository=bucket_event_repository,
             now=datetime(2026, 1, 10, 3, 0, tzinfo=UTC),
             input_value="100.00",
-            additional_secure_object_writes=(second_receipt,),
+            additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
+                receipt_repository.to_secure_object_write(
+                    _receipt(
+                        receipt_id="2" * 64,
+                        calculation_revision_id=revision_id,
+                        bucket_event_id=bucket_event_id,
+                    ),
+                ),
+            ),
         )
 
         loaded_second_receipt = receipt_repository.load("2" * 64)

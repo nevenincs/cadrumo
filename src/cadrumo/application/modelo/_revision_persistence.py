@@ -37,7 +37,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -254,7 +254,9 @@ def persist_calculation_revision(
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
-    additional_secure_object_writes: tuple[SecureObjectWrite, ...] = (),
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> CalculationRevision:
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
@@ -290,17 +292,24 @@ def persist_calculation_revision(
     The duplicate branch still advances or confirms the work-unit pointer under
     the SAME ``work_units_revision_id`` compare-and-swap guard the new-revision
     branch uses -- it never falls back to an unguarded pointer save, and it
-    still co-commits ``additional_secure_object_writes`` when supplied, so a
-    caller relying on a co-committed side effect (a guarded edit's result
-    receipt, for instance) gets it on the duplicate path exactly as reliably as
-    on the new-revision path.
+    still invokes ``additional_secure_object_writes_for_revision`` when
+    supplied, so a caller relying on a co-committed side effect (a guarded
+    edit's result receipt, for instance) gets it on the duplicate path exactly
+    as reliably as on the new-revision path.
 
-    ``additional_secure_object_writes`` lets a caller land its own atomic
-    writes (an edit-contract mutation-result receipt, most notably) in the
-    SAME secure-object transaction as the revision, pointer, and bucket event
-    this function already commits, without this function knowing anything
-    about the caller's payload shape. Empty by default, so every existing
-    caller's write set is unchanged.
+    ``additional_secure_object_writes_for_revision`` lets a caller land its own
+    atomic writes (an edit-contract mutation-result receipt, most notably) in
+    the SAME secure-object transaction as the revision, pointer, and bucket
+    event this function already commits, without this function knowing
+    anything about the caller's payload shape. It is a FACTORY rather than a
+    plain tuple because the content-addressed revision id (and, on the
+    new-revision path only, the fresh bucket-event id) are not known until
+    this function derives them -- a receipt needs the revision id, so the
+    caller cannot build its write before calling in. The factory receives the
+    resolved ``calculation_revision_id`` and the fresh bucket-event id, or
+    ``None`` for the latter on the duplicate-result path where no new event is
+    emitted, and returns the writes to co-commit. ``None`` by default, so
+    every existing caller's write set is unchanged.
     """
     _require_filing_instance_evidence_for_work_unit(
         work_unit=work_unit,
@@ -356,15 +365,19 @@ def persist_calculation_revision(
             )
         else:
             duplicate_work_units = work_units
-        if duplicate_work_units is not work_units or additional_secure_object_writes:
+        duplicate_writes = (
+            additional_secure_object_writes_for_revision(revision_id, None)
+            if additional_secure_object_writes_for_revision is not None
+            else ()
+        )
+        if duplicate_work_units is not work_units or duplicate_writes:
             # Guarded, never a bare `.save`: an unguarded write here would
             # silently discard a concurrent catalogue change this branch never
             # observed, and it is the one place a co-committed receipt write
-            # (`additional_secure_object_writes`) could otherwise be dropped
-            # on the duplicate-result path.
+            # could otherwise be dropped on the duplicate-result path.
             work_unit_repository.save_with_secure_object_writes(
                 duplicate_work_units,
-                additional_secure_object_writes,
+                duplicate_writes,
                 expected_revision_id=work_units_revision_id,
             )
         return existing
@@ -449,7 +462,11 @@ def persist_calculation_revision(
                 expected_revision_id=work_units_revision_id,
             ),
             bucket_event_history_write(bucket_event_repository, (created_event,)),
-            *additional_secure_object_writes,
+            *(
+                additional_secure_object_writes_for_revision(revision_id, created_event.event_id)
+                if additional_secure_object_writes_for_revision is not None
+                else ()
+            ),
         ),
         expected_revision_id=revisions_revision_id,
     )

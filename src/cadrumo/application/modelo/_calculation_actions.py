@@ -177,8 +177,11 @@ from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 
+    from ...adapters.persistence.storage import SecureObjectWrite
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
@@ -411,11 +414,18 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     clock: datetime | None = None,
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
 
     This is deliberately private: provenance and source issues are an authority
     boundary, not caller-controlled calculation inputs.
+
+    ``additional_secure_object_writes_for_revision`` passes straight through to
+    :func:`persist_calculation_revision`; see that function for why it is a
+    factory keyed by the resolved revision id rather than a plain tuple.
 
     ``ledger_preflight_transaction_repository`` is a :class:`TransactionCatalogueRepository`
     used for the ledger preflight check before calculation.
@@ -593,6 +603,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         calculation_repository=cr_repo,
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
 
 
@@ -1365,6 +1376,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> BucketAggregationCalculationResult:
     """Calculate a modelo revision and return it alongside the source diagnostics.
 
@@ -1463,6 +1477,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=channels.detail_rows,
         clock=clock,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         preparation.snapshot.revision,

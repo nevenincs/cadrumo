@@ -704,6 +704,12 @@ class ModeloEditMutationResultReceiptV1(_EditModel):
     Carries no financial value, raw input, row content, or input digest. A
     matching receipt proves ``UPDATED``; a proven failed compare-and-swap
     proves ``NONE``.
+
+    ``bucket_event_id`` is ``None`` on a duplicate-result confirmation: an
+    identical content-addressed revision already exists, so this commit
+    advances or confirms only the work-unit pointer and emits no fresh
+    ``MODELO_CALCULATION_CREATED`` event to reference. It is always present
+    when the commit created the revision.
     """
 
     receipt_id: ModeloEditMutationResultReceiptId
@@ -712,7 +718,7 @@ class ModeloEditMutationResultReceiptV1(_EditModel):
     baseline_id: ModeloEditBaselineId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    bucket_event_id: BucketEventId
+    bucket_event_id: BucketEventId | None
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     committed_at: datetime
     result_destination: OperationReference
