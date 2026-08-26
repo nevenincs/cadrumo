@@ -20,6 +20,7 @@ from dev.quality.registry_facade_family_census import (
     _owner_for_reference,
     _package_attribute_owners,
     _python_import_context,
+    _text_reference_owners,
     _transitive_consumer_paths,
     check_matrix_document,
     current_terminal_state_report,
@@ -158,6 +159,87 @@ def test_package_symbol_and_leaf_references_have_exact_family_owners() -> None:
         )
         == "old-export"
     )
+
+
+def test_non_python_package_symbol_targets_are_attributed_to_the_exporting_row() -> None:
+    """TOML/JSON/YAML package targets retain symbol-level ownership."""
+    export = RelocatedFamily(
+        100,
+        "src/cadrumo/domain/calculations/registry/_export.py",
+        "src/cadrumo/domain/calculations/registry/export.py",
+    )
+    calculation = RelocatedFamily(
+        100,
+        "src/cadrumo/domain/calculations/registry/_formula_runtime.py",
+        "src/cadrumo/domain/calculations/registry/formula_runtime.py",
+    )
+    text = (
+        'parser = "cadrumo.domain.calculations.registry.parse_export_payload"\n'
+        'consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"\n'
+    )
+
+    assert _text_reference_owners(
+        text,
+        candidates=(export, calculation),
+        member_owners={
+            "parse_export_payload": export.old_path,
+            "calculate_registry_snapshot": calculation.old_path,
+        },
+    ) == {export.old_path, calculation.old_path}
+
+
+def test_fully_qualified_package_access_and_aliased_registration_keep_exact_provenance() -> None:
+    """Package-object spelling and register aliases resolve to the referenced family only."""
+    package = "cadrumo.domain.calculations.registry"
+    qualified = ast.parse(
+        "import cadrumo.domain.calculations.registry\n"
+        "cadrumo.domain.calculations.registry.ValidatedRegistryAuthority\n"
+    )
+    _, qualified_aliases, qualified_members = _python_import_context(
+        qualified,
+        current_module="application.consumer",
+        is_package=False,
+    )
+    assert _package_attribute_owners(
+        qualified,
+        aliases=qualified_aliases,
+        from_members=qualified_members,
+        member_owners={"ValidatedRegistryAuthority": "old-authority"},
+    ) == {"old-authority"}
+
+    registration = ast.parse(
+        "from registrar import register as enroll\n"
+        "from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as Authority\n"
+        "enroll(Authority)\n"
+    )
+    _, aliases, _ = _python_import_context(
+        registration,
+        current_module="application.consumer",
+        is_package=False,
+    )
+    call = next(node for node in ast.walk(registration) if isinstance(node, ast.Call))
+    references = [census._resolve_import_alias(census._dotted_name(call.func) or "", aliases)]
+    references.extend(
+        census._resolve_import_alias(reference, aliases)
+        for reference in (census._dotted_name(argument) for argument in call.args)
+        if reference
+    )
+    authority = RelocatedFamily(
+        100,
+        "old-authority",
+        "src/cadrumo/domain/calculations/registry/authority.py",
+    )
+    assert {
+        owner
+        for reference in references
+        if (
+            owner := _owner_for_reference(
+                reference,
+                by_new_module={authority.new_module: authority},
+                member_owners={"ValidatedRegistryAuthority": "old-authority"},
+            )
+        )
+    } == {"old-authority"}
     assert (
         _owner_for_reference(
             authority.new_module,
@@ -307,6 +389,7 @@ def test_reviewed_refresh_preserves_every_manual_adjudication_field() -> None:
     refreshed = refresh_reviewed_matrix_document(document)
     reviewed_fields = {
         "semantic_owner",
+        "semantic_evidence",
         "rag_query",
         "rag_result",
         "alternative_owner_evidence",
@@ -327,6 +410,25 @@ def test_reviewed_refresh_preserves_every_manual_adjudication_field() -> None:
         assert isinstance(before, dict)
         assert isinstance(after, dict)
         assert {field: before[field] for field in reviewed_fields} == {field: after[field] for field in reviewed_fields}
+
+
+def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates() -> None:
+    """A plausible path cannot launder an unrelated symbol or mass-produced prose."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    row = document["rows"][0]
+    original_symbol = row["rag_result"]["symbol"]
+    row["rag_result"]["symbol"] = "irrelevant_symbol"
+    with pytest.raises(RuntimeError, match="unrelated to its exported symbols"):
+        check_matrix_document(document)
+    row["rag_result"]["symbol"] = original_symbol
+
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    first, second = document["rows"][:2]
+    second["semantic_evidence"]["substitutability"]["rationale"] = first["semantic_evidence"][
+        "substitutability"
+    ]["rationale"].replace(first["rag_query"], second["rag_query"])
+    with pytest.raises(RuntimeError, match="normalized rationale template|templated substitutability evidence"):
+        check_matrix_document(document)
 
 
 def test_reviewed_rows_are_one_to_one_complete_and_not_grouped() -> None:

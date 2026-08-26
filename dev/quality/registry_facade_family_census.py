@@ -412,6 +412,27 @@ def _facade_member_owners(candidates: tuple[RelocatedFamily, ...]) -> dict[str, 
     return {**module_stems, **owners}
 
 
+def _text_reference_owners(
+    text: str,
+    *,
+    candidates: tuple[RelocatedFamily, ...],
+    member_owners: dict[str, str],
+) -> set[str]:
+    """Resolve module and package-symbol targets in non-Python evidence."""
+    owners = {
+        candidate.old_path
+        for candidate in candidates
+        if candidate.old_module in text or candidate.new_module in text
+    }
+    package = "cadrumo.domain.calculations.registry"
+    owners.update(
+        old_path
+        for symbol, old_path in member_owners.items()
+        if re.search(rf"(?<![\w.]){re.escape(package)}\.{re.escape(symbol)}(?![\w.])", text)
+    )
+    return owners
+
+
 def _package_attribute_owners(
     tree: ast.AST,
     *,
@@ -511,12 +532,12 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
         relative = evidence_file.path
         text = evidence_file.text
         base = _base_category(relative)
-        for candidate in candidates:
-            if candidate.old_module in text or candidate.new_module in text:
-                hits[candidate.old_path][base].add(relative)
-        for symbol, old_path in member_owners.items():
-            if f"registry.{symbol}" in text or f"cadrumo.domain.calculations.registry.{symbol}" in text:
-                hits[old_path][base].add(relative)
+        for old_path in _text_reference_owners(
+            text,
+            candidates=candidates,
+            member_owners=member_owners,
+        ):
+            hits[old_path][base].add(relative)
         if not relative.endswith(".py"):
             continue
         tree = ast.parse(text, filename=relative)
@@ -634,41 +655,6 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
     return locations
 
 
-def _structured_semantic_evidence(
-    candidate: RelocatedFamily,
-    *,
-    locators: dict[str, list[str]],
-    all_locators: dict[str, dict[str, list[str]]],
-) -> dict[str, object]:
-    """Record falsifiable owner, competing-site, and substitutability anchors."""
-    owner_definition_locators = sorted(locator for values in locators.values() for locator in values)
-    competing_sites: dict[str, list[str]] = {}
-    for symbol in sorted(locators):
-        alternatives = sorted(
-            locator
-            for other_path, other_locators in all_locators.items()
-            if other_path != candidate.old_path
-            for locator in other_locators.get(symbol, [])
-        )
-        if alternatives:
-            competing_sites[symbol] = alternatives
-    return {
-        "owner_definition_locators": owner_definition_locators,
-        "competing_site_census": competing_sites,
-        "substitutability": {
-            "result": "no_substitutable_c941_owner",
-            "rationale": (
-                "The one-to-one c941 old/new pair is the only reviewed family owner; "
-                "AST locator and competing-site census are anchored to the current-tree evidence snapshot."
-            ),
-        },
-        "anchors": {
-            "census_root": "current_worktree",
-            "relocation_pair": [candidate.old_path, candidate.new_path],
-        },
-    }
-
-
 def generated_rows() -> list[dict[str, object]]:
     """Produce the exact c941 family rows without inventing their adjudications."""
     candidates = exact_relocation_candidates()
@@ -690,12 +676,8 @@ def generated_rows() -> list[dict[str, object]]:
                 "facade_exported_symbols": list(exported_symbols),
                 "current_symbol_locators": locators[candidate.old_path],
                 "consumers": evidence_census.consumers[candidate.old_path],
-                "semantic_evidence": _structured_semantic_evidence(
-                    candidate,
-                    locators=locators[candidate.old_path],
-                    all_locators=locators,
-                ),
                 "semantic_owner": None,
+                "semantic_evidence": None,
                 "rag_query": None,
                 "rag_result": None,
                 "alternative_owner_evidence": None,
@@ -787,10 +769,10 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         "facade_exported_symbols",
         "current_symbol_locators",
         "consumers",
-        "semantic_evidence",
     }
     reviewed_fields = {
         "semantic_owner",
+        "semantic_evidence",
         "rag_query",
         "rag_result",
         "alternative_owner_evidence",
@@ -823,6 +805,26 @@ def _canonical_plan_step_ids() -> frozenset[str]:
     """Read the canonical Step IDs owned by the reviewed TUI architecture plan."""
     matches = re.findall(r"`(W\d{2}\.P\d{2}\.S\d+)`", PLAN_PATH.read_text(encoding="utf-8"))
     return frozenset(str(match) for match in matches)
+
+
+def _normalized_review_prose(value: str) -> str:
+    """Erase row-specific labels so mechanically diversified templates collide."""
+    normalized = re.sub(r"`[^`]+`", "<token>", value.lower())
+    normalized = re.sub(r"\b(?:r\d+|w\d+\.p\d+\.s\d+)\b", "<id>", normalized)
+    normalized = re.sub(r"(?:src|dev|docs)/[^\s,;:]+(?::\d+)?", "<path>", normalized)
+    normalized = re.sub(r"\b\d+\b", "<n>", normalized)
+    return " ".join(normalized.split())
+
+
+def _top_level_symbol_locators(path: str) -> dict[str, str]:
+    """Return exact current definitions for rows that had no facade exports."""
+    tree = ast.parse(_evidence_text(path), filename=path)
+    locators: dict[str, str] = {}
+    for node in tree.body:
+        name = getattr(node, "name", None)
+        if isinstance(name, str) and isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            locators[name] = f"{path}:{node.lineno}"
+    return locators
 
 
 def check_matrix_document(document: dict[str, object]) -> None:
@@ -860,6 +862,8 @@ def check_matrix_document(document: dict[str, object]) -> None:
         raise RuntimeError("registry facade matrix is missing, extra, duplicate, or unrelated c941 rows")
     steps: set[str] = set()
     rationales: set[str] = set()
+    normalized_rationales: set[str] = set()
+    normalized_alternatives: set[str] = set()
     disposition_counts = {disposition: 0 for disposition in DISPOSITIONS}
     required_row_fields = {
         "row_id",
@@ -942,12 +946,38 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(f"registry facade row {pair[0]} has unanchored semantic evidence")
         if anchors.get("relocation_pair") != [row["old_path"], row["new_path"]]:
             raise RuntimeError(f"registry facade row {pair[0]} semantic evidence has another relocation pair")
+        exported_symbols = row["facade_exported_symbols"]
+        if not isinstance(exported_symbols, list):
+            raise RuntimeError(f"registry facade row {pair[0]} has malformed exported symbols")
+        if exported_symbols and rag_result["symbol"] not in exported_symbols:
+            raise RuntimeError(f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols")
+        if rag_result["symbol"] not in row["rag_query"]:
+            raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
+        symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
+        if not exported_symbols:
+            symbol_locators = [_top_level_symbol_locators(row["new_path"]).get(rag_result["symbol"])]
+        if rag_location not in symbol_locators:
+            raise RuntimeError(f"registry facade row {pair[0]} RAG result is not an exact current definition")
+        owner_locators = semantic_evidence["owner_definition_locators"]
+        expected_owner_locators = sorted(
+            locator for values in row["current_symbol_locators"].values() for locator in values
+        )
+        if owner_locators != expected_owner_locators:
+            raise RuntimeError(f"registry facade row {pair[0]} reviewed owner locators drifted")
         rationale = semantic_evidence["substitutability"].get("rationale")
         if not isinstance(rationale, str) or row["rag_query"] not in rationale or rationale in rationales:
             raise RuntimeError(f"registry facade row {pair[0]} has templated substitutability evidence")
         rationales.add(rationale)
+        normalized_rationale = _normalized_review_prose(rationale)
+        if normalized_rationale in normalized_rationales:
+            raise RuntimeError(f"registry facade row {pair[0]} has a normalized rationale template")
+        normalized_rationales.add(normalized_rationale)
         if row["semantic_owner"] not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} lacks alternative-owner comparison evidence")
+        normalized_alternative = _normalized_review_prose(row["alternative_owner_evidence"])
+        if normalized_alternative in normalized_alternatives:
+            raise RuntimeError(f"registry facade row {pair[0]} has normalized alternative-owner boilerplate")
+        normalized_alternatives.add(normalized_alternative)
         locators = row.get("current_symbol_locators")
         terminal_symbols = row.get("symbol_terminal_destinations")
         if not isinstance(locators, dict) or not isinstance(terminal_symbols, dict):

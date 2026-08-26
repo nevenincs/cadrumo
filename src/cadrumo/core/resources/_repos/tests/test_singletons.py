@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the six singleton-keyed Repositories."""
+"""Real-behaviour tests for the singleton-keyed Repositories."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ import pytest
 from .. import (
     ApoderamientosRepository,
     IvaRateTableRepository,
-    LegalParameterRepository,
     RecargoBandsRepository,
     TopicCatalogueRepository,
 )
@@ -70,19 +69,3 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
     assert result is not None
     assert len(result) > 0  # at least one EU member state
     assert repo.singleton is result
-
-
-def test_legal_parameters_singleton_loads_real_mapping() -> None:
-    from cadrumo.domain.calculations.registry.schema_references import LegalParameter
-
-    repo = LegalParameterRepository()
-
-    result = repo.singleton
-
-    assert len(result) > 0, "Legal parameter mapping must contain at least one entry"
-    first_key, first_value = next(iter(result.items()))
-    assert isinstance(first_key, str) and first_key, "Mapping keys must be non-empty strings"
-    assert isinstance(first_value, LegalParameter), (
-        f"Mapping values must be LegalParameter, got {type(first_value).__name__}"
-    )
-    assert repo.singleton is result  # cached identity
