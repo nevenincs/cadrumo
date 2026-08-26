@@ -228,11 +228,40 @@ type ModeloEditAddressV1 = Annotated[
 ]
 
 
+type ModeloEditCasillaDataType = Literal[
+    "decimal",
+    "money",
+    "integer",
+    "ratio",
+    "text",
+    "boolean",
+    "nif",
+    "year",
+    "period_code",
+    "country_code",
+    "iban",
+    "name",
+    "nif_iva",
+    "ccaa_code",
+    "province_code",
+    "postal_code",
+    "municipality_code",
+    "bic",
+    "date",
+]
+"""The exact registry ``CasillaDefinition.data_type`` closed set, mirrored here.
+
+Metadata only, not a value: the parse service selects its grammar from this
+axis, and the permitted surface carries no casilla value.
+"""
+
+
 class ModeloEditWritableScalarSurfaceEntryV1(_EditModel):
     """One scalar address the baseline admits for writing, with its allowed intents."""
 
     kind: Literal["writable_scalar"] = "writable_scalar"
     casilla_id: CasillaId
+    data_type: ModeloEditCasillaDataType
     allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
 
     @field_validator("allowed_intents")
@@ -518,11 +547,15 @@ ModeloEditPreflightEvaluatedV1.model_rebuild()
 class ModeloEditParseRequestV1(_EditModel):
     """One parse request for a single semantic address and transient raw lexeme.
 
+    Carries the complete admitted baseline rather than an opaque id: the
+    contract mints no server-side baseline store, so the frontend retains the
+    admission result in memory and resupplies it on every subsequent call, the
+    same posture :class:`ModeloEditSubmissionV1` takes for preflight and apply.
     The raw lexeme is never echoed by any result derived from this request.
     """
 
     edit_contract_version: Literal[1] = 1
-    baseline_id: ModeloEditBaselineId
+    baseline: ModeloEditBaselineV1
     address: ModeloEditScalarAddressV1
     input_kind: InputKind
     locale: OutputLanguage
@@ -717,6 +750,7 @@ __all__ = [
     "ModeloEditAdmittedV1",
     "ModeloEditApplyRequestV1",
     "ModeloEditBaselineV1",
+    "ModeloEditCasillaDataType",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCompatibilityTupleV1",
     "ModeloEditDomainRefusalV1",
