@@ -34,8 +34,8 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from ..errors import SedeNavigationError
 from .._walker import assert_landed_url_readable, assert_resumen_landing
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

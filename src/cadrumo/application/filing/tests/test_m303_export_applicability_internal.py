@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ast
-from inspect import signature
 from importlib import import_module
+from inspect import signature
 from pathlib import Path
 
 import pytest

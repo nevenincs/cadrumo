@@ -12,6 +12,8 @@ from typing import NamedTuple
 
 from pydantic import BaseModel
 
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind
 from ..core.config import Settings, load_settings
@@ -22,7 +24,6 @@ from .auth.operator_probes import bind_profile_auth_settings, probe_provider_cre
 from .auth.probes import ProviderProbeResult
 from .auth.providers import select_provider
 from .auth_credentials import ActiveCertificateCredentials
-from cadrumo.application.workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
 

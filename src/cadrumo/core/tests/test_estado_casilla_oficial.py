@@ -9,8 +9,8 @@ import pytest
 from ... import core
 from ...tests import modules_declaring_class
 from .. import EstadoCasillaOficial
-from ..directory_scan import DirectoryEntryKind, scan_directory
 from .. import _estado_casilla_oficial as owner
+from ..directory_scan import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

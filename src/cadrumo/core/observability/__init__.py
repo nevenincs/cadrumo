@@ -31,15 +31,6 @@ from ._context import (
     current_run_context,
     run_context,
 )
-from .errors import (
-    AeatCorpusDriftError,
-    CadrumoObservabilityError,
-    GoldenCaptureError,
-    GoldenReplayMismatchError,
-    RunContextMissingError,
-    RunTracePersistenceError,
-    RunTraceValidationError,
-)
 from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
@@ -92,6 +83,15 @@ from ._store import (
     save_envelope,
     save_events_append,
     save_trace,
+)
+from .errors import (
+    AeatCorpusDriftError,
+    CadrumoObservabilityError,
+    GoldenCaptureError,
+    GoldenReplayMismatchError,
+    RunContextMissingError,
+    RunTracePersistenceError,
+    RunTraceValidationError,
 )
 
 __all__ = [

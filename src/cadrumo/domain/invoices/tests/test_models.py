@@ -17,7 +17,6 @@ from .._enums import (
     iva_rate_slot_percentage,
     numeric_iva_rate_percentages,
 )
-from ..errors import InvoiceValidationError
 from .._models import (
     Invoice,
     InvoiceCatalogue,
@@ -25,6 +24,7 @@ from .._models import (
     _normalise_invoice_monetary_fields,
     derive_invoice_id,
 )
+from ..errors import InvoiceValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

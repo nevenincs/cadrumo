@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -142,6 +143,9 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="modelo",

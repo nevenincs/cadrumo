@@ -24,9 +24,14 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.renta_web_open_oracle import (
+    RentaWebOpenLivePayload,
+    RentaWebOpenSyntheticProfile,
+    serialize_renta_web_open_replay_decimal,
+)
+
 from ......core import CasillaId, validated_casilla_id
 from ......core.resources import bundled_path
-from cadrumo.domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile, serialize_renta_web_open_replay_decimal
 from ......tests.live_gate import requires_live_enabled
 from .._renta_web_open import collect_renta_web_open_observation
 

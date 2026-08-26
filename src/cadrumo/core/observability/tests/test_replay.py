@@ -26,8 +26,8 @@ import pytest
 
 from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory
-from ...directory_scan import scan_directory
 from ...config import Settings, override_settings
+from ...directory_scan import scan_directory
 from .. import (
     AeatCorpusDriftError,
     ArgumentRecord,

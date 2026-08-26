@@ -47,8 +47,8 @@ from ..application.aggregation import (
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
-from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..application.ledger.actions_manual import update_manual_transaction_fields
+from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.iva import IvaCategory
 from ..domain.modelos import (

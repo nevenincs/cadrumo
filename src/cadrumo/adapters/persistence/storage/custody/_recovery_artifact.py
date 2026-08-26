@@ -25,7 +25,6 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from .errors import ProfileCustodyRecordError
 from ._filesystem_primitives import (
     WindowsDirectoryAnchorErrors,
     windows_directory_anchor,
@@ -50,6 +49,7 @@ from ._recovery import (
     validate_profile_custody_dek_epoch,
 )
 from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
+from .errors import ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from .....core.config import Settings

@@ -118,15 +118,14 @@ def test_modelo_353_2021_design_revision_is_monthly_and_bounded() -> None:
     ("filing_year", "period", "revision_id"),
     [(2021, "01", "2021-2025"), (2025, "12", "2021-2025"), (2026, "02", "2026-desde-02")],
 )
-def test_modelo_353_proven_periods_select_their_exact_epoch(
-    filing_year: int, period: str, revision_id: str
-) -> None:
+def test_modelo_353_proven_periods_select_their_exact_epoch(filing_year: int, period: str, revision_id: str) -> None:
     modelo, _ = _load_modelo_353()
     assert select_revision(modelo, filing_year=filing_year, period=period).id == revision_id
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "period"), [(2015, "01"), (2020, "12"), (2026, "01"), (2027, "01")],
+    ("filing_year", "period"),
+    [(2015, "01"), (2020, "12"), (2026, "01"), (2027, "01")],
 )
 def test_modelo_353_unjoined_or_unproven_periods_refuse_selection(filing_year: int, period: str) -> None:
     modelo, _ = _load_modelo_353()

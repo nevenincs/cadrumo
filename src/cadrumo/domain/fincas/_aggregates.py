@@ -27,7 +27,6 @@ from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
 from ._amortization_ledger import compute_amortization_for_year
 from ._enums import ReduccionTier, UseType
-from .errors import FincaAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ._imputacion_parameters import load_imputacion_parameters
 from ._models import Arrendamiento, Finca
@@ -39,6 +38,7 @@ from ._repository_ports import (
     FincaRendimientoReader,
 )
 from ._tier_resolver import TierResolution, resolve_reduccion
+from .errors import FincaAggregationError
 
 _log = get_logger(__name__)
 

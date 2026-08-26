@@ -29,8 +29,8 @@ from ..modelo.calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
-    CalculationRouteManualOwnership,
     MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteManualOwnership,
 )
 from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
 

@@ -25,8 +25,8 @@ from pathlib import Path
 import pytest
 
 from ...core import build_provenance_stamp
-from ...core.directory_scan import scan_directory
 from ...core.config import LLMProvider
+from ...core.directory_scan import scan_directory
 from ...tests import non_test_package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

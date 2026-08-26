@@ -25,7 +25,6 @@ from ....core import PROSE_ELISION_MARKER
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._business_proportion import business_proportion
-from ..errors import AggregationPeriodError
 from .._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -33,6 +32,7 @@ from .._renta_ledger import (
     _renta_direction_for,
     _resolve_annual_period,
 )
+from ..errors import AggregationPeriodError
 from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

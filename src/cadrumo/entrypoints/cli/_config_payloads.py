@@ -396,7 +396,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
     manifest_digest: str
 
 
-class ConfigProfileRestoreResult(OutputSchema):
+class ConfigProfileArchiveImportResult(OutputSchema):
     """JSON envelope for ``aeat config profile restore``.
 
     Reports one completed restore of a capsule the operator held on disk.

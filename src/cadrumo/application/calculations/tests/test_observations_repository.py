@@ -20,12 +20,12 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ..errors import ObservationKeyError
 from .._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     observation_key,
 )
+from ..errors import ObservationKeyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

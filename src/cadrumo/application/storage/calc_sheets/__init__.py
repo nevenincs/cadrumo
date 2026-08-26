@@ -46,7 +46,6 @@ See Also:
 """
 
 from ._engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, collect_row_sets, registry_sha
-from .errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
 from ._evidence import sheet_evidence_from_ledger_filing
 from ._export_service import export_modelo_to_sheets
 from ._layout import BracketRanges, SheetLayout, plan_layout
@@ -106,6 +105,7 @@ from ._workbook_export import (
     serialize_offline_export,
     serialize_offline_workbook,
 )
+from .errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
 
 __all__ = [
     "CALC_SHEETS_ENGINE_VERSION",

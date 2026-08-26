@@ -449,7 +449,9 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         return _stable_dump(result.transaction), classified[0].payload["source_command"]
 
     direct_tx, direct_cmd = _run_in_fresh_profile(tmp_path / "direct", "4ad6f74a-2d46-4e6f-ae46-58bb910137a1", _direct)
-    workflow_tx, workflow_cmd = _run_in_fresh_profile(tmp_path / "workflow", "3e9f396c-0fd2-4357-9de3-0597d58893c3", _workflow)
+    workflow_tx, workflow_cmd = _run_in_fresh_profile(
+        tmp_path / "workflow", "3e9f396c-0fd2-4357-9de3-0597d58893c3", _workflow
+    )
 
     assert direct_tx == workflow_tx
     assert direct_cmd == workflow_cmd == origin.source_command
@@ -497,7 +499,11 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(tmp_path: Path) -
 
         return _run
 
-    direct = _run_in_fresh_profile(tmp_path / "split-direct", "f6b3236e-cc08-48f3-90f4-6a2dce620f79", _scenario(use_workflow=False))
-    workflow = _run_in_fresh_profile(tmp_path / "split-workflow", "bd6b0d50-aa23-487d-a27e-eedeb99d2f2f", _scenario(use_workflow=True))
+    direct = _run_in_fresh_profile(
+        tmp_path / "split-direct", "f6b3236e-cc08-48f3-90f4-6a2dce620f79", _scenario(use_workflow=False)
+    )
+    workflow = _run_in_fresh_profile(
+        tmp_path / "split-workflow", "bd6b0d50-aa23-487d-a27e-eedeb99d2f2f", _scenario(use_workflow=True)
+    )
 
     assert direct == workflow

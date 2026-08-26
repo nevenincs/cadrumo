@@ -15,8 +15,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ..filing_evidence import FilingEvidenceReference
-from .errors import IvaValidationError
 from ._schema import validate_orden_module_identities
+from .errors import IvaValidationError
 
 _Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _OfficialActivityName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]

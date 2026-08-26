@@ -57,9 +57,9 @@ from ...core import STRICT_FROZEN_CONFIG, read_toml
 from ...core.directory_scan import scan_directory
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
-from .errors import IvaCatalogueError
 from ._grounding import verify_table_legal_refs
 from ._supply_nature import SupplyNature
+from .errors import IvaCatalogueError
 
 __all__ = [
     "IvaPlaceOfSupplyRule",

@@ -625,7 +625,7 @@ def test_rule_two_ignores_ordinary_imports_from_the_canonical_prompt_surfaces() 
     modules = _synthetic_modules(
         {
             LINE_FRONTEND_MODULE: "import questionary\n\n\nclass LineFlowFrontend:\n    pass\n",
-        "application/flows/capability.py": (
+            "application/flows/capability.py": (
                 "def detect_frontend_capability():\n    return None\n\n\nNO_CONSOLE_ERRORS = (OSError,)\n"
             ),
             "application/flows/__init__.py": (

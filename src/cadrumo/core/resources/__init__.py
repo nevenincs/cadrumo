@@ -27,15 +27,15 @@ from ._boundary import (
     resolve_companion_binary,
     resolve_corpus_binary,
 )
+from ._keys import TypedResourceKey
+from ._registry import ResourceRegistry, resources
+from ._repository import ResourceCacheRepository, ResourceRepository
 from .errors import (
     ResourceBackendError,
     ResourceLoadError,
     ResourceNotFoundError,
     ResourceValidationError,
 )
-from ._keys import TypedResourceKey
-from ._registry import ResourceRegistry, resources
-from ._repository import ResourceCacheRepository, ResourceRepository
 
 __all__ = [
     "ResourceBackendError",

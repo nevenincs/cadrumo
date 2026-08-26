@@ -16,9 +16,10 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from ......core.config import Settings
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
+
+from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
@@ -26,7 +27,6 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from ..errors import SedeNavigationError
 from .._nif_iva_check import (
     _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
@@ -37,6 +37,7 @@ from .._nif_iva_check import (
     assert_nif_iva_read_landing,
     extract_verdict_from_response_text,
 )
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _AEAT = Settings.external_constants().aeat

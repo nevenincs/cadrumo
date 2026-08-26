@@ -22,8 +22,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+
+from ....core.resources import bundled_path
 from ....domain.filing import FilingExportValidationError
 from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import (

@@ -40,8 +40,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 
 from ..core import ActionEvidenceProvenance
 from ..core.config import LLMProvider, Settings
-from .errors import LLMConsentError
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .errors import LLMConsentError
 
 __all__ = [
     "EvidenceConsentToken",

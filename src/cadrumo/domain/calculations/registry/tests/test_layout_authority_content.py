@@ -29,7 +29,6 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from ..schema_references import SourceReference
 from .._validate_layout_authority_content import (
     _ANNEX_BLOCK,
     _ANNEX_HEADING,
@@ -37,6 +36,7 @@ from .._validate_layout_authority_content import (
     _carries_layout_content,
     validate_layout_authority_content,
 )
+from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

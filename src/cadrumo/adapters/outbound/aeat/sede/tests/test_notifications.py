@@ -13,10 +13,11 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
-from ......application.auth.session_types import AeatSession
-from ......core.config import Settings
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
+
+from ......application.auth.session_types import AeatSession
+from ......core.config import Settings
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import (
     NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,

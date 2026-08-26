@@ -8,8 +8,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, Period, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
+from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,

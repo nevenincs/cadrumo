@@ -135,7 +135,10 @@ def test_modelo_184_historical_filing_links_are_consumers_not_filing_capability(
     capability = revision_capability_probe(revision, modelo_id=modelo.id)
 
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert any(link.surface == "filing" and link.consumer == "cadrumo.application.filing" for link in revision.application_links)
+    assert any(
+        link.surface == "filing" and link.consumer == "cadrumo.application.filing"
+        for link in revision.application_links
+    )
     assert revision.export_layouts == ()
     assert not capability.has_fixed_width_export
     assert not capability.has_xml_dictionary_export
@@ -152,7 +155,10 @@ def test_modelo_184_parsed_epochs_retain_filing_links_and_layout_capability(revi
     capability = revision_capability_probe(revision, modelo_id=modelo.id)
 
     assert revision.authority_grade is RegistryAuthorityGrade.FILING
-    assert any(link.surface == "filing" and link.consumer == "cadrumo.application.filing" for link in revision.application_links)
+    assert any(
+        link.surface == "filing" and link.consumer == "cadrumo.application.filing"
+        for link in revision.application_links
+    )
     assert capability.has_fixed_width_export
 
 

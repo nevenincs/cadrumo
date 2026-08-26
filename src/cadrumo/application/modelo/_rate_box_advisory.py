@@ -31,11 +31,11 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.rate_box_partition import (
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_rate_box_coverage_diagnostics"]

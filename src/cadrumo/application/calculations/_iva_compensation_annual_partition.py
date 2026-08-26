@@ -25,18 +25,18 @@ from ...core import (
 )
 from ...core.logging import get_logger
 from ...core.time import now
+from ...domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    iva_compensation_annual_partition_requirement,
+)
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
-    iva_compensation_annual_partition_requirement,
-)
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,

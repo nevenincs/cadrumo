@@ -173,10 +173,10 @@ class LoginGatedVerb:
 #: was deleted with the surrounding block, and the principle survived nowhere.
 #: It is data now, and ``test_login_gated_verbs_never_exempt.py`` enforces it.
 #:
-#: The profile restore, export and import surface is being rebuilt. The first
-#: two paths below are the ones the operator-surface contract declares for it;
-#: a rename of the declared command reds the gate rather than silently retiring
-#: the refusal.
+#: The profile archive surface is `export` / `import` / `inspect`. The path
+#: below is the one the operator-surface contract declares for it; a rename of
+#: the declared command reds the gate rather than silently retiring the
+#: refusal.
 #:
 LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
     LoginGatedVerb(
@@ -187,14 +187,6 @@ LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
             "duplicate siblings do, which is why the refusal has to be recorded rather than "
             "merely observed: the reasoning that frees those siblings readmits this verb "
             "unless something says otherwise. Operator directive, 2026-08-03."
-        ),
-    ),
-    LoginGatedVerb(
-        verb_path="config profile export",
-        reason=(
-            "Same class as the archive export: its output is a copy of profile state leaving "
-            "the encrypted store, so it needs a currently-valid login and not merely the "
-            "ability to unlock the named target."
         ),
     ),
 )
@@ -212,7 +204,7 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         ),
     ),
     BootstrapExemption(
-        verb_path="config profile restore",
+        verb_path="config profile archive import",
         criterion=ExemptionCriterion.TORN_STATE_RECOVERY,
         note=(
             "Republishes a capsule the operator holds on disk after a disk failure or an "

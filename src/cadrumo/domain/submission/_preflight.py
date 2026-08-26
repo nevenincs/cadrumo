@@ -24,13 +24,13 @@ from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ...core.parsing import enum_value as _enum_value
-from .errors import SubmissionPreflightError
 from ._protocols import (
     AuthProviderProbe,
     DeadlineWindowChecker,
     ModeloDraftLike,
     ModeloDraftStatus,
 )
+from .errors import SubmissionPreflightError
 
 _logger = get_logger(__name__)
 

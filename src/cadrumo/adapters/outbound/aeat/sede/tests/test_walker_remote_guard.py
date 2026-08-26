@@ -30,8 +30,9 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.config import Settings
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
     AEAT_APEX_EVIL_SUFFIX_URL_CANARY,
     AEAT_APEX_NOT_PREFIX_URL_CANARY,

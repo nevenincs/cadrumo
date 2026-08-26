@@ -62,9 +62,9 @@ from ..core import LLM_EXTRA, ActionEvidenceProvenance, FieldOrigin, provenance_
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
-from .errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .errors import LLMConfigError
 
 __all__ = [
     "VISION_TRANSCRIPTION_PROMPT",

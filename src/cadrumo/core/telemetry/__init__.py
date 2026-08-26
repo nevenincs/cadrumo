@@ -47,7 +47,6 @@ from __future__ import annotations
 
 from ._consent import telemetry_emit_permitted
 from ._emit import LocalNoopTelemetrySink, TelemetrySink, emit_telemetry_event
-from .errors import TelemetrySchemaError
 from ._http_sink import HttpTelemetrySink
 from ._producers import (
     emit_command_invocation_telemetry,
@@ -63,6 +62,7 @@ from ._schema import (
 )
 from ._tier import TelemetryTier
 from ._workspace import workspace_hash
+from .errors import TelemetrySchemaError
 
 __all__ = [
     "TELEMETRY_METRIC_REGISTRY",

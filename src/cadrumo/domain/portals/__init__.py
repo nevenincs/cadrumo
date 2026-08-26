@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._entries._common import build_entry, portal_path
+from ._hosts import portal_host_name
 from .errors import (
     PortalIntegrityError,
     PortalRegistryError,
@@ -50,7 +51,6 @@ from .errors import (
     UnknownPortalError,
     portal_integrity_error,
 )
-from ._hosts import portal_host_name
 
 if TYPE_CHECKING:
     from ._drift import PortalDriftEvent, PortalDriftField, evaluate_portal_drift

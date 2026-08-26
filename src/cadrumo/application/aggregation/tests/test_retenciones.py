@@ -206,8 +206,8 @@ class TestAggregate111:
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from ..errors import AggregationUnsupportedModeloError
         from .._grouping import filter_observations_for_modelo
+        from ..errors import AggregationUnsupportedModeloError
 
         with pytest.raises(AggregationUnsupportedModeloError):
             filter_observations_for_modelo(

@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
+
 from ....domain.deadlines import (
     EntityType,
     IrpfIncomeCategory,
@@ -23,8 +24,8 @@ from ....domain.deadlines import (
     twelve_month_anniversary,
 )
 from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
-from ..errors import OverviewExplainError
 from .._explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
+from ..errors import OverviewExplainError
 from .calendar_test_support import profile as _autonomo_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

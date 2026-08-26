@@ -80,14 +80,14 @@ _DYNAMIC_DISPATCH_EXEMPTIONS: Final[Mapping[str, str]] = {
         "it end-to-end through that spawn. Retire when the worker body is "
         "reachable without the subprocess boundary."
     ),
-    "src/cadrumo/entrypoints/cli/_app_maintenance.py": (
+    "src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports.py": (
         "Typer subcommand registered through the same `_lazy(...)` dispatch; "
-        "exercised end-to-end by the maintenance export-reconcile CLI suite. "
+        "exercised end-to-end by the prepared-exports repair CLI suite. "
         "Retire when the command module is registered statically."
     ),
-    "src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py": (
+    "src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports_payloads.py": (
         "Response payload models reachable only through the dynamically "
-        "dispatched maintenance command module above, which the CLI suite "
+        "dispatched repair command module above, which the CLI suite "
         "drives. Retire when the owning command is registered statically."
     ),
     "src/cadrumo/entrypoints/cli/_app_quickfile.py": (

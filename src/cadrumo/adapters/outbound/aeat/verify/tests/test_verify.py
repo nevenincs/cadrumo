@@ -8,8 +8,9 @@ import pytest
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import Playwright
 
-from ......core.config import Settings
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ......core.config import Settings
 from ... import verify as verify_module
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import (

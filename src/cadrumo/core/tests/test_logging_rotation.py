@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from .. import logging as _logging_mod
-from ..directory_scan import scan_directory
 from ..config import override_settings
+from ..directory_scan import scan_directory
 from ..logging import configure_logging
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

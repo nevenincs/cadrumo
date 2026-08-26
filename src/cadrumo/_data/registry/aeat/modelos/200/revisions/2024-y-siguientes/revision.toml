@@ -58,8 +58,14 @@ legal_refs = [
     "ley-27-2014:art-105",
     "ley-27-2014:dt-44",
     "ley-49-2002:art-10",
+    "orden-hac-657-2025:modelo-200",
 ]
-orden_aplicabilidad = []
+# Orden HAC/657/2025 approves modelo 200 for "los periodos impositivos
+# iniciados entre el 1 de enero y el 31 de diciembre de 2024" -- this
+# revision's own ejercicio.
+orden_aplicabilidad = [
+    "orden-hac-657-2025:modelo-200",
+]
 source_refs = [
     "aeat-dr-200-2024",
     "aeat-modelo-200-manual-2024",

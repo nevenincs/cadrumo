@@ -28,8 +28,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
+
+from .....core.resources import bundled_path
 from ..record_design import _split_glued_naturaleza_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -42,8 +42,8 @@ from decimal import Decimal
 from typing import NamedTuple, Protocol
 
 from ...core import CasillaId, Period, PeriodKind
-from .errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
 from ._models import CasillaAggregation, CasillaProvenance
+from .errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
 
 
 class CumulativeWindow(NamedTuple):

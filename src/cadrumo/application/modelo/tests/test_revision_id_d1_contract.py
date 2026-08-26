@@ -45,11 +45,11 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitRevisionDivergenceError
+from .._work_lifecycle import create_work_unit
 from ..work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     resolve_registry_revision_for_work_target,
 )
-from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

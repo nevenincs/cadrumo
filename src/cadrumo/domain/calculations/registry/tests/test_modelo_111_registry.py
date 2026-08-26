@@ -6,10 +6,11 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from .....core.resources import bundled_path
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

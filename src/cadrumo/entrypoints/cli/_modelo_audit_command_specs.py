@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -135,6 +136,9 @@ MODELO_AUDIT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=_PATH,
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.audit.output_help"),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="force_incomplete",

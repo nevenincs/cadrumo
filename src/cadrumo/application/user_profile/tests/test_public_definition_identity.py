@@ -108,7 +108,10 @@ def test_public_module_inventory_is_complete_and_the_package_namespace_is_inert(
     assert actual == set(_PUBLIC_MODULE_NAMES)
 
     initializer = ast.parse((_PACKAGE_ROOT / "__init__.py").read_text(encoding="utf-8"))
-    assert not any(isinstance(node, ast.Import | ast.ImportFrom | ast.FunctionDef | ast.AsyncFunctionDef) for node in initializer.body)
+    assert not any(
+        isinstance(node, ast.Import | ast.ImportFrom | ast.FunctionDef | ast.AsyncFunctionDef)
+        for node in initializer.body
+    )
 
 
 @pytest.mark.parametrize("module", _PUBLIC_DEFINING_MODULES, ids=lambda module: module.__name__)

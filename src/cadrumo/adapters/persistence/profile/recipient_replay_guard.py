@@ -211,6 +211,7 @@ class RecipientReplayGuardRepository:
 
         return self._storage.mutate(_append_if_new, attempts=_CONSUME_RETRY_LIMIT)
 
+
 __all__ = [
     "ConsumedNonceLedger",
     "ConsumedNonceRecord",

@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
 from .....core.config import override_settings
+from .....core.directory_scan import scan_directory
 from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .. import LLMCache
 

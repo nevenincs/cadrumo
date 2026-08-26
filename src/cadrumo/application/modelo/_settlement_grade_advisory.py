@@ -41,8 +41,8 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["SETTLEMENT_SEMANTIC_ROLES", "collect_settlement_not_computed_diagnostics"]

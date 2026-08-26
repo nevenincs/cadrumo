@@ -68,12 +68,6 @@ See Also:
 from __future__ import annotations
 
 from ._enums import AttachmentKind, AttachmentSource, DocumentLinkSource
-from .errors import (
-    AttachmentError,
-    AttachmentNotFoundError,
-    AttachmentPersistenceError,
-    AttachmentValidationError,
-)
 from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type, normalize_media_type
 from ._protocols import AttachmentStoreProtocol
 from ._service import (
@@ -85,6 +79,12 @@ from ._service import (
     link_attachment_transaction,
     list_attachments,
     load_attachment,
+)
+from .errors import (
+    AttachmentError,
+    AttachmentNotFoundError,
+    AttachmentPersistenceError,
+    AttachmentValidationError,
 )
 
 __all__ = [

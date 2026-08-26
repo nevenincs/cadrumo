@@ -10,8 +10,6 @@ from pydantic import Field, model_validator
 
 from ....core.identity import ContentDigest
 from ....domain.iva import IaeEpigrafe
-from .errors import RegistryValidationError
-from .ids import SourceRefId
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_AGRICULTURAL_AXIS_COUNTS,
@@ -21,6 +19,8 @@ from ._m303_orden_constants import (
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
     EXPECTED_SEASONAL_INDEXES,
 )
+from .errors import RegistryValidationError
+from .ids import SourceRefId
 from .schema_base import RegistryModel
 
 

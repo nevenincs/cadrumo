@@ -44,9 +44,7 @@ def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
     assert "orden-hac-3625-2003:apartado-1" in modelo.legal_refs
     assert "orden-hac-3625-2003:apartado-3" in modelo.legal_refs
     assert "orden-hfp-1245-2022:art-unico" in modelo.legal_refs
-    assert {"aeat-dr-309-2004", "aeat-dr-309-2016", "aeat-dr-309-2018", "aeat-dr-309-2023"}.issubset(
-        modelo.source_refs
-    )
+    assert {"aeat-dr-309-2004", "aeat-dr-309-2016", "aeat-dr-309-2018", "aeat-dr-309-2023"}.issubset(modelo.source_refs)
     assert "aeat-dr-309-2023" in modelo.source_refs
     assert catalogues.sources["aeat-modelo-309-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-309-2003-form"].evidence_tier == "layout_authority"

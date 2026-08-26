@@ -26,7 +26,6 @@ from pydantic import ValidationError
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin, NoRecoveryOutcome
 from ...core.config import load_settings
-from ..errors import LLMConfigError, LLMValidationError
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
@@ -39,6 +38,7 @@ from .._invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from .._models import LLMProvider, LLMRequest
+from ..errors import LLMConfigError, LLMValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

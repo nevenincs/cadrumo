@@ -40,13 +40,6 @@ See Also:
         unconverted foreign rows instead of silently treating them as EUR.
 """
 
-from .errors import (
-    CurrencyError,
-    ExchangeRateProviderError,
-    MissingExchangeRateError,
-    StaleExchangeRateError,
-    UnsupportedCurrencyError,
-)
 from ._models import (
     CurrencyNormalizationStatus,
     FxConversionStamp,
@@ -54,6 +47,13 @@ from ._models import (
     NormalizedAmount,
 )
 from ._service import CurrencyNormalizationService, ExchangeRateProvider, resolve_fx_conversion_stamp
+from .errors import (
+    CurrencyError,
+    ExchangeRateProviderError,
+    MissingExchangeRateError,
+    StaleExchangeRateError,
+    UnsupportedCurrencyError,
+)
 
 __all__ = [
     "CurrencyError",

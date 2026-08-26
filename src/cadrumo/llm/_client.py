@@ -28,6 +28,7 @@ from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from ..core.time import now
 from ._consent import provider_reads_off_host
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .errors import (
     LLMBusyError,
     LLMCacheError,
@@ -36,7 +37,6 @@ from .errors import (
     LLMContentionError,
     LLMRateLimitError,
 )
-from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the

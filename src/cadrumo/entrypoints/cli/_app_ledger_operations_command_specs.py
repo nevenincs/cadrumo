@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
     _POLICY_2,
@@ -151,6 +152,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+                transport_locus=TransportLocus.REMOTE_HANDLE,
+                transport_shape=TransportShape.NOT_APPLICABLE,
+                transport_role=TransportRole.NOT_APPLICABLE,
             ),
             OptionSpec(
                 name="note",
@@ -310,6 +314,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="export_kind",
@@ -468,6 +475,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="provider",
@@ -532,6 +542,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="verbose",

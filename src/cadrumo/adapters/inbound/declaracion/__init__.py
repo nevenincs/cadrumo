@@ -51,13 +51,13 @@ See Also:
 
 from __future__ import annotations
 
-from .errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
     ExtractionWarning,
     InboundDeclaracionObservation,
     TemplateRevision,
 )
+from .errors import DeclaracionParseError, TemplateNotDetectedError
 
 __all__ = [
     "DeclaracionParseError",

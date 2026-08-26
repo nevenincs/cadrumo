@@ -46,7 +46,6 @@ from pathlib import Path
 
 import pytest
 
-from ..directory_scan import scan_directory
 from .._storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
@@ -54,6 +53,7 @@ from .._storage_taxonomy import (
     STORAGE_TAXONOMY,
 )
 from ..config import Settings
+from ..directory_scan import scan_directory
 from ._settings_path_fields import path_typed_settings_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

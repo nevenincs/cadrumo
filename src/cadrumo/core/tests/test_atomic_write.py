@@ -36,7 +36,6 @@ import pytest
 
 from ...tests.attribute_scope import scoped_attribute
 from .. import atomic_write
-from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..atomic_write import (
     _write_all,
     atomic_write_best_effort_bytes,
@@ -50,6 +49,7 @@ from ..atomic_write import (
     durable_write_batch,
     hardened_staged_publication,
 )
+from ..directory_scan import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

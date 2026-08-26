@@ -19,8 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from cadrumo.domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+
+from ....adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (

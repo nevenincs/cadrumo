@@ -17,9 +17,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....core import Modelo
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import (
     _reject_caller_overrides_of_source_bindings,

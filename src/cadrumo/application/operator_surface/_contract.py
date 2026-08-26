@@ -18,7 +18,6 @@ from functools import lru_cache
 from ...core import BindingSourceKind
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 from ._models import (
     LifecycleContract,
     ModeloLifecycleStep,
@@ -32,6 +31,7 @@ from ._models import (
     ServiceOwner,
     SourceKindAlias,
 )
+from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 
 LOGGER = get_logger(__name__)
 
@@ -70,7 +70,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "review",
             "quickfile",
             "diagnostics",
-            "maintenance",
         ),
     ),
 )
@@ -134,7 +133,11 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.CONFIG,
         child="repair",
-        operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
+        operator_question=(
+            "diagnose local configuration, logs, connectivity, and secure-object integrity, and "
+            "recover local state an interrupted operation left behind, including a profile-bundle "
+            "export whose crash left an unencrypted staged file on disk"
+        ),
         service_owner="cadrumo.application.diagnostics",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -255,17 +258,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "bucket; inspect and control the opt-in remote telemetry consent level"
         ),
         service_owner="cadrumo.application.diagnostics_run_health",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.MAINTENANCE,
-        root=RootSurfaceName.APP,
-        child="maintenance",
-        operator_question=(
-            "recover local state an interrupted operation left behind, including a "
-            "profile-bundle export whose crash left an unencrypted staged file on disk"
-        ),
-        service_owner="cadrumo.application.user_profile",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

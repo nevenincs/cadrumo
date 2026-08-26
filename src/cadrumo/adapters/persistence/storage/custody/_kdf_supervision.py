@@ -18,13 +18,6 @@ from .....core import StorageCategory, storage_path
 from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto import KEY_SIZE
-from .errors import (
-    ProfileCustodyPasswordError,
-    ProfileCustodyRecordError,
-    ProfileCustodyRecoverySecretError,
-    ProfileCustodyRefusal,
-    ProfileCustodyRefusedError,
-)
 from ._kdf_codec import (
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,
@@ -68,6 +61,13 @@ from ._records import (
 )
 from ._recovery_secret_codec import encode_recovery_secret
 from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
+from .errors import (
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
 
 if TYPE_CHECKING:
     from .....core.config import Settings

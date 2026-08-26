@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING, override
 
 from pydantic import field_validator
 
-from ..errors import ResourceValidationError
 from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
+from ..errors import ResourceValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator

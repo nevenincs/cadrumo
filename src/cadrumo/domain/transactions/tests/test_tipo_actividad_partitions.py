@@ -18,13 +18,13 @@ import pytest
 
 from ....core import IAE_SUBJECT_TIPOS_ACTIVIDAD, NON_IAE_SUBJECT_TIPOS_ACTIVIDAD, TipoActividad
 from ...deadlines import IrpfActivityKind
-from ..errors import TransactionValidationError
 from .._tipo_actividad_partitions import (
     _ART_95_SELECTORS,
     _code_set,
     irpf_activity_kind_for,
     load_tipo_actividad_selectors,
 )
+from ..errors import TransactionValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

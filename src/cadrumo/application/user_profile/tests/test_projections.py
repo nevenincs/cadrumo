@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+import cadrumo.application.wizard.catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from cadrumo.application.user_profile.projections import (
     facts_to_values,
     projection_for_taxpayer,
@@ -20,7 +21,6 @@ from ....domain.deadlines import (
     IVARegime,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-import cadrumo.application.wizard.catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -45,12 +45,6 @@ supported API.
 
 from __future__ import annotations
 
-from .errors import (
-    CensoRatioMismatchError,
-    UsageRatioError,
-    UsageRatioPersistenceError,
-    UsageRatioValidationError,
-)
 from ._model import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -63,6 +57,12 @@ from ._service import (
     derive_home_office_ratios_from_censo,
     usage_ratio_bucket_lock,
     usage_ratios_object_key,
+)
+from .errors import (
+    CensoRatioMismatchError,
+    UsageRatioError,
+    UsageRatioPersistenceError,
+    UsageRatioValidationError,
 )
 
 __all__ = [

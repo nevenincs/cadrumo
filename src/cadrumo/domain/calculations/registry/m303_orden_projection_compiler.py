@@ -19,8 +19,6 @@ from ....domain.iva import (
     PorcentajeIngresoCuentaIaeOrdenAnual,
     ReduccionLorcaOrdenAnual,
 )
-from .errors import RegistryValidationError
-from .ids import LegalRefId, RevisionId, SourceRefId
 from ._m303_orden_keys import (
     activity_legal_key,
     agricultural_index_legal_key,
@@ -31,6 +29,8 @@ from ._m303_orden_keys import (
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
+from .errors import RegistryValidationError
+from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_projection_models import M303AnnualOrdenProjection
 from .m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 from .m303_orden_source import annual_orden_raw_activity_identity

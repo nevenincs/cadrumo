@@ -30,7 +30,6 @@ from __future__ import annotations
 import pytest
 
 from ....domain.iva import InvoiceKind
-from ..errors import FilterParseError
 from .._filter import (
     FilterClause,
     InvoiceReviewFilterKey,
@@ -40,6 +39,7 @@ from .._filter import (
     _ensure_unique_keys,
     _enum_value_or_raise,
 )
+from ..errors import FilterParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

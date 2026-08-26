@@ -17,9 +17,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from .....core import Period
 from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 if TYPE_CHECKING:

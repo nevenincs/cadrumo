@@ -745,8 +745,8 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
             outside the closed set, or cites a provision that does not resolve
             to the bundled legal text it claims.
     """
-    from .errors import IvaCatalogueError
     from ._grounding import verify_table_legal_refs
+    from .errors import IvaCatalogueError
 
     target = bundled_path("registry", "aeat", "iva", "territories.toml")
     try:

@@ -19,7 +19,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ..errors import BucketEventValidationError
 from .._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -28,6 +27,7 @@ from .._event import (
     derive_bucket_event_id,
 )
 from .._event_repository import append_bucket_event
+from ..errors import BucketEventValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

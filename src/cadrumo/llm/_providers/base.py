@@ -19,9 +19,9 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...core import ActionEvidenceProvenance
-from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from .._models import LLMProvider, MultimodalImageInput
 from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 
 if TYPE_CHECKING:
     from logging import Logger

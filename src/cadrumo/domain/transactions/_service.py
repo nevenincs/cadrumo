@@ -19,8 +19,8 @@ from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ._enums import BusinessClassification
-from .errors import TransactionCatalogueError, TransactionNotFoundError
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from .errors import TransactionCatalogueError, TransactionNotFoundError
 
 _LOGGER = get_logger(__name__)
 

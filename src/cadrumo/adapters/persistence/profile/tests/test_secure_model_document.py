@@ -64,6 +64,7 @@ def _document(identifier: str) -> AssetsLedgerDocument:
         ),
     )
 
+
 def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_bytes(tmp_path: Path) -> None:
     """The shared kernel never creates a plaintext model or an ungoverned row."""
     document = _document("kernel-canary")

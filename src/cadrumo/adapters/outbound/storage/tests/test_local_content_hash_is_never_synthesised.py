@@ -28,8 +28,8 @@ import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, iter_directory
 from .....core.hashing import sha256_hex
-from ..errors import OutboundStorageIntegrityError, OutboundStorageValidationError
 from .._local import LocalFileSystemProvider
+from ..errors import OutboundStorageIntegrityError, OutboundStorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

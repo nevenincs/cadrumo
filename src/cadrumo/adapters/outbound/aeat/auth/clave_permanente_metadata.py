@@ -75,4 +75,3 @@ __all__ = [
     "AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION",
     "ClavePermanenteSessionMetadata",
 ]
-

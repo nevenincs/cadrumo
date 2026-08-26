@@ -71,10 +71,10 @@ def _login() -> App[Any]:
 
 
 def _manager() -> App[Any]:
-    from ....application.user_profile.profile_repository import CommittedProfileRepository
-    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
     from ....application.user_profile.overview import build_profile_overview
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ....application.user_profile.profile_repository import CommittedProfileRepository
     from ....core.bucket_pointer import require_active_bucket_id
     from ....entrypoints.tui.profile.overview import ProfileManagerApp
 

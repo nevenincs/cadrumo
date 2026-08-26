@@ -34,19 +34,19 @@ from types import MappingProxyType
 
 from ...core import CasillaId
 from ...core.aggregation import BindingSourceKind
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
+from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.iva_wallet_relation_targets import iva_wallet_owned_binding_ids_for_revision
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ...domain.calculations.registry.casilla_membership import casillas_by_id
-from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
-from ...domain.calculations.registry.iva_wallet_relation_targets import iva_wallet_owned_binding_ids_for_revision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import WorkUnit
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ..aggregation import (

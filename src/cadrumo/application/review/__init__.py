@@ -72,7 +72,6 @@ if TYPE_CHECKING:
         reserved_kind_reason,
         severity_rank,
     )
-    from .errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
     from ._filter import (
         DeclaracionReviewFilterKey,
         DeclaracionReviewFilterSpec,
@@ -103,6 +102,7 @@ if TYPE_CHECKING:
         project_review_item,
         project_review_queue,
     )
+    from .errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
 
 
 #: Public name -> owning submodule, resolved on first attribute access.

@@ -15,8 +15,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.errors import resolve_error_message
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ....core.errors import resolve_error_message
 from .._calculate_input import ModeloCalculateDecimalInputError, _decimal_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

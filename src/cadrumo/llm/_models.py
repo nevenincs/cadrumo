@@ -33,8 +33,8 @@ from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
 from ..core.identity import ContentDigest
 from ._consent import EvidenceConsentToken
-from .errors import LLMValidationError
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .errors import LLMValidationError
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, Modelo
-from cadrumo.domain.calculations.registry.handoff_paths import audit_registry_handoff_paths
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.handoff_paths import audit_registry_handoff_paths
+
+from .....core import BindingSourceKind, Modelo
 from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

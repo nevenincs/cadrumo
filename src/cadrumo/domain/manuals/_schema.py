@@ -19,10 +19,11 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ...core import CasillaId, Hex64Str
 from cadrumo.domain.calculations.registry.ids import ModeloId
-from .errors import ManualValidationError
+
+from ...core import CasillaId, Hex64Str
 from ._ids import ManualId, ManualPart
+from .errors import ManualValidationError
 
 _StableId = Annotated[
     str,

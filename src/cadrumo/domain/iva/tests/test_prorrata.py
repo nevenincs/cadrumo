@@ -25,7 +25,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
-from ..errors import ProrrataInputError, ProrrataSectorError
 from .._prorrata import (
     InputClassification,
     ProrrataInputDeduction,
@@ -44,6 +43,7 @@ from .._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
+from ..errors import ProrrataInputError, ProrrataSectorError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -21,6 +21,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from ..ledger_binding_resolution import (
     assert_quantity_readers_cover_independent_facts,
     independent_quantity_facts,

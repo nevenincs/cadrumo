@@ -7,9 +7,13 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from cadrumo.domain.calculations.registry.renta_web_open_oracle import (
+    RentaWebOpenLivePayload,
+    equivalent_renta_web_open_value,
+)
+
 from ......core import CasillaId, validated_casilla_id
 from ......core.config import Settings
-from cadrumo.domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload, equivalent_renta_web_open_value
 from ......tests.aeat_literal_fixtures import (
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
@@ -17,7 +21,6 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from ..._playwright import PlaywrightTimeoutError
-from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._renta_web_open import (
     RentaWebOpenSedeDriver,
     _playwright_stage,
@@ -25,6 +28,7 @@ from .._renta_web_open import (
     assert_renta_web_open_read_landing,
     extract_renta_web_open_summary_value,
 )
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

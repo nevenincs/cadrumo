@@ -47,9 +47,9 @@ from decimal import Decimal
 from typing import Final
 
 from ...core import CasillaId, Modelo, validated_casilla_id
-from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.period_offset_math import same_ejercicio_prior_quarter_anchors
+from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic, casilla_registry_legal_refs
 from ..calculations import CalculationObservationRepository
 

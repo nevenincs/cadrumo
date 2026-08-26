@@ -14,8 +14,8 @@ domain package depends only on the structural port.
 from __future__ import annotations
 
 from ...core.logging import get_logger
-from .errors import ModeloError
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
+from .errors import ModeloError
 
 _LOGGER = get_logger(__name__)
 _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"

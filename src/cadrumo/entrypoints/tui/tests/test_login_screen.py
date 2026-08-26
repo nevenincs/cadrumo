@@ -20,9 +20,9 @@ import asyncio
 import pytest
 from textual.widgets import Button, Input, Select
 
+from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.app import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root

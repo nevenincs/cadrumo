@@ -19,8 +19,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+
+from ....core import Period
 from .._plazo import resolve_filing_closes_on
 from .._recargo import (
     build_recovery_for_overdue,

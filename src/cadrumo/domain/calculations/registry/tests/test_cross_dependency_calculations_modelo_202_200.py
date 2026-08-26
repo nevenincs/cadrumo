@@ -6,8 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
+from .....core import RegistryAuthorityGrade
 from ..relations import relation_source_requirements, resolve_relation_values_from_observations
 from ..schema import RegistrySnapshot
 from ._cross_dependency_calculation_support import (

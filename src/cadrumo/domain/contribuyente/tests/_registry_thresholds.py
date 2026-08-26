@@ -27,11 +27,12 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from ....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ....core.resources import bundled_path
 from .. import MinimoDescendientesThresholds
 
 __all__ = [

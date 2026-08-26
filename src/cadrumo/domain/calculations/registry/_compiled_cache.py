@@ -50,9 +50,9 @@ from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel
 
-from ....core.directory_scan import iter_directory, scan_directory
 from ....core.aggregation import BindingSourceKind
 from ....core.atomic_write import atomic_write_best_effort_bytes
+from ....core.directory_scan import iter_directory, scan_directory
 from ....core.hashing import sha256_hex
 from ....core.paths import select_filesystem_retention_survivors
 from .bindings import selector_model_for_source

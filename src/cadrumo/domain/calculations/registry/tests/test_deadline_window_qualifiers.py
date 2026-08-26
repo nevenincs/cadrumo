@@ -7,9 +7,10 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
+
+from .....core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

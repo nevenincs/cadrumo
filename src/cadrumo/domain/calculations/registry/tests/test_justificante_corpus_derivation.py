@@ -19,9 +19,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

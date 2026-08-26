@@ -22,8 +22,8 @@ from ...core.time import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
-from .errors import ReviewError
 from ._models import InvoiceReviewItem, ReviewItem, TransactionReviewItem
+from .errors import ReviewError
 
 
 class ReviewQueueRow(BaseModel):

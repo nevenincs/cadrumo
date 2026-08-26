@@ -25,8 +25,8 @@ from pydantic import ValidationError
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, XLSX_MIME_TYPE
 from ....core.hashing import sha256_hex
 from .. import ExportSerializationFormat, TabularExportResult, serialize_tabular_rows
-from ..errors import ExportFieldError
 from .._tabular import verify_export_metadata
+from ..errors import ExportFieldError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -95,9 +95,7 @@ def test_edit_path_returns_the_updated_record(isolated_profile: TestRuntimeProfi
 
     # Sparse persisted facts leave optional answers unknown, so the production
     # door asks them before review. Then edit row 2 (the birth date) and submit.
-    _state, projection, edited, _output = _run(
-        _resume_missing_optional_answers() + "\x1b[B\r2\r\x152021-02-02\r\r"
-    )
+    _state, projection, edited, _output = _run(_resume_missing_optional_answers() + "\x1b[B\r2\r\x152021-02-02\r\r")
 
     assert projection.submit_eligible
     assert _facts(edited)["renta_family.descendiente.0.birth_date"] == "2021-02-02"
@@ -110,9 +108,7 @@ def test_restart_shrink_returns_a_record_without_orphaned_rows(isolated_profile:
     # Complete sparse optional answers -> review -> restart -> confirm ->
     # count zero -> submit. The second run proves the writer clears orphaned
     # indexed facts from the record currently stored by the first run.
-    _state, projection, shrunk, _output = _run(
-        _resume_missing_optional_answers() + "\x1b[B\x1b[B\ry\r0\r\r"
-    )
+    _state, projection, shrunk, _output = _run(_resume_missing_optional_answers() + "\x1b[B\x1b[B\ry\r0\r\r")
 
     facts = _facts(shrunk)
     assert projection.submit_eligible

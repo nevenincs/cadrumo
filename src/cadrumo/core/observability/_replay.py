@@ -17,10 +17,10 @@ from collections.abc import Callable
 
 from ..config import Settings
 from ..product_identity import PRODUCT_IDENTITY
-from .errors import AeatCorpusDriftError, CadrumoObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace
+from .errors import AeatCorpusDriftError, CadrumoObservabilityError
 
 # Marker environment variable set for the duration of ``replay_run``'s
 # re-entered CLI call so run_context can label the child trace.

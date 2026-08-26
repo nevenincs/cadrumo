@@ -17,6 +17,7 @@ from ...core import Modelo
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now, today_madrid
+
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
 # this module does not trigger the ~870ms ValidatedRegistryAuthority

@@ -55,7 +55,6 @@ from __future__ import annotations
 # inversion -- the registry never imports renta). Imported for the
 # registration side effect; no symbols are re-exported.
 from . import _first_slice_routing_integrity as _first_slice_routing_integrity
-from .errors import RentaValidationError
 from ._ledger_expenses import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
@@ -98,6 +97,7 @@ from ._retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
 )
 from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
+from .errors import RentaValidationError
 
 __all__ = [
     "ART_7P_EXEMPTION_CAP_EUR",

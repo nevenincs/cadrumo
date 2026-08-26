@@ -63,4 +63,3 @@ __all__ = [
     "AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION",
     "ClaveMovilSessionMetadata",
 ]
-

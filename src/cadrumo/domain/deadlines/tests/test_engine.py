@@ -7,10 +7,14 @@ from datetime import date
 
 import pytest
 
-from ....core import Modelo, Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
+from cadrumo.domain.calculations.registry.deadline_coordinate import (
+    DeadlineSemanticCoordinate,
+    deadline_semantic_coordinate,
+)
 from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
+
+from ....core import Modelo, Period
 from .. import (
     DeadlineEngine,
     IrpfEstimationRegime,

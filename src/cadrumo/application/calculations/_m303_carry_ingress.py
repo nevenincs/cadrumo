@@ -17,10 +17,10 @@ from ...core import Modelo, ResultDisposition, result_disposition_is_refund
 from ...core.errors import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
-from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -37,14 +37,14 @@ if TYPE_CHECKING:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
-from .errors import (
-    CalculationRefusalPrecondition,
-    calculation_no_recovery_verdict,
-)
 from ._observations_repository import (
     ObservationEnvelopePayload,
     ObservationSourceKind,
     ResultDispositionProjection,
+)
+from .errors import (
+    CalculationRefusalPrecondition,
+    calculation_no_recovery_verdict,
 )
 
 M303_DECLARATION_TYPE_HEADER_KEY = "declaration_type"

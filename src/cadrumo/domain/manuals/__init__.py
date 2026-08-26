@@ -54,14 +54,6 @@ Examples:
 
 from __future__ import annotations
 
-from .errors import (
-    ManifestError,
-    ManualError,
-    ManualNotFoundError,
-    ManualParseError,
-    ManualReviewRequiredError,
-    RuleExtractionError,
-)
 from ._fetch import (
     PART_SPECS,
     FetchResult,
@@ -97,6 +89,14 @@ from ._schema import (
     Section,
     SectionRef,
     SectionSource,
+)
+from .errors import (
+    ManifestError,
+    ManualError,
+    ManualNotFoundError,
+    ManualParseError,
+    ManualReviewRequiredError,
+    RuleExtractionError,
 )
 from .verify import (
     ManualVerificationIssue,

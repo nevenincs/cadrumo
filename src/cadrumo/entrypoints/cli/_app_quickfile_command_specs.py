@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     CommandSpec,
     DeferredTarget,
@@ -38,6 +39,9 @@ def _option(
     required: bool = False,
     default: str | tuple[str, ...] | None = None,
     multiple: bool = False,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name,
@@ -46,6 +50,9 @@ def _option(
         ParameterDefault.required() if required else ParameterDefault.value(default),
         TranslationKey(help_key),
         multiple=multiple,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -67,7 +74,15 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("modelo", ("--modelo",), _STR, "cli.app.modelo.work.modelo_help", required=True),
             _option("year", ("--year",), _INT, "cli.app.modelo.work.year_help", required=True),
             _option("period", ("--period",), _STR, "cli.app.modelo.work.period_help", required=True),
-            _option("output", ("--output",), _PATH, "cli.app.modelo.export.output_help"),
+            _option(
+                "output",
+                ("--output",),
+                _PATH,
+                "cli.app.modelo.export.output_help",
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
             _option("revision", ("--revision",), _STR, "cli.app.modelo.work.revision_help"),
             _option("bucket_id", ("--bucket-id",), _STR, "cli.app.modelo.work.bucket_id_help"),
             _option("casilla", ("--casilla",), _STR, "cli.app.modelo.work.casilla_help", multiple=True),
@@ -101,6 +116,9 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--m303-filing-evidence",),
                 _PATH,
                 "cli.app.modelo.work.m303_filing_evidence_help",
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             _option(
                 "output_language",

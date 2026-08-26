@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -19,9 +20,6 @@ from .._command_spec import (
     ValueContract,
 )
 from ._spec_policies import (
-    GOOGLE_CALCULATION_HANDOFF,
-    GOOGLE_CALCULATION_READ,
-    GOOGLE_CALCULATION_WRITE,
     GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
     GOOGLE_WRITE,
@@ -79,6 +77,9 @@ def _option(
     multiple: bool = False,
     minimum: int | None = None,
     maximum: int | None = None,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name=name,
@@ -90,6 +91,9 @@ def _option(
         flag_value=True if flag else None,
         multiple=multiple,
         constraint=ParameterConstraint(minimum=minimum, maximum=maximum),
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -120,27 +124,6 @@ def _leaf(
     )
 
 
-_MODELO = _option("modelo", ("--modelo",), _STR, "cli.config.google.sync.calc.export.modelo_help", required=True)
-_PERIOD = _option("period", ("--period",), _STR, "cli.config.google.sync.calc.export.period_help", required=True)
-_YEAR = _option(
-    "year",
-    ("--year",),
-    _INT,
-    "cli.config.google.sync.calc.export.year_help",
-    required=True,
-    minimum=2000,
-    maximum=2099,
-)
-_SPREADSHEET_ID = _option(
-    "spreadsheet_id",
-    ("--spreadsheet-id",),
-    _STR,
-    "cli.config.google.sync.calc.pull.spreadsheet_id_help",
-    required=True,
-    minimum=1,
-)
-
-
 GOOGLE_COMMAND_SPECS = (
     _group("config_google", "config", "google", "cli.config.google.help"),
     _leaf(
@@ -153,7 +136,18 @@ GOOGLE_COMMAND_SPECS = (
         "_google_payloads",
         "GoogleRegisterResult",
         GOOGLE_WRITE,
-        (_option("client_json", ("--client-json",), _PATH, "cli.config.google.client_json_help", required=True),),
+        (
+            _option(
+                "client_json",
+                ("--client-json",),
+                _PATH,
+                "cli.config.google.client_json_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+        ),
     ),
     _leaf(
         "config_google_login",
@@ -268,7 +262,13 @@ GOOGLE_COMMAND_SPECS = (
         GOOGLE_WRITE,
         (
             ArgumentSpec(
-                "folder_id", _STR, ParameterDefault.required(), _key("cli.config.google.folder.folder_id_help")
+                "folder_id",
+                _STR,
+                ParameterDefault.required(),
+                _key("cli.config.google.folder.folder_id_help"),
+                transport_locus=TransportLocus.REMOTE_HANDLE,
+                transport_shape=TransportShape.NOT_APPLICABLE,
+                transport_role=TransportRole.NOT_APPLICABLE,
             ),
         ),
     ),
@@ -325,105 +325,6 @@ GOOGLE_COMMAND_SPECS = (
                 "cli.config.google.sync.push_dry_run_help",
                 default=False,
                 flag=True,
-            ),
-        ),
-    ),
-    _group("config_google_sync_calc", "config_google_sync", "calc", "cli.config.google.sync.calc.help"),
-    _leaf(
-        "config_google_sync_calc_export",
-        "config_google_sync_calc",
-        "export",
-        "cli.config.google.sync.calc.export_help",
-        "_google_sync_calc",
-        "google_sync_calc_export",
-        "_google_payloads",
-        "GoogleSyncCalcExportResult",
-        GOOGLE_CALCULATION_HANDOFF,
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _option(
-                "prefill_relations",
-                ("--prefill-relations/--no-prefill-relations",),
-                _BOOL,
-                "cli.config.google.sync.calc.export.prefill_relations_help",
-                default=False,
-                flag=True,
-            ),
-            _option(
-                "dry_run",
-                ("--dry-run",),
-                _BOOL,
-                "cli.config.google.sync.calc.export.dry_run_help",
-                default=False,
-                flag=True,
-            ),
-        ),
-    ),
-    _leaf(
-        "config_google_sync_calc_verify",
-        "config_google_sync_calc",
-        "verify",
-        "cli.config.google.sync.calc.verify_help",
-        "_google_sync_calc",
-        "google_sync_calc_verify",
-        "_google_payloads",
-        "GoogleSyncCalcVerifyResult",
-        GOOGLE_CALCULATION_READ,
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _option("scenario_path", ("--scenario",), _PATH, "cli.config.google.sync.calc.verify.scenario_help"),
-        ),
-    ),
-    _leaf(
-        "config_google_sync_calc_pull",
-        "config_google_sync_calc",
-        "pull",
-        "cli.config.google.sync.calc.pull_help",
-        "_google_sync_calc",
-        "google_sync_calc_pull",
-        "_google_payloads",
-        "GoogleSyncCalcPullResult",
-        GOOGLE_CALCULATION_WRITE,
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _SPREADSHEET_ID,
-            _option(
-                "assemble_observations",
-                ("--assemble-observations/--no-assemble-observations",),
-                _BOOL,
-                "cli.config.google.sync.calc.pull.assemble_observations_help",
-                default=False,
-                flag=True,
-            ),
-        ),
-    ),
-    _leaf(
-        "config_google_sync_calc_compute",
-        "config_google_sync_calc",
-        "compute",
-        "cli.config.google.sync.calc.compute_help",
-        "_google_sync_calc",
-        "google_sync_calc_compute",
-        "_google_payloads",
-        "GoogleSyncCalcComputeResult",
-        GOOGLE_CALCULATION_WRITE,
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _option(
-                "spreadsheet_id",
-                ("--spreadsheet-id",),
-                _STR,
-                "cli.config.google.sync.calc.compute.spreadsheet_id_help",
-                required=True,
-                minimum=1,
             ),
         ),
     ),

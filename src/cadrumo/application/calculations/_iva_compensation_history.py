@@ -47,9 +47,9 @@ from ...core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance,
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import bundled_path
 from ...core.time import now
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
     IvaCompensationCasillaReferenceError,
@@ -60,7 +60,6 @@ from ...domain.iva_compensation import (
     derive_iva_compensation_year_end_carry_partition,
     iva_compensation_period_sort_key,
 )
-from .errors import IvaCompensationModeloError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )
@@ -90,6 +89,7 @@ from ._iva_compensation_casillas import (
 )
 from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._ports import FiledDeclaracionObservationProtocol
+from .errors import IvaCompensationModeloError
 
 _ZERO = Decimal("0")
 

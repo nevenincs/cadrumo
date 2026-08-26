@@ -65,7 +65,6 @@ if TYPE_CHECKING:
         event_suffix_for,
     )
     from ._crud_registry import BUILTIN_CRUD_CATALOGUE, get_builtin_catalogue
-    from .errors import OperatorSurfaceContractError
     from ._help import build_help_document, build_root_landing_report, render_help_text, render_root_landing_text
     from ._help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
     from ._manifest import (
@@ -103,6 +102,7 @@ if TYPE_CHECKING:
         ServiceOwner,
         SourceKindAlias,
     )
+    from .errors import OperatorSurfaceContractError
 
 __all__ = [
     "ACCEPTED_ROOTS",

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import pytest
 
-from ..errors import TransactionError
 from .._model_tier import (
     MINIMUM_CLASSIFICATION_TIER,
     ModelCapability,
@@ -19,6 +18,7 @@ from .._model_tier import (
     profiles_for_provider,
     resolve_profile,
 )
+from ..errors import TransactionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

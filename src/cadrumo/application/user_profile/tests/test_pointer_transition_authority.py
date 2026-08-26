@@ -111,10 +111,7 @@ def test_only_the_transaction_owner_calls_the_low_level_pointer_writer() -> None
         source
         for source in source_root.rglob("*.py")
         if "tests" not in source.parts
-        and any(
-            line.lstrip().startswith("write_pointer(")
-            for line in source.read_text(encoding="utf-8").splitlines()
-        )
+        and any(line.lstrip().startswith("write_pointer(") for line in source.read_text(encoding="utf-8").splitlines())
     }
 
     assert transaction_source in writer_callers

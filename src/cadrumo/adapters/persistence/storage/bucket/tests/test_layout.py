@@ -33,11 +33,11 @@ from pydantic import ValidationError
 from ......core import StorageCategory, storage_location
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
 from ......tests.bucket_layout import provision_bucket_directory
-from ..errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 from .._layout import (
     BucketPaths,
     bucket_paths,
 )
+from ..errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
 from .. import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 

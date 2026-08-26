@@ -65,9 +65,9 @@ from ...domain.transactions import (
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
-from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
+from .errors import AggregationPeriodError, AggregationValidationError, t
 
 # The Modelo 151 base liquidable general (régimen impatriados, excluida la parte
 # del ahorro). The impatriado income aggregation folds Spanish-source income into

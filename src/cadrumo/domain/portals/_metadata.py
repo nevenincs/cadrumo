@@ -17,8 +17,8 @@ from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
-from .errors import PortalValidationError
 from ._hosts import portal_host_name
+from .errors import PortalValidationError
 
 
 @lru_cache(maxsize=1)

@@ -17,7 +17,6 @@ from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
-from ..errors import ProrrataInputError
 from .._prorrata import (
     ProrrataInputs,
     ProrrataKind,
@@ -25,6 +24,7 @@ from .._prorrata import (
     compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
 )
+from ..errors import ProrrataInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -13,8 +13,8 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.custody import profile_session_path
-from ...core.directory_scan import iter_directory, scan_directory
 from ...core.bucket_pointer import read_pointer
+from ...core.directory_scan import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

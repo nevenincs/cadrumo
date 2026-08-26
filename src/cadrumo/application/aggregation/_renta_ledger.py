@@ -79,12 +79,12 @@ from ._currency_predicates import (
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
-from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     relies_on_activity_marker,
     renta_expense_business_proportion,
 )
+from .errors import AggregationPeriodError, AggregationValidationError, t
 
 _LEDGER_CATALOGUE_ID = "ledger"
 

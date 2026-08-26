@@ -18,8 +18,8 @@ import pytest
 
 from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory, storage_path
-from ...directory_scan import scan_directory
 from ...config import override_settings
+from ...directory_scan import scan_directory
 from .. import (
     GenericPayload,
     RunEventKind,

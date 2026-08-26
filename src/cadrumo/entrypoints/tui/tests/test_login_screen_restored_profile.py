@@ -15,14 +15,14 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
-from ....application.user_profile.login_session import logout_active_profile
-from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.capsule_restore import restore_profile_from_source_with_password
 from ....application.user_profile.login_interaction import (
     ProfileLoginChoice,
     attempt_profile_login,
     profile_login_choices,
 )
+from ....application.user_profile.login_session import logout_active_profile
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....entrypoints.tui.secret.app import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root
 

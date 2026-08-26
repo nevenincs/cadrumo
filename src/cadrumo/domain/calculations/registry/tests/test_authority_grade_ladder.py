@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 
 from .....core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition
-from ..loader import load_registry_tree
 from .._schema_family_coverage import build_revision_coverage_manifest
 from .._validate_authority_grade import validate_authority_grade_section
+from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

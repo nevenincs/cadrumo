@@ -17,8 +17,8 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.classification import SensitivityClass
+from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path

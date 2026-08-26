@@ -53,10 +53,6 @@ def test_available_bound_input_projector_is_the_sole_resolver_surface() -> None:
     """Keep one public projector and prevent the strict dead surface returning."""
     production_paths = _production_python_paths()
 
-    assert _resolver_definitions(production_paths) == (
-        ("bindings.py", "resolve_available_bound_inputs_by_casilla_id"),
-    )
+    assert _resolver_definitions(production_paths) == (("bindings.py", "resolve_available_bound_inputs_by_casilla_id"),)
     assert _retired_imports(production_paths) == ()
-    assert resolve_available_bound_inputs_by_casilla_id.__module__ == (
-        "cadrumo.domain.calculations.registry.bindings"
-    )
+    assert resolve_available_bound_inputs_by_casilla_id.__module__ == ("cadrumo.domain.calculations.registry.bindings")

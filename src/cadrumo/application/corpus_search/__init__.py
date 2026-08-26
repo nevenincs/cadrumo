@@ -21,10 +21,6 @@ documentation, never a runtime the product carries.
 from __future__ import annotations
 
 from ._citation_lookup import CitationLookup, bundled_citation_lookup
-from .errors import (
-    CorpusSearchError,
-    CorpusSearchInputError,
-)
 from ._lexical_index import (
     build_lexical_index,
     bundled_corpus_html_root,
@@ -57,6 +53,10 @@ from ._terminology import (
     load_terminology_concepts,
     lookup_terminology,
     search_terminology,
+)
+from .errors import (
+    CorpusSearchError,
+    CorpusSearchInputError,
 )
 
 __all__ = [
