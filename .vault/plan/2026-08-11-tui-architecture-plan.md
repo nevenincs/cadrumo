@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:9769e8a95010d87c5b57f1fbac85b7d9f9950ff1046a4ff1e8102332e26f3ed0'
+body_hash: 'sha256:0fcf66be7554ca5a63ca26a1791ddeed4bf870e7755bb34ef87214bc31085e3d'
 ---
 
 # `tui-architecture` plan
@@ -258,10 +258,10 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S246` - Prove temporal remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `W03.P20.S247` - Privatize the validate implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate.py`.
 - [x] `W03.P20.S248` - Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_cross_revision.py`.
-- [ ] `W03.P20.S249` - Privatize the validate_references implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_references.py`.
+- [x] `W03.P20.S249` - Privatize the validate_references implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_references.py`.
 - [x] `W03.P20.S250` - Prove validate_registry_scope remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_registry_scope.py`.
 - [x] `W03.P20.S251` - Prove validate_revision_identity remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_revision_identity.py`.
-- [ ] `W03.P20.S252` - Privatize the verdict_cache implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/verdict_cache.py`.
+- [x] `W03.P20.S252` - Privatize the verdict_cache implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/verdict_cache.py`.
 - [x] `W03.P20.S253` - Prove verification_tolerance remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/verification_tolerance.py`.
 - [ ] `W03.P20.S254` - Prove the registry package fixed point: zero project package bindings, zero re-exports, and zero unresolved family rows; `src/cadrumo/domain/calculations/registry/__init__.py`.
 - [ ] `W03.P20.S257` - Retire the 2 binding_aggregation re-export(s) from the registry bindings dispatch module by direct-importing binding_aggregation_op, default_binding_aggregation_op from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/binding_aggregation.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
