@@ -684,7 +684,7 @@ def _evidence_census() -> EvidenceCensus:
 
 def _top_level_binding_details(path: str, text: str, symbols: set[str]) -> dict[str, list[dict[str, object]]]:
     """Locate top-level definitions and imports for the requested symbols."""
-    locations: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in symbols}
+    locations: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in sorted(symbols)}
     tree = ast.parse(text, filename=path)
     for node in tree.body:
         bindings: list[tuple[str, str]] = []
@@ -722,7 +722,7 @@ def _evidence_symbol_locator_details(
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Return the compact locator arrays stored in the checked matrix."""
     details = _evidence_symbol_locator_details(candidate, symbols)
-    return {symbol: [f"{detail['path']}:{detail['line']}" for detail in details[symbol]] for symbol in symbols}
+    return {symbol: [f"{detail['path']}:{detail['line']}" for detail in details[symbol]] for symbol in sorted(symbols)}
 
 
 def _all_symbol_definition_sites(
@@ -736,21 +736,28 @@ def _all_symbol_definition_sites(
     to the complete candidate family avoids treating ordinary third-party names
     as architectural alternatives while preserving every in-family locator.
     """
-    sites: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in symbols}
+    sites: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in sorted(symbols)}
     for candidate in candidates:
         details = _top_level_binding_details(candidate.new_path, _evidence_text(candidate.new_path), symbols)
         for symbol, values in details.items():
             sites[symbol].extend(values)
-    return {symbol: sorted(values, key=_definition_site_sort_key) for symbol, values in sites.items()}
+    return {symbol: sorted(sites[symbol], key=_definition_site_sort_key) for symbol in sorted(sites)}
 
 
-def _definition_site_sort_key(item: dict[str, object]) -> tuple[str, int]:
-    """Return the checked path/line ordering key for one structured locator."""
+def _definition_site_sort_key(item: dict[str, object]) -> tuple[str, int, str, str]:
+    """Return a total checked ordering key for one structured locator."""
     path = item.get("path")
     line = item.get("line")
-    if not isinstance(path, str) or not isinstance(line, int):
-        raise RuntimeError("structured definition site has no path/line anchor")
-    return path, line
+    node_type = item.get("node_type")
+    symbol = item.get("symbol")
+    if (
+        not isinstance(path, str)
+        or not isinstance(line, int)
+        or not isinstance(node_type, str)
+        or not isinstance(symbol, str)
+    ):
+        raise RuntimeError("structured definition site has no complete ordering anchor")
+    return path, line, node_type, symbol
 
 
 def _structured_semantic_evidence(
@@ -760,7 +767,10 @@ def _structured_semantic_evidence(
     definition_sites: dict[str, list[dict[str, object]]],
 ) -> dict[str, object]:
     """Record falsifiable owner, competing-site, and substitutability evidence."""
-    owner_definition_locators = [detail for symbol in sorted(locator_details) for detail in locator_details[symbol]]
+    owner_definition_locators = sorted(
+        (detail for symbol in sorted(locator_details) for detail in locator_details[symbol]),
+        key=_definition_site_sort_key,
+    )
     competing_site_census = {
         symbol: [detail for detail in definition_sites[symbol] if detail["path"] != candidate.new_path]
         for symbol in sorted(locator_details)
@@ -798,9 +808,9 @@ def generated_rows() -> list[dict[str, object]]:
     locators = {
         old_path: {
             symbol: [f"{detail['path']}:{detail['line']}" for detail in details]
-            for symbol, details in per_symbol.items()
+            for symbol, details in sorted(per_symbol.items())
         }
-        for old_path, per_symbol in locator_details.items()
+        for old_path, per_symbol in sorted(locator_details.items())
     }
     definition_sites = _all_symbol_definition_sites(
         candidates,

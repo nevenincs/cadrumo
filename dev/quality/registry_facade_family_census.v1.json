@@ -1168,12 +1168,6 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 142,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "ApplicabilityVerdict"
-          },
-          {
             "line": 113,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
@@ -1184,6 +1178,36 @@
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
             "symbol": "Modelo202ModalityVerdict"
+          },
+          {
+            "line": 113,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "derive_modelo_202_modality"
+          },
+          {
+            "line": 113,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "modelo_202_modality_from_inputs"
+          },
+          {
+            "line": 119,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "PayerFact"
+          },
+          {
+            "line": 121,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "TaxRoute"
+          },
+          {
+            "line": 142,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "ApplicabilityVerdict"
           },
           {
             "line": 171,
@@ -1198,10 +1222,10 @@
             "symbol": "ModeloApplicabilityRule"
           },
           {
-            "line": 119,
-            "node_type": "import_from",
+            "line": 398,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "PayerFact"
+            "symbol": "hydrate_applicability_rule"
           },
           {
             "line": 816,
@@ -1210,40 +1234,10 @@
             "symbol": "REGISTRY_RESOLVED_APPLICABILITY_MODELOS"
           },
           {
-            "line": 121,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "TaxRoute"
-          },
-          {
-            "line": 113,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "derive_modelo_202_modality"
-          },
-          {
-            "line": 1024,
+            "line": 857,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "derive_modelo_applicability"
-          },
-          {
-            "line": 1119,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "derive_not_applicable_source_modelos"
-          },
-          {
-            "line": 998,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "derive_tax_route"
-          },
-          {
-            "line": 1104,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "derive_taxpayer_files_economic_activity"
+            "symbol": "resolve_applicability_rule_from_authority"
           },
           {
             "line": 959,
@@ -1252,34 +1246,40 @@
             "symbol": "has_applicability_rule"
           },
           {
-            "line": 398,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "hydrate_applicability_rule"
-          },
-          {
             "line": 964,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
             "symbol": "iter_modelo_applicability_rules"
           },
           {
-            "line": 113,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "modelo_202_modality_from_inputs"
-          },
-          {
-            "line": 857,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
-            "symbol": "resolve_applicability_rule_from_authority"
-          },
-          {
             "line": 978,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/applicability.py",
             "symbol": "taxpayer_model_is_declared"
+          },
+          {
+            "line": 998,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "derive_tax_route"
+          },
+          {
+            "line": 1024,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "derive_modelo_applicability"
+          },
+          {
+            "line": 1104,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "derive_taxpayer_files_economic_activity"
+          },
+          {
+            "line": 1119,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/applicability.py",
+            "symbol": "derive_not_applicable_source_modelos"
           }
         ],
         "substitutability": {
@@ -2433,10 +2433,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 140,
-            "node_type": "class_definition",
+            "line": 69,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/authority.py",
-            "symbol": "RegistryAuthorityCapture"
+            "symbol": "collect_registry_identity_fingerprints"
           },
           {
             "line": 97,
@@ -2445,22 +2445,28 @@
             "symbol": "RegistryAuthorityLifecycleObserver"
           },
           {
+            "line": 140,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/authority.py",
+            "symbol": "RegistryAuthorityCapture"
+          },
+          {
             "line": 172,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/authority.py",
             "symbol": "RegistryDiagnosticFilingRevision"
           },
           {
-            "line": 1187,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/authority.py",
-            "symbol": "StampedRegistryRelease"
-          },
-          {
             "line": 191,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/authority.py",
             "symbol": "UnvalidatedRegistryClassification"
+          },
+          {
+            "line": 203,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/authority.py",
+            "symbol": "derive_filing_revision_classifications"
           },
           {
             "line": 520,
@@ -2481,16 +2487,10 @@
             "symbol": "bundled_revision_inspection"
           },
           {
-            "line": 69,
+            "line": 1034,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/authority.py",
-            "symbol": "collect_registry_identity_fingerprints"
-          },
-          {
-            "line": 203,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/authority.py",
-            "symbol": "derive_filing_revision_classifications"
+            "symbol": "reset_registry_caches"
           },
           {
             "line": 1154,
@@ -2499,10 +2499,10 @@
             "symbol": "load_registry_diagnostic_classification"
           },
           {
-            "line": 1034,
-            "node_type": "function_definition",
+            "line": 1187,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/authority.py",
-            "symbol": "reset_registry_caches"
+            "symbol": "StampedRegistryRelease"
           },
           {
             "line": 1194,
@@ -3687,22 +3687,16 @@
             "symbol": "BindingRowSetSelector"
           },
           {
+            "line": 264,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
+            "symbol": "selector_as_dict"
+          },
+          {
             "line": 274,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
             "symbol": "BooleanBindingEncodedValue"
-          },
-          {
-            "line": 345,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
-            "symbol": "ManualInputRecordFieldSelector"
-          },
-          {
-            "line": 482,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
-            "symbol": "binding_row_set_selector"
           },
           {
             "line": 296,
@@ -3711,16 +3705,22 @@
             "symbol": "boolean_binding_encoded_values"
           },
           {
+            "line": 345,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
+            "symbol": "ManualInputRecordFieldSelector"
+          },
+          {
             "line": 366,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
             "symbol": "manual_input_record_field_selector"
           },
           {
-            "line": 264,
+            "line": 482,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/binding_selector_utils.py",
-            "symbol": "selector_as_dict"
+            "symbol": "binding_row_set_selector"
           }
         ],
         "substitutability": {
@@ -6062,34 +6062,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "AtributionMemberObservation"
-          },
-          {
             "line": 43,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "BindingAggregationOp"
-          },
-          {
-            "line": 381,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "CasillaObservation"
-          },
-          {
-            "line": 60,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "CounterpartAggregationObservation"
-          },
-          {
-            "line": 60,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "CounterpartObservationRequirement"
           },
           {
             "line": 43,
@@ -6098,268 +6074,10 @@
             "symbol": "CounterpartSourceKind"
           },
           {
-            "line": 101,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "DonativoDonorObservation"
-          },
-          {
-            "line": 110,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "Gasto193Observation"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "INVOICE_BINDING_SOURCE_KINDS"
-          },
-          {
-            "line": 198,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "ImpatriadoIncomeObservationProtocol"
-          },
-          {
-            "line": 118,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "InventoryProjectionOperation"
-          },
-          {
-            "line": 118,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "InventorySelector"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "InvoiceObservation"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "InvoiceObservationRequirement"
-          },
-          {
-            "line": 140,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "IrnrIncomeObservationProtocol"
-          },
-          {
-            "line": 787,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "IvaCompensationAnnualPartitionRequirement"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "IvaLedgerObservation"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "LEDGER_BINDING_SOURCE_KINDS"
-          },
-          {
-            "line": 976,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "M303RegimenSimplificadoAnnualSummaryRequirement"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "Modelo349OperadorClaveTotal"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "Modelo349OperadorTotalsParity"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "Modelo720RowObservation"
-          },
-          {
-            "line": 545,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "OracleModeloObservation"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "OssIossLedgerObservation"
-          },
-          {
-            "line": 1232,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "ProfileSelector"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "RefundOperationObservation"
-          },
-          {
-            "line": 466,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "RegistryModeloObservation"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "RelatedPartyOperationObservation"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "RentaGastosPagoFraccionadoObservationProtocol"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "RentaIncomeObservationProtocol"
-          },
-          {
-            "line": 149,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "UngroundedRentaIncome"
-          },
-          {
-            "line": 148,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "UnroutedLedgerQuantity"
-          },
-          {
-            "line": 217,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "Withholding296Observation"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "WithholdingClaveBreakdown"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "WithholdingObservation"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "WithholdingObservationRequirement"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "WithholdingTotalsParity"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "aggregate_withholding_by_clave"
-          },
-          {
             "line": 50,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "binding_aggregation_op"
-          },
-          {
-            "line": 1197,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "binding_source_casilla_ids"
-          },
-          {
-            "line": 564,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "bound_casilla_binding_ids"
-          },
-          {
-            "line": 578,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "casillas_by_binding"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "compute_modelo_349_operador_totals_parity"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "compute_withholding_totals_parity"
-          },
-          {
-            "line": 60,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "counterpart_binding_requirements"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "foreign_asset_binding_row_field"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "invoice_binding_requirements"
-          },
-          {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "is_m347_declarante_summary_invoice_binding"
-          },
-          {
-            "line": 822,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "iva_compensation_annual_partition_requirement"
-          },
-          {
-            "line": 1064,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "m303_regimen_simplificado_annual_summary_requirement"
           },
           {
             "line": 52,
@@ -6380,28 +6098,28 @@
             "symbol": "previous_filing_source_reference"
           },
           {
-            "line": 149,
+            "line": 52,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "renta_first_slice_binding_target_casillas"
+            "symbol": "resolve_previous_filing_binding_values"
           },
           {
-            "line": 68,
+            "line": 60,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_atribucion_binding_row_values"
+            "symbol": "CounterpartAggregationObservation"
           },
           {
-            "line": 633,
-            "node_type": "function_definition",
+            "line": 60,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_available_bound_inputs_by_casilla_id"
+            "symbol": "CounterpartObservationRequirement"
           },
           {
-            "line": 603,
-            "node_type": "function_definition",
+            "line": 60,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_bound_casilla_binding_value"
+            "symbol": "counterpart_binding_requirements"
           },
           {
             "line": 60,
@@ -6416,16 +6134,76 @@
             "symbol": "resolve_counterpart_binding_values"
           },
           {
-            "line": 101,
+            "line": 68,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_donativo_binding_row_values"
+            "symbol": "AtributionMemberObservation"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "Modelo720RowObservation"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "RefundOperationObservation"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "RelatedPartyOperationObservation"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "foreign_asset_binding_row_field"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_atribucion_binding_row_values"
           },
           {
             "line": 68,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "resolve_foreign_asset_binding_row_values"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_refund_binding_row_values"
+          },
+          {
+            "line": 68,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_related_party_binding_row_values"
+          },
+          {
+            "line": 101,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "DonativoDonorObservation"
+          },
+          {
+            "line": 101,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_donativo_binding_row_values"
+          },
+          {
+            "line": 110,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "Gasto193Observation"
           },
           {
             "line": 110,
@@ -6440,6 +6218,66 @@
             "symbol": "resolve_gasto193_binding_values"
           },
           {
+            "line": 118,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "InventoryProjectionOperation"
+          },
+          {
+            "line": 118,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "InventorySelector"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "INVOICE_BINDING_SOURCE_KINDS"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "InvoiceObservation"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "InvoiceObservationRequirement"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "Modelo349OperadorClaveTotal"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "Modelo349OperadorTotalsParity"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "compute_modelo_349_operador_totals_parity"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "invoice_binding_requirements"
+          },
+          {
+            "line": 123,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "is_m347_declarante_summary_invoice_binding"
+          },
+          {
             "line": 123,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
@@ -6452,16 +6290,82 @@
             "symbol": "resolve_invoice_binding_values"
           },
           {
-            "line": 198,
+            "line": 123,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_ledger_impatriado_income_aggregation_binding_values"
+            "symbol": "validate_invoice_binding_definition"
+          },
+          {
+            "line": 140,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "IrnrIncomeObservationProtocol"
           },
           {
             "line": 140,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "resolve_ledger_irnr_income_aggregation_binding_values"
+          },
+          {
+            "line": 140,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "unsupported_ledger_irnr_income_observations"
+          },
+          {
+            "line": 140,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "validate_ledger_irnr_income_aggregation_binding_definition"
+          },
+          {
+            "line": 148,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "UnroutedLedgerQuantity"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "IvaLedgerObservation"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "LEDGER_BINDING_SOURCE_KINDS"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "OssIossLedgerObservation"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "RentaGastosPagoFraccionadoObservationProtocol"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "RentaIncomeObservationProtocol"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "UngroundedRentaIncome"
+          },
+          {
+            "line": 149,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "renta_first_slice_binding_target_casillas"
           },
           {
             "line": 149,
@@ -6494,54 +6398,6 @@
             "symbol": "resolve_ledger_renta_income_aggregation_binding_values"
           },
           {
-            "line": 52,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_previous_filing_binding_values"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_refund_binding_row_values"
-          },
-          {
-            "line": 68,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_related_party_binding_row_values"
-          },
-          {
-            "line": 212,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_retenciones_aggregation_binding_values"
-          },
-          {
-            "line": 217,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_withholding296_binding_row_values"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_withholding_binding_row_values"
-          },
-          {
-            "line": 223,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "resolve_withholding_binding_values"
-          },
-          {
-            "line": 1459,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "selector_model_for_source"
-          },
-          {
             "line": 149,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
@@ -6564,18 +6420,6 @@
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "unrouted_ledger_renta_income_quantities"
-          },
-          {
-            "line": 198,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "unsupported_ledger_impatriado_income_observations"
-          },
-          {
-            "line": 140,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "unsupported_ledger_irnr_income_observations"
           },
           {
             "line": 149,
@@ -6608,24 +6452,6 @@
             "symbol": "unsupported_ledger_renta_income_observations"
           },
           {
-            "line": 123,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "validate_invoice_binding_definition"
-          },
-          {
-            "line": 198,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "validate_ledger_impatriado_income_aggregation_binding_definition"
-          },
-          {
-            "line": 140,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
-            "symbol": "validate_ledger_irnr_income_aggregation_binding_definition"
-          },
-          {
             "line": 149,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
@@ -6656,16 +6482,190 @@
             "symbol": "validate_ledger_renta_income_aggregation_binding_definition"
           },
           {
+            "line": 198,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "ImpatriadoIncomeObservationProtocol"
+          },
+          {
+            "line": 198,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_ledger_impatriado_income_aggregation_binding_values"
+          },
+          {
+            "line": 198,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "unsupported_ledger_impatriado_income_observations"
+          },
+          {
+            "line": 198,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "validate_ledger_impatriado_income_aggregation_binding_definition"
+          },
+          {
+            "line": 212,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_retenciones_aggregation_binding_values"
+          },
+          {
             "line": 212,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "validate_retenciones_aggregation_binding"
           },
           {
+            "line": 217,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "Withholding296Observation"
+          },
+          {
+            "line": 217,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_withholding296_binding_row_values"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "WithholdingClaveBreakdown"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "WithholdingObservation"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "WithholdingObservationRequirement"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "WithholdingTotalsParity"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "aggregate_withholding_by_clave"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "compute_withholding_totals_parity"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_withholding_binding_row_values"
+          },
+          {
+            "line": 223,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_withholding_binding_values"
+          },
+          {
             "line": 223,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/bindings.py",
             "symbol": "withholding_binding_requirements"
+          },
+          {
+            "line": 381,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "CasillaObservation"
+          },
+          {
+            "line": 466,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "RegistryModeloObservation"
+          },
+          {
+            "line": 545,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "OracleModeloObservation"
+          },
+          {
+            "line": 564,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "bound_casilla_binding_ids"
+          },
+          {
+            "line": 578,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "casillas_by_binding"
+          },
+          {
+            "line": 603,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_bound_casilla_binding_value"
+          },
+          {
+            "line": 633,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "resolve_available_bound_inputs_by_casilla_id"
+          },
+          {
+            "line": 787,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "IvaCompensationAnnualPartitionRequirement"
+          },
+          {
+            "line": 822,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "iva_compensation_annual_partition_requirement"
+          },
+          {
+            "line": 976,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "M303RegimenSimplificadoAnnualSummaryRequirement"
+          },
+          {
+            "line": 1064,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "m303_regimen_simplificado_annual_summary_requirement"
+          },
+          {
+            "line": 1197,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "binding_source_casilla_ids"
+          },
+          {
+            "line": 1232,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "ProfileSelector"
+          },
+          {
+            "line": 1459,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/bindings.py",
+            "symbol": "selector_model_for_source"
           }
         ],
         "substitutability": {
@@ -7331,18 +7331,6 @@
         },
         "owner_definition_locators": [
           {
-            "line": 108,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
-            "symbol": "casilla_noncanonical_reference_targets"
-          },
-          {
-            "line": 90,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
-            "symbol": "casilla_noncanonical_reference_tokens"
-          },
-          {
             "line": 47,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
@@ -7355,16 +7343,28 @@
             "symbol": "declared_casilla_ids"
           },
           {
-            "line": 119,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
-            "symbol": "format_noncanonical_casilla_reference"
-          },
-          {
             "line": 76,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
             "symbol": "undeclared_casilla_ids"
+          },
+          {
+            "line": 90,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
+            "symbol": "casilla_noncanonical_reference_tokens"
+          },
+          {
+            "line": 108,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
+            "symbol": "casilla_noncanonical_reference_targets"
+          },
+          {
+            "line": 119,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/casilla_membership.py",
+            "symbol": "format_noncanonical_casilla_reference"
           }
         ],
         "substitutability": {
@@ -7533,10 +7533,10 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 28,
-            "node_type": "annotated_assignment",
+            "line": 26,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CENSO_MODELO_ERROR_CODES"
+            "symbol": "CENSO_MODELO_SERVICE_OWNER"
           },
           {
             "line": 27,
@@ -7545,46 +7545,10 @@
             "symbol": "CENSO_MODELO_EVENT_KINDS"
           },
           {
-            "line": 26,
-            "node_type": "assignment",
+            "line": 28,
+            "node_type": "annotated_assignment",
             "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CENSO_MODELO_SERVICE_OWNER"
-          },
-          {
-            "line": 40,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloEventKind"
-          },
-          {
-            "line": 131,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloFoundationCommand"
-          },
-          {
-            "line": 94,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloFoundationContract"
-          },
-          {
-            "line": 48,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloFoundationLogFields"
-          },
-          {
-            "line": 149,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloFoundationResult"
-          },
-          {
-            "line": 77,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "CensoModeloOwnership"
+            "symbol": "CENSO_MODELO_ERROR_CODES"
           },
           {
             "line": 33,
@@ -7593,16 +7557,40 @@
             "symbol": "CensoModeloRole"
           },
           {
-            "line": 224,
-            "node_type": "function_definition",
+            "line": 40,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "build_censo_modelo_foundation_contract"
+            "symbol": "CensoModeloEventKind"
           },
           {
-            "line": 263,
-            "node_type": "function_definition",
+            "line": 48,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
-            "symbol": "censo_modelo_ownership"
+            "symbol": "CensoModeloFoundationLogFields"
+          },
+          {
+            "line": 77,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "CensoModeloOwnership"
+          },
+          {
+            "line": 94,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "CensoModeloFoundationContract"
+          },
+          {
+            "line": 131,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "CensoModeloFoundationCommand"
+          },
+          {
+            "line": 149,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "CensoModeloFoundationResult"
           },
           {
             "line": 215,
@@ -7611,10 +7599,22 @@
             "symbol": "censo_modelo_ownership_map"
           },
           {
+            "line": 224,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "build_censo_modelo_foundation_contract"
+          },
+          {
             "line": 249,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
             "symbol": "get_censo_modelo_foundation_contract"
+          },
+          {
+            "line": 263,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/censo_modelos.py",
+            "symbol": "censo_modelo_ownership"
           },
           {
             "line": 351,
@@ -7748,12 +7748,6 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 147,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
-            "symbol": "ClassificationCoherenceFinding"
-          },
-          {
             "line": 103,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
@@ -7770,6 +7764,12 @@
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
             "symbol": "DeclaredAxisStatus"
+          },
+          {
+            "line": 147,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
+            "symbol": "ClassificationCoherenceFinding"
           },
           {
             "line": 175,
@@ -7790,16 +7790,16 @@
             "symbol": "RegistryClassificationAudit"
           },
           {
-            "line": 320,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
-            "symbol": "audit_bundled_classification_coherence"
-          },
-          {
             "line": 277,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
             "symbol": "build_classification_coherence_audit"
+          },
+          {
+            "line": 320,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/classification_coherence.py",
+            "symbol": "audit_bundled_classification_coherence"
           }
         ],
         "substitutability": {
@@ -7884,28 +7884,28 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 36,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/constructs.py",
-            "symbol": "ResolvedConstruct"
-          },
-          {
             "line": 21,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/constructs.py",
             "symbol": "ResolvedConstructMember"
           },
           {
-            "line": 137,
-            "node_type": "function_definition",
+            "line": 36,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/constructs.py",
-            "symbol": "resolve_construct"
+            "symbol": "ResolvedConstruct"
           },
           {
             "line": 116,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/constructs.py",
             "symbol": "resolve_revision_constructs"
+          },
+          {
+            "line": 137,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/constructs.py",
+            "symbol": "resolve_construct"
           }
         ],
         "substitutability": {
@@ -8872,18 +8872,6 @@
         },
         "owner_definition_locators": [
           {
-            "line": 156,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/convenio.py",
-            "symbol": "ConvenioAuthority"
-          },
-          {
-            "line": 139,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/convenio.py",
-            "symbol": "ConvenioOverride"
-          },
-          {
             "line": 40,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/convenio.py",
@@ -8894,6 +8882,18 @@
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/convenio.py",
             "symbol": "ConvenioTreaty"
+          },
+          {
+            "line": 139,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/convenio.py",
+            "symbol": "ConvenioOverride"
+          },
+          {
+            "line": 156,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/convenio.py",
+            "symbol": "ConvenioAuthority"
           },
           {
             "line": 205,
@@ -9158,6 +9158,12 @@
             "symbol": "ResolvedRecordDesignBinary"
           },
           {
+            "line": 58,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/corpus_catalogue.py",
+            "symbol": "verify_source_file"
+          },
+          {
             "line": 135,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/corpus_catalogue.py",
@@ -9168,12 +9174,6 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/corpus_catalogue.py",
             "symbol": "verify_source_catalogue"
-          },
-          {
-            "line": 58,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/corpus_catalogue.py",
-            "symbol": "verify_source_file"
           }
         ],
         "substitutability": {
@@ -9502,28 +9502,16 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 186,
+            "line": 78,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "ConstructEvidenceKind"
+            "symbol": "RequiredCoverageTier"
           },
           {
-            "line": 300,
-            "node_type": "class_definition",
+            "line": 80,
+            "node_type": "annotated_assignment",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "ConstructEvidenceLedger"
-          },
-          {
-            "line": 235,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "ConstructEvidenceRow"
-          },
-          {
-            "line": 187,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "ConstructEvidenceStatus"
+            "symbol": "REQUIRED_COVERAGE_TIERS"
           },
           {
             "line": 94,
@@ -9538,10 +9526,34 @@
             "symbol": "ModelLawCoverageLedger"
           },
           {
-            "line": 80,
-            "node_type": "annotated_assignment",
+            "line": 156,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "REQUIRED_COVERAGE_TIERS"
+            "symbol": "RegistryCoverageAudit"
+          },
+          {
+            "line": 186,
+            "node_type": "assignment",
+            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
+            "symbol": "ConstructEvidenceKind"
+          },
+          {
+            "line": 187,
+            "node_type": "assignment",
+            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
+            "symbol": "ConstructEvidenceStatus"
+          },
+          {
+            "line": 235,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
+            "symbol": "ConstructEvidenceRow"
+          },
+          {
+            "line": 300,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
+            "symbol": "ConstructEvidenceLedger"
           },
           {
             "line": 342,
@@ -9550,16 +9562,10 @@
             "symbol": "RegistryConstructEvidenceAudit"
           },
           {
-            "line": 156,
-            "node_type": "class_definition",
+            "line": 368,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "RegistryCoverageAudit"
-          },
-          {
-            "line": 78,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "RequiredCoverageTier"
+            "symbol": "audit_registry_model_law_coverage"
           },
           {
             "line": 468,
@@ -9568,22 +9574,16 @@
             "symbol": "audit_registry_construct_evidence"
           },
           {
-            "line": 368,
+            "line": 537,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "audit_registry_model_law_coverage"
+            "symbol": "build_model_law_coverage_ledger"
           },
           {
             "line": 620,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/coverage.py",
             "symbol": "build_construct_evidence_ledger"
-          },
-          {
-            "line": 537,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/coverage.py",
-            "symbol": "build_model_law_coverage_ledger"
           }
         ],
         "substitutability": {
@@ -10131,10 +10131,10 @@
             "symbol": "ResolvedExportLayout"
           },
           {
-            "line": 214,
+            "line": 59,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export.py",
-            "symbol": "clasificar_casillas_oficiales"
+            "symbol": "resolve_export_layout"
           },
           {
             "line": 99,
@@ -10143,10 +10143,16 @@
             "symbol": "derive_export_layouts_from_bindings"
           },
           {
-            "line": 450,
+            "line": 172,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export.py",
-            "symbol": "export_fields_for_casilla"
+            "symbol": "fixed_width_record_casilla_ids"
+          },
+          {
+            "line": 214,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/export.py",
+            "symbol": "clasificar_casillas_oficiales"
           },
           {
             "line": 304,
@@ -10155,16 +10161,10 @@
             "symbol": "export_fields_overlap"
           },
           {
-            "line": 172,
+            "line": 450,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export.py",
-            "symbol": "fixed_width_record_casilla_ids"
-          },
-          {
-            "line": 59,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/export.py",
-            "symbol": "resolve_export_layout"
+            "symbol": "export_fields_for_casilla"
           }
         ],
         "substitutability": {
@@ -10384,18 +10384,6 @@
             "symbol": "LOGICAL_DICTIONARY_TYPE"
           },
           {
-            "line": 52,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
-            "symbol": "ParsedExportFieldValue"
-          },
-          {
-            "line": 64,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
-            "symbol": "ParsedExportPayload"
-          },
-          {
             "line": 40,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
@@ -10406,6 +10394,18 @@
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
             "symbol": "XML_DICTIONARY_BOOLEAN_TYPES"
+          },
+          {
+            "line": 52,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
+            "symbol": "ParsedExportFieldValue"
+          },
+          {
+            "line": 64,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/export_parse.py",
+            "symbol": "ParsedExportPayload"
           },
           {
             "line": 73,
@@ -10680,10 +10680,10 @@
             "symbol": "ExportValuePolicy"
           },
           {
-            "line": 82,
-            "node_type": "assignment",
+            "line": 59,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
-            "symbol": "ExportValuePolicyValue"
+            "symbol": "ParsedExportPolicyWireValue"
           },
           {
             "line": 66,
@@ -10692,10 +10692,10 @@
             "symbol": "ParsedExportPolicyValue"
           },
           {
-            "line": 59,
-            "node_type": "class_definition",
+            "line": 69,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
-            "symbol": "ParsedExportPolicyWireValue"
+            "symbol": "coerce_export_value_policy"
           },
           {
             "line": 81,
@@ -10704,22 +10704,16 @@
             "symbol": "RequiredExportValuePolicyValue"
           },
           {
-            "line": 69,
-            "node_type": "function_definition",
+            "line": 82,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
-            "symbol": "coerce_export_value_policy"
+            "symbol": "ExportValuePolicyValue"
           },
           {
             "line": 95,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
             "symbol": "export_value_policy_wire_length"
-          },
-          {
-            "line": 145,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
-            "symbol": "normalize_parsed_export_policy_value"
           },
           {
             "line": 100,
@@ -10732,6 +10726,12 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
             "symbol": "validate_export_wire_value"
+          },
+          {
+            "line": 145,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/export_value_policy.py",
+            "symbol": "normalize_parsed_export_policy_value"
           }
         ],
         "substitutability": {
@@ -10917,16 +10917,10 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 226,
-            "node_type": "class_definition",
+            "line": 124,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "DeclaredScenarioInputs"
-          },
-          {
-            "line": 437,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "ExternalGroundingFinding"
+            "symbol": "OracleAttributionGap"
           },
           {
             "line": 136,
@@ -10935,16 +10929,10 @@
             "symbol": "ExternalGroundingFindingKind"
           },
           {
-            "line": 353,
+            "line": 226,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "ExternalOracleEvidence"
-          },
-          {
-            "line": 394,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "ExternalOracleInventory"
+            "symbol": "DeclaredScenarioInputs"
           },
           {
             "line": 292,
@@ -10953,22 +10941,10 @@
             "symbol": "ManualWorkedExamplePayload"
           },
           {
-            "line": 124,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "OracleAttributionGap"
-          },
-          {
-            "line": 487,
+            "line": 353,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "RegistryExternalGroundingAudit"
-          },
-          {
-            "line": 447,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "RevisionExternalGroundingRow"
+            "symbol": "ExternalOracleEvidence"
           },
           {
             "line": 379,
@@ -10977,10 +10953,34 @@
             "symbol": "UnattributedOraclePayload"
           },
           {
-            "line": 640,
+            "line": 394,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
+            "symbol": "ExternalOracleInventory"
+          },
+          {
+            "line": 437,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
+            "symbol": "ExternalGroundingFinding"
+          },
+          {
+            "line": 447,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
+            "symbol": "RevisionExternalGroundingRow"
+          },
+          {
+            "line": 487,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
+            "symbol": "RegistryExternalGroundingAudit"
+          },
+          {
+            "line": 546,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "audit_bundled_external_grounding"
+            "symbol": "load_bundled_external_oracle_inventory"
           },
           {
             "line": 569,
@@ -10989,10 +10989,10 @@
             "symbol": "build_external_grounding_audit"
           },
           {
-            "line": 546,
+            "line": 640,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/external_grounding.py",
-            "symbol": "load_bundled_external_oracle_inventory"
+            "symbol": "audit_bundled_external_grounding"
           }
         ],
         "substitutability": {
@@ -11367,10 +11367,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 44,
+            "line": 27,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
-            "symbol": "ExportEncoding"
+            "symbol": "ExportPadding"
           },
           {
             "line": 36,
@@ -11379,10 +11379,10 @@
             "symbol": "ExportJustification"
           },
           {
-            "line": 27,
+            "line": 44,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
-            "symbol": "ExportPadding"
+            "symbol": "ExportEncoding"
           },
           {
             "line": 139,
@@ -11391,16 +11391,10 @@
             "symbol": "FixedWidthRecordRenderError"
           },
           {
-            "line": 373,
+            "line": 174,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
-            "symbol": "pad_fixed_width_text"
-          },
-          {
-            "line": 343,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
-            "symbol": "parse_fixed_width_export_field"
+            "symbol": "validate_fixed_width_shape"
           },
           {
             "line": 197,
@@ -11421,10 +11415,16 @@
             "symbol": "render_fixed_width_export_record_payload"
           },
           {
-            "line": 174,
+            "line": 343,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
-            "symbol": "validate_fixed_width_shape"
+            "symbol": "parse_fixed_width_export_field"
+          },
+          {
+            "line": 373,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+            "symbol": "pad_fixed_width_text"
           }
         ],
         "substitutability": {
@@ -12367,16 +12367,22 @@
         },
         "owner_definition_locators": [
           {
+            "line": 54,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
+            "symbol": "RegistryUnresolvedOutcomeReason"
+          },
+          {
+            "line": 108,
+            "node_type": "assignment",
+            "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
+            "symbol": "read_parameter"
+          },
+          {
             "line": 126,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
             "symbol": "RegistryCalculationEntry"
-          },
-          {
-            "line": 171,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
-            "symbol": "RegistryCalculationResult"
           },
           {
             "line": 149,
@@ -12385,22 +12391,16 @@
             "symbol": "RegistryCalculationUnresolvedOutcome"
           },
           {
-            "line": 54,
-            "node_type": "import_from",
+            "line": 171,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
-            "symbol": "RegistryUnresolvedOutcomeReason"
+            "symbol": "RegistryCalculationResult"
           },
           {
             "line": 335,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
             "symbol": "calculate_registry_snapshot"
-          },
-          {
-            "line": 108,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/formula_runtime.py",
-            "symbol": "read_parameter"
           }
         ],
         "substitutability": {
@@ -12687,16 +12687,16 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 297,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/formula_runtime_ops.py",
-            "symbol": "resolve_keyed_bracket"
-          },
-          {
             "line": 248,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/formula_runtime_ops.py",
             "symbol": "resolve_parameter"
+          },
+          {
+            "line": 297,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/formula_runtime_ops.py",
+            "symbol": "resolve_keyed_bracket"
           }
         ],
         "substitutability": {
@@ -13001,16 +13001,16 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 71,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/formula_text_inputs.py",
-            "symbol": "validate_text_input_targets"
-          },
-          {
             "line": 30,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/formula_text_inputs.py",
             "symbol": "validated_text_input_casilla_ids"
+          },
+          {
+            "line": 71,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/formula_text_inputs.py",
+            "symbol": "validate_text_input_targets"
           }
         ],
         "substitutability": {
@@ -13198,6 +13198,12 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
+            "line": 25,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoff_paths.py",
+            "symbol": "RelationHandoffPathRecord"
+          },
+          {
             "line": 47,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/handoff_paths.py",
@@ -13208,12 +13214,6 @@
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/handoff_paths.py",
             "symbol": "RegistryHandoffPathAudit"
-          },
-          {
-            "line": 25,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoff_paths.py",
-            "symbol": "RelationHandoffPathRecord"
           },
           {
             "line": 93,
@@ -13409,52 +13409,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 204,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "RegistryRelationHandoffApplicabilityAudit"
-          },
-          {
-            "line": 154,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "RegistryRelationHandoffAudit"
-          },
-          {
             "line": 58,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
             "symbol": "RelationConsumptionChannel"
-          },
-          {
-            "line": 175,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "RelationHandoffApplicabilityRecord"
-          },
-          {
-            "line": 113,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "RelationHandoffRecord"
-          },
-          {
-            "line": 498,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "audit_registry_relation_handoff_applicability"
-          },
-          {
-            "line": 242,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "audit_registry_relation_handoffs"
-          },
-          {
-            "line": 91,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
-            "symbol": "relation_consumption_channels"
           },
           {
             "line": 69,
@@ -13463,10 +13421,52 @@
             "symbol": "relation_consumption_index"
           },
           {
+            "line": 91,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "relation_consumption_channels"
+          },
+          {
             "line": 108,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
             "symbol": "relation_is_consumed"
+          },
+          {
+            "line": 113,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "RelationHandoffRecord"
+          },
+          {
+            "line": 154,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "RegistryRelationHandoffAudit"
+          },
+          {
+            "line": 175,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "RelationHandoffApplicabilityRecord"
+          },
+          {
+            "line": 204,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "RegistryRelationHandoffApplicabilityAudit"
+          },
+          {
+            "line": 242,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "audit_registry_relation_handoffs"
+          },
+          {
+            "line": 498,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/handoffs.py",
+            "symbol": "audit_registry_relation_handoff_applicability"
           }
         ],
         "substitutability": {
@@ -13946,22 +13946,16 @@
         },
         "owner_definition_locators": [
           {
-            "line": 64,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/identity.py",
-            "symbol": "REGISTRY_IDENTITY_SCHEMA_VERSION"
-          },
-          {
             "line": 61,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/identity.py",
             "symbol": "REGISTRY_IDENTITY_STAMP_FILENAME"
           },
           {
-            "line": 97,
-            "node_type": "class_definition",
+            "line": 64,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/identity.py",
-            "symbol": "RegistryIdentity"
+            "symbol": "REGISTRY_IDENTITY_SCHEMA_VERSION"
           },
           {
             "line": 73,
@@ -13976,10 +13970,16 @@
             "symbol": "RegistryIdentityStamp"
           },
           {
-            "line": 180,
+            "line": 97,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/identity.py",
+            "symbol": "RegistryIdentity"
+          },
+          {
+            "line": 127,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/identity.py",
-            "symbol": "compute_installed_tree_digest"
+            "symbol": "registry_identity_stamp_location"
           },
           {
             "line": 140,
@@ -13988,16 +13988,16 @@
             "symbol": "compute_walked_tree_digest"
           },
           {
+            "line": 180,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/identity.py",
+            "symbol": "compute_installed_tree_digest"
+          },
+          {
             "line": 236,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/identity.py",
             "symbol": "read_registry_identity_stamp"
-          },
-          {
-            "line": 127,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/identity.py",
-            "symbol": "registry_identity_stamp_location"
           },
           {
             "line": 325,
@@ -17342,106 +17342,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 37,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ApplicabilityRuleId"
-          },
-          {
-            "line": 33,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ApplicationLinkId"
-          },
-          {
-            "line": 25,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "BindingId"
-          },
-          {
-            "line": 35,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ConstructId"
-          },
-          {
-            "line": 30,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "CrossReferenceId"
-          },
-          {
-            "line": 34,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "DeadlineWindowId"
-          },
-          {
-            "line": 36,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "DependencyClassificationId"
-          },
-          {
-            "line": 40,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ExportFieldId"
-          },
-          {
-            "line": 38,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ExportLayoutId"
-          },
-          {
-            "line": 29,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ExtractionProfileId"
-          },
-          {
-            "line": 23,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "FormulaId"
-          },
-          {
-            "line": 27,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "LegalRefId"
-          },
-          {
             "line": 21,
             "node_type": "type_alias",
             "path": "src/cadrumo/domain/calculations/registry/ids.py",
             "symbol": "ModeloId"
-          },
-          {
-            "line": 43,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "OracleId"
-          },
-          {
-            "line": 24,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "ParameterId"
-          },
-          {
-            "line": 39,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "RecordId"
-          },
-          {
-            "line": 26,
-            "node_type": "type_alias",
-            "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "RelationId"
           },
           {
             "line": 22,
@@ -17450,16 +17354,112 @@
             "symbol": "RevisionId"
           },
           {
+            "line": 23,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "FormulaId"
+          },
+          {
+            "line": 24,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ParameterId"
+          },
+          {
+            "line": 25,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "BindingId"
+          },
+          {
+            "line": 26,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "RelationId"
+          },
+          {
+            "line": 27,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "LegalRefId"
+          },
+          {
             "line": 28,
             "node_type": "type_alias",
             "path": "src/cadrumo/domain/calculations/registry/ids.py",
             "symbol": "SourceRefId"
           },
           {
+            "line": 29,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ExtractionProfileId"
+          },
+          {
+            "line": 30,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "CrossReferenceId"
+          },
+          {
+            "line": 31,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "WorkbookParityRefId"
+          },
+          {
             "line": 32,
             "node_type": "type_alias",
             "path": "src/cadrumo/domain/calculations/registry/ids.py",
             "symbol": "VerificationExpectationId"
+          },
+          {
+            "line": 33,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ApplicationLinkId"
+          },
+          {
+            "line": 34,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "DeadlineWindowId"
+          },
+          {
+            "line": 35,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ConstructId"
+          },
+          {
+            "line": 36,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "DependencyClassificationId"
+          },
+          {
+            "line": 37,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ApplicabilityRuleId"
+          },
+          {
+            "line": 38,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ExportLayoutId"
+          },
+          {
+            "line": 39,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "RecordId"
+          },
+          {
+            "line": 40,
+            "node_type": "type_alias",
+            "path": "src/cadrumo/domain/calculations/registry/ids.py",
+            "symbol": "ExportFieldId"
           },
           {
             "line": 41,
@@ -17474,10 +17474,10 @@
             "symbol": "WorkbookOutputId"
           },
           {
-            "line": 31,
+            "line": 43,
             "node_type": "type_alias",
             "path": "src/cadrumo/domain/calculations/registry/ids.py",
-            "symbol": "WorkbookParityRefId"
+            "symbol": "OracleId"
           },
           {
             "line": 46,
@@ -17739,16 +17739,16 @@
             "symbol": "is_iva_wallet_owned_relation_target"
           },
           {
-            "line": 112,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py",
-            "symbol": "iva_wallet_owned_binding_ids_for_revision"
-          },
-          {
             "line": 93,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py",
             "symbol": "iva_wallet_owned_relation_targets_for_revision"
+          },
+          {
+            "line": 112,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py",
+            "symbol": "iva_wallet_owned_binding_ids_for_revision"
           }
         ],
         "substitutability": {
@@ -18518,16 +18518,28 @@
         },
         "owner_definition_locators": [
           {
-            "line": 322,
+            "line": 224,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/legal.py",
-            "symbol": "assert_legal_ref_ids_resolve"
+            "symbol": "verify_legal_reference"
+          },
+          {
+            "line": 270,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/legal.py",
+            "symbol": "verify_legal_reference_grounding"
           },
           {
             "line": 292,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/legal.py",
             "symbol": "legal_reference_quotes_corpus"
+          },
+          {
+            "line": 322,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/legal.py",
+            "symbol": "assert_legal_ref_ids_resolve"
           },
           {
             "line": 361,
@@ -18540,18 +18552,6 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/legal.py",
             "symbol": "verify_legal_catalogue_grounding"
-          },
-          {
-            "line": 224,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/legal.py",
-            "symbol": "verify_legal_reference"
-          },
-          {
-            "line": 270,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/legal.py",
-            "symbol": "verify_legal_reference_grounding"
           }
         ],
         "substitutability": {
@@ -18776,40 +18776,22 @@
         },
         "owner_definition_locators": [
           {
-            "line": 476,
-            "node_type": "class_definition",
+            "line": 76,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "CrossReferenceApplicability"
-          },
-          {
-            "line": 627,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "CrossReferenceApplicabilityDeclaracion"
-          },
-          {
-            "line": 272,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "LiveParityCatalogue"
-          },
-          {
-            "line": 174,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "LiveParityOracle"
-          },
-          {
-            "line": 86,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "OracleEnvironment"
+            "symbol": "ParityVerdict"
           },
           {
             "line": 77,
             "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
             "symbol": "OracleSurfaceKind"
+          },
+          {
+            "line": 86,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
+            "symbol": "OracleEnvironment"
           },
           {
             "line": 127,
@@ -18824,16 +18806,40 @@
             "symbol": "ParityResult"
           },
           {
-            "line": 76,
-            "node_type": "assignment",
+            "line": 174,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "ParityVerdict"
+            "symbol": "LiveParityOracle"
           },
           {
-            "line": 773,
+            "line": 272,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
+            "symbol": "LiveParityCatalogue"
+          },
+          {
+            "line": 476,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
+            "symbol": "CrossReferenceApplicability"
+          },
+          {
+            "line": 490,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "audit_registry_oracle_bindings"
+            "symbol": "evaluate_cross_reference_applicability"
+          },
+          {
+            "line": 527,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
+            "symbol": "resolve_cross_reference_oracle"
+          },
+          {
+            "line": 627,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
+            "symbol": "CrossReferenceApplicabilityDeclaracion"
           },
           {
             "line": 644,
@@ -18848,16 +18854,10 @@
             "symbol": "collect_orphan_oracle_ids"
           },
           {
-            "line": 490,
+            "line": 773,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "evaluate_cross_reference_applicability"
-          },
-          {
-            "line": 527,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/live_parity.py",
-            "symbol": "resolve_cross_reference_oracle"
+            "symbol": "audit_registry_oracle_bindings"
           }
         ],
         "substitutability": {
@@ -19863,10 +19863,22 @@
             "symbol": "clear_fingerprint_cache"
           },
           {
-            "line": 1435,
-            "node_type": "assignment",
+            "line": 172,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/loader.py",
-            "symbol": "collect_registry_tree_fingerprints"
+            "symbol": "load_modelo_file"
+          },
+          {
+            "line": 376,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/loader.py",
+            "symbol": "load_modelo_directory"
+          },
+          {
+            "line": 410,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/loader.py",
+            "symbol": "load_modelo_path"
           },
           {
             "line": 926,
@@ -19881,28 +19893,16 @@
             "symbol": "load_legal_parameters_only"
           },
           {
-            "line": 376,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/loader.py",
-            "symbol": "load_modelo_directory"
-          },
-          {
-            "line": 172,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/loader.py",
-            "symbol": "load_modelo_file"
-          },
-          {
-            "line": 410,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/loader.py",
-            "symbol": "load_modelo_path"
-          },
-          {
             "line": 1082,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/loader.py",
             "symbol": "load_registry_tree"
+          },
+          {
+            "line": 1435,
+            "node_type": "assignment",
+            "path": "src/cadrumo/domain/calculations/registry/loader.py",
+            "symbol": "collect_registry_tree_fingerprints"
           }
         ],
         "substitutability": {
@@ -20242,12 +20242,6 @@
             "symbol": "M303_ORDEN_CENSUS_ARTEFACT_FILENAME"
           },
           {
-            "line": 107,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py",
-            "symbol": "load_m303_annual_orden_censuses"
-          },
-          {
             "line": 73,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py",
@@ -20258,6 +20252,12 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py",
             "symbol": "render_m303_annual_orden_censuses"
+          },
+          {
+            "line": 107,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py",
+            "symbol": "load_m303_annual_orden_censuses"
           }
         ],
         "substitutability": {
@@ -20365,6 +20365,18 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
+            "line": 135,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
+            "symbol": "render_m303_annual_orden_manifest"
+          },
+          {
+            "line": 146,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
+            "symbol": "render_m303_annual_orden_census_artefact"
+          },
+          {
             "line": 166,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
@@ -20377,28 +20389,16 @@
             "symbol": "check_m303_annual_orden_manifest"
           },
           {
-            "line": 444,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
-            "symbol": "collect_m303_annual_orden_fingerprints"
-          },
-          {
             "line": 305,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
             "symbol": "load_m303_annual_orden_authority"
           },
           {
-            "line": 146,
+            "line": 444,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
-            "symbol": "render_m303_annual_orden_census_artefact"
-          },
-          {
-            "line": 135,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py",
-            "symbol": "render_m303_annual_orden_manifest"
+            "symbol": "collect_m303_annual_orden_fingerprints"
           }
         ],
         "substitutability": {
@@ -21356,16 +21356,16 @@
             "symbol": "ActividadOrdenAnualRef"
           },
           {
-            "line": 217,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py",
-            "symbol": "M303AnnualOrdenAuthority"
-          },
-          {
             "line": 114,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py",
             "symbol": "M303AnnualOrdenProjection"
+          },
+          {
+            "line": 217,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py",
+            "symbol": "M303AnnualOrdenAuthority"
           },
           {
             "line": 251,
@@ -21531,16 +21531,16 @@
         },
         "owner_definition_locators": [
           {
-            "line": 37,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py",
-            "symbol": "M303AnnualOrdenRawActivity"
-          },
-          {
             "line": 27,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py",
             "symbol": "M303AnnualOrdenRawModule"
+          },
+          {
+            "line": 37,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py",
+            "symbol": "M303AnnualOrdenRawActivity"
           },
           {
             "line": 112,
@@ -21677,16 +21677,16 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
-            "line": 50,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_orden_resolution.py",
-            "symbol": "m303_annual_orden_snapshot_from_projection"
-          },
-          {
             "line": 26,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_orden_resolution.py",
             "symbol": "resolve_m303_regimen_simplificado_snapshot"
+          },
+          {
+            "line": 50,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_orden_resolution.py",
+            "symbol": "m303_annual_orden_snapshot_from_projection"
           }
         ],
         "substitutability": {
@@ -22024,6 +22024,12 @@
         "competing_site_census": {},
         "owner_definition_locators": [
           {
+            "line": 100,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py",
+            "symbol": "validate_m303_regimen_simplificado_endpoint_epoch"
+          },
+          {
             "line": 113,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py",
@@ -22040,12 +22046,6 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py",
             "symbol": "project_m303_regimen_simplificado_rows"
-          },
-          {
-            "line": 100,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py",
-            "symbol": "validate_m303_regimen_simplificado_endpoint_epoch"
           }
         ],
         "substitutability": {
@@ -22875,18 +22875,6 @@
         },
         "owner_definition_locators": [
           {
-            "line": 80,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
-            "symbol": "casilla_continuity_locale_key"
-          },
-          {
-            "line": 66,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
-            "symbol": "casilla_occurrence_locale_key"
-          },
-          {
             "line": 34,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
@@ -22897,6 +22885,18 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
             "symbol": "revision_locale_key"
+          },
+          {
+            "line": 66,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
+            "symbol": "casilla_occurrence_locale_key"
+          },
+          {
+            "line": 80,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/modelo_localization.py",
+            "symbol": "casilla_continuity_locale_key"
           }
         ],
         "substitutability": {
@@ -23063,10 +23063,10 @@
         },
         "owner_definition_locators": [
           {
-            "line": 102,
+            "line": 35,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/observation_fold.py",
-            "symbol": "fold_observed_requirement_values"
+            "symbol": "gather_observed_requirement_values"
           },
           {
             "line": 74,
@@ -23075,10 +23075,10 @@
             "symbol": "fold_sum_or_copy"
           },
           {
-            "line": 35,
+            "line": 102,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/observation_fold.py",
-            "symbol": "gather_observed_requirement_values"
+            "symbol": "fold_observed_requirement_values"
           },
           {
             "line": 121,
@@ -24571,16 +24571,16 @@
             "symbol": "ProfileKeyGrounding"
           },
           {
-            "line": 123,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/profile_grounding.py",
-            "symbol": "binding_profile_keys"
-          },
-          {
             "line": 55,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/profile_grounding.py",
             "symbol": "build_profile_grounding_index"
+          },
+          {
+            "line": 123,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/profile_grounding.py",
+            "symbol": "binding_profile_keys"
           }
         ],
         "substitutability": {
@@ -24863,12 +24863,6 @@
             "symbol": "ModeloSupportMatrixReport"
           },
           {
-            "line": 108,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/queries.py",
-            "symbol": "RegistryQueryService"
-          },
-          {
             "line": 35,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/queries.py",
@@ -24885,6 +24879,12 @@
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/queries.py",
             "symbol": "RegistrySourceSite"
+          },
+          {
+            "line": 108,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/queries.py",
+            "symbol": "RegistryQueryService"
           },
           {
             "line": 757,
@@ -25036,16 +25036,16 @@
             "symbol": "RateBoxPartition"
           },
           {
-            "line": 111,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
-            "symbol": "RateBoxShortfall"
-          },
-          {
             "line": 95,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
             "symbol": "RateBoxUnscreenedGroup"
+          },
+          {
+            "line": 111,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
+            "symbol": "RateBoxShortfall"
           },
           {
             "line": 204,
@@ -25054,16 +25054,16 @@
             "symbol": "derive_rate_box_partitions"
           },
           {
-            "line": 407,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
-            "symbol": "rate_box_coverage_shortfalls"
-          },
-          {
             "line": 334,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
             "symbol": "rate_box_unscreened_groups"
+          },
+          {
+            "line": 407,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/rate_box_partition.py",
+            "symbol": "rate_box_coverage_shortfalls"
           }
         ],
         "substitutability": {
@@ -25462,10 +25462,52 @@
         },
         "owner_definition_locators": [
           {
-            "line": 4604,
-            "node_type": "assignment",
+            "line": 43,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "ABSENT_NATURALEZA_TYPE_CODE"
+            "symbol": "DerivedDisenoCasilla"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "DisenoCoverageReport"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "build_diseno_coverage_report"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "calculation_closure_casilla_ids"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "calculation_closure_legal_refs"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "calculation_closure_record_design_metadata"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "derive_calculation_completeness_casillas"
+          },
+          {
+            "line": 43,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "derive_diseno_coverage_casillas"
           },
           {
             "line": 53,
@@ -25490,18 +25532,6 @@
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/record_design.py",
             "symbol": "AUXILIARY_ENVELOPE_HEADER_ROWS"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "DerivedDisenoCasilla"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "DisenoCoverageReport"
           },
           {
             "line": 53,
@@ -25600,46 +25630,22 @@
             "symbol": "RecordDesignVariableTotalMarker"
           },
           {
-            "line": 43,
+            "line": 53,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "build_diseno_coverage_report"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "calculation_closure_casilla_ids"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "calculation_closure_legal_refs"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "calculation_closure_record_design_metadata"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "derive_calculation_completeness_casillas"
-          },
-          {
-            "line": 43,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "derive_diseno_coverage_casillas"
+            "symbol": "validate_auxiliary_envelope_header_contents"
           },
           {
             "line": 263,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/record_design.py",
             "symbol": "extract_record_design"
+          },
+          {
+            "line": 316,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
+            "symbol": "extract_record_design_workbook"
           },
           {
             "line": 428,
@@ -25654,16 +25660,10 @@
             "symbol": "extract_record_design_pdf_bytes"
           },
           {
-            "line": 316,
-            "node_type": "function_definition",
+            "line": 4604,
+            "node_type": "assignment",
             "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "extract_record_design_workbook"
-          },
-          {
-            "line": 53,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/record_design.py",
-            "symbol": "validate_auxiliary_envelope_header_contents"
+            "symbol": "ABSENT_NATURALEZA_TYPE_CODE"
           }
         ],
         "substitutability": {
@@ -26316,16 +26316,16 @@
         },
         "owner_definition_locators": [
           {
+            "line": 51,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/relations.py",
+            "symbol": "source_presence_gaps"
+          },
+          {
             "line": 69,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/relations.py",
             "symbol": "RegistryFoldRequirement"
-          },
-          {
-            "line": 402,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/relations.py",
-            "symbol": "materialize_relation_binding_values"
           },
           {
             "line": 168,
@@ -26352,10 +26352,10 @@
             "symbol": "resolve_relation_values_from_observations"
           },
           {
-            "line": 51,
+            "line": 402,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/relations.py",
-            "symbol": "source_presence_gaps"
+            "symbol": "materialize_relation_binding_values"
           }
         ],
         "substitutability": {
@@ -26675,22 +26675,28 @@
             "symbol": "AEAT_WRITE_FORBIDDEN_VERB_TOKENS"
           },
           {
-            "line": 303,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
-            "symbol": "RemoteOperation"
-          },
-          {
             "line": 136,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
             "symbol": "RemoteStateGuardPolicy"
           },
           {
+            "line": 303,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
+            "symbol": "RemoteOperation"
+          },
+          {
             "line": 322,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
             "symbol": "RemoteStateGuardResult"
+          },
+          {
+            "line": 330,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
+            "symbol": "remote_state_policy_from_cross_reference"
           },
           {
             "line": 379,
@@ -26709,12 +26715,6 @@
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
             "symbol": "evaluate_remote_operation"
-          },
-          {
-            "line": 330,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/remote_state_guard.py",
-            "symbol": "remote_state_policy_from_cross_reference"
           }
         ],
         "substitutability": {
@@ -27298,22 +27298,22 @@
         },
         "owner_definition_locators": [
           {
-            "line": 155,
+            "line": 37,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
-            "symbol": "enum_consumed_binding_ids"
+            "symbol": "expression_casilla_refs"
+          },
+          {
+            "line": 48,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
+            "symbol": "expression_relation_refs"
           },
           {
             "line": 59,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
             "symbol": "expression_binding_refs"
-          },
-          {
-            "line": 37,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
-            "symbol": "expression_casilla_refs"
           },
           {
             "line": 70,
@@ -27328,22 +27328,22 @@
             "symbol": "expression_parameter_refs"
           },
           {
-            "line": 48,
+            "line": 155,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
-            "symbol": "expression_relation_refs"
-          },
-          {
-            "line": 228,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
-            "symbol": "input_casilla_id_map"
+            "symbol": "enum_consumed_binding_ids"
           },
           {
             "line": 185,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
             "symbol": "revision_date_binding_ids"
+          },
+          {
+            "line": 228,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/runtime_graph.py",
+            "symbol": "input_casilla_id_map"
           }
         ],
         "substitutability": {
@@ -31735,66 +31735,6 @@
         },
         "owner_definition_locators": [
           {
-            "line": 489,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ApplicabilityRuleDefinition"
-          },
-          {
-            "line": 340,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ApplicationLinkDefinition"
-          },
-          {
-            "line": 265,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "AuxiliaryEnvelopeHeaderDefinition"
-          },
-          {
-            "line": 284,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "BboxAnchorSpec"
-          },
-          {
-            "line": 285,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "BracketEntry"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "CalculationCompletenessCasilla"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "CalculationCompletenessManifest"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "CasillaConstraints"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "CasillaContinuidadEvolutionDefinition"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "CasillaDefinition"
-          },
-          {
             "line": 43,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
@@ -31807,40 +31747,52 @@
             "symbol": "CasillaFieldKindValue"
           },
           {
-            "line": 362,
-            "node_type": "class_definition",
+            "line": 144,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ConstructDefinition"
+            "symbol": "LiveCrossReferenceDecision"
           },
           {
-            "line": 696,
-            "node_type": "class_definition",
+            "line": 144,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "DataBindingDefinition"
+            "symbol": "ProfilePredicateDefinition"
           },
           {
-            "line": 575,
-            "node_type": "class_definition",
+            "line": 144,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "DeadlineWindowDefinition"
-          },
-          {
-            "line": 315,
-            "node_type": "assignment",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "DecimalValue"
-          },
-          {
-            "line": 438,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "DependencyClassificationDefinition"
+            "symbol": "WorkbookParityReference"
           },
           {
             "line": 242,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
             "symbol": "EvidenceTier"
+          },
+          {
+            "line": 242,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "LegalRefs"
+          },
+          {
+            "line": 242,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ModeloFilingCapability"
+          },
+          {
+            "line": 242,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "SourceRefs"
+          },
+          {
+            "line": 265,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "AuxiliaryEnvelopeHeaderDefinition"
           },
           {
             "line": 265,
@@ -31879,18 +31831,6 @@
             "symbol": "ExportSemanticPayloadAxis"
           },
           {
-            "line": 284,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ExtractionProfileDefinition"
-          },
-          {
-            "line": 284,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ExtractionTargetDefinition"
-          },
-          {
             "line": 265,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
@@ -31921,10 +31861,46 @@
             "symbol": "FilingEnvelopeTotalDerivation"
           },
           {
-            "line": 871,
-            "node_type": "class_definition",
+            "line": 265,
+            "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "FormulaDefinition"
+            "symbol": "OneBasedExportOffset"
+          },
+          {
+            "line": 265,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ProjectionEndpointDeclaration"
+          },
+          {
+            "line": 265,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "export_semantic_payload_axis"
+          },
+          {
+            "line": 284,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "BboxAnchorSpec"
+          },
+          {
+            "line": 284,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ExtractionProfileDefinition"
+          },
+          {
+            "line": 284,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ExtractionTargetDefinition"
+          },
+          {
+            "line": 285,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "BracketEntry"
           },
           {
             "line": 285,
@@ -31939,6 +31915,12 @@
             "symbol": "KeyedBracketEntry"
           },
           {
+            "line": 285,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ParameterDefinition"
+          },
+          {
             "line": 292,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
@@ -31951,34 +31933,100 @@
             "symbol": "LegalReference"
           },
           {
-            "line": 242,
+            "line": 292,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "LegalRefs"
+            "symbol": "PeriodSelector"
           },
           {
-            "line": 144,
+            "line": 292,
             "node_type": "import_from",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "LiveCrossReferenceDecision"
+            "symbol": "RegistryExternalLink"
           },
           {
-            "line": 1417,
+            "line": 292,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "RegistrySnapshotRef"
+          },
+          {
+            "line": 292,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "SourceReference"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "CalculationCompletenessCasilla"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "CalculationCompletenessManifest"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "CasillaConstraints"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "CasillaContinuidadEvolutionDefinition"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "CasillaDefinition"
+          },
+          {
+            "line": 301,
+            "node_type": "import_from",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "RelationDefinition"
+          },
+          {
+            "line": 315,
+            "node_type": "assignment",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "DecimalValue"
+          },
+          {
+            "line": 340,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ModeloDefinition"
+            "symbol": "ApplicationLinkDefinition"
           },
           {
-            "line": 242,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ModeloFilingCapability"
-          },
-          {
-            "line": 1125,
+            "line": 362,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ModeloRevision"
+            "symbol": "ConstructDefinition"
+          },
+          {
+            "line": 438,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "DependencyClassificationDefinition"
+          },
+          {
+            "line": 489,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "ApplicabilityRuleDefinition"
+          },
+          {
+            "line": 575,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema.py",
+            "symbol": "DeadlineWindowDefinition"
           },
           {
             "line": 663,
@@ -31987,34 +32035,22 @@
             "symbol": "ModeloScheduleDefinition"
           },
           {
-            "line": 265,
-            "node_type": "import_from",
+            "line": 696,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "OneBasedExportOffset"
+            "symbol": "DataBindingDefinition"
           },
           {
-            "line": 285,
-            "node_type": "import_from",
+            "line": 871,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ParameterDefinition"
+            "symbol": "FormulaDefinition"
           },
           {
-            "line": 292,
-            "node_type": "import_from",
+            "line": 1125,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "PeriodSelector"
-          },
-          {
-            "line": 144,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ProfilePredicateDefinition"
-          },
-          {
-            "line": 265,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "ProjectionEndpointDeclaration"
+            "symbol": "ModeloRevision"
           },
           {
             "line": 1367,
@@ -32029,46 +32065,10 @@
             "symbol": "REVISION_MANIFEST_ONLY_FIELDS"
           },
           {
-            "line": 1495,
+            "line": 1417,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "RegistryCatalogues"
-          },
-          {
-            "line": 292,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "RegistryExternalLink"
-          },
-          {
-            "line": 1504,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "RegistrySnapshot"
-          },
-          {
-            "line": 292,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "RegistrySnapshotRef"
-          },
-          {
-            "line": 301,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "RelationDefinition"
-          },
-          {
-            "line": 292,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "SourceReference"
-          },
-          {
-            "line": 242,
-            "node_type": "import_from",
-            "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "SourceRefs"
+            "symbol": "ModeloDefinition"
           },
           {
             "line": 1480,
@@ -32077,16 +32077,16 @@
             "symbol": "SupportedFilingYearsCatalogue"
           },
           {
-            "line": 144,
-            "node_type": "import_from",
+            "line": 1495,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "WorkbookParityReference"
+            "symbol": "RegistryCatalogues"
           },
           {
-            "line": 265,
-            "node_type": "import_from",
+            "line": 1504,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema.py",
-            "symbol": "export_semantic_payload_axis"
+            "symbol": "RegistrySnapshot"
           }
         ],
         "substitutability": {
@@ -35796,6 +35796,24 @@
             "symbol": "DiscrepancyCause"
           },
           {
+            "line": 411,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "VerificationExpectationDefinition"
+          },
+          {
+            "line": 473,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "fold_reconciliation_total_casilla_ids"
+          },
+          {
+            "line": 510,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "RegistryVerificationPolicy"
+          },
+          {
             "line": 552,
             "node_type": "annotated_assignment",
             "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
@@ -35808,46 +35826,10 @@
             "symbol": "KNOWN_VERIFICATION_PREDICATE_OPERATORS"
           },
           {
-            "line": 755,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "ParsedVerificationPredicate"
-          },
-          {
-            "line": 510,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "RegistryVerificationPolicy"
-          },
-          {
-            "line": 787,
-            "node_type": "annotated_assignment",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "VERIFICATION_PREDICATE_SPECIFICATIONS"
-          },
-          {
-            "line": 411,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "VerificationExpectationDefinition"
-          },
-          {
-            "line": 1070,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "VerificationPredicateDefinition"
-          },
-          {
             "line": 709,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
             "symbol": "VerificationPredicateOperator"
-          },
-          {
-            "line": 745,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "VerificationPredicateSpecification"
           },
           {
             "line": 731,
@@ -35856,10 +35838,28 @@
             "symbol": "VerificationPredicateSyntax"
           },
           {
-            "line": 473,
+            "line": 745,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "VerificationPredicateSpecification"
+          },
+          {
+            "line": 755,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "ParsedVerificationPredicate"
+          },
+          {
+            "line": 787,
+            "node_type": "annotated_assignment",
+            "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
+            "symbol": "VERIFICATION_PREDICATE_SPECIFICATIONS"
+          },
+          {
+            "line": 898,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "fold_reconciliation_total_casilla_ids"
+            "symbol": "verification_predicate_operator_name"
           },
           {
             "line": 1048,
@@ -35868,10 +35868,10 @@
             "symbol": "parse_verification_predicate_expression"
           },
           {
-            "line": 898,
-            "node_type": "function_definition",
+            "line": 1070,
+            "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/schema_verification.py",
-            "symbol": "verification_predicate_operator_name"
+            "symbol": "VerificationPredicateDefinition"
           }
         ],
         "substitutability": {
@@ -37008,22 +37008,22 @@
         },
         "owner_definition_locators": [
           {
-            "line": 73,
-            "node_type": "class_definition",
-            "path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
-            "symbol": "GeneratedArtifactInspection"
-          },
-          {
             "line": 59,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
             "symbol": "GeneratedArtifactSource"
           },
           {
-            "line": 154,
+            "line": 73,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
-            "symbol": "RegistryRevisionInspection"
+            "symbol": "GeneratedArtifactInspection"
+          },
+          {
+            "line": 87,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
+            "symbol": "StaticGeneratedArtifactSource"
           },
           {
             "line": 117,
@@ -37032,10 +37032,10 @@
             "symbol": "StaticGeneratedArtifactInspection"
           },
           {
-            "line": 87,
+            "line": 154,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/static_inspection.py",
-            "symbol": "StaticGeneratedArtifactSource"
+            "symbol": "RegistryRevisionInspection"
           }
         ],
         "substitutability": {
@@ -37171,16 +37171,16 @@
         },
         "owner_definition_locators": [
           {
-            "line": 176,
+            "line": 77,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
-            "symbol": "ModeloEntry"
+            "symbol": "RevisionCapabilityProbe"
           },
           {
-            "line": 154,
-            "node_type": "class_definition",
+            "line": 108,
+            "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
-            "symbol": "ModeloPortalCompatibilityRef"
+            "symbol": "revision_capability_probe"
           },
           {
             "line": 129,
@@ -37189,22 +37189,22 @@
             "symbol": "ModeloRenameRecord"
           },
           {
-            "line": 77,
+            "line": 154,
             "node_type": "class_definition",
             "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
-            "symbol": "RevisionCapabilityProbe"
+            "symbol": "ModeloPortalCompatibilityRef"
+          },
+          {
+            "line": 176,
+            "node_type": "class_definition",
+            "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
+            "symbol": "ModeloEntry"
           },
           {
             "line": 277,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
             "symbol": "build_support_matrix"
-          },
-          {
-            "line": 108,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/support_matrix.py",
-            "symbol": "revision_capability_probe"
           }
         ],
         "substitutability": {
@@ -38269,16 +38269,16 @@
             "symbol": "revision_selection_coordinates"
           },
           {
-            "line": 118,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/temporal.py",
-            "symbol": "select_revision"
-          },
-          {
             "line": 65,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/temporal.py",
             "symbol": "select_revision_for_year"
+          },
+          {
+            "line": 118,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/temporal.py",
+            "symbol": "select_revision"
           }
         ],
         "substitutability": {
@@ -39767,16 +39767,16 @@
         },
         "owner_definition_locators": [
           {
-            "line": 112,
-            "node_type": "function_definition",
-            "path": "src/cadrumo/domain/calculations/registry/validate_revision_identity.py",
-            "symbol": "revision_casilla_identity_failures"
-          },
-          {
             "line": 101,
             "node_type": "function_definition",
             "path": "src/cadrumo/domain/calculations/registry/validate_revision_identity.py",
             "symbol": "revision_reference_identity_failures"
+          },
+          {
+            "line": 112,
+            "node_type": "function_definition",
+            "path": "src/cadrumo/domain/calculations/registry/validate_revision_identity.py",
+            "symbol": "revision_casilla_identity_failures"
           }
         ],
         "substitutability": {

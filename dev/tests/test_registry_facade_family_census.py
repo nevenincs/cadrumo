@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import ast
 import json
+import os
+import subprocess
+import sys
 from collections import Counter
 from copy import deepcopy
 from typing import cast
@@ -208,15 +211,45 @@ def test_generation_is_reproducible_from_the_clean_immutable_git_object(monkeypa
     monkeypatch.setattr(census.Path, "read_text", fail_if_worktree_text_is_read)
     census._EVIDENCE_FILE_CACHE = None
     census._EVIDENCE_CENSUS_CACHE = None
-    first = generated_rows()
-    census._EVIDENCE_FILE_CACHE = None
-    census._EVIDENCE_CENSUS_CACHE = None
-    second = generated_rows()
+    rows = generated_rows()
 
-    assert first == second
+    assert len(rows) == 78
     assert _evidence_text(exact_relocation_candidates()[0].new_path)
     assert archive_calls
     assert all(call[:4] == ("archive", "--format=tar", EVIDENCE_COMMIT, "--") for call in archive_calls)
+
+
+def _fresh_semantic_evidence_digest(*, seed: str, cwd: census.Path) -> str:
+    """Run the immutable generator in a fresh interpreter from another CWD."""
+    program = """
+import hashlib
+import json
+from dev.quality.registry_facade_family_census import generated_rows
+payload = [row[\"semantic_evidence\"] for row in generated_rows()]
+encoded = json.dumps(payload, ensure_ascii=True, separators=(\",\", \":\"), sort_keys=True).encode()
+print(hashlib.sha256(encoded).hexdigest())
+"""
+    environment = dict(os.environ)
+    environment["PYTHONHASHSEED"] = seed
+    environment["PYTHONPATH"] = str(census.ROOT)
+    completed = subprocess.run(  # noqa: S603  # fixed interpreter and inline immutable-evidence probe
+        (sys.executable, "-c", program),
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    return completed.stdout.strip()
+
+
+def test_immutable_semantic_evidence_is_fresh_process_and_foreign_cwd_stable() -> None:
+    """Hash randomisation and a non-repository process CWD cannot alter evidence."""
+    root_digest = _fresh_semantic_evidence_digest(seed="1", cwd=census.ROOT)
+    foreign_cwd_digest = _fresh_semantic_evidence_digest(seed="2", cwd=census.ROOT.parent)
+
+    assert len(root_digest) == 64
+    assert root_digest == foreign_cwd_digest
 
 
 def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
