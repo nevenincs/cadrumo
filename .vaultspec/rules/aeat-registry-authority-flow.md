@@ -82,9 +82,12 @@ registry-parity gate excludes.
 Every production calculation, verification, filing, export or projection path
 MUST resolve its registry revision from `(modelo, filing_year, period)` through
 `ValidatedRegistryAuthority.snapshot` / `select_revision`, or through
-`resolve_registry_revision_for_work_target`. A stored, literal or
-operator-supplied `revision_id` may only be **asserted equal** to that
-resolution, never injected as the selector.
+`law_selected_revision_for_work_target`, which takes exactly one
+`RegistryAuthorityCapture` and delegates to the pure
+`assert_work_target_revision`. A stored, literal or operator-supplied
+`revision_id` may only be **asserted equal** to that resolution, never injected
+as the selector; the requested and stored axes are judged independently against
+the same capture, so neither can select the revision the other is judged by.
 
 AEAT binds every triple to exactly one revision by publishing orden, so "which
 revision applies" is a derived fact. Feeding a stored id back into resolution
