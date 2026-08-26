@@ -12,7 +12,7 @@ There are two ways to supply the justificante:
 - **Pull it from AEAT** with `reconcile pull` - the tool fetches the receipt
   from the AEAT sede (read-only), stores an encrypted copy in your profile,
   and reconciles in one step.
-- **Use a local PDF** with `reconcile file --file` - you downloaded the
+- **Use a local PDF** with `reconcile import --file` - you downloaded the
   justificante yourself; the check is local and never contacts AEAT.
 
 ## Before you start
@@ -24,7 +24,7 @@ You need:
   filing) that was presented at the AEAT portal
 - for the pull commands: working AEAT authentication - see
   [Authenticate with AEAT](authenticate-with-aeat.md)
-- for `reconcile file`: the justificante PDF on disk
+- for `reconcile import`: the justificante PDF on disk
 
 To create a profile, see [Set up your taxpayer profile](profile-setup.md). For
 the filing workflow, see the [quickstart](quickstart.md). Every command on
@@ -90,7 +90,7 @@ If you already downloaded the justificante from the portal, compare your local
 filing record against that file. This check is local and never contacts AEAT,
 but it needs the real receipt PDF on disk, so it is shown as a display frame:
 
-```{cli-sequence} reconcile-file
+```{cli-sequence} reconcile-import
 ```
 
 This check is local. It reads the PDF you supply and never contacts AEAT.
@@ -140,7 +140,7 @@ stores:
 
 - `reconcile pull` stores the fetched justificante as an encrypted copy in your
   profile.
-- `reconcile file` reads a PDF you supply but does not store it. If you reconcile
+- `reconcile import` reads a PDF you supply but does not store it. If you reconcile
   against a downloaded PDF, also pull the receipt so an encrypted copy is kept in
   your profile. See [Pull and store the justificante](#pull-and-store-the-justificante).
 - Reconciliation history is a read-back you can regenerate from the justificante,

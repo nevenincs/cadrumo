@@ -1,3 +1,3 @@
 @step Pull the Drive document straight into encrypted evidence storage.
-@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+@static aeat app ledger evidence pull <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 @blocked external-service Needs Google OAuth credentials and a live Drive file readable under the drive.file scope.

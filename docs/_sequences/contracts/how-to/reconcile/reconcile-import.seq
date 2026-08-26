@@ -1,3 +1,3 @@
 @step Reconcile the local filing record against a downloaded justificante PDF.
-@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
+@static aeat app modelo reconcile import --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 @blocked operator-artifact Needs a real AEAT justificante PDF carrying a CSV; the bundled annex specimens carry none.

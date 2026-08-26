@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-26 10:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -27,18 +27,18 @@ msgstr "Egy benyújtott modelo egyeztetése a justificantéjával szemben"
 msgid ""
 "This page covers the {term}`justificante`, the signed PDF receipt AEAT "
 "issues when you file at the portal, and reconciliation: how to pull the "
-"receipt from AEAT and keep it as encrypted evidence in your profile, and how"
-" to compare it against your local filing record so a typo at the portal, a "
-"wrong period, or a stale local value surfaces now instead of during a later "
-"review."
+"receipt from AEAT and keep it as encrypted evidence in your profile, and "
+"how to compare it against your local filing record so a typo at the "
+"portal, a wrong period, or a stale local value surfaces now instead of "
+"during a later review."
 msgstr ""
 "Ez az oldal a {term}`justificante`-t tárgyalja, azt az aláírt PDF-"
-"bizonylatot, amelyet az AEAT kiad, amikor a portálon benyújt, valamint az "
-"egyeztetést: hogyan kérje le a bizonylatot az AEAT-ból, és tartsa "
+"bizonylatot, amelyet az AEAT kiad, amikor a portálon benyújt, valamint az"
+" egyeztetést: hogyan kérje le a bizonylatot az AEAT-ból, és tartsa "
 "titkosított bizonyítékként a profiljában, és hogyan vesse össze a helyi "
 "benyújtási rekordjával, hogy egy portálon vétett elgépelés, egy rossz "
-"időszak vagy egy elavult helyi érték most kerüljön felszínre, ne egy későbbi"
-" felülvizsgálat során."
+"időszak vagy egy elavult helyi érték most kerüljön felszínre, ne egy "
+"későbbi felülvizsgálat során."
 
 #: ../../how-to/reconcile.md:10
 msgid "There are two ways to supply the justificante:"
@@ -46,17 +46,18 @@ msgstr "Kétféleképpen adhatja meg a justificantét:"
 
 #: ../../how-to/reconcile.md:12
 msgid ""
-"**Pull it from AEAT** with `reconcile pull` - the tool fetches the receipt "
-"from the AEAT sede (read-only), stores an encrypted copy in your profile, "
-"and reconciles in one step."
+"**Pull it from AEAT** with `reconcile pull` - the tool fetches the "
+"receipt from the AEAT sede (read-only), stores an encrypted copy in your "
+"profile, and reconciles in one step."
 msgstr ""
-"**Kérje le az AEAT-ból** a `reconcile pull` paranccsal: az eszköz lekéri a "
-"bizonylatot az AEAT sedéről (csak olvasható), egy titkosított másolatot "
-"tárol a profiljában, és egy lépésben egyeztet."
+"**Kérje le az AEAT-ból** a `reconcile pull` paranccsal: az eszköz lekéri "
+"a bizonylatot az AEAT sedéről (csak olvasható), egy titkosított másolatot"
+" tárol a profiljában, és egy lépésben egyeztet."
 
 #: ../../how-to/reconcile.md:15
+#, fuzzy
 msgid ""
-"**Use a local PDF** with `reconcile file --file` - you downloaded the "
+"**Use a local PDF** with `reconcile import --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
 "**Használjon egy helyi PDF-et** a `reconcile file --file` paranccsal: Ön "
@@ -77,112 +78,116 @@ msgstr "egy aktív profilra"
 
 #: ../../how-to/reconcile.md:23
 msgid ""
-"a locally filed work unit (you have run `aeat app modelo work file` for this"
-" filing) that was presented at the AEAT portal"
+"a locally filed work unit (you have run `aeat app modelo work file` for "
+"this filing) that was presented at the AEAT portal"
 msgstr ""
-"egy helyben benyújtott munkaegységre (Ön futtatta az `aeat app modelo work "
-"file` parancsot ehhez a benyújtáshoz), amelyet beadtak az AEAT-portálon"
+"egy helyben benyújtott munkaegységre (Ön futtatta az `aeat app modelo "
+"work file` parancsot ehhez a benyújtáshoz), amelyet beadtak az AEAT-"
+"portálon"
 
 #: ../../how-to/reconcile.md:25
 msgid ""
-"for the pull commands: working AEAT authentication - see [Authenticate with "
-"AEAT](authenticate-with-aeat.md)"
+"for the pull commands: working AEAT authentication - see [Authenticate "
+"with AEAT](authenticate-with-aeat.md)"
 msgstr ""
 "a lekérő parancsokhoz: működő AEAT-hitelesítésre, lásd: [Hitelesítés az "
 "AEAT-nál](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
-msgid "for `reconcile file`: the justificante PDF on disk"
+#, fuzzy
+msgid "for `reconcile import`: the justificante PDF on disk"
 msgstr "a `reconcile file` parancshoz: a justificante PDF a lemezen"
 
 #: ../../how-to/reconcile.md:29
 msgid ""
-"To create a profile, see [Set up your taxpayer profile](profile-setup.md). "
-"For the filing workflow, see the [quickstart](quickstart.md). Every command "
-"on this page needs your master-key passphrase; the tool prompts for it."
+"To create a profile, see [Set up your taxpayer profile](profile-"
+"setup.md). For the filing workflow, see the [quickstart](quickstart.md). "
+"Every command on this page needs your master-key passphrase; the tool "
+"prompts for it."
 msgstr ""
 "Egy profil létrehozásához lásd: [Állítsa be adózói profilját](profile-"
 "setup.md). A benyújtási munkafolyamathoz lásd a "
 "[gyorsindítót](quickstart.md). Az oldalon szereplő minden parancshoz "
 "szükséges a mesterkulcs-jelmondata; az eszköz bekéri."
 
-#: ../../how-to/reconcile.md:33
+#: ../../how-to/reconcile.md:34
 msgid "Pull and store the justificante"
 msgstr "Kérje le és tárolja a justificantét"
 
-#: ../../how-to/reconcile.md:35
+#: ../../how-to/reconcile.md:36
 msgid ""
-"Keep the receipt with your records: it is the official evidence behind every"
-" filed period. Fetch the justificante for one filed period and store it in "
-"your profile without reconciling yet. This reads from the AEAT sede, so it "
-"is shown as a display frame:"
+"Keep the receipt with your records: it is the official evidence behind "
+"every filed period. Fetch the justificante for one filed period and store"
+" it in your profile without reconciling yet. This reads from the AEAT "
+"sede, so it is shown as a display frame:"
 msgstr ""
 "Őrizze meg a bizonylatot a nyilvántartásával: ez a hivatalos bizonyíték "
-"minden benyújtott időszak mögött. Kérje le a justificantét egy benyújtott "
-"időszakhoz, és tárolja a profiljában, egyeztetés nélkül. Ez az AEAT sedéről "
-"olvas, ezért megjelenítési keretként szerepel:"
+"minden benyújtott időszak mögött. Kérje le a justificantét egy benyújtott"
+" időszakhoz, és tárolja a profiljában, egyeztetés nélkül. Ez az AEAT "
+"sedéről olvas, ezért megjelenítési keretként szerepel:"
 
-#: ../../how-to/reconcile.md:43
+#: ../../how-to/reconcile.md:44
 msgid ""
-"`pull` is live-only: it reads from AEAT (read-only) and needs the configured"
-" authentication session. `--modelo`, `--year`, and `--period` are all "
-"required. When auth is not set up, the pull refuses before contacting AEAT "
-"with a Cl@ve identity message (`La identidad de Cl@ve Móvil no "
-"coincide...`); on a first run the real cause is usually that no AEAT session"
-" is configured yet."
+"`pull` is live-only: it reads from AEAT (read-only) and needs the "
+"configured authentication session. `--modelo`, `--year`, and `--period` "
+"are all required. When auth is not set up, the pull refuses before "
+"contacting AEAT with a Cl@ve identity message (`La identidad de Cl@ve "
+"Móvil no coincide...`); on a first run the real cause is usually that no "
+"AEAT session is configured yet."
 msgstr ""
 "A `pull` csak élő: az AEAT-ból olvas (csak olvasható), és szüksége van a "
-"beállított hitelesítési munkamenetre. A `--modelo`, `--year` és `--period` "
-"mind kötelező. Amikor a hitelesítés nincs beállítva, a lekérés az AEAT-tal "
-"való kapcsolatfelvétel előtt elutasít egy Cl@ve azonossági üzenettel (`La "
-"identidad de Cl@ve Móvil no coincide...`); egy első futtatásnál a valódi ok "
-"általában az, hogy még nincs beállítva AEAT-munkamenet."
+"beállított hitelesítési munkamenetre. A `--modelo`, `--year` és "
+"`--period` mind kötelező. Amikor a hitelesítés nincs beállítva, a lekérés"
+" az AEAT-tal való kapcsolatfelvétel előtt elutasít egy Cl@ve azonossági "
+"üzenettel (`La identidad de Cl@ve Móvil no coincide...`); egy első "
+"futtatásnál a valódi ok általában az, hogy még nincs beállítva AEAT-"
+"munkamenet."
 
-#: ../../how-to/reconcile.md:50
+#: ../../how-to/reconcile.md:51
 msgid ""
-"The output reports the stored capture: its snapshot id, the expediente it "
-"belongs to, the CSV verification code printed on the receipt, the PDF's "
+"The output reports the stored capture: its snapshot id, the expediente it"
+" belongs to, the CSV verification code printed on the receipt, the PDF's "
 "content fingerprint, and when it was captured. The PDF bytes are stored "
 "encrypted inside your profile, so you do not need to keep a separate "
-"downloaded copy. Pulling again for the same modelo, year, and period stores "
-"a fresh capture and marks the earlier one as superseded, so the latest "
-"receipt is always the active one."
+"downloaded copy. Pulling again for the same modelo, year, and period "
+"stores a fresh capture and marks the earlier one as superseded, so the "
+"latest receipt is always the active one."
 msgstr ""
 "A kimenet jelenti a tárolt rögzítést: a pillanatkép azonosítóját, az "
-"expedientét, amelyhez tartozik, a bizonylaton kiírt CSV-ellenőrző kódot, a "
-"PDF tartalmi ujjlenyomatát, és azt, hogy mikor rögzítették. A PDF bájtjai "
-"titkosítva tárolódnak a profiljában, így nem kell külön letöltött másolatot "
-"megőriznie. Az ugyanahhoz a modelóhoz, évhez és időszakhoz való újbóli "
-"lekérés friss rögzítést tárol, és a korábbit felülírtként jelöli meg, így a "
-"legutóbbi bizonylat mindig az aktív."
+"expedientét, amelyhez tartozik, a bizonylaton kiírt CSV-ellenőrző kódot, "
+"a PDF tartalmi ujjlenyomatát, és azt, hogy mikor rögzítették. A PDF "
+"bájtjai titkosítva tárolódnak a profiljában, így nem kell külön letöltött"
+" másolatot megőriznie. Az ugyanahhoz a modelóhoz, évhez és időszakhoz "
+"való újbóli lekérés friss rögzítést tárol, és a korábbit felülírtként "
+"jelöli meg, így a legutóbbi bizonylat mindig az aktív."
 
-#: ../../how-to/reconcile.md:58
+#: ../../how-to/reconcile.md:59
 msgid ""
 "List every capture stored in the active profile, then inspect one (an "
 "unambiguous prefix of the snapshot id is enough). Both read the stored "
-"captures back through the live justificante surface, so they are shown as "
-"display frames:"
+"captures back through the live justificante surface, so they are shown as"
+" display frames:"
 msgstr ""
 "Listázza az aktív profilban tárolt minden rögzítést, majd vizsgáljon meg "
-"egyet (a pillanatkép azonosítójának egy egyértelmű előtagja elég). Mindkettő"
-" a tárolt rögzítéseket olvassa vissza az élő justificante-felületen "
-"keresztül, ezért megjelenítési keretként szerepelnek:"
+"egyet (a pillanatkép azonosítójának egy egyértelmű előtagja elég). "
+"Mindkettő a tárolt rögzítéseket olvassa vissza az élő justificante-"
+"felületen keresztül, ezért megjelenítési keretként szerepelnek:"
 
-#: ../../how-to/reconcile.md:65
+#: ../../how-to/reconcile.md:66
 msgid ""
 "The view reports the expediente id, the CSV verification code, the PDF "
-"fingerprint, whether the capture is still active or superseded, and when it "
-"was captured."
+"fingerprint, whether the capture is still active or superseded, and when "
+"it was captured."
 msgstr ""
-"A megtekintés jelenti az expediente azonosítóját, a CSV-ellenőrző kódot, a "
-"PDF ujjlenyomatát, azt, hogy a rögzítés még aktív vagy felülírt, és azt, "
-"hogy mikor rögzítették."
+"A megtekintés jelenti az expediente azonosítóját, a CSV-ellenőrző kódot, "
+"a PDF ujjlenyomatát, azt, hogy a rögzítés még aktív vagy felülírt, és "
+"azt, hogy mikor rögzítették."
 
-#: ../../how-to/reconcile.md:69
+#: ../../how-to/reconcile.md:70
 msgid "Pull the justificante from AEAT and reconcile"
 msgstr "Kérje le a justificantét az AEAT-ból, és egyeztessen"
 
-#: ../../how-to/reconcile.md:71
+#: ../../how-to/reconcile.md:72
 msgid ""
 "Fetch the receipt for the filing and reconcile in one command. The pull "
 "reads from AEAT, so it is shown as a display frame:"
@@ -190,132 +195,134 @@ msgstr ""
 "Kérje le a bizonylatot a benyújtáshoz, és egyeztessen egy parancsban. A "
 "lekérés az AEAT-ból olvas, ezért megjelenítési keretként szerepel:"
 
-#: ../../how-to/reconcile.md:77
+#: ../../how-to/reconcile.md:78
 msgid ""
-"Replace `303`, `2026`, and `1T` with the modelo, year, and period of your "
-"actual filing. You can also name the work unit directly as a positional "
+"Replace `303`, `2026`, and `1T` with the modelo, year, and period of your"
+" actual filing. You can also name the work unit directly as a positional "
 "argument instead of the `--modelo --year --period` selectors."
 msgstr ""
-"Cserélje a `303`, `2026` és `1T` értéket a tényleges benyújtása modelójára, "
-"évére és időszakára. A munkaegységet közvetlenül, pozicionális "
-"argumentumként is megnevezheti a `--modelo --year --period` választók "
-"helyett."
+"Cserélje a `303`, `2026` és `1T` értéket a tényleges benyújtása "
+"modelójára, évére és időszakára. A munkaegységet közvetlenül, "
+"pozicionális argumentumként is megnevezheti a `--modelo --year --period` "
+"választók helyett."
 
-#: ../../how-to/reconcile.md:81
+#: ../../how-to/reconcile.md:82
 msgid ""
-"The pull is read-only at AEAT. The fetched receipt is stored as an encrypted"
-" capture in your profile, so the official evidence stays available after the"
-" command finishes. To list or inspect stored captures later, see [Pull and "
-"store the justificante](#pull-and-store-the-justificante) above."
+"The pull is read-only at AEAT. The fetched receipt is stored as an "
+"encrypted capture in your profile, so the official evidence stays "
+"available after the command finishes. To list or inspect stored captures "
+"later, see [Pull and store the justificante](#pull-and-store-the-"
+"justificante) above."
 msgstr ""
 "A lekérés csak olvasható az AEAT-nál. A lekért bizonylat titkosított "
-"rögzítésként tárolódik a profiljában, így a hivatalos bizonyíték a parancs "
-"befejezése után is elérhető marad. A tárolt rögzítések későbbi listázásához "
-"vagy megvizsgálásához lásd a fenti [Kérje le és tárolja a justificantét"
-"](#pull-and-store-the-justificante) oldalt."
+"rögzítésként tárolódik a profiljában, így a hivatalos bizonyíték a "
+"parancs befejezése után is elérhető marad. A tárolt rögzítések későbbi "
+"listázásához vagy megvizsgálásához lásd a fenti [Kérje le és tárolja a "
+"justificantét](#pull-and-store-the-justificante) oldalt."
 
-#: ../../how-to/reconcile.md:86
+#: ../../how-to/reconcile.md:87
 msgid "Reconcile against a local PDF instead"
 msgstr "Egyeztessen inkább egy helyi PDF-fel szemben"
 
-#: ../../how-to/reconcile.md:88
+#: ../../how-to/reconcile.md:89
 msgid ""
 "If you already downloaded the justificante from the portal, compare your "
 "local filing record against that file. This check is local and never "
-"contacts AEAT, but it needs the real receipt PDF on disk, so it is shown as "
-"a display frame:"
+"contacts AEAT, but it needs the real receipt PDF on disk, so it is shown "
+"as a display frame:"
 msgstr ""
 "Ha már letöltötte a justificantét a portálról, vesse össze a helyi "
-"benyújtási rekordját azzal a fájllal. Ez az ellenőrzés helyi, és soha nem "
-"lép kapcsolatba az AEAT-tal, de szüksége van a valódi bizonylat PDF-re a "
-"lemezen, ezért megjelenítési keretként szerepel:"
+"benyújtási rekordját azzal a fájllal. Ez az ellenőrzés helyi, és soha nem"
+" lép kapcsolatba az AEAT-tal, de szüksége van a valódi bizonylat PDF-re a"
+" lemezen, ezért megjelenítési keretként szerepel:"
 
-#: ../../how-to/reconcile.md:95
+#: ../../how-to/reconcile.md:96
 msgid "This check is local. It reads the PDF you supply and never contacts AEAT."
 msgstr ""
-"Ez az ellenőrzés helyi. Az Ön által megadott PDF-et olvassa, és soha nem lép"
-" kapcsolatba az AEAT-tal."
+"Ez az ellenőrzés helyi. Az Ön által megadott PDF-et olvassa, és soha nem "
+"lép kapcsolatba az AEAT-tal."
 
-#: ../../how-to/reconcile.md:97
+#: ../../how-to/reconcile.md:98
 msgid "Read the result"
 msgstr "Olvassa el az eredményt"
 
-#: ../../how-to/reconcile.md:99
+#: ../../how-to/reconcile.md:100
 msgid "Both transports report one of three verdicts:"
 msgstr "Mindkét átvitel három verdikt egyikét jelenti:"
 
-#: ../../how-to/reconcile.md:101
+#: ../../how-to/reconcile.md:102
 msgid "**matches** - the justificante matches the local filing record."
 msgstr "**matches**: a justificante megegyezik a helyi benyújtási rekorddal."
 
-#: ../../how-to/reconcile.md:102
+#: ../../how-to/reconcile.md:103
 msgid ""
-"**mismatches** - one or more fields differ. The report names each field and "
-"shows the local value next to the value found in the PDF."
+"**mismatches** - one or more fields differ. The report names each field "
+"and shows the local value next to the value found in the PDF."
 msgstr ""
 "**mismatches**: egy vagy több mező eltér. A jelentés megnevezi az egyes "
 "mezőket, és a helyi értéket a PDF-ben talált érték mellett mutatja."
 
-#: ../../how-to/reconcile.md:104
+#: ../../how-to/reconcile.md:105
 msgid ""
-"**evidence_invalid** - the PDF could not be read. Check that the file is the"
-" AEAT justificante and not a different document."
+"**evidence_invalid** - the PDF could not be read. Check that the file is "
+"the AEAT justificante and not a different document."
 msgstr ""
-"**evidence_invalid**: a PDF-et nem lehetett beolvasni. Ellenőrizze, hogy a "
-"fájl az AEAT-justificante, és nem egy másik dokumentum."
+"**evidence_invalid**: a PDF-et nem lehetett beolvasni. Ellenőrizze, hogy "
+"a fájl az AEAT-justificante, és nem egy másik dokumentum."
 
-#: ../../how-to/reconcile.md:107
+#: ../../how-to/reconcile.md:108
 msgid ""
-"Reconciliation compares four header fields only: the modelo code, the filing"
-" year, the period, and the taxpayer identifier (NIF, CIF, DNI, or NIE). It "
-"does not compare box (casilla) values. A `mismatches` verdict always names "
-"one of those four fields, never a box."
+"Reconciliation compares four header fields only: the modelo code, the "
+"filing year, the period, and the taxpayer identifier (NIF, CIF, DNI, or "
+"NIE). It does not compare box (casilla) values. A `mismatches` verdict "
+"always names one of those four fields, never a box."
 msgstr ""
 "Az egyeztetés csak négy fejlécmezőt hasonlít össze: a modelo-kódot, a "
-"benyújtási évet, az időszakot és az adózó azonosítóját (NIF, CIF, DNI vagy "
-"NIE). Nem hasonlítja össze a rovat (casilla) értékeit. Egy `mismatches` "
-"verdikt mindig e négy mező egyikét nevezi meg, soha nem egy rovatot."
+"benyújtási évet, az időszakot és az adózó azonosítóját (NIF, CIF, DNI "
+"vagy NIE). Nem hasonlítja össze a rovat (casilla) értékeit. Egy "
+"`mismatches` verdikt mindig e négy mező egyikét nevezi meg, soha nem egy "
+"rovatot."
 
-#: ../../how-to/reconcile.md:112
+#: ../../how-to/reconcile.md:113
 msgid "Handle a mismatch"
 msgstr "Kezeljen egy eltérést"
 
-#: ../../how-to/reconcile.md:114
+#: ../../how-to/reconcile.md:115
 msgid ""
-"A `mismatches` verdict names the header field that differs and shows your "
-"local value next to the value in the justificante."
+"A `mismatches` verdict names the header field that differs and shows your"
+" local value next to the value in the justificante."
 msgstr ""
-"Egy `mismatches` verdikt megnevezi az eltérő fejlécmezőt, és a helyi értékét"
-" a justificantéban lévő érték mellett mutatja."
+"Egy `mismatches` verdikt megnevezi az eltérő fejlécmezőt, és a helyi "
+"értékét a justificantéban lévő érték mellett mutatja."
 
-#: ../../how-to/reconcile.md:117
+#: ../../how-to/reconcile.md:118
 msgid ""
-"Confirm the justificante is the correct one for this filing, not a different"
-" period or taxpayer. A wrong receipt is the most common cause."
+"Confirm the justificante is the correct one for this filing, not a "
+"different period or taxpayer. A wrong receipt is the most common cause."
 msgstr ""
 "Erősítse meg, hogy a justificante a helyes ehhez a benyújtáshoz, nem egy "
 "másik időszakhoz vagy adózóhoz. Egy rossz bizonylat a leggyakoribb ok."
 
-#: ../../how-to/reconcile.md:119
+#: ../../how-to/reconcile.md:120
 msgid ""
-"If the modelo, year, or period differs, you either reconciled against the "
-"wrong filing or filed the wrong period at the portal. Re-run reconciliation "
-"with the correct selectors, or check what you submitted."
+"If the modelo, year, or period differs, you either reconciled against the"
+" wrong filing or filed the wrong period at the portal. Re-run "
+"reconciliation with the correct selectors, or check what you submitted."
 msgstr ""
-"Ha a modelo, az év vagy az időszak eltér, akkor vagy a rossz benyújtással "
-"szemben egyeztetett, vagy a rossz időszakot nyújtotta be a portálon. "
-"Futtassa újra az egyeztetést a helyes választókkal, vagy ellenőrizze, mit "
-"adott be."
+"Ha a modelo, az év vagy az időszak eltér, akkor vagy a rossz benyújtással"
+" szemben egyeztetett, vagy a rossz időszakot nyújtotta be a portálon. "
+"Futtassa újra az egyeztetést a helyes választókkal, vagy ellenőrizze, mit"
+" adott be."
 
-#: ../../how-to/reconcile.md:122
+#: ../../how-to/reconcile.md:123
 msgid ""
-"If the taxpayer identifier differs, confirm the active profile matches the "
-"taxpayer the justificante was issued to."
+"If the taxpayer identifier differs, confirm the active profile matches "
+"the taxpayer the justificante was issued to."
 msgstr ""
-"Ha az adózó azonosítója eltér, erősítse meg, hogy az aktív profil megegyezik"
-" azzal az adózóval, akinek a justificantét kiadták."
+"Ha az adózó azonosítója eltér, erősítse meg, hogy az aktív profil "
+"megegyezik azzal az adózóval, akinek a justificantét kiadták."
 
-#: ../../how-to/reconcile.md:124
+#: ../../how-to/reconcile.md:125
 msgid ""
 "If the justificante itself appears wrong, contact your asesor or AEAT "
 "directly."
@@ -323,70 +330,73 @@ msgstr ""
 "Ha maga a justificante tűnik hibásnak, forduljon az asesorához vagy "
 "közvetlenül az AEAT-hoz."
 
-#: ../../how-to/reconcile.md:127
+#: ../../how-to/reconcile.md:128
 msgid "If a box value looks wrong"
 msgstr "Ha egy rovatérték hibásnak tűnik"
 
-#: ../../how-to/reconcile.md:129
+#: ../../how-to/reconcile.md:130
 msgid ""
-"Reconciliation does not compare box (casilla) values, so it cannot tell you "
-"that a computed total differs from what you filed. To correct a box value, "
-"use the amendment workflow rather than reconciliation. Re-check the inputs "
-"and re-calculate. If the period was already filed, file a complementaria. "
-"See [Review and supply calculation inputs](review-calculation-values.md)."
+"Reconciliation does not compare box (casilla) values, so it cannot tell "
+"you that a computed total differs from what you filed. To correct a box "
+"value, use the amendment workflow rather than reconciliation. Re-check "
+"the inputs and re-calculate. If the period was already filed, file a "
+"complementaria. See [Review and supply calculation inputs](review-"
+"calculation-values.md)."
 msgstr ""
 "Az egyeztetés nem hasonlítja össze a rovat (casilla) értékeit, ezért nem "
-"tudja megmondani, hogy egy kiszámított összeg eltér attól, amit benyújtott. "
-"Egy rovatérték javításához a módosítási munkafolyamatot használja, ne az "
-"egyeztetést. Ellenőrizze újra a bemeneteket, és számítson újra. Ha az "
-"időszakot már benyújtotta, nyújtson be egy complementariát. Lásd: [Számítási"
-" bemenetek felülvizsgálata és megadása](review-calculation-values.md)."
+"tudja megmondani, hogy egy kiszámított összeg eltér attól, amit "
+"benyújtott. Egy rovatérték javításához a módosítási munkafolyamatot "
+"használja, ne az egyeztetést. Ellenőrizze újra a bemeneteket, és "
+"számítson újra. Ha az időszakot már benyújtotta, nyújtson be egy "
+"complementariát. Lásd: [Számítási bemenetek felülvizsgálata és megadása"
+"](review-calculation-values.md)."
 
-#: ../../how-to/reconcile.md:135
+#: ../../how-to/reconcile.md:136
 msgid "What to keep as evidence"
 msgstr "Mit őrizzen meg bizonyítékként"
 
-#: ../../how-to/reconcile.md:137
+#: ../../how-to/reconcile.md:138
 msgid ""
-"The justificante is your proof of what AEAT received. Here is what each path"
-" stores:"
+"The justificante is your proof of what AEAT received. Here is what each "
+"path stores:"
 msgstr ""
 "A justificante az Ön bizonyítéka arról, mit kapott meg az AEAT. Íme, mit "
 "tárol az egyes utak:"
 
-#: ../../how-to/reconcile.md:140
+#: ../../how-to/reconcile.md:141
 msgid ""
 "`reconcile pull` stores the fetched justificante as an encrypted copy in "
 "your profile."
 msgstr ""
-"A `reconcile pull` a lekért justificantét titkosított másolatként tárolja a "
-"profiljában."
+"A `reconcile pull` a lekért justificantét titkosított másolatként tárolja"
+" a profiljában."
 
-#: ../../how-to/reconcile.md:142
+#: ../../how-to/reconcile.md:143
+#, fuzzy
 msgid ""
-"`reconcile file` reads a PDF you supply but does not store it. If you "
-"reconcile against a downloaded PDF, also pull the receipt so an encrypted "
-"copy is kept in your profile. See [Pull and store the justificante](#pull-"
-"and-store-the-justificante)."
+"`reconcile import` reads a PDF you supply but does not store it. If you "
+"reconcile against a downloaded PDF, also pull the receipt so an encrypted"
+" copy is kept in your profile. See [Pull and store the justificante"
+"](#pull-and-store-the-justificante)."
 msgstr ""
-"A `reconcile file` egy Ön által megadott PDF-et olvas, de nem tárolja. Ha "
-"egy letöltött PDF-fel szemben egyeztet, kérje le a bizonylatot is, hogy egy "
-"titkosított másolat megmaradjon a profiljában. Lásd: [Kérje le és tárolja a "
-"justificantét](#pull-and-store-the-justificante)."
+"A `reconcile file` egy Ön által megadott PDF-et olvas, de nem tárolja. Ha"
+" egy letöltött PDF-fel szemben egyeztet, kérje le a bizonylatot is, hogy "
+"egy titkosított másolat megmaradjon a profiljában. Lásd: [Kérje le és "
+"tárolja a justificantét](#pull-and-store-the-justificante)."
 
-#: ../../how-to/reconcile.md:145
+#: ../../how-to/reconcile.md:146
 msgid ""
 "Reconciliation history is a read-back you can regenerate from the "
 "justificante, so it needs no separate backup."
 msgstr ""
-"Az egyeztetési előzmény egy visszaolvasás, amelyet a justificantéból újra "
-"létrehozhat, ezért nem igényel külön biztonsági mentést."
+"Az egyeztetési előzmény egy visszaolvasás, amelyet a justificantéból újra"
+" létrehozhat, ezért nem igényel külön biztonsági mentést."
 
-#: ../../how-to/reconcile.md:148
+#: ../../how-to/reconcile.md:149
 msgid "Review past reconciliations"
 msgstr "Múltbeli egyeztetések felülvizsgálata"
 
-#: ../../how-to/reconcile.md:150
+#: ../../how-to/reconcile.md:151
 msgid ""
 "Each reconciliation is recorded in the profile's event history. List the "
 "past reconciliations recorded for the active profile:"
@@ -394,7 +404,7 @@ msgstr ""
 "Minden egyeztetés rögzül a profil eseményelőzményében. Listázza az aktív "
 "profilhoz rögzített múltbeli egyeztetéseket:"
 
-#: ../../how-to/reconcile.md:157
+#: ../../how-to/reconcile.md:158
 msgid ""
 "On a fresh profile the list is empty; after you reconcile a filing a row "
 "appears for each run."
@@ -402,61 +412,61 @@ msgstr ""
 "Egy friss profilon a lista üres; miután egyeztet egy benyújtást, minden "
 "futtatáshoz megjelenik egy sor."
 
-#: ../../how-to/reconcile.md:160
+#: ../../how-to/reconcile.md:161
 msgid ""
-"Add `--work-unit-id <id>` to narrow the list to a single work unit. Each row"
-" shows when the reconciliation ran, the work unit, the evidence source, the "
-"verdict, and how many fields differed. Reconciliation is repeatable on "
-"demand from the justificante, so this is a convenience read-back rather than"
-" a separate stored record."
+"Add `--work-unit-id <id>` to narrow the list to a single work unit. Each "
+"row shows when the reconciliation ran, the work unit, the evidence "
+"source, the verdict, and how many fields differed. Reconciliation is "
+"repeatable on demand from the justificante, so this is a convenience "
+"read-back rather than a separate stored record."
 msgstr ""
 "Adja hozzá a `--work-unit-id <id>` opciót a lista egyetlen munkaegységre "
 "szűkítéséhez. Minden sor megmutatja, mikor futott az egyeztetés, a "
-"munkaegységet, a bizonyíték forrását, a verdiktet, és hány mező tért el. Az "
-"egyeztetés igény szerint megismételhető a justificantéból, ezért ez egy "
-"kényelmi visszaolvasás, nem egy külön tárolt rekord."
+"munkaegységet, a bizonyíték forrását, a verdiktet, és hány mező tért el. "
+"Az egyeztetés igény szerint megismételhető a justificantéból, ezért ez "
+"egy kényelmi visszaolvasás, nem egy külön tárolt rekord."
 
-#: ../../how-to/reconcile.md:166
+#: ../../how-to/reconcile.md:167
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/reconcile.md:168
+#: ../../how-to/reconcile.md:169
 msgid ""
-"[Import, export, and evidence](../reference/import-export-and-evidence.md) -"
-" understand what the justificante proves and what a complete audit handoff "
-"still requires."
+"[Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) - understand what the justificante proves and what a "
+"complete audit handoff still requires."
 msgstr ""
 "[Importálás, export és bizonyíték](../reference/import-export-and-"
-"evidence.md): értse meg, mit bizonyít a justificante, és mit igényel még egy"
-" teljes auditátadás."
+"evidence.md): értse meg, mit bizonyít a justificante, és mit igényel még "
+"egy teljes auditátadás."
 
-#: ../../how-to/reconcile.md:171
+#: ../../how-to/reconcile.md:172
 msgid ""
-"[File your modelo at the AEAT portal](file-at-aeat.md) - the "
-"filing handoff that produces the justificante."
+"[File your modelo at the AEAT portal](file-at-aeat.md) - the filing "
+"handoff that produces the justificante."
 msgstr ""
 "[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md): a "
 "benyújtási átadás, amely a justificantét előállítja."
 
-#: ../../how-to/reconcile.md:173
+#: ../../how-to/reconcile.md:174
 msgid "[Quickstart](quickstart.md) - the end-to-end filing workflow."
 msgstr ""
 "[Gyorsindító](quickstart.md): a végponttól végpontig tartó benyújtási "
 "munkafolyamat."
 
-#: ../../how-to/reconcile.md:174
+#: ../../how-to/reconcile.md:175
 msgid ""
-"[Review and supply calculation inputs](review-calculation-values.md) - amend"
-" a filing if reconciliation finds a mismatch."
+"[Review and supply calculation inputs](review-calculation-values.md) - "
+"amend a filing if reconciliation finds a mismatch."
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
 "values.md): módosítson egy benyújtást, ha az egyeztetés eltérést talál."
 
-#: ../../how-to/reconcile.md:176
+#: ../../how-to/reconcile.md:177
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[CLI-referencia](../cli/index.rst): a teljes opcióreferencia."
 
-#: ../../how-to/reconcile.md:177
+#: ../../how-to/reconcile.md:178
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - fix local "
 "readiness problems."

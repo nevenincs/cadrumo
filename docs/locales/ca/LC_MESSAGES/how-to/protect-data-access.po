@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 14:57+0200\n"
+"POT-Creation-Date: 2026-08-26 10:39+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -204,20 +204,21 @@ msgstr ""
 "cap perfil."
 
 #: ../../how-to/protect-data-access.md:68
+#, fuzzy
 msgid ""
 "The CLI does not currently export a recovery artifact, so do not treat "
 "the phrase as a complete operator recovery path. Where an external "
 "provisioning workflow supplies the matching artifact, use it only with "
-"the explicit artifact-based profile restore command and a source capsule."
-" The artifact and phrase prove a restore; they do not log in, reset the "
-"passphrase, enroll recovery in the restored profile, or travel inside a "
-"normal backup archive."
+"the explicit artifact-based `profile archive import` command and a source"
+" capsule. The artifact and phrase prove a restore; they do not log in, "
+"reset the passphrase, enroll recovery in the restored profile, or travel "
+"inside a normal backup archive."
 msgstr ""
 "La CLI no exporta actualment cap artefacte de recuperació; per tant, no "
 "tractis la frase com una via completa de recuperació per a l'operador. "
 "Quan un flux de proveïment extern aporti l'artefacte corresponent, "
-"utilitza'l només amb l'ordre explícita de restauració de perfil basada en "
-"artefacte i una càpsula d'origen. L'artefacte i la frase proven una "
+"utilitza'l només amb l'ordre explícita de restauració de perfil basada en"
+" artefacte i una càpsula d'origen. L'artefacte i la frase proven una "
 "restauració; no inicien sessió, no restableixen la contrasenya, no "
 "inscriuen la recuperació al perfil restaurat ni viatgen dins d'un arxiu "
 "de còpia de seguretat normal."
@@ -400,11 +401,13 @@ msgstr ""
 "\"new_passphrase_confirmation\": \"...\"}`"
 
 #: ../../how-to/protect-data-access.md:97
-msgid "`aeat config profile restore` without `--artifact`"
+#, fuzzy
+msgid "`aeat config profile archive import` without `--artifact`"
 msgstr "`aeat config profile restore` sense `--artifact`"
 
 #: ../../how-to/protect-data-access.md:97
-msgid "`aeat config profile restore` with `--artifact`"
+#, fuzzy
+msgid "`aeat config profile archive import` with `--artifact`"
 msgstr "`aeat config profile restore` amb `--artifact`"
 
 #: ../../how-to/protect-data-access.md:97
@@ -851,3 +854,4 @@ msgstr "[Referència de la CLI](../cli/index.rst) - referència completa d'opcio
 #~ "i la frase és el que preserva "
 #~ "la teva capacitat de recuperació una "
 #~ "vegada que ho fa."
+

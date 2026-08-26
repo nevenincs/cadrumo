@@ -1,6 +1,6 @@
 @step Preview the census facts the downloaded certificate carries.
-@static aeat config profile censo file --file certificado-g313.pdf
+@static aeat config profile censo import --file certificado-g313.pdf
 @blocked operator-artifact Needs the operator's own G313 censo certificate PDF from the AEAT sede.
 @step Record the certificate's facts onto the active profile.
-@static aeat config profile censo file --file certificado-g313.pdf --apply
+@static aeat config profile censo import --file certificado-g313.pdf --apply
 @blocked operator-artifact Needs the operator's own G313 censo certificate PDF from the AEAT sede.

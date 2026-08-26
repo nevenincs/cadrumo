@@ -1,0 +1,177 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-26 10:37+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:6
+msgid "Orden EHA/1033/2011"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:8
+msgid ""
+"Published in the Boletín Oficial del Estado as BOE-A-2011-7479. Cadrumo's"
+" calculations cite 2 provisions of this text; each one links below to its"
+" official wording in the BOE."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:15
+msgid "Orden EHA/1033/2011, art. disposición final única"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:19
+#: ../../_generated/legal/boe-a-2011-7479.rst:58
+msgid "In force from 2011-07-01 (published on 2011-04-27)."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:30
+msgid ""
+"`Read Orden EHA/1033/2011, art. disposición final única in the BOE "
+"<https://www.boe.es/buscar/doc.php?id=BOE-A-2011-7479>`__"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:32
+#: ../../_generated/legal/boe-a-2011-7479.rst:71
+msgid ""
+"The consolidated text in the Boletín Oficial del Estado is the official "
+"wording."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:36
+#: ../../_generated/legal/boe-a-2011-7479.rst:75
+msgid "Catalogue record"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Catalogue identifier"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:38
+msgid "``orden-eha-1033-2011:disposicion-final-unica``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Kind of instrument"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:39
+#: ../../_generated/legal/boe-a-2011-7479.rst:78
+msgid "``orden``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "BOE document"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:40
+#: ../../_generated/legal/boe-a-2011-7479.rst:79
+msgid "``BOE-A-2011-7479``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Bundled corpus"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:41
+msgid ""
+"``corpus/normatives/html/orden-eha-1033-2011.html#disposicion-final-"
+"unica``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Authority"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:42
+#: ../../_generated/legal/boe-a-2011-7479.rst:81
+msgid "``boe``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Evidence tier"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:43
+#: ../../_generated/legal/boe-a-2011-7479.rst:82
+msgid "``legal_authority``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Review status"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:44
+#: ../../_generated/legal/boe-a-2011-7479.rst:83
+msgid "``agent_reviewed``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Date reviewed"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:45
+#: ../../_generated/legal/boe-a-2011-7479.rst:84
+msgid "2026-08-26"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Reviewed by"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:46
+#: ../../_generated/legal/boe-a-2011-7479.rst:85
+msgid "agent-prepared-pending-operator"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst
+msgid "Cataloguer's note"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:47
+msgid ""
+"Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II "
+"de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio "
+"de 2011. Corrobora la frontera intranual entre los diseños de registro "
+"del modelo 308."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:54
+msgid "Orden EHA/1033/2011, art. único"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:69
+msgid ""
+"`Read Orden EHA/1033/2011, art. único in the BOE "
+"<https://www.boe.es/buscar/doc.php?id=BOE-A-2011-7479>`__"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:77
+msgid "``orden-eha-1033-2011:articulo-unico``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:80
+msgid "``corpus/normatives/html/orden-eha-1033-2011.html#articulo-unico``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2011-7479.rst:86
+msgid ""
+"Artículo único de la Orden EHA/1033/2011: sustituye el anexo II del "
+"modelo 308 aprobado por la Orden EHA/3786/2008. La disposición final "
+"única fija su entrada en vigor el 1 de julio de 2011."
+msgstr ""
+

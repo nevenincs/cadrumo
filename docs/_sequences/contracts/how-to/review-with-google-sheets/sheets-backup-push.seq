@@ -1,6 +1,6 @@
 @step Preview the encrypted backup to Drive without uploading.
-@static aeat config google sync push --dry-run
+@static aeat config profile archive push --dry-run
 @blocked external-service Refuses with no Google Drive root folder configured against a live account.
 @step Mirror the encrypted records to the Drive folder.
-@static aeat config google sync push
+@static aeat config profile archive push
 @blocked external-service Refuses with no Google Drive root folder configured against a live account.

@@ -1,3 +1,3 @@
 @step Compute casilla values from the operator-edited cells.
-@static aeat config google sync calc compute --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
+@static aeat app modelo spreadsheet calculate --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 @blocked external-service Needs a Google OAuth consent and a live Sheets API the sandbox has no credentials for.

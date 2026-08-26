@@ -198,10 +198,10 @@ invoice-record workflow, including the `--attachment-id` option and its current
 limitation.
 
 Pull a document straight from Google Drive into encrypted evidence storage with
-`doclink`. This command reaches Google Drive, so it runs against your own
+`evidence pull`. This command reaches Google Drive, so it runs against your own
 authorized account rather than in the documentation sandbox:
 
-```{cli-sequence} import-doclink
+```{cli-sequence} import-evidence-pull
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the

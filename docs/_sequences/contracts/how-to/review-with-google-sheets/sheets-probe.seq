@@ -1,3 +1,3 @@
 @step Probe the Google connection.
-@static aeat config google sync probe
+@static aeat config google probe
 @blocked external-service Refuses with no Google Drive root folder configured against a live account.

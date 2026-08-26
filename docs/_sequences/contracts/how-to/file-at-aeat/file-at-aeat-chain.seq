@@ -17,5 +17,5 @@ aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --outp
 @expect result.status == "vigente"
 @expect exit_code == 0
 @step Reconcile AEAT's justificante against your local record (run against your own receipt).
-@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
+@static aeat app modelo reconcile import --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 @blocked operator-artifact Needs a real AEAT justificante PDF carrying a CSV; no committed fixture may fabricate one.

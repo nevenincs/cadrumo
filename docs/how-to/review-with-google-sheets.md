@@ -64,7 +64,7 @@ Export the registry calculation surface for one modelo, year, and period. The
 export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
 area in Drive:
 
-```{cli-sequence} sheets-export
+```{cli-sequence} sheets-push
 ```
 
 It is a calculation review surface, not a bank statement export. Use `aeat app
@@ -94,7 +94,7 @@ Run `compute` when you want Cadrumo to calculate casilla values from the edits
 in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing:
 
-```{cli-sequence} sheets-compute
+```{cli-sequence} sheets-calculate
 ```
 
 The compute command checks that the spreadsheet matches the expected filing

@@ -1,0 +1,141 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-26 10:37+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:6
+msgid "Orden EHA/1981/2005"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:8
+msgid ""
+"Published in the Boletín Oficial del Estado as BOE-A-2005-10950. "
+"Cadrumo's calculations cite 1 provisions of this text; each one links "
+"below to its official wording in the BOE."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:15
+msgid "Orden EHA/1981/2005, art. disposicion final unica"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:19
+msgid "In force from 2005-06-30 (published on 2005-06-29)."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:30
+msgid ""
+"`Read Orden EHA/1981/2005, art. disposicion final unica in the BOE "
+"<https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950#disposicionfinalunica>`__"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:32
+msgid ""
+"The consolidated text in the Boletín Oficial del Estado is the official "
+"wording."
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:36
+msgid "Catalogue record"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Catalogue identifier"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:38
+msgid "``orden-eha-1981-2005:df-unica``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Kind of instrument"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:39
+msgid "``orden``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "BOE document"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:40
+msgid "``BOE-A-2005-10950``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Bundled corpus"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:41
+msgid "``corpus/normatives/html/orden-eha-1981-2005.html#df-unica``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Authority"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:42
+msgid "``boe``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Evidence tier"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:43
+msgid "``legal_authority``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Review status"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:44
+msgid "``agent_reviewed``"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Date reviewed"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:45
+msgid "2026-08-26"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Reviewed by"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:46
+msgid ""
+"agent-prepared (corpus-grounded against the official BOE-A-2005-10950 "
+"final provision; pending operator re-verification)"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst
+msgid "Cataloguer's note"
+msgstr ""
+
+#: ../../_generated/legal/boe-a-2005-10950.rst:47
+msgid ""
+"Orden EHA/1981/2005 final provision: modelo 576 is required for IEDMT "
+"operations whose devengo occurs from 1 January 2006. Its annex is "
+"graphical form evidence, not a parser-usable fixed-width record design."
+msgstr ""
+

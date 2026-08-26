@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-26 10:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -49,18 +49,19 @@ msgid ""
 "receipt from the AEAT sede (read-only), stores an encrypted copy in your "
 "profile, and reconciles in one step."
 msgstr ""
-"**Descárgalo de la AEAT** con `reconcile pull`: la herramienta obtiene "
-"el resguardo de la sede de la AEAT (solo lectura), guarda una copia "
-"cifrada en tu perfil y concilia en un solo paso."
+"**Descárgalo de la AEAT** con `reconcile pull`: la herramienta obtiene el"
+" resguardo de la sede de la AEAT (solo lectura), guarda una copia cifrada"
+" en tu perfil y concilia en un solo paso."
 
 #: ../../how-to/reconcile.md:15
+#, fuzzy
 msgid ""
-"**Use a local PDF** with `reconcile file --file` - you downloaded the "
+"**Use a local PDF** with `reconcile import --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
 "**Usa un PDF local** con `reconcile file --file`: descargaste el "
-"justificante por tu cuenta; la comprobación es local y nunca contacta con "
-"la AEAT."
+"justificante por tu cuenta; la comprobación es local y nunca contacta con"
+" la AEAT."
 
 #: ../../how-to/reconcile.md:18
 msgid "Before you start"
@@ -80,8 +81,8 @@ msgid ""
 "this filing) that was presented at the AEAT portal"
 msgstr ""
 "una unidad de trabajo presentada localmente (has ejecutado `aeat app "
-"modelo work file` para esta presentación) que se presentó en el portal de "
-"la AEAT"
+"modelo work file` para esta presentación) que se presentó en el portal de"
+" la AEAT"
 
 #: ../../how-to/reconcile.md:25
 msgid ""
@@ -92,7 +93,8 @@ msgstr ""
 "funcione; consulta [Autentícate ante la AEAT](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
-msgid "for `reconcile file`: the justificante PDF on disk"
+#, fuzzy
+msgid "for `reconcile import`: the justificante PDF on disk"
 msgstr "para `reconcile file`: el PDF del justificante en disco"
 
 #: ../../how-to/reconcile.md:29
@@ -107,11 +109,11 @@ msgstr ""
 "rápida](quickstart.md). Todo comando de esta página necesita tu frase de "
 "contraseña de la clave maestra; la herramienta la solicita."
 
-#: ../../how-to/reconcile.md:33
+#: ../../how-to/reconcile.md:34
 msgid "Pull and store the justificante"
 msgstr "Descarga y guarda el justificante"
 
-#: ../../how-to/reconcile.md:35
+#: ../../how-to/reconcile.md:36
 msgid ""
 "Keep the receipt with your records: it is the official evidence behind "
 "every filed period. Fetch the justificante for one filed period and store"
@@ -123,7 +125,7 @@ msgstr ""
 "presentado y guárdalo en tu perfil sin conciliar todavía. Esto lee de la "
 "sede de la AEAT, así que se muestra como marco ilustrativo:"
 
-#: ../../how-to/reconcile.md:43
+#: ../../how-to/reconcile.md:44
 msgid ""
 "`pull` is live-only: it reads from AEAT (read-only) and needs the "
 "configured authentication session. `--modelo`, `--year`, and `--period` "
@@ -140,7 +142,7 @@ msgstr ""
 "primera ejecución, la causa real suele ser que aún no hay ninguna sesión "
 "de la AEAT configurada."
 
-#: ../../how-to/reconcile.md:50
+#: ../../how-to/reconcile.md:51
 msgid ""
 "The output reports the stored capture: its snapshot id, the expediente it"
 " belongs to, the CSV verification code printed on the receipt, the PDF's "
@@ -158,7 +160,7 @@ msgstr ""
 "modelo, año y periodo guarda una captura nueva y marca la anterior como "
 "sustituida, de modo que el resguardo más reciente es siempre el activo."
 
-#: ../../how-to/reconcile.md:58
+#: ../../how-to/reconcile.md:59
 msgid ""
 "List every capture stored in the active profile, then inspect one (an "
 "unambiguous prefix of the snapshot id is enough). Both read the stored "
@@ -170,7 +172,7 @@ msgstr ""
 "Ambas leen de vuelta las capturas guardadas a través de la superficie de "
 "justificantes en vivo, así que se muestran como marcos ilustrativos:"
 
-#: ../../how-to/reconcile.md:65
+#: ../../how-to/reconcile.md:66
 msgid ""
 "The view reports the expediente id, the CSV verification code, the PDF "
 "fingerprint, whether the capture is still active or superseded, and when "
@@ -180,19 +182,19 @@ msgstr ""
 " la huella del PDF, si la captura sigue activa o está sustituida, y "
 "cuándo se capturó."
 
-#: ../../how-to/reconcile.md:69
+#: ../../how-to/reconcile.md:70
 msgid "Pull the justificante from AEAT and reconcile"
 msgstr "Descarga el justificante de la AEAT y concilia"
 
-#: ../../how-to/reconcile.md:71
+#: ../../how-to/reconcile.md:72
 msgid ""
 "Fetch the receipt for the filing and reconcile in one command. The pull "
 "reads from AEAT, so it is shown as a display frame:"
 msgstr ""
-"Obtén el resguardo de la presentación y concilia en un solo comando. La"
-" descarga lee de la AEAT, así que se muestra como marco ilustrativo:"
+"Obtén el resguardo de la presentación y concilia en un solo comando. La "
+"descarga lee de la AEAT, así que se muestra como marco ilustrativo:"
 
-#: ../../how-to/reconcile.md:77
+#: ../../how-to/reconcile.md:78
 msgid ""
 "Replace `303`, `2026`, and `1T` with the modelo, year, and period of your"
 " actual filing. You can also name the work unit directly as a positional "
@@ -203,7 +205,7 @@ msgstr ""
 "directamente como argumento posicional en lugar de los selectores "
 "`--modelo --year --period`."
 
-#: ../../how-to/reconcile.md:81
+#: ../../how-to/reconcile.md:82
 msgid ""
 "The pull is read-only at AEAT. The fetched receipt is stored as an "
 "encrypted capture in your profile, so the official evidence stays "
@@ -217,11 +219,11 @@ msgstr ""
 " inspeccionar las capturas guardadas más tarde, consulta [Descarga y "
 "guarda el justificante](#pull-and-store-the-justificante) más arriba."
 
-#: ../../how-to/reconcile.md:86
+#: ../../how-to/reconcile.md:87
 msgid "Reconcile against a local PDF instead"
 msgstr "Concilia contra un PDF local"
 
-#: ../../how-to/reconcile.md:88
+#: ../../how-to/reconcile.md:89
 msgid ""
 "If you already downloaded the justificante from the portal, compare your "
 "local filing record against that file. This check is local and never "
@@ -233,27 +235,27 @@ msgstr ""
 "contacta con la AEAT, pero necesita el PDF real del resguardo en disco, "
 "así que se muestra como marco ilustrativo:"
 
-#: ../../how-to/reconcile.md:95
+#: ../../how-to/reconcile.md:96
 msgid "This check is local. It reads the PDF you supply and never contacts AEAT."
 msgstr ""
 "Esta comprobación es local. Lee el PDF que aportas y nunca contacta con "
 "la AEAT."
 
-#: ../../how-to/reconcile.md:97
+#: ../../how-to/reconcile.md:98
 msgid "Read the result"
 msgstr "Lee el resultado"
 
-#: ../../how-to/reconcile.md:99
+#: ../../how-to/reconcile.md:100
 msgid "Both transports report one of three verdicts:"
 msgstr "Ambos transportes informan de uno de tres veredictos:"
 
-#: ../../how-to/reconcile.md:101
+#: ../../how-to/reconcile.md:102
 msgid "**matches** - the justificante matches the local filing record."
 msgstr ""
 "**matches**: el justificante coincide con el registro de presentación "
 "local."
 
-#: ../../how-to/reconcile.md:102
+#: ../../how-to/reconcile.md:103
 msgid ""
 "**mismatches** - one or more fields differ. The report names each field "
 "and shows the local value next to the value found in the PDF."
@@ -261,7 +263,7 @@ msgstr ""
 "**mismatches**: uno o más campos difieren. El informe nombra cada campo y"
 " muestra el valor local junto al valor encontrado en el PDF."
 
-#: ../../how-to/reconcile.md:104
+#: ../../how-to/reconcile.md:105
 msgid ""
 "**evidence_invalid** - the PDF could not be read. Check that the file is "
 "the AEAT justificante and not a different document."
@@ -269,7 +271,7 @@ msgstr ""
 "**evidence_invalid**: no se pudo leer el PDF. Comprueba que el fichero es"
 " el justificante de la AEAT y no un documento distinto."
 
-#: ../../how-to/reconcile.md:107
+#: ../../how-to/reconcile.md:108
 msgid ""
 "Reconciliation compares four header fields only: the modelo code, the "
 "filing year, the period, and the taxpayer identifier (NIF, CIF, DNI, or "
@@ -282,11 +284,11 @@ msgstr ""
 "casillas. Un veredicto de `mismatches` siempre nombra uno de esos cuatro "
 "campos, nunca una casilla."
 
-#: ../../how-to/reconcile.md:112
+#: ../../how-to/reconcile.md:113
 msgid "Handle a mismatch"
 msgstr "Gestiona una discrepancia"
 
-#: ../../how-to/reconcile.md:114
+#: ../../how-to/reconcile.md:115
 msgid ""
 "A `mismatches` verdict names the header field that differs and shows your"
 " local value next to the value in the justificante."
@@ -294,7 +296,7 @@ msgstr ""
 "Un veredicto de `mismatches` nombra el campo de cabecera que difiere y "
 "muestra su valor local junto al valor del justificante."
 
-#: ../../how-to/reconcile.md:117
+#: ../../how-to/reconcile.md:118
 msgid ""
 "Confirm the justificante is the correct one for this filing, not a "
 "different period or taxpayer. A wrong receipt is the most common cause."
@@ -303,7 +305,7 @@ msgstr ""
 " un periodo o contribuyente distinto. Un resguardo equivocado es la causa"
 " más frecuente."
 
-#: ../../how-to/reconcile.md:119
+#: ../../how-to/reconcile.md:120
 msgid ""
 "If the modelo, year, or period differs, you either reconciled against the"
 " wrong filing or filed the wrong period at the portal. Re-run "
@@ -311,10 +313,10 @@ msgid ""
 msgstr ""
 "Si el modelo, el año o el periodo difieren, o bien conciliaste contra la "
 "presentación equivocada o bien presentaste el periodo equivocado en el "
-"portal. Vuelve a ejecutar la conciliación con los selectores correctos, o "
-"comprueba qué presentaste."
+"portal. Vuelve a ejecutar la conciliación con los selectores correctos, o"
+" comprueba qué presentaste."
 
-#: ../../how-to/reconcile.md:122
+#: ../../how-to/reconcile.md:123
 msgid ""
 "If the taxpayer identifier differs, confirm the active profile matches "
 "the taxpayer the justificante was issued to."
@@ -322,7 +324,7 @@ msgstr ""
 "Si el identificador del contribuyente difiere, confirma que el perfil "
 "activo coincide con el contribuyente al que se emitió el justificante."
 
-#: ../../how-to/reconcile.md:124
+#: ../../how-to/reconcile.md:125
 msgid ""
 "If the justificante itself appears wrong, contact your asesor or AEAT "
 "directly."
@@ -330,11 +332,11 @@ msgstr ""
 "Si el propio justificante parece incorrecto, contacta con su asesor o con"
 " la AEAT directamente."
 
-#: ../../how-to/reconcile.md:127
+#: ../../how-to/reconcile.md:128
 msgid "If a box value looks wrong"
 msgstr "Si un valor de casilla parece incorrecto"
 
-#: ../../how-to/reconcile.md:129
+#: ../../how-to/reconcile.md:130
 msgid ""
 "Reconciliation does not compare box (casilla) values, so it cannot tell "
 "you that a computed total differs from what you filed. To correct a box "
@@ -350,11 +352,11 @@ msgstr ""
 "periodo ya se presentó, presenta una complementaria. Consulta [Revisa y "
 "aporta las entradas de cálculo](review-calculation-values.md)."
 
-#: ../../how-to/reconcile.md:135
+#: ../../how-to/reconcile.md:136
 msgid "What to keep as evidence"
 msgstr "Qué conservar como evidencia"
 
-#: ../../how-to/reconcile.md:137
+#: ../../how-to/reconcile.md:138
 msgid ""
 "The justificante is your proof of what AEAT received. Here is what each "
 "path stores:"
@@ -362,7 +364,7 @@ msgstr ""
 "El justificante es su prueba de lo que la AEAT recibió. Esto es lo que "
 "guarda cada vía:"
 
-#: ../../how-to/reconcile.md:140
+#: ../../how-to/reconcile.md:141
 msgid ""
 "`reconcile pull` stores the fetched justificante as an encrypted copy in "
 "your profile."
@@ -370,9 +372,10 @@ msgstr ""
 "`reconcile pull` guarda el justificante obtenido como una copia cifrada "
 "en tu perfil."
 
-#: ../../how-to/reconcile.md:142
+#: ../../how-to/reconcile.md:143
+#, fuzzy
 msgid ""
-"`reconcile file` reads a PDF you supply but does not store it. If you "
+"`reconcile import` reads a PDF you supply but does not store it. If you "
 "reconcile against a downloaded PDF, also pull the receipt so an encrypted"
 " copy is kept in your profile. See [Pull and store the justificante"
 "](#pull-and-store-the-justificante)."
@@ -382,7 +385,7 @@ msgstr ""
 "una copia cifrada en tu perfil. Consulta [Descarga y guarda el "
 "justificante](#pull-and-store-the-justificante)."
 
-#: ../../how-to/reconcile.md:145
+#: ../../how-to/reconcile.md:146
 msgid ""
 "Reconciliation history is a read-back you can regenerate from the "
 "justificante, so it needs no separate backup."
@@ -391,11 +394,11 @@ msgstr ""
 "partir del justificante, así que no necesita una copia de seguridad "
 "aparte."
 
-#: ../../how-to/reconcile.md:148
+#: ../../how-to/reconcile.md:149
 msgid "Review past reconciliations"
 msgstr "Revisa conciliaciones pasadas"
 
-#: ../../how-to/reconcile.md:150
+#: ../../how-to/reconcile.md:151
 msgid ""
 "Each reconciliation is recorded in the profile's event history. List the "
 "past reconciliations recorded for the active profile:"
@@ -403,7 +406,7 @@ msgstr ""
 "Cada conciliación se registra en el historial de eventos del perfil. "
 "Lista las conciliaciones pasadas registradas para el perfil activo:"
 
-#: ../../how-to/reconcile.md:157
+#: ../../how-to/reconcile.md:158
 msgid ""
 "On a fresh profile the list is empty; after you reconcile a filing a row "
 "appears for each run."
@@ -411,7 +414,7 @@ msgstr ""
 "En un perfil recién creado, la lista está vacía; después de conciliar una"
 " presentación aparece una fila por cada ejecución."
 
-#: ../../how-to/reconcile.md:160
+#: ../../how-to/reconcile.md:161
 msgid ""
 "Add `--work-unit-id <id>` to narrow the list to a single work unit. Each "
 "row shows when the reconciliation ran, the work unit, the evidence "
@@ -426,11 +429,11 @@ msgstr ""
 "justificante, así que esto es una lectura de conveniencia y no un "
 "registro guardado aparte."
 
-#: ../../how-to/reconcile.md:166
+#: ../../how-to/reconcile.md:167
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/reconcile.md:168
+#: ../../how-to/reconcile.md:169
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - understand what the justificante proves and what a "
@@ -440,32 +443,31 @@ msgstr ""
 "evidence.md): comprenda qué prueba el justificante y qué requiere aún un "
 "traspaso de auditoría completo."
 
-#: ../../how-to/reconcile.md:171
+#: ../../how-to/reconcile.md:172
 msgid ""
-"[File your modelo at the AEAT portal](file-at-aeat.md) - the "
-"filing handoff that produces the justificante."
+"[File your modelo at the AEAT portal](file-at-aeat.md) - the filing "
+"handoff that produces the justificante."
 msgstr ""
 "[Sube tu modelo exportado en el portal de la AEAT](file-at-aeat.md): el "
 "traspaso de presentación que produce el justificante."
 
-#: ../../how-to/reconcile.md:173
+#: ../../how-to/reconcile.md:174
 msgid "[Quickstart](quickstart.md) - the end-to-end filing workflow."
 msgstr "[Guía rápida](quickstart.md): el flujo de presentación de principio a fin."
 
-#: ../../how-to/reconcile.md:174
+#: ../../how-to/reconcile.md:175
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "amend a filing if reconciliation finds a mismatch."
 msgstr ""
 "[Revisa y aporta las entradas de cálculo](review-calculation-values.md): "
-"rectifica una presentación si la conciliación encuentra una "
-"discrepancia."
+"rectifica una presentación si la conciliación encuentra una discrepancia."
 
-#: ../../how-to/reconcile.md:176
+#: ../../how-to/reconcile.md:177
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."
 
-#: ../../how-to/reconcile.md:177
+#: ../../how-to/reconcile.md:178
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - fix local "
 "readiness problems."
