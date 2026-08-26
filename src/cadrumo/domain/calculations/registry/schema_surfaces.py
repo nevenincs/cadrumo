@@ -15,6 +15,7 @@ from ....core import (
 )
 from ....core.aggregation import RelationAggregation
 from ....core.identity import AeatBoxNumber, ContinuidadId
+from ._schema_export_exemption import ExportExemptionReasonValue
 from .errors import RegistryValidationError
 from .ids import (
     BindingId,
@@ -28,7 +29,6 @@ from .ids import (
 )
 from .modelo_localization import resolve_modelo_localization
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
-from ._schema_export_exemption import ExportExemptionReasonValue
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
 
@@ -531,6 +531,12 @@ class CalculationCompletenessManifest(RegistryModel):
 
 
 class RelationRevisionSelector(RegistryModel):
+    """Select source revisions by an absolute year or filing-year offset.
+
+    A selector may use one year, a bounded or open-ended year range, or a
+    relative filing-year delta; validation rejects mixed selector shapes.
+    """
+
     year: int | None = None
     year_from: int | None = None
     year_to: int | None = None
@@ -561,6 +567,12 @@ class RelationRevisionSelector(RegistryModel):
 
 
 class RelationPeriodAlignment(RegistryModel):
+    """Describe the validated source and target period shape of a relation.
+
+    An alignment uses either a named mode or one explicit period shape, with
+    validation enforcing the required target and year-offset fields.
+    """
+
     mode: Literal["previous_quarter", "prior_pagos_cumulative"] | None = None
     source_periods: Literal["quarters", "months", "annual_summary"] | None = None
     source_period_kind: Literal["quarterly"] | None = None
@@ -627,6 +639,12 @@ class RelationPeriodAlignment(RegistryModel):
 
 
 class RelationDefinition(RegistryModel):
+    """Declare a grounded relation from a source casilla to a target binding.
+
+    The declaration records source revision selection, period alignment,
+    dependency role, and the legal and source references that ground it.
+    """
+
     id: RelationId
     kind: Literal["previous_period", "annual_summary", "cross_model_output"]
     dependency_role: Literal[
