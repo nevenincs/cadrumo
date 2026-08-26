@@ -41,8 +41,6 @@ _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 # leaves its old ceiling standing hands back budget nobody is defending.
 # Re-pin on the way DOWN too, not only on the way up.
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    "_validate.py": 307,
-    "_validate_cross_revision.py": 326,
     "_validate_dependency_sections.py": 382,
     "_validate_evidence.py": 415,
     "_validate_export_exemption.py": 383,
@@ -114,11 +112,21 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
 
 
 def test_registry_validator_modules_stay_below_complexity_baselines() -> None:
+    # BOTH spellings are scanned. A validator promoted out of its underscore-
+    # private name keeps every reason it had for being held to a ceiling, but a
+    # pattern anchored on the underscore stops matching it, and the module drops
+    # out of the gate silently -- worse than an unpinned ceiling, because it is
+    # not measured at all rather than measured against a generous number.
     oversize: list[str] = []
-    for path in scan_directory(_REGISTRY_PACKAGE_ROOT, pattern="_validate*.py"):
-        line_count = len(path.read_text(encoding="utf-8").splitlines())
-        ceiling = _VALIDATOR_MODULE_LINE_BASELINES.get(path.name, _MAX_NEW_VALIDATOR_MODULE_LINES)
-        if line_count > ceiling:
-            oversize.append(f"{path.name}: {line_count} lines exceeds {ceiling}")
+    seen: set[str] = set()
+    for pattern in ("_validate*.py", "validate*.py"):
+        for path in scan_directory(_REGISTRY_PACKAGE_ROOT, pattern=pattern):
+            if path.name in seen:
+                continue
+            seen.add(path.name)
+            line_count = len(path.read_text(encoding="utf-8").splitlines())
+            ceiling = _VALIDATOR_MODULE_LINE_BASELINES.get(path.name, _MAX_NEW_VALIDATOR_MODULE_LINES)
+            if line_count > ceiling:
+                oversize.append(f"{path.name}: {line_count} lines exceeds {ceiling}")
 
     assert oversize == []
