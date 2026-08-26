@@ -293,6 +293,14 @@ class BucketEventHistoryRepository:
         return write
 
 
+def build_bucket_event_history_repository(*, bucket_id: str) -> BucketEventHistoryRepository:
+    """Build the encrypted event-history repository for ``bucket_id``."""
+    from ..storage import secure_object_repository_for_bucket
+
+    return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
+
 __all__ = [
     "BucketEventHistoryRepository",
+    "build_bucket_event_history_repository",
 ]
