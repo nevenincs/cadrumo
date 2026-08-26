@@ -10,19 +10,22 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.domain.calculations.registry.record_design as record_design_module
-from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design import (
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
+from .. import record_design as record_design_module
+from ..corpus_catalogue import resolve_record_design_binary
+from ..errors import RegistryValidationError
+from ..record_design import (
+    _unnamed_position_candidate,
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from ..record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
+    RecordDesignSinglePositionCorrection,
 )
-from cadrumo.domain.calculations.registry.tests._record_design_support import (
+from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
     _official_record_design_sheets,
@@ -32,10 +35,6 @@ from cadrumo.domain.calculations.registry.tests._record_design_support import (
     _write_pdf_lines,
     bundled_path,
 )
-
-from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from ..record_design import _unnamed_position_candidate
-from ..record_design_schema import RecordDesignSinglePositionCorrection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
