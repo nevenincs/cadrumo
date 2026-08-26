@@ -13,6 +13,28 @@ profile:
     not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
       a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
       beállításához.
+  journey:
+    action:
+      next: Következő
+      previous: Előző
+    get_data:
+      placeholder: Ebben a folyamatban a forrásműveletek még nem érhetők el.
+    ready:
+      blocked: 'Nem kész: a Kötelező szakaszban felsorolt mezők blokkolják.'
+      summary: Bevallásra való felkészültség
+    required:
+      none_missing: Nem hiányzik kötelező adat.
+      show_not_applicable: Nem alkalmazhatók megjelenítése
+      show_optional: Nem kötelezők megjelenítése
+    review:
+      placeholder: Ebben a folyamatban a származási és ütközési áttekintés még nem
+        érhető el.
+    stage:
+      get_data: Adatok lekérése
+      overview: Áttekintés
+      ready: Kész
+      required: Kötelező
+      review: Áttekintés és jóváhagyás
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:

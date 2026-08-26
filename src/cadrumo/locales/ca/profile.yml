@@ -11,6 +11,28 @@ profile:
       el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
       Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
+  journey:
+    action:
+      next: Següent
+      previous: Anterior
+    get_data:
+      placeholder: Les accions d'origen encara no estan disponibles en aquest recorregut.
+    ready:
+      blocked: 'No està llest: bloquejat pels camps indicats a Obligatori.'
+      summary: Preparació per presentar
+    required:
+      none_missing: No falta cap dada obligatòria.
+      show_not_applicable: Mostra els no aplicables
+      show_optional: Mostra els opcionals
+    review:
+      placeholder: La revisió de procedència i conflictes encara no està disponible
+        en aquest recorregut.
+    stage:
+      get_data: Obtenir dades
+      overview: Resum
+      ready: Llest
+      required: Obligatori
+      review: Revisió
   keys:
     description: Claus de configuració del perfil i les seves descripcions
     tax:
