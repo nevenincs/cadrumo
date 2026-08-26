@@ -863,3 +863,47 @@ def test_workspace_schema_record_label_distinguishes_localized_from_technical() 
     # Round-trip through JSON must preserve the discriminant.
     reloaded_technical = ModeloWorkspaceSchemaRecordV1.model_validate_json(technical.model_dump_json())
     assert isinstance(reloaded_technical.label, ModeloWorkspaceTechnicalLabelV1)
+
+
+def test_workspace_ledger_issue_subject_distinguishes_transaction_from_period() -> None:
+    """S291: a period-level ledger-preflight issue is represented as itself.
+
+    ``LedgerPreflightIssue.transaction_id`` is ``TransactionId | Literal["__period__"]``
+    for exactly one non-transaction case (an unsupported period with no date span).
+    Collapsing both arms into one required ``TransactionId`` field would either
+    drop the period-level issue or pin it to a fabricated transaction id; the
+    discriminated ``ModeloWorkspaceLedgerIssueSubjectV1`` union represents each
+    case honestly.
+    """
+    from ...ledger.preflight import LedgerPreflightIssueReason
+    from ..workspace_models import (
+        ModeloWorkspaceLedgerIssueV1,
+        ModeloWorkspaceLedgerPeriodSubjectV1,
+        ModeloWorkspaceLedgerTransactionSubjectV1,
+    )
+
+    transaction_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
+        {
+            "subject": {"kind": "transaction", "transaction_id": "e" * 64},
+            "reason": LedgerPreflightIssueReason.MISSING_CATEGORY,
+            "detail": "missing IVA category",
+        }
+    )
+    assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
+    assert transaction_issue.subject.transaction_id == "e" * 64
+
+    period_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
+        {
+            "subject": {"kind": "period"},
+            "reason": LedgerPreflightIssueReason.UNSUPPORTED_PERIOD,
+            "detail": "period has no date span",
+        }
+    )
+    assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
+    assert transaction_issue.subject != period_issue.subject
+
+    # Round-trip through JSON must preserve the discriminant in both directions.
+    reloaded_transaction = ModeloWorkspaceLedgerIssueV1.model_validate_json(transaction_issue.model_dump_json())
+    assert isinstance(reloaded_transaction.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
+    reloaded_period = ModeloWorkspaceLedgerIssueV1.model_validate_json(period_issue.model_dump_json())
+    assert isinstance(reloaded_period.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
