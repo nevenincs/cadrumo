@@ -1753,6 +1753,63 @@ required_text = [
     "1 millón de euros",
 ]
 
+[legal."ley-27-2014:art-130"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a130"
+document_id = "BOE-A-2014-12328"
+article = "130"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a130"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a130 resolved through the production resolver against the bundled consolidated LIS (ley-27-2014.html, 212 units, exactly one unit for this anchor) and each required_text phrase confirmed present in that resolved unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchors 59 and 61 (pp. 529, 534); pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en credito exigible frente a la Administracion Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en credito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidacion o insolvencia judicialmente declarada). Funda la seccion activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos comun a toda la revision y no el articulo que establece el derecho."""
+required_text = [
+    "podrán convertirse en un crédito exigible frente a la Administración Tributaria",
+    "Que la entidad sea objeto de liquidación o insolvencia judicialmente declarada",
+]
+
+[legal."ley-27-2014:da-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimotercera-2"
+document_id = "BOE-A-2014-12328"
+article = "DA-13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimotercera-2"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dadecimotercera-2 resolved through the production resolver to exactly one unit of the bundled consolidated LIS (the -2 suffix is the BOE source anchor id, verified NOT a redaction split: only one unit matches the #dadecimotercera prefix); required_text phrases confirmed present in that unit; the 1,5 per cent prestacion rate is described in these notes but deliberately NOT asserted in required_text, because a numeric rate needs the live-BOE cross-check this entry has not had; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS disposicion adicional decimotercera: prestacion patrimonial por conversion de activos por impuesto diferido en credito exigible frente a la Administracion Tributaria. Obliga al pago de la prestacion a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo dia del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el dia de inicio del plazo voluntario de declaracion."""
+required_text = [
+    "Prestación patrimonial por conversión de activos por impuesto diferido",
+    "El ingreso de la prestación patrimonial se realizará mediante autoliquidación",
+]
+
+[legal."ley-27-2014:dt-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dttrigesimatercera"
+document_id = "BOE-A-2014-12328"
+article = "DT-33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dttrigesimatercera"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dttrigesimatercera resolved through the production resolver to exactly one unit of the bundled consolidated LIS; required_text phrases confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchor 61 (p. 534), which cites art. 130, DA 13a and DT 33a together; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS disposicion transitoria trigesima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior segun su redaccion vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la seccion activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de seccion nombra esta disposicion y la DA 13a."""
+required_text = [
+    "Conversión de activos por impuesto diferido generados en períodos impositivos iniciados con anterioridad",
+    "se registren activos por impuesto diferido",
+]
+
 [sources."aeat-dr-200-2010"]
 evidence_tier = "layout_authority"
 authority = "aeat"

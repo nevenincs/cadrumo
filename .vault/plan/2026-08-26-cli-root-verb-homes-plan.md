@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:f563a6d4b99108686a1d1a024290a3dde2cafdb4745e683493753fac69096bb3'
+body_hash: 'sha256:cdfde4667f433d11851dc937319885631db3d798d8df7c9636f58d52c0331168'
 ---
 
 # `cli-root-verb-homes` plan
@@ -26,8 +26,8 @@ Add the ParameterSpec annotation the D3 spelling gate requires. Until a paramete
 
 Define the closed locus and shape enums in core and carry them on the parameter spec, validated at spec construction.
 
-- [ ] `W01.P01.S01` - Define TransportLocus and TransportShape closed enums; `src/cadrumo/core/`.
-- [ ] `W01.P01.S02` - Carry locus and shape on OptionSpec and ArgumentSpec, validated at construction; `src/cadrumo/entrypoints/cli/_command_spec.py`.
+- [x] `W01.P01.S01` - Define TransportLocus and TransportShape closed enums; `src/cadrumo/core/`.
+- [x] `W01.P01.S02` - Carry locus and shape on OptionSpec and ArgumentSpec, validated at construction; `src/cadrumo/entrypoints/cli/_command_spec.py`.
 
 ### Phase `W01.P02` - Locus declaration sweep
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -41,6 +42,9 @@ def _option(
     default: str | tuple[str, ...] | None = None,
     multiple: bool = False,
     constraint: ParameterConstraint = ParameterConstraint(),
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name,
@@ -50,6 +54,9 @@ def _option(
         _key(help_key),
         multiple=multiple,
         constraint=constraint,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -59,6 +66,9 @@ _REGISTRY_ROOT = _option(
     _PATH,
     "cli.registry.inspect_registry_root_help",
     constraint=ParameterConstraint(file_okay=False, readable=True),
+    transport_locus=TransportLocus.LOCAL_IN,
+    transport_shape=TransportShape.ROOT,
+    transport_role=TransportRole.AUXILIARY,
 )
 _SOURCE_ROOT = _option(
     "source_root",
@@ -66,6 +76,9 @@ _SOURCE_ROOT = _option(
     _PATH,
     "cli.registry.verify_source_root_help",
     constraint=ParameterConstraint(exists=True, file_okay=False, readable=True),
+    transport_locus=TransportLocus.LOCAL_IN,
+    transport_shape=TransportShape.ROOT,
+    transport_role=TransportRole.AUXILIARY,
 )
 
 
@@ -156,13 +169,25 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _ROOT_PAYLOADS,
         "RegistryVerifyFiledStateResult",
         (
-            _option("observation_path", ("--observation",), _PATH, "cli.registry.observation_help", required=True),
+            _option(
+                "observation_path",
+                ("--observation",),
+                _PATH,
+                "cli.registry.observation_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
+            ),
             _option(
                 "source_observation_paths",
                 ("--source-observation",),
                 _PATH,
                 "cli.registry.source_observation_help",
                 multiple=True,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             _REGISTRY_ROOT,
             _SOURCE_ROOT,
