@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:f002f835974a1fc17aabbd58adbd1604aa6e7d522b95edd8b2e8973e339125b8'
+body_hash: 'sha256:52ffa32311f29bb296869b97a5145ab69023221a33cd36b8411a8b8a6dcd9468'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S160]]'
@@ -14,9 +14,12 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S162]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S163]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S164]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S165]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S166]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S173]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S174]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S175]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S132]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S61]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S62]]'
@@ -25,6 +28,8 @@ related:
   - '[[2026-08-11-tui-architecture-W05-P11-S65]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S66]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S67]]'
+  - '[[2026-08-11-tui-architecture-W05-P12-S255]]'
+  - '[[2026-08-11-tui-architecture-W05-P12-S256]]'
   - '[[2026-08-11-tui-architecture-W05-P12-S68]]'
   - '[[2026-08-11-tui-architecture-W05-P12-S69]]'
   - '[[2026-08-11-tui-architecture-W05-P12-S70]]'
@@ -128,6 +133,7 @@ related:
   - '[[2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit]]'
   - '[[2026-08-26-tui-architecture-s173-authority-remediation-audit]]'
   - '[[2026-08-26-tui-architecture-s173-review-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s175-independent-architecture-re-review-audit]]'
   - '[[2026-08-26-tui-architecture-s175-independent-architecture-review-audit]]'
 ---
 
@@ -231,6 +237,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit` - `tui-architecture` audit: `S170 semantic selector consolidation`
 - `2026-08-26-tui-architecture-s173-authority-remediation-audit` - `tui-architecture` audit: `S173 registry authority remediation`
 - `2026-08-26-tui-architecture-s173-review-remediation-audit` - `tui-architecture` audit: `S173 independent review remediation`
+- `2026-08-26-tui-architecture-s175-independent-architecture-re-review-audit` - `tui-architecture` audit: `S175 independent architecture re-review`
 - `2026-08-26-tui-architecture-s175-independent-architecture-review-audit` - `tui-architecture` audit: `S175 independent architecture review`
 
 ### exec
@@ -242,9 +249,12 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S162` - Expose the canonical ProjectionModeloReadiness native atomic capture, owner generation, and neutral opaque comparison domain without inferring capability, collapsing readiness axes, or duplicating operator-state computation
 - `2026-08-11-tui-architecture-W03-P20-S163` - Hard-move the canonical registry-closure native atomic capture, owner generation, and neutral opaque comparison domain from application/registry/_closure.py into the sole public application/registry/closure.py defining module, atomically migrate every exact consumer to direct defining-module imports, delete the private module and every application.registry package binding, and preserve the existing closure join without recreating development-only authority or blocker classification
 - `2026-08-11-tui-architecture-W03-P20-S164` - Define in the sole public application/modelo/calculation.py module the calculation-materialization and source-graph-safe native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain by delegating the sole calculation-revision and provenance authorities, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer of that public contract to direct defining-module imports while leaving unrelated package-private calculation services private, and prove exact materialization/provenance parity without a parallel calculation, graph, persistence, or redaction path or any package binding, shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S165` - Define the canonical locale-catalogue native atomic capture, owner generation, and neutral opaque comparison domain in the sole public locales/locale_catalogue.py defining module, migrate every exact consumer to direct defining-module imports, and delegate to the existing canonical key resolution, Spanish fallback, suppression, catalogue loading, and digest semantics without reimplementation, package re-export, alias, shim, fallback, or bridge
+- `2026-08-11-tui-architecture-W03-P20-S166` - Hard-move the generated field-manifest authority and its native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain from _workspace_manifest.py into the sole public application/modelo/workspace_manifest.py defining module, correct its contributor owner to application.modelo.workspace_manifest, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports and delete the private module plus every package binding, and prove identity, generation, currentness, and sole-walker parity without a permanent allowlist, shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S173` - Semantically harden the already-public domain/calculations/registry/authority.py owner after c94133f29516b12e3529f3d154c31592562f6198 delivered the mechanical private-to-public relocation, direct-import and API-documentation cutover, and inert registry package, consume the reviewed S175 matrix row for this family rather than replaying that move, generate and commit a schema-versioned deterministic authority consumer census whose check mode derives every definition and production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer instead of relying on unexplained fixed counts, replace the separate load-state-key and comparison-domain normalization paths with one canonical physical registry-root and source-root pair identity helper shared by both, resolve relative, dot-segment, and symlink aliases to one identity, apply platform-native case policy so case aliases coalesce only on case-insensitive filesystems and remain distinct on case-sensitive filesystems, fail closed on unresolvable roots, derive only the opaque ContentDigest domain from that pair plus a guarded process incarnation without exposing roots, PID, or nonce, preserve the native process-monotonic generation and domain-before-integer comparison, install an after-fork and PID guard that rekeys the child incarnation without acquiring inherited locks, reconstructs the state lock, load barrier, root load-state map, generation and reset state before a fresh child load, binds each authority instance to its creating PID and incarnation, and rejects every inherited parent capture or current-coordinate access, delete read_current_generation and every compatibility alias, and prove parent capture and current-coordinate exercise in the child, fork during active readers without deadlock, child re-key and inherited-instance refusal followed by a fresh child load, same-physical-root relative, dot, symlink, and platform-case aliases, distinct registry-root and source-root mismatches, same-domain reset succession, real A -> B -> A invalidation, cross-process refusal, deterministic census drift refusal, and zero ModeloWorkspace, shim, fallback, bridge, package binding, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S174` - Define in the sole public application/modelo/work_addressing.py module one pure application revision assertion that evaluates the independent S125 requested and stored axes against the law-selected revision from exactly one S159 RegistryAuthorityCapture, atomically migrate every addressing, work-review, calculation, external-import, quickfile, lifecycle, CLI, registration, test, dynamic, and tooling consumer to direct defining-module imports, and delete resolve_registry_revision_for_work_target, every package binding, load_registry_tree, asserted-ID selection, stale docstring reference, and parallel registry read from the work path with fixed-point proof and no shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S175` - Retrospectively adjudicate before S173 or any affected registry-family implementation the exactly 78 private-to-public module candidates mechanically renamed by c94133f29516b12e3529f3d154c31592562f6198 by running semantic Vaultspec-RAG owner discovery followed by a deterministic exact AST and text consumer census, generate and commit a schema-versioned fixed matrix containing exactly 78 unique rows plus a deterministic generator with check mode, require each row to record the c94133f old and new module paths, every exported symbol and categorized production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer, semantic owner and evidence, exactly one keep-public proof, hard-move/direct-import completion, privatize/external-elimination, or delete disposition, and exactly one unique canonical follow-on Step ID, fail every extra, missing, duplicate, unresolved, unrelated-grouped, omitted, mechanically inferred, or many-to-one row or Step mapping, obtain independent architecture review, and amend W03.P20 through the canonical plan CLI with one bounded disposition Step per matrix row plus one final zero-project-binding, zero-re-export, and zero-unresolved-row registry package gate before S175 can close, without implementing any disposition inside this census Step or hiding work in internal commits
+- `2026-08-11-tui-architecture-W03-P21-S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt
 - `2026-08-11-tui-architecture-W05-P11-S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access
 - `2026-08-11-tui-architecture-W05-P11-S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state
 - `2026-08-11-tui-architecture-W05-P11-S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal
@@ -253,6 +263,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W05-P11-S65` - Expose a narrow operation-presentation facade that accepts only public operation contracts and exports neither Textual internals nor application-private operation types as backend contracts
 - `2026-08-11-tui-architecture-W05-P11-S66` - Derive spinner visibility, enabled controls, close policy, interaction affordance, and terminal copy solely from OperationPublicProjectionV1 and public response-control projections without reclassifying lifecycle truth
 - `2026-08-11-tui-architecture-W05-P11-S67` - Prove public cursor replay, resynchronization, detach and reattach, REVIEW revision and response authority, cancellation acknowledgement, typed Workspace refresh, terminal settlement, log visibility, subscriber loss, and exact C0 receipt ancestry with no private operation imports
+- `2026-08-11-tui-architecture-W05-P12-S255` - Build the generic operation result-projection mechanism symmetric with REVIEW's reviewed_operand_type and review_projector, so a settled operation can expose a typed PUBLIC result distinct from its private result_type: add a result_projector slot and its registry validation, a projection service resolving result_ref to the stored operand and through the projector to a public schema instance, its frontend request success and refusal contracts, and its OperationComposedServices slot, covering the refused and failed settlement paths as well as succeeded, and amend the operation-observation decision record in the same change; no operation binds its private result_type as its own public schema
+- `2026-08-11-tui-architecture-W05-P12-S256` - Wire the filed-history operation through the generic result-projection mechanism with a typed public result exposing its evidence, IVA wallet, notificaciones and provenance facts, registering its result_projector against the stored run, and prove a frontend projects every fact W05.P12.S69 names without importing the private FiledHistoryOnboardingRun type
 - `2026-08-11-tui-architecture-W05-P12-S68` - Implement census local-versus-persisted field review with suggested intent, per-field selection, apply all, reject, and stale-proposal display
 - `2026-08-11-tui-architecture-W05-P12-S69` - Implement filed-history stage, unit, refusal, partial-effect, evidence, wallet, notification, and provenance result projection
 - `2026-08-11-tui-architecture-W05-P12-S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI
