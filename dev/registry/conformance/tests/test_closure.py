@@ -11,12 +11,11 @@ from typer.testing import CliRunner
 from cadrumo.application.filing import FilingExportProofAssessment, FilingExportProofCoordinate
 from cadrumo.application.registry import (
     FilingExportCoverageReport,
-    RegistryClosureEvidence,
-    RegistryClosureLimb,
     SourceConnectivityCoverageReport,
     TemporalCoverageReport,
     TemporalRevisionCoverage,
 )
+from cadrumo.application.registry.closure import RegistryClosureEvidence, RegistryClosureLimb
 from cadrumo.core import (
     RegistryAuthorityGrade,
     SourceConnectivityEncryptedRevisionProof,
