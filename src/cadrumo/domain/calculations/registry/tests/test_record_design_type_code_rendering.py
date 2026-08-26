@@ -53,11 +53,22 @@ def test_the_coercion_is_what_renders_an_integral_float_as_an_integer() -> None:
     assert coerce_cell_text(6.0, integral_floats_as_int=True) == "6"
 
 
+#: The dual-encoding control needs a design that ships BOTH binaries, and the
+#: modelo 100 design above is not one: only its .xls binary ships, beside
+#: .xlsx.extracted sidecars whose own binary never did. Exactly one design in
+#: the bundled corpus ships both, so the control reads that one rather than
+#: asserting about a file that is not there.
+_DUAL_ENCODING_FILES = Path("corpus/aeat_official/disenos_registro/modelo_200/files")
+_DUAL_ENCODING_STEM = "01-200-ejercicio-2025-10-9-mb-xls"
+
+
 def test_both_encodings_of_one_design_are_read_identically() -> None:
-    xls = bundled_path() / _FILES / f"{_STEM}.xls"
-    xlsx = bundled_path() / _FILES / f"{_STEM}.xlsx"
+    xls = bundled_path() / _DUAL_ENCODING_FILES / f"{_DUAL_ENCODING_STEM}.xls"
+    xlsx = bundled_path() / _DUAL_ENCODING_FILES / f"{_DUAL_ENCODING_STEM}.xlsx"
     if not (xls.is_file() and xlsx.is_file()):
-        raise AssertionError(f"both encodings of {_STEM} must ship for this control to mean anything")
+        raise AssertionError(
+            f"both encodings of {_DUAL_ENCODING_STEM} must ship for this control to mean anything",
+        )
 
     from_xls, from_xlsx = _rows(xls), _rows(xlsx)
 
