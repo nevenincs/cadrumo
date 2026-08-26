@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-26'
+body_hash: 'sha256:f33b28650a1c8a2925c1de3bd9885181d1dd4ec592a1705299165ded9f5dac07'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-26'
-body_hash: 'sha256:76192e5e0e54f0dde119ba8e65bc139eaa9f90643680985e7c516bf182222f00'
 ---
 
 # `registry-completeness-closure` plan
@@ -146,6 +146,8 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; `materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
 - [x] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; `it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
 - [x] `W03.P05.S87` - Cut the registry closure CLI over from the disabled single-channel proof port to the canonical two-channel assessment, preserving typed per-channel refusals and public receipt secrecy, and prove an eligible two-receipt assessment can satisfy the filing-export limb without a second writer or payload digest projection; `src/cadrumo/application/registry/; src/cadrumo/application/filing/; dev/registry/conformance/; dev/registry/; src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
+- [ ] `W03.P05.S88` - Repair corpus localization drift introduced by the Modelo 165 and 353 revision splits by moving only legally corresponding revision subtrees through the dev.locales CLI, authoring every newly required Spanish source value and all supported-locale leaves, removing stale revision identities, and rerunning runtime, parity, and translation-honesty gates; `dev/locales/; src/cadrumo/locales/; dev/locales/tests/`.
+- [ ] `W03.P05.S89` - Reconcile the post-temporal-split continuity completeness backlog for Modelos 165, 200, 270, 308, 309, 341, and 576 through loader-derived dossiers and official-source adjudication, stamping only evidenced identities, recording explicit parked buckets and barriers, and updating only proven per-modelo ratchets; `src/cadrumo/_data/registry/aeat/modelos/; src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py; .vault/reference/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
 
