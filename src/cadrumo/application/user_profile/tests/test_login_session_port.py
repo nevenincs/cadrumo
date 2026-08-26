@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_login_session_application_modules_have_no_persistence_imports() -> None:
     owner = Path(__file__).parents[1]
-    for filename in ("_login_session.py", "_login_session_port.py"):
+    for filename in ("login_session.py", "login_session_port.py"):
         tree = ast.parse((owner / filename).read_text(encoding="utf-8"))
         imported = tuple(node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
 
