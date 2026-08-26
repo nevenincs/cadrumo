@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:2c49ef6188d82ef30d01a4bf64d25aad226ed6e631b4fddc10e2331d485d11a9'
+body_hash: 'sha256:3cf055dfb1fd17304e088026d7f20224e55d5c8cdc9f1742b34949308eb74369'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -108,8 +108,8 @@ Deliver profile selection, login, registration, password entry, profile-secret c
 - [x] `W04.P07.S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade; `src/cadrumo/entrypoints/tui/secret/credentials.py`.
 - [x] `W04.P07.S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI; `src/cadrumo/entrypoints/tui/secret/login.py`.
 - [x] `W04.P07.S19` - Complete profile-secret creation and registration presentation through public application contracts; `src/cadrumo/entrypoints/tui/secret/registration.py`.
-- [ ] `W04.P07.S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states; `src/cadrumo/entrypoints/tui/secret/passphrase.py`.
-- [ ] `W04.P07.S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys; `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`.
+- [x] `W04.P07.S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states; `src/cadrumo/entrypoints/tui/secret/passphrase.py`.
+- [x] `W04.P07.S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys; `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`.
 
 ### Phase `W04.P08` - Generic guided flows
 
