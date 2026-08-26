@@ -2000,6 +2000,44 @@ required_text = [
     "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
 ]
 
+[legal."ley-27-2014:da-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoctava"
+document_id = "BOE-A-2014-12328"
+article = "DA-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
+published_at = 2014-11-28
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposicion as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposicion states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion adicional decimoctava: libertad de amortizacion en determinados vehiculos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehiculos electricos y en puntos de recarga afectos a actividades economicas y puestos a disposicion en los ejercicios que la propia disposicion acota. Funda la seccion libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposicion."
+required_text = [
+    "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
+    "Las inversiones en vehículos",
+]
+
+[legal."ley-27-2014:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a102"
+document_id = "BOE-A-2014-12328"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a102"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a102 resolved to exactly one unit through the production resolver and checked against this corpus's measured collision set; required_text confirmed present. Adjudicated as the ENTIDADES DE REDUCIDA DIMENSION regime rather than a general one: art. 102 sits in the incentives chapter whose ambito is fixed by art. 101, which the catalogue already carries, so it grounds the ERD libertad-de-amortizacion section and not the other varieties; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 102: libertad de amortizacion de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades economicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+required_text = [
+    "Libertad de amortización",
+    "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",
+]
+
 [legal."ley-49-2002:art-20"]
 evidence_tier = "legal_authority"
 authority = "boe"
