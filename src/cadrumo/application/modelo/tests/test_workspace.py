@@ -21,7 +21,10 @@ from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
+    formula_operand_references_for_casilla,
     modelo_work_selector_request_for_target,
+    relation_source_endpoints_for_casilla,
+    relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
     static_inspection_modelo_workspace_capabilities,
 )
@@ -478,3 +481,57 @@ def test_static_inspection_capabilities_are_identical_regardless_of_work_state(
     absent_shape = {(row.capability, row.disposition, row.producer) for row in absent_capabilities}
     present_shape = {(row.capability, row.disposition, row.producer) for row in present_capabilities}
     assert absent_shape == present_shape
+
+
+# --- S277: schema-record join semantics, proven against real revisions
+# carrying both edge directions ---
+
+
+def test_formula_operand_references_answer_the_input_direction_not_the_output_direction() -> None:
+    """A real revision where the same casilla is both a formula's output and another's input."""
+    authority = bundled_authority()
+    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    formulas = snapshot.revision.formulas
+
+    producing_formula_ids = {formula.id for formula in formulas if formula.target_casilla_id == "03"}
+    assert producing_formula_ids == {"modelo-130-rendimiento-neto"}
+
+    consuming = formula_operand_references_for_casilla(formulas, "03")
+
+    assert len(consuming) == 1
+    assert consuming[0].formula_id == "modelo-130-pago-fraccionado-directa"
+    assert consuming[0].casilla_id == "03"
+    # The producing formula must never appear as a "consumer of its own output"
+    # unless its own expression genuinely reads casilla 03 as an operand.
+    assert consuming[0].formula_id not in producing_formula_ids
+
+
+def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field() -> None:
+    authority = bundled_authority()
+    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    relations = snapshot.revision.relations
+    assert relations  # sanity: this fixture coordinate carries a real relation
+
+    endpoints = relation_source_endpoints_for_casilla(relations, "iva.compensacion-disponible-fin-periodo")
+
+    assert len(endpoints) == 1
+    assert endpoints[0].relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    assert endpoints[0].casilla_id == "iva.compensacion-disponible-fin-periodo"
+
+    # A different casilla id must never match.
+    assert relation_source_endpoints_for_casilla(relations, "not-the-source-casilla") == ()
+
+
+def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
+    authority = bundled_authority()
+    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    relations = snapshot.revision.relations
+
+    endpoints = relation_target_endpoints_for_binding(relations, "modelo-303-compensacion-pendiente-anteriores")
+
+    assert len(endpoints) == 1
+    assert endpoints[0].relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    assert endpoints[0].binding_id == "modelo-303-compensacion-pendiente-anteriores"
+
+    # The relation's own SOURCE casilla id must never be accepted as a target binding.
+    assert relation_target_endpoints_for_binding(relations, "iva.compensacion-disponible-fin-periodo") == ()

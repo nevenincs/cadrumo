@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:d196e8e56d1e07cd2c85f83b36fce703825fc798d6512e8e911eef49a5e557a5'
+body_hash: 'sha256:1ed47e1e9e3e955d6203981703502a316ba27df24287c77a0e9d23c0d80ae193'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -259,6 +259,55 @@ source, contributor source, `PRIMARY` or `CONTRIBUTOR` role, safe source
 reference, fingerprint, and parent reference. The assembler may select and
 redact those records but cannot synthesize an alternate owner, edge, identity,
 or causal graph.
+
+**Amendment (S277): each schema-record join is the registry's own declared
+edge, never a name-matched inference.**
+
+- **`formula_operands` is the INPUT direction only.** `FormulaExpression` is a
+  self-recursive registry-declared tree (an operator node carries `args`; a
+  leaf carries exactly one populated identity field --
+  `casilla_id`/`binding`/`date_binding`/`parameter`/`relation`/`literal`/
+  `dispatch_table`); walking that tree and mapping each populated leaf 1:1 to
+  its matching `ModeloWorkspaceFormulaOperandReferenceV1` variant needs no
+  inference at all. A casilla row's `formula_operands` lists the entries
+  where that walk names `casilla_id` equal to the row's own id -- the
+  formulas that READ this casilla as an operand. The OUTPUT direction
+  (`FormulaDefinition.target_casilla_id`, which formula this casilla's value
+  comes from) is a provenance-facet concern, already covered above by "the
+  canonical calculation-source graph," and is never represented by
+  `formula_operands`, which is why the field is plural and multi-kind
+  discriminated: one casilla can be read as an input by many different
+  formulas, but is the output of at most one.
+- **`relation_endpoints` matches `RelationDefinition`'s own named fields
+  exactly.** `source_casilla_id: CasillaId` names the source side;
+  `target_binding: BindingId` names the target side. A casilla row's
+  `relation_endpoints` includes a `ModeloWorkspaceRelationSourceEndpointReferenceV1`
+  wherever `relation.source_casilla_id` equals that casilla; a binding row's
+  includes a `ModeloWorkspaceRelationTargetEndpointReferenceV1` wherever
+  `relation.target_binding` equals that binding. No other casilla or binding
+  may ever claim either endpoint of a relation it is not named on.
+- **`constraints` is self-owned; no cross-casilla join exists or is needed.**
+  `CasillaConstraints` is embedded directly on `CasillaDefinition.constraints`
+  (never a separate registered collection with its own id), so a casilla's
+  constraint entry is always its own -- there is no "which casilla owns a
+  multi-casilla constraint rule" question in the current registry shape,
+  because no constraint rule spans more than the one casilla that embeds it.
+- **`applicability` has no casilla-level registry edge and MUST stay empty on
+  every casilla, binding, formula, relation, or parameter row.**
+  `ApplicabilityRuleDefinition` is scoped to the REVISION
+  (`revision.applicability`, resolved as a single per-modelo rule via
+  `resolve_applicability_rule_from_authority`), never to a specific casilla;
+  no field anywhere in the registry schema points an `ApplicabilityRuleId`
+  reference at a casilla. Populating a per-casilla `applicability` field
+  from a revision-wide rule would misrepresent a fact about the WHOLE
+  MODELO's applicability as though it were specific to one casilla. The rule
+  itself is exposed only via its own `reference.kind == "applicability"`
+  schema record, never attached to another row.
+
+If a future registry revision introduces a genuine casilla-scoped
+applicability edge, that is a new registry field to add and re-ground this
+amendment against -- never a Workspace-side inference from the
+revision-scoped rule.
 
 ### Generated field-classification denominator
 

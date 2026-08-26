@@ -26,6 +26,8 @@ from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage
 from ...domain.calculations.registry.modelo_localization import revision_locale_key
+from ...domain.calculations.registry.schema import FormulaDefinition, RelationDefinition
+from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.modelos import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
@@ -40,8 +42,18 @@ from .workspace_models import (
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceFormulaBindingOperandReferenceV1,
+    ModeloWorkspaceFormulaCasillaOperandReferenceV1,
+    ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
+    ModeloWorkspaceFormulaDispatchOperandReferenceV1,
+    ModeloWorkspaceFormulaLiteralOperandReferenceV1,
+    ModeloWorkspaceFormulaOperandReferenceV1,
+    ModeloWorkspaceFormulaParameterOperandReferenceV1,
+    ModeloWorkspaceFormulaRelationOperandReferenceV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceRelationSourceEndpointReferenceV1,
+    ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
@@ -403,8 +415,127 @@ __all__ = [
     "ModeloWorkspaceRevisionAxes",
     "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
+    "formula_expression_operand_references",
+    "formula_operand_references_for_casilla",
     "modelo_work_selector_request_for_target",
+    "relation_source_endpoints_for_casilla",
+    "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
     "static_inspection_modelo_workspace_capabilities",
 ]
+
+
+# --- S277 (ADR amendment "Schema, materialization, and provenance
+# projection"): schema-record join semantics, each derived from the
+# registry's own declared edge direction ---
+
+
+def formula_expression_operand_references(
+    formula_id: str,
+    expression: FormulaExpression,
+) -> tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...]:
+    """Walk one formula's own declared expression tree for every operand it reads.
+
+    ``FormulaExpression`` is a self-recursive registry-declared tree: an
+    operator node carries ``args``, a leaf carries exactly one populated
+    identity field. This walks that exact structure and needs no inference --
+    every operand kind maps 1:1 to the leaf field the registry already names
+    it by (``casilla_id``, ``binding``, ``date_binding``, ``parameter``,
+    ``relation``, ``literal``, ``dispatch_table``).
+
+    This is the INPUT direction only: which identities this formula's own
+    expression reads. The OUTPUT direction (which casilla this formula
+    produces) is ``FormulaDefinition.target_casilla_id`` and is a
+    provenance-facet concern ("Provenance is projected from the canonical
+    calculation-source graph"), never a schema-record field -- the schema
+    record's plural, multi-kind-discriminated ``formula_operands`` field
+    exists to carry exactly this INPUT set, not the single producing edge.
+    """
+    if expression.op is not None:
+        references: list[ModeloWorkspaceFormulaOperandReferenceV1] = []
+        for arg in expression.args:
+            references.extend(formula_expression_operand_references(formula_id, arg))
+        return tuple(references)
+    if expression.casilla_id is not None:
+        return (ModeloWorkspaceFormulaCasillaOperandReferenceV1(formula_id=formula_id, casilla_id=expression.casilla_id),)
+    if expression.binding is not None:
+        return (ModeloWorkspaceFormulaBindingOperandReferenceV1(formula_id=formula_id, binding_id=expression.binding),)
+    if expression.date_binding is not None:
+        return (
+            ModeloWorkspaceFormulaDateBindingOperandReferenceV1(
+                formula_id=formula_id,
+                binding_id=expression.date_binding,
+            ),
+        )
+    if expression.parameter is not None:
+        return (
+            ModeloWorkspaceFormulaParameterOperandReferenceV1(formula_id=formula_id, parameter_id=expression.parameter),
+        )
+    if expression.relation is not None:
+        return (ModeloWorkspaceFormulaRelationOperandReferenceV1(formula_id=formula_id, relation_id=expression.relation),)
+    if expression.literal is not None:
+        return (ModeloWorkspaceFormulaLiteralOperandReferenceV1(formula_id=formula_id),)
+    if expression.dispatch_table is not None:
+        return (
+            ModeloWorkspaceFormulaDispatchOperandReferenceV1(
+                formula_id=formula_id,
+                parameter_ids=tuple(sorted(expression.dispatch_table.values())),
+            ),
+        )
+    return ()
+
+
+def formula_operand_references_for_casilla(
+    formulas: tuple[FormulaDefinition, ...],
+    casilla_id: str,
+) -> tuple[ModeloWorkspaceFormulaCasillaOperandReferenceV1, ...]:
+    """Return every formula-operand entry naming ``casilla_id`` as an INPUT.
+
+    Deliberately never includes the formula whose ``target_casilla_id``
+    equals ``casilla_id`` unless that same formula's own expression also
+    reads ``casilla_id`` as an operand (a self-referential formula) -- being
+    the OUTPUT of a formula is a different edge from being an INPUT to one,
+    and this function answers only the input question.
+    """
+    matches: list[ModeloWorkspaceFormulaCasillaOperandReferenceV1] = []
+    for formula in formulas:
+        for reference in formula_expression_operand_references(formula.id, formula.expression):
+            if (
+                isinstance(reference, ModeloWorkspaceFormulaCasillaOperandReferenceV1)
+                and reference.casilla_id == casilla_id
+            ):
+                matches.append(reference)
+    return tuple(matches)
+
+
+def relation_source_endpoints_for_casilla(
+    relations: tuple[RelationDefinition, ...],
+    casilla_id: str,
+) -> tuple[ModeloWorkspaceRelationSourceEndpointReferenceV1, ...]:
+    """Return the relation-source-endpoint rows whose declared source casilla matches.
+
+    ``RelationDefinition.source_casilla_id`` names the source side
+    explicitly; no inference is needed.
+    """
+    return tuple(
+        ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=relation.id, casilla_id=relation.source_casilla_id)
+        for relation in relations
+        if relation.source_casilla_id == casilla_id
+    )
+
+
+def relation_target_endpoints_for_binding(
+    relations: tuple[RelationDefinition, ...],
+    binding_id: str,
+) -> tuple[ModeloWorkspaceRelationTargetEndpointReferenceV1, ...]:
+    """Return the relation-target-endpoint rows whose declared target binding matches.
+
+    ``RelationDefinition.target_binding`` names the target side explicitly;
+    no inference is needed.
+    """
+    return tuple(
+        ModeloWorkspaceRelationTargetEndpointReferenceV1(relation_id=relation.id, binding_id=relation.target_binding)
+        for relation in relations
+        if relation.target_binding == binding_id
+    )
