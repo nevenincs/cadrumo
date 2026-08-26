@@ -12,6 +12,7 @@ from textual.containers import Vertical
 from textual.widgets import Static
 
 from ....core.i18n import tr
+from ..components.theme import tokenised
 from ._safe_text import bounded_pre_redacted_text
 
 MAX_LOG_ENTRIES: Final[int] = 16
@@ -61,10 +62,10 @@ class BoundedLogPanel(Vertical, can_focus=True):
     tabbing through a screen sees the log channel exists and is quiet.
     """
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     BoundedLogPanel { height: auto; }
-    BoundedLogPanel:focus { border: solid $accent; }
-    """
+    BoundedLogPanel:focus { border: $cadrumo-radius $accent; }
+    """)
 
     def __init__(
         self,

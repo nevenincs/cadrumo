@@ -19,7 +19,7 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
+from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import CREDENTIAL_PANEL_CSS, CredentialApp, run_credential_app
 
@@ -35,12 +35,12 @@ __all__ = ["LoginApp", "run_login_tui"]
 class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     """Full-screen credential entry that unlocks one existing profile."""
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #login-intro { margin: 0; }
-    #login-actions Button { margin: 0 0 0 1; }
+    #login-intro { margin: $cadrumo-space-0; }
+    #login-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
     """
     )
 

@@ -34,6 +34,7 @@ from ....application.operations.models import OperationId, OperationRevision
 from ....core.i18n import tr
 from ....core.operations import OperationLifecycle
 from ....core.time import now
+from ..components.theme import tokenised
 from .controller import OperationController
 from .interactions import (
     OperationModalInteractionStateV1,
@@ -70,24 +71,28 @@ type OperationModalOutcomeV1 = OperationModalSettledOutcomeV1 | OperationModalDe
 class OperationModal(ModalScreen[OperationModalOutcomeV1]):
     """Generic modal presenting one supervised operation until it settles."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     OperationModal {
         align: center middle;
     }
     #operation-modal-body {
-        border: thick $accent;
+        border: $cadrumo-radius-overlay $accent;
         background: $surface;
-        padding: 0 1;
-        width: 80%;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
+        width: $cadrumo-modal-width;
         height: auto;
-        max-height: 80%;
+        max-height: $cadrumo-modal-height;
     }
-    #operation-modal-status { text-style: bold; margin: 0; }
-    #operation-modal-review { color: $text; margin: 0; }
-    #operation-modal-log { color: $text-muted; height: auto; max-height: 12; overflow-y: auto; }
-    #operation-modal-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #operation-modal-actions Button { margin: 0 0 0 1; }
-    """
+    #operation-modal-status { text-style: bold; margin: $cadrumo-space-0; }
+    #operation-modal-review { color: $text; margin: $cadrumo-space-0; }
+    #operation-modal-log { color: $text-muted; height: auto; max-height: $cadrumo-log-max-height; overflow-y: auto; }
+    #operation-modal-actions {
+        height: auto;
+        align-horizontal: right;
+        margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
+    }
+    #operation-modal-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 
     def __init__(self, controller: OperationController) -> None:

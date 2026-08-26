@@ -71,7 +71,7 @@ from ....core.flows import (
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
-from ..components.theme import BASE_CSS, cadrumo_css_variables, install_cadrumo_themes, toggle_appearance
+from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 
 if TYPE_CHECKING:
@@ -97,16 +97,7 @@ def _operator_flow_context(definition: FlowDefinition, mode: FlowMode) -> dict[s
 class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
-    def get_css_variables(self) -> dict[str, str]:
-        """Expose the canonical Cadrumo tokens to every stylesheet.
-
-        Textual resolves this once per app and hands the result to app-level
-        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
-        design tokens travel here rather than in the theme's own variables.
-        """
-        return cadrumo_css_variables(super().get_css_variables())
-
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + """
     #flow-top {
@@ -114,19 +105,19 @@ class FlowTuiApp(App[None]):
         height: auto;
         width: 100%;
     }
-    #flow-stage-strip { height: 1; width: 100%; }
+    #flow-stage-strip { height: $cadrumo-band-height; width: 100%; }
     #flow-header {
-        height: 1;
+        height: $cadrumo-band-height;
         width: 100%;
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 1;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
     }
     #flow-progress {
-        height: 1;
+        height: $cadrumo-band-height;
         width: 100%;
-        padding: 0 1;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
         background: $surface;
         color: $text-muted;
     }
@@ -134,47 +125,47 @@ class FlowTuiApp(App[None]):
        inside the shared `.cadrumo-scroll` host and `.cadrumo-column`, so
        its border, padding, margin and auto height come from the one panel
        definition every surface shares. */
-    #page-prompt { text-style: bold; margin: 0; }
+    #page-prompt { text-style: bold; margin: $cadrumo-space-0; }
     #page-badge {
         background: $warning 30%;
         color: $warning;
         width: auto;
-        padding: 0 1;
-        margin: 0;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
+        margin: $cadrumo-space-0;
     }
-    #page-help { color: $text-muted; text-style: italic; margin: 0; }
-    #page-format-hint { color: $text-muted; margin: 0; }
-    #page-failure-modes { color: $text-muted; margin: 0; }
-    #page-legal-zone { color: $text-muted; text-style: italic; margin: 0; }
-    #widget-area { margin: 0; height: auto; }
-    #widget-area Input { border: tall $accent; background: $background; }
+    #page-help { color: $text-muted; text-style: italic; margin: $cadrumo-space-0; }
+    #page-format-hint { color: $text-muted; margin: $cadrumo-space-0; }
+    #page-failure-modes { color: $text-muted; margin: $cadrumo-space-0; }
+    #page-legal-zone { color: $text-muted; text-style: italic; margin: $cadrumo-space-0; }
+    #widget-area { margin: $cadrumo-space-0; height: auto; }
+    #widget-area Input { border: $cadrumo-radius $accent; background: $background; }
     #widget-area RadioSet, #widget-area OptionList {
-        border: round $panel;
+        border: $cadrumo-radius $panel;
         background: $background;
-        padding: 0 1;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
         height: auto;
         width: 100%;
     }
     #widget-area RadioButton { height: auto; }
-    #widget-area OptionList > .option-list--option { padding: 0 1; }
-    #live-validation { color: $error; margin: 0; }
-    #answer-echo { color: $success; text-style: bold; margin: 0; }
-    #commit-verdicts { color: $error; margin: 0; }
-    #nav-buttons { height: 1; align-horizontal: right; margin: 0; }
-    #nav-buttons Button { margin: 0 0 0 1; }
+    #widget-area OptionList > .option-list--option { padding: $cadrumo-space-0 $cadrumo-space-1; }
+    #live-validation { color: $error; margin: $cadrumo-space-0; }
+    #answer-echo { color: $success; text-style: bold; margin: $cadrumo-space-0; }
+    #commit-verdicts { color: $error; margin: $cadrumo-space-0; }
+    #nav-buttons { height: $cadrumo-band-height; align-horizontal: right; margin: $cadrumo-space-0; }
+    #nav-buttons Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
     #review-header {
         dock: top;
-        height: 1;
+        height: $cadrumo-band-height;
         width: 100%;
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 1;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
     }
     #review-table {
-        border: round $primary;
+        border: $cadrumo-radius $primary;
         background: $surface;
-        margin: 0;
+        margin: $cadrumo-space-0;
         /* 1fr, not auto. A DataTable is its own scroll container and is a
            real control the operator drives with the arrow keys, so it must
            be the one thing that scrolls here. At `height: auto` it grew to
@@ -185,13 +176,13 @@ class FlowTuiApp(App[None]):
     }
     #review-blocking {
         color: $error;
-        border: round $error;
-        padding: 0 1;
-        margin: 0;
+        border: $cadrumo-radius $error;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
+        margin: $cadrumo-space-0;
         width: 100%;
     }
-    #review-save-note { color: $warning; margin: 0; }
-    #btn-submit { margin: 0; }
+    #review-save-note { color: $warning; margin: $cadrumo-space-0; }
+    #btn-submit { margin: $cadrumo-space-0; }
     """
     )
 

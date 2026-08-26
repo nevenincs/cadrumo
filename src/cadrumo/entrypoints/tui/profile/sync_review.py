@@ -39,6 +39,7 @@ from ....application.user_profile.presentation import ProfileFieldSourceClass, p
 from ....application.user_profile.projections import record_to_effective_facts
 from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.user_profile.values import UserProfileRecord
+from ..components.theme import tokenised
 from ..operations.controller import OperationController
 
 _ADOPT = CensalFieldIntent.ADOPT
@@ -138,19 +139,23 @@ def censal_operation_request_from_selection(
     )
 
 
-_FIELD_REVIEW_CSS = """
+_FIELD_REVIEW_CSS = tokenised("""
 #censal-field-review {
-    border: thick $accent;
+    border: $cadrumo-radius-overlay $accent;
     background: $surface;
-    padding: 0 1;
+    padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
 }
-#censal-field-review-title { text-style: bold; margin: 0; }
-#censal-field-review-stale { color: $warning; margin: 0; }
-#censal-field-review-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-#censal-field-review-actions Button { margin: 0 0 0 1; }
-"""
+#censal-field-review-title { text-style: bold; margin: $cadrumo-space-0; }
+#censal-field-review-stale { color: $warning; margin: $cadrumo-space-0; }
+#censal-field-review-actions {
+    height: auto;
+    align-horizontal: right;
+    margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
+}
+#censal-field-review-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+""")
 
 
 class CensalFieldReviewScreen(ModalScreen[CensalOperationRequest | None]):

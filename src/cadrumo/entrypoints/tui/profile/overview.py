@@ -52,9 +52,9 @@ from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
-    cadrumo_css_variables,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from ....entrypoints.tui.components.widgets import (
     ContentDataTable,
@@ -113,11 +113,11 @@ read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
 
-_EDIT_DIALOG_CSS = """
+_EDIT_DIALOG_CSS = tokenised("""
 #edit-dialog {
-    border: thick $accent;
+    border: $cadrumo-radius-overlay $accent;
     background: $surface;
-    padding: 0 1;
+    padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
 }
@@ -125,10 +125,10 @@ _EDIT_DIALOG_CSS = """
 #edit-hint { color: $text-muted; }
 #edit-refusal { color: $error; text-style: bold; }
 #edit-masked-note { color: $text-muted; }
-#edit-dialog Input { margin: 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 0; }
-#edit-actions Button { margin: 0 0 0 1; }
-"""
+#edit-dialog Input { margin: $cadrumo-space-0; }
+#edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+""")
 
 
 class FieldEditScreen(ModalScreen[str | None]):
@@ -287,15 +287,6 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 
 class ProfileManagerApp(App[None]):
     """Full-screen profile overview with in-place editing."""
-
-    def get_css_variables(self) -> dict[str, str]:
-        """Expose the canonical Cadrumo tokens to every stylesheet.
-
-        Textual resolves this once per app and hands the result to app-level
-        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
-        design tokens travel here rather than in the theme's own variables.
-        """
-        return cadrumo_css_variables(super().get_css_variables())
 
     CSS = (
         BASE_CSS

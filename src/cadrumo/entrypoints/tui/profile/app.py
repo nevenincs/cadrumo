@@ -28,7 +28,7 @@ from textual.widgets import Button, Footer, Static
 
 from ....application.user_profile.presentation import ProfilePresentationV1
 from ....core.i18n import tr
-from ..components.theme import BASE_CSS, cadrumo_css_variables, install_cadrumo_themes, toggle_appearance
+from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 from .journey_status import ReadyStageBody, compose_required_stage, overview_readiness_summary
 
@@ -57,20 +57,15 @@ _LAST_STAGE = max(ProfileJourneyStage)
 class ProfileJourneyApp(App[None]):
     """Compose the guided five-stage journey with only the active body mounted."""
 
-    def get_css_variables(self) -> dict[str, str]:
-        """Expose the canonical Cadrumo tokens to every stylesheet.
-
-        Textual resolves this once per app and hands the result to app-level
-        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
-        design tokens travel here rather than in the theme's own variables.
-        """
-        return cadrumo_css_variables(super().get_css_variables())
-
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + """
-    #journey-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #journey-actions Button { margin: 0 0 0 1; }
+    #journey-actions {
+        height: auto;
+        align-horizontal: right;
+        margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
+    }
+    #journey-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
     """
     )
 

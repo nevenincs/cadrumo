@@ -19,6 +19,8 @@ rather than a smoke test.
 from __future__ import annotations
 
 import math
+import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -32,14 +34,18 @@ from ....entrypoints.tui.profile.status import StatusApp
 from ....entrypoints.tui.secret.registration import RegistrationApp
 from ..components.theme import (
     BASE_CSS,
+    CADRUMO_CSS_TOKENS,
     CADRUMO_DARK,
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT,
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
     CONTENT_WIDTH_PERCENT,
+    NOTICE_BAND_CSS,
     SCROLLBAR_CELLS,
+    UnknownDesignTokenError,
     resolve_theme_name,
+    tokenised,
 )
 
 pytestmark = [
@@ -239,13 +245,31 @@ async def test_the_content_column_consumes_the_available_terminal(
         app.exit(None)
 
 
-def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> None:
-    """Only overflow may consume the single scrollbar cell."""
-    assert f"scrollbar-size-vertical: {SCROLLBAR_CELLS};" in BASE_CSS
-    assert "scrollbar-gutter: auto;" in BASE_CSS
-    assert "scrollbar-gutter: stable;" not in BASE_CSS
-    assert "padding: 0 0 0 1;" not in BASE_CSS
-    assert "SCROLLBAR_CELLS" not in BASE_CSS, "an unsubstituted token would be invalid CSS"
+@pytest.mark.asyncio
+async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> None:
+    """Only overflow may consume the single scrollbar cell.
+
+    Read off a MOUNTED scroll container rather than the stylesheet text. The
+    measures now resolve from design tokens, so asserting a literal spelling
+    would prove which token was named and not the width the operator gets --
+    and it would break on every token rename while a genuinely reserved
+    gutter slipped through.
+    """
+    app = _registration_screen()
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        scroll = app.screen.query_one(".cadrumo-scroll")
+        assert scroll.styles.scrollbar_size_vertical == SCROLLBAR_CELLS
+        assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
+        app.exit(None)
+
+
+def test_no_stylesheet_carries_an_unsubstituted_token() -> None:
+    """A misspelled token is invalid CSS, not a silently ignored declaration."""
+    for stylesheet in (BASE_CSS, NOTICE_BAND_CSS):
+        for name in re.findall(r"\$([a-z0-9-]+)", stylesheet):
+            if name.startswith("cadrumo-"):
+                assert name in CADRUMO_CSS_TOKENS, f"{name} is not a declared token"
 
 
 def test_no_surface_pins_or_caps_its_content_width() -> None:
@@ -267,3 +291,137 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
             if match.group(2) != "100":
                 offenders.append(f"{module.name}: {match.group(0)}")
     assert not offenders, f"width limits: {offenders}"
+
+
+# ── the design system is the only source of measure ─────────────────────────
+
+_CSS_DECLARATION = re.compile(
+    r"\b(padding|margin|border|border-top|border-bottom|border-left|border-right"
+    r"|height|min-height|max-height|width|min-width|max-width): ([^;\n]+);",
+)
+_TUI_ROOT = Path(__file__).resolve().parents[1]
+
+_STRUCTURAL_VALUES = frozenset({"auto", "100%", "1fr", "none", "hidden", "0"})
+"""Values that describe topology rather than measure.
+
+``auto``/``1fr``/``100%`` say "fill what is there", which is a layout
+relationship and not a number the design system should own. ``none`` and
+``hidden`` remove a treatment rather than choosing one.
+"""
+
+
+def _css_target(node: object) -> str | None:
+    """Name of the stylesheet a node assigns, whether annotated or not."""
+    import ast
+
+    if isinstance(node, ast.AnnAssign):
+        target, value = node.target, node.value
+    elif isinstance(node, ast.Assign) and len(node.targets) == 1:
+        target, value = node.targets[0], node.value
+    else:
+        return None
+    if value is None or not isinstance(target, ast.Name):
+        return None
+    if target.id in {"CSS", "DEFAULT_CSS"} or target.id.endswith("_CSS"):
+        return target.id
+    return None
+
+
+def _stylesheets() -> list[tuple[Path, str]]:
+    """Every CSS string literal the shipped TUI declares.
+
+    Collected through the AST so only real stylesheet constants are read: a
+    regex over raw source would also sweep up prose in docstrings that happens
+    to mention a CSS declaration.
+    """
+    import ast
+
+    found: list[tuple[Path, str]] = []
+    for path in sorted(_TUI_ROOT.rglob("*.py")):
+        if "tests" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            # AnnAssign as well as Assign: `BASE_CSS: Final[str] = ...` is how
+            # the design system itself declares every stylesheet, so a
+            # collector that only matched bare assignment skipped the one file
+            # that matters most and passed vacuously.
+            target = _css_target(node)
+            if target is None:
+                continue
+            for literal in ast.walk(node.value):
+                if isinstance(literal, ast.Constant) and isinstance(literal.value, str) and "{" in literal.value:
+                    found.append((path, literal.value))
+    return found
+
+
+def test_every_shipped_stylesheet_is_found_by_the_scan() -> None:
+    """Anti-tautology: a scan that finds nothing would pass every rule below."""
+    sheets = _stylesheets()
+    assert len(sheets) >= 10, f"the stylesheet scan collected only {len(sheets)}"
+    collected = {path.name for path, _body in sheets}
+    assert "theme.py" in collected, "the design system's own stylesheets were not collected"
+    assert any(".cadrumo-panel {" in body for _p, body in sheets), "BASE_CSS was not collected"
+
+
+def _offending_declarations(body: str) -> list[str]:
+    """Declarations in ``body`` whose value is a raw measure, not a token."""
+    offenders = []
+    for match in _CSS_DECLARATION.finditer(body):
+        words = match.group(2).strip().split()
+        if not all(word in _STRUCTURAL_VALUES or word.startswith("$") for word in words):
+            offenders.append(f"{match.group(1)}: {match.group(2).strip()}")
+    return offenders
+
+
+def test_no_stylesheet_hardcodes_a_measure_the_token_table_should_own() -> None:
+    """Spacing, borders and fixed sizes come from the design system, or not at all.
+
+    This is what makes the token table canonical rather than merely present:
+    without it, the next hurried edit puts ``margin: 0`` back and the system
+    quietly stops describing the product.
+    """
+    offenders = [f"{path.name}: {found}" for path, body in _stylesheets() for found in _offending_declarations(body)]
+    assert offenders == [], "hardcoded measures; declare them in CADRUMO_CSS_TOKENS:\n" + "\n".join(offenders)
+
+
+def test_the_hardcoded_measure_scan_actually_fires() -> None:
+    """Anti-tautology for the rule above, proved on a synthetic stylesheet."""
+    assert _offending_declarations("Foo { padding: 0 1; }") == ["padding: 0 1"]
+    assert _offending_declarations("Foo { border: round $primary; }") == ["border: round $primary"]
+    assert _offending_declarations("Foo { padding: $cadrumo-gutter; height: auto; width: 100%; }") == []
+
+
+def test_every_token_bearing_stylesheet_is_wrapped_in_the_resolver() -> None:
+    """A stylesheet that names a token must resolve it before Textual sees it.
+
+    Asserting that the RESOLVED string carries no ``$cadrumo-`` would be
+    tautological, since that is what the resolver does by construction. The
+    defect worth catching is the one a hurried edit actually causes: a new
+    token added to a stylesheet whose assignment was never wrapped, which
+    reaches Textual as an undefined variable and fails at mount.
+    """
+    import ast
+
+    unwrapped: list[str] = []
+    for path in sorted(_TUI_ROOT.rglob("*.py")):
+        if "tests" in path.parts or path.name == "theme.py":
+            continue
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            target = _css_target(node)
+            if target is None:
+                continue
+            segment = ast.get_source_segment(source, node.value) or ""
+            if "$cadrumo-" in segment and "tokenised(" not in segment:
+                unwrapped.append(f"{path.name}: {target}")
+
+    assert unwrapped == [], "token-bearing stylesheets not passed through tokenised():\n" + "\n".join(unwrapped)
+
+
+def test_the_resolver_refuses_a_token_it_does_not_declare() -> None:
+    """A typo fails loudly at import, not as a mount error far from its cause."""
+    assert tokenised("Foo { padding: $cadrumo-gutter; }") == "Foo { padding: 2; }"
+    with pytest.raises(UnknownDesignTokenError):
+        tokenised("Foo { padding: $cadrumo-guttter; }")

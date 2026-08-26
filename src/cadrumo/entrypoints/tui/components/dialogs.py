@@ -11,39 +11,40 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, OptionList, SelectionList, Static
 
 from ....core.presentation import FormField
+from ..components.theme import tokenised
 
 _MULTI_CHOICE_SEPARATOR = ","
 
-_EDIT_DIALOG_CSS = """
+_EDIT_DIALOG_CSS = tokenised("""
 #edit-dialog {
-    border: thick $accent;
+    border: $cadrumo-radius-overlay $accent;
     background: $surface;
-    padding: 0 1;
+    padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
 }
 #edit-label { text-style: bold; }
-#edit-path { color: $text-muted; margin: 0; }
+#edit-path { color: $text-muted; margin: $cadrumo-space-0; }
 #edit-refusal { color: $error; }
-#edit-dialog Input { margin: 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 0; }
-#edit-actions Button { margin: 0 0 0 1; }
-"""
+#edit-dialog Input { margin: $cadrumo-space-0; }
+#edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+""")
 """Styling carried by each dialog so every host renders it consistently."""
 
-_CONFIRM_DIALOG_CSS = """
+_CONFIRM_DIALOG_CSS = tokenised("""
 #confirm-dialog {
-    border: thick $warning;
+    border: $cadrumo-radius-overlay $warning;
     background: $surface;
-    padding: 0 1;
+    padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
 }
-#confirm-title { text-style: bold; margin: 0; }
-#confirm-message { color: $text; margin: 0; }
-#confirm-actions { height: auto; align-horizontal: right; margin: 0; }
-#confirm-actions Button { margin: 0 0 0 1; }
-"""
+#confirm-title { text-style: bold; margin: $cadrumo-space-0; }
+#confirm-message { color: $text; margin: $cadrumo-space-0; }
+#confirm-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+#confirm-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+""")
 
 
 class ConfirmScreen(ModalScreen[bool]):

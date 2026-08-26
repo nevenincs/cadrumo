@@ -35,9 +35,9 @@ from ....core.i18n import tr
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
-    cadrumo_css_variables,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
@@ -56,22 +56,13 @@ _ACTIVE_MARKER = "●"
 class StatusApp(App[None]):
     """Full-screen read-only projection of the operator's configuration state."""
 
-    def get_css_variables(self) -> dict[str, str]:
-        """Expose the canonical Cadrumo tokens to every stylesheet.
-
-        Textual resolves this once per app and hands the result to app-level
-        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
-        design tokens travel here rather than in the theme's own variables.
-        """
-        return cadrumo_css_variables(super().get_css_variables())
-
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + NOTICE_BAND_CSS
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
-    .status-commands { color: $text-muted; margin: 0; }
+    .status-commands { color: $text-muted; margin: $cadrumo-space-0; }
     """
     )
 

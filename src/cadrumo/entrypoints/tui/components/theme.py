@@ -9,6 +9,7 @@ Reusable Textual widgets that consume these tokens live in
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -79,6 +80,22 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # border at all is three shapes claiming to be one system, and the
         # eye reads the inconsistency long before it can name it.
         "cadrumo-radius": "round",
+        # A terminal has no shadow, so border WEIGHT is the only elevation
+        # channel there is. Overlays therefore keep a deliberately heavier
+        # edge: it is the one signal that a dialog floats above the page
+        # rather than sitting in it. Five different border styles were in use
+        # before this -- round, thick, tall, solid and none -- and only this
+        # one distinction among them was carrying meaning.
+        "cadrumo-radius-overlay": "thick",
+        # A single edge is a RULE, not a box. `round` draws corners, so
+        # spending it on one edge asks for a corner that has nowhere to
+        # go. Separators and the bar that marks an aside share this.
+        "cadrumo-rule": "solid",
+        # -- Fixed measures --------------------------------------------------
+        "cadrumo-band-height": "1",
+        "cadrumo-modal-width": "80%",
+        "cadrumo-modal-height": "80%",
+        "cadrumo-log-max-height": "12",
         # -- Spacing scale, in terminal cells -------------------------------
         # Cells, not rem: the unit here is a character, so the useful scale is
         # tiny and every step has to earn itself. A web 4-point scale has no
@@ -127,17 +144,49 @@ SCROLLBAR_CELLS: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-scrollbar"])
 """Width of the vertical scrollbar track, in cells."""
 
 
-def cadrumo_css_variables(base: Mapping[str, str]) -> dict[str, str]:
-    """Merge the canonical tokens over Textual's own CSS variables.
+class UnknownDesignTokenError(KeyError):
+    """A stylesheet referenced a ``$cadrumo-`` token that is not declared."""
 
-    Every Cadrumo ``App`` overrides ``get_css_variables`` to return this, so a
-    token edit reaches every surface at once instead of being swept through
-    each stylesheet by hand.
+
+_TOKEN_REFERENCE: Final = re.compile(r"\$(cadrumo-[a-z0-9-]+)")
+
+
+def tokenised(css: str) -> str:
+    """Resolve every ``$cadrumo-`` token in ``css`` to its declared value.
+
+    Substitution happens HERE, at import time, rather than through Textual's
+    ``get_css_variables`` hook. The hook works, but it makes a widget's own
+    ``DEFAULT_CSS`` depend on the application that happens to host it: mount a
+    Cadrumo component inside any app that does not implement the hook -- a
+    test host, an embedder, a future surface someone forgets to wire -- and
+    the widget fails to mount on an undefined variable. A component's styling
+    should not be a contract with its host.
+
+    Resolving into the string keeps one canonical table and one place to edit,
+    and leaves the shipped stylesheets self-contained. Textual's own ``$``
+    variables (``$primary``, ``$text-muted``, the theme colours) are untouched
+    and still resolve at mount, which is right: those DO change at runtime
+    when the operator flips appearance, and these measures never do.
+
+    Raises:
+        UnknownDesignTokenError: When the stylesheet names a token that is not
+            declared. A silent pass-through would reach Textual as an
+            undefined variable and fail far from the typo.
     """
-    return {**base, **CADRUMO_CSS_TOKENS}
+
+    def _resolve(match: re.Match[str]) -> str:
+        name = match.group(1)
+        value = CADRUMO_CSS_TOKENS.get(name)
+        if value is None:
+            declared = ", ".join(sorted(CADRUMO_CSS_TOKENS))
+            message = f"unknown design token ${name}; declared: {declared}"
+            raise UnknownDesignTokenError(message)
+        return value
+
+    return _TOKEN_REFERENCE.sub(_resolve, css)
 
 
-BASE_CSS: Final[str] = """
+BASE_CSS: Final[str] = tokenised("""
     Screen {
         background: $background;
         color: $foreground;
@@ -166,7 +215,7 @@ BASE_CSS: Final[str] = """
 
     .cadrumo-banner {
         dock: top;
-        height: 1;
+        height: $cadrumo-band-height;
         width: 100%;
         background: $primary;
         color: $text;
@@ -205,18 +254,25 @@ BASE_CSS: Final[str] = """
         color: $foreground;
     }
     Button:hover { background: $panel-lighten-1; }
+    /* A border drawn in its own fill colour is an invisible border, and the
+       control silently loses the one shape every other control has. So a
+       filled button always edges in a LIGHTER step of its fill, never in the
+       fill itself. */
     Button:focus {
         background: $primary;
         color: $text;
-        border: $cadrumo-radius $primary;
+        border: $cadrumo-radius $primary-lighten-2;
         text-style: bold;
     }
     Button.-primary {
         background: $primary;
         color: $text;
-        border: $cadrumo-radius $primary;
+        border: $cadrumo-radius $primary-lighten-2;
     }
-    Button.-primary:focus { text-style: bold; }
+    Button.-primary:focus {
+        border: $cadrumo-radius $accent-lighten-2;
+        text-style: bold;
+    }
 
     Input {
         width: 100%;
@@ -228,7 +284,7 @@ BASE_CSS: Final[str] = """
         background: $background;
     }
     Input:focus { border: $cadrumo-radius $primary; }
-"""
+""")
 """Chrome and layout shared by every Cadrumo full-screen surface.
 
 Every measure and every corner resolves from :data:`CADRUMO_CSS_TOKENS`, so
@@ -236,7 +292,7 @@ re-tuning the system's density or shape is an edit to the token table rather
 than a sweep through this stylesheet and the eighteen others beside it.
 """
 
-NOTICE_BAND_CSS: Final[str] = """
+NOTICE_BAND_CSS: Final[str] = tokenised("""
     NoticeBand {
         height: auto;
     }
@@ -247,7 +303,7 @@ NOTICE_BAND_CSS: Final[str] = """
         color: $text-muted;
         margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-indent;
     }
-"""
+""")
 
 
 def resolve_theme_name(appearance: str, *, host_prefers_dark: bool = True) -> str:
@@ -292,8 +348,8 @@ __all__ = [
     "CONTENT_WIDTH_PERCENT",
     "NOTICE_BAND_CSS",
     "SCROLLBAR_CELLS",
-    "cadrumo_css_variables",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",
+    "tokenised",
 ]
