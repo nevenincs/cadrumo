@@ -5,10 +5,27 @@ tags:
   - '#tui-architecture'
 date: '2026-08-25'
 modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:be9b3b6169a3f118f23d58f70dfab811498d173678b310fb4255a38683bfb99a'
+body_schema: 'body-v2'
+body_hash: 'sha256:5af7591665dfebfcf7426699bf47bbc4e7e19b9acb3af09c8d027f652053ade8'
 related:
+  - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S160]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S161]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S162]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S164]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S173]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S174]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S175]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S61]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S62]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S63]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S64]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S65]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S66]]'
+  - '[[2026-08-11-tui-architecture-W05-P11-S67]]'
   - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-11-tui-architecture-ledger]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-13-tui-architecture-s01-review-audit]]'
@@ -71,8 +88,42 @@ related:
   - '[[2026-08-25-tui-architecture-s123-d13-attestation-amendment-review-audit]]'
   - '[[2026-08-25-tui-architecture-s123-dependency-receipt-review-audit]]'
   - '[[2026-08-25-tui-architecture-s124-receipt-self-reference-feasibility-audit]]'
+  - '[[2026-08-25-tui-architecture-s125-workspace-v1-model-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s126-producer-contract-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s127-workspace-field-manifest-reference]]'
+  - '[[2026-08-25-tui-architecture-s127-workspace-manifest-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s128-workspace-projection-composition-reference]]'
+  - '[[2026-08-25-tui-architecture-s159-registry-native-capture-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-plan-amendment-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s168-pointer-transition-code-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s169-code-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s169-plan-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s170-plan-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s170-remediation-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s170-selector-convergence-audit]]'
+  - '[[2026-08-25-tui-architecture-s171-code-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s171-plan-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s171-remediation-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s172-workspace-producers-review-audit]]'
   - '[[2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit]]'
   - '[[2026-08-25-tui-architecture-s41-google-export-operation-audit]]'
+  - '[[2026-08-25-tui-architecture-s57-launcher-composition-review-audit]]'
+  - '[[2026-08-25-tui-architecture-s58-tests-audit]]'
+  - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
+  - '[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]'
+  - '[[2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit]]'
+  - '[[2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-registry-facade-family-census-audit]]'
+  - '[[2026-08-26-tui-architecture-s170-alias-selection-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s170-final-follow-up-review-audit]]'
+  - '[[2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s170-high-findings-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit]]'
+  - '[[2026-08-26-tui-architecture-s173-authority-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s173-review-remediation-audit]]'
+  - '[[2026-08-26-tui-architecture-s175-independent-architecture-review-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -143,73 +194,59 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-s123-d13-attestation-amendment-review-audit` - `tui-architecture` audit: `s123 d13 attestation amendment review`
 - `2026-08-25-tui-architecture-s123-dependency-receipt-review-audit` - `tui-architecture` audit: `s123 dependency receipt review`
 - `2026-08-25-tui-architecture-s124-receipt-self-reference-feasibility-audit` - `tui-architecture` audit: `s124 receipt self-reference feasibility`
+- `2026-08-25-tui-architecture-s125-workspace-v1-model-review-audit` - `tui-architecture` audit: `S125 Workspace V1 model review`
+- `2026-08-25-tui-architecture-s126-producer-contract-review-audit` - `tui-architecture` audit: `S126 producer contract review`
+- `2026-08-25-tui-architecture-s127-workspace-manifest-review-audit` - `tui-architecture` audit: `S127 workspace manifest review`
+- `2026-08-25-tui-architecture-s159-registry-native-capture-review-audit` - `tui-architecture` audit: `S159 registry native capture review`
+- `2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit` - `tui-architecture` audit: `S160 approved amendment architecture review`
+- `2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit` - `tui-architecture` audit: `S160 native work capture owner and atomicity reconciliation`
+- `2026-08-25-tui-architecture-s160-plan-amendment-review-audit` - `tui-architecture` audit: `S160 plan amendment review`
+- `2026-08-25-tui-architecture-s168-pointer-transition-code-review-audit` - `tui-architecture` audit: `S168 pointer transition code review`
+- `2026-08-25-tui-architecture-s169-code-review-audit` - `tui-architecture` audit: `S169 code review`
+- `2026-08-25-tui-architecture-s169-plan-review-audit` - `tui-architecture` audit: `S169 plan-only architecture review`
+- `2026-08-25-tui-architecture-s170-plan-review-audit` - `tui-architecture` audit: `S170 plan review`
+- `2026-08-25-tui-architecture-s170-remediation-review-audit` - `tui-architecture` audit: `S170 selector convergence remediation review`
+- `2026-08-25-tui-architecture-s170-selector-convergence-audit` - `tui-architecture` audit: `S170 selector convergence code review`
+- `2026-08-25-tui-architecture-s171-code-review-audit` - `tui-architecture` audit: `S171 Workspace model relocation code review`
+- `2026-08-25-tui-architecture-s171-plan-review-audit` - `tui-architecture` audit: `S171 plan-only defining-module review`
+- `2026-08-25-tui-architecture-s171-remediation-review-audit` - `tui-architecture` audit: `S171 Workspace model relocation remediation review`
+- `2026-08-25-tui-architecture-s172-workspace-producers-review-audit` - `tui-architecture` audit: `s172 workspace producers review`
 - `2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit` - `tui-architecture` audit: S40 profile-operation definitions review
 - `2026-08-25-tui-architecture-s41-google-export-operation-audit` - `tui-architecture` audit: `S41/S44 Google export operation and export facade`
+- `2026-08-25-tui-architecture-s57-launcher-composition-review-audit` - `tui-architecture` audit: `s57 launcher composition review`
+- `2026-08-25-tui-architecture-s58-tests-audit` - `tui-architecture` audit: `Canonical TUI presentation-test relocation review`
+- `2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit` - `tui-architecture` audit: `Workspace owner seam architecture reconciliation`
+- `2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit` - `tui-architecture` audit: `Registry facade census final hardening`
+- `2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit` - `tui-architecture` audit: `registry facade census review remediation`
+- `2026-08-26-tui-architecture-registry-facade-family-census-audit` - `tui-architecture` audit: `registry facade family census`
+- `2026-08-26-tui-architecture-s170-alias-selection-remediation-audit` - `tui-architecture` audit: `S170 alias and selection remediation`
+- `2026-08-26-tui-architecture-s170-final-follow-up-review-audit` - `tui-architecture` audit: `S170 final follow-up review`
+- `2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit` - 2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit
+- `2026-08-26-tui-architecture-s170-high-findings-remediation-audit` - `tui-architecture` audit: `S170 high findings remediation`
+- `2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit` - `tui-architecture` audit: `S170 semantic selector consolidation`
+- `2026-08-26-tui-architecture-s173-authority-remediation-audit` - `tui-architecture` audit: `S173 registry authority remediation`
+- `2026-08-26-tui-architecture-s173-review-remediation-audit` - `tui-architecture` audit: `S173 independent review remediation`
+- `2026-08-26-tui-architecture-s175-independent-architecture-review-audit` - `tui-architecture` audit: `S175 independent architecture review`
 
 ### exec
 
-- `2026-08-11-tui-architecture-W03-P06-S32` - Export the census operation definition through the user-profile public facade
-- `2026-08-11-tui-architecture-W01-P01-S01` - Generate the exact legacy TUI migration manifest with module, symbol, consumer, owner lane, replacement, and deletion proof
-- `2026-08-11-tui-architecture-W01-P01-S02` - Enforce the hexagonal TUI boundary, launcher-only adapter wiring, and backend prohibition contracts
-- `2026-08-11-tui-architecture-W01-P01-S03` - Reject static, dynamic, type-only, re-export, registration, Textual-location, and private-facade bypasses
-- `2026-08-11-tui-architecture-W01-P01-S04` - Reconcile accepted wizard and profile-bundle composition clauses with the dedicated TUI entrypoint
-- `2026-08-11-tui-architecture-W01-P01-S05` - Prove the generated migration manifest matches direct source discovery and admits no new identity
-- `2026-08-11-tui-architecture-W01-P02-S06` - Implement the closed operation lifecycle, terminal, effect, durability, cancellation, deadline, close-policy, event, and interaction axes
-- `2026-08-11-tui-architecture-W01-P02-S07` - Define immutable operation request, identity, snapshot, revision, and terminal receipt models
-- `2026-08-11-tui-architecture-W01-P02-S08` - Define validated per-operation capability declarations and forbidden capability combinations
-- `2026-08-11-tui-architecture-W01-P02-S09` - Define ordered phase, progress, safe-log, effect, notice, diagnostic, and terminal event contracts
-- `2026-08-11-tui-architecture-W01-P02-S10` - Define revision-bound interaction requests, single-use response tokens, proposal digests, and apply or reject responses
-- `2026-08-11-tui-architecture-W01-P02-S11` - Expose the sole public operation-platform API without leaking private models or frontend types
-- `2026-08-11-tui-architecture-W01-P02-S12` - Prove state-axis independence, capability validation, exact response binding, and event redaction invariants
-- `2026-08-11-tui-architecture-W02-P03-S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership
-- `2026-08-11-tui-architecture-W02-P03-S14` - Implement operation definition registration and immutable lookup by canonical action reference
-- `2026-08-11-tui-architecture-W02-P04-S17` - Define lifecycle journal, ordered event stream, owner lease, compare-and-swap revision, and secure reference ports
-- `2026-08-11-tui-architecture-W02-P04-S18` - Implement the operation lifecycle journal over the existing atomic journal substrate
-- `2026-08-11-tui-architecture-W02-P04-S19` - Implement durable owner lease acquisition, renewal, conflict refusal, expiry observation, exact-predecessor release, and expired-owner takeover evidence, and require operation journal commits to verify the exact current live lease while holding the same JournalRepositoryBase lock
-- `2026-08-11-tui-architecture-W02-P04-S20` - Expose the persistence adapter facade without exporting implementation internals
-- `2026-08-11-tui-architecture-W02-P04-S21` - Prove atomic snapshot and event commits, monotonic cursors, idempotent replay, lease conflicts, takeover, and credential-free persistence
-- `2026-08-11-tui-architecture-W02-P05-S16` - W02.P05.S16 - Prove definition-bound executor refusal before mutation
-- `2026-08-11-tui-architecture-W02-P05-S22` - W02.P05.S22 - Implement the durable operation supervisor vertical slice
-- `2026-08-11-tui-architecture-W02-P05-S23` - W02.P05.S23 - Implement bounded cursor replay through the supervisor
-- `2026-08-11-tui-architecture-W02-P05-S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines
-- `2026-08-11-tui-architecture-W02-P05-S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence
-- `2026-08-11-tui-architecture-W02-P05-S26` - Reconcile non-terminal journal entries into resumed, recovered, interrupted, or orphaned states at startup
-- `2026-08-11-tui-architecture-W02-P05-S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis
-- `2026-08-11-tui-architecture-W02-P05-S28` - Prove detach, cursor replay, duplicate response refusal, cancellation races, deadline races, and restart reconciliation with real journal storage
-- `2026-08-11-tui-architecture-W02-P18-S105` - Declare and capture the global --tui root option
-- `2026-08-11-tui-architecture-W02-P18-S106` - Refuse unenrolled TUI routes through a typed localized command-boundary error
-- `2026-08-11-tui-architecture-W02-P18-S107` - Remove the duplicate profile-local TUI option and align password boundary tests
-- `2026-08-11-tui-architecture-W02-P18-S108` - Prove global TUI refusal and locale parity across representative command facets
-- `2026-08-11-tui-architecture-W02-P18-S109` - Audit every production full-screen launch site and distinguish current callable availability from dedicated-entrypoint migration completion
-- `2026-08-11-tui-architecture-W02-P18-S110` - Enroll the complete existing eight-route TUI surface and remove the accidental leaf-local option
-- `2026-08-11-tui-architecture-W02-P18-S111` - Prove the graph-wide available-route fixed point, global-only option placement, implemented-route dispatch, and representative unimplemented refusals
-- `2026-08-11-tui-architecture-W02-P18-S112` - Reconcile the accepted availability decision with the still-open dedicated-entrypoint migration and complete a fresh honesty review
-- `2026-08-11-tui-architecture-W02-P19-S115` - Extend the immutable operation registry with OperationSchemaIdentityV1, OperationPublicDefinitionContractV1, OperationPublicContractSetV1, exact strict-model fingerprints, registered REVIEW and refresh adapters, deterministic definition digests, and contract-set fixed-point validation
-- `2026-08-11-tui-architecture-W02-P19-S116` - Define the strict current-only operation observation, public projection, event-page, REVIEW-projection, response-control, cancellation, detach, and Workspace-refresh request, success, and typed refusal DTO families with independent V1 dispatch axes
-- `2026-08-11-tui-architecture-W02-P19-S117` - Pin each definition_contract_digest atomically with invocation identity and define one application-owned observation materialization port binding the current snapshot, anchor cursor, bounded history, progress-fold input, and resynchronization checkpoint
-- `2026-08-11-tui-architecture-W02-P19-S118` - Implement the observation-read port over one locked journal-record read so snapshot, history page, progress checkpoint, replay status, and restart cursor share one authoritative anchor under interleaved transitions
-- `2026-08-11-tui-architecture-W02-P19-S119` - Implement the public observation service and deterministic progress fold with phase reset, independent lifecycle-terminal-effect projection, bounded cursor replay, cursor-ahead refusal, expiry or compaction resynchronization, detach, and reconnect semantics
-- `2026-08-11-tui-architecture-W02-P19-S120` - Implement registered safe REVIEW resolution and typed Workspace-refresh-target resolution with exact version, definition-digest, schema, expiry, terminal-state, and output validation while preserving separate response authority and rejecting caller-supplied result references
-- `2026-08-11-tui-architecture-W02-P19-S121` - Perform the PRE_RELEASE current-only cutover by proving zero affected nonterminal operations, refusing every superseded journal and lease shape, and deleting the v1 lease reader, acquisition migrator, retired schema dispatchers, fixtures, and migration tests without a compatibility path
-- `2026-08-11-tui-architecture-W02-P19-S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher
-- `2026-08-11-tui-architecture-W02-P19-S123` - Implement TuiOperationObservationDependencyReceiptV1 and its sole live-tree validator, proving strict round trips, atomic interleaving, progress and replay, registered REVIEW non-authority, restart refresh, digest drift refusal, production DI, sentinel non-retention, current-only deletion, and a semantic-plus-exact producer census that fails duplicate operation state or projection authorities
-- `2026-08-11-tui-architecture-W03-P06-S113` - Implement supervisor-owned post-submission secure checkpoint publication, durable response continuation scheduling, and restart recovery without reacquisition
-- `2026-08-11-tui-architecture-W03-P06-S29` - Implement the resumable census executor across preflight, Clave device wait, remote read, proposal construction, interaction wait, exact apply, and settlement
-- `2026-08-11-tui-architecture-W03-P06-S30` - Persist the encrypted reviewed observation, baseline revision and digest, field intents, and proposed-effect digest behind a secure reference
-- `2026-08-11-tui-architecture-W03-P06-S31` - Apply only the approved censal proposal through the existing cotejo authority and refuse stale baselines without effect
-- `2026-08-11-tui-architecture-W03-P06-S33` - Prove the complete censal operation lifecycle and effect boundaries
-- `2026-08-11-tui-architecture-W03-P07-S34` - Implement the recorded filed-history executor across discovery, register access, pair walk, capture, persistence, finalization, provenance, wallet, notifications, and settlement
-- `2026-08-11-tui-architecture-W03-P07-S35` - Expose dry-run on the composed filed-history operation with identical discovery scope and effect none
-- `2026-08-11-tui-architecture-W03-P07-S36` - Emit ordered safe stage and unit progress with scoped refusals and truthful none, updated, partial, or unknown effects
-- `2026-08-11-tui-architecture-W03-P07-S37` - Export the filed-history operation definition through the live application facade
-- `2026-08-11-tui-architecture-W03-P07-S38` - Prove dry-run parity, committed-unit accounting, child provenance references, unsupported cancellation and deadline claims, and cleanup before settlement
-- `2026-08-11-tui-architecture-W03-P08-S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations
-- `2026-08-11-tui-architecture-W03-P08-S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations
-- `2026-08-11-tui-architecture-W03-P08-S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities
-- `2026-08-11-tui-architecture-W03-P08-S41` - Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation
-- `2026-08-11-tui-architecture-W03-P08-S42` - Expose authentication operation definitions through the authentication application facade
-- `2026-08-11-tui-architecture-W03-P08-S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade
-- `2026-08-11-tui-architecture-W03-P08-S44` - Expose Google export operation definitions through the export application facade
+- `2026-08-11-tui-architecture-ledger` - `tui-architecture` ledger
+- `2026-08-11-tui-architecture-W02-P19-S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition
+- `2026-08-11-tui-architecture-W03-P20-S160` - Extend the sole public application/modelo/work_addressing.py defining module with the work-only native atomic capture/current-coordinate pair over the canonical visible or exact operand that returns the strict frozen ModeloWorkResolution, native generation, and neutral opaque physical-scope/process comparison domain, migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports from that module, compose implicit pointer and one-record catalogue coordinates with bounded retry/currentness and an injective order-preserving generation, preserve the explicit catalogue generation while excluding the pointer limb, keep physical root, bucket, namespace, and key identity private, and prove pointer/catalogue ABA, same-observation singleflight, distinct-root independence, defining-module ownership, and zero registry access, second read, Workspace dependency, package binding, shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S161` - Hard-move the bounded ModeloWorkReview contract, its sole build_modelo_work_review semantic join, and its native atomic capture/current-coordinate pair with owner generation and neutral opaque comparison domain into the sole public application/modelo/work_review.py defining module, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports and delete work_review_projection.py plus every package binding, while proving exact complete-review parity without reconstructing any field, retaining a parallel assembler, or introducing a shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S162` - Expose the canonical ProjectionModeloReadiness native atomic capture, owner generation, and neutral opaque comparison domain without inferring capability, collapsing readiness axes, or duplicating operator-state computation
+- `2026-08-11-tui-architecture-W03-P20-S164` - Define in the sole public application/modelo/calculation.py module the calculation-materialization and source-graph-safe native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain by delegating the sole calculation-revision and provenance authorities, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer of that public contract to direct defining-module imports while leaving unrelated package-private calculation services private, and prove exact materialization/provenance parity without a parallel calculation, graph, persistence, or redaction path or any package binding, shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S173` - Semantically harden the already-public domain/calculations/registry/authority.py owner after c94133f29516b12e3529f3d154c31592562f6198 delivered the mechanical private-to-public relocation, direct-import and API-documentation cutover, and inert registry package, consume the reviewed S175 matrix row for this family rather than replaying that move, generate and commit a schema-versioned deterministic authority consumer census whose check mode derives every definition and production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer instead of relying on unexplained fixed counts, replace the separate load-state-key and comparison-domain normalization paths with one canonical physical registry-root and source-root pair identity helper shared by both, resolve relative, dot-segment, and symlink aliases to one identity, apply platform-native case policy so case aliases coalesce only on case-insensitive filesystems and remain distinct on case-sensitive filesystems, fail closed on unresolvable roots, derive only the opaque ContentDigest domain from that pair plus a guarded process incarnation without exposing roots, PID, or nonce, preserve the native process-monotonic generation and domain-before-integer comparison, install an after-fork and PID guard that rekeys the child incarnation without acquiring inherited locks, reconstructs the state lock, load barrier, root load-state map, generation and reset state before a fresh child load, binds each authority instance to its creating PID and incarnation, and rejects every inherited parent capture or current-coordinate access, delete read_current_generation and every compatibility alias, and prove parent capture and current-coordinate exercise in the child, fork during active readers without deadlock, child re-key and inherited-instance refusal followed by a fresh child load, same-physical-root relative, dot, symlink, and platform-case aliases, distinct registry-root and source-root mismatches, same-domain reset succession, real A -> B -> A invalidation, cross-process refusal, deterministic census drift refusal, and zero ModeloWorkspace, shim, fallback, bridge, package binding, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S174` - Define in the sole public application/modelo/work_addressing.py module one pure application revision assertion that evaluates the independent S125 requested and stored axes against the law-selected revision from exactly one S159 RegistryAuthorityCapture, atomically migrate every addressing, work-review, calculation, external-import, quickfile, lifecycle, CLI, registration, test, dynamic, and tooling consumer to direct defining-module imports, and delete resolve_registry_revision_for_work_target, every package binding, load_registry_tree, asserted-ID selection, stale docstring reference, and parallel registry read from the work path with fixed-point proof and no shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S175` - Retrospectively adjudicate before S173 or any affected registry-family implementation the exactly 78 private-to-public module candidates mechanically renamed by c94133f29516b12e3529f3d154c31592562f6198 by running semantic Vaultspec-RAG owner discovery followed by a deterministic exact AST and text consumer census, generate and commit a schema-versioned fixed matrix containing exactly 78 unique rows plus a deterministic generator with check mode, require each row to record the c94133f old and new module paths, every exported symbol and categorized production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer, semantic owner and evidence, exactly one keep-public proof, hard-move/direct-import completion, privatize/external-elimination, or delete disposition, and exactly one unique canonical follow-on Step ID, fail every extra, missing, duplicate, unresolved, unrelated-grouped, omitted, mechanically inferred, or many-to-one row or Step mapping, obtain independent architecture review, and amend W03.P20 through the canonical plan CLI with one bounded disposition Step per matrix row plus one final zero-project-binding, zero-re-export, and zero-unresolved-row registry package gate before S175 can close, without implementing any disposition inside this census Step or hiding work in internal commits
+- `2026-08-11-tui-architecture-W05-P11-S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access
+- `2026-08-11-tui-architecture-W05-P11-S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state
+- `2026-08-11-tui-architecture-W05-P11-S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal
+- `2026-08-11-tui-architecture-W05-P11-S63` - Render only registered safe REVIEW projections and separately response-authorized APPLY and REJECT controls, treating public INPUT and CHOICE interaction kinds as unsupported until a later accepted contract enrolls them
+- `2026-08-11-tui-architecture-W05-P11-S64` - Implement the generic detachable operation modal solely from public projection, event-page, REVIEW, response-control, cancellation, detach, terminal-receipt, and typed Workspace-refresh DTOs
+- `2026-08-11-tui-architecture-W05-P11-S65` - Expose a narrow operation-presentation facade that accepts only public operation contracts and exports neither Textual internals nor application-private operation types as backend contracts
+- `2026-08-11-tui-architecture-W05-P11-S66` - Derive spinner visibility, enabled controls, close policy, interaction affordance, and terminal copy solely from OperationPublicProjectionV1 and public response-control projections without reclassifying lifecycle truth
+- `2026-08-11-tui-architecture-W05-P11-S67` - Prove public cursor replay, resynchronization, detach and reattach, REVIEW revision and response authority, cancellation acknowledgement, typed Workspace refresh, terminal settlement, log visibility, subscriber loss, and exact C0 receipt ancestry with no private operation imports
 
 ### plan
 
@@ -219,6 +256,9 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 
 - `2026-08-24-tui-architecture-command-enrollment-parity-reference` - `tui-architecture` reference: `TUI command enrollment parity`
 - `2026-08-24-tui-architecture-pre-custody-login-secret-submission-reference` - `tui-architecture` reference: `pre custody login secret submission`
+- `2026-08-25-tui-architecture-s127-workspace-field-manifest-reference` - `tui-architecture` reference: `S127 Workspace field-manifest derivation`
+- `2026-08-25-tui-architecture-s128-workspace-projection-composition-reference` - `tui-architecture` reference: `S128 Workspace projection composition`
+- `2026-08-25-tui-architecture-workspace-v1-contract-reference` - `tui-architecture` reference: `Workspace V1 contract blueprint`
 
 ### research
 
