@@ -21,7 +21,17 @@
 set +e   # never abort the hook; each step guards itself.
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+# Lane roots section (b) is allowed to reap. These default to cadrumo's own
+# lane names, which is correct on a cadrumo runner and silently inert on any
+# other: this same hook is deployed to the vaultspec-* runners, where nothing
+# has ever matched and the audit line has read `freed=0.0MB` on every run
+# since the hook was installed. A runner serving another repository names its
+# own lanes via RUNNER_HYGIENE_LANE_GLOBS (space-separated) in its .env.
+if [[ -n "${RUNNER_HYGIENE_LANE_GLOBS:-}" ]]; then
+    read -r -a LANE_GLOBS <<< "$RUNNER_HYGIENE_LANE_GLOBS"
+else
+    LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+fi
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))
@@ -154,14 +164,33 @@ cap_cache "${HOME}/.npm" "$NPM_CAP_GB" npm
 
 # --- (d) docker hygiene against the shared host daemon ---------------------
 # The smoke spawns nested containers via the mounted host socket, stranding
-# anonymous volumes / dangling images on the host daemon. Prune only removes
-# what is unreferenced: the running runner containers and the named
-# cadrumo-runner-state* volumes are never candidates. Throttled + guarded.
+# anonymous volumes / dangling images on the host daemon.
+#
+# This used to be four blanket prunes, justified by "the running runner
+# containers and the named cadrumo-runner-state* volumes are never
+# candidates". That reasoning holds only while the sibling runners are
+# RUNNING. On the battery-gated MacBook host they are NOT: the power gate
+# stops every runner container whenever the machine is unplugged, so a job
+# finishing near that transition would meet `container prune -f` and delete
+# the sibling runner outright — and the `volume prune -f` on the next line
+# would then reap its now-unreferenced state volume, destroying the runner's
+# registration and every build cache with it.
+#
+# So: targeted removal, never a blanket prune. Skip anything named like a
+# fleet runner, and reap only ANONYMOUS volumes (a 64-hex name is Docker's
+# generated id, so a named state volume can never match).
 if command -v docker >/dev/null 2>&1 && should_run_heavy docker; then
     if docker info >/dev/null 2>&1; then
-        docker container prune -f >/dev/null 2>&1      # stopped only
+        for _cid in $(docker ps -aq --filter status=exited --filter status=dead 2>/dev/null); do
+            _cname="$(docker inspect -f '{{.Name}}' "$_cid" 2>/dev/null)"
+            case "${_cname#/}" in *runner*) continue ;; esac
+            docker rm -f "$_cid" >/dev/null 2>&1
+        done
         docker image prune -f >/dev/null 2>&1          # dangling only (never -a)
-        docker volume prune -f >/dev/null 2>&1         # unreferenced only
+        for _vol in $(docker volume ls -q --filter dangling=true 2>/dev/null); do
+            [[ "$_vol" =~ ^[0-9a-f]{64}$ ]] || continue
+            docker volume rm "$_vol" >/dev/null 2>&1
+        done
         docker builder prune -f --keep-storage "$DOCKER_BUILDER_KEEP" >/dev/null 2>&1
         NOTES="${NOTES}docker,"
     fi
