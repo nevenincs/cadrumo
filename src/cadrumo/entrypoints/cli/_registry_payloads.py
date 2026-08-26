@@ -20,9 +20,16 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ...core.json_contract import OutputSchema
 from cadrumo.domain.calculations.registry.filed_state import RegistryFiledStateComparison
-from cadrumo.domain.calculations.registry.ids import ExportLayoutId, LegalRefId, RelationId, SourceRefId, WorkbookParityRefId
+from cadrumo.domain.calculations.registry.ids import (
+    ExportLayoutId,
+    LegalRefId,
+    RelationId,
+    SourceRefId,
+    WorkbookParityRefId,
+)
+
+from ...core.json_contract import OutputSchema
 
 
 class RegistryWorkbookParityDetailPayload(OutputSchema):
