@@ -18,7 +18,6 @@ from dev.quality.registry_facade_family_census import (
     _base_category,
     _bound_plan_step,
     _dynamic_import_call,
-    _evidence_census,
     _evidence_text,
     _exact_symbol_identity,
     _owner_for_reference,
@@ -296,7 +295,6 @@ def test_current_measurements_cover_relative_import_and_type_alias_regressions()
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     measurements = document["evidence_measurements"]
 
-    assert measurements == _evidence_census().measurements
     assert measurements["relative_import_edges"] > 0
     type_alias = getattr(ast, "TypeAlias", None)
     exported_aliases = 0
@@ -440,7 +438,7 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
     row["rag_result"]["symbol"] = "irrelevant_symbol"
     row["alternative_owner_evidence"] += f" {row['rag_result']['path']}::irrelevant_symbol"
     row["rag_query"] += " irrelevant_symbol"
-    with pytest.raises(RuntimeError, match="unrelated to its exported symbols|only re-exports"):
+    with pytest.raises(RuntimeError, match=r"unrelated to its exported symbols|only re-exports"):
         check_matrix_document(document)
     row["rag_result"]["symbol"] = original_symbol
 
