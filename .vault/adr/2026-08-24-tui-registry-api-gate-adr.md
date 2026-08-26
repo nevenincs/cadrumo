@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:48afd397707c7a23a3c7b05200a727f7d9df2aa820818517e7b4d9d16f082a5a'
+body_hash: 'sha256:eacf327db1cca159e5e1920123ea7a4adca9c64dfaf0e05d1a1eeda546d4b630'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -947,3 +947,24 @@ is amended in the same change: its baseline's schema identity is now its own
 type, `ModeloEditSchemaIdentityV1`, carrying `completeness_manifest_digest`
 rather than reusing this field. The Workspace producer's own construction-site
 docstring had already flagged the exact collision this amendment closes.
+
+## Amendment (S291): a period-level ledger-preflight issue is a distinct subject, never a fabricated transaction
+
+`LedgerPreflightIssue.transaction_id` (`application/ledger/preflight.py:120`)
+is `TransactionId | Literal["__period__"]`: exactly one issue kind
+(`_unsupported_period_issue`, fired when the period has no date span) is
+scoped to the whole period rather than one transaction. The prior
+`ModeloWorkspaceLedgerIssueV1.transaction_id: TransactionId` had no
+representable arm for that case. Dropping the issue would be a silent
+under-declaration on exactly the axis an operator consults before filing;
+pinning it to a fabricated transaction id would point the operator at a
+transaction that has nothing to do with the problem. Neither is acceptable.
+
+`ModeloWorkspaceLedgerIssueV1.transaction_id` is replaced with `subject:
+ModeloWorkspaceLedgerIssueSubjectV1`, a discriminated union of
+`ModeloWorkspaceLedgerTransactionSubjectV1` (`kind="transaction"`, carrying
+`transaction_id`) and `ModeloWorkspaceLedgerPeriodSubjectV1`
+(`kind="period"`, carrying nothing else). This is the same shape as S284's
+`ModeloWorkspaceRecordLabelV1`: a field whose type previously could not
+express a real closed-domain alternative now can, and neither silent drop
+nor fabricated identity is representable any longer.
