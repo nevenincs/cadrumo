@@ -61,6 +61,23 @@ def _hard_move_pairs() -> tuple[tuple[str, str], ...]:
     return tuple(sorted(pairs))
 
 
+def _advertising_paths() -> tuple[str, ...]:
+    """Return only the keep-public modules that actually declare ``__all__``.
+
+    Parameterizing on this rather than skipping inside the test keeps every
+    generated case meaningful: a case exists only where there is something to
+    assert.
+    """
+    advertising = []
+    for relative_path in _keep_public_paths():
+        dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
+        if hasattr(importlib.import_module(dotted), "__all__"):
+            advertising.append(relative_path)
+    if not advertising:
+        pytest.fail("no keep-public module declares __all__; the advertisement check would assert nothing")
+    return tuple(advertising)
+
+
 def _locally_bound_names(path: Path) -> frozenset[str]:
     """Return every name this module binds at its own top level."""
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -134,23 +151,23 @@ def test_the_registry_package_binds_no_keep_public_symbol(relative_path: str) ->
     assert not bound, f"the registry package binds {dotted} symbols: {bound}"
 
 
-@pytest.mark.parametrize("relative_path", _keep_public_paths())
-def test_a_keep_public_module_without_all_advertises_nothing(relative_path: str) -> None:
-    """A module declaring no ``__all__`` must genuinely make no advertisement.
+@pytest.mark.parametrize("relative_path", _advertising_paths())
+def test_a_declared_advertisement_is_real_and_resolvable(relative_path: str) -> None:
+    """Where a module declares ``__all__``, every name in it must resolve.
 
-    This is the falsifiable half of the pair: the "advertises only what it
-    defines" check can say nothing about a module with no ``__all__``, so this
-    states the actual claim instead of passing silently.
+    Only modules that actually declare one are parameterized here, so no case
+    exists that could pass without asserting anything. Modules declaring none
+    are held by the package-binding check, which reads their defined surface.
     """
     dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
     module = importlib.import_module(dotted)
-    advertised = getattr(module, "__all__", None)
-
-    if advertised is None:
-        assert not hasattr(module, "__all__")
-        return
+    advertised = module.__all__
 
     assert advertised, f"{dotted} declares an empty __all__, which advertises nothing while looking deliberate"
+
+    unresolvable = [name for name in advertised if not hasattr(module, name)]
+
+    assert not unresolvable, f"{dotted} advertises names that do not resolve: {unresolvable}"
 
 
 def test_every_keep_public_row_names_a_module_that_exists() -> None:
