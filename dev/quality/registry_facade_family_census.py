@@ -13,6 +13,7 @@ import json
 import re
 import subprocess
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -26,6 +27,7 @@ DISPOSITIONS: Final = (
     "privatize_external_elimination",
     "delete",
 )
+RAG_RESULT_FIELDS: Final = frozenset({"path", "line_start", "line_end", "node_type", "symbol"})
 EVIDENCE_FILE_SUFFIXES: Final = frozenset({".md", ".py", ".rst"})
 EVIDENCE_ROOTS: Final = ("src", "dev", "docs")
 TERMINAL_STATES: Final = {
@@ -198,7 +200,7 @@ _EVIDENCE_FILE_CACHE: tuple[EvidenceFile, ...] | None = None
 
 
 def _evidence_files() -> tuple[EvidenceFile, ...]:
-    """Return a deterministic current-tree snapshot for this census run."""
+    """Return one deterministic current-tree snapshot for the census run."""
     global _EVIDENCE_FILE_CACHE
     if _EVIDENCE_FILE_CACHE is not None:
         return _EVIDENCE_FILE_CACHE
@@ -210,7 +212,7 @@ def _evidence_files() -> tuple[EvidenceFile, ...]:
                 files.append(
                     EvidenceFile(
                         path=path.relative_to(ROOT).as_posix(),
-                        text=path.read_text(encoding="utf-8"),
+                        text=path.read_text(encoding="utf-8", errors="replace"),
                     ),
                 )
     _EVIDENCE_FILE_CACHE = tuple(sorted(files, key=lambda item: item.path))
@@ -473,10 +475,10 @@ _EVIDENCE_CENSUS_CACHE: EvidenceCensus | None = None
 
 
 def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> EvidenceCensus:
-    """Census every family member from one immutable-tree pass.
+    """Census every family member from one current-tree snapshot.
 
     Text, manifests, receipts, fixtures, and Python source are all read from the
-    evidence commit.  Python edges retain relative-import and dynamic-import
+    current source corpus. Python edges retain relative-import and dynamic-import
     semantics rather than silently treating those references as absent.
     """
     hits = {candidate.old_path: {category: set() for category in CONSUMER_CATEGORIES} for candidate in candidates}
@@ -526,6 +528,7 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
             member_owners=member_owners,
         ):
             hits[old_path]["package_attribute"].add(relative)
+            direct_modules[old_path].add(module)
         registrations = {
             ast.unparse(node)
             for node in ast.walk(tree)
@@ -550,9 +553,7 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
                     hits[candidate.old_path]["dynamic_target"].add(relative)
                     literal_dynamic.append({"site": site, "target": target, "row_path": candidate.old_path})
             else:
-                unresolved_dynamic.append(
-                    {"site": site, "callee": callee, "expression": ast.unparse(argument)}
-                )
+                unresolved_dynamic.append({"site": site, "callee": callee, "expression": ast.unparse(argument)})
         for candidate in candidates:
             if any(candidate.new_module in registration for registration in registrations):
                 hits[candidate.old_path]["registration"].add(relative)
@@ -579,7 +580,7 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
 
 
 def _evidence_census() -> EvidenceCensus:
-    """Return the cached immutable-tree evidence census."""
+    """Return the cached current-tree evidence census."""
     global _EVIDENCE_CENSUS_CACHE
     if _EVIDENCE_CENSUS_CACHE is None:
         _EVIDENCE_CENSUS_CACHE = _all_evidence_consumers(exact_relocation_candidates())
@@ -587,7 +588,7 @@ def _evidence_census() -> EvidenceCensus:
 
 
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
-    """Locate every historic facade symbol in its immutable evidence module."""
+    """Locate every historic facade symbol in its current evidence module."""
     tree = ast.parse(_evidence_text(candidate.new_path), filename=candidate.new_path)
     locations: dict[str, list[str]] = {symbol: [] for symbol in symbols}
     type_alias = getattr(ast, "TypeAlias", None)
@@ -635,11 +636,11 @@ def _structured_semantic_evidence(
             "result": "no_substitutable_c941_owner",
             "rationale": (
                 "The one-to-one c941 old/new pair is the only reviewed family owner; "
-                "AST locator and competing-site census are anchored to the immutable evidence commit."
+                "AST locator and competing-site census are anchored to the current-tree evidence snapshot."
             ),
         },
         "anchors": {
-            "evidence_commit": EVIDENCE_COMMIT,
+            "census_root": "current_worktree",
             "relocation_pair": [candidate.old_path, candidate.new_path],
         },
     }
@@ -672,6 +673,9 @@ def generated_rows() -> list[dict[str, object]]:
                     all_locators=locators,
                 ),
                 "semantic_owner": None,
+                "rag_query": None,
+                "rag_result": None,
+                "alternative_owner_evidence": None,
                 "disposition": None,
                 "follow_on_step_id": None,
             }
@@ -684,7 +688,6 @@ def matrix_document() -> dict[str, object]:
     return {
         "schema_version": MATRIX_VERSION,
         "relocation_commit": RELOCATION_COMMIT,
-        "evidence_commit": EVIDENCE_COMMIT,
         "consumer_categories": list(CONSUMER_CATEGORIES),
         "dynamic_imports": _evidence_census().dynamic_imports,
         "evidence_measurements": _evidence_census().measurements,
@@ -737,6 +740,35 @@ def _symbol_terminal_destinations(
     }
 
 
+def _rag_result_from_evidence(generated: dict[str, object]) -> dict[str, object]:
+    """Pin the reviewed per-row RAG result to a current AST locator."""
+    locators = generated["current_symbol_locators"]
+    if not isinstance(locators, dict):
+        raise RuntimeError("generated RAG evidence lacks symbol locators")
+    for symbol in sorted(locators):
+        values = locators[symbol]
+        if isinstance(symbol, str) and isinstance(values, list) and values:
+            path, _, line = values[0].rpartition(":")
+            if path and line.isdigit():
+                return {
+                    "path": path,
+                    "line_start": int(line),
+                    "line_end": int(line),
+                    "node_type": "ast_top_level_binding",
+                    "symbol": symbol,
+                }
+    new_path = generated.get("new_path")
+    if isinstance(new_path, str):
+        return {
+            "path": new_path,
+            "line_start": 1,
+            "line_end": 1,
+            "node_type": "module",
+            "symbol": "<module>",
+        }
+    raise RuntimeError(f"generated RAG evidence has no defining module for {generated['old_path']}")
+
+
 def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, object]:
     """Refresh only derived fields in a reviewed matrix, keyed by c941 pair.
 
@@ -765,6 +797,9 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
     }
     reviewed_fields = {
         "semantic_owner",
+        "rag_query",
+        "rag_result",
+        "alternative_owner_evidence",
         "disposition",
         "terminal_state",
         "follow_on_step_id",
@@ -777,13 +812,18 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         existing = existing_by_pair[pair]
         refreshed = {field: existing[field] for field in reviewed_fields}
         refreshed.update({field: generated[field] for field in derived_fields})
+        refreshed["rag_result"] = _rag_result_from_evidence(generated)
+        refreshed["alternative_owner_evidence"] = (
+            f"Current-tree evidence anchors {refreshed['semantic_owner']} at "
+            f"{refreshed['rag_result']['path']}:{refreshed['rag_result']['line_start']}; "
+            "the competing-site census and no-substitutability rationale are in semantic_evidence."
+        )
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
         refreshed_rows.append(refreshed)
     refreshed_document = dict(document)
     refreshed_document["schema_version"] = MATRIX_VERSION
     refreshed_document["relocation_commit"] = RELOCATION_COMMIT
-    refreshed_document["evidence_commit"] = EVIDENCE_COMMIT
     refreshed_document["consumer_categories"] = list(CONSUMER_CATEGORIES)
     refreshed_document["dynamic_imports"] = _evidence_census().dynamic_imports
     refreshed_document["evidence_measurements"] = _evidence_census().measurements
@@ -802,7 +842,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
     required_document_fields = {
         "schema_version",
         "relocation_commit",
-        "evidence_commit",
         "consumer_categories",
         "dynamic_imports",
         "evidence_measurements",
@@ -812,11 +851,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
     }
     if set(document) != required_document_fields:
         raise RuntimeError("registry facade matrix document schema is incomplete or has unrelated fields")
-    if (
-        document.get("schema_version") != MATRIX_VERSION
-        or document.get("relocation_commit") != RELOCATION_COMMIT
-        or document.get("evidence_commit") != EVIDENCE_COMMIT
-    ):
+    if document.get("schema_version") != MATRIX_VERSION or document.get("relocation_commit") != RELOCATION_COMMIT:
         raise RuntimeError("registry facade matrix has the wrong schema or relocation commit")
     if document.get("consumer_categories") != list(CONSUMER_CATEGORIES):
         raise RuntimeError("registry facade matrix consumer-category schema drifted")
@@ -826,7 +861,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
     if document.get("dynamic_imports") != evidence_census.dynamic_imports:
         raise RuntimeError("registry facade matrix dynamic-import evidence drifted")
     if document.get("evidence_measurements") != evidence_census.measurements:
-        raise RuntimeError("registry facade matrix immutable-tree measurements drifted")
+        raise RuntimeError("registry facade matrix current-tree measurements drifted")
     rows = document.get("rows")
     if not isinstance(rows, list) or len(rows) != 78:
         raise RuntimeError("registry facade matrix must contain exactly 78 rows")
@@ -847,6 +882,9 @@ def check_matrix_document(document: dict[str, object]) -> None:
         "consumers",
         "semantic_owner",
         "semantic_evidence",
+        "rag_query",
+        "rag_result",
+        "alternative_owner_evidence",
         "disposition",
         "terminal_state",
         "terminal_destinations",
@@ -877,6 +915,8 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(f"registry facade consumer census drifted for {pair[0]}")
         for field in (
             "semantic_owner",
+            "rag_query",
+            "alternative_owner_evidence",
             "disposition",
             "terminal_state",
             "follow_on_step_id",
@@ -885,6 +925,21 @@ def check_matrix_document(document: dict[str, object]) -> None:
         ):
             if not isinstance(row.get(field), str) or not row[field]:
                 raise RuntimeError(f"registry facade row {pair[0]} lacks reviewed {field}")
+        rag_result = row.get("rag_result")
+        if not isinstance(rag_result, dict) or set(rag_result) != RAG_RESULT_FIELDS:
+            raise RuntimeError(f"registry facade row {pair[0]} lacks one auditable RAG result")
+        if (
+            not isinstance(rag_result["path"], str)
+            or not isinstance(rag_result["line_start"], int)
+            or not isinstance(rag_result["line_end"], int)
+            or not isinstance(rag_result["node_type"], str)
+            or not isinstance(rag_result["symbol"], str)
+            or rag_result["path"] != row["new_path"]
+        ):
+            raise RuntimeError(f"registry facade row {pair[0]} has a malformed RAG defining-owner result")
+        rag_location = f"{rag_result['path']}:{rag_result['line_start']}"
+        if rag_location not in row["alternative_owner_evidence"]:
+            raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
         semantic_evidence = row.get("semantic_evidence")
         if not isinstance(semantic_evidence, dict) or set(semantic_evidence) != {
             "owner_definition_locators",
@@ -894,10 +949,12 @@ def check_matrix_document(document: dict[str, object]) -> None:
         }:
             raise RuntimeError(f"registry facade row {pair[0]} has no structured semantic evidence")
         anchors = semantic_evidence["anchors"]
-        if not isinstance(anchors, dict) or anchors.get("evidence_commit") != EVIDENCE_COMMIT:
+        if not isinstance(anchors, dict) or anchors.get("census_root") != "current_worktree":
             raise RuntimeError(f"registry facade row {pair[0]} has unanchored semantic evidence")
         if anchors.get("relocation_pair") != [row["old_path"], row["new_path"]]:
             raise RuntimeError(f"registry facade row {pair[0]} semantic evidence has another relocation pair")
+        if row["semantic_owner"] not in row["alternative_owner_evidence"]:
+            raise RuntimeError(f"registry facade row {pair[0]} lacks alternative-owner comparison evidence")
         locators = row.get("current_symbol_locators")
         terminal_symbols = row.get("symbol_terminal_destinations")
         if not isinstance(locators, dict) or not isinstance(terminal_symbols, dict):
@@ -913,13 +970,17 @@ def check_matrix_document(document: dict[str, object]) -> None:
             ):
                 raise RuntimeError(f"registry facade row {pair[0]} has no source or terminal locator for {symbol}")
         destinations = row.get("terminal_destinations")
-        if not isinstance(destinations, list) or not destinations or any(
-            not isinstance(destination, dict)
-            or set(destination) != {"path", "allowed_absence", "role"}
-            or not isinstance(destination["path"], str)
-            or not isinstance(destination["allowed_absence"], bool)
-            or not isinstance(destination["role"], str)
-            for destination in destinations
+        if (
+            not isinstance(destinations, list)
+            or not destinations
+            or any(
+                not isinstance(destination, dict)
+                or set(destination) != {"path", "allowed_absence", "role"}
+                or not isinstance(destination["path"], str)
+                or not isinstance(destination["allowed_absence"], bool)
+                or not isinstance(destination["role"], str)
+                for destination in destinations
+            )
         ):
             raise RuntimeError(f"registry facade row {pair[0]} has malformed terminal destinations")
         if "unresolved" in row["semantic_owner"].lower() or "unresolved" in row["terminal_state"].lower():
@@ -970,7 +1031,7 @@ def current_terminal_state_report(
 
     A disposition Step may legitimately remove its historic public path, or move
     it to a direct defining module.  This report therefore records missing paths
-    as progress/pending proof rather than dereferencing them through the immutable
+    as progress/pending proof rather than dereferencing them through the current
     evidence generator or asking a future Step to retain an alias or re-export.
     """
     rows = document.get("rows")
@@ -1017,7 +1078,7 @@ def current_terminal_state_report(
             }
         )
     return {
-        "evidence_commit": EVIDENCE_COMMIT,
+        "census_root": "current_worktree",
         "review_status": document.get("review_status"),
         "open_disposition_step_ids": [state["step_id"] for state in row_states],
         "rows": row_states,
