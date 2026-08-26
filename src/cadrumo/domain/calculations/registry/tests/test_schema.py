@@ -16,15 +16,14 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import ConstructDefinition, FormulaDefinition
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
-
 from .....core import CasillaId, validated_casilla_id
+from ...export_field_kind import CasillaFieldKind
 from ..ids import LegalRefId, SourceRefId
+from ..schema import ConstructDefinition, FormulaDefinition
+from ..schema_exports import ExportFieldDefinition
+from ..schema_formula import FormulaExpression
+from ..schema_input_kind import InputKind
+from ..schema_surfaces import CasillaDefinition, RelationDefinition
 from ..schema_verification import (
     DiscrepancyCause,
     RegistryVerificationPolicy,
