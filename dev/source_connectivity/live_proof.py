@@ -32,7 +32,6 @@ from cadrumo.application.modelo._calculation_actions import (
 )
 from cadrumo.application.modelo._calculation_helpers import build_typed_observations
 from cadrumo.application.modelo._calculation_resolution import build_calculation_replay_payloads
-from cadrumo.application.modelo._registry_resources import authority_via_resources
 from cadrumo.application.modelo._revision_persistence import persist_calculation_revision
 from cadrumo.application.operator_surface import build_supported_modelo_calculation_workflow_catalogue
 from cadrumo.application.registry import (
@@ -52,6 +51,7 @@ from cadrumo.core._calculation_route import ModeloCalculationRouteId
 from cadrumo.core.resources import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
 from cadrumo.core.time import now
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.invoices import PaymentStatus
 from cadrumo.domain.iva import InvoiceKind, IvaCategory
@@ -182,7 +182,7 @@ def _execute_fixture(
         occurred_at=timestamp,
         actor="source-connectivity-proof",
     )
-    snapshot = authority_via_resources().snapshot(
+    snapshot = bundled_authority().snapshot(
         fixture.modelo,
         filing_year=fixture.filing_year,
         period=fixture.period,

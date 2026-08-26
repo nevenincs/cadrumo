@@ -1,10 +1,9 @@
-"""Registry resource helpers shared by modelo application actions.
+"""Registry path and work-unit guards shared by modelo application actions.
 
-Modelo application services access the packaged registry through the central
-:class:`ValidatedRegistryAuthority` exposed by ``bundled_authority()``.
-This module keeps that access path in one place for work-unit creation,
-calculation, verification, import, and comparison code that needs the bundled
-``registry/aeat`` tree or its cached authority.
+Modelo application services access the packaged registry through the canonical
+:func:`~cadrumo.domain.calculations.registry.authority.bundled_authority`.
+This module owns the bundled ``registry/aeat`` path projection used in
+application errors and the work-unit revision/period guards.
 
 The revision and period guards are create-work-unit checks: they reject user
 input that names a modelo revision or filing period the committed registry does
@@ -16,21 +15,17 @@ See Also:
     :class:`cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`:
         Loads and validates modelo definitions, then serves registry snapshots.
     :mod:`cadrumo.application.modelo._registry_helpers`:
-        Uses this authority helper for import/amendment registry checks.
+        Owns import/amendment registry checks.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import ModeloError
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def registry_root() -> Path:
@@ -38,22 +33,11 @@ def registry_root() -> Path:
 
     The returned :class:`~pathlib.Path` is the path passed to registry-facing
     errors when the packaged registry cannot be loaded. It intentionally mirrors
-    the root used by :func:`authority_via_resources`.
+    the root resolved by the canonical bundled registry authority.
     """
     from ...core.resources import bundled_path
 
     return bundled_path("registry", "aeat")
-
-
-def authority_via_resources() -> ValidatedRegistryAuthority:
-    """Return the central :class:`ValidatedRegistryAuthority` for modelo registry access.
-
-    Callers use this instead of constructing a local authority so calculation,
-    verification, import, and create-work-unit paths share the same packaged
-    registry cache and source-root configuration.
-    """
-
-    return bundled_authority()
 
 
 def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
@@ -67,7 +51,7 @@ def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
-        modelo_def = authority_via_resources().modelo(modelo)
+        modelo_def = bundled_authority().modelo(modelo)
     except RegistrySnapshotError as exc:
         raise ModeloError(str(exc)) from exc
     if revision_id in modelo_def.revisions:
@@ -90,7 +74,7 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, 
     from ...domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     try:
-        modelo_def = authority_via_resources().modelo(modelo)
+        modelo_def = bundled_authority().modelo(modelo)
     except RegistrySnapshotError as exc:
         raise ModeloError(str(exc)) from exc
     revision = modelo_def.revisions.get(revision_id)

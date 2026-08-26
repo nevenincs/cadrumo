@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo2
 
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.decimal import coerce_decimal_strict
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
@@ -55,7 +56,6 @@ from ..calculations import (
 )
 from ._action_errors import ModeloCrossPeriodCleanStateError
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
-from ._registry_resources import authority_via_resources as _authority_via_resources
 
 
 def _cross_period_expected_member_sets_from_profile(
@@ -178,7 +178,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
-        snapshot = _authority_via_resources().snapshot(
+        snapshot = bundled_authority().snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

@@ -55,12 +55,12 @@ from pydantic import BaseModel, ConfigDict
 from ...core import CasillaId, Modelo
 from ...core import Period as _Period
 from ...core.errors import CoreError
+from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.modelos import WorkUnitCatalogue
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
@@ -89,6 +89,7 @@ def _select_taxation_work_unit(
 ) -> ModeloWorkResolution:
     """Resolve one taxation target from the caller-captured work catalogue."""
     return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+
 
 #: Honesty scope caveat for the individual filing branch. The individual run
 #: reuses the *single* input set assembled for the unidad familiar and merely
@@ -366,12 +367,12 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
             Performs the pure snapshot comparison after this function resolves
             work-unit state.
     """
-    from ...domain.calculations.registry.errors import RegistrySnapshotError
+    from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import resolve_declaration_period_inputs
-    from ._registry_resources import authority_via_resources as _authority_via_resources
     from .work_addressing import ModeloWorkSelectorState, resolve_modelo_work_bucket
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
@@ -392,7 +393,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     work_unit = resolution.work_unit
 
     try:
-        authority = _authority_via_resources()
+        authority = bundled_authority()
         snapshot = authority.snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,

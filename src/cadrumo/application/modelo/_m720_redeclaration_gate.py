@@ -34,6 +34,7 @@ See Also:
 from __future__ import annotations
 
 from ...core import Modelo
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import CalculationRevision, ModeloVerificationFinding, WorkUnit
 from ..calculations import (
@@ -44,7 +45,6 @@ from ..calculations import (
     modelo_720_redeclaration_advisory_findings,
     resolve_bindings_from_local_store,
 )
-from ._registry_resources import authority_via_resources
 
 
 def modelo_720_redeclaration_findings(
@@ -99,7 +99,7 @@ def modelo_720_redeclaration_findings(
     # Law-determined resolution from (modelo, filing_year, period); the work
     # unit's stored revision id is never fed back in as the selector.
     try:
-        snapshot = authority_via_resources().snapshot(
+        snapshot = bundled_authority().snapshot(
             Modelo.M720.value,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

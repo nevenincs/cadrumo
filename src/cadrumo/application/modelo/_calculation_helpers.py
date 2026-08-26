@@ -15,7 +15,7 @@ See Also:
         Uses these helpers before registry-engine execution and persistence.
     :mod:`cadrumo.application.modelo._amendment_actions`:
         Reuses amendment observation projection for corrected filing records.
-    :mod:`cadrumo.application.modelo._registry_resources`:
+    :func:`cadrumo.domain.calculations.registry.authority.bundled_authority`:
         Supplies the packaged registry authority used for snapshot resolution.
     :class:`~cadrumo.domain.calculations.registry.RegistryCalculationResult`:
         Registry-engine result whose values and formula entries are projected
@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ...core import CasillaId, Period, RegistryAuthorityGrade
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import (
@@ -46,9 +47,6 @@ from ._action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,
     WorkUnitRevisionDivergenceError,
-)
-from ._registry_resources import (
-    authority_via_resources as _authority_via_resources,
 )
 from ._registry_resources import (
     registry_root as _registry_root,
@@ -152,7 +150,7 @@ def resolve_registry_snapshot_for_work_unit(
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
-        authority = _authority_via_resources()
+        authority = bundled_authority()
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_root_missing",

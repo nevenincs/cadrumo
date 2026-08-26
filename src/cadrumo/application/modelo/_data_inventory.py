@@ -8,7 +8,7 @@ so an unset profile fact — e.g. the home-office usage ratio — surfaces as an
 actionable gap rather than a silent blank downstream).
 
 This module owns the read-only composition over
-:func:`~application.modelo._registry_resources.authority_via_resources`
+:func:`~domain.calculations.registry.authority.bundled_authority`
 (the registry snapshot for the casilla/binding declarations) and
 :func:`~application.modelo.profile_resolvable_binding_ids`
 (the profile-fact resolution already used by the ``bindings list --missing``
@@ -38,6 +38,7 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -53,7 +54,6 @@ from ...domain.calculations.registry.profile_grounding import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.temporal import select_revision
 from ._binding_readiness import profile_resolvable_binding_ids
-from ._registry_resources import authority_via_resources
 
 _log = get_logger(__name__)
 
@@ -352,7 +352,7 @@ def profile_requirements_for_binding(
     from ..user_profile.preflight import format_profile_path_requirements
 
     try:
-        authority = authority_via_resources()
+        authority = bundled_authority()
         revision = select_revision(authority.modelo(modelo), filing_year=filing_year, period=period.registry_token)
         keys = next(
             (binding_profile_keys(b) for b in revision.bindings if str(b.id) == binding_id),

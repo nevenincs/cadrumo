@@ -28,7 +28,7 @@ from datetime import date
 
 from ...core import Period
 from ...core.logging import get_logger
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -38,7 +38,6 @@ from ...domain.calculations.registry.errors import (
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.temporal import select_revision_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._registry_resources import authority_via_resources
 from .profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 
 _log = get_logger(__name__)
@@ -66,7 +65,7 @@ def profile_resolvable_binding_ids(
     bucket has no profile — the caller then treats every binding as missing,
     which is the correct conservative answer.
     """
-    authority = authority_via_resources()
+    authority = bundled_authority()
     if period is not None and period.filing_year != filing_year:
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
