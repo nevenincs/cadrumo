@@ -170,6 +170,7 @@ Submodules
    cadrumo.core.storage_route_guidance
    cadrumo.core.tabular
    cadrumo.core.text_fold
+   cadrumo.core.transport_locus
    cadrumo.core.tty
    cadrumo.core.wizard_catalogue
    cadrumo.core.workbook
