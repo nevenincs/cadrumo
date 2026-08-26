@@ -126,3 +126,28 @@ refusals. First restore executable strict geometry evidence, then regenerate
 the two provenance manifests through the normal generator and re-run the
 canonical focused registry, generated-tree, and lint gates. The M165 and M200
 whole-tree blockers remain separate from these M353-owned failures.
+
+## Final re-review closure
+
+Re-review of `45d2a9a3b1` and the relevant shared-test hunk in `0813f00e74`
+is **PASS**. The prior high findings are closed: the strict-parser proof now
+consumes the canonical complete-sheet tuple and independently asserts
+`35300`'s 13 fields plus the exact `35301` counts and extents (146 and 1800
+for 2015--2016; 132 and 1500 for 2017--2019 and 2020). All three completed
+geometry cases pass.
+
+Both selected generated trees were regenerated through the canonical renderer.
+The completed M353 generated-tree partition passes all four cases, proving
+fresh-render equality and official-anchor bijection for `2021-2025` and
+`2026-desde-02`; the only output is the pre-existing workbook print-area
+warning. Focused Ruff passes for both the registry and generated-tree tests.
+
+Direct canonical selection returns `2021-2025` for 2021/01 and 2025/12, and
+`2026-desde-02` for 2026/02 and 2026/12; it refuses 2015/01, 2020/12,
+2026/01, and 2027/01. The BOE hash, February-only legal basis, source epochs,
+and no-redeclaration result remain unchanged. Commit `45d2a9a3b1` is confined
+to the two truthful provenance manifests, the generated-tree test import
+order, and audit evidence; the shared commit's relevant hunk corrects only the
+M353 test's tuple handling. The earlier semantic-map observation remains an
+intentional below-filing refusal, not an unresolved defect. No Critical, High,
+or unresolved Medium finding remains.
