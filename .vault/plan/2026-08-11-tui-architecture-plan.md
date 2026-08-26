@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:f16df3cb9e323aaa85773eaeadf9e9da41ab3440a0955df446af4d781cd79690'
+body_hash: 'sha256:e31a37380f7e11b6e1fda1ad06b33d1a0dd00a9903b1f814a3c16b80085d1d1e'
 ---
 
 # `tui-architecture` plan
@@ -365,7 +365,7 @@ Render census field review and filed-history outcome detail without placing doma
 
 Add the distinct transient financial operand protocol, enroll the Modelo calculation edit, prove crash-safe custody and atomic effect evidence, and mint the financial-operand and Edit Contract C3 dependency receipts without treating either as a visual exit.
 
-- [ ] `W05.P23.S141` - Define OperationTransientFinancialOperandProtocolV1 with typed declaration, requirement, submission, access-grant, delivery, acknowledgement, release, expiry, refusal, and broker contracts that are distinct from EphemeralSecretSubmission and persistent secure-reference flows and prohibit operand hashing or durable derivatives; `src/cadrumo/application/operations/_financial_operand.py`.
+- [x] `W05.P23.S141` - Define OperationTransientFinancialOperandProtocolV1 with typed declaration, requirement, submission, access-grant, delivery, acknowledgement, release, expiry, refusal, and broker contracts that are distinct from EphemeralSecretSubmission and persistent secure-reference flows and prohibit operand hashing or durable derivatives; `src/cadrumo/application/operations/_financial_operand.py`.
 - [ ] `W05.P23.S142` - Persist only non-sensitive custody checkpoints and serialize awaiting_submission to bound to delivery_started to delivery_acknowledged to released transitions with expiry, cancellation, terminal settlement, crash classification, restart reconciliation, and exactly-once release across racing supervisor paths; `src/cadrumo/application/operations/_journal.py, src/cadrumo/application/operations/_supervisor.py, and src/cadrumo/adapters/persistence/operations/_journal_validation.py`.
 - [ ] `W05.P23.S143` - Extend registered operation definitions with validated transient-financial-operand declarations and an effect-receipt resolver that narrows recorded mutation, interruption, and uncertain-effect claims from committed application evidence without exposing financial operand material; `src/cadrumo/application/operations/_registry.py`.
 - [ ] `W05.P23.S144` - Enroll the calculate and recalculate edit family through ModeloEditContractV1 and the transient financial operand handoff, register the typed ModeloWorkspaceRefreshTargetV1 resolver, and ensure frontend entrypoints can submit only typed requests without custody or mutation access; `src/cadrumo/application/modelo/_operation_definitions.py`.

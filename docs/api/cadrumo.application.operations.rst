@@ -22,6 +22,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.operations._execution_context
+   cadrumo.application.operations._financial_operand
    cadrumo.application.operations._model_contract
    cadrumo.application.operations._supervisor_lease
    cadrumo.application.operations.capabilities
