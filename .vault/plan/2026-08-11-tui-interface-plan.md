@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:25da305a476cd0f337d8e1b80ef7f933c37ed4e88de08fa9555550cd30e7d8d6'
+body_hash: 'sha256:2c49ef6188d82ef30d01a4bf64d25aad226ed6e631b4fddc10e2331d485d11a9'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -105,9 +105,9 @@ Complete the reusable login, registration, profile-picker, passphrase, and gener
 
 Deliver profile selection, login, registration, password entry, profile-secret creation, and passphrase change as consumers of the receipt-named `EphemeralSecretSubmission` facade while preserving upstream secret custody.
 
-- [ ] `W04.P07.S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade; `src/cadrumo/entrypoints/tui/secret/credentials.py`.
-- [ ] `W04.P07.S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI; `src/cadrumo/entrypoints/tui/secret/login.py`.
-- [ ] `W04.P07.S19` - Complete profile-secret creation and registration presentation through public application contracts; `src/cadrumo/entrypoints/tui/secret/registration.py`.
+- [x] `W04.P07.S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade; `src/cadrumo/entrypoints/tui/secret/credentials.py`.
+- [x] `W04.P07.S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI; `src/cadrumo/entrypoints/tui/secret/login.py`.
+- [x] `W04.P07.S19` - Complete profile-secret creation and registration presentation through public application contracts; `src/cadrumo/entrypoints/tui/secret/registration.py`.
 - [ ] `W04.P07.S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states; `src/cadrumo/entrypoints/tui/secret/passphrase.py`.
 - [ ] `W04.P07.S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys; `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`.
 
