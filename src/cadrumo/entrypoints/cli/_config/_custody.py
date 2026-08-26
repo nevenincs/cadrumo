@@ -274,7 +274,7 @@ async def _run_logout_operation(profile_id: UUID) -> None:
     door awaits the executor to completion, so the session is closed by the time
     this returns and the caller needs no observation pass to learn that.
     """
-    from ...._operation_composition import compose_operation_dependencies
+    from ..._operation_composition import compose_operation_dependencies
     from ....application.user_profile.operations import build_profile_logout_operation_request
 
     services = compose_operation_dependencies()
