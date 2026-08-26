@@ -62,6 +62,7 @@ from cadrumo.application.calculations._relation_prefill import (
     _first_year_modalidad_cuota_no_m202,
 )
 from cadrumo.core import Period, RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.core.resources import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository

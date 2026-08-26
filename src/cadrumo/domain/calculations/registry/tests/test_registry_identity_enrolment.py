@@ -36,7 +36,7 @@ from ..identity import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_IDENTITY_MODULE_NAME = "_identity.py"
+_IDENTITY_MODULE_NAME = "identity.py"
 """The one module permitted to own each derivation below."""
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[6]

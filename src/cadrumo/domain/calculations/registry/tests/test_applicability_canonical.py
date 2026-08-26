@@ -1,22 +1,25 @@
 """Regression tests asserting canonical access to applicability rules.
 
-Pins the applicability collapse to the single domain
-source: ``derive_modelo_applicability`` access paths must resolve to the
-same object in memory and both retired re-export bridges must stay absent.
+Pins the applicability collapse to its single domain source. The rules live in
+``registry.applicability``, which is the canonical defining module rather than a
+re-export bridge: the module was promoted out of its underscore-private name,
+and consumers import ``derive_modelo_applicability`` from it directly.
 
 Assertions:
 - The former application overview re-export shim is not importable.
-- The former ``registry.applicability`` focused re-export bridge is not
-  importable either -- every public symbol it carried is already exported
-  by the package's own top-level facade, and the bridge had no consumer of
-  the underscore-prefixed internal constants it also carried.
-- The function object imported via the package facade is identity-equal to
-  the domain implementation.
+- The annual withholding summary duty is grounded in RIRPF art. 108.
+
+Two assertions retired with the shapes they defended. One required the package
+``__init__`` to re-export ``derive_modelo_applicability``; that namespace is now
+inert by rule, carrying an empty ``__all__`` and no imports, so there is no
+facade object to compare against. The other required
+``registry.applicability`` to be absent, which was right while the name belonged
+to a bridge and is wrong now that it names the implementation itself.
 
 See Also:
-    :func:`~domain.calculations.registry.derive_modelo_applicability`
-        Public package facade this test pins to the implementation object.
-    :func:`~domain.calculations.registry._applicability.iter_modelo_applicability_rules`
+    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
+        Canonical defining module for the applicability derivation.
+    :func:`~domain.calculations.registry.applicability.iter_modelo_applicability_rules`
         Canonical rule-table iterator checked for annual withholding refs.
 """
 
@@ -43,31 +46,6 @@ def test_application_overview_applicability_shim_is_absent() -> None:
     """
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("cadrumo.application.overview._applicability")
-
-
-def test_registry_applicability_focused_bridge_is_absent() -> None:
-    """The registry.applicability focused re-export bridge must not exist.
-
-    Per the operator directive collapsing every redefinition onto its single
-    canonical home: every public symbol this bridge carried was already
-    re-exported by ``cadrumo.domain.calculations.registry`` itself, and none
-    of the underscore-prefixed internal constants it also carried had a
-    consumer through the bridge. A recurrence of the bridge (an accidental
-    restore, or a new cross-package import reaching for the focused module
-    instead of the package facade) must be flagged here, not silently
-    re-introduced.
-    """
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.domain.calculations.registry.applicability")
-
-
-def test_facade_reexport_is_identity_equal_to_domain() -> None:
-    """The package facade re-export resolves to the same object as the implementation."""
-    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
-    facade_mod = importlib.import_module("cadrumo.domain.calculations.registry")
-    assert facade_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
-        "package facade derive_modelo_applicability is not the same object as the domain implementation"
-    )
 
 
 def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> None:
