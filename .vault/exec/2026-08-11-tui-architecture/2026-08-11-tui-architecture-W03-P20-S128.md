@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:2781e1a92a29aa55c9a19793404d39da54c846ad68d0a3732a2ea46f1975c58e'
+body_hash: 'sha256:58b61ec236e971f372e5094e3c51b8e065067783d946bcbaa58237910b1d6815'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -37,6 +37,10 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace_manifest.py` (commit `9e90b62c26`: `_INSPECTION_ROOT_FIELDS` companion fix)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (66 passed)
 - `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py -m "unit or integration" -q` -> `pass` (20 passed, 1 pre-existing skip)
+- `M` `src/cadrumo/application/modelo/workspace_models.py`, `tests/test_workspace_models.py` (commit `16c56b2d5c`: S283, `legal_refs`/`constraints` `None`-vs-`()`)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `d7528c1965`: CASILLA schema_facet + real pagination)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py -m integration -q` -> `pass` (24 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace_models.py -m "unit or integration" -q` -> `pass` (73 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -178,7 +182,39 @@ explicit not-yet-measured disposition on the missing fields; or open it as
 its own decision Step like S277/S278/S279) rather than picked unilaterally.
 Holding for a ruling before writing any schema_facet code.
 
-Still NOT built: request/admission dispatch, `schema_facet`, the full
-`ModeloWorkspaceProjectionV1` / `ModeloWorkspaceStaticInspectionResultV1`
-wrapping, materialization/provenance facets, readiness/closure integration
-for GRADED_SNAPSHOT.
+Update: S283 landed (own decision commit `16c56b2d5c`, reported separately)
+-- bounded a STATIC_INSPECTION casilla row to identity alone, and gave
+`ModeloWorkspaceSchemaRecordV1.legal_refs`/`.constraints` a `None`-vs-`()`
+absence distinction. With all four decisions settled, landed the CASILLA
+schema_facet (commit `d7528c1965`):
+
+- `static_inspection_casilla_schema_records`: one row per casilla identity,
+  sorted for stable pagination, `formula_operands`/`relation_endpoints`
+  consuming the S277 join functions directly, `legal_refs`/`constraints`
+  always `None` per S283.
+- Extracted `_resolve_locale_summary_and_value` as the shared per-key locale
+  fallback helper (requested -> Spanish -> suppressed), reused by both the
+  revision-level summary and per-casilla label resolution -- one rule, not
+  two independently-drifting copies.
+- `paginate_static_inspection_schema_facet` treats the cursor as a real
+  contract: proved round-trip across all 7 pages of a real 20-casilla result
+  (modelo 130/2026/1T, page_size=3), and proved `ModeloWorkspaceStaleCursorError`
+  fires when resumed against a baseline whose `contributor_epoch_digest` has
+  moved, rather than silently returning a different page.
+
+**Stopped a fifth time, same discipline**: before building BINDING/FORMULA/
+RELATION/PARAMETER rows, checked `modelo_localization.py` for their
+locale-key convention and found none exists -- only `modelo`, `revision`,
+`construct`, and casilla occurrence/continuity/alias keys are defined.
+`ModeloWorkspaceSchemaRecordV1.label` is required with `min_length=1` and no
+None-capable escape like S283 gave `legal_refs`/`constraints`, so there is no
+established, non-inventive way to populate it for these four row kinds.
+Reported three options (these identities have no real display text and
+`label` needs its own S283-shaped absence ruling; a locale-key convention
+for them is a genuine gap in `modelo_localization.py` to close; or
+something else) rather than fabricating a label convention. Holding.
+
+Still NOT built: BINDING/FORMULA/RELATION/PARAMETER schema records, request/
+admission dispatch, the full `ModeloWorkspaceProjectionV1` /
+`ModeloWorkspaceStaticInspectionResultV1` wrapping, materialization/
+provenance facets, readiness/closure integration for GRADED_SNAPSHOT.
