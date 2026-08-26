@@ -22,7 +22,17 @@
 set +e
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+# Lane roots section (b) is allowed to reap. These default to cadrumo's own
+# lane names, which is correct on a cadrumo runner and silently inert on any
+# other: this same hook is deployed to the vaultspec-* runners, where nothing
+# has ever matched and the audit line has read `freed=0.0MB` on every run
+# since the hook was installed. A runner serving another repository names its
+# own lanes via RUNNER_HYGIENE_LANE_GLOBS (space-separated) in its .env.
+if [[ -n "${RUNNER_HYGIENE_LANE_GLOBS:-}" ]]; then
+    read -r -a LANE_GLOBS <<< "$RUNNER_HYGIENE_LANE_GLOBS"
+else
+    LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+fi
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))
