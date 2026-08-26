@@ -30,22 +30,22 @@ _AEAT_ROOT = Path(__file__).resolve().parents[3]
 _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
     (
         BucketEventType.PROFILE_BUCKET_CREATED,
-        _AEAT_ROOT / "application" / "user_profile" / "_capsule_record.py",
+        _AEAT_ROOT / "application" / "user_profile" / "capsule_record.py",
         "BucketEventType.PROFILE_BUCKET_CREATED",
     ),
     (
         BucketEventType.PROFILE_ACTIVATED,
-        _AEAT_ROOT / "application" / "user_profile" / "_login_session.py",
+        _AEAT_ROOT / "application" / "user_profile" / "login_session.py",
         "BucketEventType.PROFILE_ACTIVATED",
     ),
     (
         BucketEventType.AUTH_PROVIDER_CONFIGURED,
-        _AEAT_ROOT / "application" / "auth" / "_operator.py",
+        _AEAT_ROOT / "application" / "auth" / "operator.py",
         "BucketEventType.AUTH_PROVIDER_CONFIGURED",
     ),
     (
         BucketEventType.PROFILE_VALUES_UPDATED,
-        _AEAT_ROOT / "application" / "user_profile" / "_fact_write.py",
+        _AEAT_ROOT / "application" / "user_profile" / "fact_write.py",
         # The needle names the EMISSION, not the bare symbol. The emitting
         # module also cross-links this member in prose, and a bare-symbol
         # needle is satisfied by that prose alone -- so reverting the stamp

@@ -164,7 +164,14 @@ def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
     """Prove the branch scan bites, and only inside generic construction."""
     planted = ast.parse("def _construct_authority():\n    return modelo.id == Modelo.M303\n")
     generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "authority.py"
-    per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "_m303_orden_resolution.py"
+    per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "m303_orden_resolution.py"
+
+    # The exclusion half is only worth asserting about a module that exists.
+    # Scoping is by membership of the generic set, so ANY name outside it --
+    # including one that names nothing at all -- satisfies the second assertion
+    # vacuously. Pinning the file keeps this a statement about the real
+    # per-modelo module rather than about a spelling that outlived it.
+    assert per_modelo.is_file()
 
     assert _modelo_branches_in_generic_construction(((generic, planted),))
     assert _modelo_branches_in_generic_construction(((per_modelo, planted),)) == {}

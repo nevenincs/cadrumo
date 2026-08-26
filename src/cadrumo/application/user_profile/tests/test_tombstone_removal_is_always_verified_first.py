@@ -114,7 +114,7 @@ def test_the_live_delete_flow_is_actually_the_thing_being_checked() -> None:
     sites = _removal_sites()
 
     assert sites, "no production call site found; the gate is checking nothing"
-    assert {path.name for path, _line in sites} == {"_custody_service.py"}
+    assert {path.name for path, _line in sites} == {"custody_service.py"}
 
 
 def test_the_detector_flags_an_unguarded_removal() -> None:

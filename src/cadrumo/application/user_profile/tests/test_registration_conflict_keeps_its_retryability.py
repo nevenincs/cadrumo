@@ -102,7 +102,7 @@ def test_the_permanent_case_is_caught_ahead_of_the_transient_one() -> None:
     """
     import ast
 
-    source = (Path(__file__).resolve().parents[1] / "_registration.py").read_text(encoding="utf-8")
+    source = (Path(__file__).resolve().parents[1] / "registration.py").read_text(encoding="utf-8")
     orders: list[tuple[int, int]] = []
     for node in ast.walk(ast.parse(source)):
         if not isinstance(node, ast.Try):
