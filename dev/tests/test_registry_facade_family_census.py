@@ -17,6 +17,7 @@ from dev.quality.registry_facade_family_census import (
     _dynamic_import_call,
     _evidence_census,
     _evidence_text,
+    _owner_for_reference,
     _package_attribute_owners,
     _python_import_context,
     _transitive_consumer_paths,
@@ -146,6 +147,27 @@ def test_dynamic_imports_keep_literal_and_nonliteral_sites_distinct() -> None:
     assert _dynamic_import_call(keyword_call, keyword_aliases) == "importlib.import_module"
 
 
+def test_package_symbol_and_leaf_references_have_exact_family_owners() -> None:
+    """A public package symbol is not confused with a leaf-module import route."""
+    authority = RelocatedFamily(100, "old-authority", "src/cadrumo/domain/calculations/registry/authority.py")
+    assert (
+        _owner_for_reference(
+            "cadrumo.domain.calculations.registry.parse_export_payload",
+            by_new_module={authority.new_module: authority},
+            member_owners={"parse_export_payload": "old-export"},
+        )
+        == "old-export"
+    )
+    assert (
+        _owner_for_reference(
+            authority.new_module,
+            by_new_module={authority.new_module: authority},
+            member_owners={"authority": "wrong-owner"},
+        )
+        == "old-authority"
+    )
+
+
 def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
     """Each row records owner, competing-site, and substitutability evidence."""
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
@@ -248,6 +270,7 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
     rows = document["rows"]
 
     assert isinstance(rows, list)
+    rationales: set[str] = set()
     for row in rows:
         assert isinstance(row, dict)
         result = row["rag_result"]
@@ -258,6 +281,10 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
         assert result["path"] == row["new_path"]
         assert location in row["alternative_owner_evidence"]
         assert row["semantic_owner"] in row["alternative_owner_evidence"]
+        rationale = row["semantic_evidence"]["substitutability"]["rationale"]
+        assert row["rag_query"] in rationale
+        assert rationale not in rationales
+        rationales.add(rationale)
 
 
 def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
