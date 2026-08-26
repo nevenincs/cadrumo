@@ -426,11 +426,13 @@ class PreviousModeloSelector(BaseModel):
 
     @property
     def required_periods(self) -> tuple[str, ...]:
+        """Return the selector's normalized source-period tuple."""
         if self.period is not None:
             return (self.period,)
         return self.source_periods
 
     def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
+        """Return source year-offset and period anchors for a target period."""
         if self.prior_quarter_expanding_span:
             anchors: tuple[tuple[int, str], ...] = _prior_quarter_expanding_span_anchors(target_period)
         elif self.source_period_offset_from_target is None:
