@@ -8,6 +8,13 @@ order = 2
 encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
+repeat = 'binding_rows'
+
+[revisions.2023-2024.export_layouts.records.row_field_casilla_ids]
+member_tax_id = 'tipo3.miembro-nif'
+member_legal_name = 'tipo3.miembro-nombre'
+share_percentage = 'tipo3.porcentaje-participacion'
+base_imponible_assigned = 'tipo3.importe'
 
 [[revisions.2023-2024.export_layouts.records.fields]]
 id = 'm184-2023.socio.f001'
@@ -94,8 +101,8 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.socio.f005'
 offset = 18
 length = 9
-kind = 'casilla'
-casilla_id = 'tipo3.miembro-nif'
+kind = 'binding'
+binding = 'modelo-184-member-row-nif'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -134,8 +141,8 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.socio.f007'
 offset = 36
 length = 40
-kind = 'casilla'
-casilla_id = 'tipo3.miembro-nombre'
+kind = 'binding'
+binding = 'modelo-184-member-row-name'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -277,8 +284,8 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.socio.f014'
 offset = 86
 length = 3
-kind = 'casilla'
-casilla_id = 'tipo3.porcentaje-participacion'
+kind = 'binding'
+binding = 'modelo-184-member-row-share'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -298,8 +305,8 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.socio.f015'
 offset = 89
 length = 4
-kind = 'casilla'
-casilla_id = 'tipo3.porcentaje-participacion'
+kind = 'binding'
+binding = 'modelo-184-member-row-share'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -360,12 +367,12 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.socio.f018'
 offset = 96
 length = 13
-kind = 'casilla'
-casilla_id = 'tipo3.importe'
-data_type = 'text'
+kind = 'binding'
+binding = 'modelo-184-member-row-base-assigned'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = 'left_zero'
+justification = 'right'
 signed = false
 legal_refs = [
     'orden-hap-2250-2015:art-1',
@@ -667,5 +674,3 @@ legal_refs = [
     'ley-58-2003:art-93',
 ]
 source_refs = ['aeat-dr-184-2023-2024']
-
-[revisions.2023-2024.export_layouts.records.row_field_casilla_ids]
