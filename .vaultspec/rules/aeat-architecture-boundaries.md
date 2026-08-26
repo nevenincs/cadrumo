@@ -99,9 +99,9 @@ through comments.
 (`DataBindingDefinition`, its value carrier, its source resolvers). Account
 scoping, parsing helpers, verification gates and other concepts MUST NOT be named
 "binding"; when two concepts would share the name, the non-registry-input one is
-renamed to what it actually does. Two unrelated `_profile_binding.py` modules
-once shipped side by side, one an OAuth scoping resolver and one the registry
-profile-fact resolver.
+renamed to what it actually does. Two unrelated modules once shipped side by
+side under the same profile-binding name, one an OAuth scoping resolver and one
+the registry profile-fact resolver; neither path survives, which is the point.
 
 ## How
 
