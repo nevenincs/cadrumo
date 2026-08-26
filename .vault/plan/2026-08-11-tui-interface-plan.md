@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:6845d098f08150c03c790f96fac16b19238dfcc50a97acd9ed8cc77776076445'
+body_hash: 'sha256:6bd2e00c35541d9c4dd287c7fc5f8aead8d545a5cca294ef20f8a67d16fd886c'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -73,8 +73,8 @@ Provide reusable stage navigation, progressive disclosure, grouping, badges, and
 
 Render already-classified status, safe errors, and bounded redacted logs without owning operation semantics.
 
-- [ ] `W02.P04.S09` - Extend settled status error and log renderers for distinct advisories safe failures bounded history spinner and final outcomes; `src/cadrumo/entrypoints/tui/components`.
-- [ ] `W02.P04.S10` - Prove render-only status error log and operation-feedback components consume public safe projections; `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`.
+- [x] `W02.P04.S09` - Extend settled status error and log renderers for distinct advisories safe failures bounded history spinner and final outcomes; `src/cadrumo/entrypoints/tui/components`.
+- [x] `W02.P04.S10` - Prove render-only status error log and operation-feedback components consume public safe projections; `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`.
 
 ## Wave `W03` - Task-led profile experience
 
