@@ -48,7 +48,10 @@ from .. import (
     unlock_profile_custody_recovery,
     verify_profile_custody_sentinel,
 )
-from .._capsule import load_committed_profile_custody_summary_witness
+from .._capsule import (
+    list_current_profile_custody_capsule_summary_witnesses,
+    load_committed_profile_custody_summary_witness,
+)
 from .._recovery import PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -370,6 +373,7 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
     assert witness.capsule_path == capsule
     assert witness.commit.profile_id == witness.label.profile_id == _PROFILE_ID
     assert witness.label == label
+    assert list_current_profile_custody_capsule_summary_witnesses(settings=settings) == (witness,)
     with pytest.raises(FrozenInstanceError):
         type(witness).__setattr__(witness, "capsule_path", tmp_path / "replacement")
 
@@ -402,6 +406,68 @@ def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_
     os.symlink(outside, label_path)
     with pytest.raises(ProfileCustodyRecordError, match=r"regular|reparse|unavailable"):
         load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
+
+
+def test_summary_discovery_reuses_each_anchored_commit_observation_once(tmp_path: Path) -> None:
+    """The populated summary path never reparses a marker after discovery."""
+    settings = _settings(tmp_path)
+    other_profile_id = UUID("1a5c1a5c-87fa-4b8d-8ec2-a209a6f2d435")
+    labels = {
+        _PROFILE_ID: ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="First summary"),
+        other_profile_id: ProfileCustodyCapsuleLabel.create(profile_id=other_profile_id, label="Second summary"),
+    }
+    for profile_id, label in labels.items():
+        envelope = _password_envelope(profile_id=profile_id)
+        publish_profile_custody_capsule(
+            profile_id=profile_id,
+            transaction_id=uuid4(),
+            publication_kind="enroll",
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+            data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+            settings=settings,
+        )
+
+    parsed_markers: list[object] = []
+    previous_profile = sys.getprofile()
+
+    def observe_parse(frame: object, event: str, argument: object) -> None:
+        if event == "call" and getattr(frame, "f_code", None) is parse_profile_custody_commit.__code__:
+            parsed_markers.append(argument)
+
+    sys.setprofile(observe_parse)
+    try:
+        witnesses = list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+    finally:
+        sys.setprofile(previous_profile)
+
+    assert tuple(witness.profile_id for witness in witnesses) == tuple(sorted(labels, key=str))
+    assert tuple(witness.label for witness in witnesses) == tuple(labels[witness.profile_id] for witness in witnesses)
+    assert len(parsed_markers) == len(labels)
+
+
+def test_summary_discovery_refuses_unbound_label_after_its_single_marker_parse(tmp_path: Path) -> None:
+    """A marker alone cannot become a reusable summary observation."""
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind="enroll",
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=uuid4(),
+                label="Foreign summary",
+            ).canonical_json_bytes()
+        },
+        settings=settings,
+    )
+
+    assert (capsule / "profile.commit.v1.json").is_file()
+    with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
 
 
 def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -> None:

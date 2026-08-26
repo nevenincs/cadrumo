@@ -9,7 +9,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID
 
 from .....core import StorageCategory, is_link_like, storage_location
@@ -51,7 +51,8 @@ from ._capsule_data import (
     write_posix_data_files as _write_posix_data_files,
 )
 from ._capsule_discovery import (
-    anchored_current_capsule_ids,
+    AnchoredCurrentCapsuleCommit,
+    anchored_current_capsule_commits,
     refuse_retired_profile_custody_paths,
 )
 from ._capsule_records import (
@@ -748,14 +749,50 @@ def list_current_profile_custody_capsule_ids(
     settings: Settings | None = None,
     root: Path | None = None,
 ) -> tuple[UUID, ...]:
-    """Discover only UUID capsules whose current commit validates.
+    """Project only UUIDs from current-marker observations.
 
-    This is the sole inventory seam for application profile projections.  A
-    directory name is merely a candidate: it becomes visible only after the
+    A directory name is merely a candidate: it becomes visible only after the
     exact current-format commit has been opened and bound back to that UUID.
     Staging directories, deletion tombstones, retired buckets, links and
-    malformed names therefore never enter the lifecycle surface.
+    malformed names therefore never enter the lifecycle surface.  The summary
+    inventory below consumes the same observations when label provenance is
+    also required.
     """
+    return tuple(observation.profile_id for observation in _current_capsule_commits(settings=settings, root=root))
+
+
+def list_current_profile_custody_capsule_summary_witnesses(
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> tuple[ProfileCustodyCapsuleSummaryWitness, ...]:
+    """Observe each current capsule's commit and UUID-bound label exactly once.
+
+    Discovery retains the bounded, anchored commit parse it performed instead of
+    handing this reader a UUID that would require opening that marker again.
+    The remaining read is only the label provenance required for the summary;
+    no custody, recovery, session, encrypted-fact, or label-head authority is
+    entered here.
+    """
+    return tuple(
+        ProfileCustodyCapsuleSummaryWitness(
+            capsule_path=observation.capsule_path,
+            commit=cast(ProfileCustodyCommit, observation.commit),
+            label=_load_profile_custody_label_from_verified_capsule(
+                observation.capsule_path,
+                profile_id=observation.profile_id,
+            ),
+        )
+        for observation in _current_capsule_commits(settings=settings, root=root)
+    )
+
+
+def _current_capsule_commits(
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
+    """Return current commit observations after the one retired-layout refusal."""
     storage_root = effective_storage_root(root, settings=settings)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     keystore_root = storage_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
@@ -766,7 +803,7 @@ def list_current_profile_custody_capsule_ids(
     refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
     if not os.path.lexists(capsules_root):
         return ()
-    return anchored_current_capsule_ids(
+    return anchored_current_capsule_commits(
         capsules_root,
         parse_commit=parse_profile_custody_commit,
         commit_filename=PROFILE_CUSTODY_COMMIT_FILENAME,
@@ -1164,6 +1201,7 @@ __all__ = [
     "ProfileCustodyPasswordMaterial",
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
+    "list_current_profile_custody_capsule_summary_witnesses",
     "load_committed_profile_custody_data_file",
     "load_committed_profile_custody_label_record",
     "load_committed_profile_custody_summary_witness",
