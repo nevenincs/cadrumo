@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:63fe7831474260ceb3a4a325b326c632abefabc2867b8b768f526bdf06031d65'
+body_hash: 'sha256:aa277f27f7bd89a23a8b5b3870fc2102ba92f81c082c66f7459afdeb3607dcb9'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -260,6 +260,7 @@ related:
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr]]'
   - '[[2026-08-26-tui-architecture-modelo-347-contraparte-binding-inventory-reference]]'
+  - '[[2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit]]'
   - '[[2026-08-26-tui-architecture-narrow-step-closes-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit]]'
@@ -367,6 +368,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-s58-tests-audit` - `tui-architecture` audit: `Canonical TUI presentation-test relocation review`
 - `2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit` - `tui-architecture` audit: `Workspace owner seam architecture reconciliation`
 - `2026-08-26-tui-architecture-detail-record-repetition-audit` - `tui-architecture` audit: `Detail records that cannot express more than one occurrence`
+- `2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit` - `tui-architecture` audit: `modelo 347 contraparte quarterly transmisiones representation gap`
 - `2026-08-26-tui-architecture-narrow-step-closes-audit` - `tui-architecture` audit: `Steps closed narrower than their row text`
 - `2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit` - `tui-architecture` audit: `Registry facade census final hardening`
 - `2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit` - `tui-architecture` audit: `registry facade census review remediation`
