@@ -8,22 +8,21 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, resolve_export_layout
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import ExportLayoutFormat, normalise_corpus_text
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
+from ...export_field_kind import CasillaFieldKind
+from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_file
+from ..export import derive_export_layouts_from_bindings, resolve_export_layout
+from ..export_parse import parse_export_payload
 from ..legal import verify_legal_catalogue
+from ..schema import RegistrySnapshot
+from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
+from ..temporal import select_revision
+from ..validate import RegistryValidator
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
