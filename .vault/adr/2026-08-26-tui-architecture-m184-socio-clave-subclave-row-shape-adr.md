@@ -5,13 +5,13 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea529ce07ce4ad987d5db12cc50a4c544b439a9248e8daf16f64527c67703d48'
+body_hash: 'sha256:bf51d68a263ea83eeec2c19cf2cadae8e65394d8b2360c11a0700959a7ebd44a'
 related:
   - "[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]"
   - "[[2026-07-09-m184-socio-attribution-handoff-adr]]"
 ---
 
-# `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `proposed`)
+# `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `accepted`)
 
 ## Problem Statement
 
