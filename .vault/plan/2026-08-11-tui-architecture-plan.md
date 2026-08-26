@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:f5e58767b1ad7e772721b4b4f7855aa4c7707f21c0a2916fc0e4644a35855738'
+body_hash: 'sha256:b5027291c0ca081d64cfced7846800544f22d011bec916a95b23c8fea8454675'
 ---
 
 # `tui-architecture` plan
@@ -430,12 +430,12 @@ Replace every CLI, application-test, and development import of the legacy TUI wi
 - [ ] `W06.P14.S76` - Remove frontend-owned manager callbacks and consume registered operation APIs and application results only; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [ ] `W06.P14.S157` - Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch; `src/cadrumo/entrypoints/cli/_config/_custody.py and focused CLI operation-projection tests`.
 - [x] `W06.P14.S158` - Delete remaining ad-hoc canonical JSON and SHA-256 redeclarations in operation-adjacent flow and filing paths by preserving their domain payload normalization while routing digest mechanics exclusively through core.hashing, with byte-parity and semantic RAG fixed-point tests; `src/cadrumo/application/flows/_definition.py and src/cadrumo/application/filing/_review.py`.
-- [ ] `W06.P14.S77` - Remove manager TUI construction and retain only CLI projection or frontend-neutral selection behavior; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
+- [x] `W06.P14.S77` - Remove manager TUI construction and retain only CLI projection or frontend-neutral selection behavior; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
 - [x] `W06.P14.S78` - Remove login TUI construction and consume the application authentication operation contract; `src/cadrumo/entrypoints/cli/_config/_login_frontend.py`.
 - [x] `W06.P14.S79` - Remove status-screen imports and project backend status through the CLI surface only; `src/cadrumo/entrypoints/cli/_config/_status_frontend.py`.
 - [x] `W06.P14.S80` - Replace profile-bundle TUI imports with application flow and operation facades; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
-- [ ] `W06.P14.S81` - Replace descendant wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
-- [ ] `W06.P14.S82` - Replace representative wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
+- [x] `W06.P14.S81` - Replace descendant wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [x] `W06.P14.S82` - Replace representative wizard TUI imports with frontend-neutral application flow contracts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
 - [x] `W06.P14.S83` - Remove work-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
 - [x] `W06.P14.S84` - Remove amendment-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
 - [x] `W06.P14.S85` - Replace application flow parity dependencies on TUI modules with backend contract assertions; `src/cadrumo/application/flows/tests/test_frontend_parity.py`.
