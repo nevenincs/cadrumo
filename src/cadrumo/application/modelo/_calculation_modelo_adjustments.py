@@ -154,7 +154,7 @@ def uncovered_detail_row_kinds() -> frozenset[type]:
     own member list -- rather than a hand-listed set, so a new row kind
     added to the union without a matching :data:`_ROW_IDENTITY_FIELDS` entry
     is caught by construction. Absence from the table is a silent regression
-    of S298's fix: :func:`_row_identity` falls back to an identity-unique
+    of the fix: :func:`_row_identity` falls back to an identity-unique
     key for an uncovered kind, which never wrongly merges two distinct rows
     (the safe direction) but also never unions a genuine cross-path
     duplicate for that kind (the fix's whole purpose, silently un-done).

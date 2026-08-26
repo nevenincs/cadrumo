@@ -1002,7 +1002,7 @@ def _source_provenance_refs(
     to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
     unlike the per-casilla refs, nothing else on the revision carries it, so it
     survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
-    dropped (S290): it is a subject identity, not grounding, and the anti-
+    dropped: it is a subject identity, not grounding, and the anti-
     duplication rationale for ``legal_refs``/``source_refs`` does not extend to
     it -- nothing else on the revision recovers which casilla a general
     (non-row-materialized) source object explains.
