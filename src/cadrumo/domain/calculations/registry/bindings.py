@@ -54,14 +54,8 @@ from ...iva_compensation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
 from .binding_selector_utils import selector_against_model, selector_as_dict
-from .bindings_previous_filing import (
-    PreviousModeloSelector,
-    previous_filing_binding_source_casilla_ids,
-    previous_filing_observation_requirements,
-    previous_filing_source_reference,
-    resolve_previous_filing_binding_values,
-    validate_previous_filing_binding,
-)
+from .bindings_previous_filing import PreviousModeloSelector, validate_previous_filing_binding
+from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference
 from .counterpart_bindings import (
     CounterpartAggregationObservation,
     CounterpartObservationRequirement,
@@ -296,9 +290,6 @@ __all__ = [
     "is_m347_declarante_summary_invoice_binding",
     "iva_compensation_annual_partition_requirement",
     "m303_regimen_simplificado_annual_summary_requirement",
-    "previous_filing_binding_source_casilla_ids",
-    "previous_filing_observation_requirements",
-    "previous_filing_source_reference",
     "renta_first_slice_binding_target_casillas",
     "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
@@ -318,7 +309,6 @@ __all__ = [
     "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
     "resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
-    "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
     "resolve_retenciones_aggregation_binding_values",
@@ -1200,7 +1190,7 @@ class _ProrrataRegularizacionSelector(BaseModel):
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
     if binding.source == BindingSourceKind.PREVIOUS_FILING:
-        return previous_filing_source_reference(binding).source_casilla_ids
+        return _previous_filing_source_reference(binding).source_casilla_ids
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
@@ -1218,7 +1208,7 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
 def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
     """Return the typed source modelo declared by binding families that have one."""
     if binding.source == BindingSourceKind.PREVIOUS_FILING:
-        return previous_filing_source_reference(binding).source_modelo
+        return _previous_filing_source_reference(binding).source_modelo
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
