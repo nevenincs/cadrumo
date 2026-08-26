@@ -61,7 +61,7 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from .validate_registry_scope import validate_registry_scope
 
 if TYPE_CHECKING:
-    from ...user_profile import ProfileSchemaDefinition
+    from ...user_profile.schema import ProfileSchemaDefinition
 
 _MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

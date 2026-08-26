@@ -146,7 +146,7 @@ _AUTHORITY_PROCESS_STATE_GLOBALS: Final = (
 )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def restored_authority_process_state() -> Iterator[None]:
     """Confine an emulated after-fork rebuild to the test that performs it.
 
@@ -155,13 +155,31 @@ def restored_authority_process_state() -> Iterator[None]:
     standing hands every later test in the session an authority the
     creator-process guard refuses -- a failure that reads as a defect in
     whichever test happens to run next rather than as leakage from this one.
+
+    AUTOUSE because the rebuild is not the only writer of this state:
+    ``reset_registry_caches()`` re-keys the same eight globals, and several
+    tests here call it as the very behaviour under test. Applying the guard to
+    one test left the others free to poison their successors -- reproduced
+    directly by running the reset test and then any later capture test, where
+    the reset passes and the NEXT test fails with "belongs to another process
+    incarnation". Every test in this module now restores what it re-keyed, so a
+    failure here means the test's own subject, never its predecessor's leakage.
     """
     saved = {name: getattr(authority_module, name) for name in _AUTHORITY_PROCESS_STATE_GLOBALS}
+    # `_invalidate_authority_generations` CLEARS `_authority_load_states` IN
+    # PLACE rather than rebinding it, so the entry saved above is a reference to
+    # the very dict the reset empties -- restoring it hands back the emptied
+    # object and every later capture is refused by the `state is None` clause of
+    # `_require_current_capture_incarnation`, reported as an "observed registry
+    # identity transition". Snapshot the CONTENTS and repopulate.
+    saved_load_states = dict(authority_module._authority_load_states)  # pyright: ignore[reportPrivateUsage]
     try:
         yield
     finally:
         for name, value in saved.items():
             setattr(authority_module, name, value)
+        authority_module._authority_load_states.clear()  # pyright: ignore[reportPrivateUsage]
+        authority_module._authority_load_states.update(saved_load_states)  # pyright: ignore[reportPrivateUsage]
 
 
 def test_process_state_rebuild_refuses_preexisting_public_coordinates(

@@ -41,7 +41,7 @@ from ....core import Period
 from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
 from .._repository import (
     remove_work_unit,
@@ -606,8 +606,8 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     # double-carrying the typed categories; they name the namespace as a
     # coverage declaration, not as a competing storage location (the actual
     # carry writes through ``repository.save(namespace=carried.namespace, ...)``).
-    custody_bundle_manifest = source_root / "application" / "user_profile" / "_bundle.py"
-    custody_carry_manifest = source_root / "application" / "user_profile" / "_custody_carry.py"
+    custody_bundle_manifest = source_root / "application" / "user_profile" / "bundle.py"
+    custody_carry_manifest = source_root / "application" / "user_profile" / "custody_carry.py"
     # The consolidated work-unit catalogue persistence adapter that implements the
     # actual secure-object storage for the namespace; it legitimately holds the
     # namespace string as its storage location, not as a competing one.

@@ -5,8 +5,12 @@ The centralized-output-redaction contract makes ``emit_envelope`` and
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.
 
-The scan covers the CLI, diagnostics, and wizard roots below. The canonical
-``entrypoints/tui`` tree is outside it deliberately. The TUI renders a
+The scan covers the CLI and wizard roots below, and asserts each one exists: a
+root that is renamed away yields nothing rather than failing, so the inventory
+would go on reporting success about a surface it never opened. A third root
+naming ``src/cadrumo/diagnostics`` was carried here without that tree ever
+existing, so this gate read as covering a diagnostics surface it had never
+scanned. The canonical ``entrypoints/tui`` tree is outside it deliberately. The TUI renders a
 frame the operator is looking at rather than a stream that can be redirected,
 piped, or attached, and it carries its own privacy authority: a fact row's
 ``masked`` flag, decided from schema sensitivity, substitutes a mask token so
@@ -55,7 +59,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _SRC_ROOT = Path(__file__).resolve().parents[3]
 
 _CLI_ROOT = _SRC_ROOT / "entrypoints" / "cli"
-_DIAGNOSTICS_ROOT = _SRC_ROOT / "diagnostics"
 _APPLICATION_OUTPUT_ROOTS = (_SRC_ROOT / "application" / "wizard",)
 
 _EXCLUDED_MODULES: set[Path] = set()
@@ -80,10 +83,10 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
     ),
-    ("entrypoints/cli/_app_diagnostics.py", "_diagnostics_root", "typer.echo"): (
+    ("entrypoints/cli/_app_diagnostics.py", "diagnostics_root", "typer.echo"): (
         "Group help fallback: renders the click-generated help text verbatim, not operator data subject to redaction."
     ),
-    ("entrypoints/cli/__init__.py", "_emit_version_report_and_exit", "typer.echo"): (
+    ("entrypoints/cli/_root_support.py", "_emit_version_report_and_exit", "typer.echo"): (
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."
     ),
@@ -102,7 +105,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "behind a public sink, so a future caller could feed it redactable "
         "material. Revisit if that sink grows a caller carrying identity data."
     ),
-    ("application/wizard/_commands.py", "_echo_wizard_text", "typer.echo"): (
+    ("application/wizard/commands.py", "_echo_wizard_text", "typer.echo"): (
         "IS the wizard funnel, and is now the ONLY one: echoes "
         "render_command_output()'s text arm after prepending the sandbox banner. "
         "The success surface and the save-and-exit disclosure both delegate here. "
@@ -148,7 +151,12 @@ class OutputCall:
 
 def _production_modules() -> tuple[Path, ...]:
     modules: list[Path] = []
-    for root in (_CLI_ROOT, _DIAGNOSTICS_ROOT, *_APPLICATION_OUTPUT_ROOTS):
+    for root in (_CLI_ROOT, *_APPLICATION_OUTPUT_ROOTS):
+        # scan_directory yields nothing for a path that is not there, so a root
+        # that is renamed away leaves the inventory reporting success about a
+        # surface it never opened. A root named here is a claim about what this
+        # gate covers, and an absent one is that claim already broken.
+        assert root.is_dir(), f"scanned root {root} does not exist, so this inventory would silently cover less"
         for path in scan_directory(root, pattern="*.py", recursive=True):
             relative = path.relative_to(_SRC_ROOT)
             if relative in _EXCLUDED_MODULES:

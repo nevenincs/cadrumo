@@ -99,7 +99,7 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # REGISTROS DE ENTIDAD at 221-229 of tipo 1 and is applicable for the first
     # time to ejercicio 2025. One revision carries one layout, so the years
     # before that boundary emit the 2023 design and the years after it the 2025.
-    _GeneratedTree("184", "2015-2024", "aeat-dr-184-2023-2024", "2023", 2024, "0A"),
+    _GeneratedTree("184", "2023-2024", "aeat-dr-184-2023-2024", "2023", 2024, "0A"),
     _GeneratedTree("184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
     # Enrolled late, and its absence is why its map went stale unnoticed: 347 was
     # published without a row here, so nothing compared its committed tree against a
@@ -382,15 +382,6 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     "m185-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
     "m222-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
     # 232 is not a grade or data defect -- it validates cleanly at BOTH
-    # calculation and filing grade through the full authority. It is the same
-    # isolation limitation already recorded for the 202 rows above: a continuity
-    # evolution is a CROSS-REVISION fact, declaring a transition from
-    # '2016-2017' to '2018-y-siguientes', and the candidate registry prunes
-    # every sibling so the evolution dangles. The asymmetry confirms it -- the
-    # m232-2016-2017 row PASSES, and only the LANDING revision fails, because
-    # evolutions are authored on their to_revision. Do not look for a defect in
-    # 232's evolutions; it is not there.
-    "m232-2018-y-siguientes": "evolution references a revision that the modelo does not declare",
     "m202-2019-2022": "appears on exactly one casilla",
     "m202-2023-2024": "appears on exactly one casilla",
     "m202-2025-y-siguientes": "lacks exact source revision coverage",

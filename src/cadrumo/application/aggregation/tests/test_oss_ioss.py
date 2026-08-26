@@ -403,7 +403,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
         # Tests under domain/calculations/registry/ legitimately
         # exercise the resolver directly; that path is skipped above.
         # Same for the bindings modules that define / re-export the resolver.
-        if py_file.name in {"_bindings.py", "_ledger_bindings.py"} and "calculations" in py_file.parts:
+        if py_file.name in {"bindings.py", "ledger_bindings.py"} and "calculations" in py_file.parts:
             continue
         if py_file.name == "__init__.py" and py_file.parent.name == "registry":
             continue

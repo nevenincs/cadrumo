@@ -128,10 +128,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "profile-fact entry boundary owns the text grammar. Reported as a "
         "residual finding rather than tightened here."
     ),
-    ("application/modelo/_iva_wallet_gate.py", "_decision_has_concrete_zero_authority"): (
-        "Compares app-persisted wallet decision amounts the write boundary "
-        "already validated; no operator text crosses this call."
-    ),
     # --- adapters + core, admitted to scope when rule 3 moved from a layer
     # allowlist to a call-site scope. Every adapter entry below reads
     # machine-produced text, which is the extraction posture, not the strict one.
@@ -163,18 +159,18 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "modulos unit counts. Reported as a residual on the same terms."
     ),
     # --- domain layer, admitted to scope after the RENTAS=12.500 misread ---
-    ("domain/calculations/registry/_export_parse.py", "_parse_xml_decimal"): (
+    ("domain/calculations/registry/export_parse.py", "_parse_xml_decimal"): (
         "AEAT-produced export XML, not operator text, and it already normalises "
         "separators explicitly for that machine format."
     ),
-    ("domain/calculations/registry/_formula_runtime.py", "_m100_eo_agraria_read_indice"): (
+    ("domain/calculations/registry/formula_runtime.py", "_m100_eo_agraria_read_indice"): (
         "Reads a registry-authored indice from the compiled snapshot's text "
         "values; the registry TOML is committed data, not typed input."
     ),
     ("domain/calculations/registry/_formula_runtime_m131.py", "_read_modulos_indice"): (
         "Same registry-authored modulos indice as its M100 sibling above."
     ),
-    ("domain/calculations/registry/_renta_web_open_oracle.py", "_is_non_finite_numeric_text"): (
+    ("domain/calculations/registry/renta_web_open_oracle.py", "_is_non_finite_numeric_text"): (
         "Inverted use: the parse is a non-finiteness PREDICATE over Renta WEB "
         "oracle text. Routing it through the strict grammar would make the "
         "guard more permissive, the same shape as the declarante-selector "
@@ -186,7 +182,7 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     # output and no separator reading is in question. They are one shape, and
     # they are listed individually rather than as a file-wide waiver so a new
     # bad call in any of these files still fails.
-    ("domain/calculations/registry/_bindings.py", "_decimal_from_json_string"): (
+    ("domain/calculations/registry/bindings.py", "_decimal_from_json_string"): (
         "Re-hydrates a casilla observation's Decimal from the JSON this "
         "application wrote; raises RegistryValidationError on a non-numeric."
     ),
@@ -195,7 +191,7 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Envelope[Transaction].model_validate_json, whose string form this "
         "application serialised."
     ),
-    ("domain/transactions/_models.py", "_coerce_inbound"): (
+    ("domain/transactions/_lineage_models.py", "_coerce_inbound"): (
         "Same JSON re-hydration for the classification confidence and "
         "business_pct fields, from the app's own persisted envelope."
     ),
