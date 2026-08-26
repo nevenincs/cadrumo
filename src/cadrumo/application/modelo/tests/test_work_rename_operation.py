@@ -23,6 +23,10 @@ from ..operation_definitions import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardExecutor,
     ModeloWorkDiscardPublicResultV1,
+    ModeloWorkFileApproval,
+    ModeloWorkFileExecutor,
+    ModeloWorkFilePublicResultV1,
+    ModeloWorkFileRequest,
     ModeloWorkRenameExecutor,
     ModeloWorkRenamePublicResultV1,
     ModeloWorkRenameRequest,
@@ -31,6 +35,7 @@ from ..operation_definitions import (
     ModeloWorkVerifyRequest,
     build_modelo_work_discard_definition,
     build_modelo_work_discard_registration,
+    build_modelo_work_file_definition,
     build_modelo_work_rename_definition,
     build_modelo_work_rename_registration,
     build_modelo_work_verify_definition,
@@ -232,3 +237,65 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
     schema_ids = [binding.identity.schema_id for reg in registrations for binding in reg.schema_bindings]
 
     assert len(set(schema_ids)) == len(schema_ids)
+
+
+def _file_definition():
+    return build_modelo_work_file_definition(actor="operator", profile_resolver=lambda: None)
+
+
+def test_filing_approval_names_the_verification_that_justified_it() -> None:
+    """A revision re-verified since approval is a different fact."""
+    fields = set(ModeloWorkFileApproval.model_fields)
+
+    assert fields == {"calculation_revision_id", "verification_report_id"}
+    assert _file_definition().capabilities.baseline is OperationBaselinePolicy.EXACT_APPROVAL
+
+
+def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
+    """Live submission is prohibited, so handoff is contract, not computation."""
+    assert ModeloWorkFilePublicResultV1.model_fields["handoff_required"].default is True
+
+    result = ModeloWorkFilePublicResultV1(
+        filing_record_id="record-1",
+        work_unit_id="unit-1",
+        calculation_revision_id="revision-1",
+    )
+
+    assert result.handoff_required
+
+
+def test_the_filing_executor_reaches_no_remote_surface() -> None:
+    """Nothing in this enrolment may submit, send, or transmit to AEAT."""
+    source = inspect.getsource(ModeloWorkFileExecutor)
+    tree = ast.parse(textwrap.dedent(source))
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+    assert "file_modelo_revision" in called
+
+    # Scan the CODE, not the prose: this executor's docstring says it never
+    # submits, and a substring check would fire on that sentence while missing
+    # an actual call spelled through an attribute.
+    reached = (
+        {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+        | called
+        | {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
+    )
+    for forbidden in ("submit", "httpx", "requests", "post", "presentar", "sede"):
+        assert not any(forbidden in name.lower() for name in reached), (
+            f"the filing executor reaches a remote surface: {forbidden}"
+        )
+
+
+def test_the_filing_executor_decides_no_precondition_of_its_own() -> None:
+    """Verification state and election legality refuse in the authority."""
+    source = inspect.getsource(ModeloWorkFileExecutor)
+
+    for forbidden in ("granted_verificado_completo", "VerificationReportCatalogueRepository", "ModeloRecordCatalogue"):
+        assert forbidden not in source, f"the executor duplicates a filing precondition: {forbidden}"
+
+
+def test_the_filing_request_carries_elections_the_operator_declared() -> None:
+    """Refund and payment elections are operator choices, journalled with the request."""
+    fields = set(ModeloWorkFileRequest.model_fields)
+
+    assert {"approval", "refund_election", "payment_election", "notes"} <= fields

@@ -33,6 +33,8 @@ from ...core import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    PaymentElection,
+    RefundElection,
 )
 from ...core.errors import CadrumoError
 from ..operations.capabilities import (
@@ -52,6 +54,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
 from ._work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 
@@ -64,6 +67,7 @@ if TYPE_CHECKING:
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
 MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
+MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
@@ -388,6 +392,143 @@ def build_modelo_work_verify_registration(
     )
 
 
+class ModeloWorkFileApproval(BaseModel):
+    """The exact verified revision an operator approved for local filing.
+
+    Filing is a durable declaration of what the taxpayer intends to submit, so
+    approval names the revision AND the verification that justified it. A
+    revision re-verified since approval is a different fact, and filing it on
+    the strength of the older look would record an intent nobody formed.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    verification_report_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+class ModeloWorkFileRequest(CredentialFreeOperationRequest):
+    """The approved revision and the operator's declared election choices."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    approval: ModeloWorkFileApproval
+    refund_election: RefundElection = RefundElection.COMPENSAR
+    payment_election: PaymentElection = PaymentElection.INGRESO
+    notes: Annotated[str, Field(min_length=1, max_length=500)] | None = None
+
+
+class ModeloWorkFilePublicResultV1(BaseModel):
+    """The recorded local filing, as a caller outside this package may see it.
+
+    ``handoff_required`` is always true and is part of the contract, not a
+    computed field: this operation records a filing locally and hands the
+    operator the artefacts to submit themselves. Nothing here reaches AEAT.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
+    work_unit_id: _WORK_UNIT_ID
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    handoff_required: bool = True
+
+
+class ModeloWorkFileExecutor:
+    """Record one local filing through the existing filing authority.
+
+    This never submits to AEAT and never can: it calls the local filing
+    authority and returns its record id. Live submission is prohibited, so the
+    operation's whole output is a local record plus the operator's handoff.
+    """
+
+    def __init__(self, *, actor: str, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+        """Bind the actor and the live profile the filing gates are judged against."""
+        self._actor = actor
+        self._profile_resolver = profile_resolver
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloWorkFileRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to the filing authority and return its record id.
+
+        Every precondition - verification state, cross-period cleanliness,
+        election legality - belongs to that authority and refuses there.
+        """
+        del context
+        payload = request.payload
+        record = file_modelo_revision(
+            payload.approval.calculation_revision_id,
+            actor=self._actor,
+            workflow_profile=self._profile_resolver(),
+            notes=payload.notes,
+            refund_election=payload.refund_election,
+            payment_election=payload.payment_election,
+        )
+        return str(record.filing_record_id)
+
+
+def build_modelo_work_file_definition(
+    *,
+    actor: str,
+    profile_resolver: ModeloWorkVerifyProfileResolver,
+) -> OperationDefinition:
+    """Bind the local filing authority to its registered operation contract."""
+
+    def build() -> ModeloWorkFileExecutor:
+        return ModeloWorkFileExecutor(actor=actor, profile_resolver=profile_resolver)
+
+    return OperationDefinition(
+        definition_id=MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+        request_type=ModeloWorkFileRequest,
+        result_type=ModeloWorkFilePublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloWorkFileRequest,
+            executor_type=ModeloWorkFileExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.work.file.preconditions", "modelo.work.file.record"),
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_work_file_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the local filing definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.file.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.file.result",
+            schema_version=1,
+            model_type=ModeloWorkFilePublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition(*, actor: str) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -444,6 +585,7 @@ def build_modelo_work_rename_registration(
 
 __all__ = [
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_PROGRESS_UNIT",
@@ -452,6 +594,10 @@ __all__ = [
     "ModeloWorkDiscardExecutor",
     "ModeloWorkDiscardPublicResultV1",
     "ModeloWorkDiscardRequest",
+    "ModeloWorkFileApproval",
+    "ModeloWorkFileExecutor",
+    "ModeloWorkFilePublicResultV1",
+    "ModeloWorkFileRequest",
     "ModeloWorkRenameExecutor",
     "ModeloWorkRenamePublicResultV1",
     "ModeloWorkRenameRequest",
@@ -460,6 +606,8 @@ __all__ = [
     "ModeloWorkVerifyRequest",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
+    "build_modelo_work_file_definition",
+    "build_modelo_work_file_registration",
     "build_modelo_work_rename_definition",
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
