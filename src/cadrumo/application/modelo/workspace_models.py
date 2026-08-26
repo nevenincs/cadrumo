@@ -473,7 +473,12 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     label: ModeloWorkspaceLocalizedTextV1
     classification: ModeloWorkspaceSchemaClassification
     family_disposition: RegistrySchemaFamilyDisposition
-    legal_refs: _BoundedRefList[LegalRefId] = ()
+    legal_refs: _BoundedRefList[LegalRefId] | None = ()
+    """``None`` means this admission's producer never carries legal grounding
+    for this reference kind (S283); an empty tuple means it does, and none is
+    declared. The two must never collapse into one "nothing here" shape --
+    a bare empty tuple over legal grounding reads as "the law requires
+    nothing," while ``None`` honestly reads as "not measured"."""
     source_refs: _BoundedRefList[SourceRefId] = ()
     continuity: Annotated[
         tuple[ModeloWorkspaceContinuityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
@@ -483,7 +488,12 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     ] = ()
     constraints: Annotated[
         tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
-    ] = ()
+    ] | None = ()
+    """``None`` means this admission's producer never carries constraint
+    declarations for this reference kind (S283, same distinction as
+    ``legal_refs``): a static inspection has no ``CasillaDefinition`` to
+    check, so it cannot honestly claim "no constraints declared" the way an
+    empty tuple would."""
     formula_operands: Annotated[
         tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
     ] = ()
