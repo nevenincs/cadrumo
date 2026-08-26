@@ -115,6 +115,17 @@ class DelegatingWrapperRule:
 
 
 @dataclass(frozen=True, slots=True)
+class SubstitutableNaturalScanRule:
+    """A forbidden natural-key scan that can substitute for canonical selection."""
+
+    kind: str
+    collection_names: frozenset[str]
+    collection_methods: frozenset[str]
+    coordinate_names: frozenset[str]
+    minimum_coordinates: int = 2
+
+
+@dataclass(frozen=True, slots=True)
 class CanonicalAuthoritySpec:
     """Declarative configuration for a canonical import/authority census."""
 
@@ -126,6 +137,7 @@ class CanonicalAuthoritySpec:
         {"__all__", "_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"}
     )
     wrapper_rules: tuple[DelegatingWrapperRule, ...] = ()
+    natural_scan_rules: tuple[SubstitutableNaturalScanRule, ...] = ()
     forbidden_text_references: frozenset[str] = frozenset()
     text_suffixes: frozenset[str] = frozenset(
         {".cfg", ".ini", ".json", ".md", ".py", ".pyi", ".rst", ".toml", ".txt", ".yaml", ".yml"}
@@ -245,9 +257,18 @@ def _scope_nodes(statements: Iterable[ast.stmt]) -> Iterable[ast.AST]:
     while pending:
         node = pending.pop()
         yield node
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            pending.extend(node.decorator_list)
+            pending.append(node.args)
+            if node.returns is not None:
+                pending.append(node.returns)
+            continue
+        if isinstance(node, ast.ClassDef):
+            pending.extend((*node.decorator_list, *node.bases, *node.keywords))
+            continue
+        if isinstance(node, ast.Lambda):
+            continue
         for child in ast.iter_child_nodes(node):
-            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
-                continue
             pending.append(child)
 
 
@@ -292,11 +313,15 @@ class _CanonicalAuthorityAnalyzer:
                 self._check_name_load(node, scope)
             elif isinstance(node, ast.arg) and node.annotation is not None:
                 self._check_annotation(node.annotation, scope)
-        for definition in (
-            node for node in statements if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-        ):
+        definitions = (
+            node
+            for node in _scope_nodes(statements)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        )
+        for definition in definitions:
             if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 self._check_wrapper(definition, scope)
+                self._check_natural_scan(definition)
             self._scan_scope(definition.body, scope.child())
 
     def _populate_scope(self, statements: list[ast.stmt], scope: _AuthorityScope) -> None:
@@ -442,18 +467,18 @@ class _CanonicalAuthorityAnalyzer:
                 self.add("indirect authority symbol consumer", node, name)
 
     def _check_wrapper(self, node: ast.FunctionDef | ast.AsyncFunctionDef, parent: _AuthorityScope) -> None:
+        if "tests" in self.path.parts or self.path.name.startswith("test_"):
+            return
         scope = parent.child()
         self._populate_scope(node.body, scope)
-        for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return)):
-            if not isinstance(returned.value, ast.Call):
-                continue
-            delegated = _qualified_value(returned.value.func, scope)
+        calls = [item for item in _scope_nodes(node.body) if isinstance(item, ast.Call)]
+        for delegated_call in calls:
+            delegated = _qualified_value(delegated_call.func, scope)
             for rule in self.spec.wrapper_rules:
                 target = self.targets.get(rule.delegated_symbol)
                 expected = f"{target.module}.{rule.delegated_symbol}" if target else rule.delegated_symbol
                 if delegated not in {expected, rule.delegated_symbol}:
                     continue
-                calls = [item for item in _scope_nodes(node.body) if isinstance(item, ast.Call)]
                 collaborators = {_qualified_value(call.func, scope) or _bare_callable_name(call.func) for call in calls}
                 collaborator_names = {name.rsplit(".", 1)[-1] for name in collaborators}
                 receiver_methods = {
@@ -463,19 +488,10 @@ class _CanonicalAuthorityAnalyzer:
                 }
                 keyword_sources = {
                     (keyword.arg, source.func.attr)
-                    for keyword in returned.value.keywords
+                    for keyword in delegated_call.keywords
                     if keyword.arg is not None
-                    and isinstance(keyword.value, ast.Name)
-                    for assignment in _scope_nodes(node.body)
-                    if isinstance(assignment, (ast.Assign, ast.AnnAssign))
-                    for target_node in (
-                        assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
-                    )
-                    if isinstance(target_node, ast.Name)
-                    and target_node.id == keyword.value.id
-                    and assignment.value is not None
-                    and isinstance((source := assignment.value), ast.Call)
-                    and isinstance(source.func, ast.Attribute)
+                    for source in self._keyword_source_calls(keyword.value, scope)
+                    if isinstance(source.func, ast.Attribute)
                 }
                 if (
                     rule.collaborator_symbols & collaborator_names
@@ -483,6 +499,54 @@ class _CanonicalAuthorityAnalyzer:
                     or rule.keyword_source_methods & keyword_sources
                 ):
                     self.add(rule.kind, node, node.name)
+
+    @staticmethod
+    def _keyword_source_calls(value: ast.AST, scope: _AuthorityScope) -> tuple[ast.Call, ...]:
+        if isinstance(value, ast.Call):
+            return (value,)
+        if isinstance(value, ast.Name) and isinstance(source := scope.literals.get(value.id), ast.Call):
+            return (source,)
+        return ()
+
+    def _check_natural_scan(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        if (
+            "tests" in self.path.parts
+            or self.path.name.startswith("test_")
+            or any(self.path.resolve() == target.path.resolve() for target in self.spec.targets)
+        ):
+            return
+        for loop in (
+            item
+            for item in _scope_nodes(node.body)
+            if isinstance(item, (ast.For, ast.AsyncFor, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
+        ):
+            generators = (
+                loop.generators
+                if isinstance(loop, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
+                else (loop,)
+            )
+            for generator in generators:
+                target_node = generator.target
+                iterator = generator.iter
+                if not isinstance(target_node, ast.Name) or not isinstance(iterator, ast.Call):
+                    continue
+                if not isinstance(iterator.func, ast.Attribute) or not isinstance(iterator.func.value, ast.Name):
+                    continue
+                candidate = target_node.id
+                coordinates = {
+                    child.attr
+                    for child in ast.walk(loop)
+                    if isinstance(child, ast.Attribute)
+                    and isinstance(child.value, ast.Name)
+                    and child.value.id == candidate
+                }
+                for rule in self.spec.natural_scan_rules:
+                    if (
+                        iterator.func.value.id in rule.collection_names
+                        and iterator.func.attr in rule.collection_methods
+                        and len(coordinates & rule.coordinate_names) >= rule.minimum_coordinates
+                    ):
+                        self.add(rule.kind, node, node.name)
 
 
 def scan_canonical_authority(

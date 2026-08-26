@@ -9,6 +9,7 @@ from ..quality.import_hygiene_scan import (
     CanonicalAuthoritySpec,
     CanonicalAuthorityTarget,
     DelegatingWrapperRule,
+    SubstitutableNaturalScanRule,
     public_definition_names,
     scan_canonical_authority,
     tracked_live_files,
@@ -43,6 +44,14 @@ _SPEC = CanonicalAuthoritySpec(
             receiver_methods=frozenset({("catalogue", "get")}),
         ),
     ),
+    natural_scan_rules=(
+        SubstitutableNaturalScanRule(
+            "parallel natural catalogue scan",
+            collection_names=frozenset({"catalogue"}),
+            collection_methods=frozenset({"values"}),
+            coordinate_names=frozenset({"modelo", "filing_year", "period"}),
+        ),
+    ),
 )
 _MUTANT_SPEC = CanonicalAuthoritySpec(
     targets=_SPEC.targets,
@@ -50,6 +59,7 @@ _MUTANT_SPEC = CanonicalAuthoritySpec(
     facade_modules=_SPEC.facade_modules,
     inert_modules=_SPEC.inert_modules,
     wrapper_rules=_SPEC.wrapper_rules,
+    natural_scan_rules=_SPEC.natural_scan_rules,
 )
 
 
@@ -71,6 +81,36 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
         "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
         "def outer():\n def inner():\n  WorkUnitCatalogueRepository().load(); return select_modelo_work_resolution()",
         "repository-owning selector wrapper",
+    ),
+    (
+        "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
+        "def wrapper(repo, request, bucket_id):\n"
+        " return select_modelo_work_resolution(request, catalogue=repo.load(), bucket_id=bucket_id)",
+        "repository-owning selector wrapper",
+    ),
+    (
+        "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
+        "def wrapper(repo, request, bucket_id):\n"
+        " catalogue = repo.load()\n"
+        " result = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)\n"
+        " return result",
+        "repository-owning selector wrapper",
+    ),
+    (
+        "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
+        "if True:\n"
+        " def wrapper(repo, request, bucket_id):\n"
+        "  catalogue = repo.load()\n"
+        "  result = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)\n"
+        "  return result",
+        "repository-owning selector wrapper",
+    ),
+    (
+        "def parallel(catalogue, modelo, filing_year):\n"
+        " for unit in catalogue.values():\n"
+        "  if unit.modelo == modelo and unit.filing_year == filing_year:\n"
+        "   return unit",
+        "parallel natural catalogue scan",
     ),
     (
         "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"

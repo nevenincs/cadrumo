@@ -49,7 +49,11 @@ def _classify_modelo_addressing_results(results: list[dict[str, Any]]) -> Modelo
             and "select_modelo_work_resolution(" in snippet
             and any(read in snippet for read in (".load(", ".load_revisioned(", "catalogue.get("))
         )
-        if is_production and (declared_name in _OWNER_SYMBOLS or declares_owner or wraps_repository):
+        natural_scan = (
+            ".values()" in snippet
+            and sum(coordinate in snippet for coordinate in (".modelo", ".filing_year", ".period")) >= 2
+        )
+        if is_production and (declared_name in _OWNER_SYMBOLS or declares_owner or wraps_repository or natural_scan):
             parallel.add(path)
     return ModeloAddressingSearchClassification(frozenset(canonical), frozenset(parallel))
 
@@ -62,6 +66,15 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
         {
             "path": "src/cadrumo/application/modelo/parallel_selector.py",
             "snippet": "def select_modelo_work_resolution(request, *, catalogue, bucket_id): ...",
+        },
+        {
+            "path": "src/cadrumo/application/modelo/natural_scan.py",
+            "snippet": (
+                "def resolve(catalogue, modelo, filing_year):\n"
+                "    for unit in catalogue.values():\n"
+                "        if unit.modelo == modelo and unit.filing_year == filing_year:\n"
+                "            return unit"
+            ),
         },
         {
             "path": "src/cadrumo/application/modelo/repository_wrapper.py",
@@ -81,6 +94,7 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
     assert classification.parallel_owners == {
         "src/cadrumo/application/modelo/parallel_selector.py",
         "src/cadrumo/application/modelo/repository_wrapper.py",
+        "src/cadrumo/application/modelo/natural_scan.py",
     }
 
 
