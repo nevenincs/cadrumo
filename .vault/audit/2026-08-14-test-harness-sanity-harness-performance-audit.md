@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e1e416613c61fd4be963753cb1a6558e7fa109d146c7dd99955803c8c689eb5'
+body_hash: 'sha256:a1e7f56c0aa48f0144f82aea4cbe5408b1bde56ba7b881493f2849f99d915d38'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1171,7 +1171,7 @@ previous round held across the whole slice -- and then lost its entire report:
     File "_pytest/pathlib.py", line 356, in cleanup_dead_symlinks
       if not left_dir.resolve().exists():
     PermissionError: [WinError 5] Access is denied:
-      'C:\Users\hello\AppData\Local\Temp\pytest-of-hello\pytest-current'
+      '%LOCALAPPDATA%\Temp\pytest-of-<operator>\pytest-current'
 
 Every test had executed. The durations table and the pass/fail summary were
 never printed, because the exception escaped the session finalizer. Roughly
@@ -1179,7 +1179,7 @@ eighty minutes of work produced no readable result.
 
 ### Why it happens here specifically
 
-`pytest-of-hello` is a per-USER temp root, not a per-session one, and several
+`pytest-of-<operator>` is a per-USER temp root, not a per-session one, and several
 pytest sessions run concurrently on this box at all times. At teardown pytest
 walks that shared root and stats `pytest-current`, a symlink each session
 replaces as it starts. When a peer session swaps it mid-stat, Windows answers
@@ -2470,7 +2470,7 @@ was given was accurate, which is what makes this hard to notice -- the tell was
 `git diff` returning empty on a file edited three times. Landing the missing
 half immediately is the recovery; keeping the window short is the mitigation.
 
-**The `pytest-of-hello/pytest-current` symlink `PermissionError` is no longer
+**The `pytest-of-<operator>/pytest-current` symlink `PermissionError` is no longer
 cosmetic.** It aborted a verification run outright. `--basetemp=<private dir>`
 is a reliable per-run workaround and costs nothing.
 
