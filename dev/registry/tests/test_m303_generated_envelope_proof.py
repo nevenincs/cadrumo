@@ -89,7 +89,7 @@ def _m303_2026_tree():
         if tree.modelo == "303"
         and tree.source_ref == "aeat-dr-303-2026"
         and tree.epoch == "2026"
-        and tree.year == 2026
+        and tree.filing_year == 2026
         and tree.period == "4T"
     )
 
