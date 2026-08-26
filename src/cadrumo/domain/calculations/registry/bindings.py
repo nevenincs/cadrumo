@@ -74,13 +74,7 @@ from .donativo_bindings import (
 )
 from .donativo_bindings import validate_donativo_binding
 from .errors import RegistryValidationError
-from .gasto193_bindings import (
-    Gasto193Observation,
-    _Gasto193Selector,
-    resolve_gasto193_binding_row_values,
-    resolve_gasto193_binding_values,
-    validate_gasto193_binding_selector_shape,
-)
+from .gasto193_bindings import _Gasto193Selector, validate_gasto193_binding_selector_shape
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from .inventory_bindings import (
     InventoryProjectionOperation,
@@ -206,7 +200,6 @@ from .withholding_bindings import (
 __all__ = [
     "CasillaObservation",
     "DataBindingDefinition",
-    "Gasto193Observation",
     "ImpatriadoIncomeObservationProtocol",
     "InventoryProjectionOperation",
     "InventorySelector",
@@ -246,8 +239,6 @@ __all__ = [
     "renta_first_slice_binding_target_casillas",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "resolve_gasto193_binding_row_values",
-    "resolve_gasto193_binding_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_ledger_impatriado_income_aggregation_binding_values",
