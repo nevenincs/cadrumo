@@ -9,6 +9,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
@@ -119,6 +120,41 @@ def test_modelo_184_refuses_an_epoch_selector_mutation_that_overlaps_2023() -> N
 
     with pytest.raises(AmbiguousRevisionSelectionError):
         select_revision(mutated, filing_year=2023, period="0A", on=date(2023, 12, 31))
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "filing_year"),
+    (("2015", 2015), ("2016-2018", 2016), ("2019-2021", 2019), ("2022", 2022)),
+)
+def test_modelo_184_historical_filing_links_are_consumers_not_filing_capability(
+    revision_id: str,
+    filing_year: int,
+) -> None:
+    """A required filing consumer does not promote an unparsed design to filing grade."""
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions[revision_id]
+    capability = revision_capability_probe(revision, modelo_id=modelo.id)
+
+    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert any(link.surface == "filing" and link.consumer == "cadrumo.application.filing" for link in revision.application_links)
+    assert revision.export_layouts == ()
+    assert not capability.has_fixed_width_export
+    assert not capability.has_xml_dictionary_export
+    assert not capability.has_extractor
+
+    with pytest.raises(RegistryValidationError, match="cannot satisfy the requested 'filing' snapshot authority"):
+        _committed_snapshot("184", filing_year, "0A")
+
+
+@pytest.mark.parametrize("revision_id", ("2023-2024", "2025-y-siguientes"))
+def test_modelo_184_parsed_epochs_retain_filing_links_and_layout_capability(revision_id: str) -> None:
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions[revision_id]
+    capability = revision_capability_probe(revision, modelo_id=modelo.id)
+
+    assert revision.authority_grade is RegistryAuthorityGrade.FILING
+    assert any(link.surface == "filing" and link.consumer == "cadrumo.application.filing" for link in revision.application_links)
+    assert capability.has_fixed_width_export
 
 
 def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:

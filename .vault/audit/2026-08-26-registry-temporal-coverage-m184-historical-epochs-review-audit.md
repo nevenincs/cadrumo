@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:407e66f61dcca8eea18c6745a0c2a40f1a2a463e76a0b152c557234614069164'
+body_hash: 'sha256:eda55c0a9d563ad5ca79d1a5f3eeec922476c12f0cbf7d4729e0ab87d24350d9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
@@ -55,3 +55,11 @@ The existing focused tests correctly pin every raw BOE hash, applicability windo
 - Extend the M184 focused suite with mutation-sensitive checks that each historical epoch exposes neither `filing` nor `cadrumo.application.filing`, that requesting its FILING snapshot is refused, and that adding a filing link, export layout, or `record_design_epoch` to a raw historical source turns the test red. Preserve the existing selector, hash, strict-geometry, 2023--24 offset, locale, and deadline checks.
 
 - Re-run the isolated M184 suite and the claimed-year gate after the active Modelo 200 worktree changes are resolved. Treat the present Modelo 200 failures as mixed-worktree isolation, not as evidence for or against this M184 finding.
+
+## Adjudication and resolution
+
+The HIGH finding is retained as the review record, but its interpretation is resolved as invalid. `ApplicationLinkDefinition` defines an application link as a surface that requires registry authority; it records consumer demand and lifecycle ownership, not a positive filing-capability claim. Positive capability has one canonical owner: `revision_capability_probe`, which reads actual export layouts, completeness evidence, and extraction profiles. A FILING-grade snapshot independently enforces the requested authority rung.
+
+For `2015`, `2016-2018`, `2019-2021`, and `2022`, the required `cadrumo.application.filing` link keeps the two declaration-header casillas within the generic lifecycle-closure contract. The capability probe reports no fixed-width or XML layout and no extractor, while the FILING snapshot refuses every epoch because its declared grade is applicability. This is the same consumer-versus-capability separation confirmed against Modelo 576's 2007 applicability-only revision. No layout, `record_design_epoch`, extraction profile, or capability-specific consumer was added.
+
+Focused tests now assert both sides at once: the historical filing consumer remains present, and the shared probe plus FILING snapshot refuse filing capability; 2023-2024 and 2025-y-siguientes retain their parsed layouts and filing capability. The proposed removal would instead create invalid zero-casilla revision placeholders, which the generic schema correctly refuses. The recommendation is therefore closed without a production-schema change.
