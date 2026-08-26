@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:897bfdf375bd9cde8df5f4efb26a9da18c6293299bfb4fe91b6b11be3b69e114'
+body_hash: 'sha256:7521c1d6eb94c799e11dc47f51e5411195095b173da111bb0c4824219468c698'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -194,7 +194,6 @@ The later canonical revision-era joins for Modelos 308, 309, and 341 are now loa
 Modelo 308 carries amendment-level legal refs on the 2011-julio-2015 `decl.ejercicio` and `decl.periodo` casillas even though the same semantic casillas retain the underlying approval authority in adjacent eras. Modelo 309's 2004-2015 historical casillas reuse successor semantic roles with incompatible types or constraints, and two historical-only situation roles lack explicit singleton adjudication. Modelo 341 incorrectly marks two presentation roles as intentional singletons even though they co-apply in Modelo 309.
 
 These are genuine S51-owned defects, not grounds to reopen a checked export-adjudication row and not permission to absorb the active Modelo 165 or Modelo 200 lanes. S51 remains open. Closure requires the isolated era proofs, the whole semantic-role/referential gate, and the claimed-year layout-design gate to pass after the active lanes settle.
-
 
 ### Landed semantic reconciliation
 

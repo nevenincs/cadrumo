@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:8853efe8de4c4b4de378ab20c7bac91df86b2467699656569b91e546ed311793'
+body_hash: 'sha256:43105ec22b3c00f2d9d619c27acf02fc97ea1ffa441d96f0b104e66a28703f3a'
 step_id: 'S16'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -49,7 +49,6 @@ module by another active lane, so this execution did not recreate or overwrite
 that file. Reconsider closure after the relocation owner lands and the typed
 wire normalization plus full untouched-layout proof and residual mutation table
 pass.
-
 
 ## Current proof reconciliation (2026-08-26)
 
