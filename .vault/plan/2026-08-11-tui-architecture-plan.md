@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:573206f4de33e8250caea71e82e6497222fc8f4e55ba804939cfdb2f39f3c572'
+body_hash: 'sha256:64920b8476d8801952a788ed74d9981bc3aaef9d29712d67c1d43ca0859856cc'
 ---
 
 # `tui-architecture` plan
@@ -334,9 +334,9 @@ Project supervisor snapshots and ordered events into a detachable modal, live lo
 
 Render census field review and filed-history outcome detail without placing domain merge or effect policy in the TUI.
 
-- [ ] `W05.P12.S68` - Implement census local-versus-persisted field review with suggested intent, per-field selection, apply all, reject, and stale-proposal display; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
+- [x] `W05.P12.S68` - Implement census local-versus-persisted field review with suggested intent, per-field selection, apply all, reject, and stale-proposal display; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
 - [ ] `W05.P12.S69` - Implement filed-history stage, unit, refusal, partial-effect, evidence, wallet, notification, and provenance result projection; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
-- [ ] `W05.P12.S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI; `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`.
+- [x] `W05.P12.S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI; `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`.
 - [ ] `W05.P12.S71` - Prove filed-history progress, scoped errors, viewable logs, child provenance, and partial outcomes remain visible through settlement; `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`.
 - [ ] `W05.P12.S255` - Bind the filed-history operation to a stable public result schema so its evidence, IVA wallet, notificaciones and provenance facts resolve through a typed public door rather than an opaque result_ref, replacing compose_request_only with a compose binding that declares the result schema, and prove no frontend imports the private FiledHistoryOnboardingRun type to project them; `src/cadrumo/application/live/filed_history_operation.py, its public result schema binding, and focused public-result-contract tests`.
 
