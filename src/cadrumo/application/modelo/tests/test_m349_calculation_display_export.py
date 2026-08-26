@@ -8,16 +8,15 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from ....application.filing import _filing_binding_values
 from ....core import CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.filing import (
     ModeloCasillaProvenance,
     ModeloDraft,
