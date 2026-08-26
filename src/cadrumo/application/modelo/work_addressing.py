@@ -258,9 +258,56 @@ def select_modelo_work_resolution(
             translated_message="errors.refused.modelo_work_selector_contradiction",
         )
     if request.work_unit_id is not None:
-        return _select_exact_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+        matches = tuple(
+            sorted(
+                (
+                    unit
+                    for unit in catalogue.values()
+                    if unit.bucket_id == bucket_id and unit.work_unit_id == request.work_unit_id
+                ),
+                key=lambda unit: unit.work_unit_id,
+            )
+        )
+        if not matches:
+            raise ModeloWorkUnitNotFoundError(
+                translated_message="errors.error.modelo_work_selector_unit_not_found",
+                context={"work_unit_id": request.work_unit_id},
+            )
+        work_unit = matches[0]
+        _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
+        return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
     if request.operator_work_unit_id is not None:
-        return _select_operator_work_unit_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+        if len(request.operator_work_unit_id) != 12:
+            raise ModeloWorkSelectorContradictionError(
+                translated_message="errors.refused.modelo_work_selector_contradiction",
+            )
+        matches = tuple(
+            sorted(
+                (
+                    unit
+                    for unit in catalogue.values()
+                    if unit.bucket_id == bucket_id
+                    and (
+                        unit.work_unit_id.startswith(request.operator_work_unit_id)
+                        or unit.work_unit_id.endswith(request.operator_work_unit_id)
+                    )
+                ),
+                key=lambda unit: unit.work_unit_id,
+            )
+        )
+        if not matches:
+            raise ModeloWorkUnitNotFoundError(
+                translated_message="errors.error.modelo_work_selector_unit_not_found",
+                context={"work_unit_id": request.operator_work_unit_id},
+            )
+        if len(matches) > 1:
+            raise ModeloWorkVisibleTargetAmbiguousError(
+                tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
+                selector=request.operator_work_unit_id,
+            )
+        work_unit = matches[0]
+        _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
+        return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
     if not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError(
             translated_message="errors.refused.modelo_work_selector_contradiction",
@@ -281,71 +328,6 @@ def select_modelo_work_resolution(
         )
     )
     return _select_natural_modelo_work_resolution(request, bucket_id=bucket_id, matches=matches)
-
-
-def _select_exact_modelo_work_resolution(
-    request: ModeloWorkSelectorRequest, *, catalogue: WorkUnitCatalogue, bucket_id: str
-) -> ModeloWorkResolution:
-    assert request.work_unit_id is not None
-    matches = tuple(
-        sorted(
-            (
-                unit
-                for unit in catalogue.values()
-                if unit.bucket_id == bucket_id
-                and unit.work_unit_id == request.work_unit_id
-            ),
-            key=lambda unit: unit.work_unit_id,
-        )
-    )
-    if not matches:
-        raise ModeloWorkUnitNotFoundError(
-            translated_message="errors.error.modelo_work_selector_unit_not_found",
-            context={"work_unit_id": request.work_unit_id},
-        )
-    work_unit = matches[0]
-    _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
-    return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
-
-
-def _select_operator_work_unit_resolution(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue: WorkUnitCatalogue,
-    bucket_id: str,
-) -> ModeloWorkResolution:
-    assert request.operator_work_unit_id is not None
-    if len(request.operator_work_unit_id) != 12:
-        raise ModeloWorkSelectorContradictionError(
-            translated_message="errors.refused.modelo_work_selector_contradiction",
-        )
-    matches = tuple(
-        sorted(
-            (
-                unit
-                for unit in catalogue.values()
-                if unit.bucket_id == bucket_id
-                and (
-                    unit.work_unit_id.startswith(request.operator_work_unit_id)
-                    or unit.work_unit_id.endswith(request.operator_work_unit_id)
-                )
-            ),
-            key=lambda unit: unit.work_unit_id,
-        )
-    )
-    if not matches:
-        raise ModeloWorkUnitNotFoundError(
-            translated_message="errors.error.modelo_work_selector_unit_not_found",
-            context={"work_unit_id": request.operator_work_unit_id},
-        )
-    if len(matches) > 1:
-        raise ModeloWorkVisibleTargetAmbiguousError(
-            tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
-            selector=request.operator_work_unit_id,
-        )
-    work_unit = matches[0]
-    _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
-    return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
 
 
 def _select_natural_modelo_work_resolution(

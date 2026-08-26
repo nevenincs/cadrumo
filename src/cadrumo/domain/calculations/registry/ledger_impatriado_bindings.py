@@ -211,13 +211,19 @@ class ImpatriadoIncomeObservationProtocol(Protocol):
     """
 
     @property
-    def target_casilla_id(self) -> CasillaId: ...
+    def target_casilla_id(self) -> CasillaId:
+        """Return the Modelo 151 base casilla receiving this observation's aggregate."""
+        ...
 
     @property
-    def gross_amount(self) -> Decimal: ...
+    def gross_amount(self) -> Decimal:
+        """Return the observation's gross or cash-received amount."""
+        ...
 
     @property
-    def taxable_base_amount(self) -> Decimal | None: ...
+    def taxable_base_amount(self) -> Decimal | None:
+        """Return the declared IVA-exclusive taxable base, when available."""
+        ...
 
 
 def _impatriado_income_build_matcher(

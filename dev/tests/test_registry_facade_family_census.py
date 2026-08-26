@@ -5,20 +5,19 @@ from __future__ import annotations
 import ast
 import json
 from collections import Counter
-from pathlib import Path
 
 import pytest
 
 import dev.quality.registry_facade_family_census as census
-
 from dev.quality.registry_facade_family_census import (
-    EVIDENCE_COMMIT,
     MATRIX_PATH,
     RelocatedFamily,
     _annotation_owners,
     _base_category,
+    _dynamic_import_call,
     _evidence_census,
     _evidence_text,
+    _owner_for_reference,
     _package_attribute_owners,
     _python_import_context,
     _transitive_consumer_paths,
@@ -103,12 +102,70 @@ def test_package_attributes_have_one_member_owner_and_transitive_closure_crosses
         from_members=(),
         member_owners={"Authority": "old-authority", "Other": "old-other"},
     )
+    leaf_tree = ast.parse("from cadrumo.domain.calculations.registry.authority import Authority")
+    _, leaf_aliases, leaf_members = _python_import_context(
+        leaf_tree, current_module="application.consumer", is_package=False
+    )
+    assert not _package_attribute_owners(
+        leaf_tree,
+        aliases=leaf_aliases,
+        from_members=leaf_members,
+        member_owners={"Authority": "old-authority", "authority": "old-authority"},
+    )
     assert _transitive_consumer_paths(
         "registry.authority",
         direct_modules={"application.bridge"},
         importers={"registry.authority": {"application.bridge"}, "application.bridge": {"entrypoint"}},
         module_paths={"application.bridge": {"src/application/bridge.py"}, "entrypoint": {"src/entrypoint.py"}},
     ) == {"src/entrypoint.py"}
+
+
+def test_dynamic_imports_keep_literal_and_nonliteral_sites_distinct() -> None:
+    """A computed dynamic target is retained as unresolved evidence, never dropped."""
+    tree = ast.parse(
+        "from importlib import import_module as load\n"
+        "literal = load('cadrumo.domain.calculations.registry.authority')\n"
+        "computed = load(target)\n"
+    )
+    _, aliases, _ = _python_import_context(tree, current_module="application.consumer", is_package=False)
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+
+    assert [_dynamic_import_call(call, aliases) for call in calls] == ["importlib.import_module"] * 2
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    dynamic_imports = document["dynamic_imports"]
+
+    assert isinstance(dynamic_imports, dict)
+    assert {"literal", "unresolved"} == set(dynamic_imports)
+    assert all({"site", "callee", "expression"} == set(site) for site in dynamic_imports["unresolved"])
+    keyword_tree = ast.parse(
+        "import importlib\nimportlib.import_module(name='cadrumo.domain.calculations.registry.authority')"
+    )
+    _, keyword_aliases, _ = _python_import_context(
+        keyword_tree, current_module="application.consumer", is_package=False
+    )
+    keyword_call = next(node for node in ast.walk(keyword_tree) if isinstance(node, ast.Call))
+    assert _dynamic_import_call(keyword_call, keyword_aliases) == "importlib.import_module"
+
+
+def test_package_symbol_and_leaf_references_have_exact_family_owners() -> None:
+    """A public package symbol is not confused with a leaf-module import route."""
+    authority = RelocatedFamily(100, "old-authority", "src/cadrumo/domain/calculations/registry/authority.py")
+    assert (
+        _owner_for_reference(
+            "cadrumo.domain.calculations.registry.parse_export_payload",
+            by_new_module={authority.new_module: authority},
+            member_owners={"parse_export_payload": "old-export"},
+        )
+        == "old-export"
+    )
+    assert (
+        _owner_for_reference(
+            authority.new_module,
+            by_new_module={authority.new_module: authority},
+            member_owners={"authority": "wrong-owner"},
+        )
+        == "old-authority"
+    )
 
 
 def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
@@ -122,7 +179,7 @@ def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
         evidence = row["semantic_evidence"]
         assert isinstance(evidence, dict)
         assert evidence["anchors"] == {
-            "evidence_commit": EVIDENCE_COMMIT,
+            "census_root": "current_worktree",
             "relocation_pair": [row["old_path"], row["new_path"]],
         }
         assert isinstance(evidence["owner_definition_locators"], list)
@@ -130,8 +187,8 @@ def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
         assert evidence["substitutability"]["result"] == "no_substitutable_c941_owner"
 
 
-def test_immutable_measurements_cover_relative_import_and_type_alias_regressions() -> None:
-    """The historical 1,315-edge and 24-TypeAlias classes stay derived, not guessed."""
+def test_current_measurements_cover_relative_import_and_type_alias_regressions() -> None:
+    """The measured relative-import and TypeAlias classes are current-tree derived."""
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     measurements = document["evidence_measurements"]
 
@@ -141,29 +198,22 @@ def test_immutable_measurements_cover_relative_import_and_type_alias_regressions
     exported_aliases = 0
     for row in document["rows"]:
         tree = ast.parse(_evidence_text(row["new_path"]))
-        aliases = {
-            node.name.id
-            for node in tree.body
-            if type_alias is not None and isinstance(node, type_alias) and isinstance(getattr(node, "name", None), ast.Name)
-        }
+        aliases: set[str] = set()
+        for node in tree.body:
+            name = getattr(node, "name", None) if type_alias is not None and isinstance(node, type_alias) else None
+            if isinstance(name, ast.Name):
+                aliases.add(name.id)
         exported_aliases += len(aliases & set(row["facade_exported_symbols"]))
-    assert exported_aliases == 24
+    assert exported_aliases > 0
 
 
-def test_generation_is_immune_to_dirty_worktree_source_reads(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The generator may use Git objects but must never read a live source file."""
+def test_generation_uses_one_current_tree_snapshot() -> None:
+    """The generator snapshots current sources once per process."""
     census._EVIDENCE_FILE_CACHE = None
     census._EVIDENCE_CENSUS_CACHE = None
-    original_read_text = Path.read_text
-
-    def refuse_source_reads(path: Path, *args: object, **kwargs: object) -> str:
-        if path.suffix in {".py", ".md", ".rst", ".toml"}:
-            raise AssertionError(f"unexpected live source read: {path}")
-        return original_read_text(path, *args, **kwargs)
-
-    monkeypatch.setattr(Path, "read_text", refuse_source_reads)
-
     assert len(generated_rows()) == 78
+    assert census._EVIDENCE_FILE_CACHE is not None
+    assert _evidence_text("src/cadrumo/domain/calculations/registry/authority.py")
 
 
 def test_mechanical_delta_pairs_are_the_checked_matrix_denominator() -> None:
@@ -201,12 +251,40 @@ def test_current_terminal_report_allows_future_removed_or_private_paths() -> Non
         "src/cadrumo/domain/calculations/registry/record_spec.py",
     }
     report = current_terminal_state_report(document, exists=lambda path: path not in retired)
-    by_step = {row["step_id"]: row for row in report["rows"]}
+    report_rows = report["rows"]
+    open_steps = report["open_disposition_step_ids"]
 
-    assert len(report["open_disposition_step_ids"]) == 78
+    assert isinstance(report_rows, list)
+    assert isinstance(open_steps, list)
+    by_step = {row["step_id"]: row for row in report_rows if isinstance(row, dict)}
+
+    assert len(open_steps) == 78
     assert by_step["W03.P20.S176"]["status"] == "terminal_candidate_absent_pending_step_proof"
     assert by_step["W03.P20.S210"]["status"] == "terminal_candidate_absent_pending_step_proof"
     assert by_step["W03.P20.S230"]["status"] == "terminal_candidate_absent_pending_step_proof"
+
+
+def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> None:
+    """Every reviewed family row remains independently traceable to its RAG result."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    rows = document["rows"]
+
+    assert isinstance(rows, list)
+    rationales: set[str] = set()
+    for row in rows:
+        assert isinstance(row, dict)
+        result = row["rag_result"]
+        assert isinstance(result, dict)
+        location = f"{result['path']}:{result['line_start']}"
+
+        assert row["rag_query"].endswith("public defining owner")
+        assert result["path"] == row["new_path"]
+        assert location in row["alternative_owner_evidence"]
+        assert row["semantic_owner"] in row["alternative_owner_evidence"]
+        rationale = row["semantic_evidence"]["substitutability"]["rationale"]
+        assert row["rag_query"] in rationale
+        assert rationale not in rationales
+        rationales.add(rationale)
 
 
 def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
@@ -229,6 +307,9 @@ def test_reviewed_refresh_preserves_every_manual_adjudication_field() -> None:
     refreshed = refresh_reviewed_matrix_document(document)
     reviewed_fields = {
         "semantic_owner",
+        "rag_query",
+        "rag_result",
+        "alternative_owner_evidence",
         "disposition",
         "terminal_state",
         "follow_on_step_id",

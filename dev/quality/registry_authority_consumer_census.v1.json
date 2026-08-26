@@ -411,6 +411,7 @@
       "dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py",
       "dev/docs/preprocess/tests/test_hook.py",
       "dev/docs/preprocess/tests/test_html_extractor.py",
+      "dev/docs/preprocess/tests/test_modelo_work_addressing_discovery.py",
       "dev/docs/preprocess/tests/test_pdf_extractor.py",
       "dev/docs/preprocess/tests/test_sidecar_contract.py",
       "dev/docs/preprocess/tests/test_text_extractor.py",
@@ -4028,6 +4029,7 @@
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py",
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_115_round_trip.py",
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_117_126_128_136_registry.py",
+      "src/cadrumo/domain/calculations/registry/tests/test_modelo_126_128_historical_layout_authority.py",
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_2025_activity_oracle.py",
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine.py",
       "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine_2024_backfill.py",
@@ -5654,12 +5656,12 @@
   "definitions": [
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:148",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:143",
       "name": "RegistryAuthorityCapture"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:168",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:158",
       "name": "RegistryAuthorityCurrentCoordinate"
     },
     {
@@ -5669,47 +5671,47 @@
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:193",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:178",
       "name": "RegistryDiagnosticFilingRevision"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1285",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1280",
       "name": "StampedRegistryRelease"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:212",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:197",
       "name": "UnvalidatedRegistryClassification"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:602",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:597",
       "name": "ValidatedRegistryAuthority"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:444",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:429",
       "name": "_AuthorityLoadBarrier"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:420",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:405",
       "name": "_AuthorityLoadKey"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:433",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:418",
       "name": "_AuthorityLoadState"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:419",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:404",
       "name": "_AuthorityRootKey"
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:424",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:409",
       "name": "_AuthorityRootPairIdentity"
     },
     {
@@ -5719,12 +5721,12 @@
     },
     {
       "kind": "ClassDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:383",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:368",
       "name": "_FingerprintKey"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:418",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:403",
       "name": "_PhysicalDirectoryIdentity"
     },
     {
@@ -5754,33 +5756,38 @@
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:523",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:508",
       "name": "_authority_comparison_domain"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:514",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:499",
       "name": "_authority_comparison_domain_payload"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:487",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:472",
       "name": "_authority_generation"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:485",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:470",
       "name": "_authority_load_barrier"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:552",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:547",
       "name": "_authority_load_state"
     },
     {
       "kind": "AnnAssign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:486",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:471",
       "name": "_authority_load_states"
+    },
+    {
+      "kind": "AnnAssign",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:139",
+      "name": "_authority_process_domains"
     },
     {
       "kind": "Assign",
@@ -5794,97 +5801,97 @@
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:488",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:473",
       "name": "_authority_reset_epoch"
     },
     {
       "kind": "Assign",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:484",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:469",
       "name": "_authority_state_lock"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:558",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:553",
       "name": "_begin_authority_transition"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:491",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:476",
       "name": "_canonical_authority_root_pair"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:141",
-      "name": "_capture_process_binding"
-    },
-    {
-      "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1183",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1178",
       "name": "_construct_authority"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1032",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1027",
       "name": "_deadline_window_period_sort_key"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1036",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1031",
       "name": "_deadline_window_qualifier_sort_key"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:413",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:398",
       "name": "_fingerprint_key"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:405",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:390",
       "name": "_fingerprint_key_payload"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:542",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:537",
       "name": "_guard_authority_process"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:592",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:587",
       "name": "_invalidate_authority_generations"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1081",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1076",
       "name": "_load_authority"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1154",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1149",
       "name": "_load_validated_authority"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:570",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:565",
       "name": "_publish_authority"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:586",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:581",
       "name": "_publish_authority_failure"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:528",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:522",
       "name": "_rebuild_authority_process_state"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1043",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:515",
+      "name": "_require_authority_process_domain"
+    },
+    {
+      "kind": "FunctionDef",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1038",
       "name": "bundled_authority"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1058",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1053",
       "name": "bundled_revision_inspection"
     },
     {
@@ -5894,22 +5901,22 @@
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:224",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:209",
       "name": "derive_filing_revision_classifications"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1251",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1246",
       "name": "load_registry_diagnostic_classification"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1128",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1123",
       "name": "reset_registry_caches"
     },
     {
       "kind": "FunctionDef",
-      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1292",
+      "locator": "src/cadrumo/domain/calculations/registry/authority.py:1287",
       "name": "stamp_bundled_registry_release"
     }
   ],

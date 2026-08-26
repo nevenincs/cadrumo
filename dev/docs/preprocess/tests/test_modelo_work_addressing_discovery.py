@@ -11,10 +11,25 @@ from typing import Any
 
 import pytest
 
+from ....quality.import_hygiene_scan import (
+    SubstitutableWorkSelectorRule,
+    source_contains_substitutable_work_selector,
+)
+
 _ROOT = Path(__file__).resolve().parents[4]
 _CANONICAL_OWNER = "src/cadrumo/application/modelo/work_addressing.py"
 _OWNER_SYMBOLS = frozenset(
     {"ModeloWorkResolution", "ModeloWorkSelectorRequest", "select_modelo_work_resolution"}
+)
+_NATURAL_SCAN_RULE = SubstitutableWorkSelectorRule(
+    "parallel natural catalogue scan",
+    collection_methods=frozenset({"values", "items"}),
+    catalogue_types=frozenset({"WorkUnitCatalogue"}),
+    repository_types=frozenset({"WorkUnitCatalogueRepository"}),
+    natural_coordinates=frozenset({"modelo", "filing_year", "period"}),
+    exact_coordinates=frozenset({"work_unit_id"}),
+    operator_methods=frozenset({"startswith", "endswith"}),
+    exempt_functions=frozenset({"select_modelo_work_resolution"}),
 )
 
 
@@ -32,7 +47,6 @@ def _classify_modelo_addressing_results(results: list[dict[str, Any]]) -> Modelo
         path = str(hit.get("path", "")).replace("\\", "/")
         if path == _CANONICAL_OWNER:
             canonical.add(path)
-            continue
         is_production = path.startswith("src/cadrumo/") and "/tests/" not in path
         declared_name = str(hit.get("function_name") or hit.get("class_name") or "")
         snippet = str(hit.get("snippet") or "")
@@ -49,10 +63,7 @@ def _classify_modelo_addressing_results(results: list[dict[str, Any]]) -> Modelo
             and "select_modelo_work_resolution(" in snippet
             and any(read in snippet for read in (".load(", ".load_revisioned(", "catalogue.get("))
         )
-        natural_scan = (
-            ".values()" in snippet
-            and sum(coordinate in snippet for coordinate in (".modelo", ".filing_year", ".period")) >= 2
-        )
+        natural_scan = source_contains_substitutable_work_selector(snippet, _NATURAL_SCAN_RULE)
         if is_production and (declared_name in _OWNER_SYMBOLS or declares_owner or wraps_repository or natural_scan):
             parallel.add(path)
     return ModeloAddressingSearchClassification(frozenset(canonical), frozenset(parallel))
@@ -64,13 +75,85 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
     results = [
         {"path": _CANONICAL_OWNER, "function_name": "select_modelo_work_resolution"},
         {
+            "path": _CANONICAL_OWNER,
+            "snippet": (
+                "def extra_selector(inventory: WorkUnitCatalogue, wanted):\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            return unit"
+            ),
+        },
+        {
             "path": "src/cadrumo/application/modelo/parallel_selector.py",
             "snippet": "def select_modelo_work_resolution(request, *, catalogue, bucket_id): ...",
         },
         {
+            "path": "src/cadrumo/application/modelo/aliased_items_scan.py",
+            "snippet": (
+                "def resolve(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
+                "    units = catalogue\n"
+                "    for key, unit in units.items():\n"
+                "        if unit.modelo == modelo and unit.filing_year == filing_year:\n"
+                "            return key, unit"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/projection.py",
+            "snippet": (
+                "def project(catalogue: WorkUnitCatalogue):\n"
+                "    for unit in catalogue.values():\n"
+                "        yield unit.modelo, unit.filing_year, unit.period"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/analytics.py",
+            "snippet": (
+                "def count_matching(inventory: WorkUnitCatalogue, modelo, filing_year):\n"
+                "    return sum(\n"
+                "        1 for unit in inventory.values()\n"
+                "        if unit.modelo == modelo and unit.filing_year == filing_year\n"
+                "    )"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/revisioned_scan.py",
+            "snippet": (
+                "def resolve(repo: WorkUnitCatalogueRepository, wanted):\n"
+                "    inventory, revision = repo.load_revisioned()\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            return unit"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/direct_first.py",
+            "snippet": (
+                "def resolve(repo: WorkUnitCatalogueRepository):\n"
+                "    return next(iter(repo.load().values()))"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/yield_selector.py",
+            "snippet": (
+                "def resolve(inventory: WorkUnitCatalogue, wanted):\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            yield unit"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/yield_projection.py",
+            "snippet": (
+                "def project(inventory: WorkUnitCatalogue, wanted):\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            yield unit.modelo"
+            ),
+        },
+        {
             "path": "src/cadrumo/application/modelo/natural_scan.py",
             "snippet": (
-                "def resolve(catalogue, modelo, filing_year):\n"
+                "def resolve(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
                 "    for unit in catalogue.values():\n"
                 "        if unit.modelo == modelo and unit.filing_year == filing_year:\n"
                 "            return unit"
@@ -95,6 +178,11 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
         "src/cadrumo/application/modelo/parallel_selector.py",
         "src/cadrumo/application/modelo/repository_wrapper.py",
         "src/cadrumo/application/modelo/natural_scan.py",
+        "src/cadrumo/application/modelo/aliased_items_scan.py",
+        _CANONICAL_OWNER,
+        "src/cadrumo/application/modelo/revisioned_scan.py",
+        "src/cadrumo/application/modelo/direct_first.py",
+        "src/cadrumo/application/modelo/yield_selector.py",
     }
 
 

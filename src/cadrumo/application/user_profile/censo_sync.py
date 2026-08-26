@@ -384,6 +384,14 @@ class CensoSyncService:
         bucket_id: str,
         profiles: ProfileRecordRepository | None = None,
     ) -> None:
+        """Initialize the service for one profile bucket and record repository.
+
+        Args:
+            bucket_id: Profile bucket identifier; surrounding whitespace is
+                removed before the non-blank check.
+            profiles: Optional repository for profile-record reads. When it is
+                omitted, the current-session repository is resolved on demand.
+        """
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise CensoSyncError(translated_message="errors.censo.bucket_id_blank")
@@ -391,6 +399,7 @@ class CensoSyncService:
 
     @property
     def bucket_id(self) -> str:
+        """Return the normalized bucket identifier bound to this service."""
         return self._bucket_id
 
     def bound_raw_afectacion_ratio(self, *, profile_id: str) -> Decimal | None:

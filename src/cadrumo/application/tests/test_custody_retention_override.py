@@ -90,8 +90,8 @@ def test_an_open_legal_case_still_refuses_with_a_valid_override(tmp_path: Path) 
     thing the refusal exists to protect.
     """
     from ..evidence import LegalHoldCaseAuthority
-    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
     from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     with _isolated_reset_root(tmp_path) as root:
         _held_profile(root)
@@ -117,8 +117,8 @@ def test_an_override_is_refused_where_no_filing_hold_blocks(tmp_path: Path) -> N
     nothing would notice, because a profile with no hold deletes cleanly either
     way.
     """
-    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
     from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_ID, label="No hold", tax_id="22222222J")
@@ -139,8 +139,8 @@ def test_a_legal_case_opened_after_preparation_still_stops_the_execution(tmp_pat
     afterwards. The execution must refuse, and the capsule must survive.
     """
     from ..evidence import LegalHoldCaseAuthority
-    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
     from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     with _isolated_reset_root(tmp_path) as root:
         _held_profile(root)

@@ -36,6 +36,7 @@ from ._m303_orden_constants import (
     EXPECTED_MODULE_DISTRIBUTION,
     EXTRACTOR_VERSION,
 )
+from .errors import RegistryLoadError, RegistryValidationError
 from .m303_orden_raw_models import (
     M303AnnualOrdenRawActivity,
     M303AnnualOrdenRawAgriculturalIndex,
@@ -48,7 +49,6 @@ from .m303_orden_raw_models import (
     M303AnnualOrdenSourceCensus,
 )
 from .schema_references import SourceReference
-from .errors import RegistryLoadError, RegistryValidationError
 
 _SIDECAR_PREPROCESSOR_ID = "normatives-html"
 _SIDECAR_PREPROCESSOR_VERSION = "1.3"
@@ -72,6 +72,7 @@ _CORPUS_PATH_PREFIX = "corpus/normatives/html/"
 
 
 def validate_pinned_boe_orden_source(source: SourceReference, *, ejercicio: int) -> None:
+    """Validate that a source is the official BOE artefact for the full filing year."""
     filing_start = date(ejercicio, 1, 1)
     filing_end = date(ejercicio, 12, 31)
     if source.authority != "boe" or source.kind != "instructions":
@@ -87,6 +88,7 @@ def validate_pinned_boe_orden_source(source: SourceReference, *, ejercicio: int)
 
 
 def annual_orden_raw_activity_identity(raw_activity: M303AnnualOrdenRawActivity) -> str:
+    """Return the stable digest identity derived from an activity's IAE code and name."""
     identity_seed = f"{raw_activity.iae_epigrafe}\0{raw_activity.activity_name}".encode()
     return sha256_hex(identity_seed)[:20]
 

@@ -9,10 +9,11 @@ import subprocess
 import sys
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from shutil import copytree
 from threading import Barrier, Event, Lock, Thread
+from typing import cast
 
 import pytest
 
@@ -20,6 +21,7 @@ import cadrumo.domain.calculations.registry.authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCapture,
     RegistryAuthorityCurrentCoordinate,
+    RegistryAuthorityProjection,
     ValidatedRegistryAuthority,
     bundled_authority,
     reset_registry_caches,
@@ -30,6 +32,7 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 
 from .....core import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
+from .....core.identity import ContentDigest
 from .....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -115,6 +118,48 @@ def test_native_capture_accepts_a_current_coordinate_from_its_own_domain(
     assert current.require_current(capture) is current
 
 
+def test_native_coordinate_values_expose_only_the_public_opaque_contract() -> None:
+    """Dataclass reflection cannot reveal roots, PID, nonce, or internal binding."""
+    opaque_domain = cast(ContentDigest, "0" * 64)
+    capture = RegistryAuthorityCapture(
+        projection=cast(RegistryAuthorityProjection, object()),
+        comparison_domain=opaque_domain,
+        generation=1,
+    )
+    current = RegistryAuthorityCurrentCoordinate(comparison_domain=opaque_domain, generation=1)
+
+    assert tuple(field.name for field in fields(capture)) == ("projection", "comparison_domain", "generation")
+    assert tuple(field.name for field in fields(current)) == ("comparison_domain", "generation")
+    assert set(asdict(capture)) == {"projection", "comparison_domain", "generation"}
+    assert set(asdict(current)) == {"comparison_domain", "generation"}
+
+
+def test_process_state_rebuild_refuses_preexisting_public_coordinates(tmp_path: Path) -> None:
+    """Internal domain custody rejects inherited values without a DTO binding field."""
+    registry_root = tmp_path / "registry-root"
+    source_root = tmp_path / "source-root"
+    registry_root.mkdir()
+    source_root.mkdir()
+    identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # process-boundary proof
+        registry_root,
+        source_root,
+    )
+    domain = authority_module._authority_comparison_domain(identity)  # pyright: ignore[reportPrivateUsage]  # process-boundary proof
+    capture = RegistryAuthorityCapture(
+        projection=cast(RegistryAuthorityProjection, object()),
+        comparison_domain=domain,
+        generation=1,
+    )
+    current = RegistryAuthorityCurrentCoordinate(comparison_domain=domain, generation=1)
+
+    authority_module._rebuild_authority_process_state()  # pyright: ignore[reportPrivateUsage]  # emulate after-fork callback
+
+    with pytest.raises(RegistrySnapshotError, match="another process incarnation"):
+        capture.require_current(current)
+    with pytest.raises(RegistrySnapshotError, match="another process incarnation"):
+        current.require_current(capture)
+
+
 def test_native_capture_refuses_a_coordinate_from_a_distinct_registry_root(
     tmp_path: Path,
     registry_authority: ValidatedRegistryAuthority,
@@ -137,6 +182,44 @@ def test_native_capture_refuses_a_coordinate_from_a_distinct_registry_root(
     assert capture.comparison_domain != switched_root_current.comparison_domain
     with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
         capture.require_current(same_generation_foreign_current)
+
+
+def test_native_capture_refuses_a_coordinate_from_a_distinct_source_root_only(
+    tmp_path: Path,
+) -> None:
+    """Changing only the physical source root creates a foreign comparison domain."""
+    registry_root = tmp_path / "registry-root"
+    source_root = tmp_path / "source-root-a"
+    alternate_source_root = tmp_path / "source-root-b"
+    registry_root.mkdir()
+    source_root.mkdir()
+    alternate_source_root.mkdir()
+    owner_identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+        registry_root,
+        source_root,
+    )
+    foreign_identity = authority_module._canonical_authority_root_pair(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+        registry_root,
+        alternate_source_root,
+    )
+    owner_domain = authority_module._authority_comparison_domain(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+        owner_identity
+    )
+    foreign_domain = authority_module._authority_comparison_domain(  # pyright: ignore[reportPrivateUsage]  # exact owner-domain proof
+        foreign_identity
+    )
+    capture = RegistryAuthorityCapture(
+        projection=cast(RegistryAuthorityProjection, object()),
+        comparison_domain=owner_domain,
+        generation=1,
+    )
+    foreign_current = RegistryAuthorityCurrentCoordinate(
+        comparison_domain=foreign_domain,
+        generation=1,
+    )
+
+    with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
+        capture.require_current(foreign_current)
 
 
 def test_native_capture_refuses_a_reset_stale_coordinate_in_its_same_domain(
@@ -193,7 +276,7 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
     child_current = RegistryAuthorityCurrentCoordinate(**json.loads(child.stdout))
 
     assert child_current.comparison_domain != capture.comparison_domain
-    with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
+    with pytest.raises(RegistrySnapshotError, match="another process incarnation"):
         capture.require_current(child_current)
 
 

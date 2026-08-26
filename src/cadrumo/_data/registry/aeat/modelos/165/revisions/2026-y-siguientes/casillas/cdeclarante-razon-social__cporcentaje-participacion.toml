@@ -8,7 +8,7 @@
 
 # Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
 # completa, sin anagrama."
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "declarante-razon-social"
 number = "tipo1.18-57"
 section = ["declarante"]
@@ -23,7 +23,7 @@ source_refs = ["aeat-dr-165-2026"]
 # Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
 # subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
 # ONE top-level campo of 49 bytes.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "persona-relacion"
 number = "tipo1.59-107"
 section = ["declarante"]
@@ -37,7 +37,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 8. Positions 108-120, numerico de 13 posiciones. "Un numero secuencial
 # cuyos tres primeros digitos se corresponderan con el codigo 165."
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "numero-identificativo-declaracion"
 number = "tipo1.108-120"
 section = ["declarante"]
@@ -51,7 +51,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
 # 122 declaracion sustitutiva ("S").
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["declarante"]
@@ -67,7 +67,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 10. Positions 123-135, numerico de 13 posiciones. "En cualquier otro
 # caso debera rellenarse a CEROS."
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["declarante"]
@@ -81,7 +81,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 11. Positions 136-144, numerico de 9 posiciones: "el numero total de
 # registros de socios o participes (Registro de tipo 2) declarados".
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "numero-total-declarados"
 number = "tipo1.136-144"
 section = ["declarante"]
@@ -97,7 +97,7 @@ source_refs = ["aeat-dr-165-2026"]
 # ADQUISICIONES DE ACCIONES O PARTICIPACIONES. "Se consignara sin signo y sin
 # coma decimal", subdivided 145-157 parte entera and 158-159 parte decimal --
 # an unsigned amount with two implied decimals filling the whole 15-byte slot.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "importe-total-suscripciones"
 number = "tipo1.145-159"
 section = ["declarante", "resumen"]
@@ -111,7 +111,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 13. Positions 160-167. FECHA DE CONSTITUCION de la empresa de nueva o
 # reciente creacion, subdivided 160-163 ANO, 164-165 MES, 166-167 DIA.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "fecha-constitucion"
 number = "tipo1.160-167"
 section = ["declarante"]
@@ -130,7 +130,7 @@ source_refs = ["aeat-dr-165-2026"]
 # ... sea menor que 0 (cero); en este caso se consignara una 'N'. En cualquier
 # otro caso el contenido del campo sera un espacio", then "169-183 IMPORTE:
 # campo numerico de 15 posiciones", itself 169-181 entera and 182-183 decimal.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "importe-fondos-propios"
 number = "tipo1.168-183"
 section = ["declarante"]
@@ -146,7 +146,7 @@ source_refs = ["aeat-dr-165-2026"]
 # tenga la consideracion de empresa emergente, segun lo establecido en el
 # apartado 1 del articulo 3 de la Ley 28/2022, de 21 de diciembre, de fomento
 # del ecosistema de las empresas emergentes." In any other case it goes blank.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "empresa-emergente"
 number = "tipo1.184"
 section = ["declarante"]
@@ -160,7 +160,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 5. Positions 18-26. N.I.F. DEL SOCIO O PARTICIPE de la entidad de nueva
 # o reciente creacion.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "socio-nif"
 number = "tipo2.18-26"
 section = ["socio"]
@@ -175,7 +175,7 @@ source_refs = ["aeat-dr-165-2026"]
 # Campo 6. Positions 27-35. "Si el perceptor es menor de 14 anos se consignara
 # en este campo el numero de identificacion fiscal de su representante legal
 # (padre, madre o tutor). En cualquier otro caso ... se rellenara a espacios."
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "representante-legal-nif"
 number = "tipo2.27-35"
 section = ["socio"]
@@ -189,7 +189,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 7. Positions 36-75. APELLIDOS Y NOMBRE DEL SOCIO O PARTICIPE: "el primer
 # apellido, un espacio, el segundo apellido, un espacio y el nombre completo".
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "socio-nombre"
 number = "tipo2.36-75"
 section = ["socio"]
@@ -203,7 +203,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 8. Positions 76-88. IMPORTE DE LA SUSCRIPCION O ADQUISICION, "sin signo
 # y sin coma decimal", subdivided 76-86 parte entera and 87-88 parte decimal.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "importe-suscripcion"
 number = "tipo2.76-88"
 section = ["socio", "adquisicion"]
@@ -217,7 +217,7 @@ source_refs = ["aeat-dr-165-2026"]
 
 # Campo 9. Positions 89-96. FECHA DE ADQUISICION DE LAS ACCIONES/PARTICIPACIONES,
 # subdivided 89-92 ANO, 93-94 MES, 95-96 DIA.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "fecha-adquisicion"
 number = "tipo2.89-96"
 section = ["socio", "adquisicion"]
@@ -232,7 +232,7 @@ source_refs = ["aeat-dr-165-2026"]
 # Campo 10. Positions 97-101. PORCENTAJE DE PARTICIPACION en el capital social.
 # "Dicho porcentaje, cuando no sea un numero entero, se expresara con dos
 # decimales", subdivided 97-99 parte entera and 100-101 parte decimal.
-[[revisions."2013-y-siguientes".casillas]]
+[[revisions."2026-y-siguientes".casillas]]
 id = "porcentaje-participacion"
 number = "tipo2.97-101"
 section = ["socio", "adquisicion"]

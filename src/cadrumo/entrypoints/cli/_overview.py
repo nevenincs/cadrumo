@@ -112,9 +112,10 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     resolve to nothing and pass through verbatim, which is what this surface
     already showed for them.
     """
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
@@ -177,13 +178,14 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     an entity type but no income category is told about the income category,
     not sent back to a field they already filled in.
     """
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+
     from ...application.cli_exception_preconditions import (
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.deadlines import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
@@ -780,12 +782,13 @@ def overview_prepare(
     the registry, loads the ledger/invoice/evidence/work-unit state, and
     renders the typed envelope plus per-step next-command notices.
     """
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo._registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
-    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
     current = _state()
     bucket_id = current.active_profile_bucket_id()

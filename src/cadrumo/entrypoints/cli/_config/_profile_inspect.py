@@ -14,13 +14,14 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
 from ....core import Period as _Period
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
-from cadrumo.domain.calculations.registry.ids import RevisionId
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -183,11 +184,16 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
     ambiguous: the refusal names the candidate revisions or points at
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
+    from cadrumo.domain.calculations.registry.errors import (
+        AmbiguousRevisionSelectionError,
+        NoRevisionForPeriodError,
+        RegistrySnapshotError,
+    )
+
     from ....application.modelo.work_addressing import (
         ModeloWorkRegistryYearMismatchError,
         resolve_registry_revision_for_work_target,
     )
-    from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistrySnapshotError
 
     try:
         return resolve_registry_revision_for_work_target(

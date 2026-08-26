@@ -269,7 +269,7 @@ def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
     )
     tree = ast.parse(source)
     calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
-    composing = [n for n in calls if n.func.attr in _COMPOSING_WRITES]
+    composing = [n for n in calls if isinstance(n.func, ast.Attribute) and n.func.attr in _COMPOSING_WRITES]
 
     assert composing, "fixture did not produce a composing write"
     assert not _asserts_a_revision(composing[0])
