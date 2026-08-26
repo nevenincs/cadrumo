@@ -3,22 +3,20 @@
 from __future__ import annotations
 
 import ast
+import json
+import os
+import subprocess
+import sys
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-import json
-import os
 from pathlib import Path
 from shutil import copytree
-import subprocess
-import sys
 from threading import Barrier, Event, Lock, Thread
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
-from .....core.directory_scan import scan_directory
-from .....tests import REPO_ROOT
+import cadrumo.domain.calculations.registry.authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCapture,
     RegistryAuthorityCurrentCoordinate,
@@ -26,9 +24,13 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority,
     reset_registry_caches,
 )
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+from .....core import RegistryAuthorityGrade
+from .....core.directory_scan import scan_directory
+from .....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,7 +97,7 @@ def test_native_capture_selects_the_existing_inspection_or_snapshot_authority(
     assert isinstance(snapshot_capture.projection, RegistrySnapshot)
     assert inspection_capture.projection.revision_id == snapshot_capture.projection.revision.id
     assert inspection_capture.generation == snapshot_capture.generation
-    assert snapshot_capture.generation == registry_authority.read_current_generation()
+    assert snapshot_capture.generation == registry_authority.read_current_coordinate().generation
 
 
 def test_native_capture_accepts_a_current_coordinate_from_its_own_domain(
@@ -179,7 +181,7 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
     environment = os.environ.copy()
     source_path = str(REPO_ROOT / "src")
     environment["PYTHONPATH"] = source_path + os.pathsep + environment.get("PYTHONPATH", "")
-    child = subprocess.run(
+    child = subprocess.run(  # noqa: S603 - fixed interpreter and in-repository test program
         (sys.executable, "-c", child_program, str(registry_authority.root), str(registry_authority.source_root)),
         cwd=REPO_ROOT,
         env=environment,
@@ -193,6 +195,135 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
     assert child_current.comparison_domain != capture.comparison_domain
     with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
         capture.require_current(child_current)
+
+
+def test_native_authority_coalesces_relative_dot_and_symlink_root_aliases(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """All aliases of one physical root pair share one load state and domain."""
+    monkeypatch.chdir(REPO_ROOT)
+    relative_root = registry_authority.root.relative_to(REPO_ROOT) / "."
+    relative_source_root = registry_authority.source_root.relative_to(REPO_ROOT) / "."
+    relative = ValidatedRegistryAuthority.load(relative_root, source_root=relative_source_root)
+
+    assert relative is registry_authority
+    assert relative.read_current_coordinate() == registry_authority.read_current_coordinate()
+
+    registry_link = tmp_path / "registry-link"
+    source_link = tmp_path / "source-link"
+    try:
+        registry_link.symlink_to(registry_authority.root, target_is_directory=True)
+        source_link.symlink_to(registry_authority.source_root, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"directory symlinks are unavailable: {exc}")
+    linked = ValidatedRegistryAuthority.load(registry_link, source_root=source_link)
+
+    assert linked is registry_authority
+    assert linked.read_current_coordinate() == registry_authority.read_current_coordinate()
+
+
+def test_native_authority_applies_the_platform_case_policy(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Case aliases coalesce exactly when the host path policy coalesces them."""
+    upper_root = Path(str(registry_authority.root).upper())
+    upper_source_root = Path(str(registry_authority.source_root).upper())
+    if upper_root.exists() and upper_source_root.exists():
+        alias = ValidatedRegistryAuthority.load(upper_root, source_root=upper_source_root)
+        if upper_root.samefile(registry_authority.root) and upper_source_root.samefile(registry_authority.source_root):
+            assert alias is registry_authority
+            assert alias.read_current_coordinate() == registry_authority.read_current_coordinate()
+        else:
+            assert alias is not registry_authority
+            assert alias.read_current_coordinate().comparison_domain != (
+                registry_authority.read_current_coordinate().comparison_domain
+            )
+    else:
+        with pytest.raises(RegistrySnapshotError, match="must resolve"):
+            ValidatedRegistryAuthority.load(upper_root, source_root=upper_source_root)
+
+
+def test_native_authority_fails_closed_on_unresolvable_roots(tmp_path: Path) -> None:
+    """A missing physical owner pair never enters the process load-state map."""
+    missing = tmp_path / "missing"
+
+    with pytest.raises(RegistrySnapshotError, match="must resolve"):
+        ValidatedRegistryAuthority.load(missing, source_root=missing)
+
+
+@pytest.mark.skipif(not hasattr(os, "fork"), reason="requires POSIX fork semantics")
+def test_fork_rebuilds_active_reader_state_and_refuses_every_inherited_coordinate(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """A child neither waits on inherited locks nor accepts parent authority values."""
+    capture = registry_authority.capture_law_selected_projection(
+        _MODEL0_ID,
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+    )
+    parent_current = registry_authority.read_current_coordinate()
+    reader_entered = Event()
+    release_reader = Event()
+
+    def active_reader() -> None:
+        with authority_module._authority_load_barrier.read():  # pyright: ignore[reportPrivateUsage]  # real fork-barrier proof
+            reader_entered.set()
+            assert release_reader.wait(timeout=30)
+
+    reader = Thread(target=active_reader)
+    reader.start()
+    assert reader_entered.wait(timeout=10)
+    read_fd, write_fd = os.pipe()
+    child_pid = os.fork()
+    if child_pid == 0:  # pragma: no cover - exercised in the forked process
+        os.close(read_fd)
+        result: dict[str, object]
+        try:
+            inherited_refusals = 0
+            for exercise in (
+                lambda: registry_authority.read_current_coordinate(),
+                lambda: registry_authority.capture_law_selected_projection(
+                    _MODEL0_ID,
+                    filing_year=_FILING_YEAR,
+                    period=_PERIOD,
+                ),
+                lambda: capture.require_current(parent_current),
+                lambda: parent_current.require_current(capture),
+            ):
+                try:
+                    exercise()
+                except RegistrySnapshotError:
+                    inherited_refusals += 1
+            fresh = ValidatedRegistryAuthority.load(
+                registry_authority.root,
+                source_root=registry_authority.source_root,
+            )
+            fresh_current = fresh.read_current_coordinate()
+            result = {
+                "inherited_refusals": inherited_refusals,
+                "fresh_domain": fresh_current.comparison_domain,
+            }
+        except BaseException as exc:
+            result = {"error": f"{type(exc).__name__}: {exc}"}
+        os.write(write_fd, json.dumps(result).encode("utf-8"))
+        os.close(write_fd)
+        os._exit(0)
+
+    os.close(write_fd)
+    release_reader.set()
+    reader.join(timeout=10)
+    child_bytes = os.read(read_fd, 65536)
+    os.close(read_fd)
+    _, status = os.waitpid(child_pid, 0)
+    result = json.loads(child_bytes)
+
+    assert not reader.is_alive()
+    assert os.waitstatus_to_exitcode(status) == 0
+    assert "error" not in result
+    assert result["inherited_refusals"] == 4
+    assert result["fresh_domain"] != parent_current.comparison_domain
 
 
 def test_native_capture_snapshot_is_isolated_from_the_authority_cache(
@@ -291,7 +422,7 @@ def test_native_capture_is_atomic_across_concurrent_snapshot_reads(
     assert len(snapshots) == _CAPTURE_WORKERS
     assert {snapshot.revision.id for snapshot in snapshots} == {"2019-y-siguientes"}
     assert len({id(snapshot) for snapshot in snapshots}) == _CAPTURE_WORKERS
-    assert {capture.generation for capture in captures} == {registry_authority.read_current_generation()}
+    assert {capture.generation for capture in captures} == {registry_authority.read_current_coordinate().generation}
 
 
 def test_native_capture_rejects_an_old_authority_after_reset_and_refuses_aba_reuse(
@@ -314,7 +445,7 @@ def test_native_capture_rejects_an_old_authority_after_reset_and_refuses_aba_reu
             grade=RegistryAuthorityGrade.FILING,
         )
     with pytest.raises(RegistrySnapshotError, match="invalidated by cache reset"):
-        registry_authority.read_current_generation()
+        registry_authority.read_current_coordinate()
 
     reloaded = bundled_authority()
     after_reset = reloaded.capture_law_selected_projection(
@@ -326,7 +457,7 @@ def test_native_capture_rejects_an_old_authority_after_reset_and_refuses_aba_reu
 
     assert after_reset.projection == before_reset.projection
     assert after_reset.generation > before_reset.generation
-    assert after_reset.generation == reloaded.read_current_generation()
+    assert after_reset.generation == reloaded.read_current_coordinate().generation
 
 
 def test_native_authority_load_is_singleflight_per_observed_identity(
@@ -360,8 +491,8 @@ def test_native_authority_load_is_singleflight_per_observed_identity(
 
     assert construct_count == 1
     assert len({id(authority) for authority in authorities}) == 1
-    assert {authority.read_current_generation() for authority in authorities} == {
-        authorities[0].read_current_generation(),
+    assert {authority.read_current_coordinate().generation for authority in authorities} == {
+        authorities[0].read_current_coordinate().generation,
     }
 
 
@@ -508,7 +639,7 @@ def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
     assert len(published_generations) == 1
     returned_generation = published_generations[0]
     with pytest.raises(RegistrySnapshotError, match="invalidated by cache reset"):
-        returned[0].read_current_generation()
+        returned[0].read_current_coordinate()
 
     current = ValidatedRegistryAuthority.load(
         registry_authority.root,
@@ -516,8 +647,8 @@ def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
         lifecycle_observer=lifecycle,
     )
     assert construct_count == 2
-    assert current.read_current_generation() > returned_generation
-    assert published_generations == [returned_generation, current.read_current_generation()]
+    assert current.read_current_coordinate().generation > returned_generation
+    assert published_generations == [returned_generation, current.read_current_coordinate().generation]
 
 
 def test_concurrent_resets_are_exclusive_owner_transitions() -> None:
@@ -579,13 +710,11 @@ def test_native_capture_has_one_public_registry_home_without_workspace_coupling(
         in {
             "capture_law_selected_projection",
             "read_current_coordinate",
-            "read_current_generation",
         }
     }
     assert authority_methods == {
         "capture_law_selected_projection",
         "read_current_coordinate",
-        "read_current_generation",
     }
 
     production_capture_homes = tuple(

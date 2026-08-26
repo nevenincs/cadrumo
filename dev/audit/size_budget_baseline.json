@@ -64,7 +64,7 @@
     "src/cadrumo/application/ledger/_evidence_draft.py::confirm_invoice_draft_from_evidence": 209,
     "src/cadrumo/application/ledger/_identity_roles.py::resolve_counterparty_identity": 216,
     "src/cadrumo/application/modelo/_calculation_actions.py::_calculate_modelo_revision_with_trusted_mesh_sources": 202,
-    "src/cadrumo/application/modelo/_external_import_actions.py::import_external_filing_evidence": 201,
+    "src/cadrumo/application/modelo/external_import_actions.py::import_external_filing_evidence": 201,
     "src/cadrumo/application/modelo/_filing_actions.py::file_modelo_revision": 217,
     "src/cadrumo/application/modelo/_quickfile.py::run_modelo_quickfile": 234,
     "src/cadrumo/application/modelo/_revision_persistence.py::persist_filed_revision": 200,

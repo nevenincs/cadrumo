@@ -298,7 +298,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     # Load 1: should run validation.
     auth1 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
     assert auth1._registry_validated is True
-    first_generation = auth1.read_current_generation()
+    first_generation = auth1.read_current_coordinate().generation
 
     # Load 2: same fingerprint returns the in-process cached authority.
     auth2 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
@@ -316,9 +316,9 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     assert auth3._registry_validated is True
     assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
-    second_generation = auth3.read_current_generation()
+    second_generation = auth3.read_current_coordinate().generation
     with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
-        auth1.read_current_generation()
+        auth1.read_current_coordinate()
 
     # Restore the exact original bytes rather than resetting caches: this is the
     # real ABA state whose original object must never become current again.
@@ -333,9 +333,9 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     assert auth4 is not auth1
     assert auth4 is not auth3
     assert auth4.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
-    assert auth4.read_current_generation() > second_generation > first_generation
+    assert auth4.read_current_coordinate().generation > second_generation > first_generation
     with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
-        auth3.read_current_generation()
+        auth3.read_current_coordinate()
 
 
 def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path) -> None:

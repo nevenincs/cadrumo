@@ -23,11 +23,6 @@ from ...application.modelo._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._external_import_actions import (
-    ExternalFilingBaselineSource,
-    import_external_filing_evidence,
-    import_external_filing_source,
-)
 from ...application.modelo._filing_actions import (
     get_filing_record,
     get_verification_report,
@@ -40,6 +35,11 @@ from ...application.modelo._local_observation_spreadsheet import (
     parse_casilla_value_spreadsheet,
 )
 from ...application.modelo._work_lifecycle import get_work_unit
+from ...application.modelo.external_import_actions import (
+    ExternalFilingBaselineSource,
+    import_external_filing_evidence,
+    import_external_filing_source,
+)
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr

@@ -104,7 +104,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     "permanent green from this gate while guarding nothing, so it must be a required parameter or not "
     "done at all",
     (
-        "src/cadrumo/application/modelo/_external_import_actions.py",
+        "src/cadrumo/application/modelo/external_import_actions.py",
         "import_external_filing_evidence",
     ): "the work-unit catalogue is read by _load_external_import_target; the two locally-read catalogues are guarded",
     (

@@ -606,7 +606,6 @@ ignore_imports =
     #    adapters.persistence.profile.justificante (no domain port; no domain
     #    caller); application/entrypoint callers import the adapter directly ──
     cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
-    cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.justificante
     # ── application/live, registry and diagnostics narrowed from `adapters.**`
     #    to what each module reaches. This package DRIVES the AEAT Sede and its
     #    authentication: an outbound edge here is the package's purpose, not an
@@ -714,7 +713,6 @@ ignore_imports =
     #    adapter behind ModeloRecordCatalogueRepositoryProtocol ──
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo._export -> cadrumo.adapters.persistence.profile.modelos_filing
-    cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo._participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_filing
@@ -745,7 +743,6 @@ ignore_imports =
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._export -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_calculation
@@ -758,7 +755,6 @@ ignore_imports =
     cadrumo.application.modelo._calculate_input -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._export -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_work_units
@@ -775,7 +771,6 @@ ignore_imports =
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._export -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.buckets

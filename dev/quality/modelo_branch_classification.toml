@@ -666,7 +666,7 @@ group = "modelo-scope-guard"
 selects = "_evidence"
 
 [[branch]]
-path = "src/cadrumo/application/modelo/_external_import_actions.py"
+path = "src/cadrumo/application/modelo/external_import_actions.py"
 enclosing_symbol = "import_external_filing_evidence"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
@@ -1170,7 +1170,7 @@ group = "modelo-path-routing"
 selects = "calculated_m210_plazo_notice"
 
 [[branch]]
-path = "src/cadrumo/application/modelo/_external_import_actions.py"
+path = "src/cadrumo/application/modelo/external_import_actions.py"
 enclosing_symbol = "import_external_filing_source"
 modelo_codes = "M303"
 classification = "orchestration_routing"

@@ -41,8 +41,8 @@ from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
-from ...modelo._external_import_actions import import_external_filing_evidence
 from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.external_import_actions import import_external_filing_evidence
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,

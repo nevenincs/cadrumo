@@ -132,7 +132,7 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.modelo._calculation_actions",
         "cadrumo.application.modelo._calculation_preparation",
         "cadrumo.application.modelo._export",
-        "cadrumo.application.modelo._external_import_actions",
+        "cadrumo.application.modelo.external_import_actions",
         "cadrumo.application.modelo._filing_actions",
         "cadrumo.application.modelo._history",
         "cadrumo.application.modelo._iva_wallet_gate",

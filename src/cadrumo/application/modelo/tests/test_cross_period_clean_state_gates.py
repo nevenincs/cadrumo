@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
@@ -19,7 +21,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
@@ -52,10 +53,10 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
-from .._external_import_actions import import_external_filing_evidence
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
 from .._verification_cross_period import _cross_period_clean_state_findings
+from .._work_lifecycle import create_work_unit
+from ..external_import_actions import import_external_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

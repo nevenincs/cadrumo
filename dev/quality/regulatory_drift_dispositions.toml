@@ -882,7 +882,7 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/modelo/_external_import_actions.py"
+path = "src/cadrumo/application/modelo/external_import_actions.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 

@@ -67,7 +67,6 @@ from .._calculation_actions import (
     list_calculation_revisions,
     mark_revision_verificado_completo,
 )
-from .._external_import_actions import import_external_filing_evidence
 from .._filing_actions import (
     file_modelo_revision,
     get_filing_record,
@@ -81,6 +80,7 @@ from .._work_lifecycle import (
     get_work_unit,
 )
 from .._workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
+from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
