@@ -276,6 +276,36 @@ unclassified, duplicate, stale, or missing field path. The manifest is
 conformance evidence, not runtime registry authority, and it never causes a
 backend-only field to enter the public payload.
 
+**Amendment (S278): STATIC_INSPECTION gets its own complete manifest over its
+own type universe, never a filtered view of the graded manifest.** The prior
+text described one generator without naming its root, and the only generator
+built walked `RegistrySnapshot` -- a type universe a static inspection never
+loads (`RegistryRevisionInspection` "cannot calculate, render, or file
+anything," and structurally carries neither materialization, verification,
+nor filing state). Reusing that manifest for static inspection, with
+per-entry availability layered on top, was considered and rejected: it is the
+same "one degraded result presented as a complete one" pattern this record
+already rejects for the REGISTRY projection itself ("Static revision
+inspection and a grade-admitted snapshot make different authority claims and
+cannot be represented as one degraded result"), and the identical reasoning
+applies to the manifest with no less force.
+
+`generate_modelo_workspace_field_manifest_for_inspection` roots a second walk
+at `RegistryRevisionInspection` itself, reusing the SAME classification
+function (`_classify_node`/`_projected_destination`) applied to a second root
+-- not a second, independently authored copy of the classification rules,
+since the underlying registry-compiler types (`FormulaDefinition`,
+`DataBindingDefinition`, `RelationDefinition`, and the identity kinds they
+carry) are the identical types both roots reach, just through different
+container shapes. The two admissions' manifests carry distinct digests over
+distinct traversal roots and are never compared against each other's
+coordinate. `RegistryRevisionInspection` carries no full `ModeloRevision`, so
+its manifest has no `derived.export_layout.*` root; the `selector.*` roots
+are shared unchanged, since selector models are a pure function of
+`BindingSourceKind`, independent of which admission is reading.
+`ModeloWorkspaceFieldManifestPortV1` accepts either admission's authority
+object and dispatches to the matching generator.
+
 ### Canonical capability and refusal facade
 
 Workspace V1 reports the closed read-only capability set for schema inspection,
@@ -295,7 +325,7 @@ spelling:
 
 | Capability | Canonical producer contributor | Grounding |
 |---|---|---|
-| `schema_inspection` | `field_manifest` (`workspace_field_manifest`) | Schema inspection is reading the classified field denominator; `field_manifest` is its sole producer. Static inspection reads this contributor, so `schema_inspection` is the one capability static inspection can answer `available` for -- contingent on the field-manifest root question isolated separately (`W03.P20.S278`); if that Step rules static inspection has no valid manifest root at all, `schema_inspection` is `unmeasured` for that admission instead. |
+| `schema_inspection` | `field_manifest` (`workspace_field_manifest`) | Schema inspection is reading the classified field denominator; `field_manifest` is its sole producer. `W03.P20.S278` resolved static inspection's own manifest root, so `field_manifest` is a real STATIC_INSPECTION contributor and `schema_inspection` is `available` for that admission -- the one capability static inspection answers `available` for. |
 | `calculation_materialization` | `calculation` (`calculation_materialization`) | Identical producer-identity string; no inference required. |
 | `verification_readiness` | `bounded_review` (`modelo_work_review`) | `ModeloWorkReview` is the accepted canonical bounded review projection tracking verification state, findings, and progress (`2026-08-10-casilla-schema-read-model-adr`) -- the review facet IS the verification-readiness fact. |
 | `filing_draft_readiness` | `readiness` (`modelo_readiness`) | `ProjectionModeloReadiness`'s axes (`profile_ready`, `registry_ready`, `binding_ready`, `ledger_ready`) are exactly the preflight gate checked before a filing draft can be produced, discussed immediately below this table in the existing "Modelo readiness is selected from..." paragraph. |

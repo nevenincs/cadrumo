@@ -23,9 +23,13 @@ from ..workspace_manifest import (
     _Node,
     _walk_annotation,
     capture_modelo_workspace_manifest,
+    capture_modelo_workspace_manifest_for_inspection,
     generate_modelo_workspace_field_manifest,
+    generate_modelo_workspace_field_manifest_for_inspection,
     read_modelo_workspace_manifest_current_coordinate,
+    read_modelo_workspace_manifest_current_coordinate_for_inspection,
     validate_modelo_workspace_field_manifest,
+    validate_modelo_workspace_field_manifest_for_inspection,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
 from ..workspace_producers import (
@@ -52,6 +56,17 @@ def _snapshot():
 @cache
 def _manifest() -> ModeloWorkspaceFieldManifestV1:
     return generate_modelo_workspace_field_manifest(_snapshot())
+
+
+@cache
+def _inspection():
+    """Use one real, exported static-inspection projection for the same coordinate."""
+    return bundled_authority().capture_law_selected_projection("303", filing_year=2025, period="4T").projection
+
+
+@cache
+def _inspection_manifest() -> ModeloWorkspaceFieldManifestV1:
+    return generate_modelo_workspace_field_manifest_for_inspection(_inspection())
 
 
 def _rebuild_manifest(
@@ -329,3 +344,85 @@ def test_the_retired_private_manifest_module_is_gone() -> None:
     assert not (package / "_workspace_manifest.py").exists()
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("cadrumo.application.modelo._workspace_manifest")
+
+
+# --- S278: STATIC_INSPECTION gets its own complete manifest, over its own
+# type universe, never a filtered view into the snapshot-rooted manifest ---
+
+
+def test_inspection_manifest_is_a_real_authority_fixed_point_with_safe_classifications() -> None:
+    inspection = _inspection()
+    manifest = _inspection_manifest()
+
+    assert validate_modelo_workspace_field_manifest_for_inspection(manifest, inspection) is manifest
+    assert manifest.entries == tuple(sorted(manifest.entries, key=lambda entry: entry.path))
+    assert len({entry.path for entry in manifest.entries}) == len(manifest.entries)
+    assert any(entry.destination is not None for entry in manifest.entries)
+    assert any(entry.reason == "selector_configuration" for entry in manifest.entries)
+    assert all(path.startswith(("registry_revision_inspection", "selector.")) for path in manifest.traversal_roots)
+
+
+def test_inspection_manifest_has_no_export_layout_root() -> None:
+    """RegistryRevisionInspection carries no full ModeloRevision, so it derives no export layout."""
+    manifest = _inspection_manifest()
+
+    assert not any(path.startswith("derived.export_layout.") for path in manifest.traversal_roots)
+    assert not any(entry.path.startswith("derived.export_layout.") for entry in manifest.entries)
+
+
+def test_inspection_manifest_never_reaches_filing_grade_content() -> None:
+    """Admission-honesty: no entry can name a materialization, verification, or filing-state field.
+
+    RegistryRevisionInspection structurally has no such fields at all, so this
+    is a property of the walked type rather than a filter -- the manifest
+    cannot accidentally claim availability the inspection has no data for.
+    """
+    manifest = _inspection_manifest()
+
+    for entry in manifest.entries:
+        assert "materializ" not in entry.path
+        assert "verification" not in entry.path
+        assert "filed_at" not in entry.path
+        assert "calculation" not in entry.path
+
+
+def test_inspection_manifest_is_stable_across_regeneration() -> None:
+    inspection = _inspection()
+
+    first = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+    second = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+
+    assert first == second
+    assert first.manifest_digest == second.manifest_digest
+
+
+def test_inspection_manifest_digest_differs_from_the_snapshot_manifest_for_the_same_coordinate() -> None:
+    """Two distinct authority claims over the identical (modelo, revision) never collide."""
+    snapshot_manifest = _manifest()
+    inspection_manifest = _inspection_manifest()
+
+    assert snapshot_manifest.manifest_digest != inspection_manifest.manifest_digest
+    assert snapshot_manifest.traversal_roots != inspection_manifest.traversal_roots
+
+
+def test_inspection_capture_is_singleflight_and_current_against_its_own_coordinate() -> None:
+    inspection = _inspection()
+
+    first = capture_modelo_workspace_manifest_for_inspection(inspection)
+    second = capture_modelo_workspace_manifest_for_inspection(inspection)
+
+    assert first.generation == second.generation
+    assert first.comparison_domain == second.comparison_domain
+
+    current = read_modelo_workspace_manifest_current_coordinate_for_inspection(inspection)
+    assert first.require_current(current) is first
+
+
+def test_inspection_and_snapshot_manifest_captures_never_share_a_comparison_domain() -> None:
+    """The two admissions' captures must never validate against each other's coordinate."""
+    inspection_captured = capture_modelo_workspace_manifest_for_inspection(_inspection())
+    snapshot_coordinate = read_modelo_workspace_manifest_current_coordinate(_snapshot())
+
+    assert inspection_captured.comparison_domain != snapshot_coordinate.comparison_domain
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        inspection_captured.require_current(snapshot_coordinate)

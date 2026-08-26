@@ -20,6 +20,7 @@ from ...core.identity import ContentDigest
 from ...domain.calculations.registry.bindings import selector_model_for_source
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from .workspace_models import ModeloWorkspaceSchemaClassification
 
 _MANIFEST_VERSION = 1
@@ -49,6 +50,33 @@ _REGISTRY_ROOT_FIELDS = frozenset(
         "dependency_classifications",
         "convenio",
         "supplementary_ordenes",
+    }
+)
+
+# RegistryRevisionInspection deliberately excludes filing-grade content
+# (calculation, materialization, verification, filing state) -- it "cannot
+# calculate, render, or file anything" (static_inspection.py). Its top-level
+# fields are therefore a much smaller, structurally distinct denominator from
+# RegistrySnapshot's, not a subset reachable by reusing _REGISTRY_ROOT_FIELDS.
+_INSPECTION_ROOT_FIELDS = frozenset(
+    {
+        "modelo_id",
+        "revision_id",
+        "review_status",
+        "source_root",
+        "revision_source_refs",
+        "sources",
+        "source_ref_ids",
+        "legal_ref_ids",
+        "casilla_ids",
+        "binding_ids",
+        "projection_endpoints",
+        "formulas",
+        "parameters",
+        "bindings",
+        "relations",
+        "workbook_parity_refs",
+        "live_cross_references",
     }
 )
 
@@ -158,7 +186,32 @@ def generate_modelo_workspace_field_manifest(snapshot: RegistrySnapshot) -> Mode
     selector roots come exclusively from the public registry selector accessor.
     Neither raw authoring data nor Pydantic JSON Schema participates in this walk.
     """
-    roots = _manifest_roots(snapshot)
+    return _generate_manifest_from_roots(_manifest_roots(snapshot))
+
+
+def generate_modelo_workspace_field_manifest_for_inspection(
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceFieldManifestV1:
+    """Classify every reachable STATIC_INSPECTION type leaf and tagged branch.
+
+    S278: a static inspection makes a structurally distinct authority claim
+    from a graded snapshot (it "cannot calculate, render, or file anything"),
+    so it gets its own complete manifest over its own type universe rather
+    than a partial view filtered out of the snapshot-rooted manifest -- the
+    same "cannot be represented as one degraded result" principle already
+    governing the REGISTRY admission envelope applies identically here.
+    ``RegistryRevisionInspection`` carries no full ``ModeloRevision``, so it
+    has no export-layout root; selector roots are unchanged, since selector
+    models are picked purely by :class:`BindingSourceKind`, independent of
+    which admission is reading.
+    """
+    del inspection  # unused: the walk is over the TYPE, exactly like the snapshot walk
+    roots: list[_Root] = [("registry_revision_inspection", RegistryRevisionInspection)]
+    roots.extend(_selector_roots())
+    return _generate_manifest_from_roots(_sorted_unique_roots(roots))
+
+
+def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFieldManifestV1:
     nodes: dict[str, _Node] = {}
     for root_path, root_model in roots:
         _walk_annotation(
@@ -191,12 +244,42 @@ def validate_modelo_workspace_field_manifest(
     return manifest
 
 
-def _manifest_roots(snapshot: RegistrySnapshot) -> tuple[_Root, ...]:
-    roots: list[_Root] = [("registry_snapshot", RegistrySnapshot)]
+def validate_modelo_workspace_field_manifest_for_inspection(
+    manifest: ModeloWorkspaceFieldManifestV1,
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceFieldManifestV1:
+    """Refuse a STATIC_INSPECTION manifest that is stale or no longer classified."""
+    current = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+    if manifest != current:
+        raise ValueError("workspace field manifest is not the current static-inspection fixed point")
+    return manifest
+
+
+def _selector_roots() -> tuple[_Root, ...]:
+    """Return the admission-agnostic selector roots.
+
+    Purely a function of :class:`BindingSourceKind`, never of a specific
+    snapshot or inspection instance, so both admissions share the identical
+    set.
+    """
+    roots: list[_Root] = []
     for source in BindingSourceKind:
         selector_model = selector_model_for_source(source)
         if selector_model is not None:
             roots.append((f"selector.{source.value}", selector_model))
+    return tuple(roots)
+
+
+def _sorted_unique_roots(roots: list[_Root]) -> tuple[_Root, ...]:
+    root_paths = tuple(path for path, _ in roots)
+    if len(root_paths) != len(set(root_paths)):
+        raise ValueError("workspace field manifest has duplicate traversal roots")
+    return tuple(sorted(roots, key=lambda root: root[0]))
+
+
+def _manifest_roots(snapshot: RegistrySnapshot) -> tuple[_Root, ...]:
+    roots: list[_Root] = [("registry_snapshot", RegistrySnapshot)]
+    roots.extend(_selector_roots())
 
     generated_layouts = derive_export_layouts_from_bindings(snapshot.revision)
     for layout_type in sorted({type(layout) for layout in generated_layouts}, key=_schema_type_label):
@@ -383,7 +466,7 @@ def _classify_node(
             owner="domain.calculations.registry",
             reason="generated_export_layout",
         )
-    if path == "registry_snapshot.revision.review_status":
+    if path in ("registry_snapshot.revision.review_status", "registry_revision_inspection.review_status"):
         return _owned_entry(
             path=path,
             schema_type=schema_type,
@@ -405,6 +488,18 @@ def _classify_node(
         top_level = path.removeprefix("registry_snapshot.").split(".", maxsplit=1)[0]
         if top_level not in _REGISTRY_ROOT_FIELDS:
             raise ValueError(f"workspace field manifest cannot classify registry root {top_level!r}")
+        return _owned_entry(
+            path=path,
+            schema_type=schema_type,
+            node_kind=node_kind,
+            classification=ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
+            owner="domain.calculations.registry",
+            reason="registry_declaration",
+        )
+    if path.startswith("registry_revision_inspection."):
+        top_level = path.removeprefix("registry_revision_inspection.").split(".", maxsplit=1)[0]
+        if top_level not in _INSPECTION_ROOT_FIELDS:
+            raise ValueError(f"workspace field manifest cannot classify inspection root {top_level!r}")
         return _owned_entry(
             path=path,
             schema_type=schema_type,
@@ -677,6 +772,27 @@ def _manifest_comparison_domain(snapshot: RegistrySnapshot) -> str:
     return domain
 
 
+def _inspection_manifest_comparison_domain(inspection: RegistryRevisionInspection) -> str:
+    """Mint the non-persisted coordinate domain for one STATIC_INSPECTION manifest scope.
+
+    ``RegistryRevisionInspection`` "intentionally carries neither a filing
+    year nor a period" (static_inspection.py), so this domain is keyed by
+    modelo and revision alone -- there is no filing_year/period to fold in.
+    """
+    domain = content_hash_hex(
+        {
+            "owner": "application.modelo.workspace_manifest",
+            "namespace": "modelo.workspace_field_manifest.static_inspection",
+            "modelo": str(inspection.modelo_id),
+            "revision": str(inspection.revision_id),
+            "process_incarnation": _manifest_capture_process_nonce.hex(),
+        }
+    )
+    with _manifest_capture_lock:
+        _manifest_capture_domains.add(domain)
+    return domain
+
+
 def _manifest_generation_for(domain: str, observation: tuple[str, ...]) -> int:
     """Assign one injective, order-preserving generation per distinct observation."""
     global _manifest_capture_generation
@@ -717,6 +833,31 @@ def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorks
     )
 
 
+def read_modelo_workspace_manifest_current_coordinate_for_inspection(
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceManifestCurrentCoordinate:
+    """Return the typed current coordinate for same-domain STATIC_INSPECTION capture validation."""
+    manifest = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+    domain = _inspection_manifest_comparison_domain(inspection)
+    return ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
+def capture_modelo_workspace_manifest_for_inspection(
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceManifestCapture:
+    """Generate one STATIC_INSPECTION manifest and pair it with the coordinate of that same walk."""
+    manifest = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+    domain = _inspection_manifest_comparison_domain(inspection)
+    return ModeloWorkspaceManifestCapture(
+        manifest=manifest,
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
 __all__ = [
     "ModeloWorkspaceFieldManifestEntryV1",
     "ModeloWorkspaceFieldManifestV1",
@@ -724,7 +865,11 @@ __all__ = [
     "ModeloWorkspaceManifestCaptureError",
     "ModeloWorkspaceManifestCurrentCoordinate",
     "capture_modelo_workspace_manifest",
+    "capture_modelo_workspace_manifest_for_inspection",
     "generate_modelo_workspace_field_manifest",
+    "generate_modelo_workspace_field_manifest_for_inspection",
     "read_modelo_workspace_manifest_current_coordinate",
+    "read_modelo_workspace_manifest_current_coordinate_for_inspection",
     "validate_modelo_workspace_field_manifest",
+    "validate_modelo_workspace_field_manifest_for_inspection",
 ]

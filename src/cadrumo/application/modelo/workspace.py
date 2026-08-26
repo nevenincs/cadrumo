@@ -337,45 +337,65 @@ def capture_modelo_workspace_locale_summary(
 # it is reserved for a producer that DID run and declared the fact
 # inapplicable to the specific target.
 #
-# SCHEMA_INSPECTION is provisionally UNMEASURED too, by the identical rule:
-# field_manifest is the capability's canonical producer, and whether
-# field_manifest can produce a valid manifest for a STATIC_INSPECTION target
-# at all is the open W03.P20.S278 question. Flip this one row to AVAILABLE
-# once S278 supplies a field manifest static inspection can actually capture.
-_STATIC_INSPECTION_CAPABILITY_PRODUCERS: tuple[
-    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceProducerContractV1], ...
+# SCHEMA_INSPECTION is AVAILABLE (W03.P20.S278 resolved static inspection's
+# own field-manifest root, generate_modelo_workspace_field_manifest_for_inspection):
+# field_manifest is a real contributor for this admission, so schema_inspection
+# is the one capability static inspection answers AVAILABLE for.
+_STATIC_INSPECTION_CAPABILITY_DISPOSITIONS: tuple[
+    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceProducerContractV1, ModeloWorkspaceCapabilityDisposition],
+    ...,
 ] = (
-    (ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION, MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1),
-    (ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION, MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1),
-    (ModeloWorkspaceCapabilityName.VERIFICATION_READINESS, MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1),
-    (ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS, MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1),
-    (ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS, MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1),
+    (
+        ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
+        MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+        MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
+        MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
+        MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
+        MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
 )
 
 
 def static_inspection_modelo_workspace_capabilities(
     resolved_target: ModeloWorkspaceResolvedTargetV1,
 ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
-    """Return the complete STATIC_INSPECTION capability denominator, all UNMEASURED.
+    """Return the complete STATIC_INSPECTION capability denominator.
 
     Every row cites the capability's own canonical producer contributor per
     the S279 ADR amendment; see the module-level comment above this function.
-    All five are ``UNMEASURED`` for STATIC_INSPECTION today: the four
-    non-schema producers are contributors this admission structurally never
-    reads, and ``schema_inspection`` waits on W03.P20.S278. GRADED_SNAPSHOT's
-    dispositions are a distinct, not-yet-answered question and MUST NOT be
-    derived from this table.
+    ``schema_inspection`` is ``AVAILABLE`` -- field_manifest is a real
+    STATIC_INSPECTION contributor per S278. The other four are ``UNMEASURED``:
+    their producers are contributors this admission structurally never reads.
+    GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered question
+    and MUST NOT be derived from this table.
     """
     return tuple(
         ModeloWorkspaceCapabilityV1(
             capability=capability,
-            disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            disposition=disposition,
             target=resolved_target,
             selected_revision_id=resolved_target.law_selected_revision_id,
             producer_owner=contract.contributor.owner,
             producer=contract.contributor.producer,
         )
-        for capability, contract in _STATIC_INSPECTION_CAPABILITY_PRODUCERS
+        for capability, contract, disposition in _STATIC_INSPECTION_CAPABILITY_DISPOSITIONS
     )
 
 
