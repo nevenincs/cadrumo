@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import ast
 import importlib
-import inspect
 import json
 import re
 from pathlib import Path
@@ -78,6 +77,23 @@ def _locally_bound_names(path: Path) -> frozenset[str]:
     return frozenset(names)
 
 
+def _package_bound_names(package: object) -> frozenset[str]:
+    """Return every name the package ``__init__`` itself binds.
+
+    Read from source rather than by attribute lookup, so a submodule attribute
+    set by the import system is never mistaken for a re-export.
+    """
+    init = Path(package.__file__ or "")
+    tree = ast.parse(init.read_text(encoding="utf-8"), filename=str(init))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom | ast.Import):
+            names.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.Assign):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+    return frozenset(names)
+
+
 @pytest.mark.parametrize("relative_path", _keep_public_paths())
 def test_a_keep_public_module_advertises_only_what_it_defines(relative_path: str) -> None:
     """A public module may not re-export a symbol another module owns."""
@@ -104,14 +120,16 @@ def test_the_registry_package_binds_no_keep_public_symbol(relative_path: str) ->
     path = _ROOT / relative_path
     dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
     package = importlib.import_module(_PACKAGE)
-    defined_public = sorted(name for name in _locally_bound_names(path) if not name.startswith("_"))
+    defined_public = {name for name in _locally_bound_names(path) if not name.startswith("_")}
 
     assert defined_public, f"{dotted} defines no public symbol; the keep-public row describes nothing"
 
-    # Importing a submodule sets it as an attribute of its package. That is the
-    # import system, not a re-export, so a name resolving to a module is not a
-    # binding this rule is about.
-    bound = [name for name in defined_public if hasattr(package, name) and not inspect.ismodule(getattr(package, name))]
+    # What the package BINDS is read from its own source, never by attribute
+    # lookup. Importing a submodule makes it an attribute of its package, so
+    # attribute lookup invents bindings nobody wrote - and worse, masks a real
+    # one whenever a module defines a symbol sharing its own name, which
+    # validate_registry_scope does exactly.
+    bound = sorted(defined_public & _package_bound_names(package))
 
     assert not bound, f"the registry package binds {dotted} symbols: {bound}"
 
