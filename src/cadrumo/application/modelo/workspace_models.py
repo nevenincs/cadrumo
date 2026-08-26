@@ -51,6 +51,13 @@ _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+type _BoundedLocaleKey = Annotated[str, Field(min_length=1, max_length=256, pattern=r"^[a-z][a-z0-9_.-]*$")]
+"""Locale keys embed a base32hex-encoded arbitrary identity segment
+(:func:`~cadrumo.domain.calculations.registry.modelo_localization.encode_modelo_locale_segment`)
+for any casilla/binding/relation/etc id containing characters outside the
+plain-segment pattern, so a real key can exceed ``_BoundedCode``'s 128-char
+bound; 256 covers the longest real casilla id observed in the bundled
+registry (143 chars) with headroom."""
 type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
@@ -261,7 +268,7 @@ class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
     """One localized display string with its canonical resolution coordinates."""
 
     kind: Literal["localized"] = "localized"
-    locale_key: _BoundedCode
+    locale_key: _BoundedLocaleKey
     value: _BoundedLocalizedText
     locale: ModeloWorkspaceLocaleSummaryV1
 

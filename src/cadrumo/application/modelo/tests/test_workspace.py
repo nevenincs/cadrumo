@@ -32,10 +32,15 @@ from ..workspace import (
     resolve_modelo_workspace_target,
     resolve_static_inspection_baseline,
     resolve_static_inspection_schema_identity,
+    static_inspection_binding_schema_records,
     static_inspection_casilla_schema_records,
     static_inspection_contributors,
     static_inspection_evidence_horizon,
+    static_inspection_formula_schema_records,
     static_inspection_modelo_workspace_capabilities,
+    static_inspection_parameter_schema_records,
+    static_inspection_relation_schema_records,
+    static_inspection_schema_records,
 )
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
@@ -745,7 +750,7 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
         ),
     )
 
-    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
+    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1, ModeloWorkspaceLocalizedTextV1
 
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
 
@@ -755,13 +760,16 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
         casilla_ids.append(record.reference.casilla_id)
         assert record.legal_refs is None
         assert record.constraints is None
+        assert isinstance(record.label, ModeloWorkspaceLocalizedTextV1)
         assert record.label.value  # a real, non-empty label was resolved
 
     assert len(records) == len(inspection.casilla_ids)
     assert casilla_ids == sorted(inspection.casilla_ids)
 
     by_id = {casilla_id: record for casilla_id, record in zip(casilla_ids, records, strict=True)}
-    assert by_id["03"].label.value == "Rendimiento neto"
+    label = by_id["03"].label
+    assert isinstance(label, ModeloWorkspaceLocalizedTextV1)
+    assert label.value == "Rendimiento neto"
     assert any(op.formula_id == "modelo-130-pago-fraccionado-directa" for op in by_id["03"].formula_operands)
 
 
@@ -845,3 +853,131 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
             page_size=3,
             cursor=first_page.next_cursor,
         )
+
+
+def _real_303_inspection():
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection("303", filing_year=2026, period="1T")
+    inspection = capture.projection
+    assert isinstance(inspection, RegistryRevisionInspection)
+    return inspection
+
+
+def test_static_inspection_binding_schema_records_use_the_real_binding_definitions() -> None:
+    from ..workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_binding_schema_records(inspection)
+
+    assert len(records) == len(inspection.binding_ids)
+    binding_ids = []
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceBindingReferenceV1)
+        binding_ids.append(record.reference.binding_id)
+        assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
+        assert record.label.identifier == record.reference.binding_id
+        assert record.legal_refs is not None  # DataBindingDefinition is retained whole
+        assert record.constraints == ()
+    assert binding_ids == sorted(inspection.binding_ids)
+
+    by_id = dict(zip(binding_ids, records, strict=True))
+    target_binding = "modelo-303-compensacion-pendiente-anteriores"
+    assert any(
+        endpoint.relation_id == "modelo-303-rel-self-compensacion-anteriores"
+        for endpoint in by_id[target_binding].relation_endpoints
+    )
+
+
+def test_static_inspection_formula_schema_records_carry_their_own_full_operand_set() -> None:
+    from ..workspace_models import ModeloWorkspaceFormulaReferenceV1, ModeloWorkspaceTechnicalLabelV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_formula_schema_records(inspection)
+
+    assert len(records) == len(inspection.formulas)
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceFormulaReferenceV1)
+        assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
+        assert record.label.identifier == record.reference.formula_id
+        assert record.legal_refs is not None
+
+
+def test_static_inspection_relation_schema_records_state_both_of_their_own_endpoints() -> None:
+    from ..workspace_models import (
+        ModeloWorkspaceRelationReferenceV1,
+        ModeloWorkspaceRelationSourceEndpointReferenceV1,
+        ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    )
+
+    inspection = _real_303_inspection()
+    records = static_inspection_relation_schema_records(inspection)
+
+    assert len(records) == len(inspection.relations)
+    record = records[0]
+    assert isinstance(record.reference, ModeloWorkspaceRelationReferenceV1)
+    assert record.reference.relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    endpoint_kinds = {type(endpoint) for endpoint in record.relation_endpoints}
+    assert endpoint_kinds == {
+        ModeloWorkspaceRelationSourceEndpointReferenceV1,
+        ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    }
+
+
+def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas() -> None:
+    from ..workspace_models import ModeloWorkspaceParameterReferenceV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_parameter_schema_records(inspection)
+
+    assert len(records) == len(inspection.parameters)
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceParameterReferenceV1)
+        assert record.legal_refs is not None
+
+
+def test_static_inspection_schema_records_covers_all_five_reference_kinds_deterministically() -> None:
+    from ....core import OutputLanguage
+
+    inspection = _real_303_inspection()
+    target = _minimal_resolved_target(inspection)
+
+    records = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
+    records_again = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
+
+    expected_total = (
+        len(inspection.casilla_ids)
+        + len(inspection.binding_ids)
+        + len(inspection.formulas)
+        + len(inspection.relations)
+        + len(inspection.parameters)
+    )
+    assert len(records) == expected_total
+    assert records == records_again  # deterministic ordering across identical repeated reads
+
+    kinds = {record.reference.kind for record in records}
+    assert kinds == {"casilla", "binding", "formula", "relation", "parameter"}
+
+
+def _minimal_resolved_target(inspection):
+    from ..workspace_models import ModeloWorkspaceResolvedTargetV1, ModeloWorkspaceRevisionAssertionV1
+
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        law_selected_revision_id=inspection.revision_id,
+        review_status=inspection.review_status,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+    )
