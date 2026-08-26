@@ -49,8 +49,13 @@ from .workspace_models import (
     ModeloWorkspaceTargetV1,
 )
 from .workspace_producers import (
-    MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceLocaleCataloguePortV1,
+    ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
@@ -319,47 +324,58 @@ def capture_modelo_workspace_locale_summary(
     )
 
 
-# The four non-schema STATIC_INSPECTION capabilities are NOT_APPLICABLE by a
-# structural fact RegistryRevisionInspection states about itself ("It cannot
-# calculate, render, or file anything" -- static_inspection.py), never a
-# Workspace judgement call. SCHEMA_INSPECTION is AVAILABLE because the
-# inspection IS precisely that projection. REGISTRY's own contributor
-# identity is cited as producer_owner/producer for all five rows: it is the
-# canonical producer both of the one capability that IS available and of the
-# structural fact that makes the other four NOT_APPLICABLE for this
-# admission -- not a guessed per-capability contributor mapping.
-_STATIC_INSPECTION_CAPABILITY_DISPOSITIONS: tuple[
-    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceCapabilityDisposition], ...
+# S279 (ADR amendment "Canonical capability and refusal facade"): the
+# capability-to-producer mapping is fixed by which of the eight contributors
+# static inspection structurally never reads ("Static inspection captures
+# exactly registry, work, locale_catalogue, and field_manifest; it does not
+# read bounded_review, calculation, readiness, or closure"), not by matching
+# enum spellings. Every one of those four excluded contributors is UNMEASURED
+# for this admission per the ADR's own rule -- "absence of a producer... is
+# unmeasured, never available" -- which the ADR amendment clarifies covers an
+# admission-structural exclusion, not only a graded producer that ran and
+# declined to answer. NOT_APPLICABLE was the wrong disposition for this case;
+# it is reserved for a producer that DID run and declared the fact
+# inapplicable to the specific target.
+#
+# SCHEMA_INSPECTION is provisionally UNMEASURED too, by the identical rule:
+# field_manifest is the capability's canonical producer, and whether
+# field_manifest can produce a valid manifest for a STATIC_INSPECTION target
+# at all is the open W03.P20.S278 question. Flip this one row to AVAILABLE
+# once S278 supplies a field manifest static inspection can actually capture.
+_STATIC_INSPECTION_CAPABILITY_PRODUCERS: tuple[
+    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceProducerContractV1], ...
 ] = (
-    (ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION, ModeloWorkspaceCapabilityDisposition.AVAILABLE),
-    (ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
-    (ModeloWorkspaceCapabilityName.VERIFICATION_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
-    (ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
-    (ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
+    (ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION, MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1),
+    (ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION, MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1),
+    (ModeloWorkspaceCapabilityName.VERIFICATION_READINESS, MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1),
+    (ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS, MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1),
+    (ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS, MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1),
 )
 
 
 def static_inspection_modelo_workspace_capabilities(
     resolved_target: ModeloWorkspaceResolvedTargetV1,
 ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
-    """Return the complete, documented STATIC_INSPECTION capability denominator.
+    """Return the complete STATIC_INSPECTION capability denominator, all UNMEASURED.
 
-    Every disposition here is read off ``RegistryRevisionInspection``'s own
-    stated scope, never inferred; see the module-level comment above this
-    function. GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered
-    question and MUST NOT be derived from this table.
+    Every row cites the capability's own canonical producer contributor per
+    the S279 ADR amendment; see the module-level comment above this function.
+    All five are ``UNMEASURED`` for STATIC_INSPECTION today: the four
+    non-schema producers are contributors this admission structurally never
+    reads, and ``schema_inspection`` waits on W03.P20.S278. GRADED_SNAPSHOT's
+    dispositions are a distinct, not-yet-answered question and MUST NOT be
+    derived from this table.
     """
-    contributor = MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor
     return tuple(
         ModeloWorkspaceCapabilityV1(
             capability=capability,
-            disposition=disposition,
+            disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
             target=resolved_target,
             selected_revision_id=resolved_target.law_selected_revision_id,
-            producer_owner=contributor.owner,
-            producer=contributor.producer,
+            producer_owner=contract.contributor.owner,
+            producer=contract.contributor.producer,
         )
-        for capability, disposition in _STATIC_INSPECTION_CAPABILITY_DISPOSITIONS
+        for capability, contract in _STATIC_INSPECTION_CAPABILITY_PRODUCERS
     )
 
 

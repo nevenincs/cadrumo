@@ -402,7 +402,7 @@ def test_locale_summary_falls_back_to_spanish_when_the_requested_language_has_no
 def test_static_inspection_capabilities_cover_the_closed_denominator_exactly_once(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """The five capabilities are documented, not inferred, for STATIC_INSPECTION."""
+    """All five capabilities are UNMEASURED for STATIC_INSPECTION (S279), each citing its own producer."""
     bucket_id, repository = workspace_repos
     authority = bundled_authority()
     resolved = resolve_modelo_workspace_target(
@@ -416,16 +416,56 @@ def test_static_inspection_capabilities_cover_the_closed_denominator_exactly_onc
 
     by_name = {row.capability: row for row in capabilities}
     assert set(by_name) == set(ModeloWorkspaceCapabilityName)
-    assert by_name[ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION].disposition == (
-        ModeloWorkspaceCapabilityDisposition.AVAILABLE
-    )
-    for capability_name in (
-        ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
-        ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
-        ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
-        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
-    ):
-        assert by_name[capability_name].disposition == ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE
     for row in capabilities:
+        assert row.disposition == ModeloWorkspaceCapabilityDisposition.UNMEASURED
         assert row.selected_revision_id == resolved.law_selected_revision_id
         assert row.target == resolved
+    expected_producers = {
+        ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION: "workspace_field_manifest",
+        ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION: "calculation_materialization",
+        ModeloWorkspaceCapabilityName.VERIFICATION_READINESS: "modelo_work_review",
+        ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS: "modelo_readiness",
+        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS: "registry_closure",
+    }
+    for capability_name, expected_producer in expected_producers.items():
+        assert by_name[capability_name].producer == expected_producer
+
+
+def test_static_inspection_capabilities_are_identical_regardless_of_work_state(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """Capability dispositions must not be inferred from work_state, review_status or any neighbour.
+
+    Proves S279's rule directly: the same STATIC_INSPECTION capability
+    dispositions and producers are returned whether or not a work unit
+    exists, and whether the requested-axis assertion is present or absent --
+    none of those neighbouring facts may leak into a capability disposition
+    that is supposed to be copied from its own canonical producer alone.
+    """
+    bucket_id, repository = workspace_repos
+    authority = bundled_authority()
+
+    absent_target = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    present_target = resolve_modelo_workspace_target(
+        _visible_target(bucket_id, revision_id=_LAW_SELECTED_REVISION_ID),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert absent_target.work_unit_id is None
+    assert present_target.work_unit_id is not None
+    assert present_target.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+
+    absent_capabilities = static_inspection_modelo_workspace_capabilities(absent_target)
+    present_capabilities = static_inspection_modelo_workspace_capabilities(present_target)
+
+    absent_shape = {(row.capability, row.disposition, row.producer) for row in absent_capabilities}
+    present_shape = {(row.capability, row.disposition, row.producer) for row in present_capabilities}
+    assert absent_shape == present_shape

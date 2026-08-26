@@ -284,6 +284,45 @@ and filing-export readiness. Each record is `available`, `not_applicable`,
 `refused`, or `unmeasured` and carries the exact target and revision coordinate,
 canonical producer identity, safe evidence references, and source disposition.
 
+**Amendment (S279): the capability-to-producer mapping is exact, not
+name-matched.** Static inspection captures exactly `registry`, `work`,
+`locale_catalogue`, and `field_manifest`; it does not read `bounded_review`,
+`calculation`, `readiness`, or `closure` (see "Locale and consistency
+boundary" above). That is four contributors excluded from static inspection
+against four non-schema capabilities, and the correspondence is fixed by each
+contributor's own stated role, not inferred from the capability's enum
+spelling:
+
+| Capability | Canonical producer contributor | Grounding |
+|---|---|---|
+| `schema_inspection` | `field_manifest` (`workspace_field_manifest`) | Schema inspection is reading the classified field denominator; `field_manifest` is its sole producer. Static inspection reads this contributor, so `schema_inspection` is the one capability static inspection can answer `available` for -- contingent on the field-manifest root question isolated separately (`W03.P20.S278`); if that Step rules static inspection has no valid manifest root at all, `schema_inspection` is `unmeasured` for that admission instead. |
+| `calculation_materialization` | `calculation` (`calculation_materialization`) | Identical producer-identity string; no inference required. |
+| `verification_readiness` | `bounded_review` (`modelo_work_review`) | `ModeloWorkReview` is the accepted canonical bounded review projection tracking verification state, findings, and progress (`2026-08-10-casilla-schema-read-model-adr`) -- the review facet IS the verification-readiness fact. |
+| `filing_draft_readiness` | `readiness` (`modelo_readiness`) | `ProjectionModeloReadiness`'s axes (`profile_ready`, `registry_ready`, `binding_ready`, `ledger_ready`) are exactly the preflight gate checked before a filing draft can be produced, discussed immediately below this table in the existing "Modelo readiness is selected from..." paragraph. |
+| `filing_export_readiness` | `closure` (`registry_closure`) | The closure report's own limb is named `filing-export` in the existing "Registry completeness is selected from..." paragraph below -- an exact limb-name match. |
+
+**Amendment (S279): `not_applicable` is reserved for a coordinate-level fact
+about the FILING TARGET, never for a contributor an admission structurally
+never reads.** The single existing rule -- "absence of a producer or
+measurement is `unmeasured`, never available" -- governs both cases: a graded
+snapshot whose canonical producer declined to answer, AND a static inspection
+whose admission kind never invokes the contributor at all, are both
+"absence of a producer" for that read. Static inspection's four excluded
+capabilities (`calculation_materialization`, `verification_readiness`,
+`filing_draft_readiness`, `filing_export_readiness`) are therefore
+`unmeasured`, not `not_applicable` -- reversing the disposition this record
+previously accepted without this table, which had reasoned from
+`RegistryRevisionInspection`'s own docstring ("cannot calculate, render, or
+file anything") rather than from this rule. That docstring answers a
+different question -- whether the admission COULD ever produce the fact --
+not the question the disposition enum encodes, which is whether THIS read's
+canonical producer answered. `not_applicable` remains reserved for a graded
+snapshot that DID invoke the right producer and that producer declared the
+capability inapplicable to the specific target (for example, a source
+disposition of `not_required` for the filing target's regime) -- a
+target-level fact from a producer that ran, never an admission-level fact
+about a producer that never ran.
+
 Modelo readiness is selected from the canonical
 `ProjectionModeloReadiness` without collapsing its axes. The Workspace DTO
 preserves `profile_ready`, `per_operation_requirements_assessed`,
