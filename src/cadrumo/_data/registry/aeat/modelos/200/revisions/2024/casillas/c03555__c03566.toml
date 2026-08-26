@@ -6,7 +6,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03556"
@@ -16,7 +16,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03557"
@@ -26,7 +26,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03558"
@@ -36,7 +36,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03559"
@@ -46,7 +46,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03560"
@@ -56,7 +56,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03561"
@@ -66,7 +66,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03562"
@@ -76,7 +76,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03563"
@@ -86,7 +86,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03564"
@@ -96,7 +96,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03565"
@@ -106,7 +106,7 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03566"
@@ -116,5 +116,5 @@ data_type = "money"
 semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
