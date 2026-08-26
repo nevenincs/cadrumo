@@ -136,12 +136,7 @@ class _SilentRegistryAuthorityLifecycleObserver:
 _SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
 _authority_process_pid = os.getpid()
 _authority_process_nonce = token_bytes(32)
-
-
-def _capture_process_binding() -> tuple[int, bytes]:
-    """Capture the guarded process incarnation for an opaque coordinate value."""
-    _guard_authority_process()
-    return _authority_process_pid, _authority_process_nonce
+_authority_process_domains: set[ContentDigest] = set()
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,17 +146,12 @@ class RegistryAuthorityCapture:
     projection: RegistryAuthorityProjection
     comparison_domain: ContentDigest
     generation: int
-    _process_binding: tuple[int, bytes] = field(default_factory=_capture_process_binding, repr=False, compare=False)
 
     def require_current(self, current: RegistryAuthorityCurrentCoordinate) -> RegistryAuthorityCapture:
         """Refuse a currentness comparison outside this physical process domain."""
-        self._require_creator_process()
+        _require_authority_process_domain(self.comparison_domain)
         current.require_current(self)
         return self
-
-    def _require_creator_process(self) -> None:
-        if self._process_binding != _capture_process_binding():
-            raise RegistrySnapshotError("registry authority capture belongs to another process incarnation")
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,12 +160,11 @@ class RegistryAuthorityCurrentCoordinate:
 
     comparison_domain: ContentDigest
     generation: int
-    _process_binding: tuple[int, bytes] = field(default_factory=_capture_process_binding, repr=False, compare=False)
 
     def require_current(self, captured: RegistryAuthorityCapture) -> RegistryAuthorityCurrentCoordinate:
         """Require a capture from this exact root pair and process incarnation."""
-        self._require_creator_process()
-        captured._require_creator_process()  # pyright: ignore[reportPrivateUsage]  # paired opaque coordinates own this guard
+        _require_authority_process_domain(self.comparison_domain)
+        _require_authority_process_domain(captured.comparison_domain)
         if self.comparison_domain != captured.comparison_domain:
             raise RegistrySnapshotError(
                 "registry authority coordinates can compare only within one physical-root process domain"
@@ -183,10 +172,6 @@ class RegistryAuthorityCurrentCoordinate:
         if self.generation != captured.generation:
             raise RegistrySnapshotError("registry authority capture is no longer current")
         return self
-
-    def _require_creator_process(self) -> None:
-        if self._process_binding != _capture_process_binding():
-            raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
 
 
 @dataclass(frozen=True, slots=True)
@@ -522,16 +507,26 @@ def _authority_comparison_domain_payload(identity: _AuthorityRootPairIdentity) -
 
 def _authority_comparison_domain(identity: _AuthorityRootPairIdentity) -> ContentDigest:
     """Return the non-persisted coordinate domain for one resolved root pair."""
-    return content_hash_hex(_authority_comparison_domain_payload(identity))
+    domain = content_hash_hex(_authority_comparison_domain_payload(identity))
+    _authority_process_domains.add(domain)
+    return domain
+
+
+def _require_authority_process_domain(domain: ContentDigest) -> None:
+    """Refuse a coordinate domain not minted in this process incarnation."""
+    _guard_authority_process()
+    if domain not in _authority_process_domains:
+        raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
 
 
 def _rebuild_authority_process_state() -> None:
     """Re-key process-local authority state without touching inherited locks."""
-    global _authority_process_pid, _authority_process_nonce
+    global _authority_process_pid, _authority_process_nonce, _authority_process_domains
     global _authority_state_lock, _authority_load_barrier, _authority_load_states
     global _authority_generation, _authority_reset_epoch
     _authority_process_pid = os.getpid()
     _authority_process_nonce = token_bytes(32)
+    _authority_process_domains = set()
     _authority_state_lock = RLock()
     _authority_load_barrier = _AuthorityLoadBarrier()
     _authority_load_states = {}
