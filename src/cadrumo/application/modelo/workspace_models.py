@@ -516,9 +516,9 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     applicability: Annotated[
         tuple[ModeloWorkspaceApplicabilityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
     ] = ()
-    constraints: Annotated[
-        tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
-    ] | None = ()
+    constraints: (
+        Annotated[tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)] | None
+    ) = ()
     """``None`` means this admission's producer never carries constraint
     declarations for this reference kind (S283, same distinction as
     ``legal_refs``): a static inspection has no ``CasillaDefinition`` to
@@ -842,10 +842,39 @@ class ModeloWorkspaceBindingRequirementV1(_WorkspaceModel):
     input_channel: Annotated[str, Field(min_length=1, max_length=16)]
 
 
+class ModeloWorkspaceLedgerTransactionSubjectV1(_WorkspaceModel):
+    """A ledger-preflight issue attached to one identified transaction."""
+
+    kind: Literal["transaction"] = "transaction"
+    transaction_id: TransactionId
+
+
+class ModeloWorkspaceLedgerPeriodSubjectV1(_WorkspaceModel):
+    """A ledger-preflight issue that is not tied to any one transaction.
+
+    S291: :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue`
+    carries ``transaction_id: TransactionId | Literal["__period__"]`` for a
+    condition scoped to the whole period rather than one row (an unsupported
+    period with no date span, per ``_unsupported_period_issue``). Collapsing
+    that case into a required ``TransactionId`` would either drop the issue
+    (silent under-declaration on exactly the axis a taxpayer consults before
+    filing) or pin it to a fabricated transaction that has nothing to do with
+    it; this type represents the period-level case as itself.
+    """
+
+    kind: Literal["period"] = "period"
+
+
+type ModeloWorkspaceLedgerIssueSubjectV1 = Annotated[
+    ModeloWorkspaceLedgerTransactionSubjectV1 | ModeloWorkspaceLedgerPeriodSubjectV1,
+    Field(discriminator="kind"),
+]
+
+
 class ModeloWorkspaceLedgerIssueV1(_WorkspaceModel):
     """One bounded ledger-preflight issue preserving its canonical typed axis."""
 
-    transaction_id: TransactionId
+    subject: ModeloWorkspaceLedgerIssueSubjectV1
     reason: LedgerPreflightIssueReason
     detail: _BoundedLocalizedText
 
@@ -1212,7 +1241,10 @@ __all__ = [
     "ModeloWorkspaceGradedSnapshotAdmissionV1",
     "ModeloWorkspaceGradedSnapshotResultV1",
     "ModeloWorkspaceGradedSnapshotScopeV1",
+    "ModeloWorkspaceLedgerIssueSubjectV1",
     "ModeloWorkspaceLedgerIssueV1",
+    "ModeloWorkspaceLedgerPeriodSubjectV1",
+    "ModeloWorkspaceLedgerTransactionSubjectV1",
     "ModeloWorkspaceLegalEvidenceReferenceV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
