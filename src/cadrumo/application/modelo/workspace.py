@@ -32,10 +32,10 @@ from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
-    assert_work_target_revision,
 )
 from .workspace_models import (
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
@@ -127,14 +127,18 @@ def resolve_modelo_workspace_revision_axes(
     the coordinates that resolution carries (``resolution.modelo``,
     ``resolution.filing_year``, ``resolution.period``) and from no other
     source. This function never captures REGISTRY itself -- it only evaluates
-    the two axes against what the caller already captured, through the sole
-    pure :func:`assert_work_target_revision`.
+    the two axes against what the caller already captured.
 
-    A mismatch on either axis is NOT swallowed into a boolean: the raised
-    :class:`ModeloWorkRegistryYearMismatchError` names which axis diverged in
-    ``err.args[0]`` prose only, so the caller wanting per-axis dispositions
-    recomputes membership by re-checking each axis against the same law
-    revision id below, once per axis, never trusting the exception's shape.
+    This function NEVER raises on a mismatch. ``ModeloWorkspaceRevisionAssertionV1``
+    has a ``MISMATCHED`` disposition member precisely because the shared
+    Workspace contract expects the mismatch surfaced as typed data, carried
+    into ``ModeloWorkspaceRevisionMismatchRefusalV1`` by the assembly layer --
+    an exception escaping here would destroy the very information that typed
+    refusal exists to carry. A caller that wants the canonical translated
+    mismatch text (for example to construct that refusal's prose) reuses the
+    sole pure :func:`assert_work_target_revision` itself, over the same
+    ``requested_revision_id`` / ``stored_revision_id`` / law revision triple
+    this function computed its dispositions from; it is not called here.
     """
     requested_revision_id = resolution.requested_revision_id
     stored_revision_id = resolution.work_unit.revision_id if resolution.work_unit is not None else None
@@ -148,28 +152,6 @@ def resolve_modelo_workspace_revision_axes(
     ):
         if candidate is not None and candidate.strip() != law_revision_id:
             mismatched.add(source)
-
-    if mismatched:
-        # Reuse the sole pure assertion to raise the canonical, translated
-        # refusal text -- assert_work_target_revision remains the single place
-        # the mismatch wording and the "why" prose are authored, even though
-        # the per-axis disposition below is what the caller actually persists.
-        # comparison_domain/generation are irrelevant to the pure check itself
-        # (only .projection.revision_id is read), so a same-process sentinel
-        # coordinate is sufficient here -- no second REGISTRY read occurs.
-        from ...domain.calculations.registry.authority import RegistryAuthorityCapture
-
-        raw_projection = (
-            registry_projection.inspection
-            if registry_projection.inspection is not None
-            else registry_projection.snapshot
-        )
-        assert raw_projection is not None
-        assert_work_target_revision(
-            RegistryAuthorityCapture(projection=raw_projection, comparison_domain=law_revision_id, generation=1),
-            requested_revision_id=requested_revision_id,
-            stored_revision_id=stored_revision_id,
-        )
 
     return ModeloWorkspaceRevisionAxes(
         law_selected_revision_id=law_revision_id,
@@ -231,9 +213,51 @@ def capture_modelo_workspace_target_axes(
     return resolution, registry_projection, axes
 
 
+def resolve_modelo_workspace_target(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+) -> ModeloWorkspaceResolvedTargetV1:
+    """Capture WORK-then-REGISTRY and assemble the shared resolved-target record.
+
+    This is the shared shape both admissions build their projection or
+    refusal on top of. It carries no mismatch judgement of its own beyond
+    what ``ModeloWorkspaceRevisionAxes`` already computed: a caller finding
+    either assertion at ``MISMATCHED`` builds
+    ``ModeloWorkspaceRevisionMismatchRefusalV1`` from this same record rather
+    than treating the mismatch as an exception -- this function never raises
+    for a revision mismatch.
+    """
+    resolution, registry_projection, axes = capture_modelo_workspace_target_axes(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=catalogue_repository,
+        authority=authority,
+    )
+    work_unit = resolution.work_unit
+    assert resolution.modelo is not None
+    assert resolution.filing_year is not None
+    assert resolution.period is not None
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id=resolution.bucket_id,
+        modelo=resolution.modelo,
+        filing_year=resolution.filing_year,
+        period=resolution.period,
+        law_selected_revision_id=axes.law_selected_revision_id,
+        review_status=registry_projection.review_status,
+        requested_revision_assertion=axes.requested_revision_assertion,
+        stored_revision_assertion=axes.stored_revision_assertion,
+        work_unit_id=work_unit.work_unit_id if work_unit is not None else None,
+        work_state=work_unit.state if work_unit is not None else None,
+    )
+
+
 __all__ = [
     "ModeloWorkspaceRevisionAxes",
     "capture_modelo_workspace_target_axes",
     "modelo_work_selector_request_for_target",
     "resolve_modelo_workspace_revision_axes",
+    "resolve_modelo_workspace_target",
 ]

@@ -12,6 +12,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     Period,
     RegistryAuthorityGrade,
+    RevisionReviewStatus,
     SourceConnectivityProofAuthority,
     content_hash_hex,
 )
@@ -369,6 +370,14 @@ class ModeloWorkspaceRegistryProjectionV1(_WorkspaceProducerModel):
             return self.inspection.revision_id
         assert self.snapshot is not None
         return self.snapshot.revision.id
+
+    @property
+    def review_status(self) -> RevisionReviewStatus:
+        """Return the revision's own governance stamp, whichever admission shape carries it."""
+        if self.inspection is not None:
+            return self.inspection.review_status
+        assert self.snapshot is not None
+        return self.snapshot.revision.review_status
 
 
 class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):

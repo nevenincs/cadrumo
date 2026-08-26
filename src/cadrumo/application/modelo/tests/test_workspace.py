@@ -18,7 +18,11 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
-from ..workspace import capture_modelo_workspace_target_axes, modelo_work_selector_request_for_target
+from ..workspace import (
+    capture_modelo_workspace_target_axes,
+    modelo_work_selector_request_for_target,
+    resolve_modelo_workspace_target,
+)
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
     ModeloWorkspaceExactWorkUnitTargetV1,
@@ -148,10 +152,13 @@ def test_requested_and_stored_axes_are_judged_independently_against_the_same_cap
     assert axes.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
 
 
-def test_a_stored_revision_diverging_from_the_law_selected_one_refuses(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+def _corrupt_stored_revision(
+    repository: WorkUnitCatalogueRepository,
+    work_unit: WorkUnit,
+    *,
+    corrupted_revision_id: str = "not-the-law-selected-revision",
 ) -> None:
-    """A stale stored revision id must never silently select the resolution it is judged by.
+    """Write a work unit whose stored revision has drifted from the law-selected one.
 
     ``create_work_unit`` itself re-confirms the law-selected pairing at write
     time, so a genuinely stale stored revision (the registry's law-selected
@@ -162,9 +169,6 @@ def test_a_stored_revision_diverging_from_the_law_selected_one_refuses(
     """
     from ....domain.modelos import WorkUnitCatalogue, derive_work_unit_id
 
-    bucket_id, repository = workspace_repos
-    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
-    corrupted_revision_id = "not-the-law-selected-revision"
     payload = work_unit.model_dump()
     payload.update(
         work_unit_id=derive_work_unit_id(
@@ -177,14 +181,61 @@ def test_a_stored_revision_diverging_from_the_law_selected_one_refuses(
         revision_id=corrupted_revision_id,
     )
     repository.save(WorkUnitCatalogue.from_work_units((WorkUnit(**payload),)))
+
+
+def test_a_stored_revision_diverging_from_the_law_selected_one_is_typed_data_not_an_exception(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A mismatch must surface as a MISMATCHED disposition, never an exception that erases it.
+
+    ``ModeloWorkspaceRevisionMismatchRefusalV1`` is built FROM the mismatched
+    axes; an exception escaping the axis computation would destroy the exact
+    information that typed refusal exists to carry.
+    """
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    _corrupt_stored_revision(repository, work_unit)
     authority = bundled_authority()
 
+    resolution, _projection, axes = capture_modelo_workspace_target_axes(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolution.work_unit is not None
+    assert axes.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED
+    assert axes.stored_revision_assertion.asserted_revision_id == "not-the-law-selected-revision"
+    assert axes.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT
+    assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+
+
+def test_the_pure_assertion_still_raises_for_a_caller_that_wants_a_hard_refusal(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The sole pure assertion this module reuses for text still raises on the same mismatch."""
+    from ....domain.calculations.registry.authority import RegistryAuthorityCapture
+    from ..work_addressing import assert_work_target_revision
+
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    _corrupt_stored_revision(repository, work_unit)
+    authority = bundled_authority()
+
+    _resolution, projection, _axes = capture_modelo_workspace_target_axes(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    assert projection.inspection is not None
+
     with pytest.raises(ModeloWorkRegistryYearMismatchError):
-        capture_modelo_workspace_target_axes(
-            _visible_target(bucket_id),
-            bucket_id=bucket_id,
-            catalogue_repository=repository,
-            authority=authority,
+        assert_work_target_revision(
+            RegistryAuthorityCapture(projection=projection.inspection, comparison_domain="x", generation=1),
+            requested_revision_id=None,
+            stored_revision_id="not-the-law-selected-revision",
         )
 
 
@@ -229,3 +280,70 @@ def test_visible_target_projects_into_a_selector_request_with_no_exact_operands(
     assert request.work_unit_id is None
     assert request.has_visible_target
     assert not request.has_exact_target
+
+
+def test_resolve_modelo_workspace_target_carries_review_status_from_the_registry_capture(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The shared resolved-target record must source review_status from the one REGISTRY capture."""
+    from ....core import RevisionReviewStatus
+
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolved.bucket_id == bucket_id
+    assert resolved.modelo == "130"
+    assert resolved.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert isinstance(resolved.review_status, RevisionReviewStatus)
+    assert resolved.work_unit_id == work_unit.work_unit_id
+    assert resolved.work_state == work_unit.state
+    assert resolved.requested_revision_assertion.source == ModeloWorkspaceRevisionAssertionSource.REQUESTED
+    assert resolved.stored_revision_assertion.source == ModeloWorkspaceRevisionAssertionSource.STORED
+
+
+def test_resolve_modelo_workspace_target_carries_a_mismatched_stored_assertion_without_raising(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """resolve_modelo_workspace_target must never raise for a revision mismatch; it is typed data."""
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    _corrupt_stored_revision(repository, work_unit)
+    authority = bundled_authority()
+
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolved.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED
+    assert resolved.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+
+
+def test_resolve_modelo_workspace_target_carries_no_work_unit_for_an_absent_target(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """An ABSENT resolution must resolve REGISTRY from the request's own coordinates and carry no work unit."""
+    bucket_id, repository = workspace_repos
+    authority = bundled_authority()
+
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolved.work_unit_id is None
+    assert resolved.work_state is None
+    assert resolved.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT
+    assert resolved.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
