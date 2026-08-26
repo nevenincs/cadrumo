@@ -11,11 +11,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._validate import RegistryValidator
 from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 

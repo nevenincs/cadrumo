@@ -9,11 +9,11 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from ..record_design import extract_record_design
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

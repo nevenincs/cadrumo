@@ -9,8 +9,8 @@ import pytest
 from .....core import PeriodKind, registry_period_kind
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
+from .._validate import RegistryValidator
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

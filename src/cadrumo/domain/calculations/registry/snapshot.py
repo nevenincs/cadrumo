@@ -35,6 +35,7 @@ from ....core import (
     RegistryAuthorityGrade,
     RevisionReviewStatus,
 )
+from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
@@ -44,7 +45,6 @@ from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
 from .schema_references import governed_period_span
 from .temporal import select_revision
-from .validate import RegistryValidator
 from .validate_revision_identity import revision_reference_identity_failures
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None, RegistryAuthorityGrade]

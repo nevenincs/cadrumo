@@ -225,7 +225,6 @@ def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str
 _OUTSTANDING_ROWS: Final[dict[str, str]] = {
     "R35": "privatisation blocked behind a large consumer move",
     "R66": "privatisation blocked behind a consumer move",
-    "R72": "privatisation blocked behind a consumer move",
 }
 
 

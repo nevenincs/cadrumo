@@ -9,12 +9,12 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

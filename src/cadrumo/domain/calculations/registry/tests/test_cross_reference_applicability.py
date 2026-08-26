@@ -19,10 +19,10 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
 )
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._validate import RegistryValidator
 from ..live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,

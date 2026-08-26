@@ -21,6 +21,7 @@ from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTE
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
+from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
 from ..coverage import (
@@ -33,7 +34,6 @@ from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
 from ..snapshot import build_snapshot, check_snapshot_filing_review_tier
 from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
-from ..validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

@@ -16,8 +16,8 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
 )
 
 from .....core import Period, ResultDisposition
+from .._validate import RegistryValidator
 from .._validate_revision_rules import validate_deadline_window_uniqueness
-from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

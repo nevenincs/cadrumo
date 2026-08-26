@@ -17,6 +17,7 @@ from ....contribuyente import (
     RentaFamilyProfile,
     TaxResidenceProfile,
 )
+from .._validate import RegistryValidator
 from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
@@ -31,7 +32,6 @@ from ..schema import DataBindingDefinition, RegistrySnapshot
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,

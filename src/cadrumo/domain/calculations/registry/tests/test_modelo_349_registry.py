@@ -13,6 +13,7 @@ from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from ...export_field_kind import CasillaFieldKind
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_file
 from ..export import derive_export_layouts_from_bindings, resolve_export_layout
@@ -22,7 +23,6 @@ from ..schema import RegistrySnapshot
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,

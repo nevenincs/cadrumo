@@ -36,6 +36,7 @@ Submodules
    cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers
+   cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
@@ -176,7 +177,6 @@ Submodules
    cadrumo.domain.calculations.registry.static_inspection
    cadrumo.domain.calculations.registry.support_matrix
    cadrumo.domain.calculations.registry.temporal
-   cadrumo.domain.calculations.registry.validate
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
    cadrumo.domain.calculations.registry.validate_cross_revision_advisory
    cadrumo.domain.calculations.registry.validate_registry_scope

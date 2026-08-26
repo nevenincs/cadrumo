@@ -8,6 +8,7 @@ from datetime import date
 import pytest
 
 from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import BindingFixedExportSelector
 from ..errors import RegistryValidationError
@@ -25,7 +26,6 @@ from ..schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
-from ..validate import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

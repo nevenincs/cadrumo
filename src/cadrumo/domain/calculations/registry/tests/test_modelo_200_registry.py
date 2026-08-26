@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core import (
     CasillaId,
@@ -24,6 +23,7 @@ from .....core import (
     validated_casilla_id,
 )
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs

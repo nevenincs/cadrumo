@@ -18,12 +18,12 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....domain.contribuyente import compute_deduccion_maternidad_0611
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
+from .._validate import RegistryValidator
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
