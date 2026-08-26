@@ -135,6 +135,52 @@ applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr309e23.xls"
 review_status = "reviewed"
 
+# AEAT's historical index explicitly assigns these three raw designs to the
+# listed annual windows.  They are catalogued and hash-pinned here, but remain
+# unreferenced by the over-broad 2004-y-siguientes revision until that
+# revision is split through the canonical selector path.
+[sources."aeat-dr-309-2004"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2004"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf"
+sha256 = "7a855ce41e9b2363a5275b7e88a9587616cfb13db2c2e541c2665ece1815e7b6"
+bytes = 44858
+retrieved_at = 2026-08-26
+applies_from = 2004-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309_2004.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-309-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls"
+sha256 = "a54467bf47a3a8b16be42e770c174347fea14ca4315cc1b35c10d81f85c159c5"
+bytes = 177152
+retrieved_at = 2026-08-26
+applies_from = 2016-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309e16v10.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-309-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls"
+sha256 = "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8"
+bytes = 185856
+retrieved_at = 2026-08-26
+applies_from = 2018-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/dr309e17v13.xls"
+review_status = "reviewed"
+
 [sources."aeat-modelo-309-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -455,6 +501,45 @@ bytes = 182784
 retrieved_at = 2026-05-06
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr308e16v13.xls"
+review_status = "reviewed"
+
+# AEAT's historical index identifies a July-2011 change within an AD-HOC
+# filing year.  The present selector contract is year-based, so registering an
+# epoch/window or attaching either source to 2009-y-siguientes would falsely
+# claim a selector that the registry cannot yet express.  These exact source
+# bytes are acquisition evidence only until the canonical revision split can
+# represent that boundary.
+[sources."aeat-dr-308-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/02-308-orden-eha-1033-2011-ejercicios-2009-a-2011-julio.xls"
+sha256 = "e6a67ab3fccb72adba80c0297cc9ff565af0a83b34e86cafb9f5da68bf118367"
+bytes = 147456
+retrieved_at = 2026-08-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-308-2011-july"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/03-308-orden-eha-1033-2011-ejercicios-2011-julio-a-2015.pdf"
+sha256 = "0d02c1477f291502203422342faed99035e8d52de775fe9f2f259b00ce226467"
+bytes = 32183
+retrieved_at = 2026-08-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308_2011.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-308-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls"
+sha256 = "658e37957ebc2f888167cafd0a24b089b8868654d601102b82cc6d4c8ae66654"
+bytes = 176640
+retrieved_at = 2026-08-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308e16v12.xls"
 review_status = "reviewed"
 
 [sources."aeat-modelo-308-procedure"]

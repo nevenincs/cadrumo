@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "308",
-  "retrieved_at": "2026-05-06",
+  "retrieved_at": "2026-08-26",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 4,
   "artefacts": [
     {
       "modelo": "308",
@@ -27,6 +27,42 @@
       "bytes": 182784,
       "sha256": "85eb926a84d309684db271e42a85dc3375e8265b6026d918400e647c76f15981",
       "retrieved_at": "2026-05-06"
+    },
+    {
+      "modelo": "308",
+      "title": "308 - Orden EHA/1033/2011 (Ejercicios 2009 a 2011- julio)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308.xls",
+      "stored_path": "files/02-308-orden-eha-1033-2011-ejercicios-2009-a-2011-julio.xls",
+      "original_filename": "dr308.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 147456,
+      "sha256": "e6a67ab3fccb72adba80c0297cc9ff565af0a83b34e86cafb9f5da68bf118367",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "308",
+      "title": "308 - Orden EHA/1033/2011 (Ejercicios 2011 - julio - a 2015)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308_2011.pdf",
+      "stored_path": "files/03-308-orden-eha-1033-2011-ejercicios-2011-julio-a-2015.pdf",
+      "original_filename": "dr308_2011.pdf",
+      "content_type": "application/pdf",
+      "bytes": 32183,
+      "sha256": "0d02c1477f291502203422342faed99035e8d52de775fe9f2f259b00ce226467",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "308",
+      "title": "308 - Orden EHA/1033/2011 (Ejercicios 2016 hasta 2018)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308e16v12.xls",
+      "stored_path": "files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls",
+      "original_filename": "dr308e16v12.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 176640,
+      "sha256": "658e37957ebc2f888167cafd0a24b089b8868654d601102b82cc6d4c8ae66654",
+      "retrieved_at": "2026-08-26"
     }
   ]
 }

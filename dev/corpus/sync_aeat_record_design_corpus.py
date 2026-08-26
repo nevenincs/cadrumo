@@ -266,6 +266,42 @@ _REQUIRED = (
     _RequiredArtifact(
         "303", "303 - Ejercicio 2025, URL oficial vigente", "DR_300_399/archivos_25/DR303e25.xlsx", "h300"
     ),
+    _RequiredArtifact(
+        "308",
+        "308 - Orden EHA/1033/2011 (Ejercicios 2009 a 2011- julio)",
+        "ant_300_399/archivos/dr308.xls",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "308",
+        "308 - Orden EHA/1033/2011 (Ejercicios 2011 - julio - a 2015)",
+        "ant_300_399/archivos/dr308_2011.pdf",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "308",
+        "308 - Orden EHA/1033/2011 (Ejercicios 2016 hasta 2018)",
+        "ant_300_399/archivos/dr308e16v12.xls",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "309",
+        "309 - Orden EHA/3212/2004 (Ejercicios hasta 2015)",
+        "ant_300_399/archivos/dr309_2004.pdf",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "309",
+        "309 - Orden EHA/3212/2004 (Ejercicios 2016 y 2017)",
+        "ant_300_399/archivos/dr309e16v10.xls",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "309",
+        "309 - Orden EHA/3212/2004 (Ejercicios 2018 y posteriores)",
+        "DR_300_399/archivos_17/dr309e17v13.xls",
+        "h300",
+    ),
     _RequiredArtifact("322", "322 - Ejercicio 2022 y siguientes", "DR_300_399/archivos_22/DR322e22.xls", "h300"),
     _RequiredArtifact("322", "322 - Ejercicio 2023", "DR_300_399/archivos_23/DR322e23.xls", "h300"),
     _RequiredArtifact(

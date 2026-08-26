@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "309",
-  "retrieved_at": "2026-05-06",
+  "retrieved_at": "2026-08-26",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 4,
   "artefacts": [
     {
       "modelo": "309",
@@ -27,6 +27,42 @@
       "bytes": 192000,
       "sha256": "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
       "retrieved_at": "2026-05-06"
+    },
+    {
+      "modelo": "309",
+      "title": "309 - Orden EHA/3212/2004 (Ejercicios hasta 2015)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309_2004.pdf",
+      "stored_path": "files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf",
+      "original_filename": "dr309_2004.pdf",
+      "content_type": "application/pdf",
+      "bytes": 44858,
+      "sha256": "7a855ce41e9b2363a5275b7e88a9587616cfb13db2c2e541c2665ece1815e7b6",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "309",
+      "title": "309 - Orden EHA/3212/2004 (Ejercicios 2016 y 2017)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr309e16v10.xls",
+      "stored_path": "files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls",
+      "original_filename": "dr309e16v10.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 177152,
+      "sha256": "a54467bf47a3a8b16be42e770c174347fea14ca4315cc1b35c10d81f85c159c5",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "309",
+      "title": "309 - Orden EHA/3212/2004 (Ejercicios 2018 y posteriores)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/dr309e17v13.xls",
+      "stored_path": "files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls",
+      "original_filename": "dr309e17v13.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 185856,
+      "sha256": "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8",
+      "retrieved_at": "2026-08-26"
     }
   ]
 }
