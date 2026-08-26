@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:2656750613cf29f8e8fdcb5ab98ed74d0ac9fd314e1bbdd7b51fff601c532b6c'
+body_hash: 'sha256:4db7ce39c6426355ddb4e989297d78e3e403fa0c146610d77f51c1d9eaa25d85'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -58,6 +58,9 @@ related:
 - `M` `src/cadrumo/domain/modelos/_calculation_revision.py`, `application/modelo/_calculation_actions.py`, `application/modelo/workspace.py`, `tests/test_workspace.py`, `adapters/persistence/profile/tests/test_source_mesh_revision_roundtrip.py` (commit `8b6f04125a`: S290, `CalculationSourceRef.source_casilla_ids`, `graded_snapshot_provenance_facet`)
 - `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S290 amendment)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/domain/modelos/tests/test_calculation_revision.py src/cadrumo/adapters/persistence/profile/tests/test_source_mesh_revision_roundtrip.py -m "unit or integration" -q` -> `pass` (177 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_models.py`, `tests/test_workspace.py` (commit `9aaba37009`: unlinked provenance ref represented, never dropped)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S290 amendment correction)
+- `M` `.vault/plan/2026-08-11-tui-architecture-plan.md` (commit `37190be3a6`: S290, S291 checked)
 
 ## Notes
 
@@ -341,6 +344,17 @@ construction sites across 7 files that leave the field at its `()` default
 -- a separate undertaking.
 
 This lands all three GRADED_SNAPSHOT mechanical pieces plus the S290
-provenance-subject decision. Still held: the runtime
-capability-disposition computation (S287, confirmed unimplementable as
-written). S128 stays unchecked until S287 is ruled on.
+provenance-subject decision.
+
+Follow-on correction (commit `9aaba37009`): the original S290 landing had an
+unlinked source ref produce ZERO provenance records rather than one -- a
+silent drop, since unlinked is the common case (most of the 16 construction
+sites do not yet populate the link). `ModeloWorkspaceProvenanceRecordV1.subject`
+widened to `... | None` (the S283 shape); `graded_snapshot_provenance_facet`
+now emits exactly one record per ref regardless of linkage. S290 and S291
+are both closed in the plan (`37190be3a6`).
+
+Still held: the runtime capability-disposition computation (S287, confirmed
+unimplementable as written for `FILING_DRAFT_READINESS`; concrete stamps
+identified for the other four, proposal sent). S128 stays unchecked until
+S287 is ruled on.
