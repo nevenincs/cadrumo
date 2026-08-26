@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:665f40564ef9e1321fdd811e09856379c5601552359f4461d8e860aed7027e77'
+body_hash: 'sha256:b8f2c7bb54acc17de7a58f689b3e59aee445fbfe6a4e61b3c49bc42a754554e2'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -56,6 +56,7 @@ Freeze the application-owned profile projection required for requirement class, 
 - [x] `W01.P02.S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns; `src/cadrumo/application/user_profile/presentation.py`.
 - [x] `W01.P02.S05` - Publish the settled profile presentation contract through the application facade; `src/cadrumo/application/user_profile/presentation.py public defining module`.
 - [x] `W01.P02.S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference; `src/cadrumo/application/user_profile/tests/test_presentation.py`.
+- [ ] `W01.P02.S94` - Complete conditional-applicability assessment in the profile presentation contract for the cases W01.P02.S04 left classified as OPTIONAL rather than assessed: the multi-field IVA-regime trigger resolved through modelo_iva_profile_required_paths, and every repeatable section, so a field is reported not_applicable or applicable_required_missing on its real trigger instead of defaulting to optional; `src/cadrumo/application/user_profile/presentation.py and src/cadrumo/application/user_profile/tests/test_presentation.py`.
 
 ## Wave `W02` - Reusable information-architecture components
 
