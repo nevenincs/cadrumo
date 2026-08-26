@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:6e74b2aee09c5d5dfc15b7e8cf2f8d8192b6911f6e761a501fba4c00e24839f1'
+body_hash: 'sha256:6131f19159a2ffeffa547e1ccd785d1f940c14af59d853c2651e3c14f58500d1'
 ---
 
 # `tui-architecture` plan
@@ -211,7 +211,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S199` - Prove formula_runtime_ops remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/formula_runtime_ops.py`.
 - [x] `W03.P20.S200` - Prove formula_text_inputs remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/formula_text_inputs.py`.
 - [x] `W03.P20.S201` - Prove groi_oracle remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/groi_oracle.py`.
-- [ ] `W03.P20.S202` - Delete the dedicated handoff_paths family after eliminating every definition, test, documentation, and import; `src/cadrumo/domain/calculations/registry/handoff_paths.py`.
+- [x] `W03.P20.S202` - Delete the dedicated handoff_paths family after eliminating every definition, test, documentation, and import; `src/cadrumo/domain/calculations/registry/handoff_paths.py`.
 - [x] `W03.P20.S203` - Prove handoffs remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/handoffs.py`.
 - [x] `W03.P20.S204` - Prove identity remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/identity.py`.
 - [x] `W03.P20.S205` - Prove ids remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/ids.py`.
