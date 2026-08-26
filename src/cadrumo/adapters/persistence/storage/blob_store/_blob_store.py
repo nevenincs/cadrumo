@@ -41,9 +41,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.directory_scan import scan_directory
 from .....core.atomic_write import atomic_write_bytes
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from .....core.directory_scan import scan_directory
 from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex

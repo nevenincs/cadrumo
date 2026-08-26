@@ -9,10 +9,11 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
+
 from ...core import RECORD_DESIGN_EPOCH_PATTERN, STRICT_FROZEN_CONFIG, CasillaId, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
-from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
 from .errors import ModeloValidationError
 

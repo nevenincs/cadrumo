@@ -605,19 +605,6 @@ cli:
           mentése.
         view_help: Mentett ellenőrzési megfigyelés megjelenítése.
       year_help: Benyújtási év.
-    maintenance:
-      help: Helyreállítja a megszakadt művelet után maradt helyi állapotot.
-      reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
-        A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre már
-        kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
-      reconcile_failures_warning: '{count} félbemaradt profilcsomag-exportot nem sikerült
-        kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez maradhat
-        a lemezen egy titkosítatlan ideiglenes fájl.'
-      reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
-        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
-        elmaradt naplóbejegyzéseket.
-      reconcile_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
-        futás nem hagyott hátra semmit.
     modelo:
       aggregate:
         counterpart_observation_help: JSON CounterpartObservation objektum. A source_kind
@@ -2431,6 +2418,19 @@ cli:
       logs_lines_help: A megjelenítendő legújabb naplósorok száma.
       plan_help: Száraz-futtatásos megőrzés-elsőbbségű helyreállítási terv az olvashatatlan
         biztonságos-objektum-sorokhoz.
+      prepared_exports_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
+        A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre már
+        kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
+      prepared_exports_failures_warning: '{count} félbemaradt profilcsomag-exportot
+        nem sikerült kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez
+        maradhat a lemezen egy titkosítatlan ideiglenes fájl.'
+      prepared_exports_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
+        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
+        elmaradt naplóbejegyzéseket.
+      prepared_exports_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
+        futás nem hagyott hátra semmit.
+      prepared_exports_output_language_help: A válasz szövegének nyelve (es, en, ca,
+        hu).
       profile_clear_active_help: A mutató-fájl aktív profilmutatójának törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
       profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót

@@ -58,8 +58,8 @@ from ..core import LLM_EXTRA, ModelRole, build_provenance_stamp, require_optiona
 from ..core.config import Settings, load_settings
 from ..domain.iva import SupplyNature
 from ._client import LLMClient
-from .errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest
+from .errors import LLMConfigError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

@@ -17,9 +17,9 @@ from ....core.config import Settings
 from ....core.i18n import Translatable as tr
 from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
-from ..errors import PortalValidationError
 from .._hosts import portal_host_origin
 from .._metadata import PortalMetadata
+from ..errors import PortalValidationError
 
 _URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 

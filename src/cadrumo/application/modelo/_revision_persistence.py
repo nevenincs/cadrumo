@@ -68,12 +68,12 @@ from ...domain.calculations import (
     RowCasillaKey,
     RowSourceIdentity,
 )
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.iva import is_m303_annual_settlement_period
 from ...domain.modelos import (
     CalculationRevision,

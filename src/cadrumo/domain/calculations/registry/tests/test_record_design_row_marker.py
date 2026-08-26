@@ -21,6 +21,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
+
 from ..record_design import _parse_pdf_row
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 

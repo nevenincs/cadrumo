@@ -1,4 +1,4 @@
-"""Operator-path proofs for ``aeat app maintenance reconcile``.
+"""Operator-path proofs for ``aeat config repair prepared-exports``.
 
 The export service reconciles before every publication, so an operator who keeps
 exporting never needs this verb. It exists for the one case that trigger
@@ -38,7 +38,7 @@ from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RECONCILE_ARGV = ("--format", "json", "app", "maintenance", "reconcile")
+_RECONCILE_ARGV = ("--format", "json", "config", "repair", "prepared-exports")
 
 
 def _create_profile() -> str:
@@ -152,7 +152,7 @@ def test_the_verb_reports_a_clean_sweep_rather_than_staying_silent(tmp_path: Pat
         assert envelope["result"]["reconciled_count"] == 0
         assert envelope["result"]["failed_count"] == 0
         codes = [notice["code"] for notice in envelope["notices"]]
-        assert codes == ["app.maintenance.reconcile.nothing_to_reconcile"]
+        assert codes == ["config.repair.prepared_exports.nothing_to_reconcile"]
 
 
 def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_path: Path) -> None:
@@ -168,13 +168,13 @@ def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_pa
         assert failed_run.exit_code == 0, failed_run.output
         failed_notices = json.loads(failed_run.output)["notices"]
         assert [notice["severity"] for notice in failed_notices] == ["info", "warning"]
-        assert failed_notices[1]["code"] == "app.maintenance.reconcile.failures"
+        assert failed_notices[1]["code"] == "config.repair.prepared_exports.failures"
         assert failed_notices[1]["context"]["journal_ids"] == "e" * 64
         assert failed_notices[1]["action"] == {
             "action": {
-                "action_id": "operator.maintenance.reconcile",
-                "target_command_key": "app.maintenance.reconcile",
-                "cli_path": ["app", "maintenance", "reconcile"],
+                "action_id": "operator.repair.prepared_exports",
+                "target_command_key": "config.repair.prepared_exports",
+                "cli_path": ["config", "repair", "prepared-exports"],
             },
             "argument_bindings": [],
         }

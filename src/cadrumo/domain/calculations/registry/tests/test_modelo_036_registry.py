@@ -6,10 +6,11 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core import RegistryAuthorityGrade
+from .....core.resources import bundled_path
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

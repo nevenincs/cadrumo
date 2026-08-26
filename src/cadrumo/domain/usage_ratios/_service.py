@@ -24,8 +24,8 @@ from ..categories import (
     effective_usage_ratio,
     resolve_category_profiles,
 )
-from .errors import UsageRatioPersistenceError, UsageRatioValidationError
 from ._model import UsageRatioProfile
+from .errors import UsageRatioPersistenceError, UsageRatioValidationError
 
 __all__ = [
     "derive_home_office_ratios_from_censo",

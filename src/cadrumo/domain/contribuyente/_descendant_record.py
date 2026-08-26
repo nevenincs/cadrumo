@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import today_madrid
-from .errors import ProfileValidationError
 from ._family_types import (
     MAX_AGE_MENOR_TRES,
     MAX_AGE_ORDINARY,
@@ -19,6 +18,7 @@ from ._family_types import (
     MinimoDescendientesThresholds,
     coerce_iso_date_field,
 )
+from .errors import ProfileValidationError
 
 
 class DescendantRecordFields(BaseModel):

@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..errors import IvaCatalogueError
 from .._establishment import _carve_out_rows_from_payload
+from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,10 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+
+from ....core import Period
 from .._binding_readiness import _annual_period_for_year, profile_resolvable_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

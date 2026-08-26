@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from ....core import Modelo
 from ....domain.iva import M303RegimenSimplificadoScopeDecision
 from ....domain.period import period_end_date
+from ._supplementary_orden import supplementary_orden_authority
 from .errors import RegistryValidationError
 from .ids import SourceRefId
 from .m303_orden_projection_models import (
@@ -17,7 +18,6 @@ from .m303_orden_projection_models import (
     M303RegimenSimplificadoSnapshot,
 )
 from .schema_references import SourceReference
-from ._supplementary_orden import supplementary_orden_authority
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot

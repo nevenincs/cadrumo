@@ -368,7 +368,10 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
     """
     from decimal import Decimal
 
-    from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
+    from ...application.ledger.invoice_extraction_authority import (
+        InvoiceExtractionAuthorityValues,
+        default_invoice_extraction_period,
+    )
     from ...domain.iva import IvaCategory
 
     return InvoiceExtractionAuthorityValues(

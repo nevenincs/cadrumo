@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
     from .._observations_repository import ObservationEnvelopePayload
 
 

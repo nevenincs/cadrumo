@@ -88,7 +88,6 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     compare_and_clear_profile_custody_local_record,
     compare_and_replace_profile_custody_local_record,
@@ -98,6 +97,7 @@ from ._filesystem import (
     read_optional_profile_custody_local_record,
 )
 from ._zeroise import zeroise as _zeroise
+from .errors import ProfileCustodyRecordError
 
 _log = get_logger(__name__)
 

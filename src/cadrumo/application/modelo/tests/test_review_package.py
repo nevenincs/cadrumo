@@ -21,8 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
+from ....core import Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

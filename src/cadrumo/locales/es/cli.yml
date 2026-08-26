@@ -615,19 +615,6 @@ cli:
         tgvi_help: Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
-    maintenance:
-      help: Recupera el estado local que ha dejado una operación interrumpida.
-      reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil interrumpidas.
-        Se ha eliminado cualquier archivo temporal sin cifrar y las exportaciones
-        ya escritas en disco han recibido su registro de auditoría pendiente.
-      reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
-        de perfil interrumpidas y se han conservado para un intento posterior. Puede
-        quedar en disco un archivo temporal sin cifrar por cada una.
-      reconcile_help: Limpia las exportaciones de perfil que un fallo dejó a medias,
-        eliminando cualquier archivo temporal sin cifrar y registrando los eventos
-        de auditoría pendientes.
-      reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
-        Ninguna ejecución anterior ha dejado nada pendiente.
     modelo:
       aggregate:
         counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
@@ -2457,6 +2444,19 @@ cli:
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       plan_help: Planificación de reparación en seco y preservación primero para filas
         de objetos seguros no legibles.
+      prepared_exports_cleared_info: Se han limpiado {count} exportación(es) de perfil
+        interrumpidas. Se ha eliminado cualquier archivo temporal sin cifrar y las
+        exportaciones ya escritas en disco han recibido su registro de auditoría pendiente.
+      prepared_exports_failures_warning: No se han podido limpiar {count} exportación(es)
+        de perfil interrumpidas y se han conservado para un intento posterior. Puede
+        quedar en disco un archivo temporal sin cifrar por cada una.
+      prepared_exports_help: Limpia las exportaciones de perfil que un fallo dejó
+        a medias, eliminando cualquier archivo temporal sin cifrar y registrando los
+        eventos de auditoría pendientes.
+      prepared_exports_none_info: No se ha encontrado ninguna exportación de perfil
+        interrumpida. Ninguna ejecución anterior ha dejado nada pendiente.
+      prepared_exports_output_language_help: Idioma del texto de salida (es, en, ca,
+        hu).
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del

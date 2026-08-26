@@ -24,8 +24,8 @@ from pydantic import ValidationError
 from ....core.identity import IdentityError
 from ...iva import InvoiceKind
 from .._enums import IvaRate, PaymentStatus
-from ..errors import InvoiceValidationError
 from .._models import Invoice, InvoiceLine, _normalise_invoice_counterparty
+from ..errors import InvoiceValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

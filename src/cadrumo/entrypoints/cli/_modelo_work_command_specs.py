@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     ArgumentSpec,
     Capability,
@@ -98,6 +99,9 @@ def _o(
     multiple: bool = False,
     flag: bool = False,
     required: bool = False,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     literal_default = False if flag and default is None else (() if multiple else default)
     return OptionSpec(
@@ -109,6 +113,9 @@ def _o(
         multiple=multiple,
         is_flag=flag,
         flag_value=True if flag else None,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -190,7 +197,14 @@ _CALCULATE_PARAMETERS = (
     _o("sal_reserva_dotada", "--sal-reserva-dotada"),
     _o("sal_capital_social", "--sal-capital-social"),
     _o("autoconsumo_promotor_base", "--autoconsumo-promotor-base"),
-    _o("m303_filing_evidence", "--m303-filing-evidence", _PATH),
+    _o(
+        "m303_filing_evidence",
+        "--m303-filing-evidence",
+        _PATH,
+        transport_locus=TransportLocus.LOCAL_IN,
+        transport_shape=TransportShape.FILE,
+        transport_role=TransportRole.AUXILIARY,
+    ),
     _LANG,
 )
 

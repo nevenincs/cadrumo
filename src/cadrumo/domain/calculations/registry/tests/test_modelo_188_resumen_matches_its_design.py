@@ -23,9 +23,10 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
+
+from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

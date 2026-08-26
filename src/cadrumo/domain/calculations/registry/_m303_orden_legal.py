@@ -18,8 +18,6 @@ from ....core import (
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
-from .errors import RegistryValidationError
-from .ids import LegalRefId
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_keys import (
     activity_legal_key,
@@ -30,6 +28,8 @@ from ._m303_orden_keys import (
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
+from .errors import RegistryValidationError
+from .ids import LegalRefId
 from .m303_orden_raw_models import (
     M303AnnualOrdenRawLorca2022Reduction,
     M303AnnualOrdenSourceCensus,

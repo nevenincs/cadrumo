@@ -16,11 +16,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.loader import load_modelo_path
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import IntracomOperationType, Period
 from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_modelo_path
 from ....domain.invoices import (
     InvoiceClass,
     InvoiceLine,

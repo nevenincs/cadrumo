@@ -15,8 +15,8 @@ reason, rather than left empty and silent.
 from __future__ import annotations
 
 from ....core import RegistryAuthorityGrade
-from .schema import ModeloRevision
 from ._schema_family_coverage import build_revision_coverage_manifest
+from .schema import ModeloRevision
 
 #: Families whose resolution the calculation rung specifically asserts.
 _CALCULATION_FAMILIES: frozenset[str] = frozenset({"formulas"})

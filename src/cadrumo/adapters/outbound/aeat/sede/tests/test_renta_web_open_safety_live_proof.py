@@ -25,12 +25,13 @@ import asyncio
 
 import pytest
 
-from ......core.config import Settings
 from cadrumo.domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload
+
+from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
-from ..errors import SedeNavigationError
 from .._renta_web_open_safety import install_page_safety_net
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

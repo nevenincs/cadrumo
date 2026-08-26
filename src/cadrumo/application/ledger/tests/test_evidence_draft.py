@@ -38,8 +38,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....core.directory_scan import scan_directory
 from ....core.config import Settings
+from ....core.directory_scan import scan_directory
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind

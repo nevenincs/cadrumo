@@ -24,8 +24,8 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from .._html import parse_html
 from ._declarations_remote import extract_csv_from_url
-from .errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
+from .errors import SedeParseError
 
 _SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 

@@ -7,9 +7,9 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, Period, validated_casilla_id
 from cadrumo.domain.calculations.registry.ids import LegalRefId
-from ..errors import CalcSheetsRecordError
+
+from .....core import CasillaId, Period, validated_casilla_id
 from .._records import (
     OperatorInput,
     OperatorInputs,
@@ -25,6 +25,7 @@ from .._records import (
     TabName,
     column_letters_to_index,
 )
+from ..errors import CalcSheetsRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

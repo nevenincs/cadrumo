@@ -14,7 +14,6 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from .....core.identity import canonical_profile_bucket_id
 from ..crypto import GCM_TAG_SIZE, NONCE_SIZE, EncryptedBlob, decrypt_record
-from .errors import ProfileCustodyRecordError
 from ._kdf_codec import (
     canonical_frame_bytes as _canonical_frame_bytes,
 )
@@ -22,6 +21,7 @@ from ._kdf_codec import (
     decode_canonical_b64 as _decode_canonical_b64,
 )
 from ._records import ProfileCustodyEnvelope
+from .errors import ProfileCustodyRecordError
 
 _PROFILE_CUSTODY_DATA_FORMAT_VERSION: Final = 1
 _PROFILE_CUSTODY_SENTINEL_PURPOSE: Final = "profile-dek-sentinel/v1"

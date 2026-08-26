@@ -32,8 +32,8 @@ from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import BusinessClassification
-from .errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
+from .errors import TransactionValidationError
 
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")

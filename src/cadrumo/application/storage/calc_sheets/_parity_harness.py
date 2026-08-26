@@ -56,19 +56,18 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
+from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import (
     BindingId,
     RelationId,
     RevisionId,
 )
-from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.relations import relation_source_requirements
-from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.period import calculation_filing_date
 from ._engine import build_export_plan
-from .errors import CalcSheetsParityError
 from ._layout import plan_layout
 from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
 from ._records import (
@@ -79,6 +78,7 @@ from ._records import (
     SheetCellAddress,
     SheetExportPlan,
 )
+from .errors import CalcSheetsParityError
 
 
 class _SheetsDiscoveryBuilder(Protocol):

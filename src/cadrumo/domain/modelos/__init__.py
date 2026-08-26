@@ -122,15 +122,6 @@ from ._dt12_reduccion import (
     compute_dt12_reduccion_plan_pensiones,
     dt12_regime_window_eligibility,
 )
-from .errors import (
-    Modelo036LifecycleError,
-    Modelo036PriorAltaRequiredError,
-    Modelo036TerminalStateError,
-    ModeloError,
-    ModeloExportError,
-    ModeloValidationError,
-    raise_catalogue_integrity_error,
-)
 from ._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -207,6 +198,15 @@ from ._verification_report import (
 )
 from ._verification_repository import VerificationReportPersistenceError, upsert_verification_report
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from .errors import (
+    Modelo036LifecycleError,
+    Modelo036PriorAltaRequiredError,
+    Modelo036TerminalStateError,
+    ModeloError,
+    ModeloExportError,
+    ModeloValidationError,
+    raise_catalogue_integrity_error,
+)
 
 __all__ = (
     "CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY",

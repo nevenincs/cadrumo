@@ -12,11 +12,6 @@ See Also:
 
 from __future__ import annotations
 
-from .errors import (
-    StorageManagementError,
-    StorageReclaimRefusedError,
-    StorageReclaimUnconfirmedError,
-)
 from ._models import (
     StorageAreaDisposition,
     StorageAreaInventoryReport,
@@ -36,6 +31,11 @@ from ._service import (
     materialise_storage_tree,
     reclaim_storage_area,
     storage_lifecycle_permits_reclaim,
+)
+from .errors import (
+    StorageManagementError,
+    StorageReclaimRefusedError,
+    StorageReclaimUnconfirmedError,
 )
 
 __all__ = [

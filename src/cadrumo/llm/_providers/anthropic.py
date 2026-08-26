@@ -18,9 +18,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 from ...core import ActionEvidenceProvenance
-from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from .._models import LLMProvider
 from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 if TYPE_CHECKING:

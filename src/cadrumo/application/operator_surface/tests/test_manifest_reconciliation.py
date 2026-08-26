@@ -7,7 +7,6 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ..errors import OperatorSurfaceContractError
 from .._manifest import (
     ExplicitExclusionInventoryRow,
     InputSchemaInventoryRow,
@@ -19,6 +18,7 @@ from .._manifest import (
     SurfaceExposureInventoryRow,
     reconcile_operator_surface_inventory,
 )
+from ..errors import OperatorSurfaceContractError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``aeat app maintenance`` commands.
+"""Typed ``--json`` payload schemas for ``aeat config repair prepared-exports``.
 
 Every declared payload is an :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets and carried by :class:`SchemaEnvelope` through
@@ -14,7 +14,7 @@ and left journalled for a later attempt, which matters to an operator precisely
 because a journal left behind may still describe cleartext bundle bytes on disk.
 
 See Also:
-    :mod:`~entrypoints.cli._app_maintenance`
+    :mod:`~entrypoints.cli._config._repair_prepared_exports`
         CLI transport that populates these payloads.
     :mod:`~application.user_profile`
         Application facade owning the reconciliation this module projects.
@@ -26,8 +26,8 @@ from pydantic import Field
 
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 
-from ...core import Hex64Str
-from ...core.json_contract import OutputSchema
+from ....core import Hex64Str
+from ....core.json_contract import OutputSchema
 
 
 class ReconciledProfileExportPayload(OutputSchema):

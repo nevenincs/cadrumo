@@ -11,12 +11,13 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
+
 from ......core import Period
 from ......core.config import Settings
 from ......core.decimal import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
@@ -27,7 +28,6 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
@@ -48,6 +48,7 @@ from .._iva_compensation_wallet_parsing import (
     is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
 )
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

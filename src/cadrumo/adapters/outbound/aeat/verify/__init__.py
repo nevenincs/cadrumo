@@ -44,7 +44,9 @@ from .....core.errors import CadrumoError as _CadrumoError
 from .....core.logging import get_logger as _get_logger
 from .....domain.calculations.registry.remote_state_guard import RemoteOperation as _RemoteOperation
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy as _RemoteStateGuardPolicy
-from .....domain.calculations.registry.remote_state_guard import assert_remote_operation_allowed as _assert_remote_operation_allowed
+from .....domain.calculations.registry.remote_state_guard import (
+    assert_remote_operation_allowed as _assert_remote_operation_allowed,
+)
 from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
 from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError

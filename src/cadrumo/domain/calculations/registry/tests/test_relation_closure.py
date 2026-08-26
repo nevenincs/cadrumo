@@ -7,12 +7,18 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from .._validate_relation_sources import (
+    RelationSourceYearCoverageAllowance,
+    validate_relation_closure,
+    validate_slot_source_hygiene,
+)
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
 from ..relations import (
@@ -23,11 +29,6 @@ from ..relations import (
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 from ..validate import RegistryValidator
-from .._validate_relation_sources import (
-    RelationSourceYearCoverageAllowance,
-    validate_relation_closure,
-    validate_slot_source_hygiene,
-)
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

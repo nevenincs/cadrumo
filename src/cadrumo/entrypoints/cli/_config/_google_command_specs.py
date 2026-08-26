@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -79,6 +80,9 @@ def _option(
     multiple: bool = False,
     minimum: int | None = None,
     maximum: int | None = None,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name=name,
@@ -90,6 +94,9 @@ def _option(
         flag_value=True if flag else None,
         multiple=multiple,
         constraint=ParameterConstraint(minimum=minimum, maximum=maximum),
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -138,6 +145,9 @@ _SPREADSHEET_ID = _option(
     "cli.config.google.sync.calc.pull.spreadsheet_id_help",
     required=True,
     minimum=1,
+    transport_locus=TransportLocus.REMOTE_HANDLE,
+    transport_shape=TransportShape.NOT_APPLICABLE,
+    transport_role=TransportRole.NOT_APPLICABLE,
 )
 
 
@@ -153,7 +163,18 @@ GOOGLE_COMMAND_SPECS = (
         "_google_payloads",
         "GoogleRegisterResult",
         GOOGLE_WRITE,
-        (_option("client_json", ("--client-json",), _PATH, "cli.config.google.client_json_help", required=True),),
+        (
+            _option(
+                "client_json",
+                ("--client-json",),
+                _PATH,
+                "cli.config.google.client_json_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+        ),
     ),
     _leaf(
         "config_google_login",
@@ -268,7 +289,13 @@ GOOGLE_COMMAND_SPECS = (
         GOOGLE_WRITE,
         (
             ArgumentSpec(
-                "folder_id", _STR, ParameterDefault.required(), _key("cli.config.google.folder.folder_id_help")
+                "folder_id",
+                _STR,
+                ParameterDefault.required(),
+                _key("cli.config.google.folder.folder_id_help"),
+                transport_locus=TransportLocus.REMOTE_HANDLE,
+                transport_shape=TransportShape.NOT_APPLICABLE,
+                transport_role=TransportRole.NOT_APPLICABLE,
             ),
         ),
     ),
@@ -375,7 +402,15 @@ GOOGLE_COMMAND_SPECS = (
             _MODELO,
             _PERIOD,
             _YEAR,
-            _option("scenario_path", ("--scenario",), _PATH, "cli.config.google.sync.calc.verify.scenario_help"),
+            _option(
+                "scenario_path",
+                ("--scenario",),
+                _PATH,
+                "cli.config.google.sync.calc.verify.scenario_help",
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
+            ),
         ),
     ),
     _leaf(
@@ -424,6 +459,9 @@ GOOGLE_COMMAND_SPECS = (
                 "cli.config.google.sync.calc.compute.spreadsheet_id_help",
                 required=True,
                 minimum=1,
+                transport_locus=TransportLocus.REMOTE_HANDLE,
+                transport_shape=TransportShape.NOT_APPLICABLE,
+                transport_role=TransportRole.NOT_APPLICABLE,
             ),
         ),
     ),

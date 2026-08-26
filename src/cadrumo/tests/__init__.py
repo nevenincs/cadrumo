@@ -112,8 +112,8 @@ from ._storage_path_grammar import (
 )
 
 if TYPE_CHECKING:
-    from .justificante_parse_cache import parse_committed_justificante_fixture
     from .filing_evidence import general_m303_filing_evidence
+    from .justificante_parse_cache import parse_committed_justificante_fixture
 
 FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 """Root of the on-disk fixture tree bundled with the package."""

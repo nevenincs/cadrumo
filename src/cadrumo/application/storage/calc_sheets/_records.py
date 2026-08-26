@@ -53,8 +53,8 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
-from .errors import CalcSheetsRecordError
 from ._theme import WORKBOOK_FONT_FAMILY, StyleRole
+from .errors import CalcSheetsRecordError
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
 # BeforeValidator that coerces int / str inputs through `Decimal(...)`.

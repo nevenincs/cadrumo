@@ -80,18 +80,6 @@ See Also:
 
 from __future__ import annotations
 
-from .errors import (
-    BucketArchiveRefusedError,
-    BucketBrowseError,
-    BucketDeleteRefusedError,
-    BucketEventValidationError,
-    BucketExportError,
-    BucketImportError,
-    BucketMaintenanceError,
-    BucketRenameError,
-    BucketRestoreRefusedError,
-    BucketsError,
-)
 from ._event import (
     BUCKET_ACTOR_LABEL_MAX_LENGTH,
     BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
@@ -114,6 +102,18 @@ from ._event_repository import (
     emit_bucket_events,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
+from .errors import (
+    BucketArchiveRefusedError,
+    BucketBrowseError,
+    BucketDeleteRefusedError,
+    BucketEventValidationError,
+    BucketExportError,
+    BucketImportError,
+    BucketMaintenanceError,
+    BucketRenameError,
+    BucketRestoreRefusedError,
+    BucketsError,
+)
 
 __all__ = [
     "BUCKET_ACTOR_LABEL_MAX_LENGTH",

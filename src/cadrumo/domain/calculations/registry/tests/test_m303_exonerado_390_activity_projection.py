@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
+
 from .....core import (
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
@@ -20,7 +22,6 @@ from ....modelos import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
-from cadrumo.domain.calculations.registry.m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

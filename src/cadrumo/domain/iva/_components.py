@@ -59,13 +59,13 @@ from typing import TYPE_CHECKING, Final
 from pydantic import Field, model_validator
 
 from ._classification import InvoiceKind
-from .errors import IvaValidationError
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     IvaCategory,
     IvaStrictFrozen,
     _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
+from .errors import IvaValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

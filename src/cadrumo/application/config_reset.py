@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import NamedTuple
 from uuid import UUID
 
+from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+
 from ..core.bucket_pointer import BucketPointer
 from ..core.config import load_settings
 from ..core.errors import CadrumoError
@@ -39,10 +41,9 @@ from .bucket_maintenance import (
     BucketDeletionAssessment,
     BucketMaintenanceService,
 )
-from .user_profile.lifecycle import ProfileCapsuleLifecycle
 from .user_profile.custody_hold_models import ProfileCustodyRetentionOverride
+from .user_profile.lifecycle import ProfileCapsuleLifecycle
 from .user_profile.profile_pointer import active_profile_pointer_transaction
-from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
 
 class ConfigResetError(CadrumoError):

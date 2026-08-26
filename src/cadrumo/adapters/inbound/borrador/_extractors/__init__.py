@@ -24,8 +24,8 @@ See Also:
 
 from __future__ import annotations
 
-from ..errors import BorradorParseError as _BorradorParseError
 from .._schema import ArtefactKind
+from ..errors import BorradorParseError as _BorradorParseError
 from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo100ObservedV2025Extractor
 
 # The generic observed-value extraction algorithm is year-stable across the

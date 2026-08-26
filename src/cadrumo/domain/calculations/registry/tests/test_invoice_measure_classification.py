@@ -23,6 +23,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from ..invoice_bindings import (
     _INVOICE_ALTERNATIVE_MEASURE_FACTS,
     _INVOICE_FACTS,

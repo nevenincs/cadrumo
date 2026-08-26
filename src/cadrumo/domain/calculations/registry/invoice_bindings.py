@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
+from ._m347_threshold import m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -26,7 +27,6 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_resolution import independent_quantity_facts
-from ._m347_threshold import m347_declarable_party_ids
 from .schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]

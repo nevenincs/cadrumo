@@ -34,16 +34,16 @@ import pytest
 
 from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory
-from ...directory_scan import scan_directory
 from ...config import override_settings
+from ...directory_scan import scan_directory
 from .. import (
     RunOutcome,
     RunTrace,
     save_envelope,
     save_trace,
 )
-from ..errors import RunTracePersistenceError
 from .._store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir
+from ..errors import RunTracePersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

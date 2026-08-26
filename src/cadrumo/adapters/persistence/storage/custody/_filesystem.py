@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any, Final, Literal, cast, overload
 from uuid import uuid4
 
-from .errors import ProfileCustodyRecordError
 from ._filesystem_primitives import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,
@@ -50,6 +49,7 @@ from ._filesystem_primitives import (
 from ._filesystem_primitives import (
     write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
 )
+from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_DATA_MAX_ENTRIES: Final = 1024
 PROFILE_CUSTODY_DATA_FILE_MAX_BYTES: Final = 64 * 1024 * 1024

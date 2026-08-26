@@ -560,18 +560,6 @@ cli:
         tgvi_help: Verify a NIF's ROI/VIES registration in GROI and save the observation
         view_help: Show a saved verification observation
       year_help: Filing year
-    maintenance:
-      help: Recover local state left behind by an interrupted operation.
-      reconcile_cleared_info: Cleared {count} interrupted profile-bundle export(s).
-        Any leftover unencrypted staged file was removed, and an export that had already
-        been written to disk received its missing audit record.
-      reconcile_failures_warning: '{count} interrupted profile-bundle export(s) could
-        not be cleared and were kept for a later attempt. An unencrypted staged file
-        may remain on disk for each.'
-      reconcile_help: Clear profile-bundle exports left unfinished by a crash, removing
-        any leftover cleartext staged file and recording owed audit events.
-      reconcile_none_info: No interrupted profile-bundle export was found. Nothing
-        was left behind by a previous run.
     modelo:
       aggregate:
         counterpart_observation_help: JSON CounterpartObservation object. The source_kind
@@ -2275,6 +2263,18 @@ cli:
       logs_lines_help: Number of recent log lines to show
       plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
         rows.
+      prepared_exports_cleared_info: Cleared {count} interrupted profile-bundle export(s).
+        Any leftover unencrypted staged file was removed, and an export that had already
+        been written to disk received its missing audit record.
+      prepared_exports_failures_warning: '{count} interrupted profile-bundle export(s)
+        could not be cleared and were kept for a later attempt. An unencrypted staged
+        file may remain on disk for each.'
+      prepared_exports_help: Clear profile-bundle exports left unfinished by a crash,
+        removing any leftover cleartext staged file and recording owed audit events.
+      prepared_exports_none_info: No interrupted profile-bundle export was found.
+        Nothing was left behind by a previous run.
+      prepared_exports_output_language_help: Output language for the response text
+        (es, en, ca, hu).
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
       profile_clear_active_mismatch: --clear-active can only clear the active profile

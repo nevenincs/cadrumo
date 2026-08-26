@@ -6,10 +6,11 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
 from .....core import LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 from ..snapshot import _check_snapshot_filing_capability, build_validated_snapshot

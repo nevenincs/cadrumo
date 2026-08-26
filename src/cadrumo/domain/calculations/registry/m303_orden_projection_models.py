@@ -18,8 +18,6 @@ from ....domain.iva import (
     PorcentajeIngresoCuentaIaeOrdenAnual,
     ReduccionLorcaOrdenAnual,
 )
-from .errors import RegistryValidationError
-from .ids import LegalRefId, RevisionId, SourceRefId
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
@@ -35,6 +33,8 @@ from ._m303_orden_constants import (
 from ._m303_orden_constants import (
     validate_generated_source_counts as _validate_generated_source_counts,
 )
+from .errors import RegistryValidationError
+from .ids import LegalRefId, RevisionId, SourceRefId
 from .schema_base import RegistryModel
 from .schema_references import LegalReference, SourceReference
 

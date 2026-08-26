@@ -49,9 +49,9 @@ if TYPE_CHECKING:
 from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
 from ....core.config import Settings, load_settings
-from .errors import OutboundStorageError, OutboundStorageValidationError
 from ._protocol import StorageProvider
 from ._records import ProviderKind
+from .errors import OutboundStorageError, OutboundStorageValidationError
 
 
 def _configuration_validation_verdict(

@@ -45,8 +45,8 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
-from .errors import IvaCatalogueError, IvaValidationError
 from ._grounding import verify_table_legal_refs
+from .errors import IvaCatalogueError, IvaValidationError
 
 
 class LivaArt161RecargoRates(BaseModel):

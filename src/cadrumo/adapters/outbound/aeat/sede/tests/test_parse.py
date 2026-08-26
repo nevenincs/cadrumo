@@ -25,8 +25,8 @@ import pytest
 from ......core.config import Settings
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import KATA_COTEJO_ID_PATH_FIXTURE
-from ..errors import SedeParseError
 from .._parse import parse_expediente_detail, parse_resumen_tree
+from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

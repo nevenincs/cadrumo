@@ -9,10 +9,11 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
-from ....core import Period
 from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
+from ....core import Period
 from ....domain.deadlines import (
     DeadlineEngine,
     EntityType,

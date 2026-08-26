@@ -65,14 +65,16 @@ import asyncio
 from collections.abc import Collection
 
 from ..application.ledger.document_transcription import DocumentTranscription
-from ..application.ledger.evidence_draft import InvoiceDraft
-from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues, resolve_invoice_extraction_authority_values
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
+from ..application.ledger.evidence_draft import InvoiceDraft
+from ..application.ledger.invoice_extraction_authority import (
+    InvoiceExtractionAuthorityValues,
+    resolve_invoice_extraction_authority_values,
+)
 from ..core import LLM_EXTRA, ActionEvidenceProvenance, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
-from .errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
     default_extraction_period,
@@ -81,6 +83,7 @@ from ._invoice_extraction_prompt import (
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMProvider, LLMRequest
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .errors import LLMConfigError
 
 __all__ = [
     "TextInvoiceFieldExtractor",

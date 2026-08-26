@@ -39,7 +39,6 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.identifiers import canonical_decimal_string
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
@@ -50,6 +49,7 @@ from ...domain.filing import (
     ModeloValidator,
     derive_validation_status,
 )
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue

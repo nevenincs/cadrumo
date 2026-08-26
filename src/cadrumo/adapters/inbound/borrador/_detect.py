@@ -14,9 +14,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from .errors import ArtefactNotRecognisedError
 from ._parsers import extract_pages_text
 from ._schema import ArtefactKind
+from .errors import ArtefactNotRecognisedError
 
 _VISTA_PREVIA_RE = re.compile(r"\bVISTA\s+PREVIA\b", re.IGNORECASE)
 _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)

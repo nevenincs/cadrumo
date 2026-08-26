@@ -9,7 +9,6 @@ from functools import lru_cache
 from typing import NamedTuple, Protocol
 
 from ....core import CasillaId
-from .ids import RevisionId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_modelo_prefix_siblings,
@@ -17,6 +16,7 @@ from ._validate_semantic_role_axes import (
     semantic_roles_are_quarter_axis_siblings,
     semantic_roles_are_tax_domain_siblings,
 )
+from .ids import RevisionId
 
 
 class _RoleObservationLike(Protocol):

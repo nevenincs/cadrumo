@@ -7,10 +7,11 @@ from typing import cast
 
 import pytest
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition
 from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
-from ..errors import DeadlineValidationError
+
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition
 from .._plazo import _resolve_projected_filing_window, resolve_filing_window
+from ..errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -38,19 +38,19 @@ from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.errors import (
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
-from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
 )
+from ...domain.calculations.registry.errors import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError

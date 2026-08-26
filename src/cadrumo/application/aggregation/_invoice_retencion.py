@@ -60,8 +60,8 @@ from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import InvoiceId
 from ...domain.iva import IvaRetencionRole, category_components
-from .errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
+from .errors import AggregationValidationError, t
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence

@@ -10,14 +10,15 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..application.modelo.work_review_projection import ModeloWorkReview, build_modelo_work_review
 from ..core import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

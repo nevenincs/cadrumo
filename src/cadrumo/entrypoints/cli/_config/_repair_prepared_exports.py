@@ -1,6 +1,6 @@
-"""CLI commands for the ``aeat app maintenance`` subcommand group.
+"""CLI commands for the ``aeat config repair`` subcommand group.
 
-Provides ``reconcile``: a local-only, on-demand sweep that
+Provides ``prepared-exports``: a local-only, on-demand sweep that
 resolves crash-interrupted portable profile-bundle publications. The export
 service already reconciles before every publication, so an operator who keeps
 exporting never needs this verb. It exists for the case that trigger
@@ -16,7 +16,7 @@ encrypted local secure-object storage.
 
 This module is the transport adapter over
 :func:`~application.user_profile.reconcile_prepared_exports`. It emits
-:class:`~entrypoints.cli._app_maintenance_payloads.ProfileBundleReconcileResult`
+:class:`~entrypoints.cli._config._repair_prepared_exports_payloads.ProfileBundleReconcileResult`
 through :func:`emit_envelope`, and reports both halves of the outcome through
 the typed :class:`Notice` channel per
 ``aeat-cli-contract``.
@@ -28,28 +28,28 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.operator_actions import ActionReference
-from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
-from ._app_maintenance_payloads import (
+from ....application.operator_actions import ActionReference
+from ....core.external_constants import OutputLanguage
+from ....core.i18n import tr
+from ....core.json_contract import Notice, NoticeSeverity
+from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope, resolve_notice_action
+from ._repair_prepared_exports_payloads import (
     ProfileBundleReconcileResult,
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,
 )
-from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
-    from ...application.user_profile.bundle_export import ProfileBundleExportReconciliation
+    from ....application.user_profile.bundle_export import ProfileBundleExportReconciliation
 
 
-def app_maintenance_reconcile(
+def repair_prepared_exports(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
-    from ...application.user_profile.bundle_export import reconcile_prepared_exports
+    from ....application.user_profile.bundle_export import reconcile_prepared_exports
 
     _activate_subcommand_output_language(ctx, output_language)
     outcome = reconcile_prepared_exports()
@@ -77,7 +77,7 @@ def app_maintenance_reconcile(
     notices = _reconcile_notices(outcome)
     emit_envelope(
         ctx,
-        command="app.maintenance.reconcile",
+        command="config.repair.prepared_exports",
         result=result,
         lines=(
             f"reconciled\t{result.reconciled_count}",
@@ -105,9 +105,9 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code="app.maintenance.reconcile.nothing_to_reconcile",
+                code="config.repair.prepared_exports.nothing_to_reconcile",
                 message=tr(
-                    "cli.app.maintenance.reconcile_none_info",
+                    "cli.config.repair.prepared_exports_none_info",
                     default=(
                         "No interrupted profile-bundle export was found. Nothing was left behind by a previous run."
                     ),
@@ -118,9 +118,9 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code="app.maintenance.reconcile.cleared",
+                code="config.repair.prepared_exports.cleared",
                 message=tr(
-                    "cli.app.maintenance.reconcile_cleared_info",
+                    "cli.config.repair.prepared_exports_cleared_info",
                     default=(
                         "Cleared {count} interrupted profile-bundle export(s). Any "
                         "leftover unencrypted staged file was removed, and an export "
@@ -136,9 +136,9 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
-                code="app.maintenance.reconcile.failures",
+                code="config.repair.prepared_exports.failures",
                 message=tr(
-                    "cli.app.maintenance.reconcile_failures_warning",
+                    "cli.config.repair.prepared_exports_failures_warning",
                     default=(
                         "{count} interrupted profile-bundle export(s) could not be "
                         "cleared and were kept for a later attempt. An unencrypted "
@@ -146,7 +146,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     ),
                     count=str(len(outcome.failures)),
                 ),
-                action=resolve_notice_action(action=ActionReference(action_id="operator.maintenance.reconcile")),
+                action=resolve_notice_action(action=ActionReference(action_id="operator.repair.prepared_exports")),
                 context={
                     "failed_count": str(len(outcome.failures)),
                     "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),
@@ -156,4 +156,4 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
     return tuple(notices)
 
 
-__all__ = ["app_maintenance_reconcile"]
+__all__ = ["repair_prepared_exports"]

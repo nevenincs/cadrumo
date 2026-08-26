@@ -12,8 +12,8 @@ from __future__ import annotations
 import pytest
 
 from ......core.config import Settings
-from ..errors import SedeParseError
 from .._parse import parse_expediente_detail
+from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

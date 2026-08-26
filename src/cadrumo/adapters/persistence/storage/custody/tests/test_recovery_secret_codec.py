@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ..errors import ProfileCustodyRecoverySecretError
 from .._recovery_secret_codec import decode_recovery_secret, encode_recovery_secret
+from ..errors import ProfileCustodyRecoverySecretError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

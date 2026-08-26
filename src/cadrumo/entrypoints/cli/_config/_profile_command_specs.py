@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -73,6 +74,9 @@ def _option(
     multiple: bool = False,
     constraint: ParameterConstraint = ParameterConstraint(),
     machine_secret_channel: MachineSecretChannelKind | None = None,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name,
@@ -85,6 +89,9 @@ def _option(
         multiple=multiple,
         constraint=constraint,
         machine_secret_channel=machine_secret_channel,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -346,6 +353,9 @@ PROFILE_COMMAND_SPECS = (
                 "cli.config.profile.archive.export_out_help",
                 required=True,
                 constraint=ParameterConstraint(dir_okay=False, writable=True),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             _LANGUAGE,
         ),
@@ -368,6 +378,9 @@ PROFILE_COMMAND_SPECS = (
                 "cli.config.profile.archive.inspect_path_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             _LANGUAGE,
         ),
@@ -416,6 +429,9 @@ PROFILE_COMMAND_SPECS = (
                 "cli.config.profile.censo.file_option_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             _option("apply", ("--apply",), _BOOL, "cli.config.profile.censo.apply_help", default=False, flag=True),
         ),
@@ -631,6 +647,9 @@ PROFILE_COMMAND_SPECS = (
                 "cli.config.profile.restore.file_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             _option(
                 "artifact",
@@ -638,6 +657,9 @@ PROFILE_COMMAND_SPECS = (
                 _PATH,
                 "cli.config.profile.restore.artifact_help",
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             _option(
                 "secrets_stdin",

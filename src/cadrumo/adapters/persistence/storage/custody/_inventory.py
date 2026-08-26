@@ -14,7 +14,6 @@ from uuid import UUID
 from .....core import StorageCategory, storage_location
 from .....core.directory_scan import iter_directory
 from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     anchor_directory,
@@ -23,6 +22,7 @@ from ._filesystem import (
     posix_open_child_directory,
     windows_regular_file_anchor,
 )
+from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = 2048
 PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = 512 * 1024 * 1024

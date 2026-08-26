@@ -35,12 +35,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....core import (
     CasillaId,
     RegistryAuthorityGrade,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     Modelo840IaeExemptionAssessment,
     Modelo840IaeExemptionStatus,

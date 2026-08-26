@@ -9,7 +9,6 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_DATA_MAX_ENTRIES,
@@ -26,6 +25,7 @@ from ._filesystem import (
 from ._records import ProfileCustodyEnvelope
 from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, PROFILE_CUSTODY_SENTINEL_MAX_BYTES
 from ._sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
+from .errors import ProfileCustodyRecordError
 
 
 def write_data_files(data_root: Path, data_files: Mapping[str, bytes]) -> None:

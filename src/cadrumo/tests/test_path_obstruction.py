@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from ..core.directory_scan import iter_directory
 from ..core.atomic_write import atomic_write_bytes, atomic_write_text
+from ..core.directory_scan import iter_directory
 from ..core.external_constants import UTF_8_ENCODING
 from .path_obstruction import PathObstructionError, obstructed_path, replace_would_refuse
 

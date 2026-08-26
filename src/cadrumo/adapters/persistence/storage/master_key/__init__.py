@@ -53,7 +53,6 @@ from ._active_session import (
     suspend_active_session,
 )
 from ._bucket_session import BucketSession
-from .errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import (
     ARGON2_VERSION,
@@ -81,6 +80,7 @@ from ._master_key import (
     refuse_unsecured_with_real_nif,
 )
 from ._master_key_derivation import derive_kek_with_params
+from .errors import MasterKeyReentrantError
 
 __all__ = [
     "ARGON2_VERSION",

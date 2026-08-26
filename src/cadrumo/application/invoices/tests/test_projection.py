@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
@@ -20,7 +22,6 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ...review import InvoiceReviewFilterSpec, InvoiceReviewStatus, update_invoice_review
-from cadrumo.application.workflow.state_models import WorkflowState
 from .. import (
     InvoiceMatchRow,
     apply_manual_invoice_match,

@@ -21,13 +21,13 @@ import tomllib
 
 import pytest
 
-from ..errors import CorpusSearchInputError
 from .._terminology import (
     CONCEPT_ID_MAX_LENGTH,
     CONCEPT_ID_MIN_LENGTH,
     CONCEPT_ID_PATTERN,
     _project_concept,
 )
+from ..errors import CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

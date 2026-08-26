@@ -15,7 +15,6 @@ import pytest
 from ....core import ConceptLifecycle
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
-from ..errors import CorpusSearchInputError
 from .._terminology import (
     _project_concept,
     _terminology_root,
@@ -23,6 +22,7 @@ from .._terminology import (
     lookup_terminology,
     search_terminology,
 )
+from ..errors import CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

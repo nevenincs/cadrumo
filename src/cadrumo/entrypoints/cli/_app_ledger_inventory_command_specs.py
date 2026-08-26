@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
     _POLICY_4,
@@ -172,6 +173,9 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
         ),
         policy=_POLICY_4,

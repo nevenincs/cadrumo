@@ -43,10 +43,10 @@ from ...core import (
     ConceptLifecycle,
     fold_diacritics,
 )
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.directory_scan import (
     scan_directory,
 )
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from .errors import CorpusSearchInputError

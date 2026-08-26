@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import validated_casilla_id
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement
+
+from ....core import validated_casilla_id
 from .._relation_prefill import _unresolved_relation_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

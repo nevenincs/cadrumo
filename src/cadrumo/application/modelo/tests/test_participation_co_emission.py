@@ -17,13 +17,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger.actions_common import blocking_modelo_references
 from ....core import CasillaId, Period, validated_casilla_id
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

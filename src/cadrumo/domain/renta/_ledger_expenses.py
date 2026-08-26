@@ -33,8 +33,8 @@ from ..categories import (
     family_for,
 )
 from ..contribuyente import CCAA
-from .errors import RentaValidationError
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
+from .errors import RentaValidationError
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
 

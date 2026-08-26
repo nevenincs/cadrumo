@@ -5,7 +5,6 @@ from __future__ import annotations
 from ._app_diagnostics_command_specs import DIAGNOSTICS_COMMAND_SPECS
 from ._app_ledger_command_specs import LEDGER_COMMAND_SPECS
 from ._app_live_command_specs import LIVE_COMMAND_SPECS
-from ._app_maintenance_command_specs import MAINTENANCE_COMMAND_SPECS
 from ._app_quickfile_command_specs import QUICKFILE_COMMAND_SPECS
 from ._command_spec import CommandSpec, CommandSpecGraph
 from ._config._command_specs import CONFIG_COMMAND_SPECS
@@ -26,7 +25,6 @@ COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *DIAGNOSTICS_COMMAND_SPECS,
     *LEDGER_COMMAND_SPECS,
     *LIVE_COMMAND_SPECS,
-    *MAINTENANCE_COMMAND_SPECS,
     MODELO_ROOT_COMMAND_SPEC,
     *MODELO_AUDIT_COMMAND_SPECS,
     *MODELO_CORE_COMMAND_SPECS,

@@ -57,9 +57,10 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
+        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
         from ...tests.profile_capsule import load_test_profile_record
         from ..user_profile.projections import fact_value
-        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.

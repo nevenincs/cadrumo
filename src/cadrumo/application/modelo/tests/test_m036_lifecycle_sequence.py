@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.modelos import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m036_lifecycle import M036DeclarationCommand, list_m036_declarations, record_m036_declaration

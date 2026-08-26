@@ -26,12 +26,12 @@ from ..transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ._models import Invoice, InvoiceCatalogue
 from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
     InvoiceValidationError,
 )
-from ._models import Invoice, InvoiceCatalogue
 
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.

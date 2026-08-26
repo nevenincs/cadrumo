@@ -30,7 +30,6 @@ from ._descendant_facts import (
     relacion_kwarg,
 )
 from ._descendant_record import DescendantRecordFields
-from .errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._family_profile import RentaFamilyProfile
 from ._family_types import (
     GuarderiaMonthSpend,
@@ -78,6 +77,7 @@ from ._renta_codes import (
     modelo100_ccaa_codigo,
     modelo100_ecivil_export_code,
 )
+from .errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the

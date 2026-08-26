@@ -25,8 +25,8 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
-from .errors import LedgerStorageError
 from ._models import BucketTransactionRef
+from .errors import LedgerStorageError
 
 #: Registered locale key for every key-derivation refusal in this module.
 #: Read from the class's own bound :class:`~core.errors.ErrorCode` rather than

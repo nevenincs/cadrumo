@@ -15,9 +15,10 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     DeadlineEngine,
     IVARegime,

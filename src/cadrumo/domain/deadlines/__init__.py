@@ -71,13 +71,6 @@ from ._engine import (
     explain,
     next_deadline,
 )
-from .errors import (
-    DeadlineError,
-    DeadlineValidationError,
-    NoDeadlineWindowsError,
-    ProfileError,
-    ScheduleComputationError,
-)
 from ._festivos import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
@@ -131,6 +124,13 @@ from ._recargo import (
     load_recargo_bands,
     resolve_recargo_band,
     twelve_month_anniversary,
+)
+from .errors import (
+    DeadlineError,
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ProfileError,
+    ScheduleComputationError,
 )
 
 __all__ = [

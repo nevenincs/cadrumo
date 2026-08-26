@@ -20,6 +20,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+
 from ....adapters.persistence.storage import Envelope, EnvelopeVersionError
 from ....core import (
     CasillaId,
@@ -27,7 +29,6 @@ from ....core import (
     SecureObjectWrite,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,
@@ -38,7 +39,6 @@ from ....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ..errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionEnvelopePayload,
@@ -48,6 +48,7 @@ from .._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
 )
+from ..errors import ObservationCasillaReferenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

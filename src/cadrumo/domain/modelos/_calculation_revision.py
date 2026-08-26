@@ -59,6 +59,10 @@ from pydantic import (
     model_validator,
 )
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     STRICT_FROZEN_CONFIG,
@@ -71,9 +75,6 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from ..calculations import DirectRowMaterializationProvenance, RowBindingKey, RowCasillaKey, RowSourceIdentity
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ._calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,

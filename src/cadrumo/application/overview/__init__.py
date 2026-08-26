@@ -106,13 +106,6 @@ from ._data_prep import (
     DataPrepWalkthrough,
     build_data_prep_walkthrough,
 )
-from .errors import (
-    OverviewAgendaError,
-    OverviewBacklogError,
-    OverviewCalendarError,
-    OverviewError,
-    OverviewExplainError,
-)
 from ._next_actions import (
     OverviewStatusNextStep,
     OverviewStatusNextStepId,
@@ -125,10 +118,18 @@ from ._pipeline_health import (
     PipelineHealthReport,
     build_pipeline_health_report,
 )
+from .errors import (
+    OverviewAgendaError,
+    OverviewBacklogError,
+    OverviewCalendarError,
+    OverviewError,
+    OverviewExplainError,
+)
 
 if TYPE_CHECKING:
-    from ..state_projection import OperatorStateProjection
     from cadrumo.application.workflow.state_models import WorkflowState
+
+    from ..state_projection import OperatorStateProjection
     from ._agenda import build_overview_agenda
     from ._backlog import build_overview_backlog
     from ._explain import build_overview_explain

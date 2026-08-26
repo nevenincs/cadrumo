@@ -6,9 +6,9 @@ from collections import Counter, defaultdict
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_window_semantic_coordinates
+from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

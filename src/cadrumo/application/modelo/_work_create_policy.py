@@ -145,8 +145,9 @@ def modelo_work_create_applicability_refusal(
     if allow_not_applicable:
         return None
 
-    from ...application.user_profile.projections import projection_for_taxpayer
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ...application.user_profile.projections import projection_for_taxpayer
     from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
@@ -176,8 +177,9 @@ def guard_active_profile_foral_ccaa() -> None:
     values pass through; foral values raise the domain refusal before work-unit
     creation reaches the generic unsupported-modelo checks.
     """
-    from ...application.user_profile.projections import fact_value
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ...application.user_profile.projections import fact_value
     from ...domain.contribuyente import parse_tax_region
 
     state = workflow_state_repository().load()

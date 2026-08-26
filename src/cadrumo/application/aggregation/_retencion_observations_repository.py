@@ -45,9 +45,9 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
-from .errors import AggregationValidationError, t
 from ._observation_window import hashed_tax_id_token, replace_observation_window
 from ._retenciones import RetencionObservation, RetencionScheme
+from .errors import AggregationValidationError, t
 
 
 class _RetencionObservationEnvelopePayload(BaseModel):

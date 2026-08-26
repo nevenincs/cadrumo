@@ -37,9 +37,9 @@ from ...pdf import (
     sha256_file,
     source_pdf_reference_path,
 )
-from ..errors import BorradorParseError
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
+from ..errors import BorradorParseError
 
 _CASILLA_VALUE_RE = re.compile(
     rf"(?m)^\s*(?P<casilla_id>[0-9]{{4}})\s[^\n]{{0,160}}?{SPANISH_AMOUNT_GROUP}",

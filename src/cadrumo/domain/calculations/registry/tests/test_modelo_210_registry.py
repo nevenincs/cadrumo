@@ -7,11 +7,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.convenio import load_convenio_authority
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
-from cadrumo.domain.calculations.registry.convenio import load_convenio_authority
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..errors import NoRevisionForPeriodError
 from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues

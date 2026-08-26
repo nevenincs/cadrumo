@@ -8,8 +8,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+
+from ....core import CasillaId, validated_casilla_id
 from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

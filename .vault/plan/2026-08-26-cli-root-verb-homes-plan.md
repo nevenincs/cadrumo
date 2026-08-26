@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:cdfde4667f433d11851dc937319885631db3d798d8df7c9636f58d52c0331168'
+body_hash: 'sha256:1f2b6494327899799c3aff4b863403637b47c4be544651e195277c3a5201037c'
 ---
 
 # `cli-root-verb-homes` plan
@@ -33,9 +33,9 @@ Define the closed locus and shape enums in core and carry them on the parameter 
 
 Declare a locus on all 55 Path-typed parameters and every remote-handle parameter, then gate that a path or handle parameter without a declared locus cannot be constructed.
 
-- [ ] `W01.P02.S03` - Declare locus and shape on all 55 Path-typed parameters; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W01.P02.S04` - Declare remote-handle locus on folder, reference and spreadsheet-id parameters; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W01.P02.S05` - Gate that a path-bearing or handle-bearing parameter without a declared locus cannot be constructed, and prove it bites; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W01.P02.S03` - Declare locus and shape on all 55 Path-typed parameters; `src/cadrumo/entrypoints/cli/`.
+- [x] `W01.P02.S04` - Declare remote-handle locus on folder, reference and spreadsheet-id parameters; `src/cadrumo/entrypoints/cli/`.
+- [x] `W01.P02.S05` - Gate that a path-bearing or handle-bearing parameter without a declared locus cannot be constructed, and prove it bites; `src/cadrumo/entrypoints/cli/tests/`.
 
 ## Wave `W02` - Placement re-homes
 
@@ -54,8 +54,8 @@ Move config google sync calc to app modelo spreadsheet, renaming export to push 
 
 Fold app maintenance reconcile into config repair and retire the one-verb family.
 
-- [ ] `W02.P04.S10` - Fold app maintenance reconcile into config repair and retire the family; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P04.S11` - Update the operator-actions catalogue target command key; `src/cadrumo/application/operator_actions/`.
+- [x] `W02.P04.S10` - Fold app maintenance reconcile into config repair and retire the family; `src/cadrumo/entrypoints/cli/`.
+- [x] `W02.P04.S11` - Update the operator-actions catalogue target command key; `src/cadrumo/application/operator_actions/`.
 
 ### Phase `W02.P05` - Placement gate
 

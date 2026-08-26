@@ -26,9 +26,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .corpus_catalogue import verify_source_catalogue
-from .legal import verify_legal_catalogue_grounding
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
@@ -42,7 +39,6 @@ from ._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
 )
-from .validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_deadline_window_cadence,
     validate_deadline_window_ownership,
@@ -58,7 +54,11 @@ from ._validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
+from .corpus_catalogue import verify_source_catalogue
 from .errors import RegistryValidationError
+from .legal import verify_legal_catalogue_grounding
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from .validate_registry_scope import validate_registry_scope
 
 if TYPE_CHECKING:
     from ...user_profile import ProfileSchemaDefinition

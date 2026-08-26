@@ -27,11 +27,11 @@ from .._capsule_records import (
     ProfileCustodyCapsuleLabel,
     parse_profile_custody_capsule_label,
 )
-from ..errors import ProfileCustodyRecordError
 from .._filesystem import (
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
+from ..errors import ProfileCustodyRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

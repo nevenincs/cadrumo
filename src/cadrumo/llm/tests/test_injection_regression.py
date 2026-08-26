@@ -58,10 +58,10 @@ import pytest
 
 from ...adapters.inbound.pdf import extract_pages_text_from_bytes
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
-from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ...application.ledger.evidence_draft import InvoiceDraft
-from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.closure_findings import closure_findings
+from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence_draft import InvoiceDraft
 from ...application.ledger.grounding_anchor import evaluate_anchor
 from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ...core.config import LLMProvider, override_settings

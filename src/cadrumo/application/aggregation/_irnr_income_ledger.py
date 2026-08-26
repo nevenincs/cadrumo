@@ -41,9 +41,9 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from . import _shared_issue_reasons
-from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
+from .errors import AggregationPeriodError, AggregationValidationError, t
 
 _TARGET_CASILLA_RENDIMIENTOS_INTEGROS: CasillaId = validated_casilla_id(
     "rendimientos_integros",

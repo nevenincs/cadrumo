@@ -77,11 +77,11 @@ from ....core import (
     elide_to_cap,
 )
 from ....core.resources import bundled_path
+from ._validate_revision_rules import validate_informative_class_invariant
 from .ids import ModeloId
 from .loader import load_registry_tree
 from .schema import ModeloDefinition
 from .schema_base import CalculationClass
-from ._validate_revision_rules import validate_informative_class_invariant
 
 #: The ``calculation_class`` value naming the informative enforcement posture.
 _INFORMATIVE_CLASS: Final[CalculationClass] = "informative"

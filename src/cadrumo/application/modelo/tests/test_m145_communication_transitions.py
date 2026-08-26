@@ -26,12 +26,12 @@ from ....tests.write_unit_recorder import WriteUnitRecorder
 from .._m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordState,
+    _m145_communication_record_repository,
     create_m145_communication_record,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
     read_m145_communication_record,
 )
-from .._m145_communication_records import _m145_communication_record_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

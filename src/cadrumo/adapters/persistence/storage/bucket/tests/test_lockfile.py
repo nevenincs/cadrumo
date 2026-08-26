@@ -23,7 +23,6 @@ import pytest
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.bucket_layout import provision_bucket_directory
-from ..errors import BucketBusyError, BucketValidationError
 from .._layout import (
     BucketPaths,
     bucket_paths,
@@ -34,6 +33,7 @@ from .._lockfile import (
     lock_path,
     release_lock,
 )
+from ..errors import BucketBusyError, BucketValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

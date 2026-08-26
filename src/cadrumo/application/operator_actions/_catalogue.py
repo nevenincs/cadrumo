@@ -508,8 +508,8 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.maintenance.reconcile",
-            target_command_key="app.maintenance.reconcile",
+            action_id="operator.repair.prepared_exports",
+            target_command_key="config.repair.prepared_exports",
         ),
     ),
 )

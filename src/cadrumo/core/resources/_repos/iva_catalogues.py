@@ -10,8 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import override
 
-from ..errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
+from ..errors import ResourceNotFoundError
 
 
 class IvaCatalogueRepository(ResourceCacheRepository[object, int]):

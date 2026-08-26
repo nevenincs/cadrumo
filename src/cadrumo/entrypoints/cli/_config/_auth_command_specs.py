@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -45,6 +46,9 @@ def _option(
     flag: bool = False,
     multiple: bool = False,
     machine_secret_channel: MachineSecretChannelKind | None = None,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
     return OptionSpec(
         name=name,
@@ -56,6 +60,9 @@ def _option(
         flag_value=True if flag else None,
         multiple=multiple,
         machine_secret_channel=machine_secret_channel,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
     )
 
 
@@ -153,7 +160,15 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _option("provider", ("--provider",), _STR, "cli.config.auth.provider_help", required=True),
-            _option("file", ("--file",), _PATH, "cli.config.auth.file_help"),
+            _option(
+                "file",
+                ("--file",),
+                _PATH,
+                "cli.config.auth.file_help",
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
         ),
     ),
     _leaf(
@@ -344,7 +359,16 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _NAME_REGISTER,
-            _option("file", ("--file",), _PATH, "cli.config.auth.certificate.register.file_help", required=True),
+            _option(
+                "file",
+                ("--file",),
+                _PATH,
+                "cli.config.auth.certificate.register.file_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
             _option(
                 "friendly_name", ("--friendly-name",), _STR, "cli.config.auth.certificate.register.friendly_name_help"
             ),

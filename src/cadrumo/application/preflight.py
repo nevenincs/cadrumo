@@ -41,10 +41,10 @@ from ..core import (
     AuthProviderKind,
     NoRecoveryOutcome,
 )
+from ..core.config import Settings, load_settings
 from ..core.directory_scan import (
     iter_directory,
 )
-from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
 from ..core.paths import (
     WINDOWS_MAX_PATH,

@@ -20,8 +20,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from .....core import StorageCategory, storage_location
-from .errors import BucketValidationError
 from ._layout import BucketPaths, bucket_paths, validate_path_component
+from .errors import BucketValidationError
 
 _KEYSTORE_VALIDATION_SURFACE = "bucket_keystore"
 

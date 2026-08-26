@@ -62,9 +62,9 @@ from ..core import (
 )
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from .errors import LLMConfigError, LLMValidationError
 from ._models import LLMProvider, LLMRequest
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .errors import LLMConfigError, LLMValidationError
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
 #: run telemetry, so a mapping call is attributable separately from a read.

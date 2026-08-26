@@ -32,8 +32,8 @@ from ....application.provisioning import (
     probe_hardware_profile,
 )
 from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
-from ....core.directory_scan import scan_directory
 from ....core.config import load_settings, override_settings
+from ....core.directory_scan import scan_directory
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile

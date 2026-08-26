@@ -32,6 +32,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage import SYNC_RUN_RECORDS_NAMESPACE
@@ -41,7 +43,6 @@ from .....domain.buckets import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._persist import record_sync_run
 from .._records import (
     SyncRunCoverage,

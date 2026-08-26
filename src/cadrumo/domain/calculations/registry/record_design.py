@@ -40,6 +40,7 @@ from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
+from .errors import RegistryValidationError
 from .record_design_coverage import (
     DerivedDisenoCasilla,
     DisenoCoverageReport,
@@ -74,7 +75,6 @@ from .record_design_schema import (
     RecordDesignVariableTotalMarker,
     validate_auxiliary_envelope_header_contents,
 )
-from .errors import RegistryValidationError
 
 _log = get_logger(__name__)
 

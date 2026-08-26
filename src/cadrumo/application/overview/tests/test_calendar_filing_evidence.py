@@ -8,10 +8,11 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
+
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....core import Period
 from ....core.hashing import sha256_hex
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot

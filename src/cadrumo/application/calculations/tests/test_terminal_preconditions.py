@@ -12,6 +12,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
@@ -24,9 +28,6 @@ from ....core import (
 )
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -38,13 +39,13 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import _errors as errors_module
 from .. import _m303_carry_ingress as m303_module
 from .. import _observations_repository as observations_module
-from ..errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
 from .._m303_carry_ingress import M303CarryIngressError, _resolve_available_compensation_formula_id
 from .._observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     ResultDispositionProjection,
 )
+from ..errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
 
 if TYPE_CHECKING:
     from pathlib import Path

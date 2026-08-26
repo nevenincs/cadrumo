@@ -136,10 +136,11 @@ def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: P
 def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to_active_bucket(
     tmp_path: Path,
 ) -> None:
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from cadrumo.application.workflow.state_models import WorkflowState
+
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from cadrumo.application.workflow.state_models import WorkflowState
-    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
         # The fixture brings its bucket into existence by publishing a capsule,

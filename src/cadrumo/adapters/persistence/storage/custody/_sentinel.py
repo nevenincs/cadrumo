@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Final
 
 from ..crypto import GCM_TAG_SIZE, encrypt_record
-from .errors import ProfileCustodyRecordError
 from ._records import ProfileCustodyEnvelope
 from ._sentinel_contract import (
     ProfileCustodySentinelRecord,
@@ -16,6 +15,7 @@ from ._sentinel_contract import (
     profile_custody_sentinel_aad,
     profile_custody_sentinel_plaintext,
 )
+from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_SENTINEL_FILENAME: Final = "dek.sentinel.v1.json"
 PROFILE_CUSTODY_SENTINEL_MAX_BYTES: Final = 8 * 1024

@@ -28,12 +28,12 @@ from uuid import UUID
 
 import pytest
 
-from ..errors import ProfileCustodyRecordError
 from .._inventory import (
     DATABASE_PRESENCE_ONLY_RELATIVE_PATHS,
     DATABASE_SIDECAR_RELATIVE_PATHS,
     inventory_profile_custody_capsule,
 )
+from ..errors import ProfileCustodyRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

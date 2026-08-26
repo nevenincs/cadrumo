@@ -610,19 +610,6 @@ cli:
         tgvi_help: Verifica l'alta ROI/VIES d'un NIF a GROI i desa l'observació
         view_help: Mostra una observació de verificació desada
       year_help: Exercici de presentació
-    maintenance:
-      help: Recupera l'estat local que ha deixat una operació interrompuda.
-      reconcile_cleared_info: S'han netejat {count} exportació(ns) de perfil interrompudes.
-        S'ha eliminat qualsevol fitxer temporal sense xifrar i les exportacions ja
-        escrites al disc han rebut el seu registre d'auditoria pendent.
-      reconcile_failures_warning: No s'han pogut netejar {count} exportació(ns) de
-        perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
-        al disc un fitxer temporal sense xifrar per a cadascuna.
-      reconcile_help: Neteja les exportacions de perfil que una fallada va deixar
-        a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant els
-        esdeveniments d'auditoria pendents.
-      reconcile_none_info: No s'ha trobat cap exportació de perfil interrompuda. Cap
-        execució anterior no ha deixat res pendent.
     modelo:
       aggregate:
         counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix
@@ -2429,6 +2416,19 @@ cli:
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
       plan_help: Planificació de reparació en sec i amb preservació primer per a files
         d'objectes segurs no llegibles.
+      prepared_exports_cleared_info: S'han netejat {count} exportació(ns) de perfil
+        interrompudes. S'ha eliminat qualsevol fitxer temporal sense xifrar i les
+        exportacions ja escrites al disc han rebut el seu registre d'auditoria pendent.
+      prepared_exports_failures_warning: No s'han pogut netejar {count} exportació(ns)
+        de perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
+        al disc un fitxer temporal sense xifrar per a cadascuna.
+      prepared_exports_help: Neteja les exportacions de perfil que una fallada va
+        deixar a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant
+        els esdeveniments d'auditoria pendents.
+      prepared_exports_none_info: No s'ha trobat cap exportació de perfil interrompuda.
+        Cap execució anterior no ha deixat res pendent.
+      prepared_exports_output_language_help: Idioma del text de sortida (es, en, ca,
+        hu).
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del

@@ -26,8 +26,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
-from .errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
+from .errors import ProfileKeysRegistrationError, ProfileValidationError
 
 if TYPE_CHECKING:
     PROFILE_KEYS: tuple[ProfileKey, ...]

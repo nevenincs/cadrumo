@@ -7,8 +7,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import ModeloCalculationRouteId
-from .errors import OperatorSurfaceContractError
 from ._manifest import OperatorSurfaceReconciliation
+from .errors import OperatorSurfaceContractError
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 _CALCULATION_WORKFLOW_PATHS = {

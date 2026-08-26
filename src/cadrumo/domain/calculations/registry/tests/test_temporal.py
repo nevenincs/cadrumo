@@ -20,6 +20,7 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
+from .._validate_revision_rules import validate_revision_windows
 from ..errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -28,7 +29,6 @@ from ..errors import (
 from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition
 from ..temporal import select_revision
-from .._validate_revision_rules import validate_revision_windows
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

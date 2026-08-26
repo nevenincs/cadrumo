@@ -16,9 +16,9 @@ from ...core.config import Settings, load_settings
 from ...core.errors import BaseSeverity
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
+from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 
 _logger = get_logger(__name__)
 

@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+
 from ....deadlines import (
     EntityType,
     FiscalResidency,
@@ -31,7 +33,6 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

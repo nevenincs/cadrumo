@@ -42,12 +42,12 @@ from ._declarations_remote import assert_read_browser_action as _remote_assert_r
 from ._declarations_remote import assert_read_http as _remote_assert_read_http
 from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ._declarations_schema import Declaracion
+from ._schema import (
+    FiledDeclaracionArtefact,
+)
 from .errors import (
     JustificanteFetchError,
     SedeNavigationError,
-)
-from ._schema import (
-    FiledDeclaracionArtefact,
 )
 
 if TYPE_CHECKING:

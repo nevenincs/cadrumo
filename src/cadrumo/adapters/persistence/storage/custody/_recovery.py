@@ -20,7 +20,6 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity import canonical_profile_bucket_id
-from .errors import ProfileCustodyRecordError
 from ._kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from ._records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
@@ -28,6 +27,7 @@ from ._records import (
     ProfileCustodyWrappedDek,
 )
 from ._sentinel_contract import ProfileCustodySentinelRecord
+from .errors import ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from .....core.config import Settings

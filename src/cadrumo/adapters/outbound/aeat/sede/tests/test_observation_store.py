@@ -12,12 +12,12 @@ from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
-from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.config import Settings
+from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......tests.secure_sql import TestRuntimeProfile
-from ..errors import SedeValidationError
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ..errors import SedeValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'

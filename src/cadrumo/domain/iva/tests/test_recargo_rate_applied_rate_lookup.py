@@ -19,13 +19,13 @@ from decimal import Decimal
 
 import pytest
 
-from ..errors import IvaValidationError
 from .._recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,
     load_recargo_rates,
     recargo_rate_for_applied_rate,
 )
+from ..errors import IvaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

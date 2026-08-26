@@ -22,6 +22,8 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
@@ -39,10 +41,8 @@ from ....core import Period
 from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from cadrumo.domain.calculations.registry.ids import RevisionId
 from ...user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
-from ..errors import ModeloValidationError
 from .._repository import (
     remove_work_unit,
     upsert_work_unit,
@@ -53,6 +53,7 @@ from .._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

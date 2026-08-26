@@ -696,7 +696,6 @@ def _registry_snapshot_for_work_unit(
     subject_leaf_key: str,
 ) -> RegistrySnapshot:
     """Resolve the registry snapshot attached to ``work_unit``."""
-
     try:
         return bundled_authority().snapshot(
             str(work_unit.modelo),

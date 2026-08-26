@@ -25,11 +25,11 @@ from ...aggregation import (
     RESERVED_SOURCE_KINDS,
     BindingSourceDisposition,
 )
+from .._calculation_source_policy import BUCKET_AGGREGATION_OWNED_SOURCES
 from ..calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
-from .._calculation_source_policy import BUCKET_AGGREGATION_OWNED_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

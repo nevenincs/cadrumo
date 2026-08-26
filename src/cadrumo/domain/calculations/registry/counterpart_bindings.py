@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
 from ....core.identity import TaxIdIdentityToken
+from ._m347_threshold import m347_declarable_party_ids
 from .binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -36,7 +37,6 @@ from .invoice_bindings import (
 from .invoice_bindings import (
     invoice_selector as _invoice_selector,
 )
-from ._m347_threshold import m347_declarable_party_ids
 from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [

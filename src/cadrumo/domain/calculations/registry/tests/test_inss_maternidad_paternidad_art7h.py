@@ -34,9 +34,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition
+
 from .....core.config import SecretStoreBackend
 from .....tests.secure_sql import dev_test_database_password
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import TypeGuard
 from uuid import UUID
 
-from ....application.user_profile.login_session_port import ProfileBucketSessionPort, ProfileLoginSessionPort, ProfileLoginThrottleEvaluationPort, ProfilePersistedSessionPort, ProfileSessionResumeOutcomePort
+from ....application.user_profile.login_session_port import (
+    ProfileBucketSessionPort,
+    ProfileLoginSessionPort,
+    ProfileLoginThrottleEvaluationPort,
+    ProfilePersistedSessionPort,
+    ProfileSessionResumeOutcomePort,
+)
 from . import custody, master_key
 
 

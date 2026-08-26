@@ -15,8 +15,8 @@ import inspect
 from ..logging import get_logger
 from ..time import now
 from ._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
-from .errors import RunContextMissingError
 from ._models import RunEvent, RunEventKind, RunEventPayload
+from .errors import RunContextMissingError
 
 _logger = get_logger("cadrumo.core.observability")
 

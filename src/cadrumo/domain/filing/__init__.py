@@ -67,17 +67,6 @@ from ._amendment import (
     ModeloSustitutiva,
     make_amendment_id,
 )
-from .errors import (
-    FilingExportError,
-    FilingExportValidationError,
-    FilingValidationError,
-    ModeloAmendmentError,
-    ModeloAmendmentValidationError,
-    ModeloBuilderError,
-    ModeloComputationError,
-    ModeloDraftError,
-    ModeloImportError,
-)
 from ._protocols import (
     CasillaCollection,
     CasillaSchema,
@@ -108,6 +97,17 @@ from ._validator import (
     ModeloValidator,
     apply_validation,
     derive_validation_status,
+)
+from .errors import (
+    FilingExportError,
+    FilingExportValidationError,
+    FilingValidationError,
+    ModeloAmendmentError,
+    ModeloAmendmentValidationError,
+    ModeloBuilderError,
+    ModeloComputationError,
+    ModeloDraftError,
+    ModeloImportError,
 )
 
 __all__ = [
