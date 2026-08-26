@@ -58,7 +58,7 @@ from ...domain.modelos import (
     ModeloError,
     WorkUnit,
 )
-from ._action_errors import ModeloCrossPeriodCleanStateError
+from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure
 
 _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
@@ -122,6 +122,89 @@ def require_detail_rows_declared_for_their_owning_modelo(
                 "work_unit_modelo": str(work_unit.modelo),
             },
         )
+
+
+#: Each detail-row kind's own natural real-world identity -- the field tuple
+#: that names WHICH counterparty/operation/member a row is about, as distinct
+#: from the declarable figures (amounts, percentages) that describe it. Two
+#: rows sharing this key from different supply paths (a resolver and a
+#: caller) name the SAME real-world thing and must union rather than
+#: double-count; two rows sharing it that disagree on a declarable figure are
+#: a genuine conflict, not a duplicate.
+_ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
+    Modelo184MemberRow: ("nif",),
+    Modelo232VinculadaRow: ("nif", "tipo_operacion"),
+    Modelo347ContraparteRow: ("nif", "clave_operacion"),
+    Modelo349OperadorRow: ("nif_comunitario", "clave_operacion"),
+    Modelo349RectificacionRow: ("nif_comunitario", "clave_operacion", "ejercicio", "periodo"),
+    Modelo210AgrupacionRentaRow: ("source_id",),
+}
+
+
+def _row_identity(row: ModeloDetailRow) -> tuple[object, ...]:
+    fields = _ROW_IDENTITY_FIELDS.get(type(row))
+    if fields is None:
+        # An undeclared row kind has no known identity to union by; treat it
+        # as identity-unique so it never collides (owning-modelo validation
+        # elsewhere refuses genuinely unknown kinds).
+        return (id(row),)
+    return tuple(getattr(row, field) for field in fields)
+
+
+def union_detail_rows_by_identity(
+    *,
+    resolver_rows: tuple[ModeloDetailRow, ...],
+    caller_rows: tuple[ModeloDetailRow, ...],
+) -> tuple[ModeloDetailRow, ...]:
+    """Union resolver-produced and caller-supplied detail rows by identity.
+
+    Naive concatenation double-counts a row two supply paths both name --
+    an invoice-derived M349 operador row the operator also enters manually,
+    for instance -- inflating every downstream count and sum derived from
+    the row set. Rows are grouped by (row type, natural identity); a group
+    fed by only one path passes through unchanged. A group fed by BOTH
+    paths unions to the resolver's row when every remaining field (the
+    declarable figures) agrees, and REFUSES, naming the identity and the
+    divergent fields, when they disagree -- an unstated precedence pick
+    between two supply paths on a filing-grade value is not this function's
+    call to make.
+
+    Two same-path rows sharing an identity (two caller rows, or two
+    resolver rows) are left as duplicates for the caller to see: this
+    function's contract is cross-path union, not intra-path deduplication,
+    which is a different defect with a different owner.
+    """
+    if not resolver_rows or not caller_rows:
+        return (*resolver_rows, *caller_rows)
+    resolver_by_identity: dict[tuple[str, tuple[object, ...]], ModeloDetailRow] = {
+        (row.row_type, _row_identity(row)): row for row in resolver_rows
+    }
+    unioned: list[ModeloDetailRow] = list(resolver_rows)
+    for caller_row in caller_rows:
+        key = (caller_row.row_type, _row_identity(caller_row))
+        resolver_row = resolver_by_identity.get(key)
+        if resolver_row is None:
+            unioned.append(caller_row)
+            continue
+        if resolver_row == caller_row:
+            continue
+        divergent_fields = tuple(
+            sorted(
+                field
+                for field in type(resolver_row).model_fields
+                if getattr(resolver_row, field) != getattr(caller_row, field)
+            ),
+        )
+        raise ModeloAggregationBindingError(
+            translated_message="errors.error.error_modelo_aggregation_binding",
+            context={
+                "reason": "detail_row_identity_conflict",
+                "row_type": caller_row.row_type,
+                "identity": [str(component) for component in _row_identity(caller_row)],
+                "divergent_fields": list(divergent_fields),
+            },
+        )
+    return tuple(unioned)
 
 
 @dataclass(frozen=True, slots=True)

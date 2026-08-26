@@ -143,6 +143,9 @@ from ._calculation_modelo_adjustments import (
 from ._calculation_modelo_adjustments import (
     suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
 )
+from ._calculation_modelo_adjustments import (
+    union_detail_rows_by_identity as _union_detail_rows_by_identity,
+)
 from ._calculation_preparation import (
     prepare_calculation as _prepare_calculation,
 )
@@ -1300,7 +1303,10 @@ def _bucket_aggregation_channels(
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> _BucketAggregationChannels:
     """Compose mesh, detail-row, and caller channels in their established order."""
-    all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
+    all_detail_rows = _union_detail_rows_by_identity(
+        resolver_rows=source_resolution.detail_rows,
+        caller_rows=detail_rows,
+    )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
         transaction_repository=transaction_repository,
