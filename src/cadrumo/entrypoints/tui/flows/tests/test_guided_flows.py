@@ -83,7 +83,11 @@ def _two_section_definition() -> FlowDefinition:
             FlowSection(
                 id="s1",
                 title=_copy("flows.guided.section_one"),
-                items=(FlowPage(id="p1", widget=FlowWidgetKind.TEXT, prompt=_copy("flows.guided.prompt_one"), answer_type=str),),
+                items=(
+                    FlowPage(
+                        id="p1", widget=FlowWidgetKind.TEXT, prompt=_copy("flows.guided.prompt_one"), answer_type=str
+                    ),
+                ),
             ),
             FlowSection(
                 id="s2",

@@ -71,7 +71,7 @@ from ....core.flows import (
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
-from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ..components.theme import BASE_CSS, cadrumo_css_variables, install_cadrumo_themes, toggle_appearance
 from ..components.widgets import ContentScroll, StageNavigationStrip
 
 if TYPE_CHECKING:
@@ -96,6 +96,15 @@ def _operator_flow_context(definition: FlowDefinition, mode: FlowMode) -> dict[s
 
 class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
+
+    def get_css_variables(self) -> dict[str, str]:
+        """Expose the canonical Cadrumo tokens to every stylesheet.
+
+        Textual resolves this once per app and hands the result to app-level
+        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
+        design tokens travel here rather than in the theme's own variables.
+        """
+        return cadrumo_css_variables(super().get_css_variables())
 
     CSS = (
         BASE_CSS

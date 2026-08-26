@@ -9,6 +9,8 @@ Reusable Textual widgets that consume these tokens live in
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from textual.theme import Theme
@@ -69,10 +71,73 @@ CADRUMO_DARK: Final[Theme] = Theme(
 
 CADRUMO_THEMES: Final[tuple[Theme, ...]] = (CADRUMO_LIGHT, CADRUMO_DARK)
 
-SCROLLBAR_CELLS: Final[int] = 1
+CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        # -- Shape ---------------------------------------------------------
+        # ONE corner treatment for every bordered thing on screen. A panel
+        # drawn `round`, a field drawn `tall` and a button drawn with no
+        # border at all is three shapes claiming to be one system, and the
+        # eye reads the inconsistency long before it can name it.
+        "cadrumo-radius": "round",
+        # -- Spacing scale, in terminal cells -------------------------------
+        # Cells, not rem: the unit here is a character, so the useful scale is
+        # tiny and every step has to earn itself. A web 4-point scale has no
+        # meaning on a grid where one step is already the smallest visible
+        # distance.
+        "cadrumo-space-0": "0",
+        "cadrumo-space-1": "1",
+        "cadrumo-space-2": "2",
+        "cadrumo-space-3": "3",
+        # -- Semantic roles -------------------------------------------------
+        # Call sites name the ROLE, never the number, so re-tuning density is
+        # one edit here rather than a sweep of eighty literals.
+        # gutter: breathing between a panel border and its content.
+        # stack:  the vertical gap between sibling blocks.
+        # indent: how far a dependent line sits under its parent.
+        "cadrumo-gutter": "2",
+        "cadrumo-stack": "1",
+        "cadrumo-indent": "2",
+        # -- Controls -------------------------------------------------------
+        # Three rows is Textual's own button height: one row of label between
+        # two rows of border. The previous single row with no border made a
+        # button indistinguishable from a line of text.
+        "cadrumo-control-height": "3",
+        "cadrumo-control-pad-x": "3",
+        "cadrumo-control-min-width": "14",
+        # -- Chrome ---------------------------------------------------------
+        "cadrumo-scrollbar": "1",
+    },
+)
+"""The canonical presentation tokens every Cadrumo surface is built from.
+
+Delivered through :func:`cadrumo_css_variables`, which every Cadrumo ``App``
+returns from ``get_css_variables``. That hook is the only mechanism Textual
+offers that reaches EVERY stylesheet -- app-level ``CSS`` and each widget's
+``DEFAULT_CSS`` alike. Theme ``variables`` do not: they are resolved after
+widget default styles are parsed, so a token spent there raises
+``UnresolvedVariableError`` in exactly the places a design system most needs
+to reach.
+
+Spatial tokens are deliberately outside the two ``Theme`` objects. Light and
+dark differ in colour, never in measure; duplicating the scale into both
+themes would create two places for one fact to drift apart.
+"""
+
+SCROLLBAR_CELLS: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-scrollbar"])
 """Width of the vertical scrollbar track, in cells."""
 
-_BASE_CSS_TEMPLATE: Final[str] = """
+
+def cadrumo_css_variables(base: Mapping[str, str]) -> dict[str, str]:
+    """Merge the canonical tokens over Textual's own CSS variables.
+
+    Every Cadrumo ``App`` overrides ``get_css_variables`` to return this, so a
+    token edit reaches every surface at once instead of being swept through
+    each stylesheet by hand.
+    """
+    return {**base, **CADRUMO_CSS_TOKENS}
+
+
+BASE_CSS: Final[str] = """
     Screen {
         background: $background;
         color: $foreground;
@@ -88,15 +153,15 @@ _BASE_CSS_TEMPLATE: Final[str] = """
         width: 100%;
         height: 1fr;
         align-horizontal: left;
-        scrollbar-size-vertical: SCROLLBAR_CELLS;
+        scrollbar-size-vertical: $cadrumo-scrollbar;
         scrollbar-gutter: auto;
-        padding: 0;
+        padding: $cadrumo-space-0;
     }
 
     .cadrumo-scroll DataTable {
         height: auto;
         overflow-y: hidden;
-        scrollbar-size-vertical: 0;
+        scrollbar-size-vertical: $cadrumo-space-0;
     }
 
     .cadrumo-banner {
@@ -106,16 +171,21 @@ _BASE_CSS_TEMPLATE: Final[str] = """
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 1;
+        padding: $cadrumo-space-0 $cadrumo-gutter;
     }
 
     .cadrumo-panel {
-        border: round $primary;
+        border: $cadrumo-radius $primary;
         border-title-color: $accent;
         border-title-style: bold;
         background: $surface;
-        padding: 0 1;
-        margin: 0;
+        padding: $cadrumo-space-0 $cadrumo-gutter;
+        /* The gap that was missing. Two panels with no margin butt their
+           borders together into one doubled line, so the eye reads a single
+           smeared container instead of two ideas. One row is the smallest
+           separation a terminal can show, and on a grid this dense it is
+           enough. */
+        margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-space-0;
         width: 100%;
         height: auto;
     }
@@ -124,9 +194,13 @@ _BASE_CSS_TEMPLATE: Final[str] = """
     .cadrumo-note { color: $text-muted; text-style: italic; }
 
     Button {
-        height: 1;
-        border: none;
-        padding: 0 1;
+        /* Three rows, not one. A borderless single-row button is a run of
+           text that happens to be focusable; the border is what makes it
+           read as a thing you press. */
+        height: $cadrumo-control-height;
+        min-width: $cadrumo-control-min-width;
+        border: $cadrumo-radius $secondary;
+        padding: $cadrumo-space-0 $cadrumo-control-pad-x;
         background: $panel;
         color: $foreground;
     }
@@ -134,30 +208,45 @@ _BASE_CSS_TEMPLATE: Final[str] = """
     Button:focus {
         background: $primary;
         color: $text;
-        text-style: bold reverse;
+        border: $cadrumo-radius $primary;
+        text-style: bold;
     }
-    Button.-primary { background: $primary; color: $text; }
-    Button.-primary:focus { text-style: bold reverse; }
+    Button.-primary {
+        background: $primary;
+        color: $text;
+        border: $cadrumo-radius $primary;
+    }
+    Button.-primary:focus { text-style: bold; }
 
     Input {
         width: 100%;
-        border: tall $accent;
+        height: $cadrumo-control-height;
+        /* Was `tall`, while panels were `round` and buttons had none: three
+           shapes claiming to be one system. */
+        border: $cadrumo-radius $accent;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
         background: $background;
     }
-    Input:focus { border: tall $primary; }
+    Input:focus { border: $cadrumo-radius $primary; }
 """
+"""Chrome and layout shared by every Cadrumo full-screen surface.
 
-BASE_CSS: Final[str] = _BASE_CSS_TEMPLATE.replace("SCROLLBAR_CELLS", str(SCROLLBAR_CELLS))
-"""Chrome and layout shared by every Cadrumo full-screen surface."""
+Every measure and every corner resolves from :data:`CADRUMO_CSS_TOKENS`, so
+re-tuning the system's density or shape is an edit to the token table rather
+than a sweep through this stylesheet and the eighteen others beside it.
+"""
 
 NOTICE_BAND_CSS: Final[str] = """
     NoticeBand {
         height: auto;
     }
-    .cadrumo-notice { margin: 0 0 1 0; }
+    .cadrumo-notice { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-space-0; }
     .cadrumo-notice-info { color: $text; }
     .cadrumo-notice-warning { color: $warning; text-style: bold; }
-    .cadrumo-notice-action { color: $text-muted; margin: 0 0 1 2; }
+    .cadrumo-notice-action {
+        color: $text-muted;
+        margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-indent;
+    }
 """
 
 
@@ -194,6 +283,7 @@ def toggle_appearance[ReturnT](app: App[ReturnT]) -> str:
 
 __all__ = [
     "BASE_CSS",
+    "CADRUMO_CSS_TOKENS",
     "CADRUMO_DARK",
     "CADRUMO_DARK_THEME_NAME",
     "CADRUMO_LIGHT",
@@ -201,6 +291,8 @@ __all__ = [
     "CADRUMO_THEMES",
     "CONTENT_WIDTH_PERCENT",
     "NOTICE_BAND_CSS",
+    "SCROLLBAR_CELLS",
+    "cadrumo_css_variables",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

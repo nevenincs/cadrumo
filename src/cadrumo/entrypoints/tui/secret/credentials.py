@@ -25,7 +25,7 @@ from textual.worker import Worker, WorkerState
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import toggle_appearance
+from ....entrypoints.tui.components.theme import cadrumo_css_variables, toggle_appearance
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -66,6 +66,15 @@ class CredentialAttempt[OutcomeT](Protocol):
 
 class CredentialApp[OutcomeT](App[OutcomeT | None]):
     """Host one bounded, thread-backed credential attempt at a time."""
+
+    def get_css_variables(self) -> dict[str, str]:
+        """Expose the canonical Cadrumo tokens to every stylesheet.
+
+        Textual resolves this once per app and hands the result to app-level
+        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
+        design tokens travel here rather than in the theme's own variables.
+        """
+        return cadrumo_css_variables(super().get_css_variables())
 
     BINDINGS: ClassVar = [
         Binding("f3", "toggle_appearance", "", show=False),

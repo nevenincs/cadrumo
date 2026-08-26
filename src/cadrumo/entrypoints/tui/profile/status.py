@@ -35,6 +35,7 @@ from ....core.i18n import tr
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
+    cadrumo_css_variables,
     install_cadrumo_themes,
     toggle_appearance,
 )
@@ -54,6 +55,15 @@ _ACTIVE_MARKER = "●"
 
 class StatusApp(App[None]):
     """Full-screen read-only projection of the operator's configuration state."""
+
+    def get_css_variables(self) -> dict[str, str]:
+        """Expose the canonical Cadrumo tokens to every stylesheet.
+
+        Textual resolves this once per app and hands the result to app-level
+        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
+        design tokens travel here rather than in the theme's own variables.
+        """
+        return cadrumo_css_variables(super().get_css_variables())
 
     CSS = (
         BASE_CSS

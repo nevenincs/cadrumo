@@ -43,6 +43,7 @@ from ....core.presentation import (
 from .dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
 from .theme import (
     BASE_CSS,
+    cadrumo_css_variables,
     install_cadrumo_themes,
     toggle_appearance,
 )
@@ -292,6 +293,15 @@ class FormApp(App["Mapping[str, str] | None"]):
     one, which is the case for every caller that reaches a form straight
     from the command line.
     """
+
+    def get_css_variables(self) -> dict[str, str]:
+        """Expose the canonical Cadrumo tokens to every stylesheet.
+
+        Textual resolves this once per app and hands the result to app-level
+        ``CSS`` and every widget's ``DEFAULT_CSS`` alike, which is why the
+        design tokens travel here rather than in the theme's own variables.
+        """
+        return cadrumo_css_variables(super().get_css_variables())
 
     CSS = BASE_CSS
 

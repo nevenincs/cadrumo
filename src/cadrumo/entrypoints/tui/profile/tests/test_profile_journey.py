@@ -156,4 +156,3 @@ async def test_ready_stage_readiness_line_matches_the_applications_own_ready_fac
     assert summary_line == overview_readiness_summary(presentation)
     assert presentation.ready is False, "a freshly registered profile with no facts cannot be filing-ready"
     assert summary_line == tr("profile.journey.ready.blocked")
-
