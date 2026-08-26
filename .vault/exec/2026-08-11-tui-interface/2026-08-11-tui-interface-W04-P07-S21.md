@@ -26,7 +26,8 @@ related:
 
 - `A` `src/cadrumo/entrypoints/tui/secret/tests/__init__.py`
 - `A` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
-- `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py -q -m integration` -> `pass` (6 passed)
+- `M` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py -q -m integration` -> `pass` (9 passed)
 
 <!-- MECHANICAL LOG. One line per path touched, nothing else:
        `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
@@ -48,3 +49,5 @@ related:
 ## Notes
 
 Scoped to PassphraseApp (the new build) plus the CredentialApp base it shares with Login/Registration: single-use dispatch, exact refusal binding, cancellation, and canary non-retention. Login and Registration already carry their own real-journey coverage (test_login_screen.py, test_registration_screen.py, test_registration_recovery_words.py, test_registration_language_switch.py); this file does not duplicate that.
+
+Added a parametrized real-geometry proof (narrow/medium/wide) asserting every field and button has a positive, in-viewport region -- direct follow-up to the SourceActionCard height defect found during the S17-S19 relocation, per operator direction that presence and focus assertions alone had already been shown insufficient.
