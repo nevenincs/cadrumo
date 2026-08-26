@@ -5,7 +5,144 @@ modelo:
         official_name: null
         title: null
       revision:
-        2013-y-siguientes:
+        2013-2022:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Marked C where the return adds records completely omitted from
+                an earlier return for the same year.
+              label: Supplementary return
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: Thirteen-position sequential number whose first three digits are
+                the code 270.
+              label: Identification number of the return
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: Identification number of the return this one supplements or replaces.
+                Filled with zeros in every other case.
+              label: Identification number of the earlier return
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: First surname, a space, second surname, a space and the full given
+                name, in that order.
+              label: Surnames and given name of the contact person
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Nine-position numeric field holding the declarant's contact telephone
+                number.
+              label: Telephone of the contact person
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Marked S where the filing cancels and completely replaces one
+                single earlier return for the same year.
+              label: Replacement return
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type (original / substitute / supplementary)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Sum of the withholding or payment-on-account bases recorded in
+                the payee records, in euros.
+              label: Total base amount for withholding or payment on account
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Sum of the gross prize amounts recorded in the payee records,
+                in euros, unsigned and without a decimal separator.
+              label: Total amount or valuation of the prizes
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Total number of payees listed in the type 2 detail records. A
+                payee appearing in several records is counted once for each appearance.
+              label: Total number of declared payee records
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Sum of the withholdings or payments on account recorded in the
+                payee records, in euros.
+              label: Total amount of withholding or payment on account
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Withholding or payment-on-account base determined under paragraphs
+                3 and 6 of the thirty-third additional provision of Law 35/2006 governing
+                personal income tax.
+              label: Base for withholding or payment on account
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Completed only where the payee type is code 5: F if the payee
+                is a natural person and J if a legal person or entity.'
+              label: Legal personality code of the non-resident payee
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Completed only where the payee type is code 5 and the legal personality
+                code is F.
+              label: Date of birth of the non-resident payee
+            x-e1in4opecpim6q315lo62prf:
+              help: Date on which the prize obtained was paid or credited to the payee.
+              label: Date the prize was paid
+            x-e1in4opecpim6q315lpmusjkclng:
+              help: Date on which the draw was held, or on which the event took place
+                that the bet determining the prize was placed on.
+              label: Date the draw or bet was held
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Marked with an X only where prizes previously distributed as shares
+                are presented for collection, so that whoever collects the prize is
+                not its ultimate beneficiary.
+              label: Prize collection agent
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: The share of the gross cash prize, or of the value of the prize
+                in kind, that corresponds individually to the payee. Where several
+                prizes were won in one draw, the sum of them all.
+              label: Gross prize amount or individual value of the prize in kind
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Only where the payee type is code 5 and the legal personality
+                code is F. Municipality and, where applicable, province, region or
+                department of the place of birth, followed by the country or territory
+                code from Annex II of Order EHA/3496/2011.
+              label: Place of birth of the non-resident payee
+            x-e1in4opedpkmc:
+              help: Tax identification number of the prize recipient. Left blank only
+                where the payee type is code 5 and the payee has no Spanish NIF, in
+                which case the identification number in the country of residence is
+                mandatory instead.
+              label: Payee tax identification number
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Only where the payee type is code 5 and there is no Spanish NIF:
+                the passport number or, failing that, the identity document valid
+                in the country of origin for a natural person, or the identifier assigned
+                by the tax authority of the country of origin for an entity.'
+              label: Tax identification number in the country of tax residence
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Tax identification number of the person or entity acting as the
+                payee's representative, where there is one. Blank in every other case.
+              label: Tax identification number of the payee's legal representative
+            x-e1in4opedpnmqojick:
+              help: For natural persons, first surname, a space, second surname, a
+                space and the full given name, in that order. For legal persons or
+                entities, the complete legal or business name, without logos.
+              label: Payee surnames and given name, legal name or business name
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Surnames and given name of the representative if a natural person,
+                or the complete legal or business name if a legal person or entity.
+                Blank in every other case.
+              label: Surnames and given name, legal name or business name of the payee's
+                representative
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Only where the payee type is code 5: two alphabetic characters
+                for the payee''s country or territory of residence under Annex II
+                of Order EHA/3496/2011. Blank in every other case.'
+              label: Payee country or territory of tax residence
+            x-e1in4opee1p6utj9dphmio8:
+              help: Two digits for the province or autonomous city of the payee's
+                address. Digits 98 are used for personal income tax payers habitually
+                resident abroad and 99 where the payee type is code 5.
+              label: Province code of the payee's address
+            x-e1in4opee9in8pbecdkmurg:
+              help: Amount of the withholding or payment on account actually applied
+                by the entity paying the prize.
+              label: Amount of withholding or payment on account
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Code 1 natural person subject to personal income tax, 2 income-attribution
+                entity resident in Spain, 3 legal person or resident entity subject
+                to corporate income tax, 4 permanent establishment in Spain, 5 non-resident
+                person or entity operating without a permanent establishment.
+              label: Payee type
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
+          field:
+            label: null
+        2023-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Marked C where the return adds records completely omitted from

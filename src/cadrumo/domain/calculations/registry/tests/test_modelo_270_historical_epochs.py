@@ -26,6 +26,7 @@ def test_modelo_270_official_designs_are_hash_pinned_and_completely_extracted() 
     historical = catalogues.sources[_HISTORICAL_SOURCE_REF]
     current = catalogues.sources[_CURRENT_SOURCE_REF]
 
+    assert "enrolled-modelo-270-layout" not in catalogues.sources
     assert historical.evidence_tier == "layout_authority"
     assert historical.authority == "boe"
     assert historical.kind == "record_design"
@@ -83,6 +84,9 @@ def test_modelo_270_official_designs_are_hash_pinned_and_completely_extracted() 
         (500, 1),
     ]
 
+    assert current.evidence_tier == "layout_authority"
+    assert current.authority == "aeat"
+    assert current.kind == "record_design"
     assert current.record_design_epoch == "2023"
     assert (current.applies_from, current.applies_to) == (date(2023, 1, 1), date(2024, 12, 31))
     assert hash_file(bundled_path() / current.corpus_path) == (current.sha256, current.bytes)
@@ -132,6 +136,17 @@ def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -
     assert current_fields["modelo-270-decl-total-base-retencion"] == (164, 17)
     assert current_fields["modelo-270-decl-total-retenciones"] == (181, 17)
     assert current_fields["modelo-270-decl-blancos"] == (198, 303)
+
+
+def test_modelo_270_split_epochs_have_shipped_locale_labels() -> None:
+    """The generated locale move must leave no live epoch on the retired key."""
+    modelo, _catalogues = _committed_modelo("270")
+
+    for revision_id in ("2013-2022", "2023-2024"):
+        revision = modelo.revisions[revision_id]
+        assert revision.casillas
+        for locale in ("es", "en", "ca", "hu"):
+            assert all(casilla.get_label(locale).strip() for casilla in revision.casillas)
 
 
 def test_modelo_270_historical_layout_covers_every_source_position() -> None:
@@ -192,4 +207,4 @@ def test_modelo_270_historical_offset_mutation_is_refused() -> None:
     )
 
     assert len(failures) == 1
-    assert "@145+17" in failures[0]
+    assert "@145+15" in failures[0]
