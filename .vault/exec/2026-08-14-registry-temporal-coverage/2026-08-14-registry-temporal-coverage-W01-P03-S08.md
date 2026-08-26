@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:6f908c366d015803f81be6332599f2933bc83e4c0932b88c4868ce4fdb859bd5'
 step_id: 'S08'
@@ -15,10 +15,14 @@ related:
 
 ## Scope
 
-- `src/cadrumo/domain/calculations/registry/_schema.py`
-- `src/cadrumo/domain/calculations/registry/_loader.py`
-- `src/cadrumo/domain/calculations/registry/_applicability.py`
-- `src/cadrumo/domain/calculations/registry/tests/`
+- `src/cadrumo/domain/calculations/registry/ids.py`
+- `src/cadrumo/domain/calculations/registry/schema.py`
+- `src/cadrumo/domain/calculations/registry/loader.py`
+- `src/cadrumo/domain/calculations/registry/applicability.py`
+- `src/cadrumo/domain/calculations/registry/_validate_applicability_section.py`
+- `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`
+- `src/cadrumo/domain/calculations/registry/tests/test_applicability_fragment_family.py`
+- `src/cadrumo/domain/calculations/registry/tests/test_applicability_registry_cutover.py`
 
 ## Description
 
@@ -34,10 +38,12 @@ related:
 
 ## Outcome
 
-All 6 new tests pass. Re-ran `test_schema_family_coverage.py` (23 tests) and `test_authority_grade_ladder.py` (6 tests) read-only -- both green; the new family enrolled with zero edits needed in either file, and enrolling it did not trip the grade ladder. Ran the full `RegistryValidator(catalogues, source_root=root).validate_registry(modelos)` against the real bundled tree (every modelo, every revision): 2751 pre-existing unrelated failures, zero applicability-related failures -- correct, since no revision carried the fragment yet at that point in the campaign. `ruff check` and `ruff format --check` clean on every touched file.
+The production family landed in commit `a16b0b8ffd` and remains canonical after the public-module relocations. Current isolated verification passed all six fragment-family tests, covering schema enrollment, fragmented TOML loading, inline-manifest refusal, typed hydration, unknown-token naming, and accumulated validation failures. The three scratch-tree authority-cutover tests also passed, proving real `ValidatedRegistryAuthority.load`, result equivalence, nonuniform verdicts, and fresh-authority mutation visibility. Terra's broader focused schema/loader/validator/grade selection passed 36/36; commit `14e3d2d744` corrected only relocated test import ordering. Ruff format/check and `git diff --check` passed.
+
+These temp-tree proofs are the current acceptance evidence. The historical 2,751 bundled-tree failures recorded during the original campaign are not treated as evidence of present whole-tree health.
 
 ## Notes
 
-Caught and fixed a real `ruff` F401 regression from this session's own earlier `W01.P04.S10`/`S34` work while editing the same file: 5 names demoted from `__all__` but left imported were unused-import violations ruff had not been run against since. Fixed with the `import X as X` redundant-alias idiom (ruff's own suggested fix), then re-confirmed the import-hygiene Family-7 gate still passes.
+The applicability family intentionally does not create a second snapshot projection: applicability is resolved at the authority scheduling boundary, below filing-grade snapshot admission. The typed authoring definition, hydration boundary, and validator remain single-owned.
 
-One incidental asymmetry surfaced and deliberately left alone: `RegistrySnapshot` carries a `Mapping[Id, Definition]` projection for every OTHER schema family (`dependency_classifications`, `constructs`, etc.) but not `applicability`. Ruled correct, not a gap, by the coordinating agent: applicability answers "is this modelo due, and to whom" -- the floor rung of the authority-grade ladder (scheduling reach) -- while `RegistrySnapshot` is a filing-context projection one rung up. Resolving applicability without filing-grade review is correct per that ladder, not a gate dodged. Recorded in `resolve_applicability_rule_from_authority`'s docstring in `_applicability.py`.
+No production residue or Modelo 200 path was touched during this reconciliation.
