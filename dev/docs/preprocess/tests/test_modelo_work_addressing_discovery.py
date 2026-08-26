@@ -116,6 +116,41 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
             ),
         },
         {
+            "path": "src/cadrumo/application/modelo/revisioned_scan.py",
+            "snippet": (
+                "def resolve(repo: WorkUnitCatalogueRepository, wanted):\n"
+                "    inventory, revision = repo.load_revisioned()\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            return unit"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/direct_first.py",
+            "snippet": (
+                "def resolve(repo: WorkUnitCatalogueRepository):\n"
+                "    return next(iter(repo.load().values()))"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/yield_selector.py",
+            "snippet": (
+                "def resolve(inventory: WorkUnitCatalogue, wanted):\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            yield unit"
+            ),
+        },
+        {
+            "path": "src/cadrumo/application/modelo/yield_projection.py",
+            "snippet": (
+                "def project(inventory: WorkUnitCatalogue, wanted):\n"
+                "    for unit in inventory.values():\n"
+                "        if unit.work_unit_id == wanted:\n"
+                "            yield unit.modelo"
+            ),
+        },
+        {
             "path": "src/cadrumo/application/modelo/natural_scan.py",
             "snippet": (
                 "def resolve(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
@@ -145,6 +180,9 @@ def test_result_classification_rejects_mixed_canonical_and_parallel_owners() -> 
         "src/cadrumo/application/modelo/natural_scan.py",
         "src/cadrumo/application/modelo/aliased_items_scan.py",
         _CANONICAL_OWNER,
+        "src/cadrumo/application/modelo/revisioned_scan.py",
+        "src/cadrumo/application/modelo/direct_first.py",
+        "src/cadrumo/application/modelo/yield_selector.py",
     }
 
 

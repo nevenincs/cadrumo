@@ -160,6 +160,32 @@ def test_canonical_module_has_no_fragmented_exact_or_operator_selector_helpers()
         "parallel natural catalogue scan",
     ),
     (
+        "def parallel(repo: WorkUnitCatalogueRepository, wanted):\n"
+        " inventory, revision = repo.load_revisioned()\n"
+        " for unit in inventory.values():\n"
+        "  if unit.work_unit_id == wanted:\n"
+        "   return unit",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(repo: WorkUnitCatalogueRepository):\n"
+        " return next(iter(repo.load().values()))",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(repo: WorkUnitCatalogueRepository):\n"
+        " inventory = repo.load()\n"
+        " return next(iter(inventory.items()))",
+        "parallel natural catalogue scan",
+    ),
+    (
+        "def parallel(inventory: WorkUnitCatalogue, wanted):\n"
+        " for unit in inventory.values():\n"
+        "  if unit.work_unit_id == wanted:\n"
+        "   yield unit",
+        "parallel natural catalogue scan",
+    ),
+    (
         "def parallel(catalogue: WorkUnitCatalogue, modelo, filing_year):\n"
         " units = catalogue\n"
         " for unit in units.values():\n"
@@ -220,6 +246,29 @@ def test_counting_comparisons_are_not_a_selector_mutant(tmp_path: Path) -> None:
         " )\n",
         encoding="utf-8",
     )
+    assert scan_canonical_authority(_MUTANT_SPEC, (_CANONICAL, path)) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        (
+            "def count_loaded(repo: WorkUnitCatalogueRepository):\n"
+            " return len(repo.load().values())\n"
+        ),
+        (
+            "def project(inventory: WorkUnitCatalogue, wanted):\n"
+            " for unit in inventory.values():\n"
+            "  if unit.work_unit_id == wanted:\n"
+            "   yield unit.modelo\n"
+        ),
+    ],
+)
+def test_repository_analytics_and_yielded_projections_are_not_selectors(
+    source: str, tmp_path: Path
+) -> None:
+    path = tmp_path / "non_selector.py"
+    path.write_text(source, encoding="utf-8")
     assert scan_canonical_authority(_MUTANT_SPEC, (_CANONICAL, path)) == []
 
 

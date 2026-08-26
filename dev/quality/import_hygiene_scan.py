@@ -567,11 +567,15 @@ def _catalogue_aliases(
         if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
             continue
         targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
-        assignments.extend(
-            (path, assignment.value)
-            for target in targets
-            if (path := _expression_path(target)) is not None
-        )
+        for target in targets:
+            path = _expression_path(target)
+            if path is None and (
+                isinstance(target, (ast.Tuple, ast.List))
+                and target.elts
+            ):
+                path = _expression_path(target.elts[0])
+            if path is not None:
+                assignments.append((path, assignment.value))
     changed = True
     while changed:
         changed = False
@@ -638,6 +642,52 @@ def _selection_decision(
             for child in ast.walk(returned.value)
         ):
             return True
+    for yielded in (
+        item for item in _scope_nodes(node.body) if isinstance(item, (ast.Yield, ast.YieldFrom)) and item.value
+    ):
+        if isinstance(yielded.value, ast.Name):
+            names = {yielded.value.id}
+        elif isinstance(yielded.value, (ast.Tuple, ast.List)):
+            names = {child.id for child in yielded.value.elts if isinstance(child, ast.Name)}
+        else:
+            names = set()
+        if names & selected_names:
+            return True
+    return False
+
+
+def _direct_repository_first_match(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    catalogue_aliases: frozenset[str],
+    repository_parameters: frozenset[str],
+    rule: SubstitutableWorkSelectorRule,
+) -> bool:
+    decisions = (
+        item
+        for item in _scope_nodes(node.body)
+        if isinstance(item, (ast.Return, ast.Yield, ast.YieldFrom)) and item.value is not None
+    )
+    for decision in decisions:
+        if not any(
+            isinstance(call, ast.Call) and _bare_callable_name(call.func) == "next"
+            for call in ast.walk(decision.value)
+        ):
+            continue
+        for call in ast.walk(decision.value):
+            if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Attribute):
+                continue
+            if call.func.attr not in rule.collection_methods:
+                continue
+            receiver_path = _expression_path(call.func.value)
+            direct_load = (
+                isinstance(call.func.value, ast.Call)
+                and isinstance(call.func.value.func, ast.Attribute)
+                and call.func.value.func.attr in {"load", "load_revisioned"}
+                and (repository := _expression_path(call.func.value.func.value)) is not None
+                and repository in repository_parameters
+            )
+            if receiver_path in catalogue_aliases or direct_load:
+                return True
     return False
 
 
@@ -658,6 +708,8 @@ def _function_has_work_selector(
         and receiver in repository_parameters
         for call in ast.walk(node)
     )
+    if _direct_repository_first_match(node, catalogue_aliases, frozenset(repository_parameters), rule):
+        return True
     loops = (
         item
         for item in _scope_nodes(node.body)
