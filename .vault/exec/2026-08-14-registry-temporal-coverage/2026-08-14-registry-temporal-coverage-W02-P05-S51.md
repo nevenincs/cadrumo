@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:7521c1d6eb94c799e11dc47f51e5411195095b173da111bb0c4824219468c698'
+body_hash: 'sha256:d2dba1a0ffecb32c9e47a872bd52ad0005617916781e2f98dbc84af830f2e1b0'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -200,3 +200,35 @@ These are genuine S51-owned defects, not grounds to reopen a checked export-adju
 Commits `c6536553bb`, `26c7d689cd`, `7bff5b1ca7`, and `ecdb753838` remove the attributable M165, M308, M309, and M341 validation residue without backdating a source or weakening the cross-revision validator. M165 now permits honest applicability-only/no-layout eras while keeping filing/layout parity fail-closed; M308 keeps amendment authority at the revision boundary rather than divergent header casillas; M309 preserves its genuinely distinct historical country-text semantics while grounding ratios, singleton flags, and unsigned numeric constraints in the 2004 design; M341's presentation roles are correctly shared with M309.
 
 Focused evidence is green: M165 historical/generic proof 9 tests, M308 registry proof 9 tests, M309 historical epochs 11 tests, plus direct per-model semantic validation with zero failures for M165, M308, M309, and M341. A fresh bundled-authority load reports zero failures for those four modelos. The remaining whole-registry load failures are confined to the active Modelo 200 revision split owned by another lane, so S51 remains open and does not absorb or overwrite that work.
+
+## Final owned-model reconciliation checkpoint (2026-08-26)
+
+The remaining S51-owned era work has since landed and passed independent review.
+Modelo 270's 2013--2022 versus 2023--2024 split, including the load-bearing
+BOE-A-2023-24414 amendment and the explicit 2025 refusal, closes with no
+unresolved Medium-or-higher finding in audit commit `2af16edd80`. Modelo 308's
+four eras, including the July 2011 boundary and undated-2011 ambiguity refusal,
+close in audit commit `3edc24e3ef`. Modelo 309's four strict layouts, historic
+formula/manifests, predecessor narratives, and all 644 non-empty historic
+locale-help leaves close in audit commit `3ba9955cae`. Modelo 353's evidenced
+geometry but withheld 2015--2020 writers, positive 2021--2025 writer, bounded
+February--December 2026 writer, and January-2026/2027-plus refusals close in
+audit commit `688d46dc57`. Earlier bounded M184, M341, and M576 reviews likewise
+close without unresolved Medium-or-higher findings in `e1b93499c6`,
+`c5d12f10f5`, and `03c38b2858` respectively.
+
+The authoritative claimed-year gate was rerun through the project environment:
+`uv run pytest --confcutdir=src/cadrumo/domain/calculations/registry
+src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py
+-q`. It completed with five failures and five passes. Every failure is the same
+pre-test bundled-authority construction refusal from Modelo 200: 2025 projection
+sources under the finite 2024 revision, the finite revision's open-ended id,
+missing filing/export application links and Orden applicability, dangling
+construct links, and duplicated or cross-owned 2024/2025 deadline coordinates.
+No S51-owned modelo remains in the failure inventory.
+
+S51 therefore remains open solely because its written acceptance criterion says
+the whole claimed-year gate must pass. That last red state is owned by sibling
+Step W02.P05.S53, not permission to absorb its dirty Modelo 200 tree or to mark
+this row complete early. Once S53 restores a valid M200 partition, rerunning the
+same command is the only remaining S51 closure action.
