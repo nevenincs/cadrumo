@@ -19,14 +19,19 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
+    STATIC_INSPECTION_WORK_REVIEW_FACET,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
+    capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
     modelo_work_selector_request_for_target,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
+    resolve_static_inspection_baseline,
     resolve_static_inspection_schema_identity,
+    static_inspection_contributors,
+    static_inspection_evidence_horizon,
     static_inspection_modelo_workspace_capabilities,
 )
 from ..workspace_models import (
@@ -555,3 +560,101 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
     assert identity == identity_again
     assert identity.schema_id == f"modelo-130-{_LAW_SELECTED_REVISION_ID}"
     assert identity.field_manifest_digest == generate_modelo_workspace_field_manifest_for_inspection(inspection).manifest_digest
+
+
+def test_static_inspection_evidence_horizon_is_stable_and_sourced_from_the_inspection() -> None:
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    inspection = capture.projection
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    assert isinstance(inspection, RegistryRevisionInspection)
+
+    horizon = static_inspection_evidence_horizon(inspection)
+    horizon_again = static_inspection_evidence_horizon(inspection)
+
+    assert horizon == horizon_again
+    assert set(horizon.source_refs) == inspection.source_ref_ids
+    assert horizon.source_refs == tuple(sorted(horizon.source_refs))
+
+
+def test_static_inspection_contributors_are_exactly_the_four_admission_reads() -> None:
+    contributors = static_inspection_contributors()
+
+    assert len(contributors) == 4
+    assert len({(c.owner, c.producer) for c in contributors}) == 4
+    # Sorted, per the shared contributor-tuple ordering rule.
+    assert contributors == tuple(sorted(contributors, key=lambda c: (c.owner, c.producer)))
+
+
+def test_static_inspection_work_review_facet_is_unmeasured_with_no_review() -> None:
+    assert STATIC_INSPECTION_WORK_REVIEW_FACET.disposition == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    assert STATIC_INSPECTION_WORK_REVIEW_FACET.review is None
+
+
+def test_static_inspection_baseline_pins_the_exact_target_and_revision(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    resolution = work_capture.projection
+    registry_projection = registry_capture.projection
+    assert resolution.work_unit is not None
+    assert resolution.modelo is not None
+    assert resolution.filing_year is not None
+    assert resolution.period is not None
+
+    target = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    inspection = registry_projection.inspection
+    assert inspection is not None
+    schema_identity = resolve_static_inspection_schema_identity(inspection)
+    locale = capture_modelo_workspace_locale_summary(target, output_language=OutputLanguage.ES)
+
+    from ..workspace_producers import ModeloWorkspaceLocaleCataloguePortV1
+    from ....domain.calculations.registry.modelo_localization import revision_locale_key
+
+    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=revision_locale_key(target.modelo, target.law_selected_revision_id),
+        locale=OutputLanguage.ES.value,
+    ).capture_projection_with_epoch()
+    field_manifest_capture = None
+    from ..workspace_producers import ModeloWorkspaceFieldManifestPortV1
+
+    field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=inspection).capture_projection_with_epoch()
+
+    baseline = resolve_static_inspection_baseline(
+        target,
+        schema_identity=schema_identity,
+        locale=locale,
+        work_stamp=work_capture.stamp,
+        work_epoch=work_capture.epoch,
+        registry_stamp=registry_capture.stamp,
+        registry_epoch=registry_capture.epoch,
+        locale_stamp=locale_capture.stamp,
+        locale_epoch=locale_capture.epoch,
+        field_manifest_stamp=field_manifest_capture.stamp,
+        field_manifest_epoch=field_manifest_capture.epoch,
+    )
+
+    assert baseline.target == target
+    assert baseline.selected_revision_id == target.law_selected_revision_id
+    assert baseline.schema_identity == schema_identity
+    assert baseline.locale_catalogue_digest == locale.catalogue_digest
+    assert len(baseline.token) > 0
+    assert len(baseline.contributor_stamp_digest) > 0
+    assert len(baseline.contributor_epoch_digest) > 0

@@ -39,9 +39,12 @@ from .work_addressing import (
     ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
+    ModeloWorkspaceBaselineV1,
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
+    ModeloWorkspaceContributorIdentityV1,
+    ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
     ModeloWorkspaceFormulaCasillaOperandReferenceV1,
@@ -57,6 +60,7 @@ from .workspace_models import (
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceSchemaIdentityV1,
+    ModeloWorkspaceWorkReviewFacetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
@@ -67,11 +71,16 @@ from .workspace_producers import (
     MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceContributingProjectionV1,
+    ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
+    ModeloWorkspaceProducerStampV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
@@ -460,7 +469,11 @@ __all__ = [
     "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
+    "STATIC_INSPECTION_WORK_REVIEW_FACET",
+    "resolve_static_inspection_baseline",
     "resolve_static_inspection_schema_identity",
+    "static_inspection_contributors",
+    "static_inspection_evidence_horizon",
     "static_inspection_modelo_workspace_capabilities",
 ]
 
@@ -606,4 +619,85 @@ def resolve_static_inspection_schema_identity(
             }
         ),
         field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    )
+
+
+def static_inspection_evidence_horizon(inspection: RegistryRevisionInspection) -> ModeloWorkspaceEvidenceHorizonV1:
+    """Build the evidence horizon straight from the inspection's own retained source catalogue."""
+    source_refs = tuple(sorted(inspection.source_ref_ids))
+    return ModeloWorkspaceEvidenceHorizonV1(
+        source_refs=source_refs,
+        evidence_digest=content_hash_hex({"source_refs": source_refs}),
+    )
+
+
+def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+    """Return the four contributor identities STATIC_INSPECTION actually reads.
+
+    Matches the ADR's own admission-scope sentence exactly: "Static inspection
+    captures exactly registry, work, locale_catalogue, and field_manifest."
+    """
+    return tuple(
+        sorted(
+            (
+                MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+            ),
+            key=lambda contributor: (contributor.owner, contributor.producer),
+        )
+    )
+
+
+STATIC_INSPECTION_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
+    disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    review=None,
+)
+"""STATIC_INSPECTION never reads bounded_review (S279); this is the fixed, non-varying facet value."""
+
+
+def resolve_static_inspection_baseline(
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    locale: ModeloWorkspaceLocaleSummaryV1,
+    work_stamp: ModeloWorkspaceProducerStampV1,
+    work_epoch: ModeloWorkspaceEpochV1,
+    registry_stamp: ModeloWorkspaceProducerStampV1,
+    registry_epoch: ModeloWorkspaceEpochV1,
+    locale_stamp: ModeloWorkspaceProducerStampV1,
+    locale_epoch: ModeloWorkspaceEpochV1,
+    field_manifest_stamp: ModeloWorkspaceProducerStampV1,
+    field_manifest_epoch: ModeloWorkspaceEpochV1,
+) -> ModeloWorkspaceBaselineV1:
+    """Assemble the STATIC_INSPECTION baseline from the four contributors' own stamps and epochs.
+
+    Every stamp/epoch pair passed in MUST come from the exact same captures
+    that produced ``target``, ``schema_identity`` and ``locale`` -- this
+    function performs no capture of its own, only digesting what the caller
+    already atomically observed.
+    """
+    stamps = (work_stamp, registry_stamp, locale_stamp, field_manifest_stamp)
+    epochs = (work_epoch, registry_epoch, locale_epoch, field_manifest_epoch)
+    contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
+    contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
+    token = content_hash_hex(
+        {
+            "contributor_stamp_digest": contributor_stamp_digest,
+            "contributor_epoch_digest": contributor_epoch_digest,
+            "target": target.model_dump(mode="json"),
+            "selected_revision_id": target.law_selected_revision_id,
+            "schema_identity": schema_identity.model_dump(mode="json"),
+            "locale_catalogue_digest": locale.catalogue_digest,
+        }
+    )
+    return ModeloWorkspaceBaselineV1(
+        token=token,
+        contributor_stamp_digest=contributor_stamp_digest,
+        contributor_epoch_digest=contributor_epoch_digest,
+        target=target,
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        locale_catalogue_digest=locale.catalogue_digest,
     )
