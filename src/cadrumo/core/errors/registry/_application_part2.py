@@ -1223,4 +1223,14 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.registry.closure_capture.RegistryClosureCaptureError",
+        ErrorCode(
+            code="REFUSED_REGISTRY_CLOSURE_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.registry_closure_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
