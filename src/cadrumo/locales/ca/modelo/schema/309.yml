@@ -5,7 +5,580 @@ modelo:
         official_name: null
         title: null
       revision:
-        2004-y-siguientes:
+        2004-2015:
+          casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              help: Casella 982-998 del model 309, exercici 2004.
+              label: Liquidació (8) - A deduir [23]
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              help: Casella 639-642 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Any de fabricació
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              help: Casella 497-536 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Fabricant
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              help: Casella 537-616 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Marca - Tipus
+                - Model
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              help: Casella 643-652 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Pes màxim
+                d'enlairament (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              help: Casella 617-638 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Núm. de sèrie
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              help: Casella 965-981 del model 309, exercici 2004.
+              label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              help: Casella 492-496 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Eslora
+                màxima
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              help: Casella 350-389 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Fabricant
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              help: Casella 470-491 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Identificació
+                (Núm. construcció)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              help: Casella 390-469 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Tipus-Model
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lgm8sbld5pmior9dtn2qqbeehp62orfdlqmsqbkc5p6io8:
+              help: null
+              label: 'Fet imposable: adquisició intracomunitària de béns'
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355limst3icljm2bb9dpr6asjjd5nmsbb9dpmmuoj9dhkm2sj9c4:
+              help: null
+              label: 'Fet imposable: lliurament de béns d’inversió de naturalesa immobiliària'
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: 'Fet imposable: inversió del subjecte passiu'
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lmmap39dtpiqt3ic5n76s3fe9q6abbeelincrrj:
+              help: null
+              label: 'Fet imposable: adquisició intracomunitària de mitjans de transport
+                nous'
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lnn8sjfec:
+              help: null
+              label: 'Fet imposable: altres supòsits no previstos'
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lo74rr3cli6irb9cln78rpdc5i6qqbed5pn8sj1ehkncrpdd9qm8qb3d5gmo:
+              help: null
+              label: 'Fet imposable: lliuraments de béns i prestacions de serveis
+                en procediments administratius i judicials'
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: Casella 1017-1029 del model 309, exercici 2004.
+              label: Número de justificant de la declaració anterior (9)
+            x-chim6r1ee1in4qbfchng:
+              help: Dada declarada al model 309, presa del disseny de registre oficial.
+              label: Meritació. Període
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              help: Casella 809-825 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              help: Casella 848-864 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              help: Casella 887-903 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              help: Casella 926-942 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              help: Casella 831-847 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              help: Casella 870-886 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              help: Casella 909-925 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              help: Casella 948-964 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              help: Casella 826-830 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              help: Casella 865-869 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              help: Casella 904-908 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              help: Casella 943-947 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              help: Casella 999-1015 del model 309, exercici 2004.
+              label: Liquidació (8) - Resultat a ingressar [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              help: Casella 653-669 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              help: Casella 731-747 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              help: Casella 770-786 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [07]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              help: Casella 675-691 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              help: Casella 753-769 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              help: Casella 792-808 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [09]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              help: Casella 670-674 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              help: Casella 748-752 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              help: Casella 787-791 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [08]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lgmesj9cdnmoo8:
+              help: null
+              label: 'Situació tributària: subjecte acollit al règim especial d’agricultura,
+                ramaderia i pesca'
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lnn8sj1ec:
+              help: null
+              label: 'Situació tributària: altres supòsits no previstos'
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bb6d5pmior15ln6ubb5dlo74pbjc5p6iro:
+              help: null
+              label: 'Situació tributària: persona física que no actua com a empresari
+                o professional'
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bbaelp6ip39cdgiqrjf5limqs3iclpm2sj9ds:
+              help: null
+              label: 'Situació tributària: persona jurídica que no actua com a empresari
+                o professional'
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lp6aor1e9jmubb5e5qmitj1dhimsor9c4:
+              help: null
+              label: 'Situació tributària: subjecte acollit al règim especial del
+                recàrrec d’equivalència'
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lpmirhdchin4pb3d1niqp35chqm6or9dtn0:
+              help: null
+              label: 'Situació tributària: subjecte passiu sense dret a deducció'
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              help: Casella 118-177 del model 309, exercici 2004.
+              label: Transmitent (3) - Cognoms o Denominació Social
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              help: Casella 109-117 del model 309, exercici 2004.
+              label: Transmitent (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              help: Casella 198-199 del model 309, exercici 2004.
+              label: Transmitent (3) - País
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              help: Casella 322-343 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Núm. identificació
+                (bastidor)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              help: Casella 344-349 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Classificació
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              help: Casella 202-241 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Marca
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              help: Casella 282-321 del model 309, exercici 2004.
+              label: 'Característiques i dades tècniques (7) - Vehicles - Model (denominació
+                comercial):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              help: Casella 242-281 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Tipus
+            x-etkn4p9edhin8sj1ecmmat39e5qmat31:
+              help: null
+              label: Lletres de l’etiqueta identificativa
+            x-etkn4p9edth76pbiepgm6qbfdpin6:
+              help: null
+              label: Observacions
+          construct:
+            modelo-309-historical-no-periodica:
+              field:
+                title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
+          field:
+            label: null
+        2016-2017:
+          casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              help: Casella 982-998 del model 309, exercici 2004.
+              label: Liquidació (8) - A deduir [23]
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              help: Casella 639-642 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Any de fabricació
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              help: Casella 497-536 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Fabricant
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              help: Casella 537-616 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Marca - Tipus
+                - Model
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              help: Casella 643-652 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Pes màxim
+                d'enlairament (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              help: Casella 617-638 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Núm. de sèrie
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casella 1016 del model 309, exercici 2004.
+              label: Declaració complementària (9)
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              help: Casella 965-981 del model 309, exercici 2004.
+              label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              help: Casella 492-496 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Eslora
+                màxima
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              help: Casella 350-389 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Fabricant
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              help: Casella 470-491 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Identificació
+                (Núm. construcció)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              help: Casella 390-469 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Tipus-Model
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              help: Casella 201 del model 309, exercici 2004.
+              label: 'Fet imposable (6):'
+            x-chim6r1ed5h62rg:
+              help: Casella 1030-1063 del model 309, exercici 2004.
+              label: IBAN (10)
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: Casella 1017-1029 del model 309, exercici 2004.
+              label: Número de justificant de la declaració anterior (9)
+            x-chim6r1edpnmqojick:
+              help: Casella 83-102 del model 309, exercici 2004.
+              label: Identificació (1) - Nom
+            x-chim6r1ee1in4qbfchng:
+              help: Dada declarada al model 309, presa del disseny de registre oficial.
+              label: Meritació. Període
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              help: Casella 809-825 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              help: Casella 848-864 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              help: Casella 887-903 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              help: Casella 926-942 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              help: Casella 831-847 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              help: Casella 870-886 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              help: Casella 909-925 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              help: Casella 948-964 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              help: Casella 826-830 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              help: Casella 865-869 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              help: Casella 904-908 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              help: Casella 943-947 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              help: Casella 999-1015 del model 309, exercici 2004.
+              label: Liquidació (8) - Resultat a ingressar [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              help: Casella 653-669 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              help: Casella 731-747 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              help: Casella 770-786 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [07]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              help: Casella 675-691 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              help: Casella 753-769 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              help: Casella 792-808 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [09]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              help: Casella 670-674 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              help: Casella 748-752 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              help: Casella 787-791 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [08]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              help: Casella 200 del model 309, exercici 2004.
+              label: 'Situació tributària (5):'
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella 13 del model 309, exercici 2004.
+              label: Tipus de declaració
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
+                / recàrrec d'equivalència / execució forçosa)
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              help: Casella 118-177 del model 309, exercici 2004.
+              label: Transmitent (3) - Cognoms o Denominació Social
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              help: Casella 109-117 del model 309, exercici 2004.
+              label: Transmitent (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              help: Casella 178-197 del model 309, exercici 2004.
+              label: Transmitent (3) - Nom
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              help: Casella 198-199 del model 309, exercici 2004.
+              label: Transmitent (3) - País
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              help: Casella 322-343 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Núm. identificació
+                (bastidor)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              help: Casella 344-349 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Classificació
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              help: Casella 202-241 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Marca
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              help: Casella 282-321 del model 309, exercici 2004.
+              label: 'Característiques i dades tècniques (7) - Vehicles - Model (denominació
+                comercial):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              help: Casella 242-281 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Tipus
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (mitjans de transport nous, etc.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
+                (devolució a viatgers)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
+          field:
+            label: null
+        2018-2022:
+          casilla:
+            x-chim6r1ec4mm8pb4elhmishd68pg:
+              help: Casella 982-998 del model 309, exercici 2004.
+              label: Liquidació (8) - A deduir [23]
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
+              help: Casella 1088-1147 del model 309, exercici 2004.
+              label: Adjudicatari (4) - Cognoms o Denominació Social
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
+              help: Casella 1079-1087 del model 309, exercici 2004.
+              label: Adjudicatari (4) - NIF
+            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
+              help: Casella 1148-1167 del model 309, exercici 2004.
+              label: Adjudicatari (4) - Nom
+            x-chim6r1ec5in4rrec5r6abb1dpng:
+              help: Casella 639-642 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Any de fabricació
+            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
+              help: Casella 497-536 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Fabricant
+            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
+              help: Casella 537-616 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Marca - Tipus
+                - Model
+            x-chim6r1ec5in4rrec5r6abbgclpmu:
+              help: Casella 643-652 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Pes màxim
+                d'enlairament (kg)
+            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
+              help: Casella 617-638 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Aeronaus - Núm. de sèrie
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Casella 1016 del model 309, exercici 2004.
+              label: Declaració complementària (9)
+            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
+              help: Casella 965-981 del model 309, exercici 2004.
+              label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+                [22]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
+              help: Casella 492-496 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Eslora
+                màxima
+            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
+              help: Casella 350-389 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Fabricant
+            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
+              help: Casella 470-491 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Identificació
+                (Núm. construcció)
+            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
+              help: Casella 390-469 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Embarcacions - Tipus-Model
+            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
+              help: Casella 201 del model 309, exercici 2004.
+              label: 'Fet imposable (6):'
+            x-chim6r1ed5h62rg:
+              help: Casella 1030-1063 del model 309, exercici 2004.
+              label: IBAN (10)
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: Casella 1017-1029 del model 309, exercici 2004.
+              label: Número de justificant de la declaració anterior (9)
+            x-chim6r1edpnmqojick:
+              help: Casella 83-102 del model 309, exercici 2004.
+              label: Identificació (1) - Nom
+            x-chim6r1ee1in4qbfchng:
+              help: Dada declarada al model 309, presa del disseny de registre oficial.
+              label: Meritació. Període
+            x-chim6r1ee9iiqoj1ediiqc9g:
+              help: Casella 809-825 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [10]
+            x-chim6r1ee9iiqoj1ediiqc9j:
+              help: Casella 848-864 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [13]
+            x-chim6r1ee9iiqoj1ediiqc9m:
+              help: Casella 887-903 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [16]
+            x-chim6r1ee9iiqoj1ediiqc9p:
+              help: Casella 926-942 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Base imposable [19]
+            x-chim6r1ee9iiqorldtq62b9h68:
+              help: Casella 831-847 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [12]
+            x-chim6r1ee9iiqorldtq62b9h6k:
+              help: Casella 870-886 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [15]
+            x-chim6r1ee9iiqorldtq62b9h70:
+              help: Casella 909-925 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [18]
+            x-chim6r1ee9iiqorldtq62b9i64:
+              help: Casella 948-964 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Quota [21]
+            x-chim6r1ee9iiqt39e1niqc9h:
+              help: Casella 826-830 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [11]
+            x-chim6r1ee9iiqt39e1niqc9k:
+              help: Casella 865-869 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [14]
+            x-chim6r1ee9iiqt39e1niqc9n:
+              help: Casella 904-908 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [17]
+            x-chim6r1ee9iiqt39e1niqchg:
+              help: Casella 943-947 del model 309, exercici 2004.
+              label: Liquidació (8) - Recàrrec d'equivalència - Tipus % [20]
+            x-chim6r1ee9in6tbcehgm8rpd68q0:
+              help: Casella 999-1015 del model 309, exercici 2004.
+              label: Liquidació (8) - Resultat a ingressar [22] [23] [24]
+            x-chim6r1ee9jiqoj1ediiqc1h:
+              help: Casella 653-669 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [01]
+            x-chim6r1ee9jiqoj1ediiqc1k:
+              help: Casella 731-747 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [04]
+            x-chim6r1ee9jiqoj1ediiqc1n:
+              help: Casella 770-786 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Base imposable [07]
+            x-chim6r1ee9jiqorldtq62b9g6c:
+              help: Casella 675-691 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [03]
+            x-chim6r1ee9jiqorldtq62b9g6o:
+              help: Casella 753-769 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [06]
+            x-chim6r1ee9jiqorldtq62b9g74:
+              help: Casella 792-808 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Quota [09]
+            x-chim6r1ee9jiqt39e1niqc1i:
+              help: Casella 670-674 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [02]
+            x-chim6r1ee9jiqt39e1niqc1l:
+              help: Casella 748-752 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [05]
+            x-chim6r1ee9jiqt39e1niqc1o:
+              help: Casella 787-791 del model 309, exercici 2004.
+              label: Liquidació (8) - Règim General - Tipus % [08]
+            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
+              help: Casella 200 del model 309, exercici 2004.
+              label: 'Situació tributària (5):'
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella 13 del model 309, exercici 2004.
+              label: Tipus de declaració
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
+                / recàrrec d'equivalència / execució forçosa)
+            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
+              help: Casella 118-177 del model 309, exercici 2004.
+              label: Transmitent (3) - Cognoms o Denominació Social
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
+              help: Casella 109-117 del model 309, exercici 2004.
+              label: Transmitent (3) - NIF
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
+              help: Casella 1064-1078 del model 309, exercici 2004.
+              label: Transmitent (3) - NIF-IVA
+            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
+              help: Casella 178-197 del model 309, exercici 2004.
+              label: Transmitent (3) - Nom
+            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
+              help: Casella 198-199 del model 309, exercici 2004.
+              label: Transmitent (3) - País
+            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
+              help: Casella 322-343 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Núm. identificació
+                (bastidor)
+            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
+              help: Casella 344-349 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Classificació
+            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
+              help: Casella 202-241 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Marca
+            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
+              help: Casella 282-321 del model 309, exercici 2004.
+              label: 'Característiques i dades tècniques (7) - Vehicles - Model (denominació
+                comercial):'
+            x-chim6r1eepimgqb3elm6ubbkd5o6u:
+              help: Casella 242-281 del model 309, exercici 2004.
+              label: Característiques i dades tècniques (7) - Vehicles - Tipus
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (mitjans de transport nous, etc.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
+                (devolució a viatgers)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
+          field:
+            label: null
+        2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
               help: Casella 982-998 del model 309, exercici 2004.

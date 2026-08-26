@@ -596,8 +596,26 @@ reviewed_at = 2026-08-26
 reviewed_by = "agent-prepared-pending-operator"
 notes = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio de 2011. Corrobora la frontera intranual entre los diseños de registro del modelo 308."
 required_text = [
-    "Se sustituye el anexo II",
     "La presente Orden entrará en vigor el día 1 de julio de 2011.",
+]
+
+[legal."orden-eha-1033-2011:articulo-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1033-2011.html#articulo-unico"
+document_id = "BOE-A-2011-7479"
+article = "único"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2011-7479"
+published_at = 2011-04-27
+effective_from = 2011-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Artículo único de la Orden EHA/1033/2011: sustituye el anexo II del modelo 308 aprobado por la Orden EHA/3786/2008. La disposición final única fija su entrada en vigor el 1 de julio de 2011."
+required_text = [
+    "Se sustituye el anexo II",
+    "modelo 308",
 ]
 
 [sources."aeat-dr-308-2019"]

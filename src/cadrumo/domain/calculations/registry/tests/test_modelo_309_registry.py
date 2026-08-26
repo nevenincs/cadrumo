@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.loader import _load_shared_catalogue_files, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
@@ -14,13 +16,17 @@ from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
 from ._ledger_iva_aggregation_support import _deduction_provenance
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _load_modelo_309() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("309")
+    """Load M309 with every shared catalogue, without unrelated modelos."""
+    return (
+        load_modelo_directory(bundled_path("registry", "aeat", "modelos", "309")),
+        _load_shared_catalogue_files(bundled_path("registry", "aeat", "legal")),
+    )
 
 
 def test_modelo_309_validator_accepts_committed_definition() -> None:
@@ -37,6 +43,10 @@ def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
     assert modelo.cadence == "ad_hoc"
     assert "orden-hac-3625-2003:apartado-1" in modelo.legal_refs
     assert "orden-hac-3625-2003:apartado-3" in modelo.legal_refs
+    assert "orden-hfp-1245-2022:art-unico" in modelo.legal_refs
+    assert {"aeat-dr-309-2004", "aeat-dr-309-2016", "aeat-dr-309-2018", "aeat-dr-309-2023"}.issubset(
+        modelo.source_refs
+    )
     assert "aeat-dr-309-2023" in modelo.source_refs
     assert catalogues.sources["aeat-modelo-309-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-309-2003-form"].evidence_tier == "layout_authority"
@@ -44,17 +54,18 @@ def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
 
 def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
-    assert revision.period_selector.year_from == 2004
+    revision = modelo.revisions["2023-y-siguientes"]
+    assert revision.period_selector.year_from == 2023
     assert revision.period_selector.periods == ("AD-HOC",)
-    assert revision.orden_aplicabilidad == ("orden-hac-3625-2003:apartado-1",)
+    assert revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
 
 
 def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_309()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
-    assert snapshot.revision.id == "2004-y-siguientes"
-    assert snapshot.revision.orden_aplicabilidad == ("orden-hac-3625-2003:apartado-1",)
+    assert snapshot.revision.id == "2023-y-siguientes"
+    assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
+    assert "orden-hfp-1245-2022:art-unico" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-3" in snapshot.legal
     assert "aeat-modelo-309-procedure" in snapshot.sources
@@ -63,7 +74,7 @@ def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
 
 def test_modelo_309_filing_schedule_is_ad_hoc() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-309-ad-hoc")
     assert schedule.period_kind == "ad_hoc"
     assert schedule.periods == ("AD-HOC",)
@@ -71,7 +82,7 @@ def test_modelo_309_filing_schedule_is_ad_hoc() -> None:
 
 def test_modelo_309_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
     filed_ref = cross_refs["modelo-309-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
@@ -81,7 +92,7 @@ def test_modelo_309_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_309_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-309-iva-no-periodica")
     assert "modelo-309-dr-2023" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-309-ad-hoc",)
@@ -92,7 +103,7 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
     intra-community acquisition reverse charge (medios de transporte
     nuevos) and recargo de equivalencia retailers' devoluciones."""
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
@@ -111,7 +122,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
     from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_309()
-    revision = modelo.revisions["2004-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     observations = [
         IvaLedgerObservation(
             ledger_id="vehicle-acquisition",

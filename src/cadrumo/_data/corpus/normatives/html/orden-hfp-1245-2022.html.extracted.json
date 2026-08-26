@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1245-2022.html",
+  "source_sha256": "1a213edd5bab62c9221cb1f81d7b77de0c06252fc21d3889678c12d6238fd57d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21458",
+  "units": [
+    {
+      "text": "El anexo I de la Orden HAC/3625/2003, de 23 de diciembre, por la que se aprueba el modelo 309 de declaración-liquidación no periódica del Impuesto sobre el Valor Añadido, se sustituye por el anexo de esta orden.",
+      "title": "Artículo único. Modificación de la Orden HAC/3625/2003, de 23 de diciembre, por la que se aprueba el modelo 309 de declaración-liquidación no periódica del Impuesto sobre el Valor Añadido.",
+      "section": "Artículo único. Modificación de la Orden HAC/3625/2003, de 23 de diciembre, por la que se aprueba el modelo 309 de declaración-liquidación no periódica del Impuesto sobre el Valor Añadido.",
+      "anchor": null
+    },
+    {
+      "text": "La presente orden entrará en vigor el 1 de enero de 2023 y se aplicará a las autoliquidaciones correspondientes a los ejercicios 2023 y siguientes.\nMadrid, 14 de diciembre de 2022.–La Ministra de Hacienda y Función Pública, María Jesús Montero Cuadrado.",
+      "title": "Disposición final única. Entrada en vigor.",
+      "section": "Disposición final única. Entrada en vigor.",
+      "anchor": null
+    },
+    {
+      "text": "Impuesto sobre el Valor Añadido. Declaración-liquidación no periódica\nAnálisis\nANÁLISIS\nRango: Orden\nFecha de disposición: 14/12/2022\nFecha de publicación: 19/12/2022\nFecha de entrada en vigor: 01/01/2023\nAplicable desde el ejercicio 2023.\nReferencias anteriores\nSUSTITUYE el anexo I de la Orden HAC/3625/2003, de 23 de diciembre (Ref. BOE-A-2003-23809).\nDE CONFORMIDAD con el art. 71 del Reglamento aprobado por Real Decreto 1624/1992, de 29 de diciembre (Ref. BOE-A-1992-28925).\nMaterias\nAgencia Estatal de la Administración Tributaria\nFormularios administrativos\nImpuesto sobre el Valor Añadido",
+      "title": "ANEXO",
+      "section": "ANEXO",
+      "anchor": null
+    }
+  ]
+}

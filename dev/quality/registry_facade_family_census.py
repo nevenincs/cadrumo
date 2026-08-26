@@ -429,12 +429,15 @@ def _package_attribute_owners(
             owners.update(member_owners.values())
         elif owner := member_owners.get(member):
             owners.add(owner)
-    package_locals = {local for local, target in aliases.items() if target == package}
     for node in ast.walk(tree):
         reference = _dotted_name(node)
-        if reference is None or reference.partition(".")[0] not in package_locals:
+        if reference is None:
             continue
-        member = reference.removeprefix(f"{reference.partition('.')[0]}").removeprefix(".").split(".", maxsplit=1)[0]
+        first = reference.partition(".")[0]
+        resolved = _resolve_import_alias(reference, aliases)
+        if not resolved.startswith(f"{package}.") or aliases.get(first, "").startswith(f"{package}."):
+            continue
+        member = resolved.removeprefix(f"{package}.").split(".", maxsplit=1)[0]
         if owner := member_owners.get(member):
             owners.add(owner)
     return owners
@@ -511,6 +514,9 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
         for candidate in candidates:
             if candidate.old_module in text or candidate.new_module in text:
                 hits[candidate.old_path][base].add(relative)
+        for symbol, old_path in member_owners.items():
+            if f"registry.{symbol}" in text or f"cadrumo.domain.calculations.registry.{symbol}" in text:
+                hits[old_path][base].add(relative)
         if not relative.endswith(".py"):
             continue
         tree = ast.parse(text, filename=relative)
@@ -547,6 +553,19 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
+            registration = _resolve_import_alias(_dotted_name(node.func) or "", aliases)
+            if registration.rpartition(".")[2].startswith("register"):
+                references = [registration.removesuffix(f".{registration.rpartition('.')[2]}")]
+                references.extend(
+                    _resolve_import_alias(reference, aliases)
+                    for reference in (_dotted_name(arg) for arg in node.args)
+                    if reference
+                )
+                for reference in references:
+                    if old_path := _owner_for_reference(
+                        reference, by_new_module=by_new_module, member_owners=member_owners
+                    ):
+                        hits[old_path]["registration"].add(relative)
             callee = _dynamic_import_call(node, aliases)
             argument = (
                 node.args[0] if node.args else next((item.value for item in node.keywords if item.arg == "name"), None)
@@ -561,20 +580,6 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
                     literal_dynamic.append({"site": site, "target": target, "row_path": old_path})
             else:
                 unresolved_dynamic.append({"site": site, "callee": callee, "expression": ast.unparse(argument)})
-            registration = _resolve_import_alias(_dotted_name(node.func) or "", aliases)
-            if not registration.rpartition(".")[2].startswith("register"):
-                continue
-            references = [registration.removesuffix(f".{registration.rpartition('.')[2]}")]
-            references.extend(
-                _resolve_import_alias(reference, aliases)
-                for reference in (_dotted_name(arg) for arg in node.args)
-                if reference
-            )
-            for reference in references:
-                if old_path := _owner_for_reference(
-                    reference, by_new_module=by_new_module, member_owners=member_owners
-                ):
-                    hits[old_path]["registration"].add(relative)
     for candidate in candidates:
         hits[candidate.old_path]["transitive"].update(
             _transitive_consumer_paths(
@@ -801,19 +806,6 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         existing = existing_by_pair[pair]
         refreshed = {field: existing[field] for field in reviewed_fields}
         refreshed.update({field: generated[field] for field in derived_fields})
-        evidence = refreshed["semantic_evidence"]
-        if not isinstance(evidence, dict) or not isinstance(evidence.get("substitutability"), dict):
-            raise RuntimeError(f"reviewed semantic evidence is malformed for {pair[0]}")
-        result = refreshed["rag_result"]
-        if not isinstance(result, dict):
-            raise RuntimeError(f"reviewed RAG evidence is malformed for {pair[0]}")
-        competitors = evidence.get("competing_site_census")
-        competitor_symbols = ", ".join(sorted(competitors)) if isinstance(competitors, dict) and competitors else "none"
-        evidence["substitutability"]["rationale"] = (
-            f"RAG `{refreshed['rag_query']}` returned `{result['path']}:{result['line_start']}` "
-            f"for `{result['symbol']}`; reviewed owner `{refreshed['semantic_owner']}` was compared against "
-            f"exact competing c941 symbols: {competitor_symbols}."
-        )
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
         refreshed_rows.append(refreshed)

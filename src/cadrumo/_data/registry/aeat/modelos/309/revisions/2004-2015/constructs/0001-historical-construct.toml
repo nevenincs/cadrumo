@@ -63,5 +63,5 @@ casilla_ids = [
     "wire.observaciones",
 ]
 export_layouts = ["modelo-309-fichero-2004-2015"]
+application_links = ["modelo-309-historical-filing", "modelo-309-historical-export"]
 workbook_parity_refs = ["modelo-309-2004-2015-record-design"]
-

@@ -1,4 +1,4 @@
-# The design's own arithmetic: [22] is the sum of the eight cuota
+# The design's own arithmetic: [22] is the sum of the seven cuota
 # casillas, and [24] is [22] minus the a-deducir casilla.
 [[revisions."2016-2017".formulas]]
 id = "modelo-309-cuota-devengada-total"
@@ -6,7 +6,6 @@ target_casilla_id = "decl.cuota-devengada-22"
 expression.op = "add"
 expression.args = [
     { casilla_id = "decl.rg-cuota-03" },
-    { casilla_id = "decl.rg-cuota-27" },
     { casilla_id = "decl.rg-cuota-06" },
     { casilla_id = "decl.rg-cuota-09" },
     { casilla_id = "decl.re-cuota-12" },

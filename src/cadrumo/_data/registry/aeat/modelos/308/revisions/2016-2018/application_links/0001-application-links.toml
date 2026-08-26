@@ -7,6 +7,14 @@ legal_refs = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-modelo-308-procedure"]
 
 [[revisions."2016-2018".application_links]]
+id = "modelo-308-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions."2016-2018".application_links]]
 id = "modelo-308-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"

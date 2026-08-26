@@ -22,41 +22,37 @@ casilla_id = "decl.rg-cuota-03"
 number = "675-691"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.rg-cuota-27"
+casilla_id = "decl.rg-cuota-06"
 number = "714-730"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.rg-cuota-06"
+casilla_id = "decl.rg-cuota-09"
 number = "753-769"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.rg-cuota-09"
+casilla_id = "decl.re-cuota-12"
 number = "792-808"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.re-cuota-12"
+casilla_id = "decl.re-cuota-15"
 number = "831-847"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.re-cuota-15"
+casilla_id = "decl.re-cuota-18"
 number = "870-886"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.re-cuota-18"
+casilla_id = "decl.re-cuota-21"
 number = "909-925"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
-casilla_id = "decl.re-cuota-21"
-number = "948-964"
-
-[[revisions."2018-2022".completeness_manifest.casillas]]
 casilla_id = "decl.cuota-devengada-22"
-number = "965-981"
+number = "926-942"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
 casilla_id = "decl.a-deducir-23"
-number = "982-998"
+number = "943-959"
 
 [[revisions."2018-2022".completeness_manifest.casillas]]
 casilla_id = "decl.resultado-24"
-number = "999-1015"
+number = "960-976"
