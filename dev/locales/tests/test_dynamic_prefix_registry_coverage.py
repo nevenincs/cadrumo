@@ -358,7 +358,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
         # Non-ctx-scoped (one ExitStack spanning the command body) - the
         # surface the wrong-language bound was proven against:
-        ("application/wizard/_commands.py", "_enter_requested_output_language"),
+        ("application/wizard/commands.py", "_enter_requested_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/_root_cli.py", "root_command"),
