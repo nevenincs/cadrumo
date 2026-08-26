@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a67fe5e96c2b9dfb664b5fd7007f3a97c4df175aceabeb55414edc1bb503b13'
+body_hash: 'sha256:2781e1a92a29aa55c9a19793404d39da54c846ad68d0a3732a2ea46f1975c58e'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -31,6 +31,12 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_producers.py`, `tests/test_workspace.py` (commit `a3db12320e`: locale summary, STATIC_INSPECTION capabilities, `catalogue_digest`)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (35 passed)
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `e9fb1cf5fa`: `resolve_static_inspection_schema_identity`, `capture_modelo_workspace_target_captures`)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `08a694e134`: evidence_horizon, contributors, work_review facet, baseline)
+- `M` `src/cadrumo/domain/calculations/registry/static_inspection.py` (landed inside peer commit `daeb0594d1`: enrolled `family_dispositions`)
+- `M` `src/cadrumo/application/modelo/workspace_manifest.py` (commit `9e90b62c26`: `_INSPECTION_ROOT_FIELDS` companion fix)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (66 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py -m "unit or integration" -q` -> `pass` (20 passed, 1 pre-existing skip)
 
 ## Notes
 
@@ -118,6 +124,61 @@ already broken there; the accidental inclusion completed that peer's
 in-flight rename rather than introducing a break. Reported to team lead for
 attribution; not claiming credit for it here.
 
-Still NOT built: request/admission dispatch, `schema_facet`, `baseline`,
-materialization/provenance facets, evidence horizon, family dispositions,
-readiness/closure integration for GRADED_SNAPSHOT. Held on S277 and S278.
+Update: S277, S278, S279 all landed (own decision commits, reported
+separately). With all three settled, resumed the STATIC_INSPECTION vertical:
+
+- `resolve_static_inspection_schema_identity` (commit `e9fb1cf5fa`):
+  `schema_fingerprint` over the inspection's own casilla/binding id sets;
+  `field_manifest_digest` from the S278 inspection-rooted manifest. Also
+  generalized the capture flow: `capture_modelo_workspace_target_captures`
+  now returns the full stamped-and-epoched WORK/REGISTRY captures (not just
+  their bare projections) so baseline assembly can fold in their stamps and
+  epochs without a second capture of either;
+  `capture_modelo_workspace_target_axes` becomes a thin wrapper preserving
+  every existing caller's shape.
+- `static_inspection_evidence_horizon`, `static_inspection_contributors`,
+  `STATIC_INSPECTION_WORK_REVIEW_FACET` (fixed `UNMEASURED`/`None`, per
+  S279), `resolve_static_inspection_baseline` (commit `08a694e134`) --
+  baseline digests the CALLER's already-captured stamps/epochs and performs
+  no capture of its own, deliberately: a baseline that re-captured would
+  reintroduce the second-observation hazard S279/S128's REGISTRY-capture
+  reasoning exists to rule out.
+
+**Pattern worth recording rather than three isolated fixes**: `review_status`
+(commit `822642adbc`), then `family_dispositions` (commit `9e90b62c26`) are
+the second and third fields the shared Workspace records require that
+`RegistryRevisionInspection` did not carry. `RegistryRevisionInspection` was
+built for a narrower consumer (verifying generated static artefacts) than the
+Workspace shared shapes assume, so a fourth gap of the same shape should be
+expected, not treated as another one-off surprise.
+
+The `family_dispositions` enrolment landed inside a peer's unrelated
+`daeb0594d1` commit via the shared working tree (verified byte-identical to
+the intended change before building on it); the matching
+`workspace_manifest.py` `_INSPECTION_ROOT_FIELDS` addition, committed
+separately as `9e90b62c26`, itself accidentally absorbed that same peer's
+follow-on deletion of the two now-superseded public module names
+(`validate_references.py`/`verdict_cache.py`) via the same shared-index
+mechanism as the earlier `m303_orden_projection_compiler.py` incident.
+Verified zero remaining references to the deleted names and clean imports
+before treating it as harmless; reported to team lead for attribution both
+times, not claiming credit here.
+
+**Stopped again, not inferring**: the schema_facet walk surfaced a FOURTH
+and materially larger gap of the same pattern before any code was written.
+`RegistryRevisionInspection.casilla_ids` / `.binding_ids` are bare id sets,
+never `CasillaDefinition` / full binding objects -- so a CASILLA row has no
+source for `legal_refs`, `constraints`, or per-casilla family membership at
+all, unlike the FORMULA/BINDING/RELATION/PARAMETER rows, which the inspection
+already carries as rich definitions. This is a bigger surface than a single
+scalar/mapping field, so it was reported with three options (enroll the
+richer casilla/binding data; scope STATIC_INSPECTION's schema_facet to the
+identity kinds it can fully back plus bare casilla references with an
+explicit not-yet-measured disposition on the missing fields; or open it as
+its own decision Step like S277/S278/S279) rather than picked unilaterally.
+Holding for a ruling before writing any schema_facet code.
+
+Still NOT built: request/admission dispatch, `schema_facet`, the full
+`ModeloWorkspaceProjectionV1` / `ModeloWorkspaceStaticInspectionResultV1`
+wrapping, materialization/provenance facets, readiness/closure integration
+for GRADED_SNAPSHOT.
