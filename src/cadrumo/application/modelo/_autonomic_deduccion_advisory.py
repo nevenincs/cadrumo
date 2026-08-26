@@ -3,7 +3,7 @@
 The Madrid nacimiento/adopción deducción autonómica (casilla 1039, DL 1/2010
 arts. 4 y 18.1) auto-populates on the calculate path only for the determinable
 single/monoparental individual filer
-(:func:`~application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`);
+(:func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`);
 a tributación conjunta declaration or a married/pareja-de-hecho filer is
 fail-closed by design because the unidad-familiar 61.860 € límite needs the
 spouse's base imponible, which the app does not persist. That fail-closed
@@ -27,10 +27,10 @@ for the target modelo revision, the same authority the calculate path resolves
 its registry formula against.
 
 See Also:
-    :func:`~application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`
+    :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`
         The calculate-path injector whose fail-closed branch this advisory
         surfaces to the operator.
-    :func:`~application.modelo._profile_binding._madrid_nacimiento_adopcion_candidate_weighted_count`
+    :func:`~application.modelo.profile_binding.madrid_nacimiento_adopcion_candidate_weighted_count`
         Shared candidate-count primitive: evaluates only the per-descendant
         window/cohabitation condition, independent of the unit's determinability.
     :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
@@ -57,16 +57,16 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ._profile_binding import (
+from ._semantic_role_resolution import (
+    AmbiguousSemanticRoleCasillaError,
+    casilla_id_for_unique_semantic_role,
+)
+from .profile_binding import (
     MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,
     is_indeterminate_unidad_familiar,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
     profile_fact_index,
-)
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_semantic_role,
 )
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"

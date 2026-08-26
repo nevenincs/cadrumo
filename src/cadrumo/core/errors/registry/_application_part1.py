@@ -788,7 +788,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._profile_binding.ProfileBindingResolutionError",
+        "cadrumo.application.modelo.profile_binding.ProfileBindingResolutionError",
         ErrorCode(
             code="REFUSED_PROFILE_BINDING_RESOLUTION",
             category=ErrorCategory.REFUSED,

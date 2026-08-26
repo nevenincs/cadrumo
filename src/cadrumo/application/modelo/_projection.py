@@ -68,9 +68,9 @@ from ._calculate_input import (
     validated_binding_input_channel as _validated_binding_input_channel,
 )
 from ._calculation_actions import list_calculation_revisions
-from ._profile_binding import resolve_profile_sourced_bindings
 from ._registry_helpers import validate_casilla_input_ids
 from ._work_lifecycle import list_work_units
+from .profile_binding import resolve_profile_sourced_bindings
 
 _LOG = get_logger(__name__)
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")

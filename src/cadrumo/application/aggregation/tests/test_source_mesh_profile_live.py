@@ -9,6 +9,8 @@ from functools import cache
 import pytest
 from pydantic import AnyHttpUrl
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.outbound.aeat.sede import (
     IVA_COMPENSATION_WALLET_URL,
     IvaCompensationWalletObservation,
@@ -16,11 +18,10 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import CalculationSourceLineageRole, Period, RegistryAuthorityGrade
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
-from ...modelo._profile_binding import resolve_profile_sourced_bindings
+from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from .. import CalculationSourceContext, ProfileSourceResolver
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 

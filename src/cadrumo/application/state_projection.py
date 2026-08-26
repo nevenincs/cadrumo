@@ -918,7 +918,7 @@ def _missing_calculation_bindings_for_readiness(
     from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 
     from .calculations import relation_prefill_period_zero_default_binding_ids
-    from .modelo._profile_binding import (
+    from .modelo.profile_binding import (
         ProfileBindingResolutionError,
         profile_resolved_binding_ids,
         resolve_profile_sourced_bindings,

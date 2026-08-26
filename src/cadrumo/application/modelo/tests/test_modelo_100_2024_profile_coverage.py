@@ -9,14 +9,15 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._profile_binding import profile_fact_index, resolve_profile_binding_value
+from ..profile_binding import profile_fact_index, resolve_profile_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

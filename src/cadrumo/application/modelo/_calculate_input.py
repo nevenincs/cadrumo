@@ -98,12 +98,12 @@ from ..aggregation import CalculationSourceDiagnostic
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS  # pyright: ignore[reportPrivateUsage]
-from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
+from .profile_binding import MaternidadMesesResolution
 from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
@@ -768,7 +768,7 @@ def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
-    from ._profile_binding import resolve_maternidad_meses
+    from .profile_binding import resolve_maternidad_meses
 
     snapshot = resolve_registry_snapshot_for_work_unit(
         work_unit,
@@ -872,7 +872,7 @@ def _ambiguous_relacion_hijo_ids(work_unit: WorkUnit, contributing_hijo_ids: fro
     Reads the active profile's descendiente records directly through the same
     canonical reconstruction (:func:`~domain.contribuyente.descendant_list_from_facts`)
     every other consumer of this fact set uses, rather than adding a field to
-    :class:`~application.modelo._profile_binding.MaternidadMesesResolution`: this
+    :class:`~application.modelo.profile_binding.MaternidadMesesResolution`: this
     module already owns loading the profile record for
     :func:`_resolved_maternidad_meses`, and the question this asks — which
     contributing descendant's relación is unstated — is orthogonal to the

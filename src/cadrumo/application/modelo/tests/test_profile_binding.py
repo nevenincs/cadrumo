@@ -34,11 +34,11 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution
 from .._calculation_actions import calculate_modelo_revision
-from .._profile_binding import (
+from .._work_lifecycle import create_work_unit
+from ..profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
 )
-from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -362,7 +362,7 @@ def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
 
 
 class TestBoolTypedProfileBinding:
-    """Pin the typed-bool path through _profile_fact_index → _decimal_value.
+    """Pin the typed-bool path through profile_fact_index → _decimal_value.
 
     contract regression: a bool-typed profile fact must arrive at the Decimal
     channel as Decimal("1")/Decimal("0") via the isinstance(value, bool)

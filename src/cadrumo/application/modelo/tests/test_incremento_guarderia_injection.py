@@ -19,10 +19,11 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core.resources import resources
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list, parse_guarderia_mensual
-from .._profile_binding import (
+from ..profile_binding import (
     _declared_profile_selectors,
     _guarderia_cap_anual,
     _inject_derived_incremento_guarderia_facts,

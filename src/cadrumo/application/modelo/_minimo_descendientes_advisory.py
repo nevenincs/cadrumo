@@ -4,7 +4,7 @@ Modelo 100 casillas ``irpf_minimo_descendientes_estatal`` (0513) and
 ``irpf_minimo_descendientes_autonomico`` (0514) are ``input_kind = computed``: the
 Art. 58/61 LIRPF aggregate is derived from the active profile's
 ``renta_family.descendiente.{n}.*`` facts by
-:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`.
+:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`.
 A profile that carries no descendiente facts at all resolves 0513/0514 to the
 legally-correct zero for a genuinely childless filer — but the SAME zero also results
 when a filer with real descendants simply never declared them (no live production
@@ -24,7 +24,7 @@ See Also:
     :mod:`~application.modelo._calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the engine
         casilla values and the owning bucket id.
-    :func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`:
+    :func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`:
         Computes the Art. 58/61 aggregate this collector's zero-check inspects.
     :func:`~domain.contribuyente.parse_descendiente_flag`:
         Parses the ``--descendiente`` flag the advisory's ``next_action`` names.
@@ -100,7 +100,7 @@ def _has_descendiente_facts(bucket_id: str) -> bool:
     its family situation and must not be flagged as a silent gap.
 
     Returns ``False`` when the bucket has no profile yet, mirroring the silent-absent
-    handling :func:`~application.modelo._profile_binding.resolve_profile_sourced_bindings`
+    handling :func:`~application.modelo.profile_binding.resolve_profile_sourced_bindings`
     already applies to profile-sourced bindings.
     """
     from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -205,7 +205,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     to the same descendant. Whether one is is not a fact about the descendant,
     so when the operator has not answered per-descendant the engine derives it
     from marital status, a spouse record and the declaration type
-    (:func:`~application.modelo._profile_binding.second_entitled_filer_indicated`).
+    (:func:`~application.modelo.profile_binding.second_entitled_filer_indicated`).
 
     A derivation that silently halved a filing's mínimo is exactly the kind of
     inference the operator must be able to see and correct before filing, which
@@ -247,7 +247,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     if facts is None:
         return ()
 
-    from ._profile_binding import second_entitled_filer_indicated
+    from .profile_binding import second_entitled_filer_indicated
 
     if not second_entitled_filer_indicated(facts):
         return ()
@@ -998,7 +998,7 @@ def collect_descendientes_count_desync_diagnostics(
     binding ``renta-2024-profile-descendientes-count`` reads the STORED
     count out of the profile fact index, while casillas 0513/0514 are
     injected from the ROWS by
-    :func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`
+    :func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`
     -- so one Modelo 100 casilla follows the operator's number and another
     follows the descendants actually on record, with nothing saying they
     disagree (`no-silent-under-declaration`).

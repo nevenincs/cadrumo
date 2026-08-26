@@ -24,9 +24,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....core import CasillaId, Modelo
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.contribuyente import DescendantInfo, RentaMaritalStatus, descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
@@ -222,7 +223,7 @@ def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> No
     These facts go through the real write path, so a value the schema would
     reject cannot reach the assertion.
     """
-    from .._profile_binding import second_entitled_filer_indicated
+    from ..profile_binding import second_entitled_filer_indicated
 
     unmarried = {
         "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
@@ -254,7 +255,7 @@ def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
     unnoticed. Deriving the sets from the enum makes that unrepresentable, and
     this asserts the derivation rather than the current contents.
     """
-    from .._profile_binding import (
+    from ..profile_binding import (
         _MARRIED_STATUS_TOKENS,
         _PARTNERED_STATUS_TOKENS,
         _UNMARRIED_STATUS_TOKENS,

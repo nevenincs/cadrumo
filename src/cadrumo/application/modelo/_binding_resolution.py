@@ -18,7 +18,7 @@ responsibilities rather than a second projection contract.
 See Also:
     :mod:`~cadrumo.application.modelo._calculation_resolution`:
         Merges these tiers and builds the canonical engine input maps.
-    :mod:`~cadrumo.application.modelo._profile_binding`:
+    :mod:`~cadrumo.application.modelo.profile_binding`:
         Resolves profile-sourced bindings into decimal, enum, and date channels.
     :mod:`~cadrumo.application.modelo._borrador_binding`:
         Resolves Modelo 100 borrador snapshots as a precedence tier.
@@ -34,17 +34,17 @@ from typing import TYPE_CHECKING
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId
 from ...core import Period as _Period
-from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.schema import (
-    ModeloRevision,
-    RegistrySnapshot,
-)
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
 )
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
 from ._borrador_binding import Modelo100BorradorSourceResolver

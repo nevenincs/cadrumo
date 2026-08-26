@@ -23,16 +23,17 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core.resources import resources
 from ....domain.contribuyente import (
     DescendantInfo,
     MinimoDescendientesThresholds,
     RentaFamilyProfile,
     RentaMaritalStatus,
 )
-from .._profile_binding import (
+from ..profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
     second_entitled_filer_indicated,

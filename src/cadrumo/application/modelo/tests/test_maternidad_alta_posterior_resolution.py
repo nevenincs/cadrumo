@@ -27,15 +27,16 @@ from functools import lru_cache
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core.resources import resources
 from ....domain.contribuyente import (
     DescendantInfo,
     compute_deduccion_maternidad_0611,
     descendant_facts_from_list,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._profile_binding import resolve_maternidad_meses
+from ..profile_binding import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

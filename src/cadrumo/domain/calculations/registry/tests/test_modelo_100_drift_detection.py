@@ -332,7 +332,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # out-of-formula pattern as the estatal mínimo-por-descendientes
         # parameters above: the application-layer injector
         # ``_minimo_descendientes_parameter`` / ``_resolved_minimo_descendientes_
-        # tranches`` (``src/cadrumo/application/modelo/_profile_binding.py``) reads
+        # tranches`` (``src/cadrumo/application/modelo/profile_binding.py``) reads
         # these by manually iterating ``snapshot.revision.parameters`` rather
         # than calling ``read_parameter(...)``, and lives under
         # ``src/cadrumo/application/`` rather than ``src/cadrumo/domain/`` — outside
@@ -370,7 +370,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         #
         # CONSUMED, not pending. Resolved by the SAME out-of-formula pattern as
         # the Madrid tranches above: ``_resolved_minimo_descendientes_thresholds``
-        # (``src/cadrumo/application/modelo/_profile_binding.py``) reads them by
+        # (``src/cadrumo/application/modelo/profile_binding.py``) reads them by
         # iterating ``snapshot.revision.parameters`` rather than calling
         # ``read_parameter(...)``, and lives under ``src/cadrumo/application/``
         # rather than ``src/cadrumo/domain/`` — outside both branches this

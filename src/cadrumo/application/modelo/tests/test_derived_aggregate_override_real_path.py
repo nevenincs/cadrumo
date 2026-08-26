@@ -3,12 +3,12 @@
 Modelo 100 casilla 0513 (``irpf_minimo_descendientes_estatal``) is
 ``input_kind = computed``: the Art. 58/61 LIRPF aggregate is derived at calculate
 time from the profile's ``renta_family.descendiente.{n}.*`` facts by
-:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`.
+:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`.
 
 The profile schema nevertheless ALSO declares
 ``renta_family.descendientes_minimos_aggregate_{year}`` as an ordinary writable
 decimal field, so the operator write door accepts a value at the derived path.
-That value is indexed unconditionally by ``_profile_fact_index`` before the
+That value is indexed unconditionally by ``profile_fact_index`` before the
 injector runs, and the injector declines to overwrite a key already present, so
 the stored value reaches casilla 0513 and the law computation never happens --
 with no diagnostic, no notice, and no refusal anywhere on the path.
@@ -45,9 +45,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact

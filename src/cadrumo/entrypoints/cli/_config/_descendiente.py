@@ -3,7 +3,7 @@
 The Art. 58/61 LIRPF minimo por descendientes engine
 (:meth:`~domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`,
 consumed at calculate time by
-:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`) reads the
+:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) reads the
 active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, no
 production CLI surface wrote those facts: :func:`~domain.contribuyente.parse_descendiente_flag`
 and :func:`~domain.contribuyente.descendant_facts_from_list` had zero non-test
@@ -28,7 +28,7 @@ canonical fact rows, which are published through one authenticated
 revision-bound replacement command.
 
 See Also:
-    :mod:`~application.modelo._profile_binding`:
+    :mod:`~application.modelo.profile_binding`:
         ``inject_derived_minimo_descendientes_facts`` reads the facts this module writes.
     :func:`~domain.contribuyente.parse_descendiente_flag`:
         Parses the ``--descendiente`` flag's ``KEY=VALUE,...`` grammar.
@@ -312,7 +312,7 @@ def descendiente_add(
     refuses instructively before any profile write. The new rows are appended after
     the existing declared descendants and the full set is rewritten so the
     Art. 58/61 LIRPF minimo por descendientes engine
-    (:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`) has
+    (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
     """
     _activate_subcommand_output_language(ctx, output_language)
