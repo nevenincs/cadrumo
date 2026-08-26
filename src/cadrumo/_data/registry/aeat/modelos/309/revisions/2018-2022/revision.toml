@@ -75,8 +75,7 @@ source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 
 [revisions."2018-2022".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2018-2022' of modelo 309 has no strictly-earlier sibling revision of this modelo (valid_from 2003-12-31 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
-transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
+Modelo 309 has the bounded 2004-2015 and 2016-2017 predecessors and this 2018-2022 successor is represented by the official M30900 and M30901 record pair. No casilla continuity identity has yet been adjudicated across those design changes, so there is no evidence-backed from_revision/to_revision evolution to declare. The empty family records that unresolved continuity boundary rather than asserting that an earlier sibling does not exist."""
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 

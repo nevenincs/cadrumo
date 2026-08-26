@@ -17,7 +17,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_modelo_registry_backed_members_match_registry() -> None:
     """The registry-backed :class:`Modelo` members are exactly the registry codes.
 
-    Uses the real registry via :func:`cadrumo.application.modelo.registry_modelo_codes`
+    Uses the real registry via
+    :func:`cadrumo.application.modelo.registry_discovery.registry_modelo_codes`
     (no mocks).  The enum is the full identifier taxonomy; subtracting the
     documented :data:`NON_REGISTRY_MODELOS` (retired codes with no registry
     definition, e.g. M037) must leave exactly the registry directory listing.
@@ -29,7 +30,7 @@ def test_modelo_registry_backed_members_match_registry() -> None:
     parallel execution, re-run sequentially (``-p no:xdist``) before concluding
     it is a real regression.
     """
-    from ...application.modelo._registry_discovery import registry_modelo_codes
+    from ...application.modelo.registry_discovery import registry_modelo_codes
 
     registry_set = set(registry_modelo_codes())
     enum_set = {m.value for m in Modelo}
@@ -53,6 +54,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     it (reviving active support) would break this test.
     """
     from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+
     from ..resources import resources
 
     authority = resources().modelos.authority

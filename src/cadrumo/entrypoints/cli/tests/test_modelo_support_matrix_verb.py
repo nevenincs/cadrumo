@@ -7,8 +7,8 @@ See Also:
         Transport mapper from registry rows to CLI payload rows.
     :class:`~entrypoints.cli._modelo_support_matrix_payloads.ModeloSupportMatrixResult`
         Registered JSON result schema asserted by the envelope checks.
-    :func:`~application.modelo.registry_support_matrix`
-        Application facade called by the CLI command.
+    :func:`~application.modelo.registry_discovery.registry_support_matrix`
+        Application query called by the CLI command.
     :mod:`~domain.calculations.registry.tests.test_support_matrix`
         Domain support-matrix coverage for the same row semantics.
 """

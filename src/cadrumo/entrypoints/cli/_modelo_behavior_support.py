@@ -5,7 +5,6 @@ from __future__ import annotations
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo._registry_discovery import declared_modelo_period_tokens
 from ...application.modelo._selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
@@ -13,6 +12,7 @@ from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
 )
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -128,9 +128,7 @@ def resolve_revision_for_cli(
     )
     exact_work_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
     typed_period = (
-        period
-        if isinstance(period, Period)
-        else resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+        period if isinstance(period, Period) else resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     )
     catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     try:

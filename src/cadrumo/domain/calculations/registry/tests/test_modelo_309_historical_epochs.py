@@ -154,3 +154,29 @@ def test_modelo_309_historical_epochs_have_labels_in_every_shipped_locale() -> N
         assert revision.casillas
         for locale in ("es", "en", "ca", "hu"):
             assert all(casilla.get_label(locale).strip() for casilla in revision.casillas)
+
+
+def test_modelo_309_locale_help_witnesses_use_each_era_exact_a_deducir_geometry() -> None:
+    """Locale help must describe the era's record slot, never a copied 2023 one."""
+    modelo, _catalogues = _modelo_309()
+    expected = {
+        "2004-2015": (792, 13),
+        "2016-2017": (943, 17),
+        "2018-2022": (943, 17),
+        "2023-y-siguientes": (982, 17),
+    }
+
+    for revision_id, (start, length) in expected.items():
+        revision = modelo.revisions[revision_id]
+        field = next(
+            field
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.casilla_id == "decl.a-deducir-23"
+        )
+        assert (field.offset, field.length) == (start, length)
+        expected_span = f"{start}-{start + length - 1}"
+        casilla = next(casilla for casilla in revision.casillas if casilla.id == "decl.a-deducir-23")
+        for locale in ("es", "en", "ca", "hu"):
+            assert expected_span in (casilla.get_help(locale) or "")

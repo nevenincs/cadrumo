@@ -8,191 +8,190 @@ modelo:
         2004-2015:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modelo 982-998. rovata, 2004. adóév.
+              help: A 309-es modell 792-804. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modelo 639-642. rovata, 2004. adóév.
+              help: A 309-es modell 546-549. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modelo 497-536. rovata, 2004. adóév.
+              help: A 309-es modell 426-465. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modelo 537-616. rovata, 2004. adóév.
+              help: A 309-es modell 466-505. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
                 - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modelo 643-652. rovata, 2004. adóév.
+              help: A 309-es modell 550-561. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
                 felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modelo 617-638. rovata, 2004. adóév.
+              help: A 309-es modell 506-545. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modelo 965-981. rovata, 2004. adóév.
+              help: A 309-es modell 779-791. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modelo 492-496. rovata, 2004. adóév.
+              help: A 309-es modell 420-425. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
                 hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modelo 350-389. rovata, 2004. adóév.
+              help: A 309-es modell 300-339. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modelo 470-491. rovata, 2004. adóév.
+              help: A 309-es modell 380-419. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
                 (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modelo 390-469. rovata, 2004. adóév.
+              help: A 309-es modell 340-379. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lgm8sbld5pmior9dtn2qqbeehp62orfdlqmsqbkc5p6io8:
-              help: null
+              help: A 309-es modell 94-94. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: termékek Közösségen belüli beszerzése'
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355limst3icljm2bb9dpr6asjjd5nmsbb9dpmmuoj9dhkm2sj9c4:
-              help: null
+              help: A 309-es modell 97-97. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: ingatlan jellegű beruházási javak értékesítése'
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: null
+              help: A 309-es modell 96-96. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: fordított adózás'
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lmmap39dtpiqt3ic5n76s3fe9q6abbeelincrrj:
-              help: null
+              help: A 309-es modell 95-95. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: új közlekedési eszközök Közösségen belüli
                 beszerzése'
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lnn8sjfec:
-              help: null
+              help: A 309-es modell 99-99. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: egyéb, nem szabályozott esetek'
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lo74rr3cli6irb9cln78rpdc5i6qqbed5pn8sj1ehkncrpdd9qm8qb3d5gmo:
-              help: null
+              help: A 309-es modell 98-98. mezője, 2004-2015. adóév.
               label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
                 közigazgatási és bírósági eljárásokban'
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modelo 1017-1029. rovata, 2004. adóév.
+              help: A 309-es modell 818-830. mezője, 2004-2015. adóév.
               label: Az előző bevallás igazolószáma (9)
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modelón bevallott adat, a hivatalos nyomtatványtervből
-                véve.
+              help: A 309-es modell 23-24. mezője, 2004-2015. adóév.
               label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modelo 809-825. rovata, 2004. adóév.
+              help: A 309-es modell 655-667. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modelo 848-864. rovata, 2004. adóév.
+              help: A 309-es modell 686-698. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modelo 887-903. rovata, 2004. adóév.
+              help: A 309-es modell 717-729. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modelo 926-942. rovata, 2004. adóév.
+              help: A 309-es modell 748-760. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modelo 831-847. rovata, 2004. adóév.
+              help: A 309-es modell 673-685. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modelo 870-886. rovata, 2004. adóév.
+              help: A 309-es modell 704-716. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modelo 909-925. rovata, 2004. adóév.
+              help: A 309-es modell 735-747. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modelo 948-964. rovata, 2004. adóév.
+              help: A 309-es modell 766-778. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modelo 826-830. rovata, 2004. adóév.
+              help: A 309-es modell 668-672. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modelo 865-869. rovata, 2004. adóév.
+              help: A 309-es modell 699-703. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modelo 904-908. rovata, 2004. adóév.
+              help: A 309-es modell 730-734. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modelo 943-947. rovata, 2004. adóév.
+              help: A 309-es modell 761-765. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modelo 999-1015. rovata, 2004. adóév.
+              help: A 309-es modell 805-817. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modelo 653-669. rovata, 2004. adóév.
+              help: A 309-es modell 562-574. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modelo 731-747. rovata, 2004. adóév.
+              help: A 309-es modell 593-605. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modelo 770-786. rovata, 2004. adóév.
+              help: A 309-es modell 624-636. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modelo 675-691. rovata, 2004. adóév.
+              help: A 309-es modell 580-592. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modelo 753-769. rovata, 2004. adóév.
+              help: A 309-es modell 611-623. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modelo 792-808. rovata, 2004. adóév.
+              help: A 309-es modell 642-654. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modelo 670-674. rovata, 2004. adóév.
+              help: A 309-es modell 575-579. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modelo 748-752. rovata, 2004. adóév.
+              help: A 309-es modell 606-610. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modelo 787-791. rovata, 2004. adóév.
+              help: A 309-es modell 637-641. mezője, 2004-2015. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lgmesj9cdnmoo8:
-              help: null
+              help: A 309-es modell 88-88. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: a mezőgazdasági, állattenyésztési és halászati
                 különös rendszer alanya'
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lnn8sj1ec:
-              help: null
+              help: A 309-es modell 93-93. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: egyéb, nem szabályozott esetek'
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bb6d5pmior15ln6ubb5dlo74pbjc5p6iro:
-              help: null
+              help: A 309-es modell 92-92. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
                 végző természetes személy'
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bbaelp6ip39cdgiqrjf5limqs3iclpm2sj9ds:
-              help: null
+              help: A 309-es modell 91-91. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
                 végző jogi személy'
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lp6aor1e9jmubb5e5qmitj1dhimsor9c4:
-              help: null
+              help: A 309-es modell 89-89. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: az egyenértékűségi felár különös rendszerének
                 alanya'
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lpmirhdchin4pb3d1niqp35chqm6or9dtn0:
-              help: null
+              help: A 309-es modell 90-90. mezője, 2004-2015. adóév.
               label: 'Adójogi helyzet: levonási jog nélküli adóalany'
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modelo 118-177. rovata, 2004. adóév.
+              help: A 309-es modell 34-73. mezője, 2004-2015. adóév.
               label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modelo 109-117. rovata, 2004. adóév.
+              help: A 309-es modell 25-33. mezője, 2004-2015. adóév.
               label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modelo 198-199. rovata, 2004. adóév.
+              help: A 309-es modell 74-87. mezője, 2004-2015. adóév.
               label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modelo 322-343. rovata, 2004. adóév.
+              help: A 309-es modell 220-259. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modelo 344-349. rovata, 2004. adóév.
+              help: A 309-es modell 260-299. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modelo 202-241. rovata, 2004. adóév.
+              help: A 309-es modell 100-139. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modelo 282-321. rovata, 2004. adóév.
+              help: A 309-es modell 180-219. mezője, 2004-2015. adóév.
               label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
                 megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modelo 242-281. rovata, 2004. adóév.
+              help: A 309-es modell 140-179. mezője, 2004-2015. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-etkn4p9edhin8sj1ecmmat39e5qmat31:
-              help: null
+              help: A 309-es modell 15-18. mezője, 2004-2015. adóév.
               label: Az azonosító címke betűi
             x-etkn4p9edth76pbiepgm6qbfdpin6:
-              help: null
+              help: A 309-es modell 951-1300. mezője, 2004-2015. adóév.
               label: Megjegyzések
           construct:
             modelo-309-historical-no-periodica:
@@ -203,168 +202,167 @@ modelo:
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modelo 982-998. rovata, 2004. adóév.
+              help: A 309-es modell 943-959. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modelo 639-642. rovata, 2004. adóév.
+              help: A 309-es modell 639-642. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modelo 497-536. rovata, 2004. adóév.
+              help: A 309-es modell 497-536. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modelo 537-616. rovata, 2004. adóév.
+              help: A 309-es modell 537-616. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
                 - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modelo 643-652. rovata, 2004. adóév.
+              help: A 309-es modell 643-652. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
                 felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modelo 617-638. rovata, 2004. adóév.
+              help: A 309-es modell 617-638. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modelo 1016. rovata, 2004. adóév.
+              help: A 309-es modell 977-977. mezője, 2016-2017. adóév.
               label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modelo 965-981. rovata, 2004. adóév.
+              help: A 309-es modell 926-942. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modelo 492-496. rovata, 2004. adóév.
+              help: A 309-es modell 492-496. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
                 hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modelo 350-389. rovata, 2004. adóév.
+              help: A 309-es modell 350-389. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modelo 470-491. rovata, 2004. adóév.
+              help: A 309-es modell 470-491. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
                 (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modelo 390-469. rovata, 2004. adóév.
+              help: A 309-es modell 390-469. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modelo 201. rovata, 2004. adóév.
+              help: A 309-es modell 201-201. mezője, 2016-2017. adóév.
               label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
-              help: A 309-es modelo 1030-1063. rovata, 2004. adóév.
+              help: A 309-es modell 991-1024. mezője, 2016-2017. adóév.
               label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modelo 1017-1029. rovata, 2004. adóév.
+              help: A 309-es modell 978-990. mezője, 2016-2017. adóév.
               label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
-              help: A 309-es modelo 83-102. rovata, 2004. adóév.
+              help: A 309-es modell 83-102. mezője, 2016-2017. adóév.
               label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modelón bevallott adat, a hivatalos nyomtatványtervből
-                véve.
+              help: A 309-es modell 107-108. mezője, 2016-2017. adóév.
               label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modelo 809-825. rovata, 2004. adóév.
+              help: A 309-es modell 770-786. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modelo 848-864. rovata, 2004. adóév.
+              help: A 309-es modell 809-825. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modelo 887-903. rovata, 2004. adóév.
+              help: A 309-es modell 848-864. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modelo 926-942. rovata, 2004. adóév.
+              help: A 309-es modell 887-903. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modelo 831-847. rovata, 2004. adóév.
+              help: A 309-es modell 792-808. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modelo 870-886. rovata, 2004. adóév.
+              help: A 309-es modell 831-847. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modelo 909-925. rovata, 2004. adóév.
+              help: A 309-es modell 870-886. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modelo 948-964. rovata, 2004. adóév.
+              help: A 309-es modell 909-925. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modelo 826-830. rovata, 2004. adóév.
+              help: A 309-es modell 787-791. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modelo 865-869. rovata, 2004. adóév.
+              help: A 309-es modell 826-830. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modelo 904-908. rovata, 2004. adóév.
+              help: A 309-es modell 865-869. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modelo 943-947. rovata, 2004. adóév.
+              help: A 309-es modell 904-908. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modelo 999-1015. rovata, 2004. adóév.
+              help: A 309-es modell 960-976. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modelo 653-669. rovata, 2004. adóév.
+              help: A 309-es modell 653-669. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modelo 731-747. rovata, 2004. adóév.
+              help: A 309-es modell 692-708. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modelo 770-786. rovata, 2004. adóév.
+              help: A 309-es modell 731-747. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modelo 675-691. rovata, 2004. adóév.
+              help: A 309-es modell 675-691. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modelo 753-769. rovata, 2004. adóév.
+              help: A 309-es modell 714-730. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modelo 792-808. rovata, 2004. adóév.
+              help: A 309-es modell 753-769. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modelo 670-674. rovata, 2004. adóév.
+              help: A 309-es modell 670-674. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modelo 748-752. rovata, 2004. adóév.
+              help: A 309-es modell 709-713. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modelo 787-791. rovata, 2004. adóév.
+              help: A 309-es modell 748-752. mezője, 2016-2017. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modelo 200. rovata, 2004. adóév.
+              help: A 309-es modell 200-200. mezője, 2016-2017. adóév.
               label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modelo 13. rovata, 2004. adóév.
+              help: A 309-es modell 13-13. mezője, 2016-2017. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modelo 118-177. rovata, 2004. adóév.
+              help: A 309-es modell 118-177. mezője, 2016-2017. adóév.
               label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modelo 109-117. rovata, 2004. adóév.
+              help: A 309-es modell 109-117. mezője, 2016-2017. adóév.
               label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modelo 178-197. rovata, 2004. adóév.
+              help: A 309-es modell 178-197. mezője, 2016-2017. adóév.
               label: Átruházó (3) - Név
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modelo 198-199. rovata, 2004. adóév.
+              help: A 309-es modell 198-199. mezője, 2016-2017. adóév.
               label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modelo 322-343. rovata, 2004. adóév.
+              help: A 309-es modell 322-343. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modelo 344-349. rovata, 2004. adóév.
+              help: A 309-es modell 344-349. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modelo 202-241. rovata, 2004. adóév.
+              help: A 309-es modell 202-241. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modelo 282-321. rovata, 2004. adóév.
+              help: A 309-es modell 282-321. mezője, 2016-2017. adóév.
               label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
                 megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modelo 242-281. rovata, 2004. adóév.
+              help: A 309-es modell 242-281. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
@@ -387,180 +385,179 @@ modelo:
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modelo 982-998. rovata, 2004. adóév.
+              help: A 309-es modell 943-959. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es modelo 1088-1147. rovata, 2004. adóév.
+              help: A 309-es modell 1049-1108. mezője, 2018-2022. adóév.
               label: Vevő (4) - Vezetéknév vagy cégnév
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es modelo 1079-1087. rovata, 2004. adóév.
+              help: A 309-es modell 1040-1048. mezője, 2018-2022. adóév.
               label: Vevő (4) - NIF
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es modelo 1148-1167. rovata, 2004. adóév.
+              help: A 309-es modell 1109-1128. mezője, 2018-2022. adóév.
               label: Vevő (4) - Név
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modelo 639-642. rovata, 2004. adóév.
+              help: A 309-es modell 639-642. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modelo 497-536. rovata, 2004. adóév.
+              help: A 309-es modell 497-536. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modelo 537-616. rovata, 2004. adóév.
+              help: A 309-es modell 537-616. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
                 - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modelo 643-652. rovata, 2004. adóév.
+              help: A 309-es modell 643-652. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
                 felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modelo 617-638. rovata, 2004. adóév.
+              help: A 309-es modell 617-638. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modelo 1016. rovata, 2004. adóév.
+              help: A 309-es modell 977-977. mezője, 2018-2022. adóév.
               label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modelo 965-981. rovata, 2004. adóév.
+              help: A 309-es modell 926-942. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modelo 492-496. rovata, 2004. adóév.
+              help: A 309-es modell 492-496. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
                 hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modelo 350-389. rovata, 2004. adóév.
+              help: A 309-es modell 350-389. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modelo 470-491. rovata, 2004. adóév.
+              help: A 309-es modell 470-491. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
                 (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modelo 390-469. rovata, 2004. adóév.
+              help: A 309-es modell 390-469. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modelo 201. rovata, 2004. adóév.
+              help: A 309-es modell 201-201. mezője, 2018-2022. adóév.
               label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
-              help: A 309-es modelo 1030-1063. rovata, 2004. adóév.
+              help: A 309-es modell 991-1024. mezője, 2018-2022. adóév.
               label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modelo 1017-1029. rovata, 2004. adóév.
+              help: A 309-es modell 978-990. mezője, 2018-2022. adóév.
               label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
-              help: A 309-es modelo 83-102. rovata, 2004. adóév.
+              help: A 309-es modell 83-102. mezője, 2018-2022. adóév.
               label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modelón bevallott adat, a hivatalos nyomtatványtervből
-                véve.
+              help: A 309-es modell 107-108. mezője, 2018-2022. adóév.
               label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modelo 809-825. rovata, 2004. adóév.
+              help: A 309-es modell 770-786. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modelo 848-864. rovata, 2004. adóév.
+              help: A 309-es modell 809-825. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modelo 887-903. rovata, 2004. adóév.
+              help: A 309-es modell 848-864. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modelo 926-942. rovata, 2004. adóév.
+              help: A 309-es modell 887-903. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modelo 831-847. rovata, 2004. adóév.
+              help: A 309-es modell 792-808. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modelo 870-886. rovata, 2004. adóév.
+              help: A 309-es modell 831-847. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modelo 909-925. rovata, 2004. adóév.
+              help: A 309-es modell 870-886. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modelo 948-964. rovata, 2004. adóév.
+              help: A 309-es modell 909-925. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modelo 826-830. rovata, 2004. adóév.
+              help: A 309-es modell 787-791. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modelo 865-869. rovata, 2004. adóév.
+              help: A 309-es modell 826-830. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modelo 904-908. rovata, 2004. adóév.
+              help: A 309-es modell 865-869. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modelo 943-947. rovata, 2004. adóév.
+              help: A 309-es modell 904-908. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modelo 999-1015. rovata, 2004. adóév.
+              help: A 309-es modell 960-976. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modelo 653-669. rovata, 2004. adóév.
+              help: A 309-es modell 653-669. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modelo 731-747. rovata, 2004. adóév.
+              help: A 309-es modell 692-708. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modelo 770-786. rovata, 2004. adóév.
+              help: A 309-es modell 731-747. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modelo 675-691. rovata, 2004. adóév.
+              help: A 309-es modell 675-691. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modelo 753-769. rovata, 2004. adóév.
+              help: A 309-es modell 714-730. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modelo 792-808. rovata, 2004. adóév.
+              help: A 309-es modell 753-769. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modelo 670-674. rovata, 2004. adóév.
+              help: A 309-es modell 670-674. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modelo 748-752. rovata, 2004. adóév.
+              help: A 309-es modell 709-713. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modelo 787-791. rovata, 2004. adóév.
+              help: A 309-es modell 748-752. mezője, 2018-2022. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modelo 200. rovata, 2004. adóév.
+              help: A 309-es modell 200-200. mezője, 2018-2022. adóév.
               label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modelo 13. rovata, 2004. adóév.
+              help: A 309-es modell 13-13. mezője, 2018-2022. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modelo 118-177. rovata, 2004. adóév.
+              help: A 309-es modell 118-177. mezője, 2018-2022. adóév.
               label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modelo 109-117. rovata, 2004. adóév.
+              help: A 309-es modell 109-117. mezője, 2018-2022. adóév.
               label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es modelo 1064-1078. rovata, 2004. adóév.
+              help: A 309-es modell 1025-1039. mezője, 2018-2022. adóév.
               label: Átruházó (3) - NIF-IVA
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modelo 178-197. rovata, 2004. adóév.
+              help: A 309-es modell 178-197. mezője, 2018-2022. adóév.
               label: Átruházó (3) - Név
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modelo 198-199. rovata, 2004. adóév.
+              help: A 309-es modell 198-199. mezője, 2018-2022. adóév.
               label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modelo 322-343. rovata, 2004. adóév.
+              help: A 309-es modell 322-343. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modelo 344-349. rovata, 2004. adóév.
+              help: A 309-es modell 344-349. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modelo 202-241. rovata, 2004. adóév.
+              help: A 309-es modell 202-241. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modelo 282-321. rovata, 2004. adóév.
+              help: A 309-es modell 282-321. mezője, 2018-2022. adóév.
               label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
                 megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modelo 242-281. rovata, 2004. adóév.
+              help: A 309-es modell 242-281. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
@@ -583,189 +580,188 @@ modelo:
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modelo 982-998. rovata, 2004. adóév.
+              help: A 309-es modell 982-998. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es modelo 1088-1147. rovata, 2004. adóév.
+              help: A 309-es modell 1088-1147. mezője, 2023 y siguientes. adóév.
               label: Vevő (4) - Vezetéknév vagy cégnév
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es modelo 1079-1087. rovata, 2004. adóév.
+              help: A 309-es modell 1079-1087. mezője, 2023 y siguientes. adóév.
               label: Vevő (4) - NIF
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es modelo 1148-1167. rovata, 2004. adóév.
+              help: A 309-es modell 1148-1167. mezője, 2023 y siguientes. adóév.
               label: Vevő (4) - Név
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modelo 639-642. rovata, 2004. adóév.
+              help: A 309-es modell 639-642. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modelo 497-536. rovata, 2004. adóév.
+              help: A 309-es modell 497-536. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modelo 537-616. rovata, 2004. adóév.
+              help: A 309-es modell 537-616. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
                 - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modelo 643-652. rovata, 2004. adóév.
+              help: A 309-es modell 643-652. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
                 felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modelo 617-638. rovata, 2004. adóév.
+              help: A 309-es modell 617-638. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modelo 1016. rovata, 2004. adóév.
+              help: A 309-es modell 1016-1016. mezője, 2023 y siguientes. adóév.
               label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modelo 965-981. rovata, 2004. adóév.
+              help: A 309-es modell 965-981. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modelo 492-496. rovata, 2004. adóév.
+              help: A 309-es modell 492-496. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
                 hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modelo 350-389. rovata, 2004. adóév.
+              help: A 309-es modell 350-389. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modelo 470-491. rovata, 2004. adóév.
+              help: A 309-es modell 470-491. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
                 (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modelo 390-469. rovata, 2004. adóév.
+              help: A 309-es modell 390-469. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modelo 201. rovata, 2004. adóév.
+              help: A 309-es modell 201-201. mezője, 2023 y siguientes. adóév.
               label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
-              help: A 309-es modelo 1030-1063. rovata, 2004. adóév.
+              help: A 309-es modell 1030-1063. mezője, 2023 y siguientes. adóév.
               label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modelo 1017-1029. rovata, 2004. adóév.
+              help: A 309-es modell 1017-1029. mezője, 2023 y siguientes. adóév.
               label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
-              help: A 309-es modelo 83-102. rovata, 2004. adóév.
+              help: A 309-es modell 83-102. mezője, 2023 y siguientes. adóév.
               label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modelón bevallott adat, a hivatalos nyomtatványtervből
-                véve.
+              help: A 309-es modell 107-108. mezője, 2023 y siguientes. adóév.
               label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modelo 809-825. rovata, 2004. adóév.
+              help: A 309-es modell 809-825. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modelo 848-864. rovata, 2004. adóév.
+              help: A 309-es modell 848-864. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modelo 887-903. rovata, 2004. adóév.
+              help: A 309-es modell 887-903. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modelo 926-942. rovata, 2004. adóév.
+              help: A 309-es modell 926-942. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modelo 831-847. rovata, 2004. adóév.
+              help: A 309-es modell 831-847. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modelo 870-886. rovata, 2004. adóév.
+              help: A 309-es modell 870-886. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modelo 909-925. rovata, 2004. adóév.
+              help: A 309-es modell 909-925. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modelo 948-964. rovata, 2004. adóév.
+              help: A 309-es modell 948-964. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modelo 826-830. rovata, 2004. adóév.
+              help: A 309-es modell 826-830. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modelo 865-869. rovata, 2004. adóév.
+              help: A 309-es modell 865-869. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modelo 904-908. rovata, 2004. adóév.
+              help: A 309-es modell 904-908. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modelo 943-947. rovata, 2004. adóév.
+              help: A 309-es modell 943-947. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modelo 999-1015. rovata, 2004. adóév.
+              help: A 309-es modell 999-1015. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modelo 653-669. rovata, 2004. adóév.
+              help: A 309-es modell 653-669. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modelo 731-747. rovata, 2004. adóév.
+              help: A 309-es modell 731-747. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modelo 770-786. rovata, 2004. adóév.
+              help: A 309-es modell 770-786. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqoj1ediiqchl:
-              help: A 309-es modelo 692-708. rovata, 2004. adóév.
+              help: A 309-es modell 692-708. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modelo 675-691. rovata, 2004. adóév.
+              help: A 309-es modell 675-691. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modelo 753-769. rovata, 2004. adóév.
+              help: A 309-es modell 753-769. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modelo 792-808. rovata, 2004. adóév.
+              help: A 309-es modell 792-808. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqorldtq62b9i6s:
-              help: A 309-es modelo 714-730. rovata, 2004. adóév.
+              help: A 309-es modell 714-730. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modelo 670-674. rovata, 2004. adóév.
+              help: A 309-es modell 670-674. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modelo 748-752. rovata, 2004. adóév.
+              help: A 309-es modell 748-752. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modelo 787-791. rovata, 2004. adóév.
+              help: A 309-es modell 787-791. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1ee9jiqt39e1niqchm:
-              help: A 309-es modelo 709-713. rovata, 2004. adóév.
+              help: A 309-es modell 709-713. mezője, 2023 y siguientes. adóév.
               label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modelo 200. rovata, 2004. adóév.
+              help: A 309-es modell 200-200. mezője, 2023 y siguientes. adóév.
               label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modelo 13. rovata, 2004. adóév.
+              help: A 309-es modell 13-13. mezője, 2023 y siguientes. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
               help: null
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modelo 118-177. rovata, 2004. adóév.
+              help: A 309-es modell 118-177. mezője, 2023 y siguientes. adóév.
               label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modelo 109-117. rovata, 2004. adóév.
+              help: A 309-es modell 109-117. mezője, 2023 y siguientes. adóév.
               label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es modelo 1064-1078. rovata, 2004. adóév.
+              help: A 309-es modell 1064-1078. mezője, 2023 y siguientes. adóév.
               label: Átruházó (3) - NIF-IVA
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modelo 178-197. rovata, 2004. adóév.
+              help: A 309-es modell 178-197. mezője, 2023 y siguientes. adóév.
               label: Átruházó (3) - Név
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modelo 198-199. rovata, 2004. adóév.
+              help: A 309-es modell 198-199. mezője, 2023 y siguientes. adóév.
               label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modelo 322-343. rovata, 2004. adóév.
+              help: A 309-es modell 322-343. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modelo 344-349. rovata, 2004. adóév.
+              help: A 309-es modell 344-349. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modelo 202-241. rovata, 2004. adóév.
+              help: A 309-es modell 202-241. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modelo 282-321. rovata, 2004. adóév.
+              help: A 309-es modell 282-321. mezője, 2023 y siguientes. adóév.
               label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
                 megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modelo 242-281. rovata, 2004. adóév.
+              help: A 309-es modell 242-281. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null

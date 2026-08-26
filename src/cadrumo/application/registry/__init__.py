@@ -38,8 +38,8 @@ See Also:
     :class:`adapters.outbound.aeat.sede.FiledDeclaracionObservationStore`
         Active-bucket observation store that persists captured filed state for
         local registry comparison.
-    :mod:`application.modelo._registry_discovery`
-        Modelo work-unit discovery facade for CLI-facing registry queries.
+    :mod:`application.modelo.registry_discovery`
+        Modelo work-unit discovery queries consumed by operator surfaces.
 """
 
 from __future__ import annotations

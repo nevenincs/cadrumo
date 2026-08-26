@@ -18,8 +18,8 @@ See Also:
         Typed per-modelo support row asserted by these tests.
     :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
         Query-service envelope returned by the registry discovery surface.
-    :func:`~application.modelo.registry_support_matrix`
-        Application facade used by the operator CLI without re-reading the
+    :func:`~application.modelo.registry_discovery.registry_support_matrix`
+        Application query used by the operator CLI without re-reading the
         authority directly.
     :mod:`~entrypoints.cli._modelo_support_matrix_payloads`
         JSON payload schemas for the ``modelo.support_matrix`` command.
@@ -29,8 +29,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import ExportLayoutFormat
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from .....core import ExportLayoutFormat
 from ..support_matrix import ModeloEntry, build_support_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

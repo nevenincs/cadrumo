@@ -1,8 +1,8 @@
-"""Application facades for modelo registry discovery queries.
+"""Application Modelo registry discovery queries.
 
 CLI discovery commands call this module instead of constructing
 :class:`RegistryQueryService` or reading the registry authority directly. Each
-facade delegates to the central validated authority exposed by
+query delegates to the central validated authority exposed by
 ``resources().modelos.authority`` and returns the domain query report unchanged.
 
 The ``*_for_scope`` helpers accept a concrete :class:`~core.Period` and
@@ -99,6 +99,7 @@ def registry_describe_modelo_for_registry_scope(
     period: str,
     as_of: date | None = None,
 ):
+    """Return a modelo description for an explicit filing-year registry scope."""
     return _service().describe_modelo_for_scope(
         modelo,
         filing_year=filing_year,
@@ -159,6 +160,7 @@ def registry_casillas_for_registry_scope(
     required: bool | None = None,
     form_number: str | None = None,
 ):
+    """Return casillas for an explicit filing-year registry scope."""
     return _service().casillas_for_scope(
         modelo,
         filing_year=filing_year,
@@ -190,6 +192,7 @@ def registry_casilla_for_registry_scope(
     period: str,
     as_of: date | None = None,
 ):
+    """Return one casilla detail for an explicit filing-year registry scope."""
     return _service().casilla_for_scope(
         modelo,
         casilla,
@@ -243,6 +246,7 @@ def registry_formulas_for_registry_scope(
     period: str,
     as_of: date | None = None,
 ):
+    """Return formulas for an explicit filing-year registry scope."""
     return _service().formulas_for_scope(
         modelo,
         filing_year=filing_year,

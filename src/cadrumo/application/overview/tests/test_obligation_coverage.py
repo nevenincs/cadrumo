@@ -5,7 +5,8 @@ obligation reaches the default calendar only when it has BOTH a deadline window
 AND a positive applicability verdict; a modelo failing either was historically
 dropped without a trace, so an operator would under-file. These tests pin the
 invariant that closes that gap: every
-:func:`~cadrumo.application.modelo.registry_modelo_codes` code is partitioned into
+:func:`~cadrumo.application.modelo.registry_discovery.registry_modelo_codes` code
+is partitioned into
 exactly one disposition — surfaced, confidently excluded, advised (investigate),
 or explicitly out of scope — so nothing can vanish silently.
 
@@ -23,12 +24,13 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.applicability import has_applicability_rule
+
 from ....core import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
     Modelo,
 )
-from cadrumo.domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -38,7 +40,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....tests.attribute_scope import scoped_attribute
-from ...modelo._registry_discovery import registry_modelo_codes
+from ...modelo.registry_discovery import registry_modelo_codes
 from .. import _coverage
 from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog

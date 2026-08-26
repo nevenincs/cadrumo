@@ -8,7 +8,7 @@ bindings.
 
 Revision resolution reuses the same ``period_selector.includes_year`` primitive
 :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`
-already uses (see :mod:`~application.modelo._registry_discovery`): given a
+already uses (see :mod:`~application.modelo.registry_discovery`): given a
 bare filing year, exactly one revision must cover it, or the request is
 refused naming the modelo's declared revisions.
 
