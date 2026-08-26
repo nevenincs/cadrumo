@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a619340f3339a91cbcbc410c854557de5e0496c4dbb1db7d1ccdc06c238c2ee8'
+body_hash: 'sha256:2656750613cf29f8e8fdcb5ab98ed74d0ac9fd314e1bbdd7b51fff601c532b6c'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -55,6 +55,9 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `dfc8a9f19c`: `graded_snapshot_readiness` pass-through)
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/workspace_models.py src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py` -> `pass` (only pre-existing unrelated diagnostics)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (110 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/domain/modelos/_calculation_revision.py`, `application/modelo/_calculation_actions.py`, `application/modelo/workspace.py`, `tests/test_workspace.py`, `adapters/persistence/profile/tests/test_source_mesh_revision_roundtrip.py` (commit `8b6f04125a`: S290, `CalculationSourceRef.source_casilla_ids`, `graded_snapshot_provenance_facet`)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S290 amendment)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/domain/modelos/tests/test_calculation_revision.py src/cadrumo/adapters/persistence/profile/tests/test_source_mesh_revision_roundtrip.py -m "unit or integration" -q` -> `pass` (177 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -324,8 +327,20 @@ field survives the projection unchanged. This completes all three
 GRADED_SNAPSHOT mechanical pieces authorized (materialization, ledger-issue
 subject, readiness).
 
-Still held: `graded_snapshot_provenance_facet` (S290, opened and unresolved
--- `CalculationSourceRef` has no field naming the casilla/binding it
-explains) and the runtime capability-disposition computation (S287,
-confirmed unimplementable as written). S128 stays unchecked until both are
-ruled on.
+S290 (`W03.P20.S290`, decided and closed separately, own exec record)
+landed (commit `8b6f04125a`): `CalculationSourceRef.source_casilla_ids`
+carries the subject identity through from `CalculationSourceProvenance`
+(which already held it) at the `_source_provenance_refs` boundary --
+verified first that the omission was a boundary gap, not the docstring's
+documented `legal_refs`/`source_refs` anti-duplication choice, which does
+not extend to a subject identity. `graded_snapshot_provenance_facet` fans
+one ref out into one record per linked casilla; an unlinked ref (most
+resolvers today) produces zero records rather than a fabricated subject.
+Deliberately does NOT backfill the 16 `CalculationSourceProvenance`
+construction sites across 7 files that leave the field at its `()` default
+-- a separate undertaking.
+
+This lands all three GRADED_SNAPSHOT mechanical pieces plus the S290
+provenance-subject decision. Still held: the runtime
+capability-disposition computation (S287, confirmed unimplementable as
+written). S128 stays unchecked until S287 is ruled on.
