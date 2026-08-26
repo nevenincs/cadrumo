@@ -135,6 +135,15 @@ class ModeloWorkspaceRefusalCode(StrEnum):
     REVISION_ASSERTION_MISMATCH = "revision_assertion_mismatch"
     STATIC_INSPECTION_UNAVAILABLE = "static_inspection_unavailable"
     AUTHORITY_GRADE_UNAVAILABLE = "authority_grade_unavailable"
+    CALCULATION_UNAVAILABLE = "calculation_unavailable"
+    """S296/S128: the WORK axis carries no calculation for this target
+    (``current_calculation_revision_id is None``), so a GRADED_SNAPSHOT
+    admission cannot produce the required materialization/provenance
+    facets. Distinct from ``AUTHORITY_GRADE_UNAVAILABLE`` (a REGISTRY-axis
+    fact): folding a missing calculation into the grade code would send an
+    operator to the wrong remedy -- the registry, not "calculate this work
+    unit first". Never raised for a STATIC_INSPECTION admission, which has
+    no calculation dependency."""
     SCHEMA_UNAVAILABLE = "schema_unavailable"
     LOCALE_UNAVAILABLE = "locale_unavailable"
     CONSISTENCY_UNAVAILABLE = "consistency_unavailable"
