@@ -341,3 +341,31 @@ def test_deleted_profile_name_is_reusable_by_create(
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
     assert "operator" in listed.output
+
+
+def test_logout_settles_through_the_supervised_operation_journal(
+    isolated_cli_profile_storage: Path,
+) -> None:
+    """Logout runs on the operation platform, not a direct authority call.
+
+    The journal is what separates the two implementations. A direct call to the
+    session-revocation authority closes the session and records nothing, so
+    asserting only that the pointer clears would pass either way. A supervised
+    operation leaves a settled journal record behind, and that is what this
+    pins.
+    """
+    from ....core._storage_taxonomy_locations import storage_location
+    from ....core.config import load_settings
+    from ....core.storage_categories import StorageCategory
+
+    create_profile_via_cli("solo")
+    journal_root = (
+        Path(load_settings().storage_root) / storage_location(StorageCategory.OPERATION_JOURNAL).subpath
+    )
+    before = set(journal_root.rglob("*")) if journal_root.exists() else set()
+
+    assert _invoke(("config", "logout")).exit_code == 0
+
+    assert journal_root.exists(), f"logout wrote no operation journal at {journal_root}"
+    written = set(journal_root.rglob("*")) - before
+    assert written, "logout settled without leaving an operation journal record"

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import typer
 from pydantic import SecretStr
@@ -18,6 +20,9 @@ if TYPE_CHECKING:
 
 
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
+
+#: Actor reference the logout command submits its supervised operation under.
+_LOGOUT_ACTOR_REF = "cli:config-logout"
 
 
 class LoginSecrets(MachineSecretPayload):
@@ -262,16 +267,41 @@ def config_login(
     )
 
 
+async def _run_logout_operation(profile_id: UUID) -> None:
+    """Strong-close through the supervised operation platform, then settle it.
+
+    The composed graph owns the journal, the lease and the executor. Its start
+    door awaits the executor to completion, so the session is closed by the time
+    this returns and the caller needs no observation pass to learn that.
+    """
+    from ...._operation_composition import compose_operation_dependencies
+    from ....application.user_profile.operations import build_profile_logout_operation_request
+
+    services = compose_operation_dependencies()
+    try:
+        submission = await services.submission.submit(
+            build_profile_logout_operation_request(profile_id),
+            actor_ref=_LOGOUT_ACTOR_REF,
+        )
+        await services.submission.start(submission.receipt.operation_id)
+    finally:
+        await services.shutdown()
+
+
 def config_logout(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Strong-close the profile session: seal, delete both halves, clear the pointer."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.login_session import logout_active_profile
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     signed_out_label = active_profile_label()
-    signed_out = logout_active_profile()
+    active_bucket_id = resolve_active_bucket_id()
+    signed_out = None
+    if active_bucket_id is not None:
+        asyncio.run(_run_logout_operation(UUID(str(active_bucket_id))))
+        signed_out = str(active_bucket_id)
     logged_out_profile = signed_out_label or signed_out
 
     from .._config_payloads import ConfigLogoutResult
