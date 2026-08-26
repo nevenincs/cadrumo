@@ -24,8 +24,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...core import OutputLanguage, content_hash_hex
-from ...domain.calculations.registry.modelo_localization import revision_locale_key
+from ...core import OutputLanguage, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
 from ...domain.calculations.registry.schema import FormulaDefinition, RelationDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -43,9 +43,13 @@ from .workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
+    ModeloWorkspaceBoundedFacetV1,
+    ModeloWorkspaceCasillaReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
+    ModeloWorkspaceCursorV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceFacetName,
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
     ModeloWorkspaceFormulaCasillaOperandReferenceV1,
     ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
@@ -56,10 +60,13 @@ from .workspace_models import (
     ModeloWorkspaceFormulaRelationOperandReferenceV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceResolvedTargetV1,
+    ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
+    ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceWorkReviewFacetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
@@ -326,6 +333,66 @@ def resolve_modelo_workspace_target(
     )
 
 
+def _resolve_locale_summary_and_value(
+    key: str,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceLocaleSummaryV1, str | None]:
+    """Resolve one canonical locale coordinate plus its text value, for any key.
+
+    Shared by the revision-level summary (:func:`capture_modelo_workspace_locale_summary`)
+    and any per-record label resolution (schema_facet). Spanish is the source
+    language for every catalogue entry (``aeat-locales-cli``), so a requested
+    language whose own key is absent falls back to Spanish rather than to an
+    arbitrary third language; Spanish absent as well is the suppressed floor,
+    never a missing key propagated as an exception. The returned value is
+    ``None`` only when even the Spanish source is absent -- callers needing a
+    non-empty display string treat that as a distinct refusal, never a blank.
+    """
+    requested = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=output_language.value,
+    ).capture_projection_with_epoch()
+    if requested.projection.value is not None:
+        return (
+            ModeloWorkspaceLocaleSummaryV1(
+                requested_language=output_language,
+                resolved_language=output_language,
+                disposition=ModeloWorkspaceLocaleDisposition.EXACT,
+                catalogue_digest=requested.projection.catalogue_digest,
+            ),
+            requested.projection.value,
+        )
+    if output_language is OutputLanguage.ES:
+        return (
+            ModeloWorkspaceLocaleSummaryV1(
+                requested_language=output_language,
+                resolved_language=OutputLanguage.ES,
+                disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
+                catalogue_digest=requested.projection.catalogue_digest,
+            ),
+            None,
+        )
+    spanish = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=OutputLanguage.ES.value,
+    ).capture_projection_with_epoch()
+    disposition = (
+        ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+        if spanish.projection.value is not None
+        else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+    )
+    return (
+        ModeloWorkspaceLocaleSummaryV1(
+            requested_language=output_language,
+            resolved_language=OutputLanguage.ES,
+            disposition=disposition,
+            catalogue_digest=spanish.projection.catalogue_digest,
+        ),
+        spanish.projection.value,
+    )
+
+
 def capture_modelo_workspace_locale_summary(
     resolved_target: ModeloWorkspaceResolvedTargetV1,
     *,
@@ -339,47 +406,10 @@ def capture_modelo_workspace_locale_summary(
     one ``(modelo, revision)`` pair, and that pair's own display label is a
     key every Workspace read already needs regardless of which facet a caller
     goes on to request.
-
-    Spanish is the source language for every catalogue entry
-    (``aeat-locales-cli``), so a requested language whose own key is absent
-    falls back to Spanish rather than to an arbitrary third language; Spanish
-    absent as well is the suppressed floor, never a missing key propagated as
-    an exception.
     """
     key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
-    requested = ModeloWorkspaceLocaleCataloguePortV1(
-        translation_key=key,
-        locale=output_language.value,
-    ).capture_projection_with_epoch()
-    if requested.projection.value is not None:
-        return ModeloWorkspaceLocaleSummaryV1(
-            requested_language=output_language,
-            resolved_language=output_language,
-            disposition=ModeloWorkspaceLocaleDisposition.EXACT,
-            catalogue_digest=requested.projection.catalogue_digest,
-        )
-    if output_language is OutputLanguage.ES:
-        return ModeloWorkspaceLocaleSummaryV1(
-            requested_language=output_language,
-            resolved_language=OutputLanguage.ES,
-            disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
-            catalogue_digest=requested.projection.catalogue_digest,
-        )
-    spanish = ModeloWorkspaceLocaleCataloguePortV1(
-        translation_key=key,
-        locale=OutputLanguage.ES.value,
-    ).capture_projection_with_epoch()
-    disposition = (
-        ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
-        if spanish.projection.value is not None
-        else ModeloWorkspaceLocaleDisposition.SUPPRESSED
-    )
-    return ModeloWorkspaceLocaleSummaryV1(
-        requested_language=output_language,
-        resolved_language=OutputLanguage.ES,
-        disposition=disposition,
-        catalogue_digest=spanish.projection.catalogue_digest,
-    )
+    summary, _value = _resolve_locale_summary_and_value(key, output_language=output_language)
+    return summary
 
 
 # S279 (ADR amendment "Canonical capability and refusal facade"): the
@@ -475,6 +505,9 @@ __all__ = [
     "static_inspection_contributors",
     "static_inspection_evidence_horizon",
     "static_inspection_modelo_workspace_capabilities",
+    "ModeloWorkspaceStaleCursorError",
+    "paginate_static_inspection_schema_facet",
+    "static_inspection_casilla_schema_records",
 ]
 
 
@@ -700,4 +733,118 @@ def resolve_static_inspection_baseline(
         selected_revision_id=target.law_selected_revision_id,
         schema_identity=schema_identity,
         locale_catalogue_digest=locale.catalogue_digest,
+    )
+
+
+class ModeloWorkspaceStaleCursorError(ValueError):
+    """Raised when a cursor's pinned coordinate no longer matches the current baseline.
+
+    A stale cursor MUST refuse rather than silently return a different page:
+    resuming it against data that moved would return records the caller did
+    not ask for and has no way to detect.
+    """
+
+
+def static_inspection_casilla_schema_records(
+    inspection: RegistryRevisionInspection,
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
+    """Build one schema record per casilla identity, sorted for stable pagination.
+
+    Bounded to identity per S283: ``legal_refs`` and ``constraints`` are
+    ``None`` (this admission's producer never carries `CasillaDefinition`
+    data), never ``()``. ``formula_operands`` and ``relation_endpoints``
+    consume the S277 join functions directly rather than re-deriving either
+    edge here.
+    """
+    formulas = inspection.formulas
+    relations = inspection.relations
+    records: list[ModeloWorkspaceSchemaRecordV1] = []
+    for casilla_id in sorted(inspection.casilla_ids):
+        key = casilla_occurrence_locale_key(target.modelo, target.law_selected_revision_id, casilla_id, "label")
+        locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
+        records.append(
+            ModeloWorkspaceSchemaRecordV1(
+                reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
+                section_path=("casillas",),
+                data_type="casilla_id",
+                label=ModeloWorkspaceLocalizedTextV1(
+                    locale_key=key,
+                    value=value if value is not None else casilla_id,
+                    locale=locale_summary,
+                ),
+                classification=ModeloWorkspaceSchemaClassification.PROJECTED,
+                family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
+                legal_refs=None,
+                constraints=None,
+                formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
+                relation_endpoints=relation_source_endpoints_for_casilla(relations, casilla_id),
+            )
+        )
+    return tuple(records)
+
+
+def paginate_static_inspection_schema_facet(
+    records: tuple[ModeloWorkspaceSchemaRecordV1, ...],
+    *,
+    target: ModeloWorkspaceResolvedTargetV1,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    baseline: ModeloWorkspaceBaselineV1,
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...],
+    disposition: ModeloWorkspaceCapabilityDisposition,
+    page_size: int,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
+) -> ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]:
+    """Return one bounded, cursor-consistent page from the complete ``records`` sequence.
+
+    ``records`` MUST already be in the caller's canonical stable order --
+    pagination consumes an offset over that fixed order, never re-derives it.
+    A ``cursor`` from a DIFFERENT baseline, revision, schema identity, or
+    contributor epoch refuses outright rather than silently starting over or
+    returning a page from the wrong coordinate.
+    """
+    if cursor is not None:
+        if (
+            cursor.baseline != baseline
+            or cursor.selected_revision_id != target.law_selected_revision_id
+            or cursor.schema_identity != schema_identity
+            or cursor.facet is not ModeloWorkspaceFacetName.SCHEMA
+            or cursor.contributor_epoch_digest != baseline.contributor_epoch_digest
+        ):
+            raise ModeloWorkspaceStaleCursorError(
+                "workspace schema facet cursor no longer matches the current baseline coordinate"
+            )
+        offset = int(cursor.continuation)
+    else:
+        offset = 0
+
+    page = records[offset : offset + page_size]
+    next_offset = offset + len(page)
+    has_more = next_offset < len(records)
+    next_cursor = (
+        ModeloWorkspaceCursorV1(
+            baseline=baseline,
+            selected_revision_id=target.law_selected_revision_id,
+            schema_identity=schema_identity,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
+            contributor_epoch_digest=baseline.contributor_epoch_digest,
+            continuation=str(next_offset),
+        )
+        if has_more
+        else None
+    )
+    return ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=disposition,
+        records=page,
+        page_size=page_size,
+        next_cursor=next_cursor,
+        has_more=has_more,
     )

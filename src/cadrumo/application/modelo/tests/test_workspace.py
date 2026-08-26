@@ -20,16 +20,19 @@ from .._work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
+    ModeloWorkspaceStaleCursorError,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
     modelo_work_selector_request_for_target,
+    paginate_static_inspection_schema_facet,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
     resolve_static_inspection_baseline,
     resolve_static_inspection_schema_identity,
+    static_inspection_casilla_schema_records,
     static_inspection_contributors,
     static_inspection_evidence_horizon,
     static_inspection_modelo_workspace_capabilities,
@@ -658,3 +661,187 @@ def test_static_inspection_baseline_pins_the_exact_target_and_revision(
     assert len(baseline.token) > 0
     assert len(baseline.contributor_stamp_digest) > 0
     assert len(baseline.contributor_epoch_digest) > 0
+
+
+def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalogueRepository):
+    """Build every piece needed for schema_facet tests, real captures throughout."""
+    from ....core import OutputLanguage
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+    from ..workspace_producers import ModeloWorkspaceFieldManifestPortV1, ModeloWorkspaceLocaleCataloguePortV1
+
+    authority = bundled_authority()
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    resolution = work_capture.projection
+    registry_projection = registry_capture.projection
+    inspection = registry_projection.inspection
+    assert isinstance(inspection, RegistryRevisionInspection)
+
+    target = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+    schema_identity = resolve_static_inspection_schema_identity(inspection)
+    locale = capture_modelo_workspace_locale_summary(target, output_language=OutputLanguage.ES)
+    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key="modelo.schema.130.revision.2019-y-siguientes.field.label",
+        locale=OutputLanguage.ES.value,
+    ).capture_projection_with_epoch()
+    field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=inspection).capture_projection_with_epoch()
+    baseline = resolve_static_inspection_baseline(
+        target,
+        schema_identity=schema_identity,
+        locale=locale,
+        work_stamp=work_capture.stamp,
+        work_epoch=work_capture.epoch,
+        registry_stamp=registry_capture.stamp,
+        registry_epoch=registry_capture.epoch,
+        locale_stamp=locale_capture.stamp,
+        locale_epoch=locale_capture.epoch,
+        field_manifest_stamp=field_manifest_capture.stamp,
+        field_manifest_epoch=field_manifest_capture.epoch,
+    )
+    contributors = static_inspection_contributors()
+    return inspection, target, schema_identity, baseline, contributors
+
+
+def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_absence() -> None:
+    from ....core import OutputLanguage
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    inspection = capture.projection
+    assert isinstance(inspection, RegistryRevisionInspection)
+
+    from ..workspace_models import ModeloWorkspaceResolvedTargetV1, ModeloWorkspaceRevisionAssertionV1
+
+    # A minimal, directly constructed resolved target is legitimate here: this
+    # test targets record construction from the inspection, not the capture
+    # ordering already proven elsewhere.
+    target = ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        law_selected_revision_id=_LAW_SELECTED_REVISION_ID,
+        review_status=inspection.review_status,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+    )
+
+    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
+
+    records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
+
+    casilla_ids: list[str] = []
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceCasillaReferenceV1)
+        casilla_ids.append(record.reference.casilla_id)
+        assert record.legal_refs is None
+        assert record.constraints is None
+        assert record.label.value  # a real, non-empty label was resolved
+
+    assert len(records) == len(inspection.casilla_ids)
+    assert casilla_ids == sorted(inspection.casilla_ids)
+
+    by_id = {casilla_id: record for casilla_id, record in zip(casilla_ids, records, strict=True)}
+    assert by_id["03"].label.value == "Rendimiento neto"
+    assert any(op.formula_id == "modelo-130-pago-fraccionado-directa" for op in by_id["03"].formula_operands)
+
+
+def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+        bucket_id, repository
+    )
+    records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
+    assert len(records) > 4  # sanity: enough real records to page over more than once
+
+    collected = []
+    cursor = None
+    pages = 0
+    while True:
+        page = paginate_static_inspection_schema_facet(
+            records,
+            target=target,
+            schema_identity=schema_identity,
+            baseline=baseline,
+            contributors=contributors,
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            page_size=3,
+            cursor=cursor,
+        )
+        pages += 1
+        collected.extend(page.records)
+        assert len(page.records) <= 3
+        assert page.has_more == (page.next_cursor is not None)
+        if page.next_cursor is None:
+            break
+        cursor = page.next_cursor
+
+    assert pages > 1
+    assert tuple(collected) == records
+
+
+def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_page(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+        bucket_id, repository
+    )
+    records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
+
+    first_page = paginate_static_inspection_schema_facet(
+        records,
+        target=target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=3,
+    )
+    assert first_page.next_cursor is not None
+    # Simulate a real ABA-style move: the same coordinate re-observed after
+    # the underlying contributor generation advanced (a distinct
+    # contributor_epoch_digest is exactly what that produces). The baseline's
+    # own model has no cross-field validator tying contributor_epoch_digest to
+    # anything else, so this is a legitimate "moved" baseline, not a
+    # structurally-invalid one.
+    moved_baseline = baseline.model_copy(update={"contributor_epoch_digest": "9" * 64})
+
+    with pytest.raises(ModeloWorkspaceStaleCursorError):
+        paginate_static_inspection_schema_facet(
+            records,
+            target=target,
+            schema_identity=schema_identity,
+            baseline=moved_baseline,
+            contributors=contributors,
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            page_size=3,
+            cursor=first_page.next_cursor,
+        )
