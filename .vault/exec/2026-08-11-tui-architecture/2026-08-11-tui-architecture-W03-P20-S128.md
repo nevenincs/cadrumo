@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ee2b4e08c107aa12f23013ddc6688419aa721dbb84f44775b9dc642a3f81edb'
+body_hash: 'sha256:1a67fe5e96c2b9dfb664b5fd7007f3a97c4df175aceabeb55414edc1bb503b13'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -28,6 +28,9 @@ related:
 - `M` `src/cadrumo/domain/calculations/registry/static_inspection.py` (separate commit `822642adbc`: enrolled `review_status` on `RegistryRevisionInspection`)
 - `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_producers.py`, `tests/test_workspace.py` (commit `be5384912c`: made revision-axis mismatch non-raising typed data; added `resolve_modelo_workspace_target` and `ModeloWorkspaceRegistryProjectionV1.review_status`)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (32 passed)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_producers.py`, `tests/test_workspace.py` (commit `a3db12320e`: locale summary, STATIC_INSPECTION capabilities, `catalogue_digest`)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (35 passed)
+- `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
 
 ## Notes
 
@@ -73,11 +76,48 @@ non-raising path, for a caller that wants the canonical raised text (proven by
 a dedicated test). `resolve_modelo_workspace_target` now assembles the full
 `ModeloWorkspaceResolvedTargetV1`, including a resolved mismatch case.
 
-Still NOT built here: request/admission dispatch, and the STATIC_INSPECTION
-and GRADED_SNAPSHOT projection assemblies (schema walk, materialization,
-provenance, capability denominator, baseline, facets/cursors, evidence
-horizon, locale summary, family dispositions, readiness/closure
-integration). Per the agreed order, next is the STATIC_INSPECTION vertical
-slice, then sizing GRADED_SNAPSHOT's remaining facets from inside the code,
-stopping again (not inferring) if the capability denominator's dispositions
-turn out undocumented for any of the five capability members.
+Update: landed part of the STATIC_INSPECTION vertical (commit `a3db12320e`).
+`capture_modelo_workspace_locale_summary` resolves the revision's own
+`revision_locale_key` display key through the LOCALE_CATALOGUE port,
+requested -> Spanish -> suppressed. Self-caught a real bug first: the draft
+used the port's `present` field to decide EXACT vs fallback, but `present`
+means catalogue MEMBERSHIP, which the locale parity gate guarantees for every
+key in every locale -- checking modelo 130's real catalogue directly showed
+`present=True` even for its null (untranslated) English label. The real
+signal is `value is not None`; fixed before landing, tested against modelo
+130's actual ES/EN catalogue content.
+
+`static_inspection_modelo_workspace_capabilities` returns the closed 5-member
+set for STATIC_INSPECTION: SCHEMA_INSPECTION `AVAILABLE`, the other four
+`NOT_APPLICABLE`, both read off `RegistryRevisionInspection`'s own stated
+scope, never inferred. GRADED_SNAPSHOT's dispositions are untouched and
+unanswered.
+
+Added `ModeloWorkspaceLocaleCatalogueProjectionV1.catalogue_digest`
+(workspace_producers.py) -- the envelope was dropping the native capture's
+real content digest, leaving only the opaque, process-nonce-salted
+`comparison_domain` as a wrong substitute; reported and fixed as a small
+mechanical addition, same shape as `review_status`.
+
+Two further specification gaps surfaced and reported rather than
+worked around, both now tracked as their own Steps rather than inferred here:
+`W03.P20.S277` (schema-record per-row join semantics -- `formula_operands`,
+`relation_endpoints` etc. have no consumer or spec anywhere in the tree to
+derive the join from) and `W03.P20.S278` (the FIELD_MANIFEST generator is
+hard-typed to `RegistrySnapshot` and has no root for
+`RegistryRevisionInspection`, so `schema_identity`/`baseline` -- which both
+require `field_manifest_digest` -- are blocked for STATIC_INSPECTION until
+that resolves).
+
+One incidental note: the landing commit's git-add picked up an already-staged,
+content-neutral peer rename (`m303_orden_projection_compiler.py` ->
+`_m303_orden_projection_compiler.py`) alongside the intended 3 files. Checked
+before assuming harm: two consumers already imported the underscored name at
+the prior HEAD while the file itself had not moved yet, so the tree was
+already broken there; the accidental inclusion completed that peer's
+in-flight rename rather than introducing a break. Reported to team lead for
+attribution; not claiming credit for it here.
+
+Still NOT built: request/admission dispatch, `schema_facet`, `baseline`,
+materialization/provenance facets, evidence horizon, family dispositions,
+readiness/closure integration for GRADED_SNAPSHOT. Held on S277 and S278.
