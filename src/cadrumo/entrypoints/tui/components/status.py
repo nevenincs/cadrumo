@@ -6,7 +6,7 @@ from typing import Final, Literal, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Static
+from textual.widgets import LoadingIndicator, Static
 
 StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""
@@ -54,6 +54,9 @@ class PinnedStatusBar(Vertical):
         text-style: bold;
     }
 
+    PinnedStatusBar > .status-spinner { height: 1; display: none; }
+    PinnedStatusBar.tone-progress > .status-spinner { display: block; }
+
     PinnedStatusBar.tone-idle > .status-message { color: $text-muted; }
     PinnedStatusBar.tone-progress > .status-message { color: $accent; }
     PinnedStatusBar.tone-success > .status-message { color: $success; }
@@ -93,6 +96,7 @@ class PinnedStatusBar(Vertical):
     @override
     def compose(self) -> ComposeResult:
         yield Static(self._summary, markup=False, classes="status-summary")
+        yield LoadingIndicator(classes="status-spinner")
         yield Static("", markup=False, classes="status-message")
 
     def set_summary(self, summary: str) -> None:

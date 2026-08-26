@@ -440,6 +440,9 @@ categories:
       label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
+component:
+  log:
+    empty: Még nincs naplóbejegyzés.
 core:
   profile:
     errors:

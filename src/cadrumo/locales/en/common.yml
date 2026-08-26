@@ -438,6 +438,9 @@ categories:
     viajes_transporte:
       label: Travel transport
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+component:
+  log:
+    empty: No log entries yet.
 core:
   profile:
     errors:
