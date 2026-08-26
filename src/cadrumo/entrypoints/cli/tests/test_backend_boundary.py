@@ -503,14 +503,18 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
     registry_dir = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
     registry_tests = registry_dir / "tests"
+    # The monolithic en/es/ca/hu.yml catalogues were retired for per-domain
+    # shards, so each language tree is walked rather than named as one file.
+    locales_root = REPO_ROOT / "src" / "cadrumo" / "locales"
+    locale_files = tuple(
+        sorted(path for language in ("en", "es", "ca", "hu") for path in (locales_root / language).rglob("*.yml"))
+    )
+    assert locale_files, "the locale scan resolved to nothing, so this gate would pass vacuously"
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "en.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "es.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "ca.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "hu.yml",
-        registry_dir / "_censo_modelos.py",
-        registry_dir / "_queries.py",
+        *locale_files,
+        registry_dir / "censo_modelos.py",
+        registry_dir / "queries.py",
         registry_tests / "test_censo_modelo_foundation.py",
         registry_tests / "test_censo_modelo_registry_data.py",
         registry_tests / "test_queries.py",
@@ -542,12 +546,22 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # ``2025-alta.pdf`` in a grounding comment; that fixture name is a legitimate
     # test-data artefact, not a stub-language leak.
     extraction_profile_exempt_tokens = {"2025-alta"}
+    # "not implemented" marks an unfinished code path in a Python source, but a
+    # locale catalogue is operator prose, where the same words are a finished
+    # message stating a capability the product genuinely does not offer -- the
+    # ledger's undetachable purchase evidence, the TUI's per-command coverage.
+    # Reading them as stub language would push authors toward vaguer refusals.
+    # Every censo-semantic token still applies to the catalogues.
+    catalogue_exempt_tokens = {"not implemented"}
     offenders: list[str] = []
     for path in scanned_files:
         text = path.read_text(encoding="utf-8")
         is_extraction_profile = "extraction_profiles" in path.parts
+        is_catalogue = path.suffix == ".yml"
         for token in forbidden_tokens:
             if is_extraction_profile and token in extraction_profile_exempt_tokens:
+                continue
+            if is_catalogue and token in catalogue_exempt_tokens:
                 continue
             if token in text:
                 offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
