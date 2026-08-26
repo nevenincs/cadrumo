@@ -45,13 +45,17 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ...core.i18n import tr
 from ...core.identity import ProfileId
+from ...core.json_contract import Notice, ResolvedNoticeAction
+from ...core.presentation import NoticePresentation
 from ...domain.deadlines import (
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
     modelo_iva_profile_required_paths,
     profile_claims_modelo_iva_block,
 )
 from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.schema import ProfileFieldType
 from ...domain.user_profile.values import UserProfileRecord
 from .completeness import (
     ATRIBUCION_SOCIOS_SECTION,
@@ -190,6 +194,17 @@ class ProfilePresentationV1(BaseModel):
     def blocking_fields(self) -> tuple[ProfileFieldPresentationV1, ...]:
         """Every field currently blocking readiness, in declaration order."""
         return tuple(field for field in self.fields if field.blocks_ready)
+
+    def fields_by_classification(
+        self, classification: ProfileFieldClassification
+    ) -> tuple[ProfileFieldPresentationV1, ...]:
+        """Every field carrying exactly the supplied classification, in declaration order.
+
+        A pure filter over already-classified fields -- it introduces no new
+        requirement policy, only groups what :func:`build_profile_presentation`
+        already decided.
+        """
+        return tuple(field for field in self.fields if field.classification is classification)
 
 
 def build_profile_presentation(record: UserProfileRecord) -> ProfilePresentationV1:
@@ -331,11 +346,43 @@ def _path_answered(effective: dict[str, EffectiveFact], path: str) -> bool:
     return fact is not None and profile_value_is_present(fact.value)
 
 
+def profile_field_shape_hint(field_type: ProfileFieldType) -> str:
+    """Return the localized accepted-shape hint for a typed profile field."""
+    match field_type:
+        case ProfileFieldType.DATE:
+            return tr("flows.manager.edit.shape.date")
+        case ProfileFieldType.EMAIL:
+            return tr("flows.manager.edit.shape.email")
+        case ProfileFieldType.INTEGER:
+            return tr("flows.manager.edit.shape.integer")
+        case ProfileFieldType.DECIMAL:
+            return tr("flows.manager.edit.shape.decimal")
+        case ProfileFieldType.MONEY:
+            return tr("flows.manager.edit.shape.money")
+        case _:
+            return ""
+
+
+def notice_presentation(notice: Notice) -> NoticePresentation:
+    """Project one resolved notice into the inert cross-entrypoint shape."""
+    action = notice.action
+    action_target = None
+    if isinstance(action, ResolvedNoticeAction) and action.action.cli_path is not None and not action.argument_bindings:
+        action_target = "aeat " + " ".join(action.action.cli_path)
+    return NoticePresentation(
+        severity=notice.severity.value,
+        message=notice.message,
+        action_target=action_target,
+    )
+
+
 __all__ = [
     "ProfileFieldClassification",
     "ProfileFieldPresentationV1",
     "ProfileFieldSourceClass",
     "ProfilePresentationV1",
     "build_profile_presentation",
+    "notice_presentation",
+    "profile_field_shape_hint",
     "profile_field_source_class",
 ]
