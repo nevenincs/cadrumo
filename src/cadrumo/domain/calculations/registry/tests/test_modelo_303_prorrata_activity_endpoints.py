@@ -19,17 +19,16 @@ from .....core import (
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
-from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
-from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
-from ..formula_initial_values import initial_values
+from ..corpus_catalogue import resolve_record_design_binary
+from ..errors import RegistryValidationError
+from ..export import clasificar_casillas_oficiales
+from ..formula_initial_values import initial_value_casilla_ids, initial_values
+from ..loader import load_catalogue_file
+from ..m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
+from ..record_design import extract_record_design
+from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
