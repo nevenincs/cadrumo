@@ -45,9 +45,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
-
 from ....core.resources import bundled_path
+from ...calculations.registry.schema_references import LegalReference
 from .._establishment import _excluded_territories_by_prefix
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from .._place_of_supply import load_place_of_supply_rules
@@ -165,8 +164,8 @@ def test_a_citation_whose_required_text_the_law_lacks_is_refused(tmp_path: Path)
         required_text=("21 por ciento",),
     )
 
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-    from cadrumo.domain.calculations.registry.legal import verify_legal_reference
+    from ...calculations.registry.errors import RegistryValidationError
+    from ...calculations.registry.legal import verify_legal_reference
 
     with pytest.raises(RegistryValidationError, match="missing required text"):
         verify_legal_reference(entry, source_root=tmp_path)
@@ -195,8 +194,8 @@ def test_a_citation_resolved_at_the_wrong_anchor_is_refused(tmp_path: Path) -> N
         required_text=("tipos impositivos reducidos",),
     )
 
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-    from cadrumo.domain.calculations.registry.legal import verify_legal_reference
+    from ...calculations.registry.errors import RegistryValidationError
+    from ...calculations.registry.legal import verify_legal_reference
 
     with pytest.raises(RegistryValidationError):
         verify_legal_reference(entry, source_root=tmp_path)
@@ -223,7 +222,7 @@ def test_the_same_wording_verifies_at_the_anchor_that_carries_it(tmp_path: Path)
         required_text=("tipos impositivos reducidos",),
     )
 
-    from cadrumo.domain.calculations.registry.legal import verify_legal_reference
+    from ...calculations.registry.legal import verify_legal_reference
 
     assert verify_legal_reference(entry, source_root=tmp_path) is None
 
