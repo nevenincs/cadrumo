@@ -399,6 +399,7 @@ class ModeloWorkspaceLocaleCatalogueProjectionV1(_WorkspaceProducerModel):
     translation_key: str
     present: bool
     value: str | None = None
+    catalogue_digest: ContentDigest
 
 
 def _declared_contract(
@@ -839,6 +840,7 @@ class ModeloWorkspaceLocaleCataloguePortV1:
                 translation_key=capture.translation_key,
                 present=capture.present,
                 value=capture.value,
+                catalogue_digest=capture.catalogue_digest,
             ),
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,

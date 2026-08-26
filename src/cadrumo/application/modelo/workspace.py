@@ -24,6 +24,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ...core import OutputLanguage
+from ...domain.calculations.registry.modelo_localization import revision_locale_key
 from ...domain.modelos import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
@@ -34,7 +36,12 @@ from .work_addressing import (
     ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
+    ModeloWorkspaceCapabilityDisposition,
+    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceLocaleDisposition,
+    ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
@@ -42,6 +49,8 @@ from .workspace_models import (
     ModeloWorkspaceTargetV1,
 )
 from .workspace_producers import (
+    MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
@@ -254,10 +263,112 @@ def resolve_modelo_workspace_target(
     )
 
 
+def capture_modelo_workspace_locale_summary(
+    resolved_target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> ModeloWorkspaceLocaleSummaryV1:
+    """Resolve the canonical locale coordinate for one resolved Workspace target.
+
+    Tests the resolved target's own revision-level display key
+    (:func:`revision_locale_key`) through the sole LOCALE_CATALOGUE port. This
+    is the natural per-read canonical key -- one Workspace read names exactly
+    one ``(modelo, revision)`` pair, and that pair's own display label is a
+    key every Workspace read already needs regardless of which facet a caller
+    goes on to request.
+
+    Spanish is the source language for every catalogue entry
+    (``aeat-locales-cli``), so a requested language whose own key is absent
+    falls back to Spanish rather than to an arbitrary third language; Spanish
+    absent as well is the suppressed floor, never a missing key propagated as
+    an exception.
+    """
+    key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
+    requested = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=output_language.value,
+    ).capture_projection_with_epoch()
+    if requested.projection.value is not None:
+        return ModeloWorkspaceLocaleSummaryV1(
+            requested_language=output_language,
+            resolved_language=output_language,
+            disposition=ModeloWorkspaceLocaleDisposition.EXACT,
+            catalogue_digest=requested.projection.catalogue_digest,
+        )
+    if output_language is OutputLanguage.ES:
+        return ModeloWorkspaceLocaleSummaryV1(
+            requested_language=output_language,
+            resolved_language=OutputLanguage.ES,
+            disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
+            catalogue_digest=requested.projection.catalogue_digest,
+        )
+    spanish = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=OutputLanguage.ES.value,
+    ).capture_projection_with_epoch()
+    disposition = (
+        ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+        if spanish.projection.value is not None
+        else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+    )
+    return ModeloWorkspaceLocaleSummaryV1(
+        requested_language=output_language,
+        resolved_language=OutputLanguage.ES,
+        disposition=disposition,
+        catalogue_digest=spanish.projection.catalogue_digest,
+    )
+
+
+# The four non-schema STATIC_INSPECTION capabilities are NOT_APPLICABLE by a
+# structural fact RegistryRevisionInspection states about itself ("It cannot
+# calculate, render, or file anything" -- static_inspection.py), never a
+# Workspace judgement call. SCHEMA_INSPECTION is AVAILABLE because the
+# inspection IS precisely that projection. REGISTRY's own contributor
+# identity is cited as producer_owner/producer for all five rows: it is the
+# canonical producer both of the one capability that IS available and of the
+# structural fact that makes the other four NOT_APPLICABLE for this
+# admission -- not a guessed per-capability contributor mapping.
+_STATIC_INSPECTION_CAPABILITY_DISPOSITIONS: tuple[
+    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceCapabilityDisposition], ...
+] = (
+    (ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION, ModeloWorkspaceCapabilityDisposition.AVAILABLE),
+    (ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
+    (ModeloWorkspaceCapabilityName.VERIFICATION_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
+    (ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
+    (ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS, ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE),
+)
+
+
+def static_inspection_modelo_workspace_capabilities(
+    resolved_target: ModeloWorkspaceResolvedTargetV1,
+) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
+    """Return the complete, documented STATIC_INSPECTION capability denominator.
+
+    Every disposition here is read off ``RegistryRevisionInspection``'s own
+    stated scope, never inferred; see the module-level comment above this
+    function. GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered
+    question and MUST NOT be derived from this table.
+    """
+    contributor = MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor
+    return tuple(
+        ModeloWorkspaceCapabilityV1(
+            capability=capability,
+            disposition=disposition,
+            target=resolved_target,
+            selected_revision_id=resolved_target.law_selected_revision_id,
+            producer_owner=contributor.owner,
+            producer=contributor.producer,
+        )
+        for capability, disposition in _STATIC_INSPECTION_CAPABILITY_DISPOSITIONS
+    )
+
+
 __all__ = [
     "ModeloWorkspaceRevisionAxes",
+    "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
     "modelo_work_selector_request_for_target",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
+    "static_inspection_modelo_workspace_capabilities",
 ]

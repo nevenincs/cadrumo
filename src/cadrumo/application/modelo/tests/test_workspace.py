@@ -19,13 +19,18 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
+    capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
     modelo_work_selector_request_for_target,
     resolve_modelo_workspace_target,
+    static_inspection_modelo_workspace_capabilities,
 )
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
+    ModeloWorkspaceCapabilityDisposition,
+    ModeloWorkspaceCapabilityName,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceVisibleFilingTargetV1,
@@ -347,3 +352,80 @@ def test_resolve_modelo_workspace_target_carries_no_work_unit_for_an_absent_targ
     assert resolved.work_state is None
     assert resolved.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT
     assert resolved.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+
+
+def test_locale_summary_resolves_exact_for_a_real_authored_key(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """modelo 130 / 2019-y-siguientes carries a real, non-null Spanish label."""
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    authority = bundled_authority()
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    summary = capture_modelo_workspace_locale_summary(resolved, output_language=OutputLanguage.ES)
+
+    assert summary.requested_language == OutputLanguage.ES
+    assert summary.resolved_language == OutputLanguage.ES
+    assert summary.disposition == ModeloWorkspaceLocaleDisposition.EXACT
+    assert len(summary.catalogue_digest) > 0
+
+
+def test_locale_summary_falls_back_to_spanish_when_the_requested_language_has_no_authored_value(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """modelo 130 / 2019-y-siguientes has a null (untranslated) English revision label."""
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    authority = bundled_authority()
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    summary = capture_modelo_workspace_locale_summary(resolved, output_language=OutputLanguage.EN)
+
+    assert summary.requested_language == OutputLanguage.EN
+    assert summary.resolved_language == OutputLanguage.ES
+    assert summary.disposition == ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+
+
+def test_static_inspection_capabilities_cover_the_closed_denominator_exactly_once(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The five capabilities are documented, not inferred, for STATIC_INSPECTION."""
+    bucket_id, repository = workspace_repos
+    authority = bundled_authority()
+    resolved = resolve_modelo_workspace_target(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    capabilities = static_inspection_modelo_workspace_capabilities(resolved)
+
+    by_name = {row.capability: row for row in capabilities}
+    assert set(by_name) == set(ModeloWorkspaceCapabilityName)
+    assert by_name[ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION].disposition == (
+        ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    for capability_name in (
+        ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+        ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
+        ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
+        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
+    ):
+        assert by_name[capability_name].disposition == ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE
+    for row in capabilities:
+        assert row.selected_revision_id == resolved.law_selected_revision_id
+        assert row.target == resolved
