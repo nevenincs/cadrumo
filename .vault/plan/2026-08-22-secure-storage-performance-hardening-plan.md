@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:f06f6d1ebf58e138d3df0abb0bd1a4a5153cbd503301d32e45c59af74ac6e99d'
+body_hash: 'sha256:35d8609b8a5fe2dccb0efcb91337cc00dcd73b7a8609890e87265961517800da'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -99,7 +99,7 @@ Make profile discovery a coherent, authoritative, non-mutating read that never e
 
 Recognize commit identity and label provenance once per capsule.
 
-- [ ] `W03.P06.S22` - Add an immutable capsule-summary witness carrying validated commit observation and UUID-bound label provenance; `src/cadrumo/adapters/persistence/storage/custody/_capsule.py`.
+- [x] `W03.P06.S22` - Add an immutable capsule-summary witness carrying validated commit observation and UUID-bound label provenance; `src/cadrumo/adapters/persistence/storage/custody/_capsule.py`.
 - [ ] `W03.P06.S23` - Split pure label-head verification from publication, recovery, and repair; `src/cadrumo/adapters/persistence/storage/custody/_label_head_repository.py`.
 - [ ] `W03.P06.S24` - Reuse the anchored discovery observation instead of reopening and revalidating commit members; `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`.
 - [ ] `W03.P06.S25` - Add real-filesystem adversarial coverage for link, record, retired-layout, concurrency, denial, and interruption cases; `src/cadrumo/adapters/persistence/storage/custody/tests/`.
