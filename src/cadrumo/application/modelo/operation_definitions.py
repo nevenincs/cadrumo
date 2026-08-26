@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -37,6 +38,8 @@ from ...core import (
     RefundElection,
 )
 from ...core.errors import CadrumoError
+from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -54,6 +57,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ._amendment_actions import amend_modelo_revision
 from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -71,6 +75,7 @@ MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
 MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
+MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
@@ -672,6 +677,156 @@ def build_modelo_export_registration(
     )
 
 
+class ModeloWorkAmendBaseline(BaseModel):
+    """The externally filed return an amendment corrects.
+
+    An amendment is only meaningful against a specific filed baseline, so the
+    request names that record rather than a work unit: the baseline supplies
+    the full casilla map, and the overrides replace only what changed.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    from_filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+class ModeloWorkAmendOverride(BaseModel):
+    """One corrected casilla and the value that replaces it.
+
+    The value crosses as an exact decimal STRING rather than a number. A public
+    operation schema must validate and serialize to the same shape, and a bare
+    Decimal does not: it accepts number-or-string and emits string. Carrying the
+    digits avoids that asymmetry and any float coercion on the way.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    casilla_id: Annotated[str, Field(min_length=1, max_length=64)]
+    value: Annotated[str, Field(pattern=r"^-?\d{1,15}(?:\.\d{1,6})?$")]
+
+    def as_decimal(self) -> Decimal:
+        """Return the exact value this override carries."""
+        return Decimal(self.value)
+
+
+class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
+    """One amendment: which baseline, which corrections, and why.
+
+    ``reason`` is required because an amendment is a declaration to the tax
+    authority that a previously filed figure was wrong; a correction with no
+    stated reason is not something the operator should be able to file.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    baseline: ModeloWorkAmendBaseline
+    amendment_kind: CalculationRevisionAmendmentKind
+    overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=500)]
+    reason: Annotated[str, Field(min_length=1, max_length=500)]
+    m303_rectificativa_motive: M303RectificativaMotive | None = None
+
+
+class ModeloWorkAmendPublicResultV1(BaseModel):
+    """The recorded amendment, as a caller outside this package may see it."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
+    amended_from_filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
+    amendment_kind: CalculationRevisionAmendmentKind
+    corrected_casilla_count: Annotated[int, Field(ge=0)]
+    handoff_required: bool = True
+
+
+class ModeloWorkAmendExecutor:
+    """Record one amendment through the existing amendment authority.
+
+    Like the filing enrolment this is local: an amendment is built and
+    recorded here, and the operator submits it themselves.
+    """
+
+    def __init__(self, *, actor: str) -> None:
+        """Bind the actor whose amendment this operation records."""
+        self._actor = actor
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloWorkAmendRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to the amendment authority and return its record id.
+
+        Which overrides are legal, which kinds a modelo admits, and whether the
+        baseline is AEAT-attested are all the authority's decisions.
+        """
+        del context
+        payload = request.payload
+        record = amend_modelo_revision(
+            from_filing_record_id=payload.baseline.from_filing_record_id,
+            overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
+            amendment_kind=payload.amendment_kind,
+            m303_rectificativa_motive=payload.m303_rectificativa_motive,
+            reason=payload.reason,
+            actor=self._actor,
+        )
+        return str(record.filing_record_id)
+
+
+def build_modelo_work_amend_definition(*, actor: str) -> OperationDefinition:
+    """Bind the amendment authority to its registered operation contract."""
+
+    def build() -> ModeloWorkAmendExecutor:
+        return ModeloWorkAmendExecutor(actor=actor)
+
+    return OperationDefinition(
+        definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
+        request_type=ModeloWorkAmendRequest,
+        result_type=ModeloWorkAmendPublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloWorkAmendRequest,
+            executor_type=ModeloWorkAmendExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.work.amend.baseline", "modelo.work.amend.record"),
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_work_amend_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the amendment definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.amend.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.amend.result",
+            schema_version=1,
+            model_type=ModeloWorkAmendPublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition(*, actor: str) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -728,6 +883,7 @@ def build_modelo_work_rename_registration(
 
 __all__ = [
     "MODELO_EXPORT_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
@@ -736,6 +892,11 @@ __all__ = [
     "ModeloExportExecutor",
     "ModeloExportPublicResultV1",
     "ModeloExportRequest",
+    "ModeloWorkAmendBaseline",
+    "ModeloWorkAmendExecutor",
+    "ModeloWorkAmendOverride",
+    "ModeloWorkAmendPublicResultV1",
+    "ModeloWorkAmendRequest",
     "ModeloWorkDiscardApprovalStaleError",
     "ModeloWorkDiscardBaseline",
     "ModeloWorkDiscardExecutor",
@@ -753,6 +914,8 @@ __all__ = [
     "ModeloWorkVerifyRequest",
     "build_modelo_export_definition",
     "build_modelo_export_registration",
+    "build_modelo_work_amend_definition",
+    "build_modelo_work_amend_registration",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
     "build_modelo_work_file_definition",
