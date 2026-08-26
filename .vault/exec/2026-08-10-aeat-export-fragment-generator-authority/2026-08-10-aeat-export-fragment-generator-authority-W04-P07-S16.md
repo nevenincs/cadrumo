@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-26'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:8853efe8de4c4b4de378ab20c7bac91df86b2467699656569b91e546ed311793'
 step_id: 'S16'
@@ -49,3 +49,10 @@ module by another active lane, so this execution did not recreate or overwrite
 that file. Reconsider closure after the relocation owner lands and the typed
 wire normalization plus full untouched-layout proof and residual mutation table
 pass.
+
+
+## Current proof reconciliation (2026-08-26)
+
+Commit `502796e401` repairs the M303 proof module's stale parameter bindings, binds its 2026 target to the stable official source coordinate rather than a lifecycle revision label, and aligns the cross-period refusal with `ModeloDraft`'s canonical snapshot-period coherence boundary. Before the concurrent roster transition, all 16 cases collected and 15 passed; the sole owned stale assertion is now corrected. Static compilation, Ruff check, Ruff formatting, and diff hygiene pass on the scoped file.
+
+A current full rerun is not attributable: another active lane has renamed the generated-tree roster entry to `2026-desde-02` before the matching registry-data rename landed and has introduced a circular registry import during that transition. S16 remains open until the foreign roster/data and import transition settles and the complete proof module passes. No M184, roster, conftest, or registry-data file was changed here.
