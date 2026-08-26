@@ -1,24 +1,20 @@
-"""One-shot migrator: transcribe applicability rule literals into registry TOML.
+"""Historical one-shot applicability transcriber retained for ``W03.P08.S19``.
 
-W01.P03.S09. Reads the Python-resident seed applicability rules
-(:func:`cadrumo.domain.calculations.registry.iter_modelo_applicability_rules`)
-and, for every modelo OUTSIDE the export-fragment-generator-authority
-campaign's owned 303/390 trees, writes an ``applicability/0001-applicability.toml``
-fragment into every declared revision directory of that modelo, then proves
-the hydrated fragment compares equal to the literal it was transcribed from.
+``W01.P03.S09`` used this tool to transcribe every then-unowned literal into
+``applicability/0001-applicability.toml`` fragments, hydration-check the real
+loader result, cut production over to the registry family, and delete those
+literals. Production therefore already reads the registry-authored fragments
+for every migrated modelo; only the export campaign's still-owned Modelo 303
+and 390 literals remain.
 
-Deliberately does NOT delete the Python literals. Nothing in the production
-runtime path reads the ``applicability`` schema family yet --
-``derive_modelo_applicability`` has no ``RegistrySnapshot`` parameter and
-reads the module-level ``_MODELO_APPLICABILITY_RULES`` dict directly --
-so deleting the literal here would silently break applicability derivation
-for every migrated modelo. That runtime cutover is a separate, larger
-decision tracked outside this script; deletion is a follow-up row once it
-lands.
+Those two modelos stay in :data:`EXCLUDED_MODELOS` until ``W03.P08.S19``
+releases their trees. That step reuses this exact transcriber for the final
+equivalence proof before it removes the last literal-carrying mechanism. This
+module is historical tooling, never a production fallback.
 
 Usage:
 
-    python -m dev.registry_authoring.migrate_applicability_fragments [--apply] [--json OUT.json]
+    python -m dev.registry.authoring_migrate_applicability_fragments [--apply] [--json OUT.json]
 
 Default is a dry run: prints what would be written, writes nothing. ``--apply``
 performs the writes, then re-loads every migrated modelo through the real
@@ -39,14 +35,18 @@ import tomlkit
 from cadrumo.core import Modelo
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.applicability import ModeloApplicabilityRule, hydrate_applicability_rule, iter_modelo_applicability_rules
+from cadrumo.domain.calculations.registry.applicability import (
+    ModeloApplicabilityRule,
+    hydrate_applicability_rule,
+    iter_modelo_applicability_rules,
+)
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition
 
 MODELOS_ROOT = bundled_path("registry", "aeat", "modelos")
 
-#: Owned by the export-fragment-generator-authority campaign (its S84/S85 rows
-#: release these trees); this migrator must never write into them.
+#: Owned by the export-fragment-generator-authority campaign. ``W03.P08.S19``
+#: releases these trees and removes this temporary exclusion before its final run.
 EXCLUDED_MODELOS: frozenset[str] = frozenset({"303", "390"})
 
 
