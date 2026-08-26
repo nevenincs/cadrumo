@@ -23,6 +23,7 @@ from ...core.decimal import (
 )
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ...domain.calculations.registry.schema import (
     CalculationCompletenessManifest,
     ModeloRevision,
@@ -31,18 +32,22 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationRevisionCatalogue, WorkUnit, WorkUnitCatalogue
 from ..operations.registry import OperationSchemaIdentityV1
+from ._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ._edit_models import (
     ModeloEditAddressV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditFindingV1,
     ModeloEditMutationResultReceiptV1,
+    ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditParsedValueV1,
@@ -62,6 +67,7 @@ from ._edit_models import (
     ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
@@ -146,9 +152,58 @@ def _writable_row_group_entries(revision: ModeloRevision) -> tuple[ModeloEditPer
     return ()
 
 
+def _writable_binding_override_entries(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
+    """Classify every declared binding by its real ``--binding``-override eligibility.
+
+    Corrects a category error: ``REMOVE_OVERRIDE`` was originally
+    modelled as a casilla-addressed scalar intent, but the store it targets
+    (``CalculationRevision.binding_overrides``) is keyed by ``BindingId``, and
+    most eligible bindings -- a fichero-BOE record-field ``manual_input``
+    binding, most notably -- have no casilla at all to address through.
+
+    Eligibility is derived from the SAME real, already-tested gate the CLI's
+    ``--binding KEY=VALUE`` override uses
+    (``_reject_caller_overrides_of_source_bindings`` in
+    ``_calculation_actions.py``): every declared binding whose source is NOT
+    in :data:`BUCKET_AGGREGATION_LOCK_SOURCES` (the deterministic bucket-owned
+    resolvers the caller may never override) is override-eligible, including
+    ``manual_input``. A date-channel binding is excluded: the real CLI refuses
+    ``--binding`` for a date-consumed binding and routes it through
+    ``--casilla`` instead (:func:`_validated_binding_input_channel`), so this
+    surface never admits one either.
+    """
+    date_channel_ids = revision_date_binding_ids(revision)
+    entries: list[ModeloEditPermittedSurfaceEntryV1] = []
+    for binding in revision.bindings:
+        if binding.id in date_channel_ids:
+            continue
+        if binding.source in BUCKET_AGGREGATION_LOCK_SOURCES:
+            entries.append(
+                ModeloEditNonWritableBindingOverrideSurfaceEntryV1(
+                    binding_id=binding.id,
+                    reason=ModeloEditNonWritableReason.SCHEMA_DECLARED_READ_ONLY,
+                )
+            )
+            continue
+        entries.append(
+            ModeloEditWritableBindingOverrideSurfaceEntryV1(
+                binding_id=binding.id,
+                allowed_intents=(
+                    ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+                ),
+            )
+        )
+    return tuple(entries)
+
+
 def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
     return tuple(sorted(
-        (*_writable_scalar_entries(revision), *_writable_row_group_entries(revision)),
+        (
+            *_writable_scalar_entries(revision),
+            *_writable_row_group_entries(revision),
+            *_writable_binding_override_entries(revision),
+        ),
         key=lambda entry: (entry.kind, getattr(entry, "casilla_id", getattr(entry, "binding_id", ""))),
     ))
 
@@ -349,12 +404,23 @@ def _writable_row_group_entry(
     return None
 
 
+def _writable_binding_override_entry(
+    baseline: ModeloEditBaselineV1, binding_id: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) and entry.binding_id == binding_id:
+            return entry
+    return None
+
+
 def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusalV1:
     return ModeloEditDomainRefusalV1(
         code=ModeloEditRefusalCode.DISALLOWED_INTENT,
         address=address,
         responsible_owner=_RESPONSIBLE_OWNER,
-        reconsideration_condition="address only a casilla or row group the baseline's permitted surface admits",
+        reconsideration_condition=(
+            "address only a casilla, binding override, or row group the baseline's permitted surface admits"
+        ),
     )
 
 
@@ -437,6 +503,15 @@ def _validate_row_intent(
     return None
 
 
+def _validate_binding_intent(
+    baseline: ModeloEditBaselineV1, address: ModeloEditBindingAddressV1, kind: ModeloEditBindingIntentKind
+) -> ModeloEditRefusalV1 | None:
+    entry = _writable_binding_override_entry(baseline, address.binding_id)
+    if entry is None or kind not in entry.allowed_intents:
+        return _disallowed_intent_refusal(address)
+    return None
+
+
 def preflight_modelo_edit(
     request: ModeloEditPreflightRequestV1,
     *,
@@ -460,6 +535,10 @@ def preflight_modelo_edit(
     findings: list[ModeloEditFindingV1] = []
     for intent in submission.scalar_intents:
         refusal = _validate_scalar_intent(baseline, intent.address, intent.kind)
+        if refusal is not None:
+            return ModeloEditRefusedV1(refusal=refusal)
+    for binding_intent in submission.binding_intents:
+        refusal = _validate_binding_intent(baseline, binding_intent.address, binding_intent.kind)
         if refusal is not None:
             return ModeloEditRefusedV1(refusal=refusal)
     for row_intent in submission.row_intents:

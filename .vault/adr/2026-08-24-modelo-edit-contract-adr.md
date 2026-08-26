@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:f1096d13cdafd952658fdc66c99f1c10c811461cbf1c83246d0e1afb1d3e3433'
+body_hash: 'sha256:c96c35c0995db4e718eaaf346b1197d33ecacfb1fc1f5c03819237639f53d014'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -451,3 +451,50 @@ constructs both types from data that changes one axis while holding the other
 fixed and asserts the two digests move independently, so a future re-merge of
 the two fields under one name would fail it rather than silently reintroducing
 this defect.
+
+## Amendment 2026-08-26: REMOVE_OVERRIDE is binding-addressed, not casilla-addressed
+
+**What this corrects.** D4's `REMOVE_OVERRIDE` scalar intent addressed
+`ModeloEditScalarAddressV1` (`casilla_id`-keyed), but the store it withdraws
+from, `CalculationRevision.binding_overrides`, is keyed by `BindingId`. No
+casilla-addressed intent can ever reach it: most eligible bindings -- a
+fichero-BOE record-field `manual_input` binding, most notably -- are not
+bound to any casilla at all. This is the same category error class as the
+row-group correction two Steps earlier in this same contract: an intent kind
+existed with an address shape that could never reach the store it named.
+
+**The decision: address by binding.** `REMOVE_OVERRIDE` is retired from
+`ModeloEditScalarIntentKind` (now `SET_TYPED_VALUE`/`CLEAR_DECLARED_VALUE`
+only, both casilla-addressed). A new `ModeloEditBindingAddressV1`
+(`binding_id`-keyed), `ModeloEditBindingIntentKind`
+(`SET_OVERRIDE_VALUE`/`REMOVE_OVERRIDE`), `ModeloBindingEditIntentV1`, and a
+new permitted-surface entry pair (`ModeloEditWritableBindingOverrideSurfaceEntryV1`
+/ `ModeloEditNonWritableBindingOverrideSurfaceEntryV1`) address the binding
+directly. `ModeloEditSubmissionV1` gains a `binding_intents` tuple alongside
+`scalar_intents` and `row_intents`, participating in the same
+duplicate-address uniqueness check.
+
+**Eligibility is derived from the real, already-tested CLI gate**, not
+invented: every declared binding whose source is NOT in
+`BUCKET_AGGREGATION_LOCK_SOURCES` (the same set
+`_reject_caller_overrides_of_source_bindings` in `_calculation_actions.py`
+uses to refuse a caller-supplied `--binding` override) is admitted as a
+writable binding-override entry; every locked binding surfaces as a
+non-writable entry naming the reason. A date-channel binding is excluded
+entirely, mirroring the real CLI's own `--binding` refusal for date-consumed
+bindings (routed through `--casilla` instead). This is why REMOVE_OVERRIDE's
+correction did NOT need the row category's "no registry data matches this
+shape" outcome: unlike the row axis, a real, live, tested `--binding`
+override mechanism already exists and already has a queryable eligibility
+authority to ground the new surface entry against -- modelo 131's ninety-seven
+`manual_input` bindings, wrongly surfaced as row groups before the prior
+amendment, now correctly surface here instead.
+
+**What was NOT decided here.** Guarded execution and persistence for a
+binding-override intent (threading a `--binding`-equivalent clear axis
+through the calculate boundary, mirroring `cleared_casilla_ids`) is deferred:
+every binding intent kind refuses today with a typed, enumerated
+`ModeloEditUnsupportedIntentReason` (`SET_OVERRIDE_VALUE_NOT_YET_WIRED` /
+`REMOVE_OVERRIDE_NOT_YET_WIRED`), matching the row-intent precedent. The
+permitted surface and admission are real and grounded; only execution is
+future work.

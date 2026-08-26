@@ -21,11 +21,13 @@ from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditMutationFamily,
+    ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     ModeloEditParsedValueV1,
     ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
@@ -38,6 +40,7 @@ from .._edit_models import (
     ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
@@ -45,6 +48,7 @@ from .._edit_models import (
 )
 from .._edit_services import (
     _completeness_manifest_digest,
+    _writable_binding_override_entries,
     _writable_row_group_entries,
     admit_modelo_edit,
     modelo_edit_request_schema_identity,
@@ -207,6 +211,47 @@ def test_writable_row_group_entries_surfaces_none_of_the_real_manual_input_bindi
     assert manual_input_bindings, "the fixture must still exercise a real manual_input population"
     entries = _writable_row_group_entries(snapshot.revision)
     assert entries == ()
+
+
+def test_writable_binding_override_entries_surfaces_every_real_manual_input_binding() -> None:
+    """Modelo 131's manual_input bindings surface as binding-addressed overrides, not rows or scalars.
+
+    The correction: ``REMOVE_OVERRIDE`` addresses
+    ``CalculationRevision.binding_overrides`` (``BindingId``-keyed), so the
+    permitted surface must classify overridable bindings by binding id, not
+    fold them into the casilla-addressed scalar surface or the (correctly
+    empty) row-group surface. Eligibility mirrors the real CLI
+    ``--binding`` gate (``_reject_caller_overrides_of_source_bindings``):
+    every binding whose source is not bucket-owned-and-locked.
+    """
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+    manual_input_bindings = {b.id for b in snapshot.revision.bindings if b.source.value == "manual_input"}
+    assert manual_input_bindings, "the fixture must still exercise a real manual_input population"
+
+    entries = _writable_binding_override_entries(snapshot.revision)
+    writable = {e.binding_id for e in entries if isinstance(e, ModeloEditWritableBindingOverrideSurfaceEntryV1)}
+    assert manual_input_bindings <= writable
+    for entry in entries:
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+            assert set(entry.allowed_intents) == {
+                ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            }
+
+
+def test_admission_never_double_surfaces_a_binding_as_both_row_group_and_binding_override() -> None:
+    """Every binding appears at most once across the row-group and binding-override axes."""
+    work_unit = _work_unit()
+    admitted = _admit(work_unit)
+    row_binding_ids = {
+        e.binding_id for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
+    }
+    override_binding_ids = {
+        e.binding_id
+        for e in admitted.baseline.permitted_surface
+        if isinstance(e, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1))
+    }
+    assert row_binding_ids.isdisjoint(override_binding_ids)
 
 
 def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest() -> None:

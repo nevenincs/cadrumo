@@ -11,8 +11,11 @@ from ....core import OutputLanguage, Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
+    ModeloBindingEditIntentV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExecutionNoEffectV1,
@@ -188,7 +191,17 @@ def test_scalar_intent_value_shape_matches_kind() -> None:
     with pytest.raises(ValidationError, match="requires a typed value"):
         ModeloScalarEditIntentV1(address=address, kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE, value=None)
     with pytest.raises(ValidationError, match="only SET_TYPED_VALUE"):
-        ModeloScalarEditIntentV1(address=address, kind=ModeloEditScalarIntentKind.REMOVE_OVERRIDE, value="120.50")
+        ModeloScalarEditIntentV1(address=address, kind=ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE, value="120.50")
+
+
+def test_binding_intent_value_shape_matches_kind() -> None:
+    """Only SET_OVERRIDE_VALUE may carry a value; REMOVE_OVERRIDE must omit it."""
+    address = ModeloEditBindingAddressV1(binding_id="binding-01")
+    ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE, value="120.50")
+    with pytest.raises(ValidationError, match="requires a typed value"):
+        ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE, value=None)
+    with pytest.raises(ValidationError, match="only SET_OVERRIDE_VALUE"):
+        ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE, value="120.50")
 
 
 def test_row_intent_shape_matches_kind() -> None:
