@@ -160,6 +160,14 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     Rows are sorted by (row_type, nif-like) so insertion order does not affect
     the revision id — operators can supply rows in any order. The nif-like field
     varies by row type: nif (M184/M232/M347) or nif_comunitario (M349).
+
+    Occurrence number established as presentation-only (S292): every
+    row-producer resolver these detail rows correspond to sorts by an
+    equivalent content key before assigning fichero occurrence numbers, so
+    two supply orders render identical bytes, not merely the same id here.
+    See :class:`~cadrumo.application.modelo._edit_models.
+    ModeloEditDetailRowIntentKind` for why ``MOVE_ROW`` has no addressable
+    effect for this row family.
     """
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
