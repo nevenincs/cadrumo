@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec1afe169a5efbd93e4a2c4bf14ae877c12cce3c6a1092e5624c13bd98f0c0ef'
+body_hash: 'sha256:2da4bee82e3385df7510f0ffedebd3b83b186ca74ba530ed3450becbcef418d4'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -40,6 +40,8 @@ A separate current-terminal report observes future S176--S254 work against the w
 Independent Sol review of frozen `976d47eb75` failed because its census was worktree-derived, did not fully resolve relative imports or `ast.TypeAlias`, dropped nonliteral dynamic imports, used imprecise package attribution, and had boilerplate semantic evidence that could not survive later H/P/D terminal changes. Its subsequent HIGH finding identified that a resolved relative import was only placed in the direct module graph, and that AST locators had been labelled as RAG results.
 
 This remediation binds the regenerated schema-v2 matrix to `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`, records direct relative-import categories, retains the two genuine semantic-search anchors, keeps structured machine-anchored source evidence and terminal-state observation, and adds regressions for source measurements, TypeAlias, fixture ordering, dynamic imports, package attributes, dirty-worktree immunity, future terminal disappearance, direct relative consumers, and RAG-schema precision. S175 remains open pending a new independent Sol review; S173 and affected registry work remain blocked by S175 and the individual disposition Steps.
+
+Integrated-main follow-up found the reported `_schema_verification.py` drift in 28 externally dirty reviewed `semantic_owner` and `alternative_owner_evidence` rows, not in the immutable generator: the source files were byte-identical, fresh UV-managed checks passed from both worktrees under two hash seeds, and the checked matrix matched in the isolated review tree. This remediation nevertheless makes symbol maps, compact locators, definition-site maps, and the definition-site tie breaker total-order deterministic, and proves the semantic-evidence digest in fresh interpreters with different hash seeds and a foreign process CWD. No main file was changed by this diagnosis.
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:a903c9eb5976642be17b8032dd66bc616495949f6fb9d15757f3912bb7a2b3f9'
+body_hash: 'sha256:4827514e2096415b7ae5366d9c1e3bc3ba2c5c690e045f3a37308ae828526ba7'
 step_id: 'S175'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -36,17 +36,18 @@ The matrix is deterministic, schema-versioned, immutable-evidence-bound, and bou
 
 The direct relative-only import in `src/cadrumo/adapters/inbound/declaracion/_parser.py` is now recorded as an `_authority.py` production consumer, not merely a transitive one. R01 carries the executed `AEAT remote read host authority canonical hostname only:prod` RAG query under request `eec115fcf1ae4225b7e9209afc205b2b`, selecting `aeat_hosts.py:19-51`; R55 carries the executed `ENCODING_ALIAS_MAP registry schema export value policy only:prod` query under request `f8cff429a3cd4d8fa1dc335774db9e47`, selecting `schema_exports.py:1-41`. The checked schema accepts their genuine structured result fields and rejects an AST-locator-shaped substitute. The other 76 rows retain null RAG fields rather than an unperformed-query claim.
 
-Sol independently failed frozen `976d47eb75` because its evidence was current-worktree-derived and incomplete. This remediation replaces that approach with Git-object evidence, direct relative categorization, genuine semantic discovery anchors, and future-safe terminal checking. S175 remains open. A new independent Sol architecture review is required before it may close; S173 and affected registry work remain blocked accordingly.
+Sol independently failed frozen `976d47eb75` because its evidence was current-worktree-derived and incomplete. This remediation replaces that approach with Git-object evidence, direct relative categorization, genuine semantic discovery anchors, and future-safe terminal checking. Integrated-main follow-up traced the transient `_schema_verification.py` mismatch to 28 externally dirty reviewed owner/prose rows, not generator drift; fresh checks from both worktrees passed. Symbol/locator/site ordering is now total and a fresh-interpreter foreign-CWD regression binds that invariant. S175 remains open. A new independent Sol architecture review is required before it may close; S173 and affected registry work remain blocked accordingly.
 
 ## Validation
 
 - `python dev/quality/registry_facade_family_census.py --check`: passed.
 - `python dev/quality/registry_facade_family_census.py --check-current-terminal`: passed; 78 open disposition Steps, 77 ordinary open proofs, and 1 missing future defining-owner destination pending its hard-move Step.
-- `pytest -q -n 0 dev/tests/test_registry_facade_family_census.py`: 16 passed in 120.51 seconds.
+- `pytest -q -n 0 dev/tests/test_registry_facade_family_census.py`: 17 passed in 160.69 seconds.
 - Ruff format/check and `ty check dev/quality/registry_facade_family_census.py dev/tests/test_registry_facade_family_census.py`: passed.
 - `vault check exec-mapping --feature tui-architecture`: passed.
 - `vault check all --feature tui-architecture`: no S175 errors; 18 pre-existing feature-wide warnings remain outside this Step's owned documents.
-- `git diff --check`: passed.
+- Two fresh UV-managed immutable --check processes with distinct hash seeds: passed.
+- git diff --check: passed.
 
 ## Notes
 
