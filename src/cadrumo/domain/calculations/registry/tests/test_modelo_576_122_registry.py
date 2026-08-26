@@ -32,6 +32,7 @@ from .....core import RegistryAuthorityGrade, RevisionReviewStatus, TaxDomain
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
 from ..snapshot import build_snapshot, build_validated_snapshot
+from ..support_matrix import revision_capability_probe
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
@@ -98,16 +99,30 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
     )
 
     assert historical.revision.id == "2007"
-    assert historical.revision.export_layouts == ()
     assert historical.revision.casillas[0].id == "decl.ejercicio"
+    assert historical.revision.constructs == ()
+    assert historical.revision.export_layouts == ()
+    assert historical.revision.application_links[0].id == "modelo-576-filing"
+    assert historical.revision.application_links[0].surface == "filing"
+    assert historical.revision.application_links[0].consumer == "cadrumo.application.filing"
+    assert historical.revision.workbook_parity_refs[0].source_refs == (
+        "boe-modelo-576-2005-form",
+    )
     assert set(historical.revision.source_refs) == {
         "boe-modelo-576-2005-form",
         "boe-modelo-576-2005-procedure",
     }
+    historical_capability = revision_capability_probe(historical.revision, modelo_id=modelo.id)
+    assert not historical_capability.has_fixed_width_export
+    assert not historical_capability.has_xml_dictionary_export
+    assert not historical_capability.has_extractor
+    assert historical_capability.extraction_profile_count == 0
 
     assert design_era.revision.id == "2008-y-siguientes"
     layout = design_era.revision.export_layouts[0]
     fields = layout.records[0].fields
+    assert len(design_era.revision.casillas) == 42
+    assert len(design_era.revision.application_links) == 2
     assert layout.source_refs == ("aeat-dr-576-2008",)
     assert len(fields) == 60
     assert max(field.offset + field.length - 1 for field in fields) == 1517
