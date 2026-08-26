@@ -941,12 +941,28 @@ def _bound_plan_step(step_id: str, action: str, scope: str, plan: str) -> str:
 
 
 def _normalized_review_prose(value: str) -> str:
-    """Erase row-specific labels so mechanically diversified templates collide."""
-    normalized = re.sub(r"`[^`]+`", "<token>", value.lower())
+    """Erase row-specific labels so mechanically diversified templates collide.
+
+    Digits and paths are not the only axis a mechanical template can vary by:
+    a row-specific module or symbol name spliced into an otherwise fixed
+    skeleton produces 78 distinct strings from one template.  Module and
+    symbol identifiers -- CamelCase names and underscore-joined snake_case
+    names -- are erased before the digit and path passes so two rows sharing
+    every word except their own names still collide under this comparison.
+    """
+    without_identifiers = re.sub(r"\b[A-Za-z]+_[A-Za-z0-9_]*\b", "<ident>", value)
+    without_identifiers = re.sub(r"\b[A-Z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*\b", "<ident>", without_identifiers)
+    without_identifiers = re.sub(r"\b[A-Z][a-z0-9]+\b", "<ident>", without_identifiers)
+    normalized = re.sub(r"`[^`]+`", "<token>", without_identifiers.lower())
     normalized = re.sub(r"\b(?:r\d+|w\d+\.p\d+\.s\d+)\b", "<id>", normalized)
     normalized = re.sub(r"(?:src|dev|docs)/[^\s,;:]+(?::\d+)?", "<path>", normalized)
     normalized = re.sub(r"\b\d+\b", "<n>", normalized)
     return " ".join(normalized.split())
+
+
+def _collapsed_prose(value: str) -> str:
+    """Fold prose to bare lowercase letters and digits for loose containment checks."""
+    return re.sub(r"[^a-z0-9]", "", value.lower())
 
 
 def _top_level_symbol_locators(path: str) -> dict[str, str]:
@@ -1104,15 +1120,31 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols")
         if rag_result["symbol"] not in row["rag_query"]:
             raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
-        symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
-        if not exported_symbols:
-            symbol_locators = [_top_level_symbol_locators(row["new_path"]).get(rag_result["symbol"])]
-        try:
-            _exact_symbol_identity(rag_result["path"], rag_result["symbol"], symbol_locators)
-        except RuntimeError as error:
+        if _collapsed_prose(row["follow_on_action"]) in _collapsed_prose(row["rag_query"]):
             raise RuntimeError(
-                f"registry facade row {pair[0]} RAG result is not an exact current definition"
-            ) from error
+                f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion"
+            )
+        if rag_result["path"] == row["new_path"]:
+            symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
+            if not exported_symbols:
+                symbol_locators = [_top_level_symbol_locators(row["new_path"]).get(rag_result["symbol"])]
+            try:
+                _exact_symbol_identity(rag_result["path"], rag_result["symbol"], symbol_locators)
+            except RuntimeError as error:
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} RAG result is not an exact current definition"
+                ) from error
+        else:
+            # The demonstrated definition site is a different module than the
+            # historic facade's own new path: the facade only re-exports the
+            # symbol.  Uniqueness is proved directly against that external
+            # module's AST rather than against this row's own locator map,
+            # which only ever records positions inside the facade's own file.
+            external_defined_at = _definition_lines(rag_result["path"], rag_result["symbol"])
+            if len(external_defined_at) != 1 or rag_result["line_start"] not in external_defined_at:
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} RAG result is not an exact current definition"
+                )
         owner_locators = semantic_evidence["owner_definition_locators"]
         expected_owner_locators = sorted(
             locator for values in row["current_symbol_locators"].values() for locator in values
