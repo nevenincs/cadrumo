@@ -65,6 +65,27 @@ _DOCS_ROOT: Final[Path] = _REPO_ROOT / "docs"
 
 _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]] = (
     (
+        "/plugin install cadrumo (Claude plugin)",
+        re.compile(r"/plugin\s+install\s+cadrumo\b", re.IGNORECASE),
+        ('claude-code-plugin', 'claude-cowork-plugin', 'claude-desktop-plugin'),
+    ),
+    (
+        "/plugin marketplace add (neve marketplace)",
+        re.compile(r"/plugin\s+marketplace\s+add\s+nevenincs/\S+", re.IGNORECASE),
+        ('claude-code-plugin', 'claude-cowork-plugin', 'claude-desktop-plugin'),
+    ),
+    (
+        # The MCPB channel declares NO install command on purpose: the bundle is
+        # a file opened in Claude Desktop, not a registry command. Its claim is
+        # therefore the artifact itself. Matched on the ".mcpb" extension rather
+        # than the word MCPB, because the generated download matrix prints the
+        # channel TITLE "Claude Desktop extension (MCPB)" on every build -- a
+        # title match would mark the channel permanently claimed.
+        ".mcpb bundle (Claude Desktop extension)",
+        re.compile(r"\.mcpb\b", re.IGNORECASE),
+        ("claude-desktop-mcpb",),
+    ),
+    (
         "pip install cadrumo (PyPI)",
         re.compile(r"pip\s+install\s+cadrumo", re.IGNORECASE),
         ("python-linux-x86-64", "python-macos-arm64", "python-windows-x86-64"),
@@ -244,6 +265,23 @@ _PATTERN_CONTROL: Final[tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]
         "pip install cadrumo (PyPI)",
         ("pip install cadrumo", "Run `pip install cadrumo` to get started."),
         ("do not pip install cadrumo yet", "Don't pip install cadrumo before launch."),
+    ),
+    (
+        "/plugin install cadrumo (Claude plugin)",
+        ("/plugin install cadrumo@neve", "Run `/plugin install cadrumo` in Claude Code."),
+        ("do not /plugin install cadrumo yet", "Claude plugin", "/plugin install ripgrep"),
+    ),
+    (
+        "/plugin marketplace add (neve marketplace)",
+        ("/plugin marketplace add nevenincs/neve-marketplace",),
+        ("do not /plugin marketplace add nevenincs/neve-marketplace yet", "/plugin marketplace add someone/else-market"),
+    ),
+    (
+        ".mcpb bundle (Claude Desktop extension)",
+        ("Open cadrumo.mcpb in Claude Desktop.", "download the .mcpb bundle"),
+        # The generated matrix prints this title on every build; it must not read
+        # as a claim, or the channel would be permanently advertised.
+        ("Claude Desktop extension (MCPB)", "do not open cadrumo.mcpb yet"),
     ),
     (
         "uvx cadrumo (PyPI via uvx)",
