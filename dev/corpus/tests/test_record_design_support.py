@@ -69,3 +69,49 @@ def test_modelos_308_and_309_historical_designs_are_required_not_excluded() -> N
 
     assert {url: required[url] for url in expected} == expected
     assert exclusions.isdisjoint(expected)
+
+
+def test_modelo_353_historical_designs_are_required_not_excluded() -> None:
+    """The five historical M353 designs remain canonical source evidence.
+
+    These sources deliberately remain unjoined while the current 2008--2025
+    selector is over-broad.  Keeping their exact official URLs in the inventory
+    is what makes a later era split evidence-backed rather than a backdate of
+    the 2021 layout.
+    """
+    expected = {
+        "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353.pdf": (
+            "353",
+            "353 - Orden EHA/3434/2007",
+        ),
+        "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353v13.pdf": (
+            "353",
+            "353 - Orden EHA/3786/2008",
+        ),
+        (
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/"
+            "ant_300_399/archivos/DR353e16v19.xls"
+        ): (
+            "353",
+            "353 - Orden HAP/1222/2014 (Ejercicios 2015 y 2016)",
+        ),
+        (
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/"
+            "ant_300_399/archivos/DR353e17v20.xlsx"
+        ): (
+            "353",
+            "353 - Orden HAP/1222/2014 (Ejercicios 2017, 2108 y 2019)",
+        ),
+        (
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/"
+            "ant_300_399/archivos/DR353e17v20.xls"
+        ): (
+            "353",
+            "353 -Orden EHA/3434/2007 (Ejercicio 2020)",
+        ),
+    }
+    required = {artifact.url: (artifact.modelo, artifact.title) for artifact in _REQUIRED}
+    exclusions = set(json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))["urls"])
+
+    assert {url: required[url] for url in expected} == expected
+    assert exclusions.isdisjoint(expected)
