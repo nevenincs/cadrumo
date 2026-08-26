@@ -514,13 +514,7 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
         ("m303-domiciliacion", 1),
     )
     assert rendered.prefix == (
-        b"<T303020261T0000><AUX>"
-        + (b" " * 70)
-        + b"C303"
-        + (b" " * 4)
-        + b"Y0000001S"
-        + (b" " * 213)
-        + b"</AUX>"
+        b"<T303020261T0000><AUX>" + (b" " * 70) + b"C303" + (b" " * 4) + b"Y0000001S" + (b" " * 213) + b"</AUX>"
     )
     assert rendered.closer == b"</T303020261T0000>"
     assert len(rendered.prefix) == layout.filing_envelope.prefix_extent
@@ -537,9 +531,7 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
     assert set(emitted_slices) == admitted_kinds
     assert all(emitted_slices[kind] for kind in admitted_kinds)
     assert any(slice_ == b"6919" for slice_ in emitted_slices[CasillaFieldKind.PROJECTION])
-    assert all(
-        slice_ == (b" " * len(slice_)) for slice_ in emitted_slices[CasillaFieldKind.FILLER]
-    )
+    assert all(slice_ == (b" " * len(slice_)) for slice_ in emitted_slices[CasillaFieldKind.FILLER])
     assert all(item.payload_sha256 == sha256(item.payload).hexdigest() for item in rendered.occurrences)
     assert (
         rendered.payload == rendered.prefix + b"".join(item.payload for item in rendered.occurrences) + rendered.closer
