@@ -46,7 +46,9 @@ def test_deleted_transition_revision_refuses_at_the_real_read_boundary(tmp_path)
     write_pointer(tmp_path, pointer)
     target = pointer_path(tmp_path)
     stripped = "".join(
-        line for line in target.read_text(encoding="utf-8").splitlines(keepends=True) if not line.startswith("transition_revision")
+        line
+        for line in target.read_text(encoding="utf-8").splitlines(keepends=True)
+        if not line.startswith("transition_revision")
     )
     target.write_text(stripped, encoding="utf-8")
 

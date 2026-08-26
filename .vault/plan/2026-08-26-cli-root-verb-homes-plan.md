@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:456fc943d8696e31f47ad17dd84baad6208bffda56efc681f58c46e84fd847ac'
+body_hash: 'sha256:c9202bd027a388e797b107a7b79b227406f4347d4321b678dc9b60416ac9fd1e'
 ---
 
 # `cli-root-verb-homes` plan
@@ -72,9 +72,9 @@ Apply the D2 counterparty grammar and the D4 collision rulings across every affe
 
 Split the custody backup surface by blast radius: archive keeps the recoverable local pair, the whole-corpus Drive mirror becomes its own mirror subject.
 
-- [ ] `W03.P06.S14` - Rename config profile restore to config profile archive import; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W03.P06.S14` - Rename config profile restore to config profile archive import; `src/cadrumo/entrypoints/cli/_config/`.
 - [ ] `W03.P06.S15` - Move config google sync push to config profile mirror push; `src/cadrumo/entrypoints/cli/_config/`.
-- [ ] `W03.P06.S16` - Update the bootstrap-exempt and login-gated verb paths and resolve the stale config profile export entry; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `W03.P06.S16` - Update the bootstrap-exempt and login-gated verb paths and resolve the stale config profile export entry; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 
 ### Phase `W03.P07` - Ledger evidence intake
 
@@ -95,7 +95,7 @@ Rename the two transport uses of the file token to import so file retains only i
 Apply the D3 role axis to the two non-conformant leaves.
 
 - [ ] `W03.P09.S21` - Convert review-package import-feedback package option to a positional subject; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W03.P09.S22` - Declare which of archive import file and artifact is the primary local input; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W03.P09.S22` - Declare which of archive import file and artifact is the primary local input; `src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W04` - Retirements
 

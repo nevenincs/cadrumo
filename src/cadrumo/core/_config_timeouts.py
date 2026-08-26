@@ -117,4 +117,3 @@ class CadrumoTimeoutSettings(BaseSettings):
             "observation query rather than the whole import."
         ),
     )
-

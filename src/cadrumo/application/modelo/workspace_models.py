@@ -1060,9 +1060,7 @@ class ModeloWorkspaceRevisionMismatchRefusalV1(_WorkspaceModel):
             self.stored_revision_assertion,
         )
         expected_sources = tuple(
-            axis.source
-            for axis in axes
-            if axis.disposition is ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED
+            axis.source for axis in axes if axis.disposition is ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED
         )
         if self.requested_revision_assertion.source is not ModeloWorkspaceRevisionAssertionSource.REQUESTED:
             raise ValueError("revision mismatch refusal must retain the requested assertion source")

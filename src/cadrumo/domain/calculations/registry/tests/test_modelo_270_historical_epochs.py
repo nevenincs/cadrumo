@@ -164,11 +164,7 @@ def test_modelo_270_2023_type_1_change_is_legally_load_bearing() -> None:
     assert {_AMENDMENT_LAYOUT_REF, _AMENDMENT_APPLICABILITY_REF} <= set(current.legal_refs)
     assert {_AMENDMENT_LAYOUT_REF, _AMENDMENT_APPLICABILITY_REF} <= set(current.orden_aplicabilidad)
     assert _AMENDMENT_LAYOUT_REF in layout.legal_refs
-    assert all(
-        _AMENDMENT_LAYOUT_REF in field.legal_refs
-        for field in record.fields
-        if field.id in shifted_ids
-    )
+    assert all(_AMENDMENT_LAYOUT_REF in field.legal_refs for field in record.fields if field.id in shifted_ids)
     assert _AMENDMENT_LAYOUT_REF in catalogues.legal
     assert _AMENDMENT_APPLICABILITY_REF in catalogues.legal
 
@@ -179,8 +175,7 @@ def test_modelo_270_historical_layout_comment_matches_the_pinned_boe_source() ->
     historical = catalogues.sources[_HISTORICAL_SOURCE_REF]
     current = catalogues.sources[_CURRENT_SOURCE_REF]
     layout_path = (
-        bundled_path()
-        / "registry/aeat/modelos/270/revisions/2013-2022/export_layouts/0003-modelo-270-fichero-boe.toml"
+        bundled_path() / "registry/aeat/modelos/270/revisions/2013-2022/export_layouts/0003-modelo-270-fichero-boe.toml"
     )
     layout_text = layout_path.read_text(encoding="utf-8")
 
@@ -206,11 +201,14 @@ def test_modelo_270_historical_layout_covers_every_source_position() -> None:
     modelo, catalogues = _committed_modelo("270")
     historical = modelo.revisions["2013-2022"]
 
-    assert validate_export_layout_record_coverage(
-        prefix="modelo 270 revision 2013-2022",
-        revision=historical,
-        source_refs=catalogues.sources,
-    ) == []
+    assert (
+        validate_export_layout_record_coverage(
+            prefix="modelo 270 revision 2013-2022",
+            revision=historical,
+            source_refs=catalogues.sources,
+        )
+        == []
+    )
 
 
 def test_modelo_270_selector_boundary_mutation_is_refused() -> None:

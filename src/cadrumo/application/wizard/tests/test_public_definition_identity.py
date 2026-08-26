@@ -95,11 +95,7 @@ def _source_and_doc_files() -> tuple[Path, ...]:
         check=False,
     )
     if result.returncode == 0 and result.stdout:
-        tracked = {
-            _REPOSITORY_ROOT / relative
-            for relative in result.stdout.decode().split("\0")
-            if relative
-        }
+        tracked = {_REPOSITORY_ROOT / relative for relative in result.stdout.decode().split("\0") if relative}
         # Include untracked cutover files in the shared worktree while keeping
         # the expensive fallback for environments that do not carry a .git dir.
         tracked.update(

@@ -229,4 +229,3 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     assert captured.out == ""
     assert captured.err == ""
     assert any("auth.waiting_banner" in record.message for record in caplog.records)
-

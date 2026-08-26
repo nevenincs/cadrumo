@@ -105,9 +105,7 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
     assert historical.revision.application_links[0].id == "modelo-576-filing"
     assert historical.revision.application_links[0].surface == "filing"
     assert historical.revision.application_links[0].consumer == "cadrumo.application.filing"
-    assert historical.revision.workbook_parity_refs[0].source_refs == (
-        "boe-modelo-576-2005-form",
-    )
+    assert historical.revision.workbook_parity_refs[0].source_refs == ("boe-modelo-576-2005-form",)
     assert set(historical.revision.source_refs) == {
         "boe-modelo-576-2005-form",
         "boe-modelo-576-2005-procedure",

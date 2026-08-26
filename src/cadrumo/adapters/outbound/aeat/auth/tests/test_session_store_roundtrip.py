@@ -206,4 +206,3 @@ def testsession_store_rejects_direct_former_product_paths_before_repository_acce
         ):
             with pytest.raises(session_store.FormerProductAuthSessionStateError):
                 operation()
-

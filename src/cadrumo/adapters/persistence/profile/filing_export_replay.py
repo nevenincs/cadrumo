@@ -108,7 +108,7 @@ def _require_source_pinned_probe_bytes(
         end = probe.emitted_offset + probe.length
         if end > len(payload):
             raise ValueError("secure replay source-pinned probe falls outside emitted bytes")
-        if payload[probe.emitted_offset:end] != expectation.expected_bytes:
+        if payload[probe.emitted_offset : end] != expectation.expected_bytes:
             raise ValueError("secure replay payload disagrees with source-pinned expected bytes")
 
 

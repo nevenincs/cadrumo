@@ -61,7 +61,9 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
     failures.extend(_validate_required_role_declarations(modelo_tuple))
     failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
-    failures.extend(cross_revision_validation.declared_cross_revision_continuity_semantic_linkage_failures(modelo_tuple))
+    failures.extend(
+        cross_revision_validation.declared_cross_revision_continuity_semantic_linkage_failures(modelo_tuple)
+    )
     # This is the surface-scoped strict continuity gate; it complements,
     # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))

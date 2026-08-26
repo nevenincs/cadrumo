@@ -144,4 +144,3 @@ __all__ = [
     "clave_permanente_configuration_error",
     "clave_permanente_login_error",
 ]
-

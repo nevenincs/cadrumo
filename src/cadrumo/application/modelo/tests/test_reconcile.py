@@ -328,7 +328,6 @@ def test_modelo_reconcile_translates_cross_bucket_address_to_absence(tmp_path: P
         )
 
 
-
 def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
     """A path that is not a valid AEAT justificante surfaces as
     ``ReconciliationEvidenceInvalidError``. Locks the contract from

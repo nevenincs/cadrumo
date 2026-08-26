@@ -635,9 +635,7 @@ def test_workspace_revision_mismatch_refusal_preserves_both_axes_and_every_misma
         ("contributor_epoch_digest", "cursor baseline must retain the contributor epoch digest"),
     ),
 )
-def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
-    coordinate: str, error: str
-) -> None:
+def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(coordinate: str, error: str) -> None:
     target = _target()
     schema_identity = _schema_identity()
     baseline = _baseline(target, schema_identity)
@@ -656,9 +654,10 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
         next_cursor=cursor,
     )
 
-    assert ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(
-        available.model_dump_json()
-    ) == available
+    assert (
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(available.model_dump_json())
+        == available
+    )
 
     alternatives = {
         "baseline": baseline.model_copy(update={"token": "b" * 64}),

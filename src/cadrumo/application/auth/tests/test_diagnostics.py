@@ -570,4 +570,3 @@ class TestPersistedPhoneStateTaxonomy:
                 )
 
                 assert list_auth_diagnostics().rows[0].phone_state is state
-
