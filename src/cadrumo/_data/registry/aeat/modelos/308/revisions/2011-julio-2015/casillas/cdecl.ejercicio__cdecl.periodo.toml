@@ -6,7 +6,7 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"]
+legal_refs = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-dr-308-2011-july"]
 
 [[revisions."2011-julio-2015".casillas]]
@@ -17,5 +17,5 @@ data_type = "period_code"
 semantic_role = "filing_period"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"]
+legal_refs = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-dr-308-2011-july"]
