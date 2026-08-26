@@ -53,7 +53,6 @@ from ...iva_compensation import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
-from .binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from .binding_selector_utils import selector_against_model, selector_as_dict
 from .bindings_previous_filing import (
     PreviousModeloSelector,
@@ -285,7 +284,6 @@ __all__ = [
     "_build_foreign_asset_rows",
     "_build_related_party_rows",
     "aggregate_withholding_by_clave",
-    "binding_aggregation_op",
     "binding_source_casilla_ids",
     "binding_source_modelo",
     "bound_casilla_binding_ids",
@@ -293,7 +291,6 @@ __all__ = [
     "compute_modelo_349_operador_totals_parity",
     "compute_withholding_totals_parity",
     "counterpart_binding_requirements",
-    "default_binding_aggregation_op",
     "foreign_asset_binding_row_field",
     "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
