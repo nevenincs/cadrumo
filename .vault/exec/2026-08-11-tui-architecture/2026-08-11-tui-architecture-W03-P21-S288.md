@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e636fc2f3fd5b02d6c1ae4729d7238e42706713bc736179f2757c7d33e7cda6d'
+body_hash: 'sha256:58de0677d3268fb866e8cd875396afd42e39953836cc4c8461cbd3685bc85394'
 step_id: 'S288'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -28,7 +28,7 @@ related:
 - `M` `src/cadrumo/application/modelo/_edit_services.py`
 - `M` `src/cadrumo/application/modelo/_edit_execution.py`
 - `A` `src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py`
-- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_edit_models.py src/cadrumo/application/modelo/tests/test_edit_services.py src/cadrumo/application/modelo/tests/test_revision_persistence_guarded_writes.py src/cadrumo/application/modelo/tests/test_edit_commit_point_guard.py src/cadrumo/application/modelo/tests/test_edit_execution.py src/cadrumo/application/modelo/tests/test_edit_contract.py src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py src/cadrumo/adapters/persistence/profile/tests/test_modelos_edit_receipts.py src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py -q -n 0 -m "integration or unit"` -> `pass` (67 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_edit_models.py src/cadrumo/application/modelo/tests/test_edit_services.py src/cadrumo/application/modelo/tests/test_revision_persistence_guarded_writes.py src/cadrumo/application/modelo/tests/test_edit_commit_point_guard.py src/cadrumo/application/modelo/tests/test_edit_execution.py src/cadrumo/application/modelo/tests/test_edit_contract.py src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py src/cadrumo/adapters/persistence/profile/tests/test_modelos_edit_receipts.py src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py -q -n 0 -m "integration or unit"` -> `pass` (66 passed, after the MOVE_ROW retirement correction below)
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/_edit_models.py src/cadrumo/application/modelo/_edit_services.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/_edit_models.py src/cadrumo/application/modelo/_edit_services.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py` -> `pass`
 
@@ -50,11 +50,25 @@ the Step's own scope) was not touched. The calculate boundary's `detail_rows`
 parameter shape was also not changed -- it already accepted a complete
 tuple; only the VALUE the executor constructs for it changed.
 
-`MOVE_ROW` is retained rather than retired: row order is structurally
-significant (it drives each row's physical record occurrence number in the
-exported fichero via `_record_renderer.py`'s `enumerate(..., 1)`, confirmed
-against `_revision_replay_inputs.py`'s M349 replay projection, and already
-participates in the revision's content address).
+**Correction after initial commit (`12142d131a`):** `MOVE_ROW` was first
+built as retained, on the claim that row order "already participates in
+the revision's content address." That claim was wrong.
+`_canonical_detail_rows` (`_calculation_revision.py:156`) sorts rows by
+`(row_type, nif-like)` before hashing specifically so insertion order never
+affects the revision id -- the content address is deliberately order-BLIND,
+which conflicts with the real export evidence (row order does drive each
+row's physical record occurrence number via `_record_renderer.py`'s
+`enumerate(..., 1)`). Checked whether anything downstream depends on WHICH
+occurrence number a row receives (rectification cross-references, fichero
+parity gates, the M296 projection's own docstring) and found nothing.
+Because the id is order-blind, a pure `MOVE_ROW` request would compute the
+SAME id as the existing revision and be silently absorbed by the guarded
+duplicate-result branch -- appearing to succeed while never actually
+persisting the reorder. `MOVE_ROW` is retired from
+`ModeloEditDetailRowIntentKind`, matching the row-group precedent, in a
+follow-up commit. The order-blind content address itself is flagged as a
+separate, unresolved finding, reported to the team lead rather than folded
+into this Step.
 
 A row absent from a resupplied set needs no `cleared_casilla_ids`-equivalent
 axis: unlike a scalar (whose declared-zero, cleared, and never-declared

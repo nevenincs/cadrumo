@@ -111,28 +111,16 @@ def test_delete_row_refuses_an_unknown_natural_key() -> None:
     assert isinstance(result, ModeloEditExecutionNoEffectV1)
 
 
-def test_move_row_repositions_within_its_own_kind() -> None:
-    first = _contraparte("11111111H", "5000")
-    second = _contraparte("22222222J", "1000")
-    third = _contraparte("33333333C", "2000")
-    intent = ModeloDetailRowEditIntentV1(
-        address=_address("33333333C"), kind=ModeloEditDetailRowIntentKind.MOVE_ROW, move_to_index=1
-    )
+def test_move_row_is_not_a_member_of_the_detail_row_intent_kind() -> None:
+    """No MOVE intent exists: the revision id is order-blind, so a reorder would be silently absorbed.
 
-    result = _reconstruct_detail_rows(current_detail_rows=(first, second, third), detail_row_intents=(intent,))
-
-    assert result == (third, first, second)
-
-
-def test_move_row_refuses_an_unknown_natural_key() -> None:
-    existing = _contraparte("11111111H", "5000")
-    intent = ModeloDetailRowEditIntentV1(
-        address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.MOVE_ROW, move_to_index=1
-    )
-
-    result = _reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
-
-    assert isinstance(result, ModeloEditExecutionNoEffectV1)
+    ``_calculation_revision._canonical_detail_rows`` sorts rows by
+    ``(row_type, nif-like)`` before hashing specifically so insertion order
+    never affects the revision id. A MOVE_ROW intent would therefore compute
+    the same id as the existing revision and be discarded by the guarded
+    duplicate-result branch rather than actually reorder anything.
+    """
+    assert not hasattr(ModeloEditDetailRowIntentKind, "MOVE_ROW")
 
 
 def test_editing_one_m349_row_kind_never_touches_the_sibling_kind() -> None:

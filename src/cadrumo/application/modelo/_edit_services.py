@@ -222,7 +222,6 @@ def _writable_detail_row_entries(*, modelo: str) -> tuple[ModeloEditPermittedSur
                 ModeloEditDetailRowIntentKind.ADD_ROW,
                 ModeloEditDetailRowIntentKind.UPDATE_ROW,
                 ModeloEditDetailRowIntentKind.DELETE_ROW,
-                ModeloEditDetailRowIntentKind.MOVE_ROW,
             ),
         )
         for kind in owned_kinds

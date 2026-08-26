@@ -97,16 +97,23 @@ class ModeloEditRowIntentKind(StrEnum):
 class ModeloEditDetailRowIntentKind(StrEnum):
     """The closed ``ModeloDetailRow`` edit intents, addressed by natural key.
 
-    Order is structurally significant (it determines each row's physical
-    record occurrence number in the exported fichero and participates in the
-    calculation revision's content address), so ``MOVE_ROW`` is retained and
-    carries an explicit target position.
+    ``MOVE_ROW`` is deliberately NOT a member. Row order affects each row's
+    physical record occurrence number in the exported fichero
+    (``_record_renderer.py``'s ``enumerate(..., 1)`` over ``detail_rows``
+    tuple order), but the calculation revision's content address is
+    explicitly order-BLIND (``_canonical_detail_rows`` sorts by
+    ``(row_type, nif-like)`` specifically so "operators can supply rows in
+    any order"). A pure reorder therefore computes the SAME revision id as
+    the existing revision, so the guarded compare-and-swap persistence
+    layer's duplicate-result branch would silently absorb it and return the
+    existing (unreordered) revision -- the requested reorder would never
+    actually persist. Building MOVE_ROW against the current content-address
+    shape would ship a control that appears to succeed and does nothing.
     """
 
     ADD_ROW = "add_row"
     UPDATE_ROW = "update_row"
     DELETE_ROW = "delete_row"
-    MOVE_ROW = "move_row"
 
 
 class ModeloEditBindingIntentKind(StrEnum):
@@ -433,7 +440,7 @@ class ModeloEditWritableDetailRowSurfaceEntryV1(_EditModel):
 
     kind: Literal["writable_detail_row"] = "writable_detail_row"
     detail_row_kind: _BoundedCode
-    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=4)]
+    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=3)]
 
     @field_validator("allowed_intents")
     @classmethod
@@ -838,28 +845,20 @@ class ModeloDetailRowEditIntentV1(_EditModel):
     DELETE_ROW names only the natural key: removal is expressed by the row's
     absence from the executor's reconstructed set, with no separate
     "explicitly deleted" axis, per :class:`ModeloEditDetailRowAddressV1`.
-    MOVE_ROW repositions an already-declared row without altering its
-    content.
+    No MOVE intent exists -- see :class:`ModeloEditDetailRowIntentKind`.
     """
 
     address: ModeloEditDetailRowAddressV1
     kind: ModeloEditDetailRowIntentKind
     row: ModeloDetailRow | None = None
-    move_to_index: Annotated[int, Field(ge=1)] | None = None
 
     @model_validator(mode="after")
     def _require_shape_matches_kind(self) -> ModeloDetailRowEditIntentV1:
         if self.kind in (ModeloEditDetailRowIntentKind.ADD_ROW, ModeloEditDetailRowIntentKind.UPDATE_ROW):
             if self.row is None:
                 raise ValueError("ADD_ROW/UPDATE_ROW detail-row intent requires a complete typed row")
-            if self.move_to_index is not None:
-                raise ValueError("ADD_ROW/UPDATE_ROW detail-row intent may not carry a move_to_index")
-        elif self.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
-            if self.row is not None or self.move_to_index is not None:
-                raise ValueError("DELETE_ROW detail-row intent requires only the natural-key address")
-        elif self.kind is ModeloEditDetailRowIntentKind.MOVE_ROW:
-            if self.row is not None or self.move_to_index is None:
-                raise ValueError("MOVE_ROW detail-row intent requires only the natural-key address and move_to_index")
+        elif self.kind is ModeloEditDetailRowIntentKind.DELETE_ROW and self.row is not None:
+            raise ValueError("DELETE_ROW detail-row intent requires only the natural-key address")
         return self
 
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:47450d4668b19da48d87d33c0a76b2a7cb282d257012aeffe9976a3092de7844'
+body_hash: 'sha256:5c774af69f765a94df5b743e7cc8148dac8a38d482c69538fea7f707aeacd4fe'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -533,23 +533,58 @@ precedent confirms this: `replace_observations`'s own read path records no
 trace of a dropped row, no deletion-count axis, nothing; removal is
 expressed purely by the row's absence from the resupplied set.
 
-**MOVE_ROW is retained**, not retired the way the binding-keyed row-group
-category was: row order is structurally significant. `_record_renderer.py`
-renders a `repeat == "binding_rows"` record via `enumerate(..., 1)` over row
-order, and that order is derived directly from `detail_rows` tuple order
-(confirmed via `_revision_replay_inputs.py`'s M349 replay projection). Order
-therefore determines each row's physical record occurrence number in the
-exported fichero and already participates in the revision's content address,
-so two orderings of the same substantive rows are legitimately distinct
-revisions. `ModeloDetailRowEditIntentV1.move_to_index` repositions an
-existing row (by natural key) within its own kind's ordered subsequence;
-cross-kind ordering is not structurally significant, since each
-`ModeloDetailRow` kind renders as its own distinct fichero record type.
+**Correction: MOVE_ROW is retired, not retained.** An earlier draft of this
+amendment claimed row order "already participates in the revision's content
+address, so two orderings of the same substantive rows are legitimately
+distinct revisions." That claim was wrong, and the correction turns it into
+a finding. `_canonical_detail_rows` (`_calculation_revision.py:156`) states
+the opposite in its own docstring: rows are sorted by `(row_type, nif-like)`
+before hashing "so insertion order does not affect the revision id --
+operators can supply rows in any order." The revision id is deliberately
+order-BLIND.
+
+That conflicts with the export evidence, which still stands:
+`_record_renderer.py` renders a `repeat == "binding_rows"` record via
+`enumerate(..., 1)` over `detail_rows` tuple order (confirmed via
+`_revision_replay_inputs.py`'s M349 replay projection), so the emitted
+fichero's physical record numbering DOES depend on tuple order. Two
+different orderings of the same rows can therefore produce two different
+ficheros sharing ONE revision id.
+
+Checked whether anything downstream depends on WHICH occurrence number a
+row receives: nothing found. `Modelo349RectificacionRow` references a prior
+declaration by its own business fields (`nif_comunitario`,
+`ejercicio`/`periodo`, `base_anterior`), never by a record's occurrence
+number; the M296 projection's own docstring states "row identity is the
+render occurrence, not a slot on the reference" only in the sense that
+there is no separate persisted slot key, not that the occurrence NUMBER
+itself carries meaning across resubmissions; no fichero parity gate or
+reconciliation path checks a specific expected row order.
+
+More decisively: because the revision id is order-blind, a pure MOVE_ROW
+request would compute the SAME id as the existing revision, so the guarded
+compare-and-swap persistence layer's duplicate-result branch would silently
+absorb it and return the existing (unreordered) revision -- the requested
+reorder would never actually persist. Building MOVE_ROW against the current
+content-address shape would ship a control that appears to succeed
+(`ModeloEditExecutionUpdatedV1`) and does nothing. `MOVE_ROW` is retired
+from `ModeloEditDetailRowIntentKind`, the same way the binding-keyed
+row-group category was retired, and for the analogous reason: no registry
+or persistence-layer fact makes it a real, safe operation today.
+
+**The order-blind content address is flagged as its own, separate finding**,
+independent of this edit contract: on a filing-grade artefact whose purpose
+is to identify exactly what was calculated, an order-blind id that ignores a
+structurally significant export axis is either a defect (if AEAT-side
+record numbering ever carries meaning this codebase hasn't found yet) or a
+deliberate, undocumented decision that the physical record number carries
+none. This amendment does not resolve that question; it is reported
+separately rather than folded into the edit contract.
 
 The guarded executor (`_edit_execution.py::_reconstruct_detail_rows`) groups
-the current revision's `detail_rows` by kind, applies each submitted intent
-by natural key (ADD appends, UPDATE replaces in place, DELETE removes,
-MOVE repositions within the kind), and resupplies the reconstructed complete
-tuple to the calculate boundary -- no signature change to the calculate
-boundary's own `detail_rows` parameter was needed, since it already accepted
-a complete tuple.
+the current revision's `detail_rows` by kind and applies each submitted
+intent by natural key (ADD appends, UPDATE replaces in place, DELETE
+removes), then resupplies the reconstructed complete tuple to the calculate
+boundary -- no signature change to the calculate boundary's own
+`detail_rows` parameter was needed, since it already accepted a complete
+tuple.

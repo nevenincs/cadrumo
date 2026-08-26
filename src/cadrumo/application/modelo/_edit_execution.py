@@ -157,14 +157,21 @@ def _reconstruct_detail_rows(
 ) -> tuple[ModeloDetailRow, ...] | ModeloEditExecutionNoEffectV1:
     """Rebuild the complete ``detail_rows`` tuple the memoryless calculate boundary requires.
 
-    Rows are grouped by ``row_type`` (a distinct fichero record per kind;
-    cross-kind ordering is not structurally significant, only order WITHIN
-    one kind is) and addressed by their own natural key, never position or a
-    minted identity -- mirroring ``RetencionObservationRepository.replace_observations``'s
+    Rows are grouped by ``row_type`` (a distinct fichero record per kind) and
+    addressed by their own natural key, never position or a minted identity
+    -- mirroring ``RetencionObservationRepository.replace_observations``'s
     established whole-set-replacement convention. A row absent from the
     result is simply not declared; there is no separate "explicitly deleted"
     axis, because a row (unlike a scalar) has no ambiguous middle state
     between "declared" and "absent".
+
+    No intent reorders an existing row: the calculation revision's content
+    address is explicitly order-blind
+    (``_calculation_revision._canonical_detail_rows`` sorts by
+    ``(row_type, nif-like)`` so insertion order never affects the id), so a
+    pure reorder would compute the SAME id as the existing revision and be
+    silently absorbed by the guarded duplicate-result branch rather than
+    actually persist. See :class:`~._edit_models.ModeloEditDetailRowIntentKind`.
     """
     by_kind: dict[str, list[ModeloDetailRow]] = {}
     for row in current_detail_rows:
@@ -186,12 +193,6 @@ def _reconstruct_detail_rows(
             if intent.address.natural_key not in keys:
                 return _detail_row_natural_key_refusal(intent.address)
             rows.pop(keys.index(intent.address.natural_key))
-        elif intent.kind is ModeloEditDetailRowIntentKind.MOVE_ROW:
-            if intent.address.natural_key not in keys:
-                return _detail_row_natural_key_refusal(intent.address)
-            assert intent.move_to_index is not None
-            moved = rows.pop(keys.index(intent.address.natural_key))
-            rows.insert(min(intent.move_to_index - 1, len(rows)), moved)
 
     result: list[ModeloDetailRow] = []
     for kind in sorted(by_kind):
