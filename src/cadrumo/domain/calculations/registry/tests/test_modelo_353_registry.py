@@ -10,6 +10,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
@@ -63,8 +64,14 @@ def test_modelo_353_historical_designs_are_hash_pinned_but_not_backdated(
     applies_from: date | None,
     applies_to: date | None,
 ) -> None:
-    """Historic geometry is source evidence until the 2008--2025 selector splits."""
-    modelo, catalogues = _load_modelo_353()
+    """Historic geometry is source evidence until the 2008--2025 selector splits.
+
+    Load the M353 directory and its IVA source catalogue directly: this precise
+    proof must remain runnable while another modelo's full-tree validation is
+    under repair.
+    """
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "353"))
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
     source = catalogues.sources[source_id]
     path = bundled_path() / source.corpus_path
 
