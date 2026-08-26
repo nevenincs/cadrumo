@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:6131f19159a2ffeffa547e1ccd785d1f940c14af59d853c2651e3c14f58500d1'
+body_hash: 'sha256:42363f935840d4c365cf99de4e7911e88d0367bdcb088b790c569f07560d0699'
 ---
 
 # `tui-architecture` plan
@@ -194,7 +194,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S182` - Prove casilla_membership remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/casilla_membership.py`.
 - [x] `W03.P20.S183` - Prove censo_modelos remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/censo_modelos.py`.
 - [x] `W03.P20.S184` - Prove classification_coherence remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/classification_coherence.py`.
-- [ ] `W03.P20.S185` - Delete the dedicated constructs family after eliminating every definition, test, documentation, and import; `src/cadrumo/domain/calculations/registry/constructs.py`.
+- [x] `W03.P20.S185` - Delete the dedicated constructs family after eliminating every definition, test, documentation, and import; `src/cadrumo/domain/calculations/registry/constructs.py`.
 - [x] `W03.P20.S186` - Prove convenio remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/convenio.py`.
 - [x] `W03.P20.S187` - Prove corpus_catalogue remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/corpus_catalogue.py`.
 - [x] `W03.P20.S188` - Prove coverage remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/coverage.py`.
