@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca8403ad5f39780682d29925828794e7c9ae5c82acfb2143010d0324541e228d'
+body_hash: 'sha256:14d5f740652db48bec005ecb7e5ab9942ffd6ed93c6991f927ec7dc5540e3f4f'
 step_id: 'S280'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Scope the operator binding-override edit surface that REMOVE_OVERRIDE was modelled for: decide whether an override of a binding-computed casilla is addressed by casilla or by binding, admit it as its own permitted-surface entry kind rather than a manual scalar, and either re-address the intent to the store it targets or record that the scalar-addressed spelling is retired; amend the edit-contract decision record in the same change
 

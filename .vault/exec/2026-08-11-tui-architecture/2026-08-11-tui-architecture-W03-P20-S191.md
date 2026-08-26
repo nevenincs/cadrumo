@@ -33,3 +33,10 @@ row specifically rather than passing for being merely unused.
 The surviving owner is asserted from the row's terminal destinations rather
 than its `new_path`, because a family that moved out of the registry entirely
 leaves a `new_path` nothing occupies.
+
+## Correction
+
+This record closed the row on the hard move alone. The row also asks that the
+module stay public only for what it locally defines, and it did not: the export
+list was still mostly borrowed names. Corrected in a later pass; the export list
+now holds only locally defined symbols. See the narrow-step-closes audit.
