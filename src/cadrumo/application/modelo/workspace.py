@@ -31,7 +31,7 @@ from ...domain.calculations.registry.schema import FormulaDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import CalculationRevision, ModeloCode
+from ...domain.modelos import CalculationRevision, CalculationSourceRef, ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
 from ..state_projection import ProjectionModeloReadiness
@@ -76,6 +76,7 @@ from .workspace_models import (
     ModeloWorkspaceParameterReferenceV1,
     ModeloWorkspaceProfileRequirementV1,
     ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceReadinessV1,
     ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
@@ -521,6 +522,7 @@ __all__ = [
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
     "graded_snapshot_materialization_facet",
+    "graded_snapshot_provenance_facet",
     "graded_snapshot_readiness",
     "modelo_work_selector_request_for_target",
     "paginate_static_inspection_schema_facet",
@@ -1234,6 +1236,31 @@ def graded_snapshot_materialization_facet(
         for (binding_id, row_index), items in sorted(grouped.items())
     )
     return scalar_records + repeated_records
+
+
+def graded_snapshot_provenance_facet(
+    source_provenance: tuple[CalculationSourceRef, ...],
+) -> tuple[ModeloWorkspaceProvenanceRecordV1, ...]:
+    """Project the persisted resolver-mesh lineage into per-casilla provenance records.
+
+    S290: a :class:`CalculationSourceRef` carries ``source_casilla_ids``
+    (added by S290 -- previously dropped at the application->domain boundary,
+    an omission rather than a documented decision) naming which casilla(s), if
+    any, its resolution feeds. One ref fans out into one
+    :class:`ModeloWorkspaceProvenanceRecordV1` per casilla it names. A ref
+    whose originating resolver call site never associated a casilla (an empty
+    ``source_casilla_ids``) produces NO record -- it is not fabricated a
+    subject it never carried, and remains invisible to this facet until its
+    resolver populates the link.
+    """
+    return tuple(
+        ModeloWorkspaceProvenanceRecordV1(
+            subject=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
+            calculation_source=ref,
+        )
+        for ref in source_provenance
+        for casilla_id in sorted(ref.source_casilla_ids)
+    )
 
 
 def _graded_snapshot_ledger_issue(issue: LedgerPreflightIssue) -> ModeloWorkspaceLedgerIssueV1:

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:eacf327db1cca159e5e1920123ea7a4adca9c64dfaf0e05d1a1eeda546d4b630'
+body_hash: 'sha256:a03225789b66c36c27ff9679080da83f103746634f9122cc508a002d245db7f4'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -968,3 +968,49 @@ ModeloWorkspaceLedgerIssueSubjectV1`, a discriminated union of
 `ModeloWorkspaceRecordLabelV1`: a field whose type previously could not
 express a real closed-domain alternative now can, and neither silent drop
 nor fabricated identity is representable any longer.
+
+## Amendment (S290): a provenance record's subject is carried, not derived, and comes from a domain gap now closed
+
+`ModeloWorkspaceProvenanceRecordV1.subject` requires a casilla or binding
+identity a trace explains; `CalculationSourceRef` (the persisted domain
+lineage row) carried only resolver identity, resolved binding source,
+source-object reference and fingerprint, with no field naming the subject
+and no shared key to any other persisted structure to join on. Verified
+before ruling: `CasillaObservation.source_refs` is a different namespace
+(legal-catalogue `SourceRefId`s, not resolver-mesh source refs);
+`operand_refs`/`operand_casilla_refs` are formula-tree lineage, not
+resolver-mesh source lineage; `row_casilla_provenance` covers only
+row-materialized casillas. No recoverable join exists.
+
+That verification also surfaced that the omission is not the documented
+design choice it first appeared to be. `CalculationSourceRef`'s docstring
+states it deliberately drops `legal_refs`/`source_refs` to avoid duplicating
+per-casilla regulatory grounding already carried by `CasillaObservation` on
+the same revision. It says nothing about a subject identity, and the
+anti-duplication rationale does not extend to one: a subject identity is not
+grounding, and carrying it duplicates nothing already on the revision. The
+application-side `CalculationSourceProvenance` (the pre-persistence row) had
+already carried `source_casilla_ids` all along; the domain-side persisted
+projection simply never carried it across the boundary.
+
+`CalculationSourceRef` gains `source_casilla_ids: tuple[CasillaId, ...] = ()`,
+passed straight through at the `_source_provenance_refs`
+application-to-domain boundary (`application/modelo/_calculation_actions.py`)
+from the `CalculationSourceProvenance` row already holding it, and folded
+into the content-addressed revision id derivation
+(`_source_provenance_revision_id_payload`) so a save-drops-field regression
+on it is not invisible. An empty tuple is honest, not fabricated: it means
+the originating resolver call site did not associate this row with a
+casilla, which is common today (verified: `_modelo_bindings.py`'s ledger IVA
+aggregation provenance never populates the field). Backfilling every
+resolver call site to populate it is explicitly OUT of this amendment's
+scope; a resolver that never links a casilla simply produces no provenance
+record for that source until it does.
+
+`ModeloWorkspaceProvenanceRecordV1.subject` is unchanged in type
+(`ModeloWorkspaceSchemaReferenceV1`, already a discriminated union including
+`ModeloWorkspaceCasillaReferenceV1`) — no new Workspace type was needed.
+`graded_snapshot_provenance_facet` fans one `CalculationSourceRef` out into
+one record per casilla in its `source_casilla_ids`; a ref with an empty
+tuple produces zero records rather than a record with a fabricated or
+inferred subject.

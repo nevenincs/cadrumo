@@ -26,6 +26,7 @@ from ..workspace import (
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
     graded_snapshot_materialization_facet,
+    graded_snapshot_provenance_facet,
     graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
     paginate_static_inspection_schema_facet,
@@ -1311,3 +1312,44 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
     assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
     assert transaction_issue.subject.transaction_id == "e" * 64
     assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
+
+
+def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_drops_unlinked_refs() -> None:
+    """S290: a source ref fans out to one record per linked casilla; an unlinked ref yields none."""
+    from ....core import CalculationSourceLineageRole, validated_casilla_id
+    from ....core.aggregation import BindingSourceKind
+    from ....domain.modelos import CalculationSourceRef
+    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
+
+    linked_casilla = validated_casilla_id("00501")
+    second_linked_casilla = validated_casilla_id("00181")
+
+    linked_ref = CalculationSourceRef(
+        resolver_id="invoice_catalogue",
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind="collectible_invoice",
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
+        source_casilla_ids=(second_linked_casilla, linked_casilla),
+    )
+    unlinked_ref = CalculationSourceRef(
+        resolver_id="ledger_iva_aggregation",
+        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind="ledger_iva_aggregation",
+        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="transaction:tx-0001",
+        parent_source_ref=None,
+    )
+
+    records = graded_snapshot_provenance_facet((linked_ref, unlinked_ref))
+
+    assert len(records) == 2
+    assert all(isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1) for record in records)
+    subjects = {
+        record.subject.casilla_id for record in records if isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1)
+    }
+    assert subjects == {linked_casilla, second_linked_casilla}
+    assert all(record.calculation_source is linked_ref for record in records)

@@ -998,7 +998,11 @@ def _source_provenance_refs(
     ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
     to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
     unlike the per-casilla refs, nothing else on the revision carries it, so it
-    survives onto the persisted ref unchanged.
+    survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
+    dropped (S290): it is a subject identity, not grounding, and the anti-
+    duplication rationale for ``legal_refs``/``source_refs`` does not extend to
+    it -- nothing else on the revision recovers which casilla a general
+    (non-row-materialized) source object explains.
     """
     return tuple(
         CalculationSourceRef(
@@ -1010,6 +1014,7 @@ def _source_provenance_refs(
             source_ref=provenance.source_ref,
             parent_source_ref=provenance.parent_source_ref,
             fingerprint=provenance.fingerprint,
+            source_casilla_ids=provenance.source_casilla_ids,
             dependency_treatment=provenance.dependency_treatment,
         )
         for provenance in source_resolution.provenance
