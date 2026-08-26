@@ -71,7 +71,6 @@ from ._capsule_records import (
 from ._capsule_records import (
     parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
 )
-from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,
@@ -167,6 +166,7 @@ from ._recovery import (
 )
 from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
 from ._sentinel_contract import ProfileCustodySentinelRecord
+from .errors import ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
