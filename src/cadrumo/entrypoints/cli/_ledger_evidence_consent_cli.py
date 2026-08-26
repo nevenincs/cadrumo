@@ -23,7 +23,12 @@ from __future__ import annotations
 
 import typer
 
-from ...application.ledger.consent_withdrawal import ConsentedDispatch, OnHostReader, rederive_artefact_on_host, survey_cloud_consent
+from ...application.ledger.consent_withdrawal import (
+    ConsentedDispatch,
+    OnHostReader,
+    rederive_artefact_on_host,
+    survey_cloud_consent,
+)
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence_draft import InvoiceDraft
 from ...core.config import load_settings

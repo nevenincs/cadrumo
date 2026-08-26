@@ -30,7 +30,13 @@ from pathlib import Path
 
 import pytest
 
-from ....application.ledger.batch_ingest import BatchItemResult, BatchRunResult, InferencePause, UnresolvedBatchSource, batch_item_identity
+from ....application.ledger.batch_ingest import (
+    BatchItemResult,
+    BatchRunResult,
+    InferencePause,
+    UnresolvedBatchSource,
+    batch_item_identity,
+)
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning import ProvisioningPreconditionCondition

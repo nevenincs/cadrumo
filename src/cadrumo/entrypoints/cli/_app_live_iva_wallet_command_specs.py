@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import _key
 from ._command_spec import (
     CommandSpec,
@@ -178,6 +179,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.DIRECTORY,
+                transport_role=TransportRole.PRIMARY,
             ),
         ),
         policy=ExecutionPolicySpec(
@@ -274,6 +278,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.DIRECTORY,
+                transport_role=TransportRole.PRIMARY,
             ),
         ),
         policy=ExecutionPolicySpec(

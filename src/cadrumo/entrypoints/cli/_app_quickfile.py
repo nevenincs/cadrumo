@@ -21,11 +21,12 @@ from pathlib import Path
 
 import typer
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ...application.modelo._quickfile import (
     QuickfileCommand,
     run_modelo_quickfile,
 )
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import OutputLanguage, PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice

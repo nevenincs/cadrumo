@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
 from ...application.modelo._export import modelo_export_readiness_refusal
 from ...application.state_projection import (
     ModeloReadinessRequest,
@@ -12,10 +14,8 @@ from ...application.state_projection import (
 )
 from ...core import Period, PeriodError
 from ...core.json_contract import Notice, NoticeSeverity
-from cadrumo.domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _no_active_profile_refusal, emit_envelope, resolve_cli_precondition_action
-from .errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
@@ -23,6 +23,7 @@ from ._modelo_payloads import (
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
+from .errors import CliRefusedBoundaryError
 
 
 def modelo_readiness(

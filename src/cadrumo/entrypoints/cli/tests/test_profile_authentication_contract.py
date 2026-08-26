@@ -22,7 +22,6 @@ from .._config._secure_input import (
     ProfileSecretChannel,
     select_profile_secret_channel,
 )
-from ..errors import CliRefusedBoundaryError
 from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
@@ -30,6 +29,7 @@ from .._profile_authentication_contract import (
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
+from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

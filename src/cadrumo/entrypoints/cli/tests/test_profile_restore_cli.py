@@ -158,7 +158,10 @@ def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_pat
     from uuid import UUID as _UUID
 
     from ....adapters.persistence.storage.custody import load_committed_profile_password_material
-    from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment, export_profile_recovery_artifact
+    from ....application.user_profile.recovery_custody import (
+        ProfileRecoveryEnrollment,
+        export_profile_recovery_artifact,
+    )
     from ....application.user_profile.registration import register_profile_with_credentials
 
     source_root = tmp_path / "source-root"

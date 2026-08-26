@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import _key
 from ._command_spec import (
     CommandSpec,
@@ -165,6 +166,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.DIRECTORY,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="limit",
@@ -257,6 +261,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.DIRECTORY,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="period",
@@ -371,6 +378,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.DIRECTORY,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="registry_root",
@@ -382,6 +392,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.ROOT,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="source_root",
@@ -393,6 +406,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(minimum=None, maximum=None),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.ROOT,
+                transport_role=TransportRole.AUXILIARY,
             ),
         ),
         policy=ExecutionPolicySpec(

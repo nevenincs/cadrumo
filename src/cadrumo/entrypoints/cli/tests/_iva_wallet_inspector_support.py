@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import cadrumo.application.wizard.catalogue as _wizard_catalogue
 import cadrumo.application.wizard.persistence as _wizard_persistence
+
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.user_profile.values import ProfileSetupState

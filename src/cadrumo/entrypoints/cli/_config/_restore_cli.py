@@ -140,7 +140,10 @@ def profile_restore(
 ) -> None:
     """Republish a capsule directory as a usable profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.capsule_restore import restore_profile_capsule_with_password, restore_profile_capsule_with_recovery_artifact
+    from ....application.user_profile.capsule_restore import (
+        restore_profile_capsule_with_password,
+        restore_profile_capsule_with_recovery_artifact,
+    )
     from .._config_payloads import ConfigProfileRestoreResult
     from ._secure_input import select_machine_secret_channel
 

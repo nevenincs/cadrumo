@@ -63,7 +63,6 @@ from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import attach_cli_policy_verdict, current_operator_surface_reconciliation, resolve_cli_precondition_action
-from .errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
 )
@@ -71,6 +70,7 @@ from ._framework_localisation import (
     localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
 )
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
+from .errors import decorate_typer_app as _decorate_typer_app
 
 CommandExecutionPolicy = _CommandExecutionPolicy
 

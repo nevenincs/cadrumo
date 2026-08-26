@@ -24,8 +24,9 @@ from pathlib import Path
 
 import pytest
 
-from ....application.wizard.status import load_active_taxpayer_profile
 from cadrumo.application.workflow.persistence import workflow_state_repository
+
+from ....application.wizard.status import load_active_taxpayer_profile
 from ._ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

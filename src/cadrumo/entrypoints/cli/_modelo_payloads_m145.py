@@ -26,10 +26,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
+
 from ...core import CasillaId
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
-from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 
 if TYPE_CHECKING:
     from ...application.modelo._m145_communication_records import (

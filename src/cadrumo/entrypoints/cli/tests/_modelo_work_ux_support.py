@@ -9,8 +9,9 @@ import json
 # startup does.
 import cadrumo.application.wizard.catalogue as _wizard_catalogue
 import cadrumo.application.wizard.persistence as _wizard_persistence
-from ....core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ....core.aggregation import BindingSourceKind
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.registry_tree import bundled_registry_tree
