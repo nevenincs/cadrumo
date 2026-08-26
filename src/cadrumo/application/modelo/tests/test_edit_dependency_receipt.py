@@ -232,7 +232,7 @@ def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC
     admitted = _admitted_baseline()
     scalar_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
     row_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)]
-    # No modelo 131 manual_input binding is a real row set (S281 finding); the
+    # No modelo 131 manual_input binding is a real row set; the
     # writable-row-group axis is correctly empty for every registry revision
     # today, so only the scalar axis is asserted non-empty here.
     assert scalar_entries
