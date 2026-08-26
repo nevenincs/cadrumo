@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:06dd7a6c3baf98c823d9f6a4570892120bddfec2218254a9a26cc0ce9f236816'
+body_hash: 'sha256:396c07881273447af7e3ff607d633781fc00560e1960701ed01222bedf495779'
 step_id: 'S233'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove remote_state_guard remains public with locally defined symbols and direct consumer imports
 

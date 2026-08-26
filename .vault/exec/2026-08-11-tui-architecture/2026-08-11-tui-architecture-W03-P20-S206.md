@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e38f4ac77b43eebe498832c488f0f9aa0781bfe7095a5bf39ef5d8ad32cf798'
+body_hash: 'sha256:d534db42484d94ed033e2f47fa6b0524eac035ac766ed7c48bd98c468be89d71'
 step_id: 'S206'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove iva_wallet_relation_targets remains public with locally defined symbols and direct consumer imports
 

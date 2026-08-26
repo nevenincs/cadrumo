@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:317c0151fcb3b2901b9619c41f231d4ea37cac80fa79d5c096c01e933bed809c'
+body_hash: 'sha256:9769e8a95010d87c5b57f1fbac85b7d9f9950ff1046a4ff1e8102332e26f3ed0'
 ---
 
 # `tui-architecture` plan
@@ -198,7 +198,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S186` - Prove convenio remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/convenio.py`.
 - [x] `W03.P20.S187` - Prove corpus_catalogue remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/corpus_catalogue.py`.
 - [x] `W03.P20.S188` - Prove coverage remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/coverage.py`.
-- [ ] `W03.P20.S189` - Privatize the cross_revision_divergence implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/cross_revision_divergence.py`.
+- [x] `W03.P20.S189` - Privatize the cross_revision_divergence implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/cross_revision_divergence.py`.
 - [x] `W03.P20.S190` - Prove deadline_coordinate remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/deadline_coordinate.py`.
 - [x] `W03.P20.S191` - Retain export as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/export.py`.
 - [x] `W03.P20.S192` - Prove export_parse remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/export_parse.py`.
@@ -224,11 +224,11 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S212` - Prove m303_exonerado_390_projection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`.
 - [x] `W03.P20.S213` - Prove m303_orden_census_artefact remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py`.
 - [x] `W03.P20.S214` - Prove m303_orden_manifest remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_orden_manifest.py`.
-- [ ] `W03.P20.S215` - Privatize the m303_orden_projection_compiler implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py`.
+- [x] `W03.P20.S215` - Privatize the m303_orden_projection_compiler implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py`.
 - [x] `W03.P20.S216` - Prove m303_orden_projection_models remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`.
-- [ ] `W03.P20.S217` - Privatize the m303_orden_raw_models implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py`.
+- [x] `W03.P20.S217` - Privatize the m303_orden_raw_models implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py`.
 - [x] `W03.P20.S218` - Prove m303_orden_resolution remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`.
-- [ ] `W03.P20.S219` - Privatize the m303_orden_source implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_source.py`.
+- [x] `W03.P20.S219` - Privatize the m303_orden_source implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/m303_orden_source.py`.
 - [x] `W03.P20.S220` - Prove m303_prorrata_activity_projection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py`.
 - [x] `W03.P20.S221` - Prove m303_regimen_simplificado_projection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`.
 - [x] `W03.P20.S222` - Prove modelo_localization remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/modelo_localization.py`.
@@ -240,7 +240,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S228` - Prove rate_box_partition remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/rate_box_partition.py`.
 - [x] `W03.P20.S229` - Retain record_design as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/record_design.py`.
 - [x] `W03.P20.S230` - Hard-move ENCODING_ALIAS_MAP to schema_exports and delete the record_spec surface; `src/cadrumo/domain/calculations/registry/record_spec.py and src/cadrumo/domain/calculations/registry/schema_exports.py`.
-- [ ] `W03.P20.S231` - Privatize the relation_aggregation implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/relation_aggregation.py`.
+- [x] `W03.P20.S231` - Privatize the relation_aggregation implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/relation_aggregation.py`.
 - [x] `W03.P20.S232` - Retain relations as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/relations.py`.
 - [x] `W03.P20.S233` - Prove remote_state_guard remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/remote_state_guard.py`.
 - [x] `W03.P20.S234` - Prove runtime_graph remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/runtime_graph.py`.
@@ -254,10 +254,10 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S242` - Prove snapshot_coordinate remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/snapshot_coordinate.py`.
 - [x] `W03.P20.S243` - Prove static_inspection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/static_inspection.py`.
 - [x] `W03.P20.S244` - Prove support_matrix remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/support_matrix.py`.
-- [ ] `W03.P20.S245` - Privatize the supported_filing_years implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/supported_filing_years.py`.
+- [x] `W03.P20.S245` - Privatize the supported_filing_years implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/supported_filing_years.py`.
 - [x] `W03.P20.S246` - Prove temporal remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `W03.P20.S247` - Privatize the validate implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate.py`.
-- [ ] `W03.P20.S248` - Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_cross_revision.py`.
+- [x] `W03.P20.S248` - Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_cross_revision.py`.
 - [ ] `W03.P20.S249` - Privatize the validate_references implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_references.py`.
 - [x] `W03.P20.S250` - Prove validate_registry_scope remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_registry_scope.py`.
 - [x] `W03.P20.S251` - Prove validate_revision_identity remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_revision_identity.py`.

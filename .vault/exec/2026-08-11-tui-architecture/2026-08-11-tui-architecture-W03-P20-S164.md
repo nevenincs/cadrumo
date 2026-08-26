@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2a87d220698fd1dedbda2bb2bcca5bfde74b5a40db3631d3305bddc7d23c97d'
+body_hash: 'sha256:52fce568499f740e0462c028ce6e65d06a4292f8c285e0f7da81d7ff109f0eba'
 step_id: 'S164'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Define in the sole public application/modelo/calculation.py module the calculation-materialization and source-graph-safe native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain by delegating the sole calculation-revision and provenance authorities, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer of that public contract to direct defining-module imports while leaving unrelated package-private calculation services private, and prove exact materialization/provenance parity without a parallel calculation, graph, persistence, or redaction path or any package binding, shim, alias, fallback, bridge, or re-export
 

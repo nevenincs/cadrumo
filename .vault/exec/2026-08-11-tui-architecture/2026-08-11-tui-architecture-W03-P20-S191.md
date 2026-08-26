@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c96cf29db90f605f1de65c9dee154acf8b7eff875170dde548ad4ac60842bdb9'
+body_hash: 'sha256:8c107b88107b9ff92985638ab58edd7d7066871a3e955b6c535a907bac16131b'
 step_id: 'S191'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Retain export as public only for locally defined contract symbols and direct-import every borrowed owner
 

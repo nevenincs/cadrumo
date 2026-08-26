@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d41073610b5bfc9e4d7bb907c532c664fad0d7926c999850c7177d2ae60cc34'
+body_hash: 'sha256:5d366ea321fc1f20ba342d4140ca3bc6d0f1da31b793f942e09e5050fa557147'
 step_id: 'S183'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove censo_modelos remains public with locally defined symbols and direct consumer imports
 

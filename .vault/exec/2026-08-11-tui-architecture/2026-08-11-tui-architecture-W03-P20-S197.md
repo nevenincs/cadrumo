@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1b0489da3d36343e7ae72a25eab8e984476dd72e424893cea04caae927559b1'
+body_hash: 'sha256:838d5957d988b228901c4dbf7c3de8f43aa48c9ee1ebcb8039d3f8cefc017454'
 step_id: 'S197'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove formula_initial_values remains public with locally defined symbols and direct consumer imports
 

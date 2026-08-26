@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b01fe2c6bd45d0dfa60907ecfb9e41bd57287351672ce8406d7ce8d09c427909'
+body_hash: 'sha256:5f5e32be9ee40d13e2f428e1b0de4ea6b9de2114ecaf7a22396dadbd73f8892f'
 step_id: 'S201'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove groi_oracle remains public with locally defined symbols and direct consumer imports
 

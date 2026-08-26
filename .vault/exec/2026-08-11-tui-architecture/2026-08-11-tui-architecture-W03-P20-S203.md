@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:245ba10a4da3583b86dd97efa91534b0bd92b16171d6115b824627f13d3e8b4e'
+body_hash: 'sha256:bb9f132a33f33088933d7cbf24cb0d000bd889c67a70224cd3377e2260014809'
 step_id: 'S203'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove handoffs remains public with locally defined symbols and direct consumer imports
 

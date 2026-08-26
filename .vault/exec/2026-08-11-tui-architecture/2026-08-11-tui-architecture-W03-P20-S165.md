@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:36f61de702d0a276e3f60f3be5ab3d168e16beab7f9863ad8e78d31d3302458d'
+body_hash: 'sha256:1e49ccd132745d7c6569be17a9788a1f8d3682066cdaa0dfb954384d25d2d21c'
 step_id: 'S165'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Define the canonical locale-catalogue native atomic capture, owner generation, and neutral opaque comparison domain in the sole public locales/locale_catalogue.py defining module, migrate every exact consumer to direct defining-module imports, and delegate to the existing canonical key resolution, Spanish fallback, suppression, catalogue loading, and digest semantics without reimplementation, package re-export, alias, shim, fallback, or bridge
 

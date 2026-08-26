@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7967f51ec2a5d436f8ff6488abbf62c87072d13010714c02cb8467d676afbe2'
+body_hash: 'sha256:a0393689cbb875f17a4d314a989c4899a04c851a2e31549b1bd63d85247810cf'
 step_id: 'S196'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove fixed_width_codec remains public with locally defined symbols and direct consumer imports
 

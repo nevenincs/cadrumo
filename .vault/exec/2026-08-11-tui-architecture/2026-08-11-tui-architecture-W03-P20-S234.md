@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a99ff4305781473cbe57e7c2360d5c2049bf0ccb9b1df605c05b0e28b1a9ad53'
+body_hash: 'sha256:8c2af7e3be98e2deb24d6682c01c5a320f35241b74c6366df770c8ba361c542a'
 step_id: 'S234'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove runtime_graph remains public with locally defined symbols and direct consumer imports
 

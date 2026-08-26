@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:30f799a199650319e830ddc7f80ab39898f5c7ea88f8dde6f1176559b575f6d6'
+body_hash: 'sha256:7b2db1950fd5d2d508d971403a400e83b71dba73ba58e0947298821ab90ce620'
 step_id: 'S222'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove modelo_localization remains public with locally defined symbols and direct consumer imports
 

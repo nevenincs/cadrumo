@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:66da5647b6cd623f183e1bbb687ef7e80a9c0930a6f0b8ed00f92d508fa4d9dc'
+body_hash: 'sha256:de6c85e610aab5035b1d911abd4000db4672914d1a0872eadae166062cfd8d2a'
 step_id: 'S256'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire the filed-history operation through the generic result-projection mechanism with a typed public result exposing its evidence, IVA wallet, notificaciones and provenance facts, registering its result_projector against the stored run, and prove a frontend projects every fact W05.P12.S69 names without importing the private FiledHistoryOnboardingRun type
 
@@ -25,23 +20,6 @@ related:
 - `and focused filed-history public-result tests`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `src/cadrumo/application/live/filed_history_operation.py`
 - `M` `src/cadrumo/application/live/tests/test_filed_history_operation.py`

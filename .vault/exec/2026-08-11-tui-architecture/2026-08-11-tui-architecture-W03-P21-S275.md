@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:7dc0a5a7c395b1b48354f75f8df7231485a16eafeadcc31979cfbf0685fc5c83'
+body_hash: 'sha256:7298d77efc97ba40c3f91305dc05de9955e9805727fcf0661dfa01d50204df12'
 step_id: 'S275'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Extend the canonical calculation input surface to express explicit CLEAR_DECLARED_VALUE for manual scalar casillas, so an edit that withdraws a previously declared value reaches the engine through the same orchestrator every other input uses rather than a second write path, carrying its own axis on the content-addressed revision so a cleared casilla is provably distinguishable from one never declared
 

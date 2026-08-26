@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e97e6bbfc33a30131a33d86f9c9a602a5022deedd0545516bb26ace7b06c0b7d'
+body_hash: 'sha256:b8043035773a2b196e6bc652b59b96c8e3c9c2f807381a4cf58d14582a00bc4e'
 step_id: 'S221'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_regimen_simplificado_projection remains public with locally defined symbols and direct consumer imports
 

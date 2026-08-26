@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e5a7d8fd97dd58bfb01e7ea7261645e8fedef4d3c9ce75f23df9f9c5574b12e8'
+body_hash: 'sha256:e115c6a202ecd29ab288c59734e13bce08b33a5c6703417912c7dc9c7f1de596'
 step_id: 'S242'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove snapshot_coordinate remains public with locally defined symbols and direct consumer imports
 

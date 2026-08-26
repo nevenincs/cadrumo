@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:9807c47c1e5799395e6d3d13eaed86020cf3ce2db3cfa6fd27fb61cde4819fe8'
+body_hash: 'sha256:c8532b76ec21b326c061e747dcc8f77000305f9feb3735233aa520a79eb446a8'
 step_id: 'S198'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove formula_runtime remains public with locally defined symbols and direct consumer imports
 

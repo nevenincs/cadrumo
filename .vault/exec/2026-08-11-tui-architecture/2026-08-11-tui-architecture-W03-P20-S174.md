@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1dbf58e97a2294ba9ba2a3103c5a7c078dd6bae95d365e22955b5768fe5f2fd'
+body_hash: 'sha256:b338310e9a700f00a61c827aa763aa6cb21cc29f79f9142c7b651c97dcc10332'
 step_id: 'S174'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Define in the sole public application/modelo/work_addressing.py module one pure application revision assertion that evaluates the independent S125 requested and stored axes against the law-selected revision from exactly one S159 RegistryAuthorityCapture, atomically migrate every addressing, work-review, calculation, external-import, quickfile, lifecycle, CLI, registration, test, dynamic, and tooling consumer to direct defining-module imports, and delete resolve_registry_revision_for_work_target, every package binding, load_registry_tree, asserted-ID selection, stale docstring reference, and parallel registry read from the work path with fixed-point proof and no shim, alias, fallback, bridge, or re-export
 

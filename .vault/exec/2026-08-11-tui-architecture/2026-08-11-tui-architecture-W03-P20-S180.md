@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:13e096522dc42c8b2d5e5642ef2448204b5c1a08eb365fe848756e20b7d3c394'
+body_hash: 'sha256:4e63f9abd0ea20c036f7937c73fafdbc74a99bae0aef1f82753b57c945f3d5c7'
 step_id: 'S180'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove binding_selector_utils remains public with locally defined symbols and direct consumer imports
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ad9fd3f19dde627cfbf56d4288f63c3a29767fed8e6974858e48c42ee723ba8'
+body_hash: 'sha256:71138f1abdf818d9d2fa56d9979eded237fe8e0bf4bab82613a7c65bdc7d43e6'
 step_id: 'S194'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove external_grounding remains public with locally defined symbols and direct consumer imports
 

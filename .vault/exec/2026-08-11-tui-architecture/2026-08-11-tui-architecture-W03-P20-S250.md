@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c741e4be989e3d1a58d65b6c134b2ca338ea324163218bc734717acd9850af4'
+body_hash: 'sha256:8500d74c7f2da3b1034b0503a4582cd404887bd23f7c5bf57d63571150305fd7'
 step_id: 'S250'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove validate_registry_scope remains public with locally defined symbols and direct consumer imports
 

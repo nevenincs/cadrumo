@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0e6e56c60e173073a8cdb92244da020f0dd9fcc9365f674287b07039bb49e2a'
+body_hash: 'sha256:c6a25b4b60fb39af1e445b1d5c954adb1b31bac2c37eba085a403c8b3a09bd0d'
 step_id: 'S186'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove convenio remains public with locally defined symbols and direct consumer imports
 

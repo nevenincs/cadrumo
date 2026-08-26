@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:061e61d9b18d03b0fb6fb8c25553e1e3f762eca11a6f527f55862ddb633bf4a2'
+body_hash: 'sha256:7ac4da88a504aa4301baf63203ebbc698d6987489b43b31977ede67678c61b93'
 step_id: 'S184'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove classification_coherence remains public with locally defined symbols and direct consumer imports
 

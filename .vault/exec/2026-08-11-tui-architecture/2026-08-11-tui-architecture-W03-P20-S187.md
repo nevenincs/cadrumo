@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a17123ba0a1c9eac46e272274fd73ec841d8b5518ff592f293b10263e7aaf6d8'
+body_hash: 'sha256:250f6d4738efa39acc7eacf47a872c3fe02afb08c2ac2ffae2f7c8faeddc2251'
 step_id: 'S187'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove corpus_catalogue remains public with locally defined symbols and direct consumer imports
 

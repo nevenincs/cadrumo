@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb373278192bf268662804ce91af6b795670c00454f8437efd590a6c52f7a10a'
+body_hash: 'sha256:ca6923ec3588898689b7704efa51b0f0198d2edcc272e9f889591d288ef7958c'
 step_id: 'S205'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove ids remains public with locally defined symbols and direct consumer imports
 

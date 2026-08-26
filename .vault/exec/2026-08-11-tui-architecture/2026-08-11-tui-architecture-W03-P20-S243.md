@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:488abf28a6b34a9875b494ee016cffc20e8f8ed296bf0b8ac53efbec30b79705'
+body_hash: 'sha256:6f797a5620427857f970309e6bc537b52352a3b4045bec39d85b6da5cb41e96b'
 step_id: 'S243'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove static_inspection remains public with locally defined symbols and direct consumer imports
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd81085c25956cefccbd913792f882890c1d213d8f79194d293c67009745e73c'
+body_hash: 'sha256:3adea91df179491d5fc3137afc5a2073bd68a199326f2dd6a401e9ed05f598af'
 step_id: 'S225'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove period_selector_match remains public with locally defined symbols and direct consumer imports
 

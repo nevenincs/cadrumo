@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f7fcd6b62385dfe9112d9aea0bac3dab64b764266707e4afd61351006506f50'
+body_hash: 'sha256:75e0dc3f293bae1e47ab575804b5a29a7090141cdcc83b06d8839c975369b6e4'
 step_id: 'S230'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Hard-move ENCODING_ALIAS_MAP to schema_exports and delete the record_spec surface
 

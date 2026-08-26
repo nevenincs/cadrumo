@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc6767143c690f083aaa780491bb47d5b27dc63b9ab37da3d72b57ed226f180d'
+body_hash: 'sha256:ea0bf1d658b17cca5784337c92f262b9ba404f846282e3d36488471a78086b9f'
 step_id: 'S228'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove rate_box_partition remains public with locally defined symbols and direct consumer imports
 

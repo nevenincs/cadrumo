@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:7fa2da483971c6c0f2ec585c684fab1ea3d8c1096a49f21fcf48ce106e01e821'
+body_hash: 'sha256:6126ae65dbfae6a7c758646b8c5c24dc29c421df5ee787584ee23e453b6f6215'
 step_id: 'S162'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Expose the canonical ProjectionModeloReadiness native atomic capture, owner generation, and neutral opaque comparison domain without inferring capability, collapsing readiness axes, or duplicating operator-state computation
 

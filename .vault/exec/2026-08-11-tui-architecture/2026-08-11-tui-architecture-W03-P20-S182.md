@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a9a930533dd954eec44720bc14ef4e46beaca8d4e8ee0c23d09e861e0c260ac2'
+body_hash: 'sha256:6bf173211e998dbda552db514887ac7d954a51c8d29978dfa131e05e280df6c1'
 step_id: 'S182'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove casilla_membership remains public with locally defined symbols and direct consumer imports
 

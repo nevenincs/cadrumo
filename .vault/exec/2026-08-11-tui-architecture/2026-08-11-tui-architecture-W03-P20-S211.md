@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:15c8505b496f67830abde2a4c161b10c8582123b8723910222956f5ff2639baa'
+body_hash: 'sha256:09543e542ff99a7ecda1fa3b12bf2f4bd4a905bc4cea1ecb2822c88a54a17b3d'
 step_id: 'S211'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_differentiated_deduction_projection remains public with locally defined symbols and direct consumer imports
 

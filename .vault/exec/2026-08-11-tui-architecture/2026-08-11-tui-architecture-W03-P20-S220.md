@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2d65cc72ba3459597986b96bd305b9731df3d7b042adc7f88acdd6425ef4176'
+body_hash: 'sha256:ca623145d11648df29c8d761439505bf4acaeb00dd1ba33452a6c099308276d6'
 step_id: 'S220'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_prorrata_activity_projection remains public with locally defined symbols and direct consumer imports
 

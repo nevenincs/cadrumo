@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe2d9e530d04402b9fb821e453c07ef7306f67f23fa536b1942ab1bbdf93fa95'
+body_hash: 'sha256:828d45084d2fee891aa2bceea7e376c1b747de65cd745469efb12b84e86d1d8a'
 step_id: 'S224'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove period_offset_math remains public with locally defined symbols and direct consumer imports
 

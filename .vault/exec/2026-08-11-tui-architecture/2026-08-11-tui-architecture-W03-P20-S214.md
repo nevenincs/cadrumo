@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:7273c7e56f2cb3ac9253a535a9101a40fc43e190ba3077d3477e53d531cbde66'
+body_hash: 'sha256:77d45befc6d12b8928055d5d857f060aa36f3c6ab32cc3cdf600b00ee024f92f'
 step_id: 'S214'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_orden_manifest remains public with locally defined symbols and direct consumer imports
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:959526e9b3305be96b6737462b50196a9debcdab9da79d6c32e7b76c6018e871'
+body_hash: 'sha256:d71d1d76e68c00142e24df5b94bedab516235089f9512e8f92804ae75252c71e'
 step_id: 'S177'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove aeat_nif_iva_oracle remains public with locally defined symbols and direct consumer imports
 

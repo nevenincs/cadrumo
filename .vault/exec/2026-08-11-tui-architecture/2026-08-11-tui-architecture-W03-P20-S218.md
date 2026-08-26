@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:d3e3b42a8e3fd33cd38b6a4a98960b6fb7939d818bc9825502dd90ad302e6eb4'
+body_hash: 'sha256:eaeb662189f5216648e894ca04e53529a88f757461a405373418fee662e7e6df'
 step_id: 'S218'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_orden_resolution remains public with locally defined symbols and direct consumer imports
 

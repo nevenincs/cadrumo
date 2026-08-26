@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:479c06f162677141e47b804624f9f5611c3f581deed141b931852974ab33f6eb'
+body_hash: 'sha256:84f729ebe6ea726e6fe5d85c3d2af34463244027d272a47674d88a790c17b33d'
 step_id: 'S216'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_orden_projection_models remains public with locally defined symbols and direct consumer imports
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b6d729b17866a48810a4cb46c944a5c9f60d1dc70724b6ea18569ca8935ff59'
+body_hash: 'sha256:27d3a4dca51d213623ae6705ce2c28d3f77410aab62496c730b23f88be1a9673'
 step_id: 'S212'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove m303_exonerado_390_projection remains public with locally defined symbols and direct consumer imports
 

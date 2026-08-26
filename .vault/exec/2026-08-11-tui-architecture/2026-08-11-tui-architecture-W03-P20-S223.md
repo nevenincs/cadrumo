@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:f11e878dcf208aeebf23009b3c6917fa5f7094e6ffa9c408e7820e2b63da0de8'
+body_hash: 'sha256:f72a72b9150e26a84ca7c95c46c6c383650b894aa72f877feafaf2461868f034'
 step_id: 'S223'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove observation_fold remains public with locally defined symbols and direct consumer imports
 
