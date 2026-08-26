@@ -29,6 +29,17 @@ profile:
     review:
       placeholder: Ebben a folyamatban a származási és ütközési áttekintés még nem
         érhető el.
+    source:
+      censal_review:
+        action: Nyilvántartás áttekintése
+        description: Olvassa be az adózó saját nyilvántartási adatait, és tekintse
+          át a javasolt módosításokat elfogadás előtt.
+        title: AEAT nyilvántartás
+      filed_history:
+        action: Előzmények lekérése
+        description: Kérje le az adózó korábbi bevallási előzményeit az AEAT-tól a
+          már bevallott adatok átviteléhez.
+        title: Korábbi bevallások
     stage:
       get_data: Adatok lekérése
       overview: Áttekintés

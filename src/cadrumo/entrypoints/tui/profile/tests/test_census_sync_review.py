@@ -62,7 +62,14 @@ _PASSPHRASE = "census-sync-review-passphrase"  # noqa: S105 - isolated integrati
 
 def _rows_from_request(request: CensalOperationRequest) -> tuple[CensalFieldReviewRowV1, ...]:
     return tuple(
-        CensalFieldReviewRowV1(path=item.path, persisted_value=None, suggested_intent=item.intent, observed_value=None)
+        CensalFieldReviewRowV1(
+            path=item.path,
+            persisted_value=None,
+            suggested_intent=item.intent,
+            observed_value=None,
+            source=None,
+            has_conflict=False,
+        )
         for item in request.field_intents
     )
 

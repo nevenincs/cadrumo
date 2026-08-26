@@ -27,6 +27,17 @@ profile:
     review:
       placeholder: La revisió de procedència i conflictes encara no està disponible
         en aquest recorregut.
+    source:
+      censal_review:
+        action: Revisa el cens
+        description: Llegeix el registre censal del contribuent i revisa els canvis
+          proposats abans d'adoptar-los.
+        title: Cens de l'AEAT
+      filed_history:
+        action: Obtenir historial
+        description: Obtén l'historial de declaracions del contribuent a l'AEAT per
+          traslladar les dades ja declarades.
+        title: Declaracions anteriors
     stage:
       get_data: Obtenir dades
       overview: Resum

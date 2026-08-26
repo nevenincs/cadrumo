@@ -26,6 +26,17 @@ profile:
       show_optional: Show optional
     review:
       placeholder: Provenance and conflict review is not yet available on this journey.
+    source:
+      censal_review:
+        action: Review census
+        description: Read the taxpayer's own censal record and review any proposed
+          changes before adopting them.
+        title: AEAT census
+      filed_history:
+        action: Pull filed history
+        description: Pull the taxpayer's filed-history record from AEAT to carry forward
+          previously declared facts.
+        title: Previous filings
     stage:
       get_data: Get data
       overview: Overview

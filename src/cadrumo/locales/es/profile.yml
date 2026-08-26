@@ -27,6 +27,17 @@ profile:
     review:
       placeholder: La revisión de procedencia y conflictos todavía no está disponible
         en este recorrido.
+    source:
+      censal_review:
+        action: Revisar censo
+        description: Lee el registro censal del contribuyente y revisa los cambios
+          propuestos antes de adoptarlos.
+        title: Censo de la AEAT
+      filed_history:
+        action: Obtener historial
+        description: Obtén el historial de declaraciones del contribuyente en la AEAT
+          para arrastrar los datos ya declarados.
+        title: Declaraciones anteriores
     stage:
       get_data: Obtener datos
       overview: Resumen
