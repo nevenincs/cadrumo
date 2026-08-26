@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:c66bcb0d93dd75173c1f90f122f15a953b2b5e12c9b210ee82889f6ffce2aa31'
+body_hash: 'sha256:6781fc0559c4526d748e7842c4c1dd45b345d464373650bde6a30b338c3a4c89'
 ---
 
 # `cli-root-verb-homes` plan
@@ -114,7 +114,7 @@ Make readiness revision-id optional with law-determined resolution and adopt the
 
 - [x] `W04.P11.S25` - Make app modelo readiness revision-id optional with law-determined resolution; `src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py`.
 - [x] `W04.P11.S26` - Adopt the exit-2 missing-field contract on app modelo readiness; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W04.P11.S27` - Retire config profile preflight and re-point the ten calling sequence contracts; `src/cadrumo/entrypoints/cli/_config/`.
+- [ ] `W04.P11.S27` - BLOCKED: do not retire config profile preflight - it is already broken by a peer work_addressing signature change, and app modelo readiness refuses without a session where preflight did not; `src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W05` - Gates, rule amendment and charter
 
@@ -124,22 +124,22 @@ Land the D6 spelling gate on top of the W01 annotation, amend the aeat-cli-contr
 
 Land D6 gate two over the declared locus and prove it bites.
 
-- [ ] `W05.P12.S28` - Land the spelling gate over declared locus with path-and-function keyed exemptions and a staleness ratchet; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W05.P12.S29` - Prove the spelling gate bites by mis-spelling a declared local-in file parameter; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W05.P12.S28` - Land the spelling gate over declared locus with path-and-function keyed exemptions and a staleness ratchet; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W05.P12.S29` - Prove the spelling gate bites by mis-spelling a declared local-in file parameter; `src/cadrumo/entrypoints/cli/tests/`.
 
 ### Phase `W05.P13` - Rule and charter amendment
 
 Amend the enumerated aeat-cli-contract sentences on the rule source, propagate by sync, and correct the two root help strings.
 
 - [x] `W05.P13.S30` - Amend the four enumerated aeat-cli-contract sentences on the rule source and propagate by sync; `.vaultspec/rules/aeat-cli-contract.md`.
-- [ ] `W05.P13.S31` - Correct the config and app root help strings in all four catalogues; `src/cadrumo/locales/`.
+- [x] `W05.P13.S31` - Correct the config and app root help strings in all four catalogues; `src/cadrumo/locales/`.
 
 ### Phase `W05.P14` - Sweep verification
 
 Verify every surface the conformance gates do not scan, and run the full suite sequentially.
 
-- [ ] `W05.P14.S32` - Verify the gate-covered sequence contracts and their JSON goldens; `docs/_sequences/`.
-- [ ] `W05.P14.S33` - Sweep the three non-gate-covered docs locale catalogues; `docs/locales/`.
+- [x] `W05.P14.S32` - Verify the gate-covered sequence contracts and their JSON goldens; `docs/_sequences/`.
+- [x] `W05.P14.S33` - Sweep the three non-gate-covered docs locale catalogues; `docs/locales/`.
 - [ ] `W05.P14.S34` - Sweep the dev quality dispositions and CLI benchmark goldens; `dev/`.
 - [ ] `W05.P14.S35` - Run the full suite sequentially and reconcile the vault; `src/cadrumo/`.
 
