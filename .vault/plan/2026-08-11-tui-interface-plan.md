@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:41e7724ad9d4ce80163f2c5eef5c1605c3ddb39917f430d29a7e3a0786edca39'
+body_hash: 'sha256:6845d098f08150c03c790f96fac16b19238dfcc50a97acd9ed8cc77776076445'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -66,8 +66,8 @@ Add presentation-only primitives and consistent status, error, and log behavior 
 
 Provide reusable stage navigation, progressive disclosure, grouping, badges, and source-action presentation components.
 
-- [ ] `W02.P03.S07` - Extend settled widgets with linear stage navigation disclosure groups requirement badges and source-action cards; `src/cadrumo/entrypoints/tui/components/widgets.py`.
-- [ ] `W02.P03.S08` - Prove reusable navigation disclosure grouping focus and narrow-terminal behavior; `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`.
+- [x] `W02.P03.S07` - Extend settled widgets with linear stage navigation disclosure groups requirement badges and source-action cards; `src/cadrumo/entrypoints/tui/components/widgets.py`.
+- [x] `W02.P03.S08` - Prove reusable navigation disclosure grouping focus and narrow-terminal behavior; `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`.
 
 ### Phase `W02.P04` - Status, error, and log presentation
 

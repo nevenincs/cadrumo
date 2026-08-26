@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Final, override
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.geometry import Size
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, Collapsible, DataTable, Static
 
 from ....core.presentation import NoticePresentation
 
@@ -59,4 +61,148 @@ class NoticeBand(Vertical, can_focus=False):
                 )
 
 
-__all__ = ["ContentDataTable", "ContentScroll", "NoticeBand"]
+class StageNavigationStrip(Horizontal, can_focus=False):
+    """Render-only linear stage strip: which stage is current, done, or ahead.
+
+    Route and focus are presentation state owned by the host screen
+    (`2026-08-11-tui-interface-adr` D6); this widget only shows where the
+    operator currently is in a fixed, ordered sequence of stages. It carries
+    no navigation of its own and mounts no button -- a host wanting a
+    clickable strip composes its own controls around this render.
+    """
+
+    def __init__(self, stages: Sequence[str], *, current_index: int, id: str | None = None) -> None:
+        """Store the ordered, already-localized stage labels and current position."""
+        if not stages:
+            raise ValueError("a stage navigation strip requires at least one stage")
+        if not 0 <= current_index < len(stages):
+            raise ValueError("current_index must name a declared stage")
+        super().__init__(id=id)
+        self._stages = tuple(stages)
+        self._current_index = current_index
+
+    @override
+    def compose(self) -> ComposeResult:
+        for index, label in enumerate(self._stages):
+            if index < self._current_index:
+                glyph, state = "✓", "done"
+            elif index == self._current_index:
+                glyph, state = "▸", "current"
+            else:
+                glyph, state = "·", "upcoming"
+            yield Static(
+                f"{glyph} {label}",
+                classes=f"cadrumo-stage cadrumo-stage-{state}",
+                id=f"stage-{index}",
+                markup=False,
+            )
+
+
+class DisclosureGroup(Collapsible):
+    """A titled, collapsible task section -- the shared `Show optional` primitive.
+
+    A thin, named extension of Textual's own `Collapsible` rather than a
+    parallel reimplementation: every Cadrumo surface that needs a collapsed
+    optional-detail or completed-group section (D6's `Required` stage task
+    sections, `Show optional`, `Show not applicable`) composes this one
+    widget instead of each host reaching for `Collapsible` under its own
+    title and defaults.
+    """
+
+    def __init__(self, *children, title: str, collapsed: bool = True, id: str | None = None) -> None:
+        """Store the group's already-localized title and initial disclosure state."""
+        super().__init__(*children, title=title, collapsed=collapsed, id=id)
+
+
+class RequirementStatus(StrEnum):
+    """The non-colour-safe requirement states a badge can render.
+
+    Named for the reader, not the palette: two operators comparing a
+    screenshot in greyscale and one in colour must reach the same
+    conclusion, so every state carries its own glyph and label rather than
+    only a colour class.
+    """
+
+    REQUIRED_MISSING = "required_missing"
+    REQUIRED_PRESENT = "required_present"
+    NEEDS_APPLICABILITY = "needs_applicability"
+    OPTIONAL = "optional"
+    NOT_APPLICABLE = "not_applicable"
+
+
+_REQUIREMENT_GLYPH: Final[dict[RequirementStatus, str]] = {
+    RequirementStatus.REQUIRED_MISSING: "✖",
+    RequirementStatus.REQUIRED_PRESENT: "✓",
+    RequirementStatus.NEEDS_APPLICABILITY: "?",
+    RequirementStatus.OPTIONAL: "○",
+    RequirementStatus.NOT_APPLICABLE: "—",
+}
+
+
+class RequirementBadge(Static, can_focus=False):
+    """One field's requirement state, rendered by glyph and label together.
+
+    Never colour alone: `_REQUIREMENT_GLYPH` gives every
+    :class:`RequirementStatus` its own distinguishing mark, so a non-colour
+    terminal or a colour-blind operator reads the same state a sighted
+    colour-terminal operator does.
+    """
+
+    def __init__(self, label: str, status: RequirementStatus, *, id: str | None = None) -> None:
+        """Store the already-localized field label and its settled status."""
+        glyph = _REQUIREMENT_GLYPH[status]
+        super().__init__(
+            f"{glyph} {label}",
+            classes=f"cadrumo-requirement cadrumo-requirement-{status.value}",
+            id=id,
+            markup=False,
+        )
+        self._status = status
+
+    @property
+    def status(self) -> RequirementStatus:
+        """Return the settled requirement status this badge renders."""
+        return self._status
+
+
+@dataclass(frozen=True, slots=True)
+class SourceActionDescriptor:
+    """One `Get data` source: what it is, and the action that starts it."""
+
+    title: str
+    description: str
+    action_label: str
+
+
+class SourceActionCard(Vertical):
+    """A focusable card for one disclosed data source and its start action.
+
+    Renders only; starting the described operation is the host screen's
+    concern; the card is not what dispatches. Composes a real `Button` so
+    the card is reachable and actionable by keyboard alone, per this
+    Wave's focus-order proof.
+    """
+
+    def __init__(self, descriptor: SourceActionDescriptor, *, id: str | None = None) -> None:
+        """Store the already-localized source description."""
+        super().__init__(id=id, classes="cadrumo-source-card")
+        self._descriptor = descriptor
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Static(self._descriptor.title, classes="cadrumo-source-card-title", markup=False)
+        yield Static(self._descriptor.description, classes="cadrumo-source-card-description", markup=False)
+        yield Button(self._descriptor.action_label, id="btn-source-action", classes="cadrumo-source-card-action")
+
+
+__all__ = [
+    "ContentDataTable",
+    "ContentScroll",
+    "DisclosureGroup",
+    "NoticeBand",
+    "RequirementBadge",
+    "RequirementStatus",
+    "SourceActionCard",
+    "SourceActionDescriptor",
+    "StageNavigationStrip",
+]
