@@ -70,6 +70,19 @@ class OperationReviewProjectionRefusalCode(StrEnum):
     REVIEW_PROJECTION_UNAVAILABLE = "review_projection_unavailable"
 
 
+class OperationResultProjectionRefusalCode(StrEnum):
+    """Stable refusal codes for settled-result projection requests."""
+
+    UNSUPPORTED_VERSION = "unsupported_result_projection_version"
+    UNKNOWN_OPERATION = "unknown_operation"
+    OPERATION_NOT_TERMINAL = "operation_not_terminal"
+    OPERATION_NOT_SUCCESSFUL = "operation_not_successful"
+    STALE_OPERATION_REVISION = "stale_operation_revision"
+    DEFINITION_CONTRACT_MISMATCH = "definition_contract_mismatch"
+    RESULT_SCHEMA_MISMATCH = "result_schema_mismatch"
+    RESULT_PROJECTION_UNAVAILABLE = "result_projection_unavailable"
+
+
 class OperationWorkspaceRefreshTargetRefusalCode(StrEnum):
     """Stable refusal codes for workspace refresh-target requests."""
 
@@ -153,6 +166,13 @@ class OperationWorkspaceRefreshTargetVersionHeader(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     refresh_target_version: Annotated[int, Field(ge=1)]
+
+
+class OperationResultProjectionVersionHeader(BaseModel):
+    """Minimal header parsed before exact settled-result projection dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    result_projection_version: Annotated[int, Field(ge=1)]
 
 
 class OperationObservationRequestV1(BaseModel):
@@ -880,6 +900,55 @@ type OperationWorkspaceRefreshTargetResultV1[RefreshTargetT: BaseModel] = Annota
 ]
 
 
+class OperationResultProjectionRequestV1(BaseModel):
+    """Resolve a settled operation's safe public result without a raw reference.
+
+    Symmetric with :class:`OperationWorkspaceRefreshTargetRequestV1`: the
+    caller never supplies the private ``result_ref`` itself, only the
+    operation identity, the terminal revision it expects, the definition
+    contract it trusts, and the registered result schema it wants back.
+    """
+
+    model_config = _PUBLIC_CONFIG
+
+    result_projection_version: Literal[1] = 1
+    operation_id: OperationId
+    terminal_revision: OperationRevision
+    definition_contract_digest: ContentDigest
+    result_schema: OperationSchemaIdentityV1
+
+
+class OperationResultProjectionSuccessV1[ResultProjectionT: BaseModel](BaseModel):
+    """Successful typed settled-result projection."""
+
+    model_config = _PUBLIC_CONFIG
+
+    outcome: Literal["success"] = "success"
+    result_projection_version: Literal[1] = 1
+    result_schema: OperationSchemaIdentityV1
+    definition_contract_digest: ContentDigest
+    projection: ResultProjectionT
+
+
+class OperationResultProjectionRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a settled-result projection request."""
+
+    model_config = _PUBLIC_CONFIG
+
+    outcome: Literal["refused"] = "refused"
+    result_projection_version: Literal[1] = 1
+    code: OperationResultProjectionRefusalCode
+    requested_version: Annotated[int, Field(ge=1)] | None
+    supported_version: Literal[1] = 1
+    diagnostic_ref: OperationDiagnosticReference | None
+
+
+type OperationResultProjectionResultV1[ResultProjectionT: BaseModel] = Annotated[
+    OperationResultProjectionSuccessV1[ResultProjectionT] | OperationResultProjectionRefusalV1,
+    Field(discriminator="outcome"),
+]
+
+
 __all__ = [
     "OperationCancellationRefusalCode",
     "OperationCancellationRefusalV1",
@@ -925,6 +994,12 @@ __all__ = [
     "OperationResponseMutationResultV1",
     "OperationResponseMutationSuccessV1",
     "OperationResponseRejectRequestV1",
+    "OperationResultProjectionRefusalCode",
+    "OperationResultProjectionRefusalV1",
+    "OperationResultProjectionRequestV1",
+    "OperationResultProjectionResultV1",
+    "OperationResultProjectionSuccessV1",
+    "OperationResultProjectionVersionHeader",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",

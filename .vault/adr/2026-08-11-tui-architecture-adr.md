@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a55376ca86e816708a6a497a8047b9e5d9cb96488cd70a9a0a88e6eabb6a81a'
+body_hash: 'sha256:7a3c209e34e108fa9eced71ba5b11506adc0c597939aed8f29b8b43197422dea'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -671,6 +671,35 @@ The exact refresh refusals are `unsupported_refresh_target_version`,
 process restart from durable safe terminal facts and live registry composition.
 A raw result/reference, repository DTO, route ID, TUI view model, exception, or
 adapter path never crosses the facade.
+
+An operation definition may additionally register a public result schema
+distinct from its private `result_type`, together with a side-effect-free
+`result_projector` binding the resolved private result and the safe terminal
+receipt to that public model -- symmetric with the `reviewed_operand_type`
+plus `review_projector` pair, but for the settled result instead of the
+mid-flight REVIEW proposal. Registration is a strict either/or on schema
+identity: a public result schema that binds the exact same model as
+`result_type` declares no projector, and a public result schema binding any
+other model requires exactly one. No operation may bind its own private
+`result_type` as its public schema AND separately declare a projector for it
+-- that would be a passthrough re-admitting the private type under cover of
+the public one, not a genuine projection.
+
+`OperationResultProjectionService` resolves this door: given an operation ID,
+its terminal revision, definition-contract digest, and declared result-schema
+identity, it reloads the authoritative terminal receipt, refuses unless a
+settled result reference is present (the accepted terminal-reference
+invariant permits one on `SUCCEEDED` and permits, but does not require, one on
+`FAILED`; it forbids one on `REFUSED`), resolves the encrypted private result
+behind the secure operand port, validates its registered private type,
+invokes the projector, and validates the exact public type and schema
+fingerprint before returning it. The private result type never crosses this
+boundary; only the projector's public output does. The exact refusal codes are
+`unsupported_result_projection_version`, `unknown_operation`,
+`operation_not_terminal`, `operation_not_successful`, `stale_operation_revision`,
+`definition_contract_mismatch`, `result_schema_mismatch`, and
+`result_projection_unavailable`. `OperationComposedServices` exposes this
+service alongside `review` and `refresh` as `result`.
 
 ### D7 - Surface projections
 

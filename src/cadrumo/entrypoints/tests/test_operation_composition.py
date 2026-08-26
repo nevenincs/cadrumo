@@ -20,6 +20,7 @@ from ...application.operations.observation import OperationObservationService
 from ...application.operations.projection_services import (
     OperationCancellationService,
     OperationDetachService,
+    OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
@@ -44,12 +45,15 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
         assert isinstance(dependencies.observation, OperationObservationService)
         assert isinstance(dependencies.submission, OperationSubmissionService)
         assert isinstance(dependencies.review, OperationReviewProjectionService)
+        assert isinstance(dependencies.result, OperationResultProjectionService)
         assert isinstance(dependencies.refresh, OperationWorkspaceRefreshTargetService)
         assert isinstance(dependencies.cancellation, OperationCancellationService)
         assert isinstance(dependencies.detach, OperationDetachService)
         assert dependencies.observation.reader is dependencies.review.reader
+        assert dependencies.observation.reader is dependencies.result.reader
         assert dependencies.observation.reader is dependencies.refresh.reader
         assert dependencies.observation.registry is dependencies.review.registry
+        assert dependencies.observation.registry is dependencies.result.registry
         assert dependencies.observation.registry is dependencies.refresh.registry
         assert dependencies.observation.registry is dependencies.cancellation.registry
         assert dependencies.observation.registry is dependencies.detach.registry
@@ -94,7 +98,7 @@ def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path
 def test_production_composition_exposes_only_public_services() -> None:
     public_fields = {item.name for item in fields(OperationComposedServices) if not item.name.startswith("_")}
 
-    assert public_fields == {"submission", "observation", "review", "refresh", "cancellation", "detach"}
+    assert public_fields == {"submission", "observation", "review", "result", "refresh", "cancellation", "detach"}
     assert {"registry", "supervisor", "response"}.isdisjoint(public_fields)
     assert callable(OperationComposedServices.response)
 

@@ -26,6 +26,7 @@ from .projection_services import (
     OperationResponseAuthorityBroker,
     OperationResponseCapability,
     OperationResponseControlService,
+    OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
     _read_snapshot,
@@ -89,6 +90,7 @@ class OperationComposedServices:
     submission: OperationSubmissionService
     observation: OperationObservationService
     review: OperationReviewProjectionService
+    result: OperationResultProjectionService
     refresh: OperationWorkspaceRefreshTargetService
     cancellation: OperationCancellationService
     detach: OperationDetachService
@@ -172,6 +174,7 @@ def compose_operation_services(
         submission=OperationSubmissionService(supervisor, authority_broker),
         observation=observation,
         review=OperationReviewProjectionService(reader=reader, registry=registry, operands=operands, clock=clock),
+        result=OperationResultProjectionService(reader=reader, registry=registry, operands=operands),
         refresh=OperationWorkspaceRefreshTargetService(reader=reader, registry=registry),
         cancellation=OperationCancellationService(reader=reader, registry=registry, supervisor=supervisor),
         detach=OperationDetachService(reader=reader, registry=registry, supervisor=supervisor),
