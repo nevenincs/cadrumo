@@ -20,6 +20,7 @@ from ....core import Modelo
 from ....core.logging import get_logger
 from .authority import ValidatedRegistryAuthority, bundled_authority
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .schema import ModeloRevision
 from .temporal import select_revision
 
 CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"
@@ -87,7 +88,6 @@ class CensoModeloOwnership:
 _ACTIVE_CENSO_MODELO = Modelo.M036.value
 _HISTORICAL_CENSO_MODELO = Modelo.M037.value
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
-_CENSO_FOUNDATION_YEAR = 2025
 
 
 class CensoModeloFoundationContract(BaseModel):
@@ -286,14 +286,11 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
         raise RegistryValidationError("active censo modelo 036 registry definition is missing") from exc
     if definition.tax_domain != "censo" or definition.cadence != "ad_hoc":
         raise RegistryValidationError("active censo modelo 036 must be an ad_hoc censo registry definition")
-    revisions = tuple(
-        revision
-        for revision in definition.revisions.values()
-        if revision.period_selector.includes_year(_CENSO_FOUNDATION_YEAR)
-    )
-    if not revisions:
-        raise RegistryValidationError("active censo modelo 036 has no registry revision for the foundation year")
-    revision = max(revisions, key=lambda item: (item.valid_from, str(item.id)))
+    try:
+        revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+    except ValueError as exc:
+        raise RegistryValidationError("active censo modelo 036 has no registry revisions") from exc
+    foundation_year = _foundation_year_from_latest_revision(revision)
     event_kinds = tuple(revision.period_selector.periods)
     if event_kinds != CENSO_MODELO_EVENT_KINDS:
         raise RegistryValidationError("active censo modelo 036 event periods must come from the registry")
@@ -313,11 +310,15 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
         # `select_revision` is the sanctioned resolver and keeps the teeth: an
         # event kind no revision declares still raises, which is the only thing
         # this loop asserts.
-        select_revision(
+        selected = select_revision(
             definition,
-            filing_year=_CENSO_FOUNDATION_YEAR,
+            filing_year=foundation_year,
             period=event_kind,
         )
+        if selected.id != revision.id:
+            raise RegistryValidationError(
+                "active censo modelo 036 foundation revision must resolve from its declared first governed year",
+            )
     return CensoModeloOwnership(
         modelo=_ACTIVE_CENSO_MODELO,
         role=CensoModeloRole.ACTIVE_FOUNDATION,
@@ -325,6 +326,19 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
         event_kinds=event_kinds,
         active_work_unit_allowed=True,
     )
+
+
+def _foundation_year_from_latest_revision(revision: ModeloRevision) -> int:
+    """Derive the active censo foundation year from its latest declared revision."""
+    selector = revision.period_selector
+    foundation_year = min(selector.years) if selector.years else selector.year_from
+    if foundation_year is None:
+        raise RegistryValidationError("active censo modelo 036 foundation revision must declare a first governed year")
+    if revision.valid_from.year != foundation_year:
+        raise RegistryValidationError(
+            "active censo modelo 036 foundation revision valid_from year must match its first governed year",
+        )
+    return foundation_year
 
 
 def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:

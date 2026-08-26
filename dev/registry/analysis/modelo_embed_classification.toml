@@ -80,17 +80,14 @@ reason = "pydantic ge/le bounds (2000..2099) on a filing-year field: a structura
 
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
-classification = "regulatory_data_embed"
+classification = "machinery"
 justification = """
-The embed is _CENSO_FOUNDATION_YEAR = 2025. It is a Python-resident filing year
-that decides which censo revision the foundation contract resolves and which
-snapshot cells it demands, so a corpus that gains or loses a censo year is
-answered by editing Python rather than registry data. The year belongs in the
-authoring tree alongside the other declared year data. The ownership routing
-and contract models around it are machinery and survive the extraction.
+The censo foundation derives its temporal coordinate from the latest declared
+Modelo 036 revision: the selector's first governed year must agree with
+valid_from.year, then the sanctioned revision resolver validates every event
+kind. It carries no filing-year declaration or source-specific temporal branch;
+the registry authoring tree remains the sole owner of those facts.
 """
-destination = "registry authoring tree, beside the declared filing-year data"
-tree_ownership = "unowned"
 
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/deadline_coordinate.py"
