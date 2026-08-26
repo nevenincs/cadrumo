@@ -934,6 +934,34 @@ def test_real_m390_2022_profile_exactly_covers_source_eligibility_and_binds_day_
     }
 
 
+def _first_blank_in_range_cell(source_path: Path, sheet_name: str) -> str:
+    """Return an A1 cell inside ``sheet_name``'s used range that holds no text.
+
+    The blank-cell guard needs a locator the reader can resolve but that carries
+    no statement. Hardcoding one would pin the test to today's design, so the
+    cell is discovered through the same reader the loader uses.
+    """
+    import xlrd
+
+    book = xlrd.open_workbook(str(source_path), on_demand=True)
+    try:
+        sheet = book.sheet_by_name(sheet_name)
+        for row in range(sheet.nrows):
+            for col in range(sheet.ncols):
+                if not str(sheet.cell_value(row, col)).strip():
+                    column = ""
+                    index = col
+                    while True:
+                        column = chr(ord("A") + index % 26) + column
+                        index = index // 26 - 1
+                        if index < 0:
+                            break
+                    return f"{column}{row + 1}"
+    finally:
+        book.release_resources()
+    raise AssertionError(f"no blank cell inside {sheet_name!r}; the guard cannot be exercised")
+
+
 def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations() -> None:
     """Source claims resolve from the binary and every identity or text drift fails closed."""
     source_root = bundled_path()
@@ -959,8 +987,26 @@ def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations
     missing_profile = profile.model_copy(
         update={"width_17_rules": (missing_rule, profile.width_17_rules[1])},
     )
-    with pytest.raises(RegistryValidationError, match="does not contain source text"):
+    # Z999 is OUTSIDE the workbook's used range, so the refusal names the missing
+    # locator. It read as "does not contain source text" only while this design
+    # was a .xlsx whose declared dimensions happened to cover Z999 and returned
+    # an empty cell; registering the bundled designs repointed it to the real
+    # .xls, where the range is genuinely smaller.
+    with pytest.raises(RegistryValidationError, match="locator does not exist"):
         load_render_profile_source_evidence(resolved.path, missing_profile)
+
+    # The blank-but-present branch is a DIFFERENT guard, and this is its only
+    # coverage: a locator inside the used range whose cell carries no statement.
+    # Probed rather than hardcoded so it survives a design revision.
+    blank_cell = _first_blank_in_range_cell(resolved.path, first_rule.evidence.source_sheet)
+    blank_rule = first_rule.model_copy(
+        update={"evidence": first_rule.evidence.model_copy(update={"source_cell": blank_cell})},
+    )
+    blank_profile = profile.model_copy(
+        update={"width_17_rules": (blank_rule, profile.width_17_rules[1])},
+    )
+    with pytest.raises(RegistryValidationError, match="does not contain source text"):
+        load_render_profile_source_evidence(resolved.path, blank_profile)
 
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     mismatched_rule = first_rule.model_copy(

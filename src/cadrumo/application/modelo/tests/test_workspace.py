@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, RegistrySchemaFamilyDisposition
+from ....core import BindingSourceKind, Period, RegistrySchemaFamilyDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -26,6 +26,7 @@ from ..workspace import (
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
     graded_snapshot_materialization_facet,
+    graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
     paginate_static_inspection_schema_facet,
     relation_source_endpoints_for_casilla,
@@ -1218,3 +1219,95 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
 
     with pytest.raises(ValueError, match="row_casilla_provenance"):
         graded_snapshot_materialization_facet(revision)
+
+
+def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_subject() -> None:
+    """Readiness is a pure axis-preserving pass-through, including the S291 subject union."""
+    from ...ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
+    from ...state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
+    from ...user_profile.commands import ProfilePreflightRequirement
+    from ..workspace_models import (
+        ModeloWorkspaceBindingRequirementV1,
+        ModeloWorkspaceLedgerPeriodSubjectV1,
+        ModeloWorkspaceLedgerTransactionSubjectV1,
+        ModeloWorkspaceProfileRequirementV1,
+    )
+
+    period = Period.from_year_and_code(2026, "1T")
+    readiness = ProjectionModeloReadiness(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        modelo="303",
+        revision_id="2022",
+        filing_year=2026,
+        period=period,
+        missing=(
+            ProfilePreflightRequirement(
+                selector="tipo_actividad",
+                section_key="actividad",
+                field_key="tipo",
+                label="Tipo de actividad",
+                legal_refs=("ley-37-1992:art-99",),
+                modelos=("303",),
+            ),
+        ),
+        profile_ready=False,
+        per_operation_requirements_assessed=True,
+        profile_refusal="missing activity type",
+        registry_ready=True,
+        registry_refusal="",
+        binding_ready=False,
+        missing_bindings=(
+            ProjectionModeloBindingRequirement(
+                binding_id="inventory-operation-0181",
+                source=BindingSourceKind.INVENTORY,
+                input_channel="ledger",
+            ),
+        ),
+        ledger_preflight_required=True,
+        ledger_ready=False,
+        ledger_period=period,
+        ledger_checked_transaction_count=3,
+        ledger_issues=(
+            LedgerPreflightIssue(
+                transaction_id="e" * 64,
+                reason=LedgerPreflightIssueReason.MISSING_CATEGORY,
+                detail="missing IVA category",
+            ),
+            LedgerPreflightIssue(
+                transaction_id="__period__",
+                reason=LedgerPreflightIssueReason.UNSUPPORTED_PERIOD,
+                detail="period has no date span",
+            ),
+        ),
+        ready=False,
+    )
+
+    projected = graded_snapshot_readiness(readiness)
+
+    assert projected.profile_id == readiness.profile_id
+    assert projected.modelo == readiness.modelo
+    assert projected.revision_id == readiness.revision_id
+    assert projected.filing_year == readiness.filing_year
+    assert projected.period == readiness.period
+    assert len(projected.missing) == 1
+    assert isinstance(projected.missing[0], ModeloWorkspaceProfileRequirementV1)
+    assert projected.missing[0].selector == "tipo_actividad"
+    assert projected.profile_ready == readiness.profile_ready
+    assert projected.per_operation_requirements_assessed == readiness.per_operation_requirements_assessed
+    assert projected.profile_refusal == readiness.profile_refusal
+    assert projected.registry_ready == readiness.registry_ready
+    assert projected.binding_ready == readiness.binding_ready
+    assert len(projected.missing_bindings) == 1
+    assert isinstance(projected.missing_bindings[0], ModeloWorkspaceBindingRequirementV1)
+    assert projected.missing_bindings[0].binding_id == "inventory-operation-0181"
+    assert projected.ledger_preflight_required == readiness.ledger_preflight_required
+    assert projected.ledger_ready == readiness.ledger_ready
+    assert projected.ledger_period == readiness.ledger_period
+    assert projected.ledger_checked_transaction_count == readiness.ledger_checked_transaction_count
+    assert projected.ready == readiness.ready
+
+    assert len(projected.ledger_issues) == 2
+    transaction_issue, period_issue = projected.ledger_issues
+    assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
+    assert transaction_issue.subject.transaction_id == "e" * 64
+    assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
