@@ -43,8 +43,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.domain.calculations.registry.schema import CalculationClass, ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import CalculationClass, EvidenceTier
 
 from ....core import ExportLayoutFormat
 from .authority import ValidatedRegistryAuthority

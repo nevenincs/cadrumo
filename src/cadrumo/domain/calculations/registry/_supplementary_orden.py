@@ -13,7 +13,8 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryModel
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_base import RegistryModel
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ....core import Modelo

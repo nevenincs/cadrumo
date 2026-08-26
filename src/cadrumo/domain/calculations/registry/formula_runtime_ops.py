@@ -28,8 +28,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.schema import DatedValue, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, DatedValue, ParameterDefinition
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.money import round_to_cents as _round_to_cents
