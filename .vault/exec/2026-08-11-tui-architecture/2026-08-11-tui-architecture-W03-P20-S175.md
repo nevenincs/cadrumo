@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4109baddb3e452c149df7f4e3d838ee3ebaf08fa37841c0820d3e4d25fd5110'
+body_hash: 'sha256:a903c9eb5976642be17b8032dd66bc616495949f6fb9d15757f3912bb7a2b3f9'
 step_id: 'S175'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -24,7 +24,9 @@ related:
 
 - Derive the fixed 78-pair c941 denominator from the historic rename delta.
 - Bind all reviewed source and consumer evidence to immutable Git commit `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`, never the dirty working tree.
-- Resolve relative imports, TypeAlias nodes, exact package attributes, and literal/nonliteral dynamic imports; retain structured per-row RAG, owner, competitor, and substitutability evidence.
+- Resolve relative imports, TypeAlias nodes, exact package attributes, and literal/nonliteral dynamic imports; retain structured per-row owner, competitor, substitutability, and terminal evidence.
+- Add the Sol HIGH correction: a resolved relative-import candidate contributes its evidence source to both the direct-module graph and the appropriate production, test, fixture, documentation, or tooling category.
+- Persist actual `vaultspec-rag` code-query/result records only for R01 and R55, with their request IDs and selected ranges; retain immutable AST locators exclusively as source evidence.
 - Keep the reviewed 54/9/13/2 disposition inventory and one future Step per row.
 - Add a separate current-terminal observer so future H/P/D path disappearance is valid without a compatibility surface.
 
@@ -32,19 +34,20 @@ related:
 
 The matrix is deterministic, schema-versioned, immutable-evidence-bound, and bound to canonical plan Steps. The S175 check fails closed for changed historical pairs, an evidence-commit mismatch, stale consumer/measurement/dynamic-import evidence, missing source/import or terminal locators, unresolved or grouped rows, invalid terminal state, wrong disposition count, duplicate mapping, absent plan Step, or a final gate that does not depend on every disposition Step.
 
-Sol independently failed frozen `976d47eb75` because its evidence was current-worktree-derived and incomplete. This remediation replaces that approach with Git-object evidence and future-safe terminal checking. Focused regression coverage includes relative-import measurement, TypeAlias, fixtures, dynamic unresolved calls, precise package attributes, immutable reproducibility/dirty-tree immunity, and future H/P/D removal.
+The direct relative-only import in `src/cadrumo/adapters/inbound/declaracion/_parser.py` is now recorded as an `_authority.py` production consumer, not merely a transitive one. R01 carries the executed `AEAT remote read host authority canonical hostname only:prod` RAG query under request `eec115fcf1ae4225b7e9209afc205b2b`, selecting `aeat_hosts.py:19-51`; R55 carries the executed `ENCODING_ALIAS_MAP registry schema export value policy only:prod` query under request `f8cff429a3cd4d8fa1dc335774db9e47`, selecting `schema_exports.py:1-41`. The checked schema accepts their genuine structured result fields and rejects an AST-locator-shaped substitute. The other 76 rows retain null RAG fields rather than an unperformed-query claim.
 
-S175 remains open. A new independent Sol architecture review is required before it may close; S173 and affected registry work remain blocked accordingly.
+Sol independently failed frozen `976d47eb75` because its evidence was current-worktree-derived and incomplete. This remediation replaces that approach with Git-object evidence, direct relative categorization, genuine semantic discovery anchors, and future-safe terminal checking. S175 remains open. A new independent Sol architecture review is required before it may close; S173 and affected registry work remain blocked accordingly.
 
 ## Validation
 
-- `python dev/quality/registry_facade_family_census.py --check`: passed through the terminal-state command's prerequisite check.
+- `python dev/quality/registry_facade_family_census.py --check`: passed.
 - `python dev/quality/registry_facade_family_census.py --check-current-terminal`: passed; 78 open disposition Steps, 77 ordinary open proofs, and 1 missing future defining-owner destination pending its hard-move Step.
-- `pytest -q -n 0 dev/tests/test_registry_facade_family_census.py`: 14 passed in 138.54 seconds.
-- Ruff format/check and `ty check dev/quality/registry_facade_family_census.py`: passed.
+- `pytest -q -n 0 dev/tests/test_registry_facade_family_census.py`: 16 passed in 120.51 seconds.
+- Ruff format/check and `ty check dev/quality/registry_facade_family_census.py dev/tests/test_registry_facade_family_census.py`: passed.
+- `vault check exec-mapping --feature tui-architecture`: passed.
 - `vault check all --feature tui-architecture`: no S175 errors; 18 pre-existing feature-wide warnings remain outside this Step's owned documents.
 - `git diff --check`: passed.
 
 ## Notes
 
-No production registry module, package facade, re-export, shim, alias, or disposition implementation was changed. This isolated remediation branch is based on frozen baseline `976d47eb759dcbc65b01cc3aa1f5dd8ef43c2268`; it has not been integrated into shared main.
+No production registry module, package facade, re-export, shim, alias, or disposition implementation was changed. This isolated remediation branch began at frozen baseline `976d47eb759dcbc65b01cc3aa1f5dd8ef43c2268`, has its earlier immutable-evidence remediation at `24268390b819df50c01e7ccc9809d8198adc276a`, and has not been integrated into shared main.

@@ -6,6 +6,7 @@ import ast
 import json
 from collections import Counter
 from copy import deepcopy
+from typing import cast
 
 import pytest
 
@@ -13,6 +14,8 @@ import dev.quality.registry_facade_family_census as census
 from dev.quality.registry_facade_family_census import (
     EVIDENCE_COMMIT,
     MATRIX_PATH,
+    RAG_QUERY_FIELDS,
+    RAG_RESULT_FIELDS,
     RelocatedFamily,
     _annotation_owners,
     _base_category,
@@ -36,7 +39,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def _document() -> dict[str, object]:
     """Read the checked reviewed artifact once for a test assertion."""
-    return json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    assert isinstance(document, dict)
+    return cast("dict[str, object]", document)
 
 
 def _candidate(stem: str = "authority") -> RelocatedFamily:
@@ -99,6 +104,21 @@ type ModernAuthorityAlias = authority.Authority
     }
     assert _base_category("src/cadrumo/tests/fixtures/registry/receipt.toml") == "fixture"
     assert _base_category("dev/quality/tests/test_registry.py") == "test"
+
+
+def test_relative_only_import_is_a_direct_production_consumer() -> None:
+    """A resolved ``from ..`` edge lands in its direct operational category."""
+    relative_consumer = "src/cadrumo/adapters/inbound/declaracion/_parser.py"
+    authority_path = "src/cadrumo/domain/calculations/registry/_authority.py"
+    source_text = _evidence_text(relative_consumer)
+    consumers = _evidence_census().consumers[authority_path]
+
+    # This archive source imports its registry authority relatively, so a
+    # text-only candidate sweep cannot identify it as an authority consumer.
+    assert "cadrumo.domain.calculations.registry.authority" not in source_text
+    assert "cadrumo.domain.calculations.registry._authority" not in source_text
+    assert relative_consumer in consumers["production"]
+    assert relative_consumer not in consumers["transitive"]
 
 
 def test_package_module_attribute_access_is_precisely_member_owned() -> None:
@@ -219,24 +239,68 @@ def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
         assert {"owner_definition_locators", "competing_site_census", "substitutability", "anchors"} == set(semantic)
 
 
-def test_reviewed_rows_record_anchored_structured_semantic_and_rag_evidence() -> None:
-    """Every row retains review query, defining locator, and competitor rationale."""
+def test_reviewed_rows_keep_ast_locators_distinct_from_real_rag_discovery() -> None:
+    """Only the two executed semantic searches carry their RAG payloads."""
     document = _document()
     rows = document["rows"]
 
     assert isinstance(rows, list)
+    discovered_pairs = {
+        (
+            "src/cadrumo/domain/calculations/registry/_aeat_hosts.py",
+            "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+        ),
+        (
+            "src/cadrumo/domain/calculations/registry/_record_spec.py",
+            "src/cadrumo/domain/calculations/registry/record_spec.py",
+        ),
+    }
+    actual_discovered_pairs = set()
     for row in rows:
         semantic = row["semantic_evidence"]
-        rag_result = row["rag_result"]
 
         assert isinstance(semantic, dict)
         assert semantic["anchors"]["evidence_commit"] == EVIDENCE_COMMIT
         assert semantic["anchors"]["relocation_pair"] == [row["old_path"], row["new_path"]]
-        module = row["new_path"].removeprefix("src/").removesuffix(".py").replace("/", ".")
-        assert row["rag_query"].endswith(module)
-        assert rag_result["path"] == row["new_path"]
-        assert f"{rag_result['path']}:{rag_result['line_start']}" in row["alternative_owner_evidence"]
         assert row["semantic_owner"] in row["alternative_owner_evidence"]
+        if row["rag_result"] is None:
+            assert row["rag_query"] is None
+            assert "Vaultspec-RAG" not in row["alternative_owner_evidence"]
+            continue
+        rag_query = row["rag_query"]
+        rag_result = row["rag_result"]
+        assert isinstance(rag_query, dict)
+        assert isinstance(rag_result, dict)
+        assert set(rag_query) == RAG_QUERY_FIELDS
+        assert set(rag_result) == RAG_RESULT_FIELDS
+        assert rag_query["type"] == "code"
+        assert rag_query["domain"] == "prod"
+        assert rag_result["source"] == "codebase"
+        assert (
+            f"{rag_result['path']}:{rag_result['line_start']}-{rag_result['line_end']}"
+            in row["alternative_owner_evidence"]
+        )
+        actual_discovered_pairs.add((row["old_path"], row["new_path"]))
+
+    assert actual_discovered_pairs == discovered_pairs
+
+
+def test_rag_schema_rejects_an_ast_locator_disguised_as_a_search_result() -> None:
+    """RAG record fields cannot be replaced by the immutable AST locator shape."""
+    document = deepcopy(_document())
+    rows = document["rows"]
+    assert isinstance(rows, list)
+    target = next(row for row in rows if row["old_path"].endswith("/_aeat_hosts.py"))
+    target["rag_result"] = {
+        "path": target["new_path"],
+        "line_start": 15,
+        "line_end": 15,
+        "node_type": "ast_top_level_binding",
+        "symbol": "REMOTE_READ_SCHEME",
+    }
+
+    with pytest.raises(RuntimeError, match="malformed RAG result evidence"):
+        check_matrix_document(document)
 
 
 def test_current_terminal_report_allows_future_hard_move_privatization_and_deletion() -> None:
@@ -262,7 +326,9 @@ def test_current_terminal_report_allows_future_hard_move_privatization_and_delet
                 else "terminal_destination_missing_pending_step"
             )
             assert status_by_step[step_id] == expected
-    assert len(report["open_disposition_step_ids"]) == 78
+    open_step_ids = report["open_disposition_step_ids"]
+    assert isinstance(open_step_ids, list)
+    assert len(open_step_ids) == 78
 
 
 def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
@@ -285,6 +351,8 @@ def test_reviewed_refresh_preserves_manual_dispositions_and_plan_bindings() -> N
     refreshed = refresh_reviewed_matrix_document(document)
     manual_fields = {
         "semantic_owner",
+        "rag_query",
+        "rag_result",
         "disposition",
         "terminal_state",
         "follow_on_step_id",

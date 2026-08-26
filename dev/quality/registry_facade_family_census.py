@@ -30,7 +30,63 @@ DISPOSITIONS: Final = (
     "privatize_external_elimination",
     "delete",
 )
-RAG_RESULT_FIELDS: Final = frozenset({"path", "line_start", "line_end", "node_type", "symbol"})
+RAG_QUERY_FIELDS: Final = frozenset({"text", "type", "domain", "prefer", "request_id"})
+RAG_RESULT_FIELDS: Final = frozenset(
+    {"id", "path", "score", "source", "line_start", "line_end", "node_type", "function_name", "class_name"}
+)
+# These are the two semantic searches performed for the Sol remediation.  They
+# are intentionally *not* derived from the AST locator census below: a RAG
+# result is an observed vaultspec-rag result, whereas the locators are
+# deterministic immutable-source evidence.  All non-target rows retain null
+# RAG fields rather than claiming an unperformed semantic search.
+RAG_DISCOVERY_BY_PAIR: Final = {
+    (
+        "src/cadrumo/domain/calculations/registry/_aeat_hosts.py",
+        "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+    ): {
+        "query": {
+            "text": "AEAT remote read host authority canonical hostname only:prod",
+            "type": "code",
+            "domain": "prod",
+            "prefer": "production",
+            "request_id": "eec115fcf1ae4225b7e9209afc205b2b",
+        },
+        "result": {
+            "id": "src/cadrumo/domain/calculations/registry/aeat_hosts.py:1:19-51:a2db203363d2",
+            "path": "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+            "score": 0.941738772392273,
+            "source": "codebase",
+            "line_start": 19,
+            "line_end": 51,
+            "node_type": None,
+            "function_name": None,
+            "class_name": None,
+        },
+    },
+    (
+        "src/cadrumo/domain/calculations/registry/_record_spec.py",
+        "src/cadrumo/domain/calculations/registry/record_spec.py",
+    ): {
+        "query": {
+            "text": "ENCODING_ALIAS_MAP registry schema export value policy only:prod",
+            "type": "code",
+            "domain": "prod",
+            "prefer": "production",
+            "request_id": "f8cff429a3cd4d8fa1dc335774db9e47",
+        },
+        "result": {
+            "id": "src/cadrumo/domain/calculations/registry/schema_exports.py:0:1-41:708338918763",
+            "path": "src/cadrumo/domain/calculations/registry/schema_exports.py",
+            "score": 1.0188962697982789,
+            "source": "codebase",
+            "line_start": 1,
+            "line_end": 41,
+            "node_type": None,
+            "function_name": None,
+            "class_name": None,
+        },
+    },
+}
 EVIDENCE_FILE_SUFFIXES: Final = frozenset(
     {".cfg", ".csv", ".ini", ".json", ".md", ".py", ".rst", ".toml", ".tsv", ".txt", ".xml", ".yaml", ".yml"},
 )
@@ -554,6 +610,11 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
             importers[imported].add(module)
             candidate = _candidate_for_reference(imported, by_new_module)
             if candidate is not None:
+                # A resolved relative ``ImportFrom`` may name neither the old
+                # nor the public module textually (for example,
+                # ``from .. import authority``).  It is nevertheless a direct
+                # consumer in the evidence file's operational category.
+                hits[candidate.old_path][base].add(relative)
                 direct_modules[candidate.old_path].add(module)
         for old_path in _package_attribute_owners(
             tree,
@@ -832,34 +893,53 @@ def _symbol_terminal_destinations(
     }
 
 
-def _rag_result_from_evidence(generated: dict[str, object]) -> dict[str, object]:
-    """Pin each reviewed RAG result to an immutable AST locator."""
-    locators = generated.get("current_symbol_locators")
-    if not isinstance(locators, dict):
-        raise RuntimeError("generated RAG evidence lacks symbol locators")
-    for symbol in sorted(locators):
-        values = locators[symbol]
-        if isinstance(symbol, str) and isinstance(values, list) and values:
-            first = values[0]
-            if isinstance(first, str):
-                path, _, line = first.rpartition(":")
-                if path and line.isdigit():
-                    return {
-                        "path": path,
-                        "line_start": int(line),
-                        "line_end": int(line),
-                        "node_type": "ast_top_level_binding",
-                        "symbol": symbol,
-                    }
-    new_path = generated.get("new_path")
-    if isinstance(new_path, str):
-        return {"path": new_path, "line_start": 1, "line_end": 1, "node_type": "module", "symbol": "<module>"}
-    raise RuntimeError(f"generated RAG evidence has no defining module for {generated.get('old_path')}")
+def _reviewed_rag_discovery(row: dict[str, object]) -> dict[str, dict[str, object]] | None:
+    """Return one manually retained, genuine RAG discovery for a reviewed pair."""
+    pair = (row.get("old_path"), row.get("new_path"))
+    discovery = RAG_DISCOVERY_BY_PAIR.get(pair)
+    if discovery is None:
+        return None
+    return {"query": dict(discovery["query"]), "result": dict(discovery["result"])}
 
 
-def _rag_query(candidate: RelocatedFamily) -> str:
-    """Return the per-row RAG query retained with the audit evidence."""
-    return f"registry public boundary c941 semantic owner {candidate.new_module}"
+def _validate_rag_discovery(row: dict[str, object]) -> None:
+    """Require real search payloads only for the two reviewed semantic queries."""
+    discovery = _reviewed_rag_discovery(row)
+    rag_query = row.get("rag_query")
+    rag_result = row.get("rag_result")
+    if discovery is None:
+        if rag_query is not None or rag_result is not None:
+            raise RuntimeError(f"registry facade row {row.get('old_path')} has an unperformed RAG discovery")
+        return
+    if not isinstance(rag_query, dict) or set(rag_query) != RAG_QUERY_FIELDS:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has malformed RAG query evidence")
+    if not isinstance(rag_result, dict) or set(rag_result) != RAG_RESULT_FIELDS:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has malformed RAG result evidence")
+    if (
+        not isinstance(rag_query["text"], str)
+        or not rag_query["text"]
+        or rag_query["type"] != "code"
+        or rag_query["domain"] != "prod"
+        or rag_query["prefer"] != "production"
+        or not isinstance(rag_query["request_id"], str)
+        or not rag_query["request_id"]
+        or not isinstance(rag_result["id"], str)
+        or not rag_result["id"]
+        or not isinstance(rag_result["path"], str)
+        or not rag_result["path"].startswith("src/")
+        or not isinstance(rag_result["score"], float)
+        or rag_result["source"] != "codebase"
+        or not isinstance(rag_result["line_start"], int)
+        or not isinstance(rag_result["line_end"], int)
+        or rag_result["line_start"] < 1
+        or rag_result["line_end"] < rag_result["line_start"]
+        or rag_result["node_type"] is not None
+        or rag_result["function_name"] is not None
+        or rag_result["class_name"] is not None
+    ):
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has invalid RAG result field values")
+    if rag_query != discovery["query"] or rag_result != discovery["result"]:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} RAG discovery drifted from its review record")
 
 
 def _alternative_owner_evidence(row: dict[str, object], generated: dict[str, object]) -> str:
@@ -867,14 +947,23 @@ def _alternative_owner_evidence(row: dict[str, object], generated: dict[str, obj
     owner = row.get("semantic_owner")
     if not isinstance(owner, str):
         raise RuntimeError("alternative-owner evidence requires a reviewed semantic owner")
-    rag_result = _rag_result_from_evidence(generated)
     semantic = generated.get("semantic_evidence")
     if not isinstance(semantic, dict):
         raise RuntimeError("alternative-owner evidence requires structured semantic evidence")
     competing = semantic.get("competing_site_census")
     competing_count = sum(len(values) for values in competing.values()) if isinstance(competing, dict) else 0
+    discovery = _reviewed_rag_discovery(row)
+    if discovery is not None:
+        query = discovery["query"]
+        result = discovery["result"]
+        return (
+            f"Vaultspec-RAG code query {query['text']!r} (request {query['request_id']}) selected "
+            f"{result['path']}:{result['line_start']}-{result['line_end']} for {owner}; immutable evidence "
+            f"{EVIDENCE_COMMIT} separately records {competing_count} non-owner bindings, none substitutable "
+            "for this c941 pair."
+        )
     return (
-        f"Immutable evidence {EVIDENCE_COMMIT} anchors {owner} at {rag_result['path']}:{rag_result['line_start']}; "
+        f"Immutable evidence {EVIDENCE_COMMIT} anchors {owner}; "
         f"the full competing-site census records {competing_count} non-owner bindings, "
         "none substitutable for this c941 pair."
     )
@@ -925,11 +1014,9 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
             )
         }
         refreshed.update({field: generated[field] for field in derived_fields})
-        candidate = next(
-            candidate for candidate in exact_relocation_candidates() if (candidate.old_path, candidate.new_path) == pair
-        )
-        refreshed["rag_query"] = _rag_query(candidate)
-        refreshed["rag_result"] = _rag_result_from_evidence(generated)
+        discovery = _reviewed_rag_discovery(refreshed)
+        refreshed["rag_query"] = None if discovery is None else discovery["query"]
+        refreshed["rag_result"] = None if discovery is None else discovery["result"]
         refreshed["alternative_owner_evidence"] = _alternative_owner_evidence(refreshed, generated)
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
@@ -1033,7 +1120,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
                 raise RuntimeError(f"registry facade immutable evidence drifted for {pair[0]} ({derived_field})")
         for field in (
             "semantic_owner",
-            "rag_query",
             "alternative_owner_evidence",
             "disposition",
             "terminal_state",
@@ -1043,16 +1129,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
         ):
             if not isinstance(row.get(field), str) or not row[field]:
                 raise RuntimeError(f"registry facade row {pair[0]} lacks reviewed {field}")
-        rag_result = row.get("rag_result")
-        if not isinstance(rag_result, dict) or set(rag_result) != RAG_RESULT_FIELDS:
-            raise RuntimeError(f"registry facade row {pair[0]} lacks one auditable RAG result")
-        if rag_result != _rag_result_from_evidence(generated):
-            raise RuntimeError(f"registry facade row {pair[0]} RAG result is not immutable evidence")
-        candidate = next(
-            candidate for candidate in exact_relocation_candidates() if (candidate.old_path, candidate.new_path) == pair
-        )
-        if row["rag_query"] != _rag_query(candidate):
-            raise RuntimeError(f"registry facade row {pair[0]} RAG query drifted")
+        _validate_rag_discovery(row)
         if row["alternative_owner_evidence"] != _alternative_owner_evidence(row, generated):
             raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence drifted")
         semantic_evidence = row.get("semantic_evidence")
