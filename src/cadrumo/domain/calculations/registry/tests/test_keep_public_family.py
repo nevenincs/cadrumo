@@ -18,6 +18,7 @@ import ast
 import importlib
 import json
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -26,6 +27,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ROOT = Path(__file__).resolve().parents[6]
 _MATRIX = _ROOT / "dev" / "quality" / "registry_facade_family_census.v1.json"
 _PACKAGE = "cadrumo.domain.calculations.registry"
+
+
+def _borrowed_exports(path: Path) -> list[str]:
+    """Return the names a module exports without defining them itself."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    bound: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound.add(node.name)
+        elif isinstance(node, ast.Assign):
+            bound.update(t.id for t in node.targets if isinstance(t, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            bound.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            bound.add(node.name.id)
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Assign)
+            and any(getattr(t, "id", "") == "__all__" for t in node.targets)
+            and isinstance(node.value, ast.List | ast.Tuple)
+        ):
+            return [e.value for e in node.value.elts if isinstance(e, ast.Constant) and e.value not in bound]
+    return []
 
 
 def _rows(disposition: str) -> tuple[dict[str, object], ...]:
@@ -193,3 +217,85 @@ def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str
 
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module(dotted)
+
+
+#: Census rows whose adjudicated terminal state the tree has not reached yet,
+#: each with the reason it is still outstanding. A row that finishes must leave
+#: this table, which the staleness test below enforces.
+_OUTSTANDING_ROWS: Final[dict[str, str]] = {
+    "R10": "delete disposition awaiting an owner ruling; consumers exist and no successor is named",
+    "R27": "delete disposition awaiting an owner ruling; consumers exist and no successor is named",
+    "R32": "privatisation blocked until its five production consumers move to the owning module",
+    "R35": "privatisation blocked behind a large consumer move",
+    "R66": "privatisation blocked behind a consumer move",
+    "R72": "privatisation blocked behind a consumer move",
+}
+
+
+def _terminal_state_owners(row: dict[str, object]) -> tuple[str, ...]:
+    destinations = row.get("terminal_destinations") or []
+    owners = tuple(str(item["path"]) for item in destinations if item.get("role") == "defining_owner")
+    return owners or ((str(row["new_path"]),) if row.get("new_path") else ())
+
+
+def _terminal_state_unreached(row: dict[str, object]) -> str | None:
+    """Return why a row's adjudicated terminal state is not reached, if so."""
+    state = row.get("terminal_state")
+    old = str(row["old_path"]) if row.get("old_path") else None
+    if state in {"public_local_definitions_only", "schema_local_definitions_only"}:
+        for path in _terminal_state_owners(row):
+            target = _ROOT / path
+            if not target.exists():
+                return f"owner missing: {path}"
+            if borrowed := _borrowed_exports(target):
+                return f"{path} exports borrowed names: {borrowed}"
+    elif state == "private_same_package_only":
+        for path in _terminal_state_owners(row):
+            if not (_ROOT / path).exists():
+                return f"owner missing: {path}"
+            if not Path(path).name.startswith("_"):
+                return f"still public: {path}"
+    elif state == "retired_after_hard_move":
+        if old and (_ROOT / old).exists():
+            return f"retired path still present: {old}"
+    elif state == "deleted_no_surface":
+        for path in (old, *_terminal_state_owners(row)):
+            if path and (_ROOT / path).exists():
+                return f"surface still present: {path}"
+    return None
+
+
+def test_the_registry_package_namespace_binds_nothing() -> None:
+    """The package marker is inert; consumers name defining modules directly."""
+    init = _ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry" / "__init__.py"
+    tree = ast.parse(init.read_text(encoding="utf-8"), filename=str(init))
+    bound = {
+        alias.asname or alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import | ast.ImportFrom)
+        for alias in node.names
+    }
+
+    assert bound == set(), f"the registry package namespace binds project symbols: {sorted(bound)}"
+
+
+def test_every_census_row_reaches_its_adjudicated_terminal_state() -> None:
+    """The registry family reaches its fixed point, save the declared remainder."""
+    document = json.loads(_MATRIX.read_text(encoding="utf-8"))
+    rows = document["rows"]
+    assert len(rows) > 50, f"census collapsed to {len(rows)} rows"
+
+    unreached = {str(row["row_id"]): reason for row in rows if (reason := _terminal_state_unreached(row)) is not None}
+    undeclared = {k: v for k, v in unreached.items() if k not in _OUTSTANDING_ROWS}
+
+    assert undeclared == {}, f"census rows regressed from their terminal state: {undeclared}"
+
+
+def test_every_declared_outstanding_row_is_still_outstanding() -> None:
+    """A finished row must leave the table rather than sit here forever."""
+    document = json.loads(_MATRIX.read_text(encoding="utf-8"))
+    unreached = {str(row["row_id"]) for row in document["rows"] if _terminal_state_unreached(row) is not None}
+    settled = sorted(row_id for row_id in _OUTSTANDING_ROWS if row_id not in unreached)
+
+    assert settled == [], f"rows reached their terminal state and must leave the table: {settled}"
+    assert all(_OUTSTANDING_ROWS.values()), "every outstanding row states why it is outstanding"
