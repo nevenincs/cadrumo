@@ -44,11 +44,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import CalculationRevisionId
@@ -61,12 +56,12 @@ from ...domain.buckets import (
 from ...domain.buckets import (
     bucket_event_history_write as _bucket_event_write,
 )
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.justificante import Justificante
+from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -89,12 +84,17 @@ from ...domain.modelos import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository, ObservationSourceKind
+from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
+from ..workflow.active_profile import require_active_profile_bucket_id
 from ._action_errors import ExternalModeloImportError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
+from .calculation_repository import calculation_revision_catalogue_repository
+from .filing_repository import modelo_record_catalogue_repository
+from .justificante_repository import justificante_repository as resolve_justificante_repository
 from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkRevisionConflictError,
@@ -104,6 +104,7 @@ from .work_addressing import (
     resolve_registry_revision_for_work_target,
     select_modelo_work_resolution,
 )
+from .work_unit_repository import work_unit_catalogue_repository
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,7 +151,7 @@ def import_external_filing_source(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepository | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
     observation_repository: CalculationObservationRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
@@ -221,6 +222,7 @@ def import_external_filing_source(
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_source_actor_blank",
         )
+    resolved_justificante_repository = justificante_repository or resolve_justificante_repository(bucket_id=bucket_id)
     _require_bound_justificante_artifact(
         evidence_kind=source.evidence_kind,
         evidence_reference_id=source.evidence_reference_id.strip(),
@@ -228,10 +230,10 @@ def import_external_filing_source(
         filing_year=source.filing_year,
         period=source.period,
         expected_tax_id=source.tax_id,
-        justificante_repository=justificante_repository or JustificanteRepository(),
+        justificante_repository=resolved_justificante_repository,
     )
 
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
+    wu_repo = work_unit_repository or work_unit_catalogue_repository(bucket_id=bucket_id)
     catalogue = wu_repo.load()
     try:
         resolution = _select_active_external_import_work_unit(
@@ -278,7 +280,7 @@ def import_external_filing_source(
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
         bucket_event_repository=bucket_event_repository,
-        justificante_repository=justificante_repository,
+        justificante_repository=resolved_justificante_repository,
         observation_repository=observation_repository,
         expected_tax_id=source.tax_id,
         clock=clock,
@@ -361,7 +363,7 @@ def import_external_filing_evidence[CasillaKey](
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepository | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
     observation_repository: CalculationObservationRepository | None = None,
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
@@ -397,10 +399,9 @@ def import_external_filing_evidence[CasillaKey](
             Stores the receipt metadata checked for receipt-bound evidence
             references.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    wu_repo = work_unit_repository
+    if wu_repo is None:
+        wu_repo = work_unit_catalogue_repository(bucket_id=require_active_profile_bucket_id())
     observation_repo = observation_repository or CalculationObservationRepository()
 
     work_units, work_unit, snapshot, canonical_values, cleaned_reference = _load_external_import_target(
@@ -409,6 +410,9 @@ def import_external_filing_evidence[CasillaKey](
         evidence_reference_id=evidence_reference_id,
         work_unit_repository=wu_repo,
     )
+    cr_repo = calculation_repository or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id)
+    fr_repo = filing_repository or modelo_record_catalogue_repository(bucket_id=work_unit.bucket_id)
+    bv_repo = bucket_event_repository or default_profile_bucket_event_history_repository()
     if work_unit.modelo == Modelo.M303.value:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
@@ -421,7 +425,9 @@ def import_external_filing_evidence[CasillaKey](
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         expected_tax_id=expected_tax_id,
-        justificante_repository=justificante_repository or JustificanteRepository(),
+        justificante_repository=(
+            justificante_repository or resolve_justificante_repository(bucket_id=work_unit.bucket_id)
+        ),
     )
 
     input_values_by_casilla_id = _validated_source_lexicals(
@@ -662,7 +668,7 @@ def _require_bound_justificante_artifact(
     filing_year: int,
     period: Period,
     expected_tax_id: str | None,
-    justificante_repository: JustificanteRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
 ) -> None:
     """Require matching stored :class:`Justificante` metadata.
 

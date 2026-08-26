@@ -38,11 +38,11 @@ from .._calculation_actions import (
     get_calculation_revision,
     mark_revision_verificado_completo,
 )
-from .._external_import_actions import import_external_filing_evidence
 from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
+from ..external_import_actions import import_external_filing_evidence
 from ._import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M111_ACTIVITY_AMOUNT_CASILLA,

@@ -13,11 +13,12 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -64,11 +65,11 @@ from .._export import (
     ModeloExportCommand,
     export_modelo_revision,
 )
-from .._external_import_actions import import_external_filing_evidence
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
+from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

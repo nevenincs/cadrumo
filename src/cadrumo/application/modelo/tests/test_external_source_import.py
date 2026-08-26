@@ -19,15 +19,15 @@ from ...calculations import (
 from ...calculations import (
     filing_external_evidence_blockers as _filing_external_evidence_blockers,
 )
+from .._action_errors import ExternalModeloImportError
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
-from .._external_import_actions import (
+from .._work_lifecycle import create_work_unit
+from ..external_import_actions import (
     ExternalFilingBaselineSource,
+    _validated_source_lexicals,
     import_external_filing_source,
 )
-from .._work_lifecycle import create_work_unit
-from .._action_errors import ExternalModeloImportError
-from .._external_import_actions import _validated_source_lexicals
 from ._import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,

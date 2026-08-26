@@ -18,13 +18,14 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
     IVARegime,
@@ -58,10 +59,10 @@ from .._export import (
     ModeloExportUnsupportedError,
     export_modelo_revision,
 )
-from .._external_import_actions import import_external_filing_evidence
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
+from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

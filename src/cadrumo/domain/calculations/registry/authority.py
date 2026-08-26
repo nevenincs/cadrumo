@@ -8,6 +8,7 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 
 from __future__ import annotations
 
+import os
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
@@ -133,7 +134,14 @@ class _SilentRegistryAuthorityLifecycleObserver:
 
 
 _SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
-_AUTHORITY_PROCESS_NONCE = token_bytes(32)
+_authority_process_pid = os.getpid()
+_authority_process_nonce = token_bytes(32)
+
+
+def _capture_process_binding() -> tuple[int, bytes]:
+    """Capture the guarded process incarnation for an opaque coordinate value."""
+    _guard_authority_process()
+    return _authority_process_pid, _authority_process_nonce
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,11 +151,17 @@ class RegistryAuthorityCapture:
     projection: RegistryAuthorityProjection
     comparison_domain: ContentDigest
     generation: int
+    _process_binding: tuple[int, bytes] = field(default_factory=_capture_process_binding, repr=False, compare=False)
 
     def require_current(self, current: RegistryAuthorityCurrentCoordinate) -> RegistryAuthorityCapture:
         """Refuse a currentness comparison outside this physical process domain."""
+        self._require_creator_process()
         current.require_current(self)
         return self
+
+    def _require_creator_process(self) -> None:
+        if self._process_binding != _capture_process_binding():
+            raise RegistrySnapshotError("registry authority capture belongs to another process incarnation")
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,9 +170,12 @@ class RegistryAuthorityCurrentCoordinate:
 
     comparison_domain: ContentDigest
     generation: int
+    _process_binding: tuple[int, bytes] = field(default_factory=_capture_process_binding, repr=False, compare=False)
 
     def require_current(self, captured: RegistryAuthorityCapture) -> RegistryAuthorityCurrentCoordinate:
         """Require a capture from this exact root pair and process incarnation."""
+        self._require_creator_process()
+        captured._require_creator_process()  # pyright: ignore[reportPrivateUsage]  # paired opaque coordinates own this guard
         if self.comparison_domain != captured.comparison_domain:
             raise RegistrySnapshotError(
                 "registry authority coordinates can compare only within one physical-root process domain"
@@ -166,6 +183,10 @@ class RegistryAuthorityCurrentCoordinate:
         if self.generation != captured.generation:
             raise RegistrySnapshotError("registry authority capture is no longer current")
         return self
+
+    def _require_creator_process(self) -> None:
+        if self._process_binding != _capture_process_binding():
+            raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,8 +415,18 @@ def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fin
     return _FingerprintKey(digest=content_hash_hex(_fingerprint_key_payload(fingerprints)), fingerprints=fingerprints)
 
 
-_AuthorityRootKey = tuple[Path, Path]
+_PhysicalDirectoryIdentity = tuple[int, int]
+_AuthorityRootKey = tuple[_PhysicalDirectoryIdentity, _PhysicalDirectoryIdentity]
 _AuthorityLoadKey = tuple[RegistryIdentity, _FingerprintKey[_SourceEvidenceFingerprints]]
+
+
+@dataclass(frozen=True, slots=True)
+class _AuthorityRootPairIdentity:
+    """Canonical physical identity for one registry and source-root pair."""
+
+    root: Path
+    source_root: Path
+    key: _AuthorityRootKey
 
 
 @dataclass(slots=True)
@@ -450,43 +481,84 @@ class _AuthorityLoadBarrier:
                 self._condition.notify_all()
 
 
-_AUTHORITY_STATE_LOCK = RLock()
-_AUTHORITY_LOAD_BARRIER = _AuthorityLoadBarrier()
-_AUTHORITY_LOAD_STATES: dict[_AuthorityRootKey, _AuthorityLoadState] = {}
+_authority_state_lock = RLock()
+_authority_load_barrier = _AuthorityLoadBarrier()
+_authority_load_states: dict[_AuthorityRootKey, _AuthorityLoadState] = {}
 _authority_generation = 0
 _authority_reset_epoch = 0
 
 
-def _authority_root_key(root: Path, source_root: Path) -> _AuthorityRootKey:
-    """Return the exact owner scope whose projections a load can change."""
-    return root, source_root
+def _canonical_authority_root_pair(root: Path, source_root: Path) -> _AuthorityRootPairIdentity:
+    """Resolve one physical owner pair with the host filesystem's case policy.
+
+    Strict resolution makes nonexistent or broken aliases a refusal.  Symlinks,
+    relative paths, and dot segments collapse before the physical device/inode
+    identity applies the filesystem's native case policy.
+    """
+    try:
+        resolved_root = root.expanduser().resolve(strict=True)
+        resolved_source_root = source_root.expanduser().resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise RegistrySnapshotError("registry authority roots must resolve to existing physical paths") from exc
+    if not resolved_root.is_dir() or not resolved_source_root.is_dir():
+        raise RegistrySnapshotError("registry authority roots must resolve to physical directories")
+    root_stat = resolved_root.stat()
+    source_root_stat = resolved_source_root.stat()
+    return _AuthorityRootPairIdentity(
+        root=resolved_root,
+        source_root=resolved_source_root,
+        key=((root_stat.st_dev, root_stat.st_ino), (source_root_stat.st_dev, source_root_stat.st_ino)),
+    )
 
 
-def _authority_comparison_domain_payload(root: Path, source_root: Path) -> dict[str, str]:
+def _authority_comparison_domain_payload(identity: _AuthorityRootPairIdentity) -> dict[str, object]:
     """Frame one private physical-root/process identity for content hashing."""
     return {
         "schema": "registry-authority-comparison-domain/v1",
-        "registry_root": str(root),
-        "source_root": str(source_root),
-        "process_incarnation": _AUTHORITY_PROCESS_NONCE.hex(),
+        "physical_root_pair": [list(item) for item in identity.key],
+        "process_incarnation": _authority_process_nonce.hex(),
     }
 
 
-def _authority_comparison_domain(root: Path, source_root: Path) -> ContentDigest:
+def _authority_comparison_domain(identity: _AuthorityRootPairIdentity) -> ContentDigest:
     """Return the non-persisted coordinate domain for one resolved root pair."""
-    return content_hash_hex(_authority_comparison_domain_payload(root, source_root))
+    return content_hash_hex(_authority_comparison_domain_payload(identity))
+
+
+def _rebuild_authority_process_state() -> None:
+    """Re-key process-local authority state without touching inherited locks."""
+    global _authority_process_pid, _authority_process_nonce
+    global _authority_state_lock, _authority_load_barrier, _authority_load_states
+    global _authority_generation, _authority_reset_epoch
+    _authority_process_pid = os.getpid()
+    _authority_process_nonce = token_bytes(32)
+    _authority_state_lock = RLock()
+    _authority_load_barrier = _AuthorityLoadBarrier()
+    _authority_load_states = {}
+    _authority_generation = 0
+    _authority_reset_epoch = 0
+
+
+def _guard_authority_process() -> None:
+    """Repair process-local state if a fork bypassed the registered callback."""
+    if os.getpid() != _authority_process_pid:
+        _rebuild_authority_process_state()
+
+
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_rebuild_authority_process_state)
 
 
 def _authority_load_state(root_key: _AuthorityRootKey) -> _AuthorityLoadState:
     """Return the one transition state for an authority owner scope."""
-    with _AUTHORITY_STATE_LOCK:
-        return _AUTHORITY_LOAD_STATES.setdefault(root_key, _AuthorityLoadState())
+    with _authority_state_lock:
+        return _authority_load_states.setdefault(root_key, _AuthorityLoadState())
 
 
 def _begin_authority_transition(state: _AuthorityLoadState, key: _AuthorityLoadKey) -> None:
     """Invalidate a root's prior authority before building the observed state."""
     global _authority_generation
-    with _AUTHORITY_STATE_LOCK:
+    with _authority_state_lock:
         _authority_generation += 1
         state.current_key = key
         state.current_authority = None
@@ -495,30 +567,35 @@ def _begin_authority_transition(state: _AuthorityLoadState, key: _AuthorityLoadK
         state.reset_epoch = _authority_reset_epoch
 
 
-def _publish_authority(state: _AuthorityLoadState, authority: ValidatedRegistryAuthority) -> None:
+def _publish_authority(
+    state: _AuthorityLoadState,
+    authority: ValidatedRegistryAuthority,
+    root_identity: _AuthorityRootPairIdentity,
+) -> None:
     """Publish the one constructed authority for the already-observed state."""
-    with _AUTHORITY_STATE_LOCK:
+    with _authority_state_lock:
         authority._bind_capture_incarnation(  # pyright: ignore[reportPrivateUsage]  # owner-controlled publication binds a new private instance
             state=state,
             generation=state.generation,
             reset_epoch=state.reset_epoch,
+            root_identity=root_identity,
         )
         state.current_authority = authority
 
 
 def _publish_authority_failure(state: _AuthorityLoadState, failure: Exception) -> None:
     """Publish a deterministic refusal for the already-observed state."""
-    with _AUTHORITY_STATE_LOCK:
+    with _authority_state_lock:
         state.current_failure = failure
 
 
 def _invalidate_authority_generations() -> None:
     """Invalidate all authority incarnations as one exclusive reset transition."""
     global _authority_generation, _authority_reset_epoch
-    with _AUTHORITY_STATE_LOCK:
+    with _authority_state_lock:
         _authority_generation += 1
         _authority_reset_epoch += 1
-        _AUTHORITY_LOAD_STATES.clear()
+        _authority_load_states.clear()
 
 
 @dataclass(slots=True)
@@ -541,6 +618,8 @@ class ValidatedRegistryAuthority:
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
     _capture_root_key: _AuthorityRootKey | None = field(default=None, init=False, repr=False)
     _capture_comparison_domain: ContentDigest | None = field(default=None, init=False, repr=False)
+    _capture_process_pid: int = field(default=0, init=False, repr=False)
+    _capture_process_incarnation: bytes = field(default=b"", init=False, repr=False)
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
 
     @classmethod
@@ -552,11 +631,10 @@ class ValidatedRegistryAuthority:
         lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
     ) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
-        resolved_root = root.expanduser().resolve()
-        resolved_source_root = source_root.expanduser().resolve()
+        _guard_authority_process()
+        identity = _canonical_authority_root_pair(root, source_root)
         return _load_authority(
-            resolved_root,
-            resolved_source_root,
+            identity,
             lifecycle_observer=lifecycle_observer,
         )
 
@@ -566,13 +644,16 @@ class ValidatedRegistryAuthority:
         state: _AuthorityLoadState,
         generation: int,
         reset_epoch: int,
+        root_identity: _AuthorityRootPairIdentity,
     ) -> None:
         """Bind this newly constructed object to the owner's current generation."""
         self._capture_state = state
-        self._capture_root_key = _authority_root_key(self.root, self.source_root)
-        self._capture_comparison_domain = _authority_comparison_domain(self.root, self.source_root)
+        self._capture_root_key = root_identity.key
+        self._capture_comparison_domain = _authority_comparison_domain(root_identity)
         self._capture_generation = generation
         self._capture_reset_epoch = reset_epoch
+        self._capture_process_pid = _authority_process_pid
+        self._capture_process_incarnation = _authority_process_nonce
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id.
@@ -804,10 +885,11 @@ class ValidatedRegistryAuthority:
         returned value is deep-copied so a consumer cannot mutate a cached
         registry projection after the capture has completed.
         """
+        self._require_creator_process()
         state = self._capture_state
         if state is None:
             raise RegistrySnapshotError("registry authority has no published capture incarnation")
-        with _AUTHORITY_LOAD_BARRIER.read(), state.lock, self._state_lock:
+        with _authority_load_barrier.read(), state.lock, self._state_lock:
             self._require_current_capture_incarnation()
             projection = (
                 self.inspect_revision(
@@ -836,20 +918,13 @@ class ValidatedRegistryAuthority:
 
     def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
         """Return the typed current coordinate for same-domain capture validation."""
+        self._require_creator_process()
         state = self._capture_state
         if state is None:
             raise RegistrySnapshotError("registry authority has no published capture incarnation")
-        with _AUTHORITY_LOAD_BARRIER.read(), state.lock:
+        with _authority_load_barrier.read(), state.lock:
             self._require_current_capture_incarnation()
             return self._current_coordinate()
-
-    def read_current_generation(self) -> int:
-        """Return this authority's still-current native capture generation.
-
-        A registry-cache reset invalidates the instance rather than letting an
-        old projection claim the next authority incarnation's generation.
-        """
-        return self.read_current_coordinate().generation
 
     def _current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
         comparison_domain = self._capture_comparison_domain
@@ -862,9 +937,10 @@ class ValidatedRegistryAuthority:
 
     def _require_current_capture_incarnation(self) -> None:
         """Refuse capture when reset or an observed identity change made it stale."""
+        self._require_creator_process()
         state = self._capture_state
         root_key = self._capture_root_key
-        with _AUTHORITY_STATE_LOCK:
+        with _authority_state_lock:
             if self._capture_reset_epoch != _authority_reset_epoch:
                 raise RegistrySnapshotError(
                     "registry authority capture was invalidated by cache reset; load a current authority"
@@ -872,7 +948,7 @@ class ValidatedRegistryAuthority:
             if (
                 state is None
                 or root_key is None
-                or _AUTHORITY_LOAD_STATES.get(root_key) is not state
+                or _authority_load_states.get(root_key) is not state
                 or state.current_authority is not self
                 or state.generation != self._capture_generation
                 or state.reset_epoch != self._capture_reset_epoch
@@ -881,6 +957,17 @@ class ValidatedRegistryAuthority:
                     "registry authority capture was invalidated by an observed registry identity transition; "
                     "load a current authority"
                 )
+
+    def _require_creator_process(self) -> None:
+        """Refuse an authority object inherited from another process incarnation."""
+        _guard_authority_process()
+        if (
+            self._capture_process_pid != _authority_process_pid
+            or self._capture_process_incarnation != _authority_process_nonce
+        ):
+            raise RegistrySnapshotError(
+                "registry authority instance belongs to another process incarnation; load a fresh authority"
+            )
 
     def deadline_windows(
         self,
@@ -992,8 +1079,7 @@ def bundled_revision_inspection(
 
 
 def _load_authority(
-    root: Path,
-    source_root: Path,
+    root_identity: _AuthorityRootPairIdentity,
     *,
     lifecycle_observer: RegistryAuthorityLifecycleObserver,
 ) -> ValidatedRegistryAuthority:
@@ -1003,8 +1089,11 @@ def _load_authority(
     share one root-scoped lock.  The reset barrier lets unrelated roots proceed
     in parallel but drains this complete protocol before any cache clear.
     """
-    root_key = _authority_root_key(root, source_root)
-    with _AUTHORITY_LOAD_BARRIER.read():
+    _guard_authority_process()
+    root = root_identity.root
+    source_root = root_identity.source_root
+    root_key = root_identity.key
+    with _authority_load_barrier.read():
         state = _authority_load_state(root_key)
         with state.lock:
             identity = resolve_registry_identity(
@@ -1027,7 +1116,7 @@ def _load_authority(
             except Exception as exc:
                 _publish_authority_failure(state, exc)
                 raise
-            _publish_authority(state, authority)
+            _publish_authority(state, authority, root_identity)
             lifecycle_observer.authority_published(
                 root=root,
                 source_root=source_root,
@@ -1048,13 +1137,14 @@ def reset_registry_caches(
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
+    _guard_authority_process()
     from .loader import (
         _load_registry_tree_cached,  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
     )
     from .loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
-    with _AUTHORITY_LOAD_BARRIER.reset():
+    with _authority_load_barrier.reset():
         lifecycle_observer.registry_cache_reset_acquired()
         _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
@@ -1171,8 +1261,9 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :meth:`ValidatedRegistryAuthority.load`.
     """
-    resolved_root = root.expanduser().resolve()
-    resolved_source_root = source_root.expanduser().resolve()
+    identity_pair = _canonical_authority_root_pair(root, source_root)
+    resolved_root = identity_pair.root
+    resolved_source_root = identity_pair.source_root
     identity = resolve_registry_identity(
         resolved_root,
         collect_fingerprints=collect_registry_identity_fingerprints,

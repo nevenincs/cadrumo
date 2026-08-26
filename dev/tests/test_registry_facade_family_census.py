@@ -2,14 +2,28 @@
 
 from __future__ import annotations
 
+import ast
 import json
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
+import dev.quality.registry_facade_family_census as census
+
 from dev.quality.registry_facade_family_census import (
+    EVIDENCE_COMMIT,
     MATRIX_PATH,
+    RelocatedFamily,
+    _annotation_owners,
+    _base_category,
+    _evidence_census,
+    _evidence_text,
+    _package_attribute_owners,
+    _python_import_context,
+    _transitive_consumer_paths,
     check_matrix_document,
+    current_terminal_state_report,
     exact_relocation_candidates,
     generated_rows,
     mechanical_relocation_pairs,
@@ -26,6 +40,130 @@ def test_c941_registry_relocation_family_is_the_fixed_78_row_set() -> None:
     assert len(candidates) == 78
     assert len({candidate.old_path for candidate in candidates}) == 78
     assert len({candidate.new_path for candidate in candidates}) == 78
+
+
+def test_relative_imports_fixture_precedence_annotations_and_type_aliases_are_resolved() -> None:
+    """The census resolves relative references before categorizing every annotation form."""
+    authority = RelocatedFamily(
+        similarity=100,
+        old_path="src/cadrumo/domain/calculations/registry/_authority.py",
+        new_path="src/cadrumo/domain/calculations/registry/authority.py",
+    )
+    tree = ast.parse(
+        """
+from .. import authority as authority_module
+from typing import TypeAlias
+AuthorityAlias: TypeAlias = authority_module.ValidatedRegistryAuthority
+def consume(value: authority_module.ValidatedRegistryAuthority) -> AuthorityAlias: ...
+"""
+    )
+    imports, aliases, _ = _python_import_context(
+        tree,
+        current_module="cadrumo.domain.calculations.registry.tests.test_consumer",
+        is_package=False,
+    )
+
+    assert "cadrumo.domain.calculations.registry.authority" in imports
+    assert aliases["authority_module"] == "cadrumo.domain.calculations.registry.authority"
+    assert _annotation_owners(tree, aliases=aliases, by_new_module={authority.new_module: authority}) == {
+        authority.old_path
+    }
+    assert _base_category("src/cadrumo/domain/calculations/registry/tests/conftest.py") == "fixture"
+    assert _base_category("src/cadrumo/domain/calculations/registry/tests/fixtures/authority.py") == "fixture"
+
+
+def test_package_attributes_have_one_member_owner_and_transitive_closure_crosses_direct_nodes() -> None:
+    """Facade member and reverse-graph attribution cannot broaden or truncate a row."""
+    package = "cadrumo.domain.calculations.registry"
+    tree = ast.parse("import cadrumo.domain.calculations.registry as registry\nregistry.Authority")
+    owners = _package_attribute_owners(
+        tree,
+        aliases={"registry": package},
+        from_members=(),
+        member_owners={"Authority": "old-authority", "Other": "old-other"},
+    )
+
+    assert owners == {"old-authority"}
+    from_tree = ast.parse("from cadrumo.domain.calculations.registry import Authority")
+    _, from_aliases, from_members = _python_import_context(
+        from_tree,
+        current_module="application.consumer",
+        is_package=False,
+    )
+    assert _package_attribute_owners(
+        from_tree,
+        aliases=from_aliases,
+        from_members=from_members,
+        member_owners={"Authority": "old-authority", "Other": "old-other"},
+    ) == {"old-authority"}
+    bare_tree = ast.parse("import cadrumo.domain.calculations.registry")
+    assert not _package_attribute_owners(
+        bare_tree,
+        aliases={"cadrumo": "cadrumo"},
+        from_members=(),
+        member_owners={"Authority": "old-authority", "Other": "old-other"},
+    )
+    assert _transitive_consumer_paths(
+        "registry.authority",
+        direct_modules={"application.bridge"},
+        importers={"registry.authority": {"application.bridge"}, "application.bridge": {"entrypoint"}},
+        module_paths={"application.bridge": {"src/application/bridge.py"}, "entrypoint": {"src/entrypoint.py"}},
+    ) == {"src/entrypoint.py"}
+
+
+def test_reviewed_rows_record_anchored_structured_semantic_evidence() -> None:
+    """Each row records owner, competing-site, and substitutability evidence."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    rows = document["rows"]
+
+    assert isinstance(rows, list)
+    for row in rows:
+        assert isinstance(row, dict)
+        evidence = row["semantic_evidence"]
+        assert isinstance(evidence, dict)
+        assert evidence["anchors"] == {
+            "evidence_commit": EVIDENCE_COMMIT,
+            "relocation_pair": [row["old_path"], row["new_path"]],
+        }
+        assert isinstance(evidence["owner_definition_locators"], list)
+        assert isinstance(evidence["competing_site_census"], dict)
+        assert evidence["substitutability"]["result"] == "no_substitutable_c941_owner"
+
+
+def test_immutable_measurements_cover_relative_import_and_type_alias_regressions() -> None:
+    """The historical 1,315-edge and 24-TypeAlias classes stay derived, not guessed."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    measurements = document["evidence_measurements"]
+
+    assert measurements == _evidence_census().measurements
+    assert measurements["relative_import_edges"] > 0
+    type_alias = getattr(ast, "TypeAlias", None)
+    exported_aliases = 0
+    for row in document["rows"]:
+        tree = ast.parse(_evidence_text(row["new_path"]))
+        aliases = {
+            node.name.id
+            for node in tree.body
+            if type_alias is not None and isinstance(node, type_alias) and isinstance(getattr(node, "name", None), ast.Name)
+        }
+        exported_aliases += len(aliases & set(row["facade_exported_symbols"]))
+    assert exported_aliases == 24
+
+
+def test_generation_is_immune_to_dirty_worktree_source_reads(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The generator may use Git objects but must never read a live source file."""
+    census._EVIDENCE_FILE_CACHE = None
+    census._EVIDENCE_CENSUS_CACHE = None
+    original_read_text = Path.read_text
+
+    def refuse_source_reads(path: Path, *args: object, **kwargs: object) -> str:
+        if path.suffix in {".py", ".md", ".rst", ".toml"}:
+            raise AssertionError(f"unexpected live source read: {path}")
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", refuse_source_reads)
+
+    assert len(generated_rows()) == 78
 
 
 def test_mechanical_delta_pairs_are_the_checked_matrix_denominator() -> None:
@@ -54,6 +192,23 @@ def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
         assert set(locators) == set(exported_symbols)
 
 
+def test_current_terminal_report_allows_future_removed_or_private_paths() -> None:
+    """Future H/P/D work can retire a candidate without breaking S175 evidence."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    retired = {
+        "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+        "src/cadrumo/domain/calculations/registry/loader.py",
+        "src/cadrumo/domain/calculations/registry/record_spec.py",
+    }
+    report = current_terminal_state_report(document, exists=lambda path: path not in retired)
+    by_step = {row["step_id"]: row for row in report["rows"]}
+
+    assert len(report["open_disposition_step_ids"]) == 78
+    assert by_step["W03.P20.S176"]["status"] == "terminal_candidate_absent_pending_step_proof"
+    assert by_step["W03.P20.S210"]["status"] == "terminal_candidate_absent_pending_step_proof"
+    assert by_step["W03.P20.S230"]["status"] == "terminal_candidate_absent_pending_step_proof"
+
+
 def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
     """The checked-in adjudication remains complete and linked to real plan Steps."""
     check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
@@ -74,7 +229,6 @@ def test_reviewed_refresh_preserves_every_manual_adjudication_field() -> None:
     refreshed = refresh_reviewed_matrix_document(document)
     reviewed_fields = {
         "semantic_owner",
-        "semantic_evidence",
         "disposition",
         "terminal_state",
         "follow_on_step_id",
