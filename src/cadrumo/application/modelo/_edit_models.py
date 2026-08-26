@@ -42,7 +42,6 @@ from ..operations.registry import OperationSchemaIdentityV1
 from ..operator_actions import ActionReference
 from .workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
-    ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceTargetV1,
 )
 
@@ -330,6 +329,30 @@ def _surface_entry_address(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[st
     return ("row_group", entry.binding_id)
 
 
+class ModeloEditSchemaIdentityV1(_EditModel):
+    """The edit contract's own schema identity: a compare-and-swap coordinate, not a display fact.
+
+    Deliberately its own type rather than a reuse of
+    :class:`~.workspace_models.ModeloWorkspaceSchemaIdentityV1` -- the two
+    types share a shape (an id, a fingerprint, and a manifest digest) but not
+    a meaning. ``completeness_manifest_digest`` digests the registry's
+    :class:`~domain.calculations.registry.schema_surfaces.CalculationCompletenessManifest`
+    (the required calculation-closure casilla set: a TAX-SEMANTIC
+    completeness declaration), so a compare-and-swap re-check catches the
+    registry's declared completeness rules changing between admission and
+    commit. The Workspace type's ``field_manifest_digest`` digests a
+    structurally unrelated concept -- the S278 field-CLASSIFICATION manifest,
+    a deterministic walk over the public registry TYPE denominator for
+    display rendering. Reusing one field name for both silently made two
+    genuinely different values compare unequal under one name; see the
+    edit-contract ADR amendment this type was added by.
+    """
+
+    schema_id: _BoundedCode
+    schema_fingerprint: ContentDigest
+    completeness_manifest_digest: ContentDigest
+
+
 class ModeloEditBaselineV1(_EditModel):
     """One admitted, independently re-resolved compare-and-swap edit coordinate.
 
@@ -349,7 +372,7 @@ class ModeloEditBaselineV1(_EditModel):
     calculation_catalogue_revision: ContentDigest
     current_calculation_revision_id: CalculationRevisionId | None
     law_selected_revision_id: RevisionId
-    schema_identity: ModeloWorkspaceSchemaIdentityV1
+    schema_identity: ModeloEditSchemaIdentityV1
     schema_version: Annotated[int, Field(ge=1)]
     permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=_MAX_SURFACE_ENTRIES)]
     permitted_surface_digest: ContentDigest
@@ -827,6 +850,7 @@ __all__ = [
     "ModeloEditRowIntentKind",
     "ModeloEditScalarAddressV1",
     "ModeloEditScalarIntentKind",
+    "ModeloEditSchemaIdentityV1",
     "ModeloEditStaleBaselineRefusalV1",
     "ModeloEditSubmissionV1",
     "ModeloEditUnsupportedIntentReason",

@@ -600,13 +600,13 @@ def resolve_static_inspection_schema_identity(
 
     ``schema_fingerprint`` is a content digest over the inspection's own
     declared identity sets (casilla and binding ids) -- the same shape
-    ``_edit_services.py`` already uses for its own (unrelated,
-    interface-ADR-governed) schema identity, adapted to the flatter
-    STATIC_INSPECTION type. ``field_manifest_digest`` is the S278
-    inspection-rooted field manifest's own digest -- never the
-    ``CalculationCompletenessManifest`` digest that a sibling module (a
-    different, write-path concern) happens to also store under the same
-    field name on this shared type.
+    ``_edit_services.py`` uses for its own, differently-typed
+    ``ModeloEditSchemaIdentityV1`` (interface-ADR-governed), adapted to the
+    flatter STATIC_INSPECTION type. ``field_manifest_digest`` is exclusively
+    the S278 inspection-rooted field manifest's own digest; the edit
+    contract's ``CalculationCompletenessManifest`` digest has its own field
+    (``completeness_manifest_digest``) on its own type and no longer shares
+    this one.
     """
     field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
     field_manifest_capture = field_manifest_port.capture_projection_with_epoch()

@@ -30,6 +30,7 @@ from .._edit_models import (
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditVersionHeader,
@@ -41,7 +42,7 @@ from .._edit_models import (
     ModeloScalarEditIntentV1,
     read_modelo_edit_version_header,
 )
-from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceSchemaIdentityV1
+from ..workspace_models import ModeloWorkspaceCapabilityDisposition
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -107,8 +108,8 @@ def _baseline(*, mutation_family: ModeloEditMutationFamily = ModeloEditMutationF
         calculation_catalogue_revision=_DIGEST,
         current_calculation_revision_id=None,
         law_selected_revision_id=_REVISION_ID,
-        schema_identity=ModeloWorkspaceSchemaIdentityV1(
-            schema_id="modelo-130-schema", schema_fingerprint=_DIGEST, field_manifest_digest=_DIGEST
+        schema_identity=ModeloEditSchemaIdentityV1(
+            schema_id="modelo-130-schema", schema_fingerprint=_DIGEST, completeness_manifest_digest=_DIGEST
         ),
         schema_version=1,
         permitted_surface=(_scalar_surface_entry(), _row_surface_entry()),

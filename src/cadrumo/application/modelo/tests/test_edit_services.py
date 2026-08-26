@@ -35,6 +35,7 @@ from .._edit_models import (
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
@@ -43,6 +44,7 @@ from .._edit_models import (
     ModeloScalarEditIntentV1,
 )
 from .._edit_services import (
+    _completeness_manifest_digest,
     _writable_row_group_entries,
     admit_modelo_edit,
     modelo_edit_request_schema_identity,
@@ -205,6 +207,49 @@ def test_writable_row_group_entries_surfaces_none_of_the_real_manual_input_bindi
     assert manual_input_bindings, "the fixture must still exercise a real manual_input population"
     entries = _writable_row_group_entries(snapshot.revision)
     assert entries == ()
+
+
+def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest() -> None:
+    """The edit contract's completeness digest and the S278 field-manifest digest are independent.
+
+    Both real producers run over the SAME registry revision. Proves three
+    things at once: the two digests are genuinely different values (not a
+    tautological self-comparison), they now live under distinct field names
+    on distinct types (``ModeloEditSchemaIdentityV1.completeness_manifest_digest``
+    versus ``ModeloWorkspaceSchemaIdentityV1.field_manifest_digest``), and
+    mutating ONLY the registry's completeness manifest moves the completeness
+    digest while leaving the S278 field-manifest digest -- computed from the
+    unrelated public registry TYPE denominator -- untouched.
+    """
+    from ..workspace_manifest import generate_modelo_workspace_field_manifest
+    from ..workspace_models import ModeloWorkspaceSchemaIdentityV1
+
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+    revision = snapshot.revision
+
+    completeness_digest = _completeness_manifest_digest(revision.completeness_manifest)
+    field_manifest_digest = generate_modelo_workspace_field_manifest(snapshot).manifest_digest
+    assert completeness_digest != field_manifest_digest
+
+    edit_identity = ModeloEditSchemaIdentityV1(
+        schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, completeness_manifest_digest=completeness_digest
+    )
+    workspace_identity = ModeloWorkspaceSchemaIdentityV1(
+        schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, field_manifest_digest=field_manifest_digest
+    )
+    assert not hasattr(edit_identity, "field_manifest_digest")
+    assert not hasattr(workspace_identity, "completeness_manifest_digest")
+
+    assert revision.completeness_manifest is not None, "modelo 131 must declare a real completeness manifest"
+    mutated_manifest = revision.completeness_manifest.model_copy(
+        update={"manual_extraction": True, "manual_extraction_reason": "cross-producer independence test"}
+    )
+    mutated_completeness_digest = _completeness_manifest_digest(mutated_manifest)
+    mutated_revision = revision.model_copy(update={"completeness_manifest": mutated_manifest})
+    mutated_snapshot = snapshot.model_copy(update={"revision": mutated_revision})
+
+    assert mutated_completeness_digest != completeness_digest
+    assert generate_modelo_workspace_field_manifest(mutated_snapshot).manifest_digest == field_manifest_digest
 
 
 def test_parse_accepts_dot_and_comma_decimal_for_the_same_money_casilla() -> None:

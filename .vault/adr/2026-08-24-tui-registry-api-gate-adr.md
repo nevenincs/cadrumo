@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ed47e1e9e3e955d6203981703502a316ba27df24287c77a0e9d23c0d80ae193'
+body_hash: 'sha256:a1dc16a4b5aa2b698946afbebce57ef894282ed752380fcc7d995018cdb96811'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -308,6 +308,44 @@ If a future registry revision introduces a genuine casilla-scoped
 applicability edge, that is a new registry field to add and re-ground this
 amendment against -- never a Workspace-side inference from the
 revision-scoped rule.
+
+**Amendment (S283): a STATIC_INSPECTION casilla row is bounded to identity
+alone; `legal_refs` and `constraints` are `None` for it, never `()`.**
+`RegistryRevisionInspection`'s own docstring states it retains "the source,
+casilla, binding, projection, and legal IDENTIFIERS to validate generated
+static artefacts" and "cannot calculate, render, or file anything" --
+identifiers, not definitions, is a deliberate boundary, not an oversight.
+Enrolling `CasillaDefinition` (or its `constraints`/`legal_refs` slices) onto
+the inspection would contradict that stated design: `CasillaConstraints`
+carries `min_value`, `max_value`, `enum` (`schema_surfaces.py:121-126`) --
+declared regulatory values, exactly the filing-adjacent content the boundary
+exists to exclude. A CASILLA row for STATIC_INSPECTION therefore carries no
+`CasillaDefinition`-sourced fields at all.
+
+The harder part is representing that absence honestly.
+`ModeloWorkspaceSchemaRecordV1.legal_refs` and `.constraints` are now typed
+`... | None`, defaulting to `()` for every existing (graded) caller: `None`
+means this admission's producer never carries the underlying data for this
+reference kind; `()` means it does, and none is declared. Collapsing both
+into a bare empty tuple would have been a silent under-declaration in a
+field whose whole purpose is legal grounding -- the same failure class as
+inferring a capability disposition, and the same rule applies: absence must
+be representable and distinguishable from a declared nothing. A STATIC_INSPECTION
+casilla row's `legal_refs` and `constraints` are always `None`.
+
+FORMULA, BINDING, RELATION and PARAMETER rows are unaffected by this
+boundary: `FormulaDefinition`, `DataBindingDefinition` and
+`RelationDefinition` each declare `legal_refs` directly, so those row kinds
+carry real tuples (possibly empty by genuine declaration) under
+STATIC_INSPECTION exactly as they would under a graded snapshot. Only the
+CASILLA row's `CasillaDefinition`-sourced fields are affected.
+
+Left open, deliberately out of this amendment's scope because the governing
+Step did not name it: `source_refs` has the identical shape of problem for a
+casilla row (`CasillaDefinition.source_refs` is equally absent from the
+inspection) but stays a plain empty-tuple-defaulting field for now. A future
+Step should decide whether `source_refs` gets the same `None` treatment
+rather than this amendment silently deciding it by omission.
 
 ### Generated field-classification denominator
 
@@ -869,3 +907,19 @@ choice supported by `2026-08-24-tui-registry-api-gate-research` and
   once its external interface decision and read receipts pass. Later cohorts
   cannot cite this ADR as mutation, operation, secret-custody, or editor
   authority.
+
+## Amendment 2026-08-26: `field_manifest_digest` is exclusively the S278 field-classification digest
+
+`ModeloWorkspaceSchemaIdentityV1.field_manifest_digest` names ONE concept: the
+S278 field-classification manifest digest this record's static-inspection and
+graded-snapshot generators produce (`ModeloWorkspaceFieldManifestPortV1`,
+`resolve_static_inspection_schema_identity`) — a deterministic walk over the
+public registry TYPE denominator for display rendering. It is never a
+digest of `CalculationCompletenessManifest` (the registry's required
+calculation-closure casilla set, a tax-semantic concept this ADR does not
+own) or any other manifest a future consumer might be tempted to store under
+the same field name because the shape happens to fit. `2026-08-24-modelo-edit-contract-adr`
+is amended in the same change: its baseline's schema identity is now its own
+type, `ModeloEditSchemaIdentityV1`, carrying `completeness_manifest_digest`
+rather than reusing this field. The Workspace producer's own construction-site
+docstring had already flagged the exact collision this amendment closes.

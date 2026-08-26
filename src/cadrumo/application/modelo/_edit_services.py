@@ -59,6 +59,7 @@ from ._edit_models import (
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
@@ -72,7 +73,6 @@ from .work_addressing import (
     resolve_modelo_work_address_unit,
     work_address_for_modelo_target,
 )
-from .workspace_models import ModeloWorkspaceSchemaIdentityV1
 
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
 _RESPONSIBLE_OWNER = "modelo.edit"
@@ -153,7 +153,7 @@ def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSur
     ))
 
 
-def _field_manifest_digest(manifest: CalculationCompletenessManifest | None) -> str:
+def _completeness_manifest_digest(manifest: CalculationCompletenessManifest | None) -> str:
     if manifest is None:
         return content_hash_hex({"completeness_manifest": None})
     return content_hash_hex(manifest.model_dump(mode="json"))
@@ -258,12 +258,12 @@ def admit_modelo_edit(
     permitted_surface_digest = content_hash_hex(
         [entry.model_dump(mode="json") for entry in permitted_surface]
     )
-    schema_identity = ModeloWorkspaceSchemaIdentityV1(
+    schema_identity = ModeloEditSchemaIdentityV1(
         schema_id=f"modelo-{work_unit.modelo}-{revision.id}".lower(),
         schema_fingerprint=content_hash_hex(
             {"casillas": [c.id for c in revision.casillas], "bindings": [b.id for b in revision.bindings]}
         ),
-        field_manifest_digest=_field_manifest_digest(revision.completeness_manifest),
+        completeness_manifest_digest=_completeness_manifest_digest(revision.completeness_manifest),
     )
     issued_at = datetime.now(UTC)
     coordinate_seed = {

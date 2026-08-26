@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:79458efdf43d4be6a8dc5d91997fbfe49dbb517490ffe56151deb9a651dd35d8'
+body_hash: 'sha256:f1096d13cdafd952658fdc66c99f1c10c811461cbf1c83246d0e1afb1d3e3433'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -408,3 +408,46 @@ motivating binding-source axis and current reachability are corrected. No
 frontend cohort may present row editing as available until a real
 permitted-surface entry for `ModeloDetailRow` (or another genuinely
 row-shaped registry axis) exists and is admitted.
+
+## Amendment 2026-08-26: the baseline's schema identity is its own type
+
+**What this corrects.** D2's `ModeloEditBaselineV1.schema_identity` field
+reused `ModeloWorkspaceSchemaIdentityV1` (defined for
+`2026-08-24-tui-registry-api-gate-adr`'s STATIC_INSPECTION and Workspace
+projections) rather than declaring its own type. The two producers filled the
+shared `field_manifest_digest` field with two structurally and semantically
+unrelated digests: this contract's producer (`_edit_services.py`) digested the
+registry's `CalculationCompletenessManifest` — the required calculation-closure
+casilla set, a TAX-SEMANTIC completeness declaration — while the Workspace
+producer (`workspace.py::resolve_static_inspection_schema_identity`) digests
+the S278 field-CLASSIFICATION manifest, a deterministic walk over the public
+registry TYPE denominator for display rendering. One field name, one shared
+record type, two meanings that silently compare unequal for the same
+revision. (The Workspace producer's own docstring already flagged the
+collision — "never the `CalculationCompletenessManifest` digest that a
+sibling module happens to also store under the same field name" — without
+the contract being corrected to stop doing so.)
+
+**The decision: rename, not converge.** These are legitimately different
+digests answering different questions (does the registry's declared
+completeness set for this revision still match what the baseline was admitted
+against, versus does the type-level field-classification manifest the
+Workspace read side renders from still match) and neither should be repointed
+at the other's source — a completeness-set change and a field-classification
+change are independent events, and collapsing them would make the edit
+baseline's compare-and-swap re-check insensitive to the axis it actually
+needs (registry completeness) or spuriously sensitive to one it does not
+(display-field classification). `ModeloEditBaselineV1.schema_identity` is now
+typed `ModeloEditSchemaIdentityV1` (`_edit_models.py`): `schema_id`,
+`schema_fingerprint`, and `completeness_manifest_digest` — a distinct field
+name, never `field_manifest_digest`. `ModeloWorkspaceSchemaIdentityV1` and its
+`field_manifest_digest` field are unchanged and remain exclusively the S278
+field-classification digest; `2026-08-24-tui-registry-api-gate-adr` is
+amended alongside this record to state that explicitly.
+
+**Proof.** A cross-producer test
+(`test_edit_models.py::test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest`)
+constructs both types from data that changes one axis while holding the other
+fixed and asserts the two digests move independently, so a future re-merge of
+the two fields under one name would fail it rather than silently reintroducing
+this defect.
