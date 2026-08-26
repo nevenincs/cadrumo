@@ -26,7 +26,6 @@ from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportTransport,
 )
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
-from cadrumo.domain.calculations.registry.ids import RevisionId
 
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
@@ -39,7 +38,7 @@ from ...application.config_reset import (
     ConfigResetTargetPhase,
 )
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
-from ...core import HEX_PATTERN_64, Period
+from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
@@ -121,7 +120,7 @@ class ProfileIssuePayload(OutputSchema):
 
     The payload mirrors
     :class:`ProfileValidationIssue` as plain JSON
-    so ``profile show`` and ``profile validate`` expose the same readiness
+    so ``profile view`` and ``profile validate`` expose the same readiness
     diagnostics without importing domain records into the CLI layer.
     """
 
@@ -132,7 +131,7 @@ class ProfileIssuePayload(OutputSchema):
 
 
 class ProfileFactPayload(OutputSchema):
-    """One schema-backed fact key/value pair in ``config profile show``.
+    """One schema-backed fact key/value pair in ``config profile view``.
 
     Values are the operator-display projection of profile facts, not the
     encrypted :class:`UserProfileRecord` itself.
@@ -439,8 +438,8 @@ class ConfigLogoutResult(OutputSchema):
     already_logged_out: bool
 
 
-class ConfigProfileShowResult(OutputSchema):
-    """JSON envelope for ``aeat config profile show``.
+class ConfigProfileViewResult(OutputSchema):
+    """JSON envelope for ``aeat config profile view``.
 
     Covers the missing-record branch, the unreadable-record branch, and
     the success path. Optional fields accommodate each branch. Successful rows
@@ -487,7 +486,7 @@ class ConfigProfileValidateResult(OutputSchema):
 
     Report-only surface: same
     :class:`ProfileValidationService` outcome
-    that ``aeat config profile show`` exposes inline, but as the primary
+    that ``aeat config profile view`` exposes inline, but as the primary
     payload with no fact dump so the operator can audit a profile's schema
     conformance independent of its data view. Exit code is ``0`` when no
     blocking issues exist and ``2`` when any error-severity issue surfaces.
@@ -499,53 +498,6 @@ class ConfigProfileValidateResult(OutputSchema):
     valid: bool
     schema_version: int = Field(ge=1)
     issues: list[ProfileIssuePayload]
-
-
-class ProfilePreflightMissingPayload(OutputSchema):
-    """One missing-required-field row inside the profile preflight result.
-
-    Nested in
-    :class:`ConfigProfilePreflightResult`
-    and mirrors :class:`ProfilePreflightRequirement`
-    so the CLI can name the missing selector, schema section, field key,
-    human label, consuming modelos, and legal grounding for a concrete
-    modelo/revision/period context.
-    """
-
-    selector: str
-    section_key: str
-    field_key: str
-    label: str
-    legal_refs: list[str]
-    modelos: list[str]
-
-
-class ConfigProfilePreflightResult(OutputSchema):
-    """JSON envelope for ``aeat config profile preflight``.
-
-    Reports which profile fields a given ``(modelo, revision_id, filing_year,
-    period)`` filing context requires that the active profile does not yet
-    carry. ``ready=true`` when no required field is missing; exit code is
-    ``0`` when ready and ``2`` when missing fields surface so operators
-    discover the gap via the shell exit status. The application authority is
-    :class:`ProfilePreflightReport`.
-    """
-
-    profile_id: ProfileId
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: Period
-    ready: bool
-    per_operation_requirements_assessed: bool
-    missing: list[ProfilePreflightMissingPayload]
-
-    @model_validator(mode="after")
-    def _period_matches_filing_year(self) -> ConfigProfilePreflightResult:
-        """Reuse the canonical ``ProfilePreflightReport`` coordinate invariant."""
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("filing_year must match period.filing_year")
-        return self
 
 
 class ConfigStatusResult(OutputSchema):
@@ -1373,8 +1325,8 @@ class AuthDiagnosticsListResult(OutputSchema):
     rows: list[AuthDiagnosticSummary] = []
 
 
-class AuthDiagnosticsShowResult(OutputSchema, AuthDiagnosticDetail):
-    """JSON envelope for ``aeat config auth diagnostics show``.
+class AuthDiagnosticsViewResult(OutputSchema, AuthDiagnosticDetail):
+    """JSON envelope for ``aeat config auth diagnostics view``.
 
     Reuses :class:`AuthDiagnosticDetail`'s own field set and validation
     directly (multiple inheritance merges the strict/frozen configs of

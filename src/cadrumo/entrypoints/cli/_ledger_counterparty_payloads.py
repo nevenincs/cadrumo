@@ -90,8 +90,8 @@ class CounterpartyWithdrawResult(OutputSchema):
     withdrawn: bool
 
 
-class CounterpartyShowResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger counterparty show``.
+class CounterpartyViewResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger counterparty view``.
 
     The operator's read of their own answer, and a first-class verb rather than
     test scaffolding: an answer that cannot be inspected cannot be audited or

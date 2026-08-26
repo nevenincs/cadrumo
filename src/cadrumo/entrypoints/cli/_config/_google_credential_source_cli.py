@@ -70,7 +70,7 @@ from ....core import GoogleCredentialSourceKind
 from .._common import emit_envelope
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
-    GoogleCredentialSourceShowResult,
+    GoogleCredentialSourceViewResult,
 )
 from ._google_errors import _google_refusal
 
@@ -192,7 +192,7 @@ def google_credential_source_set(
     emit_envelope(ctx, command="config.google.credential_source.set", result=typed, lines=tuple(lines))
 
 
-def google_credential_source_show(
+def google_credential_source_view(
     ctx: typer.Context,
 ) -> None:
     """Report the active profile's persisted Google credential-source selection.
@@ -212,7 +212,7 @@ def google_credential_source_show(
     resolved = selection if selection is not None else GoogleCredentialSourceSelection()
     impersonation = resolved.impersonation
 
-    typed = GoogleCredentialSourceShowResult(
+    typed = GoogleCredentialSourceViewResult(
         profile=active,
         configured=configured,
         kind=resolved.kind,
@@ -238,4 +238,4 @@ def google_credential_source_show(
     emit_envelope(ctx, command="config.google.credential_source.show", result=typed, lines=tuple(lines))
 
 
-__all__ = ["google_credential_source_set", "google_credential_source_show"]
+__all__ = ["google_credential_source_set", "google_credential_source_view"]

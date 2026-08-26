@@ -145,5 +145,5 @@ def test_the_family_exposes_exactly_list_view_and_latest() -> None:
 
     names = {spec.token for spec in LIVE_COMMAND_SPECS if spec.parent_key == "app_live_deudas" and spec.kind == "leaf"}
     assert names == {"list", "view", "latest"}
-    assert "show" not in names
+    assert "view" not in names
     assert "pull" not in names

@@ -78,7 +78,7 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
         )
         pointer_path(storage_root).write_text("schema_version = 1\n", encoding="utf-8")
         clear_output_language_cache()
-        result = _run_cli("config", "profile", "show", storage_root=storage_root, tmp_path=tmp_path)
+        result = _run_cli("config", "profile", "view", storage_root=storage_root, tmp_path=tmp_path)
         clear_output_language_cache()
 
     output = result.stdout + result.stderr
@@ -96,7 +96,7 @@ def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(t
     pointer_file = pointer_path(storage_root)
     pointer_file.write_text("schema_version = 1\n", encoding="utf-8")
 
-    result = _run_cli("--format", "json", "config", "profile", "show", storage_root=storage_root, tmp_path=tmp_path)
+    result = _run_cli("--format", "json", "config", "profile", "view", storage_root=storage_root, tmp_path=tmp_path)
 
     assert result.returncode == 4, result.stderr
     error = json.loads(result.stderr)["error"]

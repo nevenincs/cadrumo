@@ -135,11 +135,11 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_counterparty_show",
+        key="app_ledger_counterparty_view",
         parent_key="app_ledger_counterparty",
-        token="show",
+        token="view",
         kind="leaf",
-        help_key=TranslationKey("cli.app.ledger.counterparty.show_help"),
+        help_key=TranslationKey("cli.app.ledger.counterparty.view_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
@@ -188,12 +188,12 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_cli", "counterparty_show")
+            DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_cli", "counterparty_view")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_payloads", "CounterpartyShowResult"),
-            identity="ledger.counterparty.show",
+            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_payloads", "CounterpartyViewResult"),
+            identity="ledger.counterparty.view",
         ),
     ),
     CommandSpec(

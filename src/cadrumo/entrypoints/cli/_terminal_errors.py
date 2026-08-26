@@ -288,7 +288,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
                 type(rich_error).__name__,
                 rich_error,
             )
-    show = getattr(exc, "show", None)
+    show = getattr(exc, "view", None)
     if callable(show):
         show()
     else:
@@ -300,7 +300,7 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
 
     Not every parse failure happens before a command is known, and the spine
     was reporting as if it did. ``aeat frobnicate`` genuinely resolves nothing
-    and null is the honest answer there; ``aeat config profile preflight
+    and null is the honest answer there; ``aeat config profile validate
     --bogus`` resolved the command and then rejected an option, and click
     carries that resolution on the exception's own context. Reading it names
     the failing command on the error spine exactly as its success envelope

@@ -101,7 +101,7 @@ class M036DeclarationShowResult(OutputSchema):
 
 
 class ModeloReconciliationHistoryRowPayload(OutputSchema):
-    """One past reconciliation row surfaced by ``modelo reconcile history``.
+    """One past reconciliation row surfaced by ``modelo reconcile list``.
 
     Projects the typed
     :class:`ModeloReconciliationHistoryEntry`
@@ -124,14 +124,14 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
 
 
 class ModeloReconciliationHistoryResult(OutputSchema):
-    """Listing returned by ``aeat app modelo reconcile history``.
+    """Listing returned by ``aeat app modelo reconcile list``.
 
     Enumerates the active bucket's recorded reconciliations (optionally narrowed
     to one :obj:`WorkUnitId`). An empty ``reconciliations`` list is the clean "no
     reconciliations recorded yet" signal, not an error.
     """
 
-    operation: str = "modelo.reconcile.history"
+    operation: str = "modelo.reconcile.list"
     bucket_id: BucketId
     work_unit_id: WorkUnitId | None = None
     reconciliation_count: int = Field(ge=0)

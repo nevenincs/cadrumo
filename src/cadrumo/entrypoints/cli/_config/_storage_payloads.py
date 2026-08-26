@@ -47,8 +47,8 @@ class ConfigStorageListResult(OutputSchema):
     areas: list[StorageAreaPayload] = []
 
 
-class ConfigStorageShowResult(OutputSchema):
-    """JSON envelope for ``aeat config storage show AREA``."""
+class ConfigStorageViewResult(OutputSchema):
+    """JSON envelope for ``aeat config storage view AREA``."""
 
     storage_root: str = Field(min_length=1)
     area: StorageAreaPayload
@@ -110,7 +110,7 @@ __all__ = [
     "ConfigStorageInitResult",
     "ConfigStorageListResult",
     "ConfigStorageReclaimResult",
-    "ConfigStorageShowResult",
+    "ConfigStorageViewResult",
     "StorageAreaIssuePayload",
     "StorageAreaPayload",
 ]

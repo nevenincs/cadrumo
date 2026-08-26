@@ -60,7 +60,7 @@ def _json_output(result: Result) -> str:
 
 
 def _profile_facts(profile_name: str) -> dict[str, str]:
-    show_result = _invoke(("--format", "json", "config", "profile", "show", profile_name))
+    show_result = _invoke(("--format", "json", "config", "profile", "view", profile_name))
     assert show_result.exit_code == 0, show_result.output
     payload = json.loads(_json_output(show_result))
     return {row["path"]: row["value"] for row in payload["result"]["facts"]}
@@ -70,7 +70,7 @@ def test_registration_writes_profile_output_language() -> None:
     """The output-language preference declared at registration is stored and read back.
 
     Both surfaces are asserted, because they read through different paths:
-    the ``profile show`` projection and the encrypted profile record the
+    the ``profile view`` projection and the encrypted profile record the
     workflow state resolves.
 
     The wizard-create bucket-event assertions this test also carried

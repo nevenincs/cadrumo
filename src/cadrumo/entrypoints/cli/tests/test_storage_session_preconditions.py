@@ -18,7 +18,7 @@ from ....adapters.persistence.storage.master_key import NoActiveBucketSessionErr
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
-from .. import _errors
+from .. import errors
 from .._common import cli_policy_refusal_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -166,7 +166,7 @@ def test_s70_cli_boundary_delegates_all_verdict_construction_to_application_auth
 
 
 def _project(error: Exception):
-    projected = _errors.project_cli_boundary_error(error, lambda: None)
+    projected = errors.project_cli_boundary_error(error, lambda: None)
     projection = cli_policy_refusal_projection(projected)
     assert projection is not None
     return projection.precondition_action

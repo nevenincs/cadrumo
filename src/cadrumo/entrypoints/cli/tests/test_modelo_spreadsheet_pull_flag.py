@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _parameter():
-    pull = next(spec for spec in MODELO_SPREADSHEET_COMMAND_SPECS if spec.key == "config_modelo_spreadsheet_cli_pull")
+    pull = next(spec for spec in MODELO_SPREADSHEET_COMMAND_SPECS if spec.key == "app_modelo_spreadsheet_pull")
     return next(parameter for parameter in pull.parameters if parameter.name == "assemble_observations")
 
 

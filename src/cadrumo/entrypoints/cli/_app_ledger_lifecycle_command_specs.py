@@ -582,7 +582,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 hidden=False,
             ),
         ),
-        policy=_POLICY_9,
+        policy=_POLICY_4,
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_stash")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

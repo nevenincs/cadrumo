@@ -179,8 +179,8 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     assert " 	alpha" in listing.output
     assert "*	beta" in listing.output
 
-    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "show"))
-    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "show"))
+    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "view"))
+    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "view"))
     assert alpha_show.exit_code == 0, alpha_show.output
     assert beta_show.exit_code == 0, beta_show.output
 
@@ -315,12 +315,12 @@ def test_config_login_emits_profile_activated_event() -> None:
     assert matching[-1].payload["active_profile"] == pointer.bucket_id
 
 
-def test_config_profile_show_emits_active_profile_facts() -> None:
+def test_config_profile_view_emits_active_profile_facts() -> None:
     # Registered and logged in rather than seeded: `seed` opens a session that
     # closes with its context, so the verb runs with no active profile.
     register_cli_profile(label="operator", facts={"identity.tax_id": "00000000T"})
     assert _login("operator").exit_code == 0
-    result = _invoke_profile(("show",))
+    result = _invoke_profile(("view",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
@@ -331,13 +331,13 @@ def test_config_profile_show_emits_active_profile_facts() -> None:
     assert "00000000T" not in result.output
 
 
-def test_config_profile_show_named_profile_includes_canonical_facts() -> None:
+def test_config_profile_view_named_profile_includes_canonical_facts() -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(label="operator", facts={"identity.tax_id": "00000001R"})
     assert _login("operator").exit_code == 0
     seed("spouse", tax_id="00000000T")
-    result = _invoke_profile(("show", "spouse"))
+    result = _invoke_profile(("view", "spouse"))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tspouse" in result.output
@@ -405,7 +405,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     assert resolve_active_bucket_id() is None
 
 
-def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> None:
+def test_config_profile_view_reports_a_tombstoned_profile_as_tombstoned() -> None:
     """``show`` of a tombstoned profile renders ``record_validity tombstoned``.
 
     Closes the self-contradiction where ``show`` reported
@@ -416,14 +416,14 @@ def test_config_profile_show_reports_a_tombstoned_profile_as_tombstoned() -> Non
     # refused, so a login here would block the verb under test.
     register_cli_profile(label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
-    result = _invoke_profile(("show", "operator"))
+    result = _invoke_profile(("view", "operator"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
     assert "record_validity\ttombstoned" in result.output
     assert "record_validity\tvalid" not in result.output
 
 
-def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
+def test_config_profile_view_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
     """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
 
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
@@ -436,8 +436,8 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
     tombstoned_uuid = pointer.bucket_id
 
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
-    by_label = _invoke_profile(("show", "operator"))
-    by_uuid = _invoke_profile(("show", tombstoned_uuid))
+    by_label = _invoke_profile(("view", "operator"))
+    by_uuid = _invoke_profile(("view", tombstoned_uuid))
 
     for result in (by_label, by_uuid):
         assert result.exit_code == 0, result.output
@@ -446,12 +446,12 @@ def test_config_profile_show_inspects_a_tombstoned_profile_by_label_and_uuid() -
         assert "Unknown profile" not in result.output
 
 
-def test_config_profile_show_runs_validation_inline() -> None:
+def test_config_profile_view_runs_validation_inline() -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(label="operator")
     assert _login("operator").exit_code == 0
-    result = _invoke_profile(("show",))
+    result = _invoke_profile(("view",))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
@@ -488,7 +488,7 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
         },
     )
 
-    show_result = _invoke_profile(("show", "maria"))
+    show_result = _invoke_profile(("view", "maria"))
     status_result = _invoke_profile(("status",))
 
     assert show_result.exit_code == 0, show_result.output
@@ -510,7 +510,7 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
+def test_config_profile_view_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
     from ....core.bucket_pointer import BucketPointer, write_pointer
@@ -518,7 +518,7 @@ def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: P
 
     write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
     with override_settings(cadrumo_active_profile=None):
-        result = _invoke_profile(("show",))
+        result = _invoke_profile(("view",))
     assert result.exit_code != 0
 
 

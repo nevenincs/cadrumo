@@ -116,7 +116,7 @@ def _resolve_login_target_or_refuse(raw: str):
     `_profile_session_gate.normalize_ambient_profile`, and the root
     `--profile` override. This preflight is a FOURTH resolution site, introduced
     after that fix, and it did not carry the conversion, so the escape returned
-    on `config profile show <label>` and `config profile validate <label>`.
+    on `config profile view <label>` and `config profile validate <label>`.
     """
     from ...application.profile_preconditions import (
         ProfileSelectionFailure,

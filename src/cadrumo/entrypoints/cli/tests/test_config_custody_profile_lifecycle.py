@@ -358,7 +358,7 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
 
     shown = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
         extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
         stdin_payload=json.dumps({"profile_passphrase": passphrase}),
     )
@@ -490,7 +490,7 @@ def test_blank_explicit_profile_target_refuses_before_root_secret_read(tmp_path:
     _register_profile(tmp_path, "ambient")
     result = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", ""),
+        ("--profile-secrets-stdin", "config", "profile", "view", ""),
         stdin_payload="must-remain-unread",
     )
 
@@ -530,7 +530,7 @@ def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> Non
 
     refused = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
         stdin_payload="must-remain-unread",
     )
     output = _combined_output(refused)
@@ -632,7 +632,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 
     # The registration door returns the minted identity, so the ids are known
     # without reading the retired plaintext bucket manifest.
-    # ``profile show`` does not render the manifest label across a process
+    # ``profile view`` does not render the manifest label across a process
     # boundary, so selection is observed through a per-profile FACT instead.
     # Alpha and Beta carry distinct ``identity.name`` values for exactly that
     # purpose, and the assertion is the same claim: which profile resolved.
@@ -657,21 +657,21 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             stdin_payload=profile_secret_payload,
         )
 
-    pointer_default = _run_authenticated(("config", "profile", "show"))
+    pointer_default = _run_authenticated(("config", "profile", "view"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
     assert "identity.name\tBeta Operator" in pointer_default.stdout
 
     # A set environment variable cannot displace the pointer: the pointer
     # still selects beta even while the shell names alpha.
     env_inert = _run_authenticated(
-        ("config", "profile", "show"),
+        ("config", "profile", "view"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert env_inert.returncode == 0, _combined_output(env_inert)
     assert "identity.name\tBeta Operator" in env_inert.stdout
 
     # The flag is the selection channel that does win over the pointer.
-    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "show"))
+    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "view"))
     assert flag_default.returncode == 0, _combined_output(flag_default)
     assert "identity.name\tAlpha Operator" in flag_default.stdout
 
@@ -680,7 +680,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     # directly proves which selector won: beta, not the alpha requested by the
     # flag and environment. A precedence regression would render alpha.
     explicit_name = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "show", "beta"),
+        ("--profile", "alpha", "config", "profile", "view", "beta"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     resolved_explicit_name = _combined_output(explicit_name)
@@ -690,7 +690,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
 
     explicit_root = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "show"),
+        ("--profile", "alpha", "config", "profile", "view"),
         extra_env={
             "CADRUMO_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
         },
@@ -699,7 +699,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert "identity.name\tAlpha Operator" in explicit_root.stdout
 
     explicit_root_by_id = _run_authenticated(
-        ("--profile", alpha_id, "config", "profile", "show"),
+        ("--profile", alpha_id, "config", "profile", "view"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)

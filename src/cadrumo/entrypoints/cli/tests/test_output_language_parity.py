@@ -2,7 +2,7 @@
 
 contract closes the parity gap identified in personas R7-C, Ines D3+D6, and
 Joan R7-002: ``auth logout``, ``auth reset``, ``auth providers``, ``auth configure``,
-``config profile show``, ``modelo work calculate``, ``modelo work verify``,
+``config profile view``, ``modelo work calculate``, ``modelo work verify``,
 and ``modelo work file`` must each accept ``--output-language`` so the
 operator can request a specific output language on any user-facing verb.
 
@@ -47,7 +47,7 @@ _AUTH_COMMANDS = (
     ("config", "auth", "test"),
 )
 _CONFIG_PROFILE_COMMANDS = (
-    ("config", "profile", "show"),
+    ("config", "profile", "view"),
     ("config", "profile", "validate"),
     ("config", "profile", "list"),
     ("config", "profile", "delete"),
@@ -77,7 +77,7 @@ _REVIEW_COMMANDS = (
 )
 _SUB_NOUN_GROUP_COMMANDS = (
     ("config", "auth", "diagnostics", "list"),
-    ("config", "auth", "diagnostics", "show"),
+    ("config", "auth", "diagnostics", "view"),
     ("config", "auth", "diagnostics", "report"),
     ("config", "auth", "apoderado", "scopes", "list"),
     ("config", "auth", "apoderado", "status"),

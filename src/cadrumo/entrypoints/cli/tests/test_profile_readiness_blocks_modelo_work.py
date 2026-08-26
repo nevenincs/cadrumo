@@ -1,4 +1,4 @@
-"""CLI coverage for config profile preflight scope wording."""
+"""CLI coverage for profile-readiness blocking ahead of modelo work."""
 
 from __future__ import annotations
 
@@ -38,48 +38,6 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
     )
 
 
-def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
-    register_cli_profile(
-        label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Daniel",
-            "identity.surnames": "Ruiz Martin",
-            "activities.description": "software consulting",
-            "censo.activity_start_date": "2025-01-01",
-            "tax_residence.ccaa": "madrid",
-            "renta_filing.declaration_type": "1",
-            "irpf.estimation_regime": "directa_simplificada",
-            "renta_taxpayer.sex": "H",
-            "renta_taxpayer.marital_status": "1",
-            "renta_family.situacion_familiar": "soltero",
-            "renta_taxpayer.birth_date": "1980-01-01",
-        },
-    )
-
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "preflight",
-            "--modelo", "100",
-            "--filing-year", "2025",
-            "--period", "0A",
-            "--revision-id", "2025",
-        ],
-    )  # fmt: skip
-
-    assert result.exit_code == 0, result.output
-    lines = result.output.splitlines()
-    assert "profile_readiness\tready\tmissing=0" in result.output
-    assert "readiness\tready\tmissing=0" not in lines
-    assert "readiness_scope\tprofile_fields_only" in result.output
-    assert (
-        "full_modelo_readiness_command\t"
-        "aeat app modelo readiness --modelo 100 --revision-id 2025 --year 2025 --period 0A"
-    ) in result.output
-
-
 @pytest.mark.parametrize(
     ("profile_name", "modelo", "filing_year", "period"),
     (
@@ -111,19 +69,6 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
     assert "modelo_work_profile_baseline_missing\tactivities.description" in validate.output
     assert "readiness\tready" not in validate.output
 
-    preflight = invoke_cached_cli(
-        [
-            "config", "profile", "preflight",
-            "--modelo", modelo,
-            "--filing-year", filing_year,
-            "--period", period,
-        ],
-    )  # fmt: skip
-    assert preflight.exit_code == 2, preflight.output
-    assert "profile_readiness\tmissing\tmissing=1" in preflight.output
-    assert "missing\tactivities\tdescription\tactivities.description" in preflight.output
-    assert "profile_readiness\tready" not in preflight.output
-
     readiness = invoke_cached_cli(
         [
             "app", "modelo", "readiness",
@@ -133,7 +78,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
             "--period", period,
         ],
     )  # fmt: skip
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     assert "ready\tFalse" in readiness.output
     assert "profile_ready\tFalse" in readiness.output
     assert "activities.description\tactivities.description" in readiness.output
@@ -150,23 +95,6 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
     assert "Activity description" in work_create.output
     assert "work_unit_id" not in work_create.output
 
-    preflight_json = invoke_cached_cli(
-        [
-            "--format", "json",
-            "config", "profile", "preflight",
-            "--modelo", modelo,
-            "--filing-year", filing_year,
-            "--period", period,
-        ],
-    )  # fmt: skip
-    assert preflight_json.exit_code == 2, preflight_json.output
-    preflight_payload = _payload(preflight_json.output)
-    (missing_row,) = preflight_payload["missing"]
-    assert missing_row["selector"] and missing_row["label"]
-    assert missing_row["label"] != missing_row["selector"]
-    assert isinstance(missing_row["legal_refs"], list)
-    assert isinstance(missing_row["modelos"], list)
-
     readiness_json = invoke_cached_cli(
         [
             "--format", "json",
@@ -177,11 +105,13 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
             "--period", period,
         ],
     )  # fmt: skip
-    assert readiness_json.exit_code == 0, readiness_json.output
+    assert readiness_json.exit_code == 2, readiness_json.output
     readiness_payload = _payload(readiness_json.output)
     (readiness_missing_row,) = readiness_payload["missing"]
-    assert readiness_missing_row["label"] == missing_row["label"]
-    assert readiness_missing_row["legal_refs"] == missing_row["legal_refs"]
+    assert readiness_missing_row["selector"] and readiness_missing_row["label"]
+    assert readiness_missing_row["label"] != readiness_missing_row["selector"]
+    assert isinstance(readiness_missing_row["legal_refs"], list)
+    assert isinstance(readiness_missing_row["modelos"], list)
 
 
 def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_refuse() -> None:
@@ -219,7 +149,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
     assert status_payload["configured"] is True
     assert status_payload["activity_present"] is False
 
-    shown = invoke_cached_cli(["config", "profile", "show"])
+    shown = invoke_cached_cli(["config", "profile", "view"])
     assert shown.exit_code == 0, shown.output
     assert "capital_inmobiliario,pension" in shown.output
     assert "activities.description" not in shown.output
@@ -243,7 +173,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "--modelo", "100", "--revision-id", "2025", "--year", "2025", "--period", "0A",
         ],
     )  # fmt: skip
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     assert "profile_ready\tTrue" in readiness.output
 
     renta = invoke_cached_cli(

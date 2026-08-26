@@ -13,7 +13,7 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Literal
 
-from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 type CommandNodeKind = Literal["root", "group", "leaf"]
 type ParameterKind = Literal["argument", "option"]

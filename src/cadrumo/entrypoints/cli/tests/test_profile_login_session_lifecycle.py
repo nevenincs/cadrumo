@@ -171,7 +171,7 @@ class TestSessionLifecycle:
         assert record.is_file() is persisted, f"session_persisted={persisted} disagrees with on-disk record at {record}"
 
         # 3. The follow-on process must behave the way that claim implies.
-        follow_on = _run(storage_root, ("config", "profile", "show"))
+        follow_on = _run(storage_root, ("config", "profile", "view"))
         if persisted:
             # Resumed silently: no prompt, no re-authentication.
             assert follow_on.returncode == 0, _output(follow_on)

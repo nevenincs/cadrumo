@@ -243,14 +243,14 @@ def test_review_list_filters_narrow_the_queue(seeded_queue: None) -> None:
     assert unmatched["rows"] == []
 
 
-def test_review_show_carries_value_origin_anchor_grounding_and_candidates(seeded_queue: None) -> None:
+def test_review_view_carries_value_origin_anchor_grounding_and_candidates(seeded_queue: None) -> None:
     """Every axis the review gate requires reaches the operator, per field.
 
     A surface showing only values would make an exactly-parsed structured figure
     and an ambiguous text-layer reading look identical at exactly the moment a
     person decides whether to accept them.
     """
-    body = _json_result(["app", "ledger", "evidence", "review", "show", _BLOCKED_REFERENCE])
+    body = _json_result(["app", "ledger", "evidence", "review", "view", _BLOCKED_REFERENCE])
 
     fields = {row["field"]: row for row in _objects(body, "fields")}
     identity = fields["supplier_tax_id"]
@@ -277,22 +277,22 @@ def test_review_show_carries_value_origin_anchor_grounding_and_candidates(seeded
     assert all(len(str(blocker["blocker_id"])) == 16 for blocker in _objects(body, "blockers"))
 
 
-def test_review_show_of_a_clean_draft_reports_no_blockers(seeded_queue: None) -> None:
+def test_review_view_of_a_clean_draft_reports_no_blockers(seeded_queue: None) -> None:
     """Positive control: the surface does not manufacture a blocker for every draft."""
-    body = _json_result(["app", "ledger", "evidence", "review", "show", _CLEAN_REFERENCE])
+    body = _json_result(["app", "ledger", "evidence", "review", "view", _CLEAN_REFERENCE])
 
     assert body["blockers"] == []
     assert body["discrepancies"] == []
 
 
-def test_review_show_of_an_unknown_reference_refuses(seeded_queue: None) -> None:
+def test_review_view_of_an_unknown_reference_refuses(seeded_queue: None) -> None:
     """A reference with no pending draft refuses rather than showing an empty document."""
-    result = _invoke(["app", "ledger", "evidence", "review", "show", "ev-does-not-exist"])
+    result = _invoke(["app", "ledger", "evidence", "review", "view", "ev-does-not-exist"])
 
     assert result.exit_code != 0, result.output
 
 
-def test_review_show_tells_a_refused_anchor_from_one_never_offered(grounded_queue: None) -> None:
+def test_review_view_tells_a_refused_anchor_from_one_never_offered(grounded_queue: None) -> None:
     """The distinction the envelope records must survive to the row that shows it.
 
     Both fields reach this surface with a blank ``anchor``, because the grounding
@@ -306,7 +306,7 @@ def test_review_show_tells_a_refused_anchor_from_one_never_offered(grounded_queu
     while the row builder still dropped the field, which is exactly the gap this
     campaign keeps falling into.
     """
-    body = _json_result(["app", "ledger", "evidence", "review", "show", _GROUNDED_REFERENCE])
+    body = _json_result(["app", "ledger", "evidence", "review", "view", _GROUNDED_REFERENCE])
 
     fields = {row["field"]: row for row in _objects(body, "fields")}
     # Positive control: the surface really emitted both rows, so neither

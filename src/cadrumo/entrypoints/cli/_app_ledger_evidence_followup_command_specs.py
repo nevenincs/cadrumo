@@ -190,11 +190,11 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_review_show",
+        key="app_ledger_evidence_review_view",
         parent_key="app_ledger_evidence_review",
-        token="show",
+        token="view",
         kind="leaf",
-        help_key=TranslationKey("cli.app.ledger.evidence.review.show_help"),
+        help_key=TranslationKey("cli.app.ledger.evidence.review.view_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
@@ -211,12 +211,12 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_review_cli", "review_show")
+            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_review_cli", "review_view")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceReviewShowResult"),
-            identity="ledger.evidence.review.show",
+            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceReviewViewResult"),
+            identity="ledger.evidence.review.view",
         ),
     ),
 )

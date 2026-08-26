@@ -549,7 +549,7 @@ def test_reconcile_commands_advertise_natural_target_options() -> None:
 
     for args in (
         ["app", "modelo", "reconcile", "pull", "--help"],
-        ["app", "modelo", "reconcile", "file", "--help"],
+        ["app", "modelo", "reconcile", "import", "--help"],
     ):
         result = _invoke(args)
         assert result.exit_code == 0, result.output

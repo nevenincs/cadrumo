@@ -48,7 +48,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _show() -> dict[str, Any]:
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "capabilities", "show"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "capabilities", "view"])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.output)["result"]["capabilities"]
     return {row["capability"]: row for row in rows}

@@ -24,8 +24,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...application.modelo.m145_communication_period import M145CommunicationPeriod
-
 import typer
 
 from ...adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
@@ -36,6 +34,7 @@ from ...application.modelo._m145_communication_records import (
     mark_m145_communication_record_locally_completed,
     validate_m145_communication_record,
 )
+from ...application.modelo.m145_communication_period import M145CommunicationPeriod
 from ._common import active_bucket_id_or_refuse
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import parse_casilla_override, resolve_default_actor
