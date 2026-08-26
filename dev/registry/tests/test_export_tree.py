@@ -1276,22 +1276,37 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(m130_inspection_snap
     assert not target.exists()
 
 
-def test_note_annotated_numeric_enumeration_defers_its_conditional_domain_to_the_typed_owner() -> None:
-    """A source note can add a period-specific wire token beyond the printed pair.
+def test_note_governed_numeric_enumeration_retains_the_period_specific_closed_domain() -> None:
+    """The official Nota 8/9 form adds ``0`` without opening the enum.
 
-    The annotation is the mutation: without it the two printed values remain a
-    closed enum; with it, the generator preserves only the source-stated integer
-    shape.  The canonical owner then chooses the period-specific token rather
-    than an incomplete row-local enumeration refusing a real official value.
+    The annotation is the mutation: without the paired notes the two printed
+    values remain the complete closed enum; with the pair, ``0`` is a required
+    period-reserved wire token in addition to the printed Yes/No values.
     """
-    annotated = _joined(
-        _synthetic_static_inspection(),
-        numeric_content='"0001" SI, "0002" NO. Nota 8',
-    ).records[1].fields[1]
-    unannotated = _joined(
-        _synthetic_static_inspection(),
-        numeric_content='"0001" SI, "0002" NO',
-    ).records[1].fields[1]
+    annotated = (
+        _joined(
+            _synthetic_static_inspection(),
+            numeric_content='"0001" SI, "0002" NO. Nota 8. Nota 9',
+        )
+        .records[1]
+        .fields[1]
+    )
+    unannotated = (
+        _joined(
+            _synthetic_static_inspection(),
+            numeric_content='"0001" SI, "0002" NO',
+        )
+        .records[1]
+        .fields[1]
+    )
+    incomplete_note_pair = (
+        _joined(
+            _synthetic_static_inspection(),
+            numeric_content='"0001" SI, "0002" NO. Nota 8',
+        )
+        .records[1]
+        .fields[1]
+    )
 
     annotated_derivation = _export_tree._numeric_derivation(
         annotated,
@@ -1301,12 +1316,17 @@ def test_note_annotated_numeric_enumeration_defers_its_conditional_domain_to_the
         unannotated,
         export_record_id="generated-record-type-2",
     )
+    incomplete_note_pair_derivation = _export_tree._numeric_derivation(
+        incomplete_note_pair,
+        export_record_id="generated-record-type-2",
+    )
 
-    assert annotated_derivation.field.value_policy is None
-    assert annotated_derivation.field.allowed_values is None
-    assert annotated_derivation.derivation_code == "numeric-integer-v1"
+    assert annotated_derivation.field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS
+    assert annotated_derivation.field.allowed_values == ("0", "1", "2")
+    assert annotated_derivation.derivation_code == "numeric-enumeration-v1"
     assert unannotated_derivation.field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS
     assert unannotated_derivation.field.allowed_values == ("1", "2")
+    assert incomplete_note_pair_derivation.field.allowed_values == ("1", "2")
 
 
 def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
