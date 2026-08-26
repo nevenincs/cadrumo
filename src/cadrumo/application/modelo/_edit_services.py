@@ -24,8 +24,10 @@ from ...core.decimal import (
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
+from ...domain.calculations.registry.schema import (
+    CalculationCompletenessManifest,
+    ModeloRevision,
+)
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationRevisionCatalogue, WorkUnit, WorkUnitCatalogue

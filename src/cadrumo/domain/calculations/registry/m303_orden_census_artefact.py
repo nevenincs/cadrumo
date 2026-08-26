@@ -40,7 +40,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_base import RegistryModel
+from cadrumo.domain.calculations.registry.schema import RegistryModel
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from ....core.external_constants import UTF_8_ENCODING

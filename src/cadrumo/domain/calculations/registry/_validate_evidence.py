@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema_base import SourceCitation
+from cadrumo.domain.calculations.registry.schema import SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ....core import (

@@ -22,15 +22,16 @@ those once that is resolved -- do not infer the missing semantics.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage, RegistrySchemaFamilyDisposition, content_hash_hex
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
 from ...domain.calculations.registry.schema import FormulaDefinition
-from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import ModeloCode
+from ...domain.modelos import CalculationRevision, ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
@@ -41,11 +42,11 @@ from .work_addressing import (
 )
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,
+    ModeloWorkspaceBindingReferenceV1,
+    ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
-    ModeloWorkspaceBindingReferenceV1,
-    ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCasillaReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCursorV1,
@@ -53,7 +54,6 @@ from .workspace_models import (
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceFacetName,
     ModeloWorkspaceFamilyDispositionV1,
-    ModeloWorkspaceFormulaReferenceV1,
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
     ModeloWorkspaceFormulaCasillaOperandReferenceV1,
     ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
@@ -61,27 +61,33 @@ from .workspace_models import (
     ModeloWorkspaceFormulaLiteralOperandReferenceV1,
     ModeloWorkspaceFormulaOperandReferenceV1,
     ModeloWorkspaceFormulaParameterOperandReferenceV1,
+    ModeloWorkspaceFormulaReferenceV1,
     ModeloWorkspaceFormulaRelationOperandReferenceV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
+    ModeloWorkspaceMaterializationRecordV1,
     ModeloWorkspaceParameterReferenceV1,
+    ModeloWorkspaceProjectionV1,
     ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
-    ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceRepeatedRowMaterializationRecordV1,
+    ModeloWorkspaceRepeatedRowMaterializationV1,
     ModeloWorkspaceResolvedTargetV1,
-    ModeloWorkspaceSchemaClassification,
-    ModeloWorkspaceSchemaIdentityV1,
-    ModeloWorkspaceStaticInspectionResultV1,
-    ModeloWorkspaceStaticInspectionScopeV1,
-    ModeloWorkspaceTechnicalLabelV1,
-    ModeloWorkspaceSchemaRecordV1,
-    ModeloWorkspaceWorkReviewFacetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
+    ModeloWorkspaceScalarMaterializationRecordV1,
+    ModeloWorkspaceScalarMaterializationV1,
+    ModeloWorkspaceSchemaClassification,
+    ModeloWorkspaceSchemaIdentityV1,
+    ModeloWorkspaceSchemaRecordV1,
+    ModeloWorkspaceStaticInspectionResultV1,
+    ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTargetV1,
+    ModeloWorkspaceTechnicalLabelV1,
+    ModeloWorkspaceWorkReviewFacetV1,
 )
 from .workspace_producers import (
     MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
@@ -498,33 +504,34 @@ def static_inspection_modelo_workspace_capabilities(
 
 
 __all__ = [
+    "STATIC_INSPECTION_WORK_REVIEW_FACET",
     "ModeloWorkspaceRevisionAxes",
+    "ModeloWorkspaceStaleCursorError",
     "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
     "capture_modelo_workspace_target_captures",
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
+    "graded_snapshot_materialization_facet",
     "modelo_work_selector_request_for_target",
+    "paginate_static_inspection_schema_facet",
     "relation_source_endpoints_for_casilla",
     "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
-    "STATIC_INSPECTION_WORK_REVIEW_FACET",
     "resolve_static_inspection_baseline",
+    "resolve_static_inspection_result",
     "resolve_static_inspection_schema_identity",
+    "static_inspection_binding_schema_records",
+    "static_inspection_casilla_schema_records",
     "static_inspection_contributors",
     "static_inspection_evidence_horizon",
-    "static_inspection_modelo_workspace_capabilities",
-    "ModeloWorkspaceStaleCursorError",
-    "paginate_static_inspection_schema_facet",
-    "static_inspection_casilla_schema_records",
-    "static_inspection_binding_schema_records",
-    "static_inspection_formula_schema_records",
-    "static_inspection_relation_schema_records",
-    "static_inspection_parameter_schema_records",
-    "static_inspection_schema_records",
     "static_inspection_family_dispositions",
-    "resolve_static_inspection_result",
+    "static_inspection_formula_schema_records",
+    "static_inspection_modelo_workspace_capabilities",
+    "static_inspection_parameter_schema_records",
+    "static_inspection_relation_schema_records",
+    "static_inspection_schema_records",
 ]
 
 
@@ -560,7 +567,9 @@ def formula_expression_operand_references(
             references.extend(formula_expression_operand_references(formula_id, arg))
         return tuple(references)
     if expression.casilla_id is not None:
-        return (ModeloWorkspaceFormulaCasillaOperandReferenceV1(formula_id=formula_id, casilla_id=expression.casilla_id),)
+        return (
+            ModeloWorkspaceFormulaCasillaOperandReferenceV1(formula_id=formula_id, casilla_id=expression.casilla_id),
+        )
     if expression.binding is not None:
         return (ModeloWorkspaceFormulaBindingOperandReferenceV1(formula_id=formula_id, binding_id=expression.binding),)
     if expression.date_binding is not None:
@@ -575,7 +584,9 @@ def formula_expression_operand_references(
             ModeloWorkspaceFormulaParameterOperandReferenceV1(formula_id=formula_id, parameter_id=expression.parameter),
         )
     if expression.relation is not None:
-        return (ModeloWorkspaceFormulaRelationOperandReferenceV1(formula_id=formula_id, relation_id=expression.relation),)
+        return (
+            ModeloWorkspaceFormulaRelationOperandReferenceV1(formula_id=formula_id, relation_id=expression.relation),
+        )
     if expression.literal is not None:
         return (ModeloWorkspaceFormulaLiteralOperandReferenceV1(formula_id=formula_id),)
     if expression.dispatch_table is not None:
@@ -1167,3 +1178,50 @@ def resolve_static_inspection_result(
         capabilities=capabilities,
     )
     return ModeloWorkspaceStaticInspectionResultV1(projection=projection)
+
+
+def graded_snapshot_materialization_facet(
+    calculation_revision: CalculationRevision,
+) -> tuple[ModeloWorkspaceMaterializationRecordV1, ...]:
+    """Project one calculation revision's scalar and repeated-row values, unmodified.
+
+    Scalar values come straight from ``casilla_values``. Repeated-row values
+    come from ``row_casilla_values`` (keyed ``(casilla_id, row_index)``),
+    grouped by the ``source_binding_id`` each row's own
+    ``row_casilla_provenance`` entry names -- the registry-declared identity
+    of WHICH binding produced that repeated row, never re-derived or
+    guessed. A row value with no provenance entry cannot be attributed to a
+    binding and is refused rather than silently grouped under a fabricated
+    identity.
+    """
+    scalar_records = tuple(
+        ModeloWorkspaceScalarMaterializationRecordV1(
+            scalar=ModeloWorkspaceScalarMaterializationV1(casilla_id=casilla_id, value=value)
+        )
+        for casilla_id, value in sorted(calculation_revision.casilla_values.items())
+    )
+
+    grouped: dict[tuple[str, int], list[tuple[str, Decimal]]] = {}
+    for (casilla_id, row_index), value in calculation_revision.row_casilla_values.items():
+        provenance = calculation_revision.row_casilla_provenance.get((casilla_id, row_index))
+        if provenance is None:
+            raise ValueError(
+                f"calculation revision row casilla value {(casilla_id, row_index)!r} has no "
+                "row_casilla_provenance entry naming its source binding"
+            )
+        grouped.setdefault((provenance.source_binding_id, row_index), []).append((casilla_id, value))
+
+    repeated_records = tuple(
+        ModeloWorkspaceRepeatedRowMaterializationRecordV1(
+            repeated_row=ModeloWorkspaceRepeatedRowMaterializationV1(
+                binding_id=binding_id,
+                row_index=row_index,
+                values=tuple(
+                    ModeloWorkspaceScalarMaterializationV1(casilla_id=casilla_id, value=value)
+                    for casilla_id, value in sorted(items)
+                ),
+            )
+        )
+        for (binding_id, row_index), items in sorted(grouped.items())
+    )
+    return scalar_records + repeated_records

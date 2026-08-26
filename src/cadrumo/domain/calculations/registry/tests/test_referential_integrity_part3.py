@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
 )
 
 from .....core import BindingSourceKind, CasillaId, validated_casilla_id
-from ..schema_base import SourceCitation
+from ..schema import SourceCitation
 from ..schema_input_kind import InputKind
 from ..validate import RegistryValidator
 

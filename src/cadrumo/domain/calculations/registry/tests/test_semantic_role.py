@@ -23,9 +23,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.loader import load_modelo_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import CasillaAlias, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
