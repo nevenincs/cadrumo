@@ -5,13 +5,13 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea529ce07ce4ad987d5db12cc50a4c544b439a9248e8daf16f64527c67703d48'
+body_hash: 'sha256:39dff0b0a422991fcb45790b322f6ee36243b2407dd68455659ef81b6b6f86a6'
 related:
   - "[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]"
   - "[[2026-07-09-m184-socio-attribution-handoff-adr]]"
 ---
 
-# `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `proposed`)
+# `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -108,15 +108,30 @@ bound check already uses.
 **The clave-A reducción field is explicitly BLOCKED, not merely flagged.** Its governing
 provision is unresolved: the diseño cites LIRPF art. 24.2, which does not exist as such
 (art. 24 is an unrelated related-party rule) — see the research document's citation
-cross-check. Art. 26.2 is a candidate by cross-reference match, but was identified from a
-single consolidated bundled file rather than a per-article authoritative source, and
-adopting the nearest plausible article is exactly what the grounding rule forbids for a
-value whose specific binding provision is not correctly identified. **The clave-A
-reducción field on `Modelo184MemberRow` MUST NOT be implemented, and no export or
-resolver wiring may target it, until a dedicated follow-up research pass identifies and
-verifies its governing provision.** Every other clave-conditional field in this ADR's
-scope has a verified citation and may proceed; this one field alone is gated on that
-separate research pass.
+cross-check. Art. 26.2 is a strongly-founded candidate, not a loose neighbour: it governs
+the 30% reduction for "rendimientos previstos en el apartado 4 del artículo 25", and the
+socio record's own subclave table DEFINES subclave 02 as exactly that same statutory
+income — art. 25 apartado 4 — under clave A (capital mobiliario). The article and the
+subclave name the same provision. Even so, it was identified from a single consolidated
+bundled file rather than a per-article authoritative source, and the diseño's own
+citation to art. 24.2 remains unexplained (possibly a stale reference under an earlier
+LIRPF article numbering, which the follow-up pass should also check). A strongly-founded
+candidate is still an unconfirmed one, and a value whose binding provision is not
+confirmed must not ship. **The clave-A reducción field on `Modelo184MemberRow` MUST NOT
+be implemented, and no export or resolver wiring may target it, until a dedicated
+follow-up research pass confirms its governing provision (or explains the diseño's own
+24.2 citation as a stale renumbering).** Every other clave-conditional field in this
+ADR's scope has a verified citation and may proceed; this one field alone is gated on
+that separate research pass.
+
+**A lookalike-table hazard, worth recording for its own sake.** The entidad record (a
+different record on the same layout) declares its OWN clave-A subclave table at a
+different byte range, with a genuinely different enumeration that DOES include a
+"03 = Reducciones aplicables" value. The two tables use the same clave letter and
+overlapping subclave digits for a related legal concept, reported at two different
+levels (entity aggregate vs. per-socio detail) through two different mechanisms. Reading
+the wrong one of the two is an easy, plausible mistake — verify which record's own field
+text governs before citing a subclave value, never by clave letter alone.
 
 `provisiones-gastos-dificil-justificacion` is NOT collected as row input. It is computed
 from the entity's own régimen fact (read from the sibling tipo-2 entidad record) and the
