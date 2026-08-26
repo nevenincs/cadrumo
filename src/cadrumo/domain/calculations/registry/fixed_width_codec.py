@@ -13,6 +13,7 @@ from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
 from ....core.errors import CadrumoError
 from ....core.money import round_to_cents
+from .errors import RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyValue,
@@ -21,7 +22,6 @@ from .export_value_policy import (
     project_export_value,
     validate_export_wire_value,
 )
-from .errors import RegistryValidationError
 
 
 class ExportPadding(StrEnum):
@@ -152,6 +152,7 @@ class FixedWidthRecordRenderError(CadrumoError):
         export_record_id: str,
         **facts: object,
     ) -> None:
+        """Initialise the structured refusal with its registry coordinates."""
         context: dict[str, object] = {
             "reason": reason,
             "export_record_id": export_record_id,
@@ -203,6 +204,14 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         return " " * field.length
     if kind == "literal":
         value = field.literal
+        # ``""`` is a declared literal payload, not a missing producer value.
+        # It occurs in official fixed-width designs for an intentionally blank
+        # slot.  Preserve that semantic distinction before generic absence
+        # handling: a required casilla or header with no value must still
+        # refuse, whereas this source-owned literal occupies its full slot
+        # under the declaration's padding rule.
+        if value == "":
+            return _pad(field, value)
     if _is_absent_slot(field, value) and not policy_defines_absent_slot(field.value_policy):
         # Absence is settled BEFORE projection for every policy that does not
         # claim the empty slot. Every projector refuses ``None`` -- correctly, an

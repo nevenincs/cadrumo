@@ -337,6 +337,41 @@ def test_absent_required_numeric_is_refused_by_both_active_renderers() -> None:
         _adapter_bytes(record, values)
 
 
+def test_empty_declared_literal_fills_its_required_slot_but_absent_required_input_refuses() -> None:
+    """A registry-owned blank literal is content; a missing required casilla is not.
+
+    The first field carries an explicit ``literal = \"\"`` payload, so both
+    active consumers must write its two width-correct blank bytes.  The second
+    field has no producer value at all; accepting it would turn a missing
+    mandatory taxpayer value into a plausible record.
+    """
+    declared_blank = _record(
+        _field(
+            "declared-blank",
+            offset=1,
+            length=2,
+            literal="",
+            required=True,
+        ),
+    )
+    absent_required = _record(
+        _field(
+            "absent-required",
+            offset=1,
+            length=2,
+            casilla_id="01",
+            required=True,
+        ),
+    )
+
+    assert _application_bytes(declared_blank, {}) == b"  "
+    assert _adapter_bytes(declared_blank, {}) == b"  "
+    with pytest.raises(FilingExportValidationError):
+        _application_bytes(absent_required, {})
+    with pytest.raises(ModeloExportError):
+        _adapter_bytes(absent_required, {})
+
+
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -362,10 +397,10 @@ def test_parser_refuses_noncanonical_sign_boolean_and_policy_mutations(mutation:
 
 def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> None:
     root = Path("src/cadrumo")
-    owner = root / "domain/calculations/registry/_fixed_width_codec.py"
+    owner = root / "domain/calculations/registry/fixed_width_codec.py"
     consumers = (
         root / "application/filing/_export.py",
-        root / "domain/calculations/registry/_export_parse.py",
+        root / "domain/calculations/registry/export_parse.py",
         root / "adapters/outbound/aeat/export/_registry_record_renderer.py",
     )
 
@@ -385,6 +420,6 @@ def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> 
             assert "._fixed_width_codec" not in source
             assert "render_fixed_width_export_field" in source
 
-    registry_export = (root / "domain/calculations/registry/_export.py").read_text(encoding="utf-8")
+    registry_export = (root / "domain/calculations/registry/export.py").read_text(encoding="utf-8")
     assert "_ExportPadding" not in registry_export
     assert "_ExportJustification" not in registry_export

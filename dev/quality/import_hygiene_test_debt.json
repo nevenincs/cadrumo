@@ -109,13 +109,6 @@
                 "reason": "White-box test of the private ledger-removal blocking-reference scanner that walks live revision catalogues. Internal deletion-guard helper, not a public query API."
             },
             {
-                "importer_path": "src/cadrumo/application/modelo/tests/test_unresolved_binding_diagnostics.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry.formula_runtime",
-                "imported_names": ["_evaluate_expression", "_UnresolvedFormulaDependencyError"],
-                "reason": "White-box test of the private formula-expression evaluator and its private unresolved-dependency exception, exercising the non-blocking unresolved-binding diagnostic channel. Internal formula-runtime primitives, not the public calculate_registry_snapshot entry point."
-            },
-            {
                 "importer_path": "src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py",
                 "occurrence": 1,
                 "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",

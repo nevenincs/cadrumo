@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions import LedgerClassificationRule, TransactionCatalogue
     from .models import LedgerRemovalBlocker
-    from .rule_repository import LedgerClassificationRuleRepository
+    from .rule_repository import LedgerClassificationRuleRepositoryProtocol
 
 from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
@@ -399,7 +399,7 @@ def add_classification_rule(
     category_id: str | None = None,
     priority: int = 100,
     actor: str,
-    rule_repository: LedgerClassificationRuleRepository | None = None,
+    rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
 ) -> LedgerClassificationRule:
     """Persist a new ledger classification rule and return it.
 
@@ -415,9 +415,11 @@ def add_classification_rule(
     :class:`~domain.transactions.LedgerClassificationRule`.
     """
     from ...domain.transactions import LedgerClassificationRule
-    from .rule_repository import LedgerClassificationRuleRepository
+    from .rule_repository import ledger_classification_rule_repository
 
-    repo = rule_repository if rule_repository is not None else LedgerClassificationRuleRepository()
+    repo = (
+        rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
+    )
     rule = LedgerClassificationRule.create(
         description_pattern=description_pattern,
         classification=classification,
@@ -437,7 +439,7 @@ def apply_classification_rules(
     source_command: str = "aeat app ledger rule apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    rule_repository: LedgerClassificationRuleRepository | None = None,
+    rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
 ) -> ApplyRulesResult:
     """Apply stored classification rules to unclassified ACTIVE transactions.
 
@@ -452,11 +454,13 @@ def apply_classification_rules(
 
     Returns an :class:`~application.ledger.models.ApplyRulesResult`.
     """
-    from .rule_repository import LedgerClassificationRuleRepository
+    from .rule_repository import ledger_classification_rule_repository
 
     tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    rule_repo = rule_repository if rule_repository is not None else LedgerClassificationRuleRepository()
+    rule_repo = (
+        rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
+    )
 
     rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
     catalogue = tx_repo.load()
@@ -525,6 +529,7 @@ def apply_classification_rules(
         applied=tuple(applied_rows),
         bucket_event_ids=tuple(all_event_ids),
     )
+
 
 __all__ = [
     "add_classification_rule",

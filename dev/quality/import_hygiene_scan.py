@@ -1663,6 +1663,7 @@ def find_dev_prose_violations(
 # ---------------------------------------------------------------------------
 
 REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry.loader"
+REGISTRY_LOADER_OWNER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 
 #: Raw-loader-and-unguarded-entry-point names demoted from the registry
 #: loader module's public contract (W01.P04.S10 for the four loader names,
@@ -1729,15 +1730,21 @@ def find_registry_loader_import_violations(
             continue
         if site.target_mod != REGISTRY_LOADER_PACKAGE:
             continue
-        if site.importer_mod == REGISTRY_LOADER_PACKAGE or site.importer_mod.startswith(REGISTRY_LOADER_PACKAGE + "."):
+        if site.importer_mod == REGISTRY_LOADER_OWNER_PACKAGE or site.importer_mod.startswith(
+            REGISTRY_LOADER_OWNER_PACKAGE + "."
+        ):
             continue
         hit = [name for name in site.imported_names if name in DEMOTED_REGISTRY_LOADER_SYMBOLS]
         if not hit:
             continue
+        try:
+            importer_path = str(site.importer_path.relative_to(src_root)).replace("\\", "/")
+        except ValueError:
+            importer_path = str(site.importer_path).replace("\\", "/")
         violations.append(
             RegistryLoaderImportViolation(
                 importer_mod=site.importer_mod,
-                importer_path=str(site.importer_path.relative_to(src_root)).replace("\\", "/"),
+                importer_path=importer_path,
                 lineno=site.lineno,
                 imported_names=hit,
             )

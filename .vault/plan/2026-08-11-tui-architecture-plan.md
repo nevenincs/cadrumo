@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
+modified: '2026-08-26'
+body_hash: 'sha256:ed76f23ba207f2fe9ff12d926e9fa574b2a39e2330f0383931e42df4bb8c4600'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -11,8 +13,6 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-25'
-body_hash: 'sha256:a63be76b9b51568684e54a1f4e662d93df7f417671d5ebef9bd9ffd7a9d21679'
 ---
 
 # `tui-architecture` plan
@@ -185,6 +185,11 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S129` - Run the final current-HEAD residual Workspace V1 census and cut over only remaining assembly, dispatch, frontend, and receipt consumers not already owned by S171 or S172 to their exact public defining modules, then prove application.modelo namespace inertness plus the defining-module and zero-remnant fixed point, without deleting package bindings or moving, redefining, or deleting any model, producer, or assembly surface owned by S171, S172, or S128; `src/cadrumo/application/modelo/workspace.py, src/cadrumo/application/modelo/__init__.py inert-namespace verification, remaining assembly/dispatch/frontend/receipt consumers, Workspace receipt inventories, dev/quality/import_hygiene_scan.py, dev/tests/test_import_hygiene_gate.py, and focused residual direct-import/defining-module/zero-remnant census tests`.
 - [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview/readiness/closure parity, admission-specific contributor sets, exact-one-native-capture behavior, immutable or snapshot-isolated captures including mutation-after-capture isolation, unchanged owner generations, epoch/ABA/cross-incarnation refusal, locale behavior, bounded non-retention, forbidden lower-layer ModeloWorkspace imports, and a Vaultspec-RAG-plus-exact census that fails duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
 - [ ] `W03.P20.S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, native-owner surface inventory, native/S126 seam-conformance digest, producer inventory, field denominator, process-incarnation refusal, conformance, no-legacy, and semantic redeclaration evidence checks while leaving receipt minting to the C1 handoff phase; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
+- [ ] `W03.P20.S176` - Record reviewed direct-defining-module hard-move completion for aeat_hosts with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/aeat_hosts.py`.
+- [ ] `W03.P20.S177` - Retain aeat_nif_iva_oracle as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py`.
+- [ ] `W03.P20.S178` - Retain applicability as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/applicability.py`.
+- [ ] `W03.P20.S179` - Retain authority as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [ ] `W03.P20.S180` - Record reviewed direct-defining-module hard-move completion for binding_selector_utils with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`.
 
 ### Phase `W03.P21` - Frontend-neutral Modelo Edit Contract V1
 

@@ -56,6 +56,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PRIVATE_REGISTRY_PREFIX = "cadrumo.domain.calculations.registry._"
 _REGISTRY_SOURCE_ROOT = REPO_ROOT / "src" / "cadrumo"
 _REGISTRY_TEST_ROOT = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
+_PROJECT_PYTHON_ROOTS = (REPO_ROOT / "src", REPO_ROOT / "dev")
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
@@ -148,6 +149,18 @@ def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     assert offenders == []
 
 
+def test_project_consumers_do_not_import_the_inert_registry_package_facade() -> None:
+    """Every project consumer must name a defining registry module directly."""
+    offenders = sorted(
+        f"{path.relative_to(REPO_ROOT)} imports the registry package facade"
+        for root in _PROJECT_PYTHON_ROOTS
+        for path in scan_directory(root, pattern="*.py", recursive=True)
+        if _imports_registry_package_facade(path)
+    )
+
+    assert offenders == []
+
+
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
     offenders = sorted(
         f"{path.name} imports .{module_name}"
@@ -174,6 +187,22 @@ def _absolute_registry_private_imports(path: Path) -> tuple[str, ...]:
         ):
             imports.append(node.module)
     return tuple(imports)
+
+
+def _imports_registry_package_facade(path: Path) -> bool:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    return any(
+        (
+            isinstance(node, ast.Import)
+            and any(alias.name == "cadrumo.domain.calculations.registry" for alias in node.names)
+        )
+        or (
+            isinstance(node, ast.ImportFrom)
+            and node.level == 0
+            and node.module == "cadrumo.domain.calculations.registry"
+        )
+        for node in ast.walk(tree)
+    )
 
 
 def _relative_private_imports(path: Path) -> tuple[str, ...]:

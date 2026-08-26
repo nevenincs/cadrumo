@@ -1019,6 +1019,24 @@ def _numeric_derivation(
             raise RegistryValidationError(
                 f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has duplicate values",
             )
+        if note_references:
+            # The printed tokens are not a closed wire domain once an official
+            # note conditions them.  The note can require a further value in a
+            # different filing period (M303 DP30301's Nota 8 supplies ``0``)
+            # or prohibit a value in a particular circumstance.  The exact
+            # semantic owner therefore supplies the value; this generator still
+            # derives the source-stated unsigned integer wire shape, but must
+            # not turn the incomplete row text into a narrower enum.
+            return _schema_field(
+                joined_field,
+                data_type="integer",
+                required=_is_required(parser_field.validation),
+                padding=ExportPadding.LEFT_ZERO,
+                justification=ExportJustification.RIGHT,
+                signed=False,
+                export_record_id=export_record_id,
+                derivation_code="numeric-integer-v1",
+            )
         return _schema_field(
             joined_field,
             data_type="integer",
