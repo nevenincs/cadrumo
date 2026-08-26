@@ -41,21 +41,7 @@ from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
 from .errors import RegistryValidationError
-from .record_design_coverage import (
-    DerivedDisenoCasilla,
-    DisenoCoverageReport,
-    build_diseno_coverage_report,
-    calculation_closure_casilla_ids,
-    calculation_closure_legal_refs,
-    calculation_closure_record_design_metadata,
-    derive_calculation_completeness_casillas,
-    derive_diseno_coverage_casillas,
-)
 from .record_design_schema import (
-    AUXILIARY_ENVELOPE_HEADER_CONTENT,
-    AUXILIARY_ENVELOPE_HEADER_LENGTHS,
-    AUXILIARY_ENVELOPE_HEADER_ORDINALS,
-    AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
@@ -73,7 +59,6 @@ from .record_design_schema import (
     RecordDesignVariableBodyMarker,
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
-    validate_auxiliary_envelope_header_contents,
 )
 
 _log = get_logger(__name__)
@@ -4628,33 +4613,8 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 __all__ = [
-    "AUXILIARY_ENVELOPE_HEADER_CONTENT",
-    "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
-    "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
-    "AUXILIARY_ENVELOPE_HEADER_ROWS",
-    "DerivedDisenoCasilla",
-    "DisenoCoverageReport",
-    "RecordDesignCompositeRelativeClosing",
-    "RecordDesignCorrection",
-    "RecordDesignExtraction",
-    "RecordDesignField",
-    "RecordDesignFieldTypeCorrection",
-    "RecordDesignHeaderCellCorrection",
-    "RecordDesignRelativeSuffixMarker",
-    "RecordDesignSheet",
-    "RecordDesignSkippedSheet",
-    "RecordDesignVariableBodyMarker",
-    "RecordDesignVariableEnvelope",
-    "RecordDesignVariableTotalMarker",
-    "build_diseno_coverage_report",
-    "calculation_closure_casilla_ids",
-    "calculation_closure_legal_refs",
-    "calculation_closure_record_design_metadata",
-    "derive_calculation_completeness_casillas",
-    "derive_diseno_coverage_casillas",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
-    "validate_auxiliary_envelope_header_contents",
 ]

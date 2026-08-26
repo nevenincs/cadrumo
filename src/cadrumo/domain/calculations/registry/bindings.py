@@ -79,62 +79,14 @@ from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRef
 from .inventory_bindings import InventorySelector as _InventorySelector
 from .inventory_bindings import validate_inventory_binding
 from .invoice_bindings import (
-    InvoiceObservation,
-    InvoiceObservationRequirement,
-    Modelo349OperadorClaveTotal,
-    Modelo349OperadorTotalsParity,
-    compute_modelo_349_operador_totals_parity,
-    invoice_binding_requirements,
-    is_m347_declarante_summary_invoice_binding,
-    resolve_invoice_binding_row_values,
-    resolve_invoice_binding_values,
-    validate_invoice_binding,
-    validate_invoice_binding_definition,
-)
-from .invoice_bindings import (
     InvoiceSelector as _InvoiceSelector,
 )
-from .irnr_ledger_bindings import (
-    IrnrIncomeObservationProtocol,
-    _IrnrLedgerIncomeSelector,
-    resolve_ledger_irnr_income_aggregation_binding_values,
-    unsupported_ledger_irnr_income_observations,
-    validate_ledger_irnr_income_aggregation_binding,
-    validate_ledger_irnr_income_aggregation_binding_definition,
+from .invoice_bindings import (
+    validate_invoice_binding,
 )
-from .ledger_binding_resolution import UnroutedLedgerQuantity
-from .ledger_bindings import (
-    IvaLedgerObservation,
-    OssIossLedgerObservation,
-    RentaGastosEstimacionDirectaObservationProtocol,
-    RentaGastosPagoFraccionadoObservationProtocol,
-    RentaIncomeObservationProtocol,
-    UngroundedRentaIncome,
-    renta_first_slice_binding_target_casillas,
-    resolve_ledger_iva_aggregation_binding_values,
-    resolve_ledger_oss_aggregation_binding_values,
-    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    resolve_ledger_renta_income_aggregation_binding_values,
-    structurally_unroutable_iva_base_categories,
-    ungrounded_ledger_renta_income_observations,
-    unrouted_ledger_iva_quantities,
-    unrouted_ledger_renta_income_quantities,
-    unsupported_ledger_iva_observations,
-    unsupported_ledger_oss_observations,
-    unsupported_ledger_renta_gastos_estimacion_directa_observations,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-    unsupported_ledger_renta_income_observations,
-    validate_ledger_iva_aggregation_binding,
-    validate_ledger_iva_aggregation_binding_definition,
-    validate_ledger_oss_aggregation_binding,
-    validate_ledger_oss_aggregation_binding_definition,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
-    validate_ledger_renta_income_aggregation_binding,
-    validate_ledger_renta_income_aggregation_binding_definition,
+from .irnr_ledger_bindings import (
+    _IrnrLedgerIncomeSelector,
+    validate_ledger_irnr_income_aggregation_binding,
 )
 from .ledger_bindings import (
     IvaLedgerSelector as _IvaLedgerSelector,
@@ -151,125 +103,57 @@ from .ledger_bindings import (
 from .ledger_bindings import (
     RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
 )
-from .ledger_impatriado_bindings import (
-    ImpatriadoIncomeObservationProtocol,
-    resolve_ledger_impatriado_income_aggregation_binding_values,
-    unsupported_ledger_impatriado_income_observations,
-    validate_ledger_impatriado_income_aggregation_binding,
-    validate_ledger_impatriado_income_aggregation_binding_definition,
+from .ledger_bindings import (
+    validate_ledger_iva_aggregation_binding,
+    validate_ledger_oss_aggregation_binding,
+    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
+    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
+    validate_ledger_renta_income_aggregation_binding,
 )
 from .ledger_impatriado_bindings import (
     ImpatriadoLedgerIncomeSelector as _ImpatriadoLedgerIncomeSelector,
+)
+from .ledger_impatriado_bindings import (
+    validate_ledger_impatriado_income_aggregation_binding,
 )
 from .period_selector_match import selector_period_matches_request
 from .retenciones_bindings import (
     RetencionesAggregationSelector as _RetencionesAggregationSelector,
 )
 from .retenciones_bindings import (
-    resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 from .withholding296_bindings import (
-    Withholding296Observation,
     _Withholding296Selector,
-    resolve_withholding296_binding_row_values,
     validate_withholding296_binding_selector_shape,
-)
-from .withholding_bindings import (
-    WithholdingClaveBreakdown,
-    WithholdingObservation,
-    WithholdingObservationRequirement,
-    WithholdingTotalsParity,
-    aggregate_withholding_by_clave,
-    compute_withholding_totals_parity,
-    resolve_withholding_binding_row_values,
-    resolve_withholding_binding_values,
-    validate_withholding_binding_selector_shape,
-    withholding_binding_requirements,
 )
 from .withholding_bindings import (
     WithholdingSelector as _WithholdingSelector,
 )
+from .withholding_bindings import (
+    validate_withholding_binding_selector_shape,
+)
 
 __all__ = [
     "CasillaObservation",
-    "DataBindingDefinition",
-    "ImpatriadoIncomeObservationProtocol",
-    "InvoiceObservation",
-    "InvoiceObservationRequirement",
-    "IrnrIncomeObservationProtocol",
     "IvaCompensationAnnualPartitionRequirement",
-    "IvaLedgerObservation",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
-    "Modelo349OperadorClaveTotal",
-    "Modelo349OperadorTotalsParity",
     "OracleModeloObservation",
-    "OssIossLedgerObservation",
     "ProfileSelector",
     "RegistryModeloObservation",
-    "RentaGastosEstimacionDirectaObservationProtocol",
-    "RentaGastosPagoFraccionadoObservationProtocol",
-    "RentaIncomeObservationProtocol",
-    "UngroundedRentaIncome",
-    "UnroutedLedgerQuantity",
-    "Withholding296Observation",
-    "WithholdingClaveBreakdown",
-    "WithholdingObservation",
-    "WithholdingObservationRequirement",
-    "WithholdingTotalsParity",
-    "aggregate_withholding_by_clave",
     "binding_source_casilla_ids",
     "binding_source_modelo",
     "bound_casilla_binding_ids",
     "casillas_by_binding",
-    "compute_modelo_349_operador_totals_parity",
-    "compute_withholding_totals_parity",
-    "invoice_binding_requirements",
-    "is_m347_declarante_summary_invoice_binding",
     "iva_compensation_annual_partition_requirement",
     "m303_regimen_simplificado_annual_summary_requirement",
-    "renta_first_slice_binding_target_casillas",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "resolve_invoice_binding_row_values",
-    "resolve_invoice_binding_values",
-    "resolve_ledger_impatriado_income_aggregation_binding_values",
-    "resolve_ledger_irnr_income_aggregation_binding_values",
-    "resolve_ledger_iva_aggregation_binding_values",
-    "resolve_ledger_oss_aggregation_binding_values",
-    "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
-    "resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values",
-    "resolve_ledger_renta_income_aggregation_binding_values",
-    "resolve_retenciones_aggregation_binding_values",
-    "resolve_withholding296_binding_row_values",
-    "resolve_withholding_binding_row_values",
-    "resolve_withholding_binding_values",
     "selector_model_for_source",
-    "structurally_unroutable_iva_base_categories",
-    "ungrounded_ledger_renta_income_observations",
-    "unrouted_ledger_iva_quantities",
-    "unrouted_ledger_renta_income_quantities",
-    "unsupported_ledger_impatriado_income_observations",
-    "unsupported_ledger_irnr_income_observations",
-    "unsupported_ledger_iva_observations",
-    "unsupported_ledger_oss_observations",
-    "unsupported_ledger_renta_gastos_estimacion_directa_observations",
-    "unsupported_ledger_renta_gastos_pago_fraccionado_observations",
-    "unsupported_ledger_renta_income_observations",
-    "validate_invoice_binding_definition",
-    "validate_ledger_impatriado_income_aggregation_binding_definition",
-    "validate_ledger_irnr_income_aggregation_binding_definition",
-    "validate_ledger_iva_aggregation_binding_definition",
-    "validate_ledger_oss_aggregation_binding_definition",
-    "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition",
-    "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
-    "validate_ledger_renta_income_aggregation_binding_definition",
     "validate_m303_regimen_simplificado_annual_summary_revision",
-    "validate_retenciones_aggregation_binding",
-    "withholding_binding_requirements",
 ]
 
 #: One per-family ``validate(binding) -> list[str]`` accumulating validator. Every
