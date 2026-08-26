@@ -21,6 +21,7 @@ from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
+    ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
@@ -44,6 +45,8 @@ from .._edit_models import (
 from .._edit_services import (
     _writable_row_group_entries,
     admit_modelo_edit,
+    modelo_edit_request_schema_identity,
+    modelo_edit_result_schema_identity,
     parse_modelo_edit_value,
     preflight_modelo_edit,
     reconfirm_modelo_edit_baseline,
@@ -69,8 +72,8 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
         contract_set_digest=_DIGEST,
         operation_definition_id="modelo.calculate",
         definition_contract_digest=_DIGEST,
-        request_schema=_schema_identity(),
-        result_schema=_schema_identity(),
+        request_schema=modelo_edit_request_schema_identity(),
+        result_schema=modelo_edit_result_schema_identity(),
         review_projection_contract_version=None,
         review_schema=None,
         workspace_refresh_target_schema=_schema_identity(),
@@ -164,6 +167,29 @@ def test_admission_refuses_an_absent_work_unit() -> None:
     )
     assert isinstance(result, ModeloEditRefusedV1)
     assert _domain_refusal_code(result) is ModeloEditRefusalCode.TARGET_ABSENT
+
+
+def test_admission_refuses_a_stale_compatibility_tuple() -> None:
+    """A schema fingerprint that no longer matches this consumer's own model refuses."""
+    work_unit = _work_unit()
+    work_catalogue = WorkUnitCatalogue.from_work_units((work_unit,))
+    stale_compatibility = _compatibility().model_copy(
+        update={
+            "request_schema": _compatibility().request_schema.model_copy(
+                update={"schema_fingerprint": "f" * 64}
+            )
+        }
+    )
+    result = admit_modelo_edit(
+        ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
+        bucket_id=_BUCKET_ID,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        compatibility=stale_compatibility,
+    )
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditCompatibilityRefusalV1)
+    assert result.refusal.requested_axis == "request_schema"
 
 
 def test_writable_row_group_entries_surfaces_manual_input_bindings_directly() -> None:

@@ -30,16 +30,19 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationRevisionCatalogue, WorkUnit, WorkUnitCatalogue
+from ..operations.registry import OperationSchemaIdentityV1
 from ._edit_models import (
     ModeloEditAddressV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
+    ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditFindingV1,
+    ModeloEditMutationResultReceiptV1,
     ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditParsedValueV1,
@@ -150,6 +153,50 @@ def _field_manifest_digest(manifest: CalculationCompletenessManifest | None) -> 
     return content_hash_hex(manifest.model_dump(mode="json"))
 
 
+def modelo_edit_request_schema_identity() -> OperationSchemaIdentityV1:
+    """Return this consumer's own current identity for the edit submission schema.
+
+    Computed directly from the model's JSON schema rather than through
+    :meth:`OperationSchemaIdentityV1.from_model`, which additionally enforces
+    the operations subsystem's own public-model-graph contract (e.g.
+    ``validate_default=True``); the edit contract's models are governed by
+    this ADR, not that one, so only the identity TYPE is reused here.
+    """
+    return OperationSchemaIdentityV1(
+        schema_id="modelo.edit.submission",
+        schema_version=1,
+        schema_fingerprint=content_hash_hex(ModeloEditSubmissionV1.model_json_schema()),
+    )
+
+
+def modelo_edit_result_schema_identity() -> OperationSchemaIdentityV1:
+    """Return this consumer's own current identity for the edit result-receipt schema.
+
+    See :func:`modelo_edit_request_schema_identity` for why the fingerprint is
+    computed directly rather than through ``from_model``.
+    """
+    return OperationSchemaIdentityV1(
+        schema_id="modelo.edit.receipt",
+        schema_version=1,
+        schema_fingerprint=content_hash_hex(ModeloEditMutationResultReceiptV1.model_json_schema()),
+    )
+
+
+def _incompatible_axis(compatibility: ModeloEditCompatibilityTupleV1) -> str | None:
+    """Return the name of the first stale compatibility axis, or ``None`` when current.
+
+    Only the two axes this consumer owns and can independently recompute
+    (its own submission and receipt schemas) are checked; the workspace,
+    observation, REVIEW, refresh-target, and financial-operand axes are
+    owned by other contracts and are carried through unchecked here.
+    """
+    if compatibility.request_schema != modelo_edit_request_schema_identity():
+        return "request_schema"
+    if compatibility.result_schema != modelo_edit_result_schema_identity():
+        return "result_schema"
+    return None
+
+
 def admit_modelo_edit(
     request: ModeloEditAdmissionRequestV1,
     *,
@@ -163,7 +210,21 @@ def admit_modelo_edit(
     Never treats a Workspace safe-read baseline as authority: the target's
     natural coordinates are the only carried-over input, and the work unit,
     registry revision, and permitted surface are all re-resolved here.
+
+    Refuses ``unsupported_edit_compatibility`` before resolving any secure
+    state (D1) when the caller's request/result schema identities do not
+    match this consumer's own current schemas -- a stale compatibility tuple
+    cached from before a contract schema changed.
     """
+    incompatible = _incompatible_axis(compatibility)
+    if incompatible is not None:
+        return ModeloEditRefusedV1(
+            refusal=ModeloEditCompatibilityRefusalV1(
+                requested_axis=incompatible,
+                responsible_owner=_RESPONSIBLE_OWNER,
+                reconsideration_condition="re-fetch the current compatibility tuple and resubmit",
+            ),
+        )
     domain_target: ModeloWorkTarget = request.target.target
     try:
         work_unit: WorkUnit = resolve_modelo_work_address_unit(
@@ -404,6 +465,8 @@ def preflight_modelo_edit(
 
 __all__ = [
     "admit_modelo_edit",
+    "modelo_edit_request_schema_identity",
+    "modelo_edit_result_schema_identity",
     "parse_modelo_edit_value",
     "preflight_modelo_edit",
     "reconfirm_modelo_edit_baseline",

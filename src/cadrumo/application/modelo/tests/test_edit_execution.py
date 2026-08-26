@@ -47,7 +47,7 @@ from .._edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
-from .._edit_services import admit_modelo_edit
+from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 
@@ -93,8 +93,8 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
         contract_set_digest=_DIGEST,
         operation_definition_id="modelo.calculate",
         definition_contract_digest=_DIGEST,
-        request_schema=_schema_identity(),
-        result_schema=_schema_identity(),
+        request_schema=modelo_edit_request_schema_identity(),
+        result_schema=modelo_edit_result_schema_identity(),
         review_projection_contract_version=None,
         review_schema=None,
         workspace_refresh_target_schema=_schema_identity(),
