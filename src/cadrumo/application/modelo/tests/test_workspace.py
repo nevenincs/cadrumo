@@ -1069,6 +1069,40 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
     assert len(load_log_lines) == 1
 
 
+def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """S296 capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
+    import logging
+
+    from ....core import RegistryAuthorityGrade
+    from ....domain.calculations.registry.schema import RegistrySnapshot
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
+        work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
+
+    assert work_capture.projection.work_unit is not None
+    assert registry_capture.projection.snapshot is not None
+    assert isinstance(registry_capture.projection.snapshot, RegistrySnapshot)
+    assert registry_capture.projection.inspection is None
+    assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+
+    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
+    assert len(load_log_lines) == 1
+
+
 def _real_calculation_revision_with_row_materialization():
     """Build a real CalculationRevision carrying both a scalar and a repeated row.
 

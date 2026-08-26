@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import OutputLanguage, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...core import OutputLanguage, RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, content_hash_hex
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
 from ...domain.calculations.registry.schema import FormulaDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
@@ -247,6 +247,7 @@ def capture_modelo_workspace_target_captures(
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
     authority: ValidatedRegistryAuthority,
+    grade: RegistryAuthorityGrade | None = None,
 ) -> tuple[
     ModeloWorkspaceContributingProjectionV1[ModeloWorkResolution],
     ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceRegistryProjectionV1],
@@ -263,10 +264,13 @@ def capture_modelo_workspace_target_captures(
     ``(modelo, filing_year, period)`` is read back to build the REGISTRY port
     -- never the target's own operands, which may name an exact work unit with
     no natural coordinates of their own -- and REGISTRY is captured exactly
-    once from that single WORK-derived coordinate. Static admission
-    (``grade=None``) is the only grade this function requests; a graded
-    snapshot capture is a separate, not-yet-built caller that passes a
-    ``grade`` through the same port.
+    once from that single WORK-derived coordinate. ``grade=None`` (the
+    default) requests STATIC_INSPECTION admission
+    (``RegistryRevisionInspection``); passing a :class:`RegistryAuthorityGrade`
+    requests GRADED_SNAPSHOT admission (``RegistrySnapshot``) through the
+    exact same port and the exact same WORK-then-REGISTRY ordering -- the two
+    admissions differ only in which authority object the one REGISTRY read
+    returns, never in how many reads happen or in what order.
     """
     request = modelo_work_selector_request_for_target(target, bucket_id=bucket_id)
     work_port = ModeloWorkspaceWorkPortV1(
@@ -285,6 +289,7 @@ def capture_modelo_workspace_target_captures(
         modelo_id=resolution.modelo,
         filing_year=resolution.filing_year,
         period=resolution.period.registry_token,
+        grade=grade,
     )
     registry_capture = registry_port.capture_projection_with_epoch()
     registry_projection = registry_capture.projection
