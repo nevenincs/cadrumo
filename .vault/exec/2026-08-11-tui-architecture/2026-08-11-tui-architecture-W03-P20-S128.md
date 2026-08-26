@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:58b61ec236e971f372e5094e3c51b8e065067783d946bcbaa58237910b1d6815'
+body_hash: 'sha256:e0492cf5bfd51a232f55e71abcdf481a77c9958fab4e858d9f2f2ab25a665943'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -41,6 +41,12 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `d7528c1965`: CASILLA schema_facet + real pagination)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py -m integration -q` -> `pass` (24 passed)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace_models.py -m "unit or integration" -q` -> `pass` (73 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace_models.py`, `tests/test_workspace_models.py` (commit `9699e5cd9a`: S284, `label` discriminated union)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S284 amendment)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_models.py`, `tests/test_workspace.py` (commit `66fae65bb5`: remaining four schema_facet row kinds, `_BoundedLocaleKey`)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `780b24c2e3`: complete `ModeloWorkspaceProjectionV1` assembly)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py -m integration -q` -> `pass` (32 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m "unit or integration" -q` -> `pass` (74 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -214,7 +220,42 @@ Reported three options (these identities have no real display text and
 for them is a genuine gap in `modelo_localization.py` to close; or
 something else) rather than fabricating a label convention. Holding.
 
-Still NOT built: BINDING/FORMULA/RELATION/PARAMETER schema records, request/
-admission dispatch, the full `ModeloWorkspaceProjectionV1` /
-`ModeloWorkspaceStaticInspectionResultV1` wrapping, materialization/
-provenance facets, readiness/closure integration for GRADED_SNAPSHOT.
+Update: S284 landed (own decision commit `9699e5cd9a`, reported separately)
+-- `ModeloWorkspaceSchemaRecordV1.label` became the discriminated
+`ModeloWorkspaceRecordLabelV1` (localized text or
+`ModeloWorkspaceTechnicalLabelV1`). With all five decisions settled
+(S277/S278/S279/S283/S284), completed the schema_facet walk (commit
+`66fae65bb5`): `static_inspection_binding_schema_records`,
+`_formula_schema_records`, `_relation_schema_records`,
+`_parameter_schema_records` cover the remaining four reference kinds, all
+fully backable (their definitions carry `legal_refs` directly, unlike a
+bare casilla id). A FORMULA row's `formula_operands` is its own complete
+operand set -- the same S277 join as a CASILLA row's, walked from the
+opposite end. `static_inspection_schema_records` assembles all five kinds
+into one deterministic sequence, proven identical across two independent
+calls. Fixed a real bound violation the walk surfaced against actual data:
+modelo 303's base32hex-encoded casilla ids produce locale keys up to 143
+characters, past `_BoundedCode`'s 128-char limit; added a dedicated
+`_BoundedLocaleKey` (max 256) rather than widening the shared type.
+
+Then assembled the complete projection (commit `780b24c2e3`):
+`resolve_static_inspection_result` is the sole STATIC_INSPECTION entry
+point, wiring every landed piece into one validated
+`ModeloWorkspaceStaticInspectionResultV1` -- proven to perform exactly one
+WORK read across the whole call (asserted directly against the real
+work-unit-catalogue debug log, not inferred). `static_inspection_family_dispositions`
+projects only the families `inspection.family_dispositions` actually
+declares `NOT_APPLICABLE`; most schema families (constructs,
+deadline_windows, verification_expectations, and others) have no
+corresponding data on `RegistryRevisionInspection` at all, so reporting an
+unrepresented family as `POPULATED` or `BLOCKED_PENDING_EVIDENCE` would
+assert a fact the inspection has no basis for -- consistent with every
+prior absence ruling this Step made. Proved the full assembly round-trips
+through JSON and satisfies every cross-field validator the projection and
+result models already enforce.
+
+**This closes the STATIC_INSPECTION vertical.** GRADED_SNAPSHOT remains
+completely unbuilt: request/admission dispatch for that admission,
+materialization/provenance facets, readiness/closure integration, and the
+runtime capability-disposition computation S279 deliberately left out of
+scope. S128 stays unchecked until GRADED_SNAPSHOT is sized and addressed.
