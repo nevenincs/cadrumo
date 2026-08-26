@@ -186,3 +186,12 @@ focused `RegistryValidator.validate_modelo` gate. The whole-tree claimed-year
 test remains independently blocked by the concurrent Modelo 200 partition's
 registry validation failures. This bounded result does not alter that tree and
 does not close S51, whose row still owns the other modelos.
+
+
+## Whole-registry reconciliation (2026-08-26)
+
+The later canonical revision-era joins for Modelos 308, 309, and 341 are now loaded by the bundled authority, so the earlier acquisition-only checkpoint is superseded. Their isolated era/layout modules pass, but the authoritative whole-registry validator exposes committed cross-revision residue that those focused checks did not exercise.
+
+Modelo 308 carries amendment-level legal refs on the 2011-julio-2015 `decl.ejercicio` and `decl.periodo` casillas even though the same semantic casillas retain the underlying approval authority in adjacent eras. Modelo 309's 2004-2015 historical casillas reuse successor semantic roles with incompatible types or constraints, and two historical-only situation roles lack explicit singleton adjudication. Modelo 341 incorrectly marks two presentation roles as intentional singletons even though they co-apply in Modelo 309.
+
+These are genuine S51-owned defects, not grounds to reopen a checked export-adjudication row and not permission to absorb the active Modelo 165 or Modelo 200 lanes. S51 remains open. Closure requires the isolated era proofs, the whole semantic-role/referential gate, and the claimed-year layout-design gate to pass after the active lanes settle.
