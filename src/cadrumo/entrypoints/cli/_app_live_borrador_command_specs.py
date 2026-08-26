@@ -76,7 +76,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="state",
                 declarations=("--state",),
-                value=ValueContract(DeferredTarget("cadrumo.application.live", "SnapshotStateFilter")),
+                value=ValueContract(DeferredTarget("cadrumo.application.live.snapshot_base", "SnapshotStateFilter")),
                 default=ParameterDefault.value("active"),
                 help_key=_key("cli.app.live.borrador.state_help"),
                 multiple=False,

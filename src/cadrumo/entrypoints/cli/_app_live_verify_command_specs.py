@@ -54,7 +54,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="surface",
                 declarations=("--surface",),
-                value=ValueContract(DeferredTarget("cadrumo.application.live", "VerifySurface")),
+                value=ValueContract(DeferredTarget("cadrumo.application.live.verify", "VerifySurface")),
                 default=ParameterDefault.value(None),
                 help_key=_key("cli.app.live.verify.surface_help"),
                 multiple=False,
@@ -135,7 +135,7 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="surface",
                 declarations=("--surface",),
-                value=ValueContract(DeferredTarget("cadrumo.application.live", "VerifySurface")),
+                value=ValueContract(DeferredTarget("cadrumo.application.live.verify", "VerifySurface")),
                 default=ParameterDefault.required(),
                 help_key=_key("cli.app.live.verify.latest_surface_help"),
                 multiple=False,

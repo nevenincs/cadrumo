@@ -24,11 +24,12 @@ See Also:
 
 from __future__ import annotations
 
+from ...application.modelo.m145_communication_period import M145CommunicationPeriod
+
 import typer
 
 from ...adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ...application.modelo._m145_communication_records import (
-    M145CommunicationPeriod,
     create_m145_communication_record,
     export_m145_communication_record,
     mark_m145_communication_record_delivered_to_payer,

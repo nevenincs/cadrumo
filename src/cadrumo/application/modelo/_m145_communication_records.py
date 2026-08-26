@@ -28,6 +28,8 @@ See Also:
 
 from __future__ import annotations
 
+from .m145_communication_period import M145CommunicationPeriod
+
 import re
 from collections.abc import Mapping
 from datetime import datetime
@@ -110,13 +112,6 @@ class M145CommunicationRecordExportError(M145CommunicationServiceError, ValueErr
 
 class M145CommunicationRecordTransitionError(M145CommunicationServiceError, ValueError):
     """Raised when a Modelo 145 communication state transition is not allowed."""
-
-
-class M145CommunicationPeriod(StrEnum):
-    """Registry-backed local communication period tokens for Modelo 145."""
-
-    COMMUNICATION = "comunicacion"
-    VARIATION = "variacion"
 
 
 class M145CommunicationRecordState(StrEnum):
@@ -1095,7 +1090,6 @@ __all__ = [
     "M145CommunicationCreateCommand",
     "M145CommunicationExportResult",
     "M145CommunicationFieldValue",
-    "M145CommunicationPeriod",
     "M145CommunicationRecord",
     "M145CommunicationRecordAmbiguousError",
     "M145CommunicationRecordExportError",

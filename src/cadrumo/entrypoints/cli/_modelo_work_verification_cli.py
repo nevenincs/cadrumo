@@ -37,10 +37,8 @@ from ...application.calculations import (
 from ...application.modelo._calculation_actions import get_calculation_revision
 from ...application.modelo._filing_actions import file_modelo_revision
 from ...application.modelo._profile_readiness_gate import require_profile_ready_for_work_unit
-from ...application.modelo._selectors import (
-    ModeloCalculationRevisionSelector,
-    ModeloVerifySelector,
-)
+from ...application.modelo._selectors import ModeloCalculationRevisionSelector
+from ...application.modelo.verify_selector import ModeloVerifySelector
 from ...application.modelo._verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo._work_lifecycle import get_work_unit
 from ...application.modelo._work_plazo import calculated_m210_plazo_notice

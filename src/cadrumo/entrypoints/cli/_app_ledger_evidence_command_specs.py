@@ -275,7 +275,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 hidden=False,
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
+                transport_role=TransportRole.PRIMARY,
             ),
         ),
         policy=_POLICY_2,

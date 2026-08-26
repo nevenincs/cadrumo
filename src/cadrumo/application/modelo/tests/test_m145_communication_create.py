@@ -15,6 +15,8 @@ See Also:
 
 from __future__ import annotations
 
+from ..m145_communication_period import M145CommunicationPeriod
+
 from pathlib import Path
 
 import pytest
@@ -26,7 +28,6 @@ from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (
     M145CommunicationCreateCommand,
-    M145CommunicationPeriod,
     M145CommunicationRecord,
     create_m145_communication_record,
     derive_m145_communication_record_id,

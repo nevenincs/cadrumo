@@ -39,29 +39,6 @@ class ModeloCalculationRevisionSelector(StrEnum):
     EXPLICIT = "explicit"
 
 
-class ModeloVerifySelector(StrEnum):
-    """Draft-reachable selector subset accepted by ``modelo work verify``.
-
-    ``verify_modelo_revision`` refuses any revision not in state ``BORRADOR``,
-    so the only selectors that can resolve to a verifiable revision are the ones
-    that reach a draft: ``current`` (when the current revision is still a draft),
-    ``latest-draft``, and ``explicit`` (an explicitly-named draft revision id).
-    The post-draft selectors ``latest-verified`` and ``filed`` on the full
-    :class:`ModeloCalculationRevisionSelector` name states verify rejects, so
-    advertising them on the verify command would be an advertised-but-impossible
-    combination. This narrowed enum is what the verify ``--select`` option advertises;
-    other commands keep the full selector enum.
-    """
-
-    CURRENT = "current"
-    LATEST_DRAFT = "latest-draft"
-    EXPLICIT = "explicit"
-
-    def to_calculation_revision_selector(self) -> ModeloCalculationRevisionSelector:
-        """Map a verify selector to its :class:`ModeloCalculationRevisionSelector` member."""
-        return ModeloCalculationRevisionSelector(self.value)
-
-
 class ModeloCalculationRevisionSelectorError(ModeloError):
     """Base error for calculation-revision selector refusals."""
 
@@ -404,7 +381,6 @@ __all__ = [
     "ModeloCalculationRevisionSelectorError",
     "ModeloCalculationRevisionSelectorNotFoundError",
     "ModeloCalculationRevisionSelectorStateError",
-    "ModeloVerifySelector",
     "resolve_modelo_calculation_revision_pick",
     "select_current_verified_revision",
     "select_exportable_revision",

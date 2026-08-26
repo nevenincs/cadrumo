@@ -17,13 +17,14 @@ See Also:
 
 from __future__ import annotations
 
+from ...application.modelo.m145_communication_period import M145CommunicationPeriod
+
 from collections.abc import Callable
 
 import typer
 
 from ...application.modelo._m145_communication_records import (
     M145CommunicationCreateCommand,
-    M145CommunicationPeriod,
 )
 from ...core import CasillaId
 from ...core.i18n import tr
