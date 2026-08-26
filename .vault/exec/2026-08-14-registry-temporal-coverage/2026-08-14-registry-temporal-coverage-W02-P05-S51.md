@@ -194,3 +194,10 @@ The later canonical revision-era joins for Modelos 308, 309, and 341 are now loa
 Modelo 308 carries amendment-level legal refs on the 2011-julio-2015 `decl.ejercicio` and `decl.periodo` casillas even though the same semantic casillas retain the underlying approval authority in adjacent eras. Modelo 309's 2004-2015 historical casillas reuse successor semantic roles with incompatible types or constraints, and two historical-only situation roles lack explicit singleton adjudication. Modelo 341 incorrectly marks two presentation roles as intentional singletons even though they co-apply in Modelo 309.
 
 These are genuine S51-owned defects, not grounds to reopen a checked export-adjudication row and not permission to absorb the active Modelo 165 or Modelo 200 lanes. S51 remains open. Closure requires the isolated era proofs, the whole semantic-role/referential gate, and the claimed-year layout-design gate to pass after the active lanes settle.
+
+
+### Landed semantic reconciliation
+
+Commits `c6536553bb`, `26c7d689cd`, `7bff5b1ca7`, and `ecdb753838` remove the attributable M165, M308, M309, and M341 validation residue without backdating a source or weakening the cross-revision validator. M165 now permits honest applicability-only/no-layout eras while keeping filing/layout parity fail-closed; M308 keeps amendment authority at the revision boundary rather than divergent header casillas; M309 preserves its genuinely distinct historical country-text semantics while grounding ratios, singleton flags, and unsigned numeric constraints in the 2004 design; M341's presentation roles are correctly shared with M309.
+
+Focused evidence is green: M165 historical/generic proof 9 tests, M308 registry proof 9 tests, M309 historical epochs 11 tests, plus direct per-model semantic validation with zero failures for M165, M308, M309, and M341. A fresh bundled-authority load reports zero failures for those four modelos. The remaining whole-registry load failures are confined to the active Modelo 200 revision split owned by another lane, so S51 remains open and does not absorb or overwrite that work.
