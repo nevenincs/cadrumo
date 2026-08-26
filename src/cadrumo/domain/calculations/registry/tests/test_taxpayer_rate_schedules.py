@@ -88,9 +88,13 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
 
+    # The helper asks for filing year 2025, which the 2024/2025 split made a
+    # coordinate the 2024 revision no longer covers -- and a revision_id narrows
+    # the law-determined pick rather than selecting it, so naming the earlier
+    # era here refuses instead of quietly answering from the wrong year.
     revision = _modelo_revision(
         "200",
-        "2024",
+        "2025-y-siguientes",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     parameters = {parameter.id: parameter for parameter in revision.parameters}
