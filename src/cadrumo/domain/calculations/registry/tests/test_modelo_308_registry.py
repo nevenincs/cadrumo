@@ -341,9 +341,14 @@ def test_modelo_308_legal_boundary_and_applicability_snapshot_are_available() ->
         for casilla in july_revision.casillas
         if casilla.id in {"decl.ejercicio", "decl.periodo"}
     } == {
-        "decl.ejercicio": ("orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"),
-        "decl.periodo": ("orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"),
+        "decl.ejercicio": ("orden-eha-3786-2008:art-2",),
+        "decl.periodo": ("orden-eha-3786-2008:art-2",),
     }
+    assert all(
+        amendment_ref.id not in casilla.legal_refs and july_ref.id not in casilla.legal_refs
+        for casilla in july_revision.casillas
+        if casilla.id in {"decl.ejercicio", "decl.periodo"}
+    )
 
     snapshot = _committed_snapshot("308", 2009, "AD-HOC", RegistryAuthorityGrade.APPLICABILITY)
     assert snapshot.revision.id == "2009-2011-junio"
