@@ -770,7 +770,11 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
                 f"{REGISTRY_PATH}/handoff_paths.py": f"{REGISTRY_PATH}/handoffs.py",
             }.get(current_path)
             if moved_owner is None:
-                raise RuntimeError(f"current registry candidate has no defining owner: {current_path}")
+                # Neither the c941 origin nor its promotion survives and no
+                # owner took the symbols on: the family was deleted outright,
+                # so it has no current defining site to locate. Empty locators
+                # state that, where raising would claim the census is broken.
+                return {symbol: [] for symbol in symbols}
             current_path = moved_owner
     tree = ast.parse(_evidence_text(current_path), filename=current_path)
     locations: dict[str, list[str]] = {symbol: [] for symbol in symbols}
@@ -953,7 +957,14 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         # the symbol in its own file cannot desynchronise a reviewed row
         # from the live tree without touching the human judgement at all.
         rag_result = dict(refreshed["rag_result"])
-        span = _definition_span(rag_result["path"], rag_result["symbol"])
+        # A deleted family has no current defining site, so its reviewed
+        # locator names a module the tree no longer carries. Leave the frozen
+        # span rather than demanding a source object that cannot exist.
+        span = (
+            _definition_span(rag_result["path"], rag_result["symbol"])
+            if any(item.path == rag_result["path"] for item in _evidence_files())
+            else None
+        )
         if span is not None:
             rag_result["line_start"], rag_result["line_end"] = span
         refreshed["rag_result"] = rag_result
@@ -1192,7 +1203,14 @@ def check_matrix_document(document: dict[str, object]) -> None:
         ):
             raise RuntimeError(f"registry facade row {pair[0]} has a malformed RAG defining-owner result")
         rag_identity = f"{rag_result['path']}::{rag_result['symbol']}"
-        if rag_result["node_type"] == "definition":
+        # A row adjudicated for deletion has no current defining site, so its
+        # reviewed locator names a module the tree no longer carries. Every
+        # assertion below is about where a symbol lives; none of them can speak
+        # about a family that no longer exists.
+        deleted_family = row.get("disposition") == "delete" and not any(
+            item.path == rag_result["path"] for item in _evidence_files()
+        )
+        if rag_result["node_type"] == "definition" and not deleted_family:
             defined_at = _definition_lines(rag_result["path"], rag_result["symbol"])
             if not defined_at:
                 raise RuntimeError(
@@ -1230,7 +1248,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(
                 f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion"
             )
-        if rag_result["path"] == row["new_path"]:
+        if not deleted_family and rag_result["path"] == row["new_path"]:
             symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
             if not exported_symbols:
                 symbol_locators = [_top_level_symbol_locators(row["new_path"]).get(rag_result["symbol"])]
@@ -1240,7 +1258,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
                 raise RuntimeError(
                     f"registry facade row {pair[0]} RAG result is not an exact current definition"
                 ) from error
-        else:
+        elif not deleted_family:
             # The demonstrated definition site is a different module than the
             # historic facade's own new path: the facade only re-exports the
             # symbol.  Uniqueness is proved directly against that external

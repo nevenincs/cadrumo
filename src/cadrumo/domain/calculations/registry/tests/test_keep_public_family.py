@@ -223,7 +223,6 @@ def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str
 #: each with the reason it is still outstanding. A row that finishes must leave
 #: this table, which the staleness test below enforces.
 _OUTSTANDING_ROWS: Final[dict[str, str]] = {
-    "R10": "delete disposition awaiting an owner ruling; consumers exist and no successor is named",
     "R35": "privatisation blocked behind a large consumer move",
     "R66": "privatisation blocked behind a consumer move",
     "R72": "privatisation blocked behind a consumer move",

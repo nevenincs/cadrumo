@@ -300,7 +300,11 @@ def test_current_measurements_cover_relative_import_and_type_alias_regressions()
     type_alias = getattr(ast, "TypeAlias", None)
     exported_aliases = 0
     for row in document["rows"]:
-        tree = ast.parse(_evidence_text(_defining_owner_path(row)))
+        owner = _defining_owner_path(row)
+        if row.get("disposition") == "delete":
+            # A deleted family has no current defining site to measure.
+            continue
+        tree = ast.parse(_evidence_text(owner))
         aliases: set[str] = set()
         for node in tree.body:
             name = getattr(node, "name", None) if type_alias is not None and isinstance(node, type_alias) else None
@@ -380,6 +384,10 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
         # rather than against this row's own adjudicated destinations. The
         # earlier disjunct admitted any path that was not the row's own,
         # which an unrelated file satisfied.
+        if row.get("disposition") == "delete":
+            # A deleted family has no current defining site for its locator to
+            # land in; the reviewed record survives as provenance only.
+            continue
         assert result["line_start"] in _definition_lines(result["path"], result["symbol"])
         assert location in row["alternative_owner_evidence"]
         assert row["semantic_owner"] in row["alternative_owner_evidence"]
