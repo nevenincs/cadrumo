@@ -690,6 +690,34 @@ def _evidence_census() -> EvidenceCensus:
     return _EVIDENCE_CENSUS_CACHE
 
 
+def _definition_lines(path: str, symbol: str) -> frozenset[int]:
+    """Return the start lines at which a module really defines a symbol.
+
+    An imported name is not a definition.  The census once recorded a facade's
+    import line as its defining locator, which is precisely the discrimination a
+    keep-public disposition asserts, so a re-export could be certified as a
+    canonical owner.
+    """
+    tree = ast.parse(_evidence_text(path), filename=path)
+    type_alias = getattr(ast, "TypeAlias", None)
+    lines: set[int] = set()
+    for node in tree.body:
+        names: set[str] = set()
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+        elif type_alias is not None and isinstance(node, type_alias):
+            name = getattr(node, "name", None)
+            if isinstance(name, ast.Name):
+                names.add(name.id)
+        if symbol in names:
+            lines.add(node.lineno)
+    return frozenset(lines)
+
+
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Locate every historic facade symbol in its current evidence module."""
     current_path = candidate.new_path
@@ -1042,6 +1070,18 @@ def check_matrix_document(document: dict[str, object]) -> None:
         ):
             raise RuntimeError(f"registry facade row {pair[0]} has a malformed RAG defining-owner result")
         rag_identity = f"{rag_result['path']}::{rag_result['symbol']}"
+        if rag_result["node_type"] == "definition":
+            defined_at = _definition_lines(rag_result["path"], rag_result["symbol"])
+            if not defined_at:
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} claims a definition owner that only re-exports "
+                    f"{rag_result['symbol']}"
+                )
+            if rag_result["line_start"] not in defined_at:
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} anchors {rag_result['symbol']} at a line that is "
+                    "not its definition"
+                )
         if rag_identity not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
         semantic_evidence = row.get("semantic_evidence")
