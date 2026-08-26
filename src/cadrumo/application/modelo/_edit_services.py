@@ -77,8 +77,6 @@ from .workspace_models import ModeloWorkspaceSchemaIdentityV1
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
 _RESPONSIBLE_OWNER = "modelo.edit"
 
-_MANUAL_INPUT_SOURCE = "manual_input"
-
 
 def _target_absent_refusal() -> ModeloEditRefusalV1:
     return ModeloEditDomainRefusalV1(
@@ -114,30 +112,38 @@ def _writable_scalar_entries(revision: ModeloRevision) -> tuple[ModeloEditPermit
 
 
 def _writable_row_group_entries(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
-    """Surface exactly the taxpayer-entered repeated-row binding groups.
+    """Return no entries: no registry-declared ``manual_input`` binding is a real row set.
 
-    ``BindingSourceKind.MANUAL_INPUT`` is the one registry-declared axis that
-    distinguishes a row group the taxpayer types (donativo, invoice, and
-    withholding rows among them) from a ledger- or profile-fed aggregation;
-    every other binding source is out of scope for this row-group surface,
-    not merely non-writable, so only manual-input bindings are listed.
+    This projection formerly classified EVERY ``BindingSourceKind.MANUAL_INPUT``
+    binding as a repeatable row group admitting ``ADD_ROW``/``UPDATE_ROW``/
+    ``DELETE_ROW``, on the theory that ``manual_input`` was the taxpayer-typed
+    row axis (donativo, invoice, withholding rows among them). A registry-wide
+    audit found no such binding: every ``manual_input`` binding across every
+    modelo declares ``aggregation = {op = "copy"}`` (a 1:1 scalar copy) and
+    none carries a row index -- most, including every one of modelo 131's
+    ninety-seven, are static fichero-BOE record-field positions (e.g. a fixed
+    "actividad-2-epigrafe" slot), not a dynamic set a taxpayer can add to,
+    remove from, or reorder. Admitting ``ADD_ROW``/``DELETE_ROW`` against a
+    static field position would let an intent address a preprinted form slot
+    under a fabricated row semantic.
+
+    The genuine repeatable, taxpayer-typed row mechanism this codebase already
+    has is the per-modelo ``ModeloDetailRow`` discriminated union (M184
+    member, M232 vinculada, M349 operador/rectificación, M347 contraparte,
+    M210 agrupación renta), threaded through the calculate boundary's
+    ``detail_rows`` and already content-addressed on the revision. It is NOT
+    ``BindingId``-keyed and does not fit this function's shape; projecting it
+    into a permitted-surface entry is out-of-scope future work, deferred
+    because which detail-row kind a given modelo may accept is not yet a
+    queryable registry authority (it is implicit in which CLI subcommand the
+    operator invokes).
+
+    Returns an empty tuple unconditionally so the row-intent admission path
+    (:func:`_validate_row_intent`) refuses every row intent as
+    ``DISALLOWED_INTENT`` against every current baseline -- correct, not
+    dormant, because no registry data today makes a different answer honest.
     """
-    entries: list[ModeloEditPermittedSurfaceEntryV1] = []
-    for binding in revision.bindings:
-        if binding.source.value != _MANUAL_INPUT_SOURCE:
-            continue
-        entries.append(
-            ModeloEditWritableRowGroupSurfaceEntryV1(
-                binding_id=binding.id,
-                allowed_intents=(
-                    ModeloEditRowIntentKind.ADD_ROW,
-                    ModeloEditRowIntentKind.UPDATE_ROW,
-                    ModeloEditRowIntentKind.DELETE_ROW,
-                ),
-                reorderable=False,
-            )
-        )
-    return tuple(entries)
+    return ()
 
 
 def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:

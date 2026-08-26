@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-edit-contract'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:d743e8879636be2062663a86127d41774eeedb66d6e57260d36d311589fa142e'
+body_hash: 'sha256:79458efdf43d4be6a8dc5d91997fbfe49dbb517490ffe56151deb9a651dd35d8'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -353,3 +353,58 @@ criteria identified by `2026-08-24-tui-modelo-workspace-interface-research` and
   repository, and real atomicity/non-retention conformance.
 - Later lifecycle actions may reuse the capability and receipt shapes, but each
   keeps its existing writer and must prove its own atomic effect boundary.
+
+## Amendment 2026-08-26: no registry binding is the D4 repeated-row group
+
+**What this corrects.** D4's `ADD_ROW`/`UPDATE_ROW`/`DELETE_ROW`/`MOVE_ROW`
+row intents, and the permitted-surface projection that admitted them, assumed
+`BindingSourceKind.MANUAL_INPUT` was the taxpayer-typed repeated-row axis
+(donativo, invoice, and withholding rows were the motivating examples). A
+registry-wide audit found no binding of that shape: every `manual_input`
+binding across every modelo declares `aggregation = {op = "copy"}` — a 1:1
+scalar copy — and none carries a row index. Modelo 131's ninety-seven, the
+fixture this contract's own tests exercise, are static fichero-BOE
+record-field positions (e.g. a fixed `actividad-2-epigrafe` slot at a
+preprinted offset); none is bound to any casilla either. Admitting
+`ADD_ROW`/`DELETE_ROW` against one would let an intent address a static form
+slot under a fabricated row semantic — the same class of category error as
+`REMOVE_OVERRIDE` addressing a store no addressable casilla has, and the
+unreachable compatibility refusal before it. All three errors share one root:
+the row and override language in D1/D4 described a registry shape that had
+not yet materialised, not the shape the registry actually declares today.
+
+**The decision.** `_writable_row_group_entries` (`_edit_services.py`) is
+corrected to return no entries, unconditionally, for every current registry
+revision — not a per-modelo carve-out, because no modelo's `manual_input`
+binding matches the row shape D4 assumed. `_validate_row_intent` therefore
+refuses every row intent as `DISALLOWED_INTENT` against every current
+baseline; this is a correct, evidence-grounded refusal, not a dormant or
+placeholder one. The `ModeloEditRowIntentKind`, `ModeloEditRowAddressV1`
+(`ModeloEditExistingRowAddressV1` / `ModeloEditNewRowCorrelationV1`), and
+`ModeloEditWritableRowGroupSurfaceEntryV1` / `ModeloEditNonWritableRowGroupSurfaceEntryV1`
+model vocabulary is retained rather than deleted: the `BindingId` + row-index
+shape is not inherently wrong, only unpopulated by current registry data, and
+remains the correct address shape IF a genuine binding-keyed row set is ever
+added to the registry.
+
+**What was NOT decided here.** The genuine repeatable, taxpayer-typed row
+mechanism this codebase already has is the per-modelo `ModeloDetailRow`
+discriminated union (M184 member, M232 vinculada, M349 operador/rectificación,
+M347 contraparte, M210 agrupación renta), already threaded through the
+calculate boundary's `detail_rows` and already content-addressed on the
+revision. It is NOT `BindingId`-keyed and does not fit `_writable_row_group_entries`'s
+shape; projecting it into a new permitted-surface entry kind is the
+recommended direction for a future Step, deferred because which detail-row
+kind a given modelo may accept is not yet a queryable registry authority — it
+is implicit today in which CLI subcommand the operator invokes for `--row`,
+not a fact this contract's admission path can read from `ModeloRevision`.
+Building that projection ahead of a real per-modelo eligibility authority
+would risk repeating exactly this amendment's mistake.
+
+**Consequence for D4.** D4's row-intent vocabulary (`ADD_ROW`/`UPDATE_ROW`/
+`DELETE_ROW`/`MOVE_ROW`, existing-row and new-row-correlation addressing) is
+otherwise unchanged and remains this contract's row-intent shape; only its
+motivating binding-source axis and current reachability are corrected. No
+frontend cohort may present row editing as available until a real
+permitted-surface entry for `ModeloDetailRow` (or another genuinely
+row-shaped registry axis) exists and is admitted.

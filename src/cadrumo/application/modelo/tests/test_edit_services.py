@@ -146,9 +146,8 @@ def test_admission_resolves_a_real_registry_backed_permitted_surface() -> None:
     writable_scalars = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
     writable_rows = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)]
     assert writable_scalars, "modelo 131 declares manual casillas the surface must expose as writable"
-    assert writable_rows, "modelo 131 declares manual_input bindings the surface must expose as row groups"
+    assert not writable_rows, "no modelo 131 manual_input binding is a real row set; none may surface as a row group"
     assert len({e.casilla_id for e in writable_scalars}) == len(writable_scalars)
-    assert len({e.binding_id for e in writable_rows}) == len(writable_rows)
 
 
 def test_admission_refuses_an_absent_work_unit() -> None:
@@ -192,16 +191,20 @@ def test_admission_refuses_a_stale_compatibility_tuple() -> None:
     assert result.refusal.requested_axis == "request_schema"
 
 
-def test_writable_row_group_entries_surfaces_manual_input_bindings_directly() -> None:
-    """The row-group projection surfaces exactly the manual-input bindings."""
+def test_writable_row_group_entries_surfaces_none_of_the_real_manual_input_bindings() -> None:
+    """No modelo 131 manual_input binding is a real row set, so none may surface as one.
+
+    A registry-wide audit found every ``manual_input`` binding declares
+    ``aggregation = {op = "copy"}`` (a 1:1 scalar copy) with no row index --
+    modelo 131's ninety-seven are static fichero-BOE record-field positions.
+    Admitting any of them under ADD_ROW/UPDATE_ROW/DELETE_ROW would let an
+    intent address a static field under a fabricated row semantic.
+    """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+    manual_input_bindings = {b.id for b in snapshot.revision.bindings if b.source.value == "manual_input"}
+    assert manual_input_bindings, "the fixture must still exercise a real manual_input population"
     entries = _writable_row_group_entries(snapshot.revision)
-    expected_ids = {b.id for b in snapshot.revision.bindings if b.source.value == "manual_input"}
-    assert expected_ids
-    assert all(isinstance(entry, ModeloEditWritableRowGroupSurfaceEntryV1) for entry in entries)
-    row_group_entries = [entry for entry in entries if isinstance(entry, ModeloEditWritableRowGroupSurfaceEntryV1)]
-    assert {entry.binding_id for entry in row_group_entries} == expected_ids
-    assert all(entry.allowed_intents for entry in row_group_entries)
+    assert entries == ()
 
 
 def test_parse_accepts_dot_and_comma_decimal_for_the_same_money_casilla() -> None:
@@ -278,7 +281,6 @@ def test_preflight_accepts_an_admitted_intent_and_rejects_a_disallowed_one() -> 
     admitted = _admit(work_unit)
     baseline = admitted.baseline
     scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
-    row_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1))
 
     good_submission = ModeloEditSubmissionV1(
         baseline=baseline,
@@ -300,12 +302,15 @@ def test_preflight_accepts_an_admitted_intent_and_rejects_a_disallowed_one() -> 
     )
     assert isinstance(evaluated, ModeloEditPreflightEvaluatedV1)
 
+    # No modelo 131 manual_input binding admits a row-group entry (none is a
+    # real row set), so ANY row intent -- against any binding id -- refuses as
+    # disallowed; the address below names no real binding on purpose.
     bad_submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
         row_intents=(
             ModeloRowEditIntentV1(
-                address=ModeloEditExistingRowAddressV1(binding_id=row_entry.binding_id, row_index=1),
+                address=ModeloEditExistingRowAddressV1(binding_id="a" * 64, row_index=1),
                 kind=ModeloEditRowIntentKind.MOVE_ROW,
                 move_to_index=2,
             ),

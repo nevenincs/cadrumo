@@ -232,7 +232,11 @@ def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC
     admitted = _admitted_baseline()
     scalar_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
     row_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)]
-    assert scalar_entries and row_entries
+    # No modelo 131 manual_input binding is a real row set (S281 finding); the
+    # writable-row-group axis is correctly empty for every registry revision
+    # today, so only the scalar axis is asserted non-empty here.
+    assert scalar_entries
+    assert row_entries == []
     baseline = ModeloEditC3PassedProofV1(
         evidence=f"baseline {admitted.baseline.baseline_id[:8]} carries {len(scalar_entries)} writable scalars"
         f" and {len(row_entries)} writable row groups"
@@ -356,12 +360,12 @@ def test_contract_schema_proof_covers_the_named_edit_contract_models() -> None:
         assert config.get("extra") == "forbid", model.__name__
 
 
-def test_baseline_proof_admits_both_writable_scalar_and_row_group_surface() -> None:
-    """The real modelo 131 fixture exercises both permitted-surface shapes."""
+def test_baseline_proof_admits_the_writable_scalar_surface_and_no_fabricated_row_group() -> None:
+    """The real modelo 131 fixture exercises the scalar shape; no row group is fabricated."""
     admitted = _admitted_baseline()
     kinds = {type(entry).__name__ for entry in admitted.baseline.permitted_surface}
     assert "ModeloEditWritableScalarSurfaceEntryV1" in kinds
-    assert "ModeloEditWritableRowGroupSurfaceEntryV1" in kinds
+    assert "ModeloEditWritableRowGroupSurfaceEntryV1" not in kinds
 
 
 def test_stale_baseline_refusal_is_typed_and_never_a_domain_refusal_code() -> None:

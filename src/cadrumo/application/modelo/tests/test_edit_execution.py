@@ -42,7 +42,6 @@ from .._edit_models import (
     ModeloEditSubmissionV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
-    ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
@@ -391,16 +390,17 @@ def test_apply_refuses_a_row_intent_by_its_specific_kind(tmp_path: Path) -> None
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        row_entry = next(
-            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
-        )
 
+        # No modelo 131 manual_input binding admits a row-group entry (none is
+        # a real row set); the executor's row-intent refusal fires on any row
+        # intent's presence, before permitted-surface admission is checked, so
+        # the address below names no real binding on purpose.
         submission = ModeloEditSubmissionV1(
             baseline=baseline,
             mutation_family=ModeloEditMutationFamily.CALCULATE,
             row_intents=(
                 ModeloRowEditIntentV1(
-                    address=ModeloEditExistingRowAddressV1(binding_id=row_entry.binding_id, row_index=1),
+                    address=ModeloEditExistingRowAddressV1(binding_id="a" * 64, row_index=1),
                     kind=ModeloEditRowIntentKind.DELETE_ROW,
                 ),
             ),
