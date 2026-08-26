@@ -33,7 +33,8 @@ from ..devtools.fixture import registration_attempt
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerApp
-from ..secret.app import LoginApp, RecoveryWordsScreen, RegistrationApp
+from ..secret.login import LoginApp
+from ..secret.registration import RecoveryWordsScreen, RegistrationApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -44,9 +45,9 @@ _PASSPHRASE = "relocation-parity-operator-secret"  # noqa: S105 - synthetic test
 _CANONICAL_DEFINITIONS = (
     ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerApp"),
     ("cadrumo.entrypoints.tui.profile.status", "StatusApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "LoginApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "RegistrationApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "RecoveryWordsScreen"),
+    ("cadrumo.entrypoints.tui.secret.login", "LoginApp"),
+    ("cadrumo.entrypoints.tui.secret.registration", "RegistrationApp"),
+    ("cadrumo.entrypoints.tui.secret.registration", "RecoveryWordsScreen"),
     ("cadrumo.entrypoints.tui.flows.app", "FlowTuiApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewScreen"),

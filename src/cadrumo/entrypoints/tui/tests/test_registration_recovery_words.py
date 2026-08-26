@@ -20,7 +20,7 @@ from ....application.user_profile.registration import ProfileRegistrationError, 
 from ....core.credentials import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
-from ....entrypoints.tui.secret.app import (
+from ....entrypoints.tui.secret.registration import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
     RegistrationApp,

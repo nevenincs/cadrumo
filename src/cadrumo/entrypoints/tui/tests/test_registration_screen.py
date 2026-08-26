@@ -28,7 +28,8 @@ from ....application.user_profile.login_session import logout_active_profile
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp, assessment_refusal
+from ....entrypoints.tui.secret.credentials import assessment_refusal
+from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..devtools.fixture import registration_attempt
 

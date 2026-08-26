@@ -183,6 +183,16 @@ class SourceActionCard(Vertical):
     Wave's focus-order proof.
     """
 
+    DEFAULT_CSS = """
+    SourceActionCard {
+        height: auto;
+    }
+    """
+    """`Vertical`'s own default is `height: 1fr` (an expanding container),
+    which is fine standing alone but stretches a card to fill whatever
+    space several 1fr siblings divide -- overriding to `auto` sizes the
+    card to its own three children instead."""
+
     def __init__(self, descriptor: SourceActionDescriptor, *, id: str | None = None) -> None:
         """Store the already-localized source description."""
         super().__init__(id=id, classes="cadrumo-source-card")

@@ -29,7 +29,7 @@ from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.app import RegistrationApp
+from ....entrypoints.tui.secret.registration import RegistrationApp
 from ..components.theme import (
     BASE_CSS,
     CADRUMO_DARK,

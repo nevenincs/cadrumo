@@ -41,7 +41,8 @@ from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWi
 from ....core.presentation import FormField, FormPage
 from ....entrypoints.tui.profile.overview import ProfileManagerApp
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.app import LoginApp, RegistrationApp
+from ....entrypoints.tui.secret.login import LoginApp
+from ....entrypoints.tui.secret.registration import RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.form_screen import FormApp
@@ -155,9 +156,13 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_VISUAL_LABEL)
 
+        async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
+            del source
+
         yield ProfileManagerApp(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
+            launch_source=launch_source,
         )
 
 
@@ -270,9 +275,13 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_VISUAL_LABEL)
 
+        async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
+            del source
+
         yield ProfileManagerApp(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
+            launch_source=launch_source,
         )
 
 
