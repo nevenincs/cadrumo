@@ -52,21 +52,6 @@ from .bindings_previous_filing import PreviousModeloSelector, validate_previous_
 from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference
 from .counterpart_bindings import validate_counterpart_binding
 from .detail_record_bindings import (
-    AtributionMemberObservation,
-    Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
-    foreign_asset_binding_row_field,
-    resolve_atribucion_binding_row_values,
-    resolve_foreign_asset_binding_row_values,
-    resolve_refund_binding_row_values,
-    resolve_related_party_binding_row_values,
-    validate_atribucion_binding,
-    validate_foreign_asset_binding,
-    validate_refund_binding,
-    validate_related_party_binding,
-)
-from .detail_record_bindings import (
     AtributionSelector as _AtributionSelector,
 )
 from .detail_record_bindings import (
@@ -79,10 +64,10 @@ from .detail_record_bindings import (
     RelatedPartySelector as _RelatedPartySelector,
 )
 from .detail_record_bindings import (
-    build_foreign_asset_rows as _build_foreign_asset_rows,
-)
-from .detail_record_bindings import (
-    build_related_party_rows as _build_related_party_rows,
+    validate_atribucion_binding,
+    validate_foreign_asset_binding,
+    validate_refund_binding,
+    validate_related_party_binding,
 )
 from .donativo_bindings import (
     DonativoDonorObservation,
@@ -223,7 +208,6 @@ from .withholding_bindings import (
 )
 
 __all__ = [
-    "AtributionMemberObservation",
     "CasillaObservation",
     "DataBindingDefinition",
     "DonativoDonorObservation",
@@ -239,13 +223,10 @@ __all__ = [
     "M303RegimenSimplificadoAnnualSummaryRequirement",
     "Modelo349OperadorClaveTotal",
     "Modelo349OperadorTotalsParity",
-    "Modelo720RowObservation",
     "OracleModeloObservation",
     "OssIossLedgerObservation",
     "ProfileSelector",
-    "RefundOperationObservation",
     "RegistryModeloObservation",
-    "RelatedPartyOperationObservation",
     "RentaGastosEstimacionDirectaObservationProtocol",
     "RentaGastosPagoFraccionadoObservationProtocol",
     "RentaIncomeObservationProtocol",
@@ -256,8 +237,6 @@ __all__ = [
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "WithholdingTotalsParity",
-    "_build_foreign_asset_rows",
-    "_build_related_party_rows",
     "aggregate_withholding_by_clave",
     "binding_source_casilla_ids",
     "binding_source_modelo",
@@ -265,17 +244,14 @@ __all__ = [
     "casillas_by_binding",
     "compute_modelo_349_operador_totals_parity",
     "compute_withholding_totals_parity",
-    "foreign_asset_binding_row_field",
     "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
     "iva_compensation_annual_partition_requirement",
     "m303_regimen_simplificado_annual_summary_requirement",
     "renta_first_slice_binding_target_casillas",
-    "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
     "resolve_donativo_binding_row_values",
-    "resolve_foreign_asset_binding_row_values",
     "resolve_gasto193_binding_row_values",
     "resolve_gasto193_binding_values",
     "resolve_invoice_binding_row_values",
@@ -287,8 +263,6 @@ __all__ = [
     "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
     "resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
-    "resolve_refund_binding_row_values",
-    "resolve_related_party_binding_row_values",
     "resolve_retenciones_aggregation_binding_values",
     "resolve_withholding296_binding_row_values",
     "resolve_withholding_binding_row_values",
