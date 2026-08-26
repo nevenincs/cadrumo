@@ -7,18 +7,17 @@ from hashlib import sha256
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from ..authority import bundled_authority
+from ..bindings_previous_filing import previous_filing_source_reference
+from ..errors import RegistryValidationError
+from ..loader import load_catalogue_file, load_modelo_directory
+from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
+from ..temporal import select_revision
+from ..validate import RegistryValidator
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -593,12 +592,11 @@ def test_modelo_353_declares_322_group_settlement_treatment(revision_id: str, de
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
-    from cadrumo.domain.calculations.registry.ledger_bindings import (
+    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-
-    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]
