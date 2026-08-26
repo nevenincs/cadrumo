@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:0dfb1b1f3c4e7157a694fa4311566ed9c158313087e0eb0fa39a0fe6a9be71ed'
+body_hash: 'sha256:d6b45bb473333bc6b5baa8f6b4adde8e8e934be4325300a2224ba6b995788bf0'
 ---
 
 # `tui-architecture` plan
@@ -396,7 +396,7 @@ Enroll rename, discard, verify, local file, export, and amend one by one through
 - [x] `W06.P24.S152` - Enroll modelo.work.verify through the existing verify_modelo_revision authority with exact capability evidence, progress and REVIEW declarations, guarded persistence and event effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_verification_actions.py`.
 - [x] `W06.P24.S153` - Enroll modelo.work.file through the existing file_modelo_revision authority as local filing and human handoff only, with precondition refusal, exact approval, atomic filing effects, safe result receipt, and typed Workspace refresh target; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_filing_actions.py`.
 - [x] `W06.P24.S154` - Enroll canonical modelo.export through the existing export_modelo_revision authority with capability and identity preconditions, transient output custody, safe effect/result evidence, and no remote AEAT submission or duplicate export writer; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_export.py`.
-- [ ] `W06.P24.S155` - Enroll modelo.work.amend through the existing amend_modelo_revision authority as the sole C4 amendment mutation, with baseline evidence, amendment-kind REVIEW, atomic catalogue/event effects, safe result receipt, typed Workspace refresh target, and an explicit amend-wizard denominator disposition; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_amendment_actions.py`.
+- [x] `W06.P24.S155` - Enroll modelo.work.amend through the existing amend_modelo_revision authority as the sole C4 amendment mutation, with baseline evidence, amendment-kind REVIEW, atomic catalogue/event effects, safe result receipt, typed Workspace refresh target, and an explicit amend-wizard denominator disposition; `src/cadrumo/application/modelo/_operation_definitions.py and src/cadrumo/application/modelo/_amendment_actions.py`.
 - [ ] `W06.P24.S156` - Prove the generated C4 action denominator and every enrolled lifecycle definition against canonical capability owners, exact interactions, single writers, effect receipts, refresh adapters, refusal behavior, non-retention, and semantic-plus-exact redeclaration census before any action becomes available; `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`.
 
 ### Phase `W06.P13` - Root composition and packaging
