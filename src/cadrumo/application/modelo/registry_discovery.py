@@ -15,7 +15,15 @@ from __future__ import annotations
 from datetime import date
 
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.query_reports import ModeloSupportMatrixReport
+from cadrumo.domain.calculations.registry.query_reports import (
+    ModeloBindingsReport,
+    ModeloCasillaDetailReport,
+    ModeloCasillasReport,
+    ModeloDescribeReport,
+    ModeloFormulasReport,
+    ModeloListReport,
+    ModeloSupportMatrixReport,
+)
 
 from ...core import Period, TaxDomain
 from ...core.resources import resources
@@ -71,18 +79,28 @@ def registry_support_matrix() -> ModeloSupportMatrixReport:
     return _service().support_matrix()
 
 
-def registry_list_modelos(*, year: int | None = None, domain: TaxDomain | None = None):
+def registry_list_modelos(*, year: int | None = None, domain: TaxDomain | None = None) -> ModeloListReport:
     """Return the registry modelo list report, optionally filtered by tax family."""
     return _service().list_modelos(year=year, domain=domain)
 
 
-def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: date | None = None):
+def registry_describe_modelo(
+    modelo: str,
+    *,
+    period: str | None = None,
+    as_of: date | None = None,
+) -> ModeloDescribeReport:
     """Return the registry modelo description report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_describe_modelo_for_scope")
     return _service().describe_modelo(modelo, period=period, as_of=as_of)
 
 
-def registry_describe_modelo_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
+def registry_describe_modelo_for_scope(
+    modelo: str,
+    *,
+    period: Period,
+    as_of: date | None = None,
+) -> ModeloDescribeReport:
     """Return the registry modelo description report for an exact :class:`Period`."""
     return _service().describe_modelo_for_scope(
         modelo,
@@ -98,7 +116,7 @@ def registry_describe_modelo_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-):
+) -> ModeloDescribeReport:
     """Return a modelo description for an explicit filing-year registry scope."""
     return _service().describe_modelo_for_scope(
         modelo,
@@ -116,7 +134,7 @@ def registry_casillas(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-):
+) -> ModeloCasillasReport:
     """Return the registry casilla report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casillas_for_scope")
     return _service().casillas(
@@ -137,7 +155,7 @@ def registry_casillas_for_scope(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-):
+) -> ModeloCasillasReport:
     """Return the registry casilla report for an exact :class:`Period`."""
     return _service().casillas_for_scope(
         modelo,
@@ -159,7 +177,7 @@ def registry_casillas_for_registry_scope(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-):
+) -> ModeloCasillasReport:
     """Return casillas for an explicit filing-year registry scope."""
     return _service().casillas_for_scope(
         modelo,
@@ -178,7 +196,7 @@ def registry_casilla(
     *,
     period: str | None = None,
     as_of: date | None = None,
-):
+) -> ModeloCasillaDetailReport:
     """Return the single-casilla semantic detail report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casilla_for_registry_scope")
     return _service().casilla(modelo, casilla, period=period, as_of=as_of)
@@ -191,7 +209,7 @@ def registry_casilla_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-):
+) -> ModeloCasillaDetailReport:
     """Return one casilla detail for an explicit filing-year registry scope."""
     return _service().casilla_for_scope(
         modelo,
@@ -202,18 +220,33 @@ def registry_casilla_for_registry_scope(
     )
 
 
-def registry_bindings(modelo: str, *, period: str | None = None, as_of: date | None = None):
+def registry_bindings(
+    modelo: str,
+    *,
+    period: str | None = None,
+    as_of: date | None = None,
+) -> ModeloBindingsReport:
     """Return the registry bindings report for a modelo and optional period."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_bindings_for_year")
     return _service().bindings(modelo, period=period, as_of=as_of)
 
 
-def registry_bindings_for_year(modelo: str, *, filing_year: int, as_of: date | None = None):
+def registry_bindings_for_year(
+    modelo: str,
+    *,
+    filing_year: int,
+    as_of: date | None = None,
+) -> ModeloBindingsReport:
     """Return the registry bindings report for a filing year."""
     return _service().bindings_for_year(modelo, filing_year=filing_year, as_of=as_of)
 
 
-def registry_bindings_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
+def registry_bindings_for_scope(
+    modelo: str,
+    *,
+    period: Period,
+    as_of: date | None = None,
+) -> ModeloBindingsReport:
     """Return the registry bindings report for an exact :class:`Period`."""
     return _service().bindings_for_scope(
         modelo,
@@ -223,13 +256,23 @@ def registry_bindings_for_scope(modelo: str, *, period: Period, as_of: date | No
     )
 
 
-def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | None = None):
+def registry_formulas(
+    modelo: str,
+    *,
+    period: str | None = None,
+    as_of: date | None = None,
+) -> ModeloFormulasReport:
     """Return the registry formulas report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_formulas_for_scope")
     return _service().formulas(modelo, period=period, as_of=as_of)
 
 
-def registry_formulas_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
+def registry_formulas_for_scope(
+    modelo: str,
+    *,
+    period: Period,
+    as_of: date | None = None,
+) -> ModeloFormulasReport:
     """Return the registry formulas report for an exact :class:`Period`."""
     return _service().formulas_for_scope(
         modelo,
@@ -245,7 +288,7 @@ def registry_formulas_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-):
+) -> ModeloFormulasReport:
     """Return formulas for an explicit filing-year registry scope."""
     return _service().formulas_for_scope(
         modelo,

@@ -14,7 +14,7 @@ lifecycle.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
@@ -115,9 +115,7 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset[str]()
-    if not isinstance(values, (set, frozenset, tuple, list)) or not all(isinstance(value, str) for value in values):
-        raise TypeError("binding-id projection must be a collection of text")
-    return frozenset(values)
+    return values
 
 
 def discover_modelo_work_wizard_steps(unit: WorkUnit) -> tuple[ModeloWorkWizardStep, ...]:
@@ -313,7 +311,7 @@ class ModeloWorkWizardRun:
 
 
 @contextmanager
-def open_modelo_work_wizard(unit: WorkUnit) -> Iterator[ModeloWorkWizardRun]:
+def open_modelo_work_wizard(unit: WorkUnit) -> Generator[ModeloWorkWizardRun]:
     """Open one copy-scoped wizard run and remove its entries on exit."""
     run_token = uuid4().hex
     _ACTIVE_COPY_RUNS[run_token] = {}

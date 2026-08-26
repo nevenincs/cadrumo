@@ -273,7 +273,7 @@ def select_modelo_work_resolution(
                 translated_message="errors.error.modelo_work_selector_unit_not_found",
                 context={"work_unit_id": request.work_unit_id},
             )
-        work_unit = matches[0]
+        work_unit = next(iter(matches))
         _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
         return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
     if request.operator_work_unit_id is not None:
@@ -305,7 +305,7 @@ def select_modelo_work_resolution(
                 tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
                 selector=request.operator_work_unit_id,
             )
-        work_unit = matches[0]
+        work_unit = next(iter(matches))
         _assert_exact_coordinates(work_unit, request, bucket_id=bucket_id)
         return _resolved_modelo_work_resolution(work_unit, requested_revision_id=request.revision_id)
     if not request.has_visible_target:
@@ -346,7 +346,7 @@ def _select_natural_modelo_work_resolution(
         raise ModeloWorkVisibleTargetAmbiguousError(
             tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
         )
-    work_unit = matches[0]
+    work_unit = next(iter(matches))
     if request.revision_id is not None and request.revision_id != work_unit.revision_id:
         raise ModeloWorkRevisionConflictError(
             requested_revision_id=request.revision_id,
