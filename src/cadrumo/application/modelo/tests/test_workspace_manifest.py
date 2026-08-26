@@ -14,7 +14,6 @@ from cadrumo.domain.calculations.registry.bindings import selector_model_for_sou
 from ....core import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ..workspace_manifest import (
-    MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,
     ModeloWorkspaceManifestCapture,
@@ -29,7 +28,10 @@ from ..workspace_manifest import (
     validate_modelo_workspace_field_manifest,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
-from ..workspace_producers import ModeloWorkspaceContributorKindV1
+from ..workspace_producers import (
+    MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceContributorKindV1,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
