@@ -778,6 +778,20 @@ def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]
     return stem.strip(), tuple(reversed(notes))
 
 
+def _note_governed_period_zero_boolean(raw_values: tuple[str, ...], note_references: tuple[int, ...]) -> bool:
+    """Recognise the source form whose adjacent notes extend ``1``/``2`` with ``0``.
+
+    An ordinary note leaves the printed enumeration closed.  The paired Nota 8
+    and Nota 9 form is different: the official note table adds the reserved
+    period value ``0`` before the printed Yes/No values apply.  The field's
+    typed producer supplies that period decision, while the generated schema
+    retains all three official wire tokens as its closed codec domain.
+    """
+    return (
+        tuple(str(int(value)) for value in raw_values) == ("1", "2") and 8 in note_references and 9 in note_references
+    )
+
+
 def _literal_derivation(
     joined_field: JoinedRecordDesignField,
     profile: ExportTreeTransportProfile,
@@ -1019,24 +1033,12 @@ def _numeric_derivation(
             raise RegistryValidationError(
                 f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has duplicate values",
             )
-        if note_references:
-            # The printed tokens are not a closed wire domain once an official
-            # note conditions them.  The note can require a further value in a
-            # different filing period (M303 DP30301's Nota 8 supplies ``0``)
-            # or prohibit a value in a particular circumstance.  The exact
-            # semantic owner therefore supplies the value; this generator still
-            # derives the source-stated unsigned integer wire shape, but must
-            # not turn the incomplete row text into a narrower enum.
-            return _schema_field(
-                joined_field,
-                data_type="integer",
-                required=_is_required(parser_field.validation),
-                padding=ExportPadding.LEFT_ZERO,
-                justification=ExportJustification.RIGHT,
-                signed=False,
-                export_record_id=export_record_id,
-                derivation_code="numeric-integer-v1",
-            )
+        if _note_governed_period_zero_boolean(raw_values, note_references):
+            # The source prints ``1``/``2`` beside its Yes/No labels, then its
+            # adjacent Nota 8/9 pair adds the period-reserved ``0``.  Preserve
+            # a closed codec domain rather than erasing enum validation; the
+            # typed producer owns which one of the three official values applies.
+            allowed_values = ("0", *allowed_values)
         return _schema_field(
             joined_field,
             data_type="integer",

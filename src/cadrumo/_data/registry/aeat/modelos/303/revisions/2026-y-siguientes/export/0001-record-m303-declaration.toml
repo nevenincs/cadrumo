@@ -400,6 +400,7 @@ justification = 'right'
 signed = false
 value_policy = 'enumerated-digits'
 allowed_values = [
+    '0',
     '1',
     '2',
 ]
