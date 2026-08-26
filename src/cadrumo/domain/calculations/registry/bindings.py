@@ -70,13 +70,9 @@ from .detail_record_bindings import (
     validate_related_party_binding,
 )
 from .donativo_bindings import (
-    DonativoDonorObservation,
-    resolve_donativo_binding_row_values,
-    validate_donativo_binding,
-)
-from .donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
+from .donativo_bindings import validate_donativo_binding
 from .errors import RegistryValidationError
 from .gasto193_bindings import (
     Gasto193Observation,
@@ -210,7 +206,6 @@ from .withholding_bindings import (
 __all__ = [
     "CasillaObservation",
     "DataBindingDefinition",
-    "DonativoDonorObservation",
     "Gasto193Observation",
     "ImpatriadoIncomeObservationProtocol",
     "InventoryProjectionOperation",
@@ -251,7 +246,6 @@ __all__ = [
     "renta_first_slice_binding_target_casillas",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "resolve_donativo_binding_row_values",
     "resolve_gasto193_binding_row_values",
     "resolve_gasto193_binding_values",
     "resolve_invoice_binding_row_values",
