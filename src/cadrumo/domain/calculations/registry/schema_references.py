@@ -110,6 +110,8 @@ class RegistrySnapshotRef(RegistryModel):
 
 
 class PeriodSelector(RegistryModel):
+    """Select filing years and periods using explicit years or an inclusive range."""
+
     years: tuple[int, ...] = ()
     year_from: int | None = None
     year_to: int | None = None
@@ -146,6 +148,8 @@ class PeriodSelector(RegistryModel):
 
 
 class TemporalApplicability(RegistryModel):
+    """Describe the date axis and optional period selector for a valid window."""
+
     date_axis: DateAxis
     valid_from: date
     valid_to: date | None = None
