@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:40414c0b8f3127442d5e4538c96797fe9ecee61a17f5550f51a25a0b32254c6b'
+body_hash: 'sha256:b7c821036881fbc84a5bcda203b782d55a4fbd3c7ba298c1ef4de4e486b7b5d0'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -100,3 +100,40 @@ provision above is the correct or complete legal grounding -- a properly-paced
 pass must open the actual bundled corpus files named here, confirm each
 candidate against the CURRENT consolidated text (never the excerpt above),
 and only then author `legal_refs`/`source_citations`.
+
+### Open domain question: M347 has no ledger fail-closed guard, and no category grouping to build one from
+
+`_m349_ledger_guard.py` (`src/cadrumo/application/modelo/_m349_ledger_guard.py`)
+refuses M349 calculation when raw intracom ledger transactions exist but no
+declarable operador row does, so a taxpayer with real intracom activity
+cannot silently file a zero-row declaration. Its trigger condition is
+`_M349_INTRACOM_LEDGER_CATEGORIES`, a closed three-member `IvaCategory`
+set declared in that same file: `INTRA_COMMUNITY_SUPPLY`,
+`INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`, `INTRA_COMMUNITY_TRIANGULATION`.
+
+That pattern does not transfer to M347. Searched `domain/iva` for an
+equivalent grouping (any M347-specific `IvaCategory` set, threshold-adjacent
+constant, or classification helper) -- none exists. This is a real gap, not
+an unbuilt afternoon of typing: M347's threshold applies across third-party
+operations generally (the CLAVE OPERACIÓN closed set above spans several
+distinct operation kinds -- adquisiciones, entregas, cobros por cuenta de
+terceros, subvenciones públicas, agencia de viajes -- each per the diseño
+text above), not one narrow reverse-charge classification the way M349's
+intracom guard is. Picking a trigger set without resolving this is deciding,
+by fiat, which ledger classifications legitimately should have produced a
+contraparte row -- the same class of judgement the corpus-grounding rule
+protects against, only smaller in scope. Per `no-silent-under-declaration`:
+a guard built on a guessed trigger set either false-fires until operators
+learn to ignore it, or silently fails to fire on the population it exists to
+catch -- both outcomes defeat the guard's purpose.
+
+**Open question, not a recommendation:** what IS the correct trigger
+population for M347's contraparte threshold -- is it a registry-declared
+fact (a per-binding selector predicate already scoped to M347-relevant
+`IvaCategory` members, once the row-producer binding family from the
+sections above exists), or a new `domain/iva` classification analogous to
+M349's? Locators for whoever picks this up: `_m349_ledger_guard.py`
+(the pattern that does not transfer), `domain/iva` (searched, empty of an
+M347 answer), and the CLAVE OPERACIÓN field inventory above (the candidate
+operation-kind boundary a grouping would need to cover, itself still
+unverified against RD 1065/2007's consolidated text).
