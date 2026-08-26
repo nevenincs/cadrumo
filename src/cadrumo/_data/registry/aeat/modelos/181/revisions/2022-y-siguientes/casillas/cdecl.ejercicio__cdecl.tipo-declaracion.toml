@@ -4,7 +4,7 @@
 # registro IS bundled (aeat-dr-181-2022) but no casilla-to-position mapping
 # has been authored from it yet.
 
-[[revisions."2009-y-siguientes".casillas]]
+[[revisions."2022-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 section = ["declarante"]
@@ -15,7 +15,7 @@ input_kind = "informational"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-181-procedure"]
 
-[[revisions."2009-y-siguientes".casillas]]
+[[revisions."2022-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]

@@ -1,4 +1,4 @@
-[revisions."2009-y-siguientes"]
+[revisions."2022-y-siguientes"]
 authority_grade = "applicability"
 # Modelo 181 declaración informativa, approved by orden-eha-3514-2009 art 1
 # with its plazo grounded verbatim in orden-eha-3514-2009 art 6.
@@ -6,8 +6,15 @@ authority_grade = "applicability"
 # authoritative Modelo 181 diseño de registro IS bundled (aeat-dr-181-2022)
 # but no casilla-to-position mapping has been authored from it yet, so no
 # numbered form casilla is fabricated here.
-valid_from = 2009-01-01
-period_selector = { year_from = 2009, periods = ["0A"] }
+# Narrowed from an unbounded 2009 claim to the ejercicio its own layout covers.
+# The revision declares exactly one export layout, `modelo-181-fichero-2022`,
+# citing `aeat-dr-181-2022` (applies 2022 onward), and its deadline windows begin
+# at filing year 2024. Claiming 2009-2021 asserted that those filings are written
+# at a layout AEAT did not publish for them. The three earlier bundled designs
+# (2009, 2016, 2017) remain registered; giving each its own era needs a rendered
+# layout per era, which is export-generation work, not a span edit.
+valid_from = 2022-01-01
+period_selector = { year_from = 2022, periods = ["0A"] }
 orden_aplicabilidad = ["orden-eha-3514-2009:art-1"]
 legal_refs = [
     "orden-eha-3514-2009:art-1",
@@ -37,7 +44,7 @@ Friday, 2026-01-31 Saturday, 2027-01-31 Sunday) -- two of the three fall on a we
 are stored unshifted. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, \"Se \
 aprueba el modelo 181 «Declaracion informativa de prestamos y creditos, y operaciones \
 financieras relacionadas con bienes inmuebles»\", carrying no year bound, so the \
-open-ended 2009-y-siguientes claim does not outrun its orden. VERIFIED -- EXPORT LAYOUT: \
+open-ended 2022-y-siguientes claim does not outrun its orden. VERIFIED -- EXPORT LAYOUT: \
 modelo-181-fichero-2022, format fixed_width, two records. modelo-181-declarante carries 16 \
 offset-bearing fields and modelo-181-declarado carries 34, and each tiles positions 1..500 \
 exactly once with NO gap and NO overlap. The registry loader rejects overlapping ranges \
@@ -56,9 +63,9 @@ measured either way. NOT CLAIMED -- all 3 locales are complete, but the strings 
 audited for accuracy."""
 reviewed_at = 2026-08-21
 
-[revisions."2009-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+[revisions."2022-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2009-y-siguientes' of modelo 181 has no strictly-earlier sibling revision of this modelo (valid_from 2009-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2022-y-siguientes' of modelo 181 has no strictly-earlier sibling revision of this modelo (valid_from 2009-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
 transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-3514-2009:art-1",

@@ -17,7 +17,7 @@
 # ---------------------------------------------------------------------------
 # ERA NOTE -- read before filing an older ejercicio
 # ---------------------------------------------------------------------------
-# The revision this layout is authored on, 2009-y-siguientes, declares
+# The revision this layout is authored on, 2022-y-siguientes, declares
 # year_from = 2009 with no year_to, while the design is footered "Ejercicio
 # 2022" and its source declares applies_from 2022-01-01. AEAT publishes nothing
 # for the intervening years, so this is the only design that can be mirrored and
@@ -46,7 +46,7 @@
 # decimals. The two porcentaje campos differ from each other and from the
 # importes: 166-171 carries THREE decimal digits, 458-462 carries two.
 
-[[revisions."2009-y-siguientes".export_layouts]]
+[[revisions."2022-y-siguientes".export_layouts]]
 id = "modelo-181-fichero-2022"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
