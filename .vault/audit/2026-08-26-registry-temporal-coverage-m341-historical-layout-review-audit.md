@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3dda51fefb1e6e98cbb0a8a2b674d8f3301de3f47db181741d515d291dbfdd4'
+body_hash: 'sha256:6d3a1240a09a3d78d9333271de75ddb1ac98b7b210905c50577061c52fafe6b9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
@@ -179,3 +179,25 @@ canonical selector: `2005/1T` with `on=2005-03-31` refuses and the same natural
 coordinate with `on=2005-04-01` selects `2005-2015`. This removes the
 self-grounded February admission while preserving the source-backed exercise
 and byte-layout scope. S51 remains open for the other modelos in its row.
+
+## Final closure verification (2026-08-26, `1f4d5dc54b`)
+
+PASS. The official BOE-A-2004-17306 final provision permits telematic Modelo
+341 presentation only from the first presentation period beginning after 1
+February 2005, while its Modelo 341 deadline provision starts that quarterly
+period on 1 April. The forward fix accordingly declares
+`valid_from = 2005-04-01` at
+`src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml:11`.
+The canonical selector refuses `2005/1T` at `2005-03-31` and admits it at
+`2005-04-01`; both assertions execute in the focused regression rather than
+mirroring the declaration in a fixture.
+
+No source, layout, or locale regression was observed. The seven focused Modelo
+341 tests pass, including the hash-pinned 619-position/20-field source check,
+the offset and selector mutations, and live label resolution. Ruff is clean.
+An independent load resolves all 108 live `(revision, casilla, locale)` labels,
+and the exact four-catalogue search still finds no retired
+`2000-y-siguientes` branch. `m341-revision-localization` and
+`m341-selector-validity-axis` are closed; no critical, high, or medium finding
+remains.
+
