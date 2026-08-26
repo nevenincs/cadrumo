@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4ab0814f06161e85d6091efe516cf9d4fe63dcde478b435faaa660db7b81078'
+body_hash: 'sha256:edc3859f15c19824c96309d16601222f7f357633988217362f0097c944449a80'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -95,6 +95,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S253]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S257]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S258]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S259]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S274]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S277]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S278]]'
@@ -433,6 +434,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S253` - Prove verification_tolerance remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S257` - Retire the 2 binding_aggregation re-export(s) from the registry bindings dispatch module by direct-importing binding_aggregation_op, default_binding_aggregation_op from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
 - `2026-08-11-tui-architecture-W03-P20-S258` - Retire the 4 bindings_previous_filing re-export(s) from the registry bindings dispatch module by direct-importing previous_filing_binding_source_casilla_ids, previous_filing_observation_requirements, previous_filing_source_reference, resolve_previous_filing_binding_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
+- `2026-08-11-tui-architecture-W03-P20-S259` - Retire the 4 core.aggregation re-export(s) from the registry bindings dispatch module by direct-importing BindingAggregationOp, CounterpartSourceKind, INVOICE_BINDING_SOURCE_KINDS, LEDGER_BINDING_SOURCE_KINDS from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols. This is a CROSS-LAYER facade: a core symbol republished through a registry module, so the direct import must reach core.
 - `2026-08-11-tui-architecture-W03-P20-S274` - Correct the Workspace producer projection fingerprint so it identifies the contract a consumer actually receives instead of demanding that a model's input and output shapes coincide: derive the fingerprint from the serialization schema alone, replace the validation-equals-serialization equality with a real round-trip property proving a dumped projection re-validates, and prove the fingerprint admits a Decimal-bearing domain model while still refusing a genuine schema drift; amend the governing decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S277` - Decide and record the per-casilla join semantics the Workspace schema record requires, deriving each edge from the registry's own declared direction rather than from field-name inference: whether a casilla row lists formulas whose output it is or formulas whose expression references it as an operand, which side of a relation a casilla row claims, and which casilla owns a multi-casilla applicability or constraint rule; amend the governing registry-api-gate decision record in the same change and prove each join against a real revision carrying both edge directions
 - `2026-08-11-tui-architecture-W03-P20-S278` - Decide and record what the field manifest means for the static-inspection admission, which the governing decision record lists as capturing field_manifest while the only generator walks the snapshot-rooted type universe a static inspection never loads: either root a second generator at the inspection's own type universe, or define the snapshot-rooted manifest as the single universe with per-admission availability, and rule out the third reading of a degraded result presented as a complete one; amend the governing registry-api-gate decision record in the same change and prove the chosen manifest digest is stable and admission-honest
