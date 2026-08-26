@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfbb9d73d71dc60ac1b993ccd6a172a31eccc7eec1eec82dca22cf98d057ab5b'
+body_hash: 'sha256:03b179e074759a0039f2a4987b44e653261f515e9bab9291b75679991127c55d'
 step_id: 'S134'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction
 
