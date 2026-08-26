@@ -23,5 +23,6 @@ Submodules
    cadrumo.application.registry._source_connectivity_coverage
    cadrumo.application.registry._temporal_coverage
    cadrumo.application.registry.closure
+   cadrumo.application.registry.closure_capture
    cadrumo.application.registry.errors
    cadrumo.application.registry.source_connectivity

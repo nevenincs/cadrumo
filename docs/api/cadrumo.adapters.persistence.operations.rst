@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.operations._journal_validation
+   cadrumo.adapters.persistence.operations.financial_operand_custody
    cadrumo.adapters.persistence.operations.journal
    cadrumo.adapters.persistence.operations.lease
    cadrumo.adapters.persistence.operations.secure_references
