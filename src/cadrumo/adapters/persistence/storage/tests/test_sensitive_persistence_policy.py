@@ -68,7 +68,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "application" / "review",
-    SRC_CADRUMO / "application" / "workflow" / "_persistence.py",
+    SRC_CADRUMO / "application" / "workflow" / "persistence.py",
     SRC_CADRUMO / "application" / "auth",
     # Successors of the vanished `application/setup`, caught by the non-vacuity
     # assertion below. The setup surface did not shrink, it split: the operator
