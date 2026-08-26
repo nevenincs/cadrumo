@@ -160,6 +160,14 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     Rows are sorted by (row_type, nif-like) so insertion order does not affect
     the revision id — operators can supply rows in any order. The nif-like field
     varies by row type: nif (M184/M232/M347) or nif_comunitario (M349).
+
+    Occurrence number established as presentation-only (S292): every
+    row-producer resolver these detail rows correspond to sorts by an
+    equivalent content key before assigning fichero occurrence numbers, so
+    two supply orders render identical bytes, not merely the same id here.
+    See :class:`~cadrumo.application.modelo._edit_models.
+    ModeloEditDetailRowIntentKind` for why ``MOVE_ROW`` has no addressable
+    effect for this row family.
     """
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
@@ -383,6 +391,7 @@ def _source_provenance_revision_id_payload(
                 ref.source_ref,
                 ref.parent_source_ref or "",
                 ref.fingerprint or "",
+                tuple(sorted(ref.source_casilla_ids)),
                 ref.dependency_treatment,
             )
             for ref in source_provenance
@@ -709,6 +718,17 @@ class CalculationSourceRef(BaseModel):
     revision; duplicating them here would fragment the grounding across two
     surfaces.
 
+    S290: ``source_casilla_ids`` is NOT grounding and the rationale above does
+    not extend to it. It is a subject IDENTITY -- which casilla(s), if any,
+    this source object's resolution feeds -- and nothing else on the revision
+    carries it for the general (non-row-materialized) case; dropping it here
+    was an omission the application-side
+    :class:`~cadrumo.application.aggregation.CalculationSourceProvenance` did
+    not itself make (it already carries the field). An empty tuple is honest
+    when the originating resolver call site did not associate this row with a
+    casilla — it is not fabricated as a claim of "no subject", only carried as
+    "not linked at resolution time".
+
     Attributes:
         resolver_id: Exact canonical resolver identity that produced this row.
         resolved_binding_source: Canonical binding source owned by the resolver.
@@ -722,6 +742,10 @@ class CalculationSourceRef(BaseModel):
         fingerprint: Data-dependent digest of the contributing source object when
             the resolver produced one; ``None`` when the resolver emits a
             reference without a content digest.
+        source_casilla_ids: Casilla identities this source object's resolution
+            feeds, when the originating resolver associated one; empty when it
+            did not. Carried straight from
+            :attr:`~cadrumo.application.aggregation.CalculationSourceProvenance.source_casilla_ids`.
         dependency_treatment: The registry's declared dependency treatment for
             this carry, empty when the revision declares none. Unlike
             ``legal_refs`` / ``source_refs`` this carries no grounding duplicated
@@ -743,6 +767,7 @@ class CalculationSourceRef(BaseModel):
     source_ref: str = Field(min_length=1, max_length=256)
     parent_source_ref: str | None = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
     dependency_treatment: str = ""
 
     @model_validator(mode="after")

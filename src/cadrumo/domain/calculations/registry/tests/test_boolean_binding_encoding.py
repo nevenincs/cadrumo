@@ -103,11 +103,11 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
     """The bite proof: a selector shape the model rejects must raise, not vanish.
 
     ``DataBindingDefinition.model_validate`` already dispatches through
-    ``_ManualInputSelector`` at construction time, so a genuinely malformed
+    ``ManualInputSelector`` at construction time, so a genuinely malformed
     selector cannot reach this function via the normal constructor -- proven
     by the companion assertion below. The residual risk this fix closes is
     DRIFT: a raw ``dict.get("true_value")`` reads a string literal with no tie
-    to the model's own field names, so if ``_ManualInputSelector`` ever
+    to the model's own field names, so if ``ManualInputSelector`` ever
     renamed that field, the model's construction-time validation would keep
     passing (it would just be validating the NEW name) while a raw-dict
     reader silently, permanently stopped finding any boolean encoding at all --
@@ -118,7 +118,7 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
     """
     with pytest.raises(
         ValidationError,
-        match="violates _ManualInputSelector",
+        match="violates ManualInputSelector",
     ) as excinfo:
         DataBindingDefinition.model_validate(
             {
@@ -136,7 +136,7 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
                 "source_refs": ("aeat-dr-100-2025-dictionary",),
             },
         )
-    assert "_ManualInputSelector" in str(excinfo.value), (
+    assert "ManualInputSelector" in str(excinfo.value), (
         "construction-time gate must be the one refusing the typo -- confirms the "
         "residual risk this fix closes is drift, not malformed-data construction"
     )
@@ -147,7 +147,7 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
         selector={
             "casilla_id": "0168",
             "data_type": "boolean",
-            "ture_value": "N",  # the field _ManualInputSelector no longer names "true_value"
+            "ture_value": "N",  # the field ManualInputSelector no longer names "true_value"
             "false_value": "S",
         },
         aggregation={"op": "copy"},

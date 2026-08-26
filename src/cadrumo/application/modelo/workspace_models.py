@@ -135,6 +135,15 @@ class ModeloWorkspaceRefusalCode(StrEnum):
     REVISION_ASSERTION_MISMATCH = "revision_assertion_mismatch"
     STATIC_INSPECTION_UNAVAILABLE = "static_inspection_unavailable"
     AUTHORITY_GRADE_UNAVAILABLE = "authority_grade_unavailable"
+    CALCULATION_UNAVAILABLE = "calculation_unavailable"
+    """S296/S128: the WORK axis carries no calculation for this target
+    (``current_calculation_revision_id is None``), so a GRADED_SNAPSHOT
+    admission cannot produce the required materialization/provenance
+    facets. Distinct from ``AUTHORITY_GRADE_UNAVAILABLE`` (a REGISTRY-axis
+    fact): folding a missing calculation into the grade code would send an
+    operator to the wrong remedy -- the registry, not "calculate this work
+    unit first". Never raised for a STATIC_INSPECTION admission, which has
+    no calculation dependency."""
     SCHEMA_UNAVAILABLE = "schema_unavailable"
     LOCALE_UNAVAILABLE = "locale_unavailable"
     CONSISTENCY_UNAVAILABLE = "consistency_unavailable"
@@ -545,9 +554,21 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """One selected canonical resolver lineage row for a workspace subject."""
+    """One selected canonical resolver lineage row, optionally for a workspace subject.
 
-    subject: ModeloWorkspaceSchemaReferenceV1
+    S290: ``subject`` is ``None`` when the underlying ``calculation_source``
+    (``CalculationSourceRef``) carries no linked casilla identity --
+    ``source_casilla_ids`` empty, which is the common case today since most
+    resolver call sites do not yet populate it. This is the same
+    None-vs-()-shaped distinction S283 gave a schema record's optional
+    grounding fields: ``None`` means "this producer never carries this data
+    for this row", never a silently dropped record. An unlinked ref still
+    produces exactly one record (never zero), so an audit reader sees every
+    contributing source and can distinguish "unattributed" from "record
+    never surfaced".
+    """
+
+    subject: ModeloWorkspaceSchemaReferenceV1 | None
     calculation_source: CalculationSourceRef
 
 

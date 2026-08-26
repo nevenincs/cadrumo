@@ -21,29 +21,32 @@ from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
     ModeloWorkspaceStaleCursorError,
+    binding_schema_records,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
+    formula_schema_records,
+    graded_snapshot_casilla_schema_records,
     graded_snapshot_materialization_facet,
+    graded_snapshot_modelo_workspace_capabilities,
+    graded_snapshot_provenance_facet,
     graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
     paginate_static_inspection_schema_facet,
+    parameter_schema_records,
+    relation_schema_records,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
     resolve_static_inspection_baseline,
     resolve_static_inspection_result,
     resolve_static_inspection_schema_identity,
-    static_inspection_binding_schema_records,
     static_inspection_casilla_schema_records,
     static_inspection_contributors,
     static_inspection_evidence_horizon,
     static_inspection_family_dispositions,
-    static_inspection_formula_schema_records,
     static_inspection_modelo_workspace_capabilities,
-    static_inspection_parameter_schema_records,
-    static_inspection_relation_schema_records,
     static_inspection_schema_records,
 )
 from ..workspace_models import (
@@ -873,11 +876,84 @@ def _real_303_inspection():
     return inspection
 
 
+def _real_303_snapshot():
+    from ....core import RegistryAuthorityGrade
+    from ....domain.calculations.registry.schema import RegistrySnapshot
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection(
+        "303", filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+    )
+    snapshot = capture.projection
+    assert isinstance(snapshot, RegistrySnapshot)
+    return snapshot
+
+
+def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_snapshot() -> None:
+    """S296: the shared BINDING/FORMULA/RELATION/PARAMETER builders cannot drift between admissions.
+
+    Both admissions resolve the same modelo/filing_year/period, so
+    ``inspection.bindings``/``.formulas``/``.relations``/``.parameters`` and
+    ``snapshot.revision.bindings``/etc. must be the same registry-declared
+    data -- proving the shared builders produce byte-identical output either
+    way is the guarantee that a graded and a static read cannot disagree
+    about the same revision's edges.
+    """
+    inspection = _real_303_inspection()
+    snapshot = _real_303_snapshot()
+    revision = snapshot.revision
+
+    inspection_bindings = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+    snapshot_binding_ids = frozenset(binding.id for binding in revision.bindings)
+    snapshot_bindings = binding_schema_records(snapshot_binding_ids, revision.bindings, revision.relations)
+    assert inspection_bindings == snapshot_bindings
+    assert len(inspection_bindings) > 0
+
+    inspection_formulas = formula_schema_records(inspection.formulas)
+    snapshot_formulas = formula_schema_records(revision.formulas)
+    assert inspection_formulas == snapshot_formulas
+    assert len(inspection_formulas) > 0
+
+    inspection_relations = relation_schema_records(inspection.relations)
+    snapshot_relations = relation_schema_records(revision.relations)
+    assert inspection_relations == snapshot_relations
+    assert len(inspection_relations) > 0
+
+    inspection_parameters = parameter_schema_records(inspection.parameters, inspection.formulas)
+    snapshot_parameters = parameter_schema_records(revision.parameters, revision.formulas)
+    assert inspection_parameters == snapshot_parameters
+    assert len(inspection_parameters) > 0
+
+
+def test_graded_casilla_schema_records_populate_what_static_correctly_leaves_absent() -> None:
+    """S296: the same casilla's legal_refs/constraints are None for static, real for graded."""
+    from ....core import OutputLanguage
+
+    inspection = _real_303_inspection()
+    snapshot = _real_303_snapshot()
+    revision = snapshot.revision
+
+    target = _minimal_resolved_target(inspection)
+    static_records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
+    graded_records = graded_snapshot_casilla_schema_records(
+        revision.casillas, revision.formulas, revision.relations, target, output_language=OutputLanguage.ES
+    )
+
+    assert len(graded_records) == len(revision.casillas)
+    assert all(record.legal_refs is None for record in static_records)
+    assert all(record.constraints is None for record in static_records)
+    assert all(record.legal_refs is not None for record in graded_records)
+    assert all(record.constraints is not None for record in graded_records)
+
+    # At least one real casilla in this revision declares a non-empty constraints block.
+    assert any(record.constraints for record in graded_records)
+
+
 def test_static_inspection_binding_schema_records_use_the_real_binding_definitions() -> None:
     from ..workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_binding_schema_records(inspection)
+    records = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
 
     assert len(records) == len(inspection.binding_ids)
     binding_ids = []
@@ -902,7 +978,7 @@ def test_static_inspection_formula_schema_records_carry_their_own_full_operand_s
     from ..workspace_models import ModeloWorkspaceFormulaReferenceV1, ModeloWorkspaceTechnicalLabelV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_formula_schema_records(inspection)
+    records = formula_schema_records(inspection.formulas)
 
     assert len(records) == len(inspection.formulas)
     for record in records:
@@ -920,7 +996,7 @@ def test_static_inspection_relation_schema_records_state_both_of_their_own_endpo
     )
 
     inspection = _real_303_inspection()
-    records = static_inspection_relation_schema_records(inspection)
+    records = relation_schema_records(inspection.relations)
 
     assert len(records) == len(inspection.relations)
     record = records[0]
@@ -937,7 +1013,7 @@ def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas
     from ..workspace_models import ModeloWorkspaceParameterReferenceV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_parameter_schema_records(inspection)
+    records = parameter_schema_records(inspection.parameters, inspection.formulas)
 
     assert len(records) == len(inspection.parameters)
     for record in records:
@@ -1063,6 +1139,40 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
         )
 
     assert result.projection.target.modelo == "130"
+    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
+    assert len(load_log_lines) == 1
+
+
+def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """S296 capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
+    import logging
+
+    from ....core import RegistryAuthorityGrade
+    from ....domain.calculations.registry.schema import RegistrySnapshot
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
+        work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
+
+    assert work_capture.projection.work_unit is not None
+    assert registry_capture.projection.snapshot is not None
+    assert isinstance(registry_capture.projection.snapshot, RegistrySnapshot)
+    assert registry_capture.projection.inspection is None
+    assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+
     load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
     assert len(load_log_lines) == 1
 
@@ -1311,3 +1421,199 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
     assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
     assert transaction_issue.subject.transaction_id == "e" * 64
     assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
+
+
+def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
+    """S290: a source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
+    from ....core import CalculationSourceLineageRole, validated_casilla_id
+    from ....core.aggregation import BindingSourceKind
+    from ....domain.modelos import CalculationSourceRef
+    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
+
+    linked_casilla = validated_casilla_id("00501")
+    second_linked_casilla = validated_casilla_id("00181")
+
+    linked_ref = CalculationSourceRef(
+        resolver_id="invoice_catalogue",
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind="collectible_invoice",
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
+        source_casilla_ids=(second_linked_casilla, linked_casilla),
+    )
+    unlinked_ref = CalculationSourceRef(
+        resolver_id="ledger_iva_aggregation",
+        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind="ledger_iva_aggregation",
+        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="transaction:tx-0001",
+        parent_source_ref=None,
+    )
+
+    records = graded_snapshot_provenance_facet((linked_ref, unlinked_ref))
+
+    assert len(records) == 3
+    linked_records = [record for record in records if record.subject is not None]
+    unlinked_records = [record for record in records if record.subject is None]
+    assert len(linked_records) == 2
+    assert len(unlinked_records) == 1
+    subjects = {
+        record.subject.casilla_id
+        for record in linked_records
+        if isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1)
+    }
+    assert subjects == {linked_casilla, second_linked_casilla}
+    assert all(record.calculation_source is linked_ref for record in linked_records)
+    assert unlinked_records[0].calculation_source is unlinked_ref
+
+
+def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
+    from ....core import RevisionReviewStatus
+    from ....domain.modelos import WorkUnitState
+    from ..workspace_models import (
+        ModeloWorkspaceResolvedTargetV1,
+        ModeloWorkspaceRevisionAssertionV1,
+    )
+
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        law_selected_revision_id=revision_id,
+        review_status=RevisionReviewStatus.PENDING_REVIEW,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        work_unit_id=work_unit_id,
+        work_state=WorkUnitState.BORRADOR,
+    )
+
+
+def _minimal_calculation_revision(*, work_unit_id: str, state):
+    from ....domain.modelos import (
+        CalculationRevision,
+        CalculationRevisionState,
+        derive_calculation_revision_id,
+    )
+
+    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    verified_at = now if state is CalculationRevisionState.VERIFICADO_COMPLETO else None
+    verified_by = "test-operator" if state is CalculationRevisionState.VERIFICADO_COMPLETO else None
+    return CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=state,
+        casilla_values={},
+        observations=(),
+        source_provenance=(),
+        created_at=now,
+        updated_at=now,
+        filing_instance_evidence=None,
+        verified_at=verified_at,
+        verified_by=verified_by,
+    )
+
+
+def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() -> None:
+    """S287: CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
+    from ....domain.modelos import CalculationRevisionState, WorkUnitState
+    from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceCapabilityName
+
+    work_unit_id = "f" * 64
+    target = _resolved_target_with_work_unit(work_unit_id=work_unit_id)
+
+    # No calculation revision at all -> both calculation-derived capabilities unmeasured.
+    none_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=None)
+    }
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+
+    # A BORRADOR revision exists for the exact coordinate -> materialization available, verification not yet.
+    borrador_revision = _minimal_calculation_revision(
+        work_unit_id=work_unit_id, state=CalculationRevisionState.BORRADOR
+    )
+    borrador_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=borrador_revision)
+    }
+    assert (
+        borrador_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        borrador_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+
+    # A VERIFICADO_COMPLETO revision -> both available.
+    verified_revision = _minimal_calculation_revision(
+        work_unit_id=work_unit_id, state=CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    verified_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=verified_revision)
+    }
+    assert (
+        verified_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        verified_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+
+    # A revision for a DIFFERENT work unit must never count -- exact coordinate, not merely "some revision exists".
+    other_revision = _minimal_calculation_revision(
+        work_unit_id="e" * 64, state=CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    mismatched_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=other_revision)
+    }
+    assert (
+        mismatched_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        mismatched_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )

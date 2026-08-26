@@ -143,6 +143,9 @@ from ._calculation_modelo_adjustments import (
 from ._calculation_modelo_adjustments import (
     suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
 )
+from ._calculation_modelo_adjustments import (
+    union_detail_rows_by_identity as _union_detail_rows_by_identity,
+)
 from ._calculation_preparation import (
     prepare_calculation as _prepare_calculation,
 )
@@ -998,7 +1001,11 @@ def _source_provenance_refs(
     ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
     to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
     unlike the per-casilla refs, nothing else on the revision carries it, so it
-    survives onto the persisted ref unchanged.
+    survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
+    dropped: it is a subject identity, not grounding, and the anti-
+    duplication rationale for ``legal_refs``/``source_refs`` does not extend to
+    it -- nothing else on the revision recovers which casilla a general
+    (non-row-materialized) source object explains.
     """
     return tuple(
         CalculationSourceRef(
@@ -1010,6 +1017,7 @@ def _source_provenance_refs(
             source_ref=provenance.source_ref,
             parent_source_ref=provenance.parent_source_ref,
             fingerprint=provenance.fingerprint,
+            source_casilla_ids=provenance.source_casilla_ids,
             dependency_treatment=provenance.dependency_treatment,
         )
         for provenance in source_resolution.provenance
@@ -1295,7 +1303,10 @@ def _bucket_aggregation_channels(
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> _BucketAggregationChannels:
     """Compose mesh, detail-row, and caller channels in their established order."""
-    all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
+    all_detail_rows = _union_detail_rows_by_identity(
+        resolver_rows=source_resolution.detail_rows,
+        caller_rows=detail_rows,
+    )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
         transaction_repository=transaction_repository,

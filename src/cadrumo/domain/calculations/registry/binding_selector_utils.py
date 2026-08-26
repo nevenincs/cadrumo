@@ -8,13 +8,14 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import OneBasedExportOffset
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
+from .manual_input_selector import ManualInputSelector
 
 __all__ = [
     "BindingExportDataType",
@@ -313,21 +314,17 @@ def boolean_binding_encoded_values(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against :class:`_ManualInputSelector`
+            whose selector does not validate against :class:`ManualInputSelector`
             -- a malformed selector must be a named failure, not a silently
             empty "not a boolean binding" result.
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return ()
-    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
-    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
-    # here would cycle. Read through the declared model rather than raw dict keys:
-    # a renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key must
-    # raise, not silently return "not a boolean binding".
-    from .bindings import _ManualInputSelector
-
+    # Read through the declared model rather than raw dict keys: a
+    # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
+    # must raise, not silently return "not a boolean binding".
     try:
-        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
@@ -347,7 +344,7 @@ def boolean_binding_encoded_values(
 class ManualInputRecordFieldSelector(BaseModel):
     """The record-field shape of a validated ``manual_input`` binding selector.
 
-    :class:`_ManualInputSelector` models both the casilla shape and the
+    :class:`ManualInputSelector` models both the casilla shape and the
     record-field shape on one class because the two are mutually exclusive
     and share ``data_type``; this narrower model is what a caller that only
     cares about the record-field shape (a fichero-BOE fixed-record
@@ -384,28 +381,24 @@ def manual_input_record_field_selector(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against ``_ManualInputSelector``
+            whose selector does not validate against ``ManualInputSelector``
             -- a malformed selector must be a named failure, not silently read
             as "not a record-field binding".
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return None
-    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
-    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
-    # here would cycle. Read through the declared model rather than raw dict keys:
-    # a renamed/misspelled ``record`` / ``field`` key must raise, not silently read
-    # as "not a record-field binding".
-    from .bindings import _ManualInputSelector
-
+    # Read through the declared model rather than raw dict keys: a
+    # renamed/misspelled ``record`` / ``field`` key must raise, not silently
+    # read as "not a record-field binding".
     try:
-        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
         ) from exc
     if selector.record is None:
         return None
-    # _ManualInputSelector._validate_manual_input_shape already proved that a
+    # ManualInputSelector._validate_manual_input_shape already proved that a
     # non-None record implies field/offset/length are all non-None too -- the
     # record-field shape's four keys are required together.
     assert selector.field is not None

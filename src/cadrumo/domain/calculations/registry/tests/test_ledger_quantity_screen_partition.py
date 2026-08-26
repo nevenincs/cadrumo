@@ -22,10 +22,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..ledger_binding_resolution import (
-    assert_quantity_readers_cover_independent_facts,
-    independent_quantity_facts,
-)
 from ..ledger_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,
@@ -33,6 +29,7 @@ from ..ledger_bindings import (
     _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
     _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
 )
+from ..quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

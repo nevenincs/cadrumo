@@ -30,15 +30,12 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 from ....core import CasillaId, Modelo
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_resolution import (
-    resolve_ledger_family_binding_values,
-    unsupported_ledger_family_observations,
-)
 from .schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from

@@ -97,18 +97,31 @@ class ModeloEditRowIntentKind(StrEnum):
 class ModeloEditDetailRowIntentKind(StrEnum):
     """The closed ``ModeloDetailRow`` edit intents, addressed by natural key.
 
-    ``MOVE_ROW`` is deliberately NOT a member. Row order affects each row's
-    physical record occurrence number in the exported fichero
-    (``_record_renderer.py``'s ``enumerate(..., 1)`` over ``detail_rows``
-    tuple order), but the calculation revision's content address is
-    explicitly order-BLIND (``_canonical_detail_rows`` sorts by
-    ``(row_type, nif-like)`` specifically so "operators can supply rows in
-    any order"). A pure reorder therefore computes the SAME revision id as
-    the existing revision, so the guarded compare-and-swap persistence
-    layer's duplicate-result branch would silently absorb it and return the
-    existing (unreordered) revision -- the requested reorder would never
-    actually persist. Building MOVE_ROW against the current content-address
-    shape would ship a control that appears to succeed and does nothing.
+    ``MOVE_ROW`` is deliberately NOT a member (established S292). A row's
+    physical record occurrence number in the exported fichero is NOT a
+    function of caller-supplied order at all: every row-producer resolver in
+    :mod:`domain.calculations.registry.detail_record_bindings`
+    (``resolve_atribucion_binding_row_values``, ``_build_related_party_rows``,
+    ``_build_foreign_asset_rows``, and their siblings) sorts its rows by a
+    content key -- ``(country_code, tax_id)`` or equivalent -- BEFORE
+    ``enumerate(..., 1)`` assigns row indices, so two calls supplying the
+    same rows in different orders render byte-identical ficheros (proven in
+    :func:`~cadrumo.application.filing.tests.test_m184_socio_repeat_wiring.
+    test_occurrence_order_is_a_pure_function_of_content_not_of_supply_order`).
+    The AEAT diseno de registro for these record families identifies each
+    repeated record by its declared content (member/counterparty NIF, asset
+    identifier, clave/subclave) rather than by a required sequence -- there
+    is no "declared order" for AEAT to read or for a reorder to change.
+    Consistently, the calculation revision's content address is also
+    order-BLIND (``_canonical_detail_rows`` sorts by ``(row_type,
+    nif-like)`` specifically so "operators can supply rows in any order"). A
+    pure reorder therefore computes the SAME revision id AND renders the
+    SAME fichero bytes as the existing revision, so the guarded
+    compare-and-swap persistence layer's duplicate-result branch would
+    silently absorb it and return the existing revision -- the requested
+    reorder would never actually persist, and even if it did nothing
+    observable would change. Building MOVE_ROW against the current
+    content-address shape would ship a control with no addressable effect.
     """
 
     ADD_ROW = "add_row"
