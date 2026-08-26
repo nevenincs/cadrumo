@@ -6,17 +6,16 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from ..errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from ..record_design import extract_record_design
+from ..schema import ModeloDefinition, RegistryCatalogues
+from ..support_matrix import revision_capability_probe
+from ..temporal import select_revision
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
