@@ -1,9 +1,9 @@
 """Split and merge services for manual ledger transaction lineage.
 
 Split operations load a :class:`TransactionCatalogue` through a
-:class:`TransactionCatalogueRepository`, mark parent and child rows with
+:class:`TransactionCatalogueRepositoryProtocol`, mark parent and child rows with
 :class:`~cadrumo.domain.transactions.SplitLineage`, append audit events through a
-:class:`BucketEventHistoryRepository`, and return
+:class:`BucketEventHistoryRepositoryProtocol`, and return
 :class:`~cadrumo.application.ledger.models.SplitTransactionResult`. Merge operations
 verify the complete child cohort and return
 :class:`~cadrumo.application.ledger.models.MergeTransactionsResult`.
@@ -16,8 +16,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.hashing import sha256_hex
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
 from ...domain.modelos import (
@@ -689,14 +687,18 @@ def merge_transactions(
         sorted_child_ids=sorted_child_ids,
     )
 
-    _persist_merged_transactions(
-        catalogue=catalogue,
+    updated_transactions = dict(catalogue.transactions)
+    updated_transactions[parent_after.transaction_id] = parent_after
+    for archived_child in archived_children:
+        updated_transactions[archived_child.transaction_id] = archived_child
+    updated_transactions[merged_transaction.transaction_id] = merged_transaction
+    new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
+
+    _save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
-        parent_after=parent_after,
-        archived_children=tuple(archived_children),
-        merged_transaction=merged_transaction,
-        event=event,
+        catalogue=new_catalogue,
+        events=(event,),
     )
 
     return MergeTransactionsResult(
@@ -881,31 +883,6 @@ def _build_merge_event(
     )
 
 
-def _persist_merged_transactions(
-    *,
-    catalogue: TransactionCatalogue,
-    transaction_repository: TransactionCatalogueRepository,
-    event_repository: BucketEventHistoryRepository,
-    parent_after: Transaction,
-    archived_children: tuple[Transaction, ...],
-    merged_transaction: Transaction,
-    event: BucketEvent,
-) -> None:
-    updated_transactions = dict(catalogue.transactions)
-    updated_transactions[parent_after.transaction_id] = parent_after
-    for archived_child in archived_children:
-        updated_transactions[archived_child.transaction_id] = archived_child
-    updated_transactions[merged_transaction.transaction_id] = merged_transaction
-    new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
-
-    _save_transaction_catalogue_and_events(
-        transaction_repository=transaction_repository,
-        event_repository=event_repository,
-        catalogue=new_catalogue,
-        events=(event,),
-    )
-
-
 def _resolve_merge_split_group(
     *,
     children: tuple[Transaction, ...],
@@ -1000,6 +977,7 @@ def _resolve_merge_parent(
             },
         )
     return parent
+
 
 __all__ = [
     "merge_transactions",
