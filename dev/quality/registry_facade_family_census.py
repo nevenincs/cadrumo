@@ -339,38 +339,115 @@ def _canonical_plan_step_ids() -> frozenset[str]:
 
 def check_matrix_document(document: dict[str, object]) -> None:
     """Fail closed on census drift or an incomplete/many-to-one adjudication."""
+    required_document_fields = {
+        "schema_version",
+        "relocation_commit",
+        "consumer_categories",
+        "review_status",
+        "rows",
+        "final_package_gate",
+    }
+    if set(document) != required_document_fields:
+        raise RuntimeError("registry facade matrix document schema is incomplete or has unrelated fields")
     if document.get("schema_version") != MATRIX_VERSION or document.get("relocation_commit") != RELOCATION_COMMIT:
         raise RuntimeError("registry facade matrix has the wrong schema or relocation commit")
+    if document.get("consumer_categories") != list(CONSUMER_CATEGORIES):
+        raise RuntimeError("registry facade matrix consumer-category schema drifted")
+    if document.get("review_status") != "pending_independent_architecture_review":
+        raise RuntimeError("registry facade matrix must retain its pending independent-review status")
     rows = document.get("rows")
     if not isinstance(rows, list) or len(rows) != 78:
         raise RuntimeError("registry facade matrix must contain exactly 78 rows")
     expected = generated_rows()
-    expected_pairs = {(row["old_path"], row["new_path"]) for row in expected}
+    expected_pairs = set(mechanical_relocation_pairs())
     actual_pairs = {(row.get("old_path"), row.get("new_path")) for row in rows if isinstance(row, dict)}
     if actual_pairs != expected_pairs:
         raise RuntimeError("registry facade matrix is missing, extra, duplicate, or unrelated c941 rows")
     steps: set[str] = set()
+    disposition_counts = {disposition: 0 for disposition in DISPOSITIONS}
+    required_row_fields = {
+        "old_path",
+        "new_path",
+        "rename_similarity",
+        "facade_exported_symbols",
+        "current_symbol_locators",
+        "consumers",
+        "semantic_owner",
+        "semantic_evidence",
+        "disposition",
+        "terminal_state",
+        "follow_on_step_id",
+        "follow_on_action",
+        "follow_on_scope",
+        "follow_on_predecessors",
+    }
     canonical_step_ids = _canonical_plan_step_ids()
+    plan = PLAN_PATH.read_text(encoding="utf-8")
+    if "- [ ] `W03.P20.S175`" not in plan:
+        raise RuntimeError("S175 must remain open pending independent architecture review")
     for row in rows:
         if not isinstance(row, dict):
             raise RuntimeError("registry facade matrix rows must be objects")
+        if set(row) != required_row_fields:
+            raise RuntimeError(f"registry facade row {row.get('old_path')!r} has an incomplete or grouped schema")
         pair = (row["old_path"], row["new_path"])
         generated = next(item for item in expected if (item["old_path"], item["new_path"]) == pair)
         if (
             row.get("facade_exported_symbols") != generated["facade_exported_symbols"]
+            or row.get("current_symbol_locators") != generated["current_symbol_locators"]
             or row.get("consumers") != generated["consumers"]
         ):
             raise RuntimeError(f"registry facade consumer census drifted for {pair[0]}")
-        for field in ("semantic_owner", "semantic_evidence", "disposition", "follow_on_step_id"):
+        for field in (
+            "semantic_owner",
+            "semantic_evidence",
+            "disposition",
+            "terminal_state",
+            "follow_on_step_id",
+            "follow_on_action",
+            "follow_on_scope",
+        ):
             if not isinstance(row.get(field), str) or not row[field]:
                 raise RuntimeError(f"registry facade row {pair[0]} lacks reviewed {field}")
-        if row["disposition"] not in {"keep_public", "hard_move_complete", "privatize_external_elimination", "delete"}:
+        if "unresolved" in row["semantic_owner"].lower() or "unresolved" in row["terminal_state"].lower():
+            raise RuntimeError(f"registry facade row {pair[0]} remains unresolved")
+        if "not a filename inference" not in row["semantic_evidence"]:
+            raise RuntimeError(f"registry facade row {pair[0]} lacks reviewed semantic evidence")
+        if row["disposition"] not in DISPOSITIONS:
             raise RuntimeError(f"registry facade row {pair[0]} has an invalid disposition")
+        if row["terminal_state"] not in TERMINAL_STATES[row["disposition"]]:
+            raise RuntimeError(f"registry facade row {pair[0]} has an invalid terminal state")
+        if row["follow_on_predecessors"] != ["W03.P20.S175"]:
+            raise RuntimeError(f"registry facade row {pair[0]} does not remain independently gated by S175")
         if row["follow_on_step_id"] in steps:
             raise RuntimeError("registry facade matrix maps more than one row to one follow-on Step")
         if row["follow_on_step_id"] not in canonical_step_ids:
             raise RuntimeError(f"registry facade row {pair[0]} names a non-canonical follow-on Step")
+        plan_row = f"- [ ] `{row['follow_on_step_id']}` - {row['follow_on_action']}; `{row['follow_on_scope']}`."
+        if plan_row not in plan:
+            raise RuntimeError(f"registry facade follow-on Step is absent or diverges: {row['follow_on_step_id']}")
         steps.add(row["follow_on_step_id"])
+        disposition_counts[row["disposition"]] += 1
+    if disposition_counts != {
+        "keep_public": 54,
+        "hard_move_complete": 9,
+        "privatize_external_elimination": 13,
+        "delete": 2,
+    }:
+        raise RuntimeError("registry facade matrix disposition counts do not match the reviewed 54/9/13/2 adjudication")
+    final_gate = document.get("final_package_gate")
+    if not isinstance(final_gate, dict) or set(final_gate) != {"step_id", "action", "scope", "predecessor_step_ids"}:
+        raise RuntimeError("registry facade matrix lacks the final inert-package gate")
+    for field in ("step_id", "action", "scope"):
+        if not isinstance(final_gate.get(field), str) or not final_gate[field]:
+            raise RuntimeError("registry facade final package gate is incomplete")
+    if final_gate["step_id"] in steps or final_gate["step_id"] not in canonical_step_ids:
+        raise RuntimeError("registry facade final package gate must be a distinct canonical Step")
+    if final_gate.get("predecessor_step_ids") != sorted(steps):
+        raise RuntimeError("registry facade final package gate must wait for every disposition Step")
+    final_plan_row = f"- [ ] `{final_gate['step_id']}` - {final_gate['action']}; `{final_gate['scope']}`."
+    if final_plan_row not in plan:
+        raise RuntimeError("registry facade final package gate is absent or diverges")
 
 
 def main(argv: list[str] | None = None) -> int:

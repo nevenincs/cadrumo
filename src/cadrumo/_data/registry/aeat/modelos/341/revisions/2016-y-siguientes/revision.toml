@@ -1,0 +1,47 @@
+[revisions."2016-y-siguientes"]
+authority_grade = "applicability"
+# Modelo 341 autoliquidación/solicitud del IVA, approved by orden-min-2000-12-15-m341 art
+# 1 with its plazo grounded verbatim in orden-min-2000-12-15-m341 art 2.
+# The numbered casillas [01]-[10] and the fichero-BOE export layout ARE now
+# authored, transcribed position by position from the bundled diseño de registro
+# aeat-dr-341-2016: 33 of 33 required positions across both of its records.
+#
+# The grade stays applicability, deliberately and conservatively: promoting it is
+# an operator decision, and it is not made here on the strength of the layout
+# landing.
+#
+# This revision is bounded to the exact source era of aeat-dr-341-2016. The
+# materially different 619-position predecessor is authored separately, and
+# 2000-2004 remains applicability-only because no positional design is bundled.
+valid_from = 2016-01-01
+period_selector = { year_from = 2016, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "enrolled-modelo-341-layout",
+    "aeat-dr-341-2016",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+
+[revisions."2016-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+The 2016 design proves a material wire-layout change but does not adjudicate
+casilla identity across that boundary. No continuity evolution is asserted
+without separate identity evidence; the family is empty pending that evidence."""
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "enrolled-modelo-341-layout",
+    "aeat-dr-341-2016",
+]

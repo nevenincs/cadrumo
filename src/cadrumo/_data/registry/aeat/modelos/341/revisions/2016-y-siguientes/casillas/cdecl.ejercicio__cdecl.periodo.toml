@@ -1,0 +1,26 @@
+# Modelo 341 declaration-header casillas, grounded in orden-min-2000-12-15-m341
+# art 1. The numbered money casillas [01]-[10] are no longer absent: they live in
+# c01__c10.toml, transcribed from the bundled diseño de registro aeat-dr-341-2016.
+
+[[revisions."2016-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+
+[[revisions."2016-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+

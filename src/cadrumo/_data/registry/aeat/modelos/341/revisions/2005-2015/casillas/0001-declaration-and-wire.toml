@@ -1,0 +1,63 @@
+[[revisions."2005-2015".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+
+[[revisions."2005-2015".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+
+[[revisions."2005-2015".casillas]]
+id = "wire.letras-etiqueta"
+number = "letras-etiqueta"
+section = ["presentacion", "identificacion"]
+data_type = "text"
+semantic_role = "letras_etiqueta_persona_fisica"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The historical design declares exactly one four-character Letras etiqueta field at position 14."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-historical-letras-etiqueta"]
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".casillas]]
+id = "wire.codigo-cuenta-cliente"
+number = "codigo-cuenta-cliente"
+section = ["reintegro", "cuenta"]
+data_type = "text"
+semantic_role = "codigo_cuenta_cliente"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The historical design declares exactly one twenty-digit C.C.C. field at position 130."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-historical-codigo-cuenta-cliente"]
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".casillas]]
+id = "wire.observaciones"
+number = "observaciones"
+section = ["presentacion"]
+data_type = "text"
+semantic_role = "observaciones_presentacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The historical design declares exactly one 350-character Observaciones field at position 270."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-historical-observaciones"]
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]

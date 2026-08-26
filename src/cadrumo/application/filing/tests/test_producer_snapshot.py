@@ -586,7 +586,11 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
         update={"hydrocarbon_deposit_advance_payment_deduction_entitled": entitled},
     )
 
-    lexical = m303_profile_lexicals(profile, _m303_filing_facts(period_code=period_code))
+    # This lexical branch reads only the typed filing period.  A partial typed
+    # instance keeps the proof at the producer boundary instead of requiring a
+    # whole bundled-registry load unrelated to this source-stated wire rule.
+    facts = M303FilingFacts.model_construct(period=Period.from_year_and_code(2026, period_code))
+    lexical = m303_profile_lexicals(profile, facts)
 
     assert lexical.hydrocarbon_deposit_advance_payment_deduction_entitled == expected
 

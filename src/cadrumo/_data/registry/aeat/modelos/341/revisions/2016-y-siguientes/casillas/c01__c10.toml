@@ -17,7 +17,7 @@
 # would assert a summation the source does not close. Open question for tax
 # review.
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "01"
 number = "01"
 section = ["iva", "reagp", "compensacion", "operaciones"]
@@ -29,7 +29,7 @@ export_refs = ["modelo-341-p01-importe-operaciones-01"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "02"
 number = "02"
 section = ["iva", "reagp", "compensacion", "operaciones"]
@@ -41,7 +41,7 @@ export_refs = ["modelo-341-p01-importe-operaciones-02"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "03"
 number = "03"
 section = ["iva", "reagp", "compensacion", "operaciones"]
@@ -53,7 +53,7 @@ export_refs = ["modelo-341-p01-importe-operaciones-03"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "04"
 number = "04"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
@@ -65,7 +65,7 @@ export_refs = ["modelo-341-p01-porcentaje-compensacion-04"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "05"
 number = "05"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
@@ -77,7 +77,7 @@ export_refs = ["modelo-341-p01-porcentaje-compensacion-05"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "06"
 number = "06"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
@@ -89,7 +89,7 @@ export_refs = ["modelo-341-p01-porcentaje-compensacion-06"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "07"
 number = "07"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -101,7 +101,7 @@ export_refs = ["modelo-341-p01-importe-compensacion-07"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "08"
 number = "08"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -113,7 +113,7 @@ export_refs = ["modelo-341-p01-importe-compensacion-08"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "09"
 number = "09"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -125,7 +125,7 @@ export_refs = ["modelo-341-p01-importe-compensacion-09"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-[[revisions."2000-y-siguientes".casillas]]
+[[revisions."2016-y-siguientes".casillas]]
 id = "10"
 number = "10"
 section = ["iva", "reagp", "compensacion", "totales"]
@@ -138,3 +138,4 @@ input_kind = "manual"
 export_refs = ["modelo-341-p01-importe-total-10"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
+

@@ -1,0 +1,7 @@
+[[revisions."2000-2004".application_links]]
+id = "modelo-341-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-min-2000-12-15-m341:art-2"]
+source_refs = ["enrolled-modelo-341-procedure"]
