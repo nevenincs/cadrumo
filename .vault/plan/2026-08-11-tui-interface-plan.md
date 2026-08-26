@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:b240179765c88c6272bf173624dbce809e1d69d934cb4c5216d1586bca43276a'
+body_hash: 'sha256:7dedd60c29b3e4f6a152dfc8bca83676f9ca2a24488a25719af10ba22f7fc1e2'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -92,9 +92,9 @@ Compose Overview, Get data, Required, Review, and Ready as a linear journey whos
 
 Expose explicit source actions, provenance, conflicts, and exact apply or reject decisions through public application contracts.
 
-- [ ] `W03.P06.S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions; `src/cadrumo/entrypoints/tui/profile/overview.py`.
-- [ ] `W03.P06.S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
-- [ ] `W03.P06.S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts; `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`.
+- [x] `W03.P06.S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions; `src/cadrumo/entrypoints/tui/profile/overview.py`.
+- [x] `W03.P06.S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
+- [x] `W03.P06.S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts; `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`.
 
 ## Wave `W04` - Secret surfaces and generic flows
 
