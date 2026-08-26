@@ -240,6 +240,7 @@ __all__ = [
     "InterfaceRecord",
     "Manifest",
     "RenderedFrame",
+    "SkippedFrame",
     "digest",
     "now",
     "read_manifest",

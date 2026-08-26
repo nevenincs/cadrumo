@@ -15,7 +15,16 @@ from PIL import Image
 
 from ..._paths import REPO_ROOT, UTF_8
 from .. import _coverage, _diff, _inventory, _raster
-from .._artifacts import Manifest, RenderedFrame, read_manifest, write_index, write_manifest
+from .._artifacts import (
+    FailedFrame,
+    InterfaceRecord,
+    Manifest,
+    RenderedFrame,
+    SkippedFrame,
+    read_manifest,
+    write_index,
+    write_manifest,
+)
 from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -307,16 +316,42 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
         text="text/status.txt",
         png_sha256="a" * 64,
         text_sha256="b" * 64,
+        elapsed_ms=1234.5,
         geometry_findings=("ContentScroll overflows but cannot scroll",),
         missing_glyphs=("ⓘ",),
     )
     manifest = Manifest(
-        schema_version=1,
+        schema_version=2,
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=26,
         frames=(frame,),
-        interfaces=(),
-        failures=("form: harness refused",),
+        interfaces=(
+            InterfaceRecord(
+                qualname="pkg.Painted",
+                kind="app",
+                locator="a.py:1",
+                rendered_by=("status",),
+                note="a stated reading",
+            ),
+        ),
+        failures=(
+            FailedFrame(
+                surface="modelo-work-wizard",
+                viewport="small",
+                theme="dark",
+                kind="refused",
+                attempts=3,
+                detail="refused: application.modelo.errors.profile_readiness_setup_incomplete",
+            ),
+        ),
+        skipped=(
+            SkippedFrame(
+                surface="modelo-work-wizard",
+                viewport="medium",
+                theme="light",
+                reason="surface already refused: readiness incomplete",
+            ),
+        ),
     )
     write_manifest(tmp_path, manifest)
     assert read_manifest(tmp_path) == manifest
@@ -340,8 +375,6 @@ def test_a_manifest_missing_a_field_refuses_at_load(tmp_path: Path) -> None:
 
 def test_the_index_reports_uncovered_interfaces_rather_than_omitting_them(tmp_path: Path) -> None:
     """A report that lists only what rendered reads as full coverage."""
-    from .._artifacts import InterfaceRecord
-
     manifest = Manifest(
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=22,
