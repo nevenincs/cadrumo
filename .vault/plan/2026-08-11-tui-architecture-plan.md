@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:e3543bf5fe02faec37557a63013925b74fab864a5ebc4fd89e2fd1ad191172a2'
+body_hash: 'sha256:8a7ae81817a74988e05169ae84da7b9e50b68168e3b962e52fa4d362b9931b58'
 ---
 
 # `tui-architecture` plan
@@ -117,7 +117,7 @@ Publish the frontend-safe operation definition, atomic observation, REVIEW, and 
 - [x] `W02.P19.S121` - Perform the PRE_RELEASE current-only cutover by proving zero affected nonterminal operations, refusing every superseded journal and lease shape, and deleting the v1 lease reader, acquisition migrator, retired schema dispatchers, fixtures, and migration tests without a compatibility path; `src/cadrumo/application/operations and src/cadrumo/adapters/persistence/operations`.
 - [x] `W02.P19.S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher; `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`.
 - [x] `W02.P19.S123` - Implement TuiOperationObservationDependencyReceiptV1 and its sole live-tree validator, proving strict round trips, atomic interleaving, progress and replay, registered REVIEW non-authority, restart refresh, digest drift refusal, production DI, sentinel non-retention, current-only deletion, and a semantic-plus-exact producer census that fails duplicate operation state or projection authorities; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
-- [ ] `W02.P19.S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition; `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
+- [x] `W02.P19.S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition; `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
 
 ## Wave `W03` - Application operation executors
 
