@@ -9,21 +9,6 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from cadrumo.domain.calculations.registry.constructs import resolve_construct, resolve_revision_constructs
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.remote_state_guard import (
-    RemoteOperation,
-    assert_remote_operation_allowed,
-    remote_state_policy_from_cross_reference,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import CasillaId, RegistryAuthorityGrade
 from ....contribuyente import (
     PROFILE_KEYS,
@@ -33,6 +18,20 @@ from ....contribuyente import (
     TaxResidenceProfile,
 )
 from ..binding_selector_utils import selector_as_dict
+from ..constructs import resolve_construct, resolve_revision_constructs
+from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..export import resolve_export_layout
+from ..export_parse import parse_export_payload
+from ..remote_state_guard import (
+    RemoteOperation,
+    assert_remote_operation_allowed,
+    remote_state_policy_from_cross_reference,
+)
+from ..schema import DataBindingDefinition, RegistrySnapshot
+from ..schema_input_kind import InputKind
+from ..schema_surfaces import CasillaDefinition
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
