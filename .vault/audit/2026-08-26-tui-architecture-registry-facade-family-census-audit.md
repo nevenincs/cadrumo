@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:e11181950893fe387b9d70f1b43c9d5dbfca5059fc39805cd4a95d07aae82332'
+body_hash: 'sha256:39244a864eb3163b168edada78b18f4a44b656a49d9fe536dda8182adaa23609'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -13,24 +13,28 @@ related:
 
 ## Scope
 
-Audit the private-to-public registry module relocation recorded by `c94133f29516b12e3529f3d154c31592562f6198`, rather than replaying that already-delivered mechanical change. Semantic Vaultspec-RAG discovery located the registry public-boundary and authority owners; the exact c941 rename delta then supplied the fixed denominator. `dev/quality/registry_facade_family_census.py` derives the 78 historic pairs, parent-facade exports, current symbol locators, and categorized current consumers under `src/`, `dev/`, and `docs/`.
+Audit the private-to-public registry module relocation recorded by `c94133f29516b12e3529f3d154c31592562f6198`, rather than replaying that already-delivered mechanical change. The fixed c941 rename delta supplies the 78-pair denominator. The reviewed source and consumer evidence is read exclusively from the immutable clean Git object `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`; it is not derived from the current worktree. The archive includes authored source, tests, fixtures, manifests, receipts, tooling, and documentation while excluding generated registry data.
 
-The checked matrix records one independent future disposition per pair. It is an evidence and scheduling artifact only: no registry family disposition is implemented or represented as complete by this audit.
+The checked matrix records one independent future disposition per pair. It is evidence and scheduling only: this audit implements no registry family disposition.
 
 ## Findings
 
 ### registry-facade-c941-denominator | medium | exact historical family requires individual disposition gates
 
-The historic `git diff-tree -r -M` evidence names exactly 78 one-to-one renames beneath `src/cadrumo/domain/calculations/registry`. The checked matrix refuses a missing, additional, duplicate, unrelated, grouped, unresolved, or many-to-one pair. It also stores every parent-facade export, its current source locator array, and all current production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer arrays.
+The historic `git diff-tree -r -M` evidence names exactly 78 one-to-one renames beneath `src/cadrumo/domain/calculations/registry`. The checked matrix refuses a missing, extra, duplicate, unrelated, grouped, unresolved, or many-to-one pair. Every row records parent-facade exports, immutable source locators, categorized consumers, literal dynamic imports, unresolved nonliteral dynamic-import sites, a structured per-row owner locator census, competing in-family sites, substitutability rationale, RAG query/result, terminal destinations, and a distinct canonical follow-on Step.
 
-`R01` through `R78` follow deterministic bytewise old/new-pair order. The Sol disposition packet was normalized by named module rather than its presentation row number: `schema.py` is the hard-move special, while `schema_verification.py` remains keep-public.
+Relative `ImportFrom` targets are resolved to absolute modules; legacy annotations and `ast.TypeAlias` nodes are included. Package member attributes are attributed to one owning facade member rather than every row. The immutable measurement record is regenerated with the evidence commit, not a hard-coded test number, so source evolution cannot silently retain stale edge evidence.
 
-The reviewed terminal inventory is 54 `keep_public`, 9 `hard_move_complete`, 13 `privatize_external_elimination`, and 2 `delete`. The hard-move cases explicitly reserve the remote-authority move to `src/cadrumo/core/remote_authority.py`, the `ENCODING_ALIAS_MAP` move to `src/cadrumo/domain/calculations/registry/schema_exports.py`, and the `schema.py` local-definition cut while routing its borrowed symbols to their existing owners. The final package gate is separately scheduled to prove zero project package bindings, zero re-exports, and zero unresolved family rows.
+`R01` through `R78` follow deterministic bytewise old/new-pair order. The Sol disposition packet is normalized by named module: `schema.py` is the hard-move special while `schema_verification.py` remains keep-public. The inventory is 54 `keep_public`, 9 `hard_move_complete`, 13 `privatize_external_elimination`, and 2 `delete`. The hard-move cases reserve the remote-authority move to `src/cadrumo/core/remote_authority.py`, `ENCODING_ALIAS_MAP` to `src/cadrumo/domain/calculations/registry/schema_exports.py`, and the `schema.py` local-definition cut with borrowed bindings routed to their existing owners.
 
-### registry-facade-independent-review | medium | S175 remains open pending architecture review
+A separate current-terminal report observes future S176--S254 work against the working tree. It accepts a removed public candidate or private relocation as a valid pending terminal state and never demands a shim, alias, forwarding module, or re-export. It is intentionally separate from the immutable S175 evidence check.
 
-The matrix is deterministically complete and plan-bound, but this execution has not performed the independent Sol architecture review required by the source Step. `W03.P20.S175` therefore remains open. S173 and every affected registry-family implementation stay blocked by the S175 review gate and the individual disposition Steps; the current inert package marker at `src/cadrumo/domain/calculations/registry/__init__.py:1` is not a substitute for those future proofs.
+### registry-facade-independent-review | medium | Sol review failed frozen evidence and S175 remains open
+
+Independent Sol review of frozen `976d47eb75` failed because its census was worktree-derived, did not fully resolve relative imports or `ast.TypeAlias`, dropped nonliteral dynamic imports, used imprecise package attribution, and had boilerplate semantic evidence that could not survive later H/P/D terminal changes.
+
+This remediation binds the regenerated schema-v2 matrix to `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`, adds structured machine-anchored evidence and a terminal-state observer, and adds regressions for source measurements, TypeAlias, fixture ordering, dynamic imports, package attributes, dirty-worktree immunity, and future terminal disappearance. S175 remains open pending a new independent Sol review; S173 and affected registry work remain blocked by S175 and the individual disposition Steps.
 
 ## Recommendations
 
-Execute exactly one canonical plan Step for each matrix row after the independent review clears S175. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not start S173 or use the matrix as evidence of a completed hard move, privatization, or deletion before its corresponding follow-on Step has its own execution record and verification.
+Execute exactly one canonical plan Step for each matrix row after the independent review clears S175. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not use this audit or its matrix as evidence that a hard move, privatization, or deletion has already completed.
