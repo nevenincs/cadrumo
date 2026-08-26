@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 
 from cadrumo.core import STRICT_FROZEN_CONFIG, CasillaId, Period, hydrate_scenario_filing_period
 from cadrumo.core.time import now
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -24,7 +25,6 @@ from cadrumo.domain.calculations.registry.ids import (
     RelationId,
     WorkbookOutputId,
 )
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
 from ._workbook_parity import (

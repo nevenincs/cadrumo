@@ -2,5 +2,5 @@
 @static aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
 @blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Or reconcile a local justificante PDF against the filed quarter.
-@static aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
+@static aeat app modelo reconcile import --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
 @blocked operator-artifact Needs a real AEAT justificante PDF carrying a CSV; the bundled annex specimens carry none.

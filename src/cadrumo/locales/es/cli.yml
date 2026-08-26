@@ -1692,7 +1692,8 @@ cli:
         (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
         --period 1T --year 2024).'
   config:
-    app_help: Gestionar configuración local y diagnósticos
+    app_help: Configurar y reparar el perfil local, las credenciales, el almacenamiento
+      y el enlace con Google.
     auth:
       apoderado:
         check_help: Verificar contra la AEAT (no disponible; las lecturas en vivo
@@ -3797,7 +3798,8 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: Comandos de la aplicación fiscal (ledger, modelo, overview, registry).
+    app_app_help: 'Trabajo fiscal: ledger, modelo, lecturas en vivo de AEAT, overview,
+      registry, review y diagnósticos de ejecución.'
     app_help: Acceder a los comandos de nivel de aplicación.
     app_help_help: Mostrar la ayuda de los comandos de la aplicación.
     debug_help: Habilitar salida detallada de depuración.

@@ -27,17 +27,19 @@ discrepancy_causes = [
 ]
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41", "ley-27-2014:art-124"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-# Grounded against the AEAT Manual practico de Sociedades 2024, Cap. 6
-# "Cuota liquida minima (casilla 00619)", "Ejemplo 1" (paginas 392-396): a
-# large-company (INCN > 20M) worked example printing BOTH a "sin tributacion
-# minima" liquidacion ("Cuota integra [00562] 500.000", "Cuota liquida
-# [00592] 270.000") and the final "con tributacion minima" liquidacion once
-# LIS art. 30 bis is applied ("Cuota liquida minima [00619] 300.000", "Cuota
-# liquida [00592] 300.000"); no Modelo 202 pagos fraccionados are mentioned,
-# so cuota diferencial [00611] equals cuota liquida in both scenarios. See
-# test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example.py
-# and
+# This revision declares NO externally grounded casillas, deliberately.
+#
+# The predecessor revision grounds 00562, 00592 and 00611 on the AEAT Manual
+# practico de Sociedades 2024, Cap. 6 "Ejemplo 1", bundled as
 # corpus/manual_oracles/modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json.
-# The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
-# this declaration symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["DP200014:00562", "DP200014B:00592", "DP200014B:00611"]
+# That oracle carries ejercicio 2024 figures and applies to the 2024 filing
+# year alone, so it cannot ground the same casillas here. Nothing bundled
+# carries them for an applicable filing year yet.
+#
+# Enrollment in this expectation is NOT grounding: it reconciles filed against
+# engine, while grounding is the stronger claim that an independent AEAT
+# authority confirms the engine figure. Declaring the ids without a bundled
+# oracle would assert the stronger claim with nothing behind it. The
+# declaration returns when a Manual practico de Sociedades worked example for
+# an applicable ejercicio is bundled -- the oracle follows the evidence, never
+# the other way round.

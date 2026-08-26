@@ -441,9 +441,10 @@ def _text_reference_owners(
                 owners.add(owner)
                 break
             target = target.rpartition(".")[0]
-        if reference.startswith(package) and (
-            owner := member_owners.get(reference.removeprefix(package).split(".", maxsplit=1)[0])
-        ) in valid_owners:
+        if (
+            reference.startswith(package)
+            and (owner := member_owners.get(reference.removeprefix(package).split(".", maxsplit=1)[0])) in valid_owners
+        ):
             owners.add(owner)
     return owners
 
@@ -851,14 +852,23 @@ def _bound_plan_step(step_id: str, action: str, scope: str, plan: str) -> str:
     if scope_paths and not scope_paths.issubset(set(re.findall(r"(?:src|dev|docs)/[A-Za-z0-9_./-]+", plan_row))):
         raise RuntimeError(f"registry facade follow-on Step scope diverges: {step_id}")
     ignored = {
-        "and", "the", "from", "into", "with", "without", "every", "complete",
-        "public", "module", "registry", "family", "direct", "imports", "tests",
+        "and",
+        "the",
+        "from",
+        "into",
+        "with",
+        "without",
+        "every",
+        "complete",
+        "public",
+        "module",
+        "registry",
+        "family",
+        "direct",
+        "imports",
+        "tests",
     }
-    action_terms = {
-        term
-        for term in re.findall(r"[a-z][a-z0-9_]{3,}", action.lower())
-        if term not in ignored
-    }
+    action_terms = {term for term in re.findall(r"[a-z][a-z0-9_]{3,}", action.lower()) if term not in ignored}
     shared_terms = action_terms.intersection(re.findall(r"[a-z][a-z0-9_]{3,}", plan_row.lower()))
     if len(shared_terms) < min(3, len(action_terms)):
         raise RuntimeError(f"registry facade follow-on Step action is unrelated: {step_id}")

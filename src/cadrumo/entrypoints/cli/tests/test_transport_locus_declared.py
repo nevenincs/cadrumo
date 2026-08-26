@@ -69,18 +69,27 @@ def test_a_declared_local_parameter_carries_both_a_shape_and_a_role() -> None:
 
 
 @pytest.mark.parametrize("locus", [TransportLocus.LOCAL_IN, TransportLocus.LOCAL_OUT])
-def test_each_verb_declares_at_most_one_primary_local_parameter_per_direction(locus: TransportLocus) -> None:
-    """Two primaries in one direction means the role axis carries no information."""
+def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: TransportLocus) -> None:
+    """Two primaries of the SAME shape mean the role axis carries no information.
+
+    Two primaries of DIFFERENT shapes are legitimate and the tree has one:
+    ``app ledger evidence batch`` takes a positional directory and a repeatable
+    ``--file``, and its own help says either combines with or replaces the
+    other. Neither supports the other, so calling one auxiliary would be a
+    false claim about which input the verb is about. The invariant is therefore
+    keyed on shape as well as direction.
+    """
     offenders = []
     for node in _leaves():
-        primary = [
-            parameter.name
-            for parameter in node.spec.parameters
-            if parameter.transport_locus is locus and parameter.transport_role is TransportRole.PRIMARY
-        ]
-        if len(primary) > 1:
-            offenders.append(f"{' '.join(node.path)} :: {', '.join(sorted(primary))}")
-    assert not offenders, f"verbs declaring more than one {locus.value} primary: " + "; ".join(sorted(offenders))
+        by_shape: dict[object, list[str]] = {}
+        for parameter in node.spec.parameters:
+            if parameter.transport_locus is not locus or parameter.transport_role is not TransportRole.PRIMARY:
+                continue
+            by_shape.setdefault(parameter.transport_shape, []).append(parameter.name)
+        for shape, names in by_shape.items():
+            if len(names) > 1:
+                offenders.append(f"{' '.join(node.path)} :: {shape.value} :: {', '.join(sorted(names))}")
+    assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(sorted(offenders))
 
 
 def test_a_remote_handle_declares_neither_shape_nor_role() -> None:

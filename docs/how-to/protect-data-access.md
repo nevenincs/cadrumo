@@ -68,7 +68,7 @@ oversized payload, descriptor collision, or I/O failure leaves no profile.
 The CLI does not currently export a recovery artifact, so do not treat the
 phrase as a complete operator recovery path. Where an external provisioning
 workflow supplies the matching artifact, use it only with the explicit
-artifact-based profile restore command and a source capsule. The artifact and
+artifact-based `profile archive import` command and a source capsule. The artifact and
 phrase prove a restore; they do not log in, reset the passphrase, enroll
 recovery in the restored profile, or travel inside a normal backup archive.
 
@@ -135,8 +135,8 @@ Use the same two leaf flags on each scalar-secret command:
 | `aeat config login` | `{"passphrase": "..."}` |
 | `aeat config profile create` | `{"passphrase": "...", "passphrase_confirmation": "..."}` |
 | `aeat config passphrase change` | `{"current_passphrase": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
-| `aeat config profile restore` without `--artifact` | `{"passphrase": "..."}` |
-| `aeat config profile restore` with `--artifact` | `{"recovery_secret": "..."}` |
+| `aeat config profile archive import` without `--artifact` | `{"passphrase": "..."}` |
+| `aeat config profile archive import` with `--artifact` | `{"recovery_secret": "..."}` |
 | `aeat config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
 
 Each object must contain exactly the fields shown. For profile creation, also

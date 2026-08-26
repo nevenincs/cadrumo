@@ -116,11 +116,13 @@ Submodules
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.justificante_repository
+   cadrumo.application.modelo.m145_communication_period
    cadrumo.application.modelo.profile_binding
    cadrumo.application.modelo.reconciliation
    cadrumo.application.modelo.reconciliation_parsing
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
+   cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_review_projection
    cadrumo.application.modelo.work_unit_repository

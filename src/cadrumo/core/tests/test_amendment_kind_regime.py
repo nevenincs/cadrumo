@@ -12,7 +12,7 @@ function under test):
   IRPF correction mechanism "para los períodos impositivos 2024 y
   siguientes"; the registry's 2024 revision carries the rectificativa
   discrepancia-de-criterio casilla (0669).
-- M200: the 2024-y-siguientes registry revision carries rectificativa
+- M200: the 2024 registry revision carries rectificativa
   casillas throughout its "rectificativa" sections.
 - M130/M131: the bundled diseño de registros carries no rectificativa fields
   at all (stops at "ejercicios 2019 y siguientes"); no bundled AEAT source

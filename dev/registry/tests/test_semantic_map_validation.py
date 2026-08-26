@@ -13,8 +13,8 @@ from cadrumo.core import (
     M303ProrrataActivityProjectionRef,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline import _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat

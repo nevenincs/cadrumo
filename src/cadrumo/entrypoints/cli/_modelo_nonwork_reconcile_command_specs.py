@@ -216,7 +216,7 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.application.modelo", "ModeloReconciliationEvidenceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.application.modelo.reconciliation_records", "ModeloReconciliationEvidenceKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.reconcile.file_kind_help"),
                 multiple=False,

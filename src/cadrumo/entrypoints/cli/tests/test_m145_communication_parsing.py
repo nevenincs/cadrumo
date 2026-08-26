@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ....application.modelo._m145_communication_records import M145CommunicationPeriod
+from ....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .._modelo_cli_support import parse_casilla_override, resolve_default_actor
 from .._modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli, m145_field_values_from_cli
 

@@ -143,7 +143,7 @@ def test_relation_handoff_applicability_measures_period_and_clean_state_contract
         )
         == (
             "200",
-            "2024-y-siguientes",
+            "2024",
             "modelo-200-2024-rel-202-pagos-fraccionados",
             "0A",
         )

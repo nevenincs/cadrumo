@@ -1676,7 +1676,8 @@ cli:
         1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
         (p. ex. --period 1T --year 2024).'
   config:
-    app_help: Gestionar configuració local i diagnòstics
+    app_help: Configurar i reparar el perfil local, les credencials, l'emmagatzematge
+      i l'enllaç amb Google.
     auth:
       apoderado:
         check_help: Verificar contra l'AEAT (no disponible; les lectures en viu estan
@@ -3757,7 +3758,8 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: Ordres de l'aplicació fiscal (ledger, modelo, overview, registry).
+    app_app_help: 'Treball fiscal: ledger, modelo, lectures en viu d''AEAT, overview,
+      registry, review i diagnòstics d''execució.'
     app_help: Accedir als comandos de nivell d'aplicació.
     app_help_help: Mostra l'ajuda dels comandos de l'aplicació.
     debug_help: Habilita la sortida detallada de depuració.

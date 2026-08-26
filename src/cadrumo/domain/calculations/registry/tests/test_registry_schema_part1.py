@@ -827,7 +827,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     defect can no longer occur proves nothing.
     """
     modelo, _catalogues = _committed_modelo("200")
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions["2024"]
 
     composed = tuple(
         prefix
@@ -861,7 +861,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
             "length": 17,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024-y-siguientes", field=collapsed)
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024", field=collapsed)
     assert any("to a slot of length 17" in failure for failure in failures), failures
 
 
@@ -889,7 +889,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     contradiction the detector reports.
     """
     modelo, _catalogues = _committed_modelo("200")
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions["2024"]
 
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == set(ExportDraftAttribute), (
         "the width ruling must stay total over the declarable attributes, or a "
@@ -918,7 +918,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
             "length": SPANISH_TAX_ID_WIDTH,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024-y-siguientes", field=misbound)
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024", field=misbound)
     assert any(f"to a slot of length {SPANISH_TAX_ID_WIDTH}" in failure for failure in failures), failures
 
 

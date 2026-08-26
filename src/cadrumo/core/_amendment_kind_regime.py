@@ -26,7 +26,7 @@ Registros and manual corpus:
   2025); the registry casilla ``0669`` (2024 revision, "discrepancia de
   criterio administrativo... autoliquidación rectificativa") corroborates M100
   carries rectificativa support from filing_year 2024.
-- **M200** (Impuesto sobre Sociedades): the 2024-y-siguientes registry
+- **M200** (Impuesto sobre Sociedades): the ejercicio-2024 registry
   revision carries rectificativa casillas (``0497``/``0499``/``0508``/``0509``/
   ``0513``/``0519``/etc.), so M200 supports rectificativa from filing_year
   2024 onward.
@@ -155,7 +155,7 @@ _RECTIFICATIVA_EFFECTIVE_FROM: dict[str, date] = {
     # criterio casilla (0669). M100's revisions are single filing years, so
     # the boundary is simply the close of filing_year 2024 (annual, 0A).
     Modelo.M100: date(2024, 12, 31),
-    # M200 (Impuesto sobre Sociedades): the 2024-y-siguientes registry
+    # M200 (Impuesto sobre Sociedades): the ejercicio-2024 registry
     # revision carries rectificativa casillas throughout its "liquidacion_iv"
     # / "rectificativa" sections. M200's revision windows are annual.
     Modelo.M200: date(2024, 12, 31),

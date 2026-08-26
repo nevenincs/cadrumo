@@ -592,7 +592,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerDocLinkPullFolderResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerEvidencePullAllResult"),
             identity="ledger.evidence.pull_all",
         ),
     ),

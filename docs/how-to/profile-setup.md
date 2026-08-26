@@ -372,7 +372,7 @@ What each step does:
 - **Archive export** writes a sealed, encrypted copy of the profile. The target
   filename must end with `.cadrumo-bucket.tar.gz`. The archive is encrypted with
   the profile passphrase and does not carry the profile label. Restore it with
-  `aeat config profile restore`, and read a sealed archive's header without
+  `aeat config profile archive import`, and read a sealed archive's header without
   decrypting it using `aeat config profile archive inspect`.
 
 A sealed archive contains taxpayer data, including the tax identifier, activity,

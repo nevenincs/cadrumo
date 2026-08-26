@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-26 10:39+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -33,11 +33,11 @@ msgid ""
 "during a later review."
 msgstr ""
 "Aquesta pàgina tracta el {term}`justificante`, el rebut PDF signat que "
-"l'AEAT emet quan presentes al portal, i la conciliació: com baixar el rebut "
-"de l'AEAT i conservar-lo com a evidència xifrada al teu perfil, i com "
-"comparar-lo amb el teu registre de presentació local perquè una errada "
-"d'escriptura al portal, un període incorrecte o un valor local obsolet "
-"apareguin ara en lloc de durant una revisió posterior."
+"l'AEAT emet quan presentes al portal, i la conciliació: com baixar el "
+"rebut de l'AEAT i conservar-lo com a evidència xifrada al teu perfil, i "
+"com comparar-lo amb el teu registre de presentació local perquè una "
+"errada d'escriptura al portal, un període incorrecte o un valor local "
+"obsolet apareguin ara en lloc de durant una revisió posterior."
 
 #: ../../how-to/reconcile.md:10
 msgid "There are two ways to supply the justificante:"
@@ -49,18 +49,19 @@ msgid ""
 "receipt from the AEAT sede (read-only), stores an encrypted copy in your "
 "profile, and reconciles in one step."
 msgstr ""
-"**Baixa'l de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de la "
-"sede de l'AEAT (només lectura), en desa una còpia xifrada al teu perfil i "
-"concilia en un sol pas."
+"**Baixa'l de l'AEAT** amb `reconcile pull` - l'eina recupera el rebut de "
+"la sede de l'AEAT (només lectura), en desa una còpia xifrada al teu "
+"perfil i concilia en un sol pas."
 
 #: ../../how-to/reconcile.md:15
+#, fuzzy
 msgid ""
-"**Use a local PDF** with `reconcile file --file` - you downloaded the "
+"**Use a local PDF** with `reconcile import --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
-"**Fes servir un PDF local** amb `reconcile file --file` - has descarregat "
-"tu mateix el justificante; la comprovació és local i mai no contacta amb "
-"l'AEAT."
+"**Fes servir un PDF local** amb `reconcile file --file` - has descarregat"
+" tu mateix el justificante; la comprovació és local i mai no contacta amb"
+" l'AEAT."
 
 #: ../../how-to/reconcile.md:18
 msgid "Before you start"
@@ -79,8 +80,8 @@ msgid ""
 "a locally filed work unit (you have run `aeat app modelo work file` for "
 "this filing) that was presented at the AEAT portal"
 msgstr ""
-"una unitat de treball presentada localment (has executat `aeat app modelo "
-"work file` per a aquesta presentació) que es va presentar al portal de "
+"una unitat de treball presentada localment (has executat `aeat app modelo"
+" work file` per a aquesta presentació) que es va presentar al portal de "
 "l'AEAT"
 
 #: ../../how-to/reconcile.md:25
@@ -92,7 +93,8 @@ msgstr ""
 "consulta [Autentica't amb l'AEAT](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
-msgid "for `reconcile file`: the justificante PDF on disk"
+#, fuzzy
+msgid "for `reconcile import`: the justificante PDF on disk"
 msgstr "per a `reconcile file`: el PDF del justificante al disc"
 
 #: ../../how-to/reconcile.md:29
@@ -104,26 +106,27 @@ msgid ""
 msgstr ""
 "Per crear un perfil, consulta [Configura el teu perfil de contribuent"
 "](profile-setup.md). Per al flux de treball de presentació, consulta la "
-"[guia ràpida](quickstart.md). Cada ordre d'aquesta pàgina necessita la teva "
-"contrasenya de clau mestra; l'eina la demana."
+"[guia ràpida](quickstart.md). Cada ordre d'aquesta pàgina necessita la "
+"teva contrasenya de clau mestra; l'eina la demana."
 
-#: ../../how-to/reconcile.md:33
+#: ../../how-to/reconcile.md:34
 msgid "Pull and store the justificante"
 msgstr "Baixa i desa el justificante"
 
-#: ../../how-to/reconcile.md:35
+#: ../../how-to/reconcile.md:36
 msgid ""
 "Keep the receipt with your records: it is the official evidence behind "
 "every filed period. Fetch the justificante for one filed period and store"
 " it in your profile without reconciling yet. This reads from the AEAT "
 "sede, so it is shown as a display frame:"
 msgstr ""
-"Conserva el rebut amb els teus registres: és l'evidència oficial que hi ha "
-"darrere de cada període presentat. Recupera el justificante d'un període "
-"presentat i desa'l al teu perfil sense conciliar encara. Això llegeix de la "
-"sede de l'AEAT, de manera que es mostra com a marc il·lustratiu:"
+"Conserva el rebut amb els teus registres: és l'evidència oficial que hi "
+"ha darrere de cada període presentat. Recupera el justificante d'un "
+"període presentat i desa'l al teu perfil sense conciliar encara. Això "
+"llegeix de la sede de l'AEAT, de manera que es mostra com a marc "
+"il·lustratiu:"
 
-#: ../../how-to/reconcile.md:43
+#: ../../how-to/reconcile.md:44
 msgid ""
 "`pull` is live-only: it reads from AEAT (read-only) and needs the "
 "configured authentication session. `--modelo`, `--year`, and `--period` "
@@ -132,14 +135,15 @@ msgid ""
 "Móvil no coincide...`); on a first run the real cause is usually that no "
 "AEAT session is configured yet."
 msgstr ""
-"`pull` és només en directe: llegeix de l'AEAT (només lectura) i necessita la "
-"sessió d'autenticació configurada. `--modelo`, `--year` i `--period` són "
-"tots obligatoris. Quan l'autenticació no està configurada, la baixada es "
-"nega abans de contactar amb l'AEAT amb un missatge d'identitat de Cl@ve (`La "
-"identidad de Cl@ve Móvil no coincide...`); en una primera execució, la causa "
-"real sol ser que encara no hi ha cap sessió de l'AEAT configurada."
+"`pull` és només en directe: llegeix de l'AEAT (només lectura) i necessita"
+" la sessió d'autenticació configurada. `--modelo`, `--year` i `--period` "
+"són tots obligatoris. Quan l'autenticació no està configurada, la baixada"
+" es nega abans de contactar amb l'AEAT amb un missatge d'identitat de "
+"Cl@ve (`La identidad de Cl@ve Móvil no coincide...`); en una primera "
+"execució, la causa real sol ser que encara no hi ha cap sessió de l'AEAT "
+"configurada."
 
-#: ../../how-to/reconcile.md:50
+#: ../../how-to/reconcile.md:51
 msgid ""
 "The output reports the stored capture: its snapshot id, the expediente it"
 " belongs to, the CSV verification code printed on the receipt, the PDF's "
@@ -151,57 +155,60 @@ msgid ""
 msgstr ""
 "La sortida informa de la captura desada: el seu id d'instantània, "
 "l'expediente a què pertany, el codi de verificació CSV imprès al rebut, "
-"l'empremta del contingut del PDF i quan es va capturar. Els bytes del PDF es "
-"desen xifrats dins del teu perfil, de manera que no cal que conservis una "
-"còpia descarregada a part. Tornar a baixar-lo per al mateix modelo, any i "
-"període desa una captura nova i marca l'anterior com a substituïda, de "
-"manera que l'últim rebut sempre és l'actiu."
+"l'empremta del contingut del PDF i quan es va capturar. Els bytes del PDF"
+" es desen xifrats dins del teu perfil, de manera que no cal que conservis"
+" una còpia descarregada a part. Tornar a baixar-lo per al mateix modelo, "
+"any i període desa una captura nova i marca l'anterior com a substituïda,"
+" de manera que l'últim rebut sempre és l'actiu."
 
-#: ../../how-to/reconcile.md:58
+#: ../../how-to/reconcile.md:59
 msgid ""
 "List every capture stored in the active profile, then inspect one (an "
 "unambiguous prefix of the snapshot id is enough). Both read the stored "
 "captures back through the live justificante surface, so they are shown as"
 " display frames:"
 msgstr ""
-"Llista cada captura desada al perfil actiu i, tot seguit, inspecciona'n una "
-"(n'hi ha prou amb un prefix inequívoc de l'id d'instantània). Totes dues "
-"llegeixen les captures desades a través de la superfície de justificantes en "
-"directe, de manera que es mostren com a marcs il·lustratius:"
+"Llista cada captura desada al perfil actiu i, tot seguit, inspecciona'n "
+"una (n'hi ha prou amb un prefix inequívoc de l'id d'instantània). Totes "
+"dues llegeixen les captures desades a través de la superfície de "
+"justificantes en directe, de manera que es mostren com a marcs "
+"il·lustratius:"
 
-#: ../../how-to/reconcile.md:65
+#: ../../how-to/reconcile.md:66
 msgid ""
 "The view reports the expediente id, the CSV verification code, the PDF "
 "fingerprint, whether the capture is still active or superseded, and when "
 "it was captured."
 msgstr ""
 "La vista informa de l'id de l'expediente, el codi de verificació CSV, "
-"l'empremta del PDF, si la captura encara està activa o substituïda, i quan "
-"es va capturar."
+"l'empremta del PDF, si la captura encara està activa o substituïda, i "
+"quan es va capturar."
 
-#: ../../how-to/reconcile.md:69
+#: ../../how-to/reconcile.md:70
 msgid "Pull the justificante from AEAT and reconcile"
 msgstr "Baixa el justificante de l'AEAT i concilia"
 
-#: ../../how-to/reconcile.md:71
+#: ../../how-to/reconcile.md:72
 msgid ""
 "Fetch the receipt for the filing and reconcile in one command. The pull "
 "reads from AEAT, so it is shown as a display frame:"
 msgstr ""
-"Recupera el rebut de la presentació i concilia en una sola ordre. La baixada "
-"llegeix de l'AEAT, de manera que es mostra com a marc il·lustratiu:"
+"Recupera el rebut de la presentació i concilia en una sola ordre. La "
+"baixada llegeix de l'AEAT, de manera que es mostra com a marc "
+"il·lustratiu:"
 
-#: ../../how-to/reconcile.md:77
+#: ../../how-to/reconcile.md:78
 msgid ""
 "Replace `303`, `2026`, and `1T` with the modelo, year, and period of your"
 " actual filing. You can also name the work unit directly as a positional "
 "argument instead of the `--modelo --year --period` selectors."
 msgstr ""
-"Reemplaça `303`, `2026` i `1T` amb el modelo, l'any i el període de la teva "
-"presentació real. També pots anomenar la unitat de treball directament com a "
-"argument posicional en lloc dels selectors `--modelo --year --period`."
+"Reemplaça `303`, `2026` i `1T` amb el modelo, l'any i el període de la "
+"teva presentació real. També pots anomenar la unitat de treball "
+"directament com a argument posicional en lloc dels selectors `--modelo "
+"--year --period`."
 
-#: ../../how-to/reconcile.md:81
+#: ../../how-to/reconcile.md:82
 msgid ""
 "The pull is read-only at AEAT. The fetched receipt is stored as an "
 "encrypted capture in your profile, so the official evidence stays "
@@ -209,129 +216,130 @@ msgid ""
 "later, see [Pull and store the justificante](#pull-and-store-the-"
 "justificante) above."
 msgstr ""
-"La baixada és de només lectura a l'AEAT. El rebut recuperat es desa com a "
-"captura xifrada al teu perfil, de manera que l'evidència oficial continua "
-"disponible després que l'ordre acabi. Per llistar o inspeccionar les "
-"captures desades més endavant, consulta [Baixa i desa el justificante"
-"](#pull-and-store-the-justificante) més amunt."
+"La baixada és de només lectura a l'AEAT. El rebut recuperat es desa com a"
+" captura xifrada al teu perfil, de manera que l'evidència oficial "
+"continua disponible després que l'ordre acabi. Per llistar o inspeccionar"
+" les captures desades més endavant, consulta [Baixa i desa el "
+"justificante](#pull-and-store-the-justificante) més amunt."
 
-#: ../../how-to/reconcile.md:86
+#: ../../how-to/reconcile.md:87
 msgid "Reconcile against a local PDF instead"
 msgstr "O bé concilia contra un PDF local"
 
-#: ../../how-to/reconcile.md:88
+#: ../../how-to/reconcile.md:89
 msgid ""
 "If you already downloaded the justificante from the portal, compare your "
 "local filing record against that file. This check is local and never "
 "contacts AEAT, but it needs the real receipt PDF on disk, so it is shown "
 "as a display frame:"
 msgstr ""
-"Si ja has descarregat el justificante del portal, compara el teu registre "
-"de presentació local contra aquell fitxer. Aquesta comprovació és local i "
-"mai no contacta amb l'AEAT, però necessita el PDF real del rebut al disc, de "
-"manera que es mostra com a marc il·lustratiu:"
+"Si ja has descarregat el justificante del portal, compara el teu registre"
+" de presentació local contra aquell fitxer. Aquesta comprovació és local "
+"i mai no contacta amb l'AEAT, però necessita el PDF real del rebut al "
+"disc, de manera que es mostra com a marc il·lustratiu:"
 
-#: ../../how-to/reconcile.md:95
+#: ../../how-to/reconcile.md:96
 msgid "This check is local. It reads the PDF you supply and never contacts AEAT."
 msgstr ""
-"Aquesta comprovació és local. Llegeix el PDF que aportes i mai no contacta "
-"amb l'AEAT."
+"Aquesta comprovació és local. Llegeix el PDF que aportes i mai no "
+"contacta amb l'AEAT."
 
-#: ../../how-to/reconcile.md:97
+#: ../../how-to/reconcile.md:98
 msgid "Read the result"
 msgstr "Llegeix el resultat"
 
-#: ../../how-to/reconcile.md:99
+#: ../../how-to/reconcile.md:100
 msgid "Both transports report one of three verdicts:"
 msgstr "Tots dos transports informen d'un de tres veredictes:"
 
-#: ../../how-to/reconcile.md:101
+#: ../../how-to/reconcile.md:102
 msgid "**matches** - the justificante matches the local filing record."
 msgstr ""
 "**matches** - el justificante coincideix amb el registre de presentació "
 "local."
 
-#: ../../how-to/reconcile.md:102
+#: ../../how-to/reconcile.md:103
 msgid ""
 "**mismatches** - one or more fields differ. The report names each field "
 "and shows the local value next to the value found in the PDF."
 msgstr ""
-"**mismatches** - un o més camps difereixen. L'informe anomena cada camp i "
-"mostra el valor local al costat del valor trobat al PDF."
+"**mismatches** - un o més camps difereixen. L'informe anomena cada camp i"
+" mostra el valor local al costat del valor trobat al PDF."
 
-#: ../../how-to/reconcile.md:104
+#: ../../how-to/reconcile.md:105
 msgid ""
 "**evidence_invalid** - the PDF could not be read. Check that the file is "
 "the AEAT justificante and not a different document."
 msgstr ""
-"**evidence_invalid** - no s'ha pogut llegir el PDF. Comprova que el fitxer "
-"és el justificante de l'AEAT i no un document diferent."
+"**evidence_invalid** - no s'ha pogut llegir el PDF. Comprova que el "
+"fitxer és el justificante de l'AEAT i no un document diferent."
 
-#: ../../how-to/reconcile.md:107
+#: ../../how-to/reconcile.md:108
 msgid ""
 "Reconciliation compares four header fields only: the modelo code, the "
 "filing year, the period, and the taxpayer identifier (NIF, CIF, DNI, or "
 "NIE). It does not compare box (casilla) values. A `mismatches` verdict "
 "always names one of those four fields, never a box."
 msgstr ""
-"La conciliació compara només quatre camps de capçalera: el codi de modelo, "
-"l'any de presentació, el període i l'identificador del contribuent (NIF, "
-"CIF, DNI o NIE). No compara els valors de les casilles. Un veredicte "
-"`mismatches` sempre anomena un d'aquests quatre camps, mai una casilla."
+"La conciliació compara només quatre camps de capçalera: el codi de "
+"modelo, l'any de presentació, el període i l'identificador del "
+"contribuent (NIF, CIF, DNI o NIE). No compara els valors de les casilles."
+" Un veredicte `mismatches` sempre anomena un d'aquests quatre camps, mai "
+"una casilla."
 
-#: ../../how-to/reconcile.md:112
+#: ../../how-to/reconcile.md:113
 msgid "Handle a mismatch"
 msgstr "Gestiona una discrepància"
 
-#: ../../how-to/reconcile.md:114
+#: ../../how-to/reconcile.md:115
 msgid ""
 "A `mismatches` verdict names the header field that differs and shows your"
 " local value next to the value in the justificante."
 msgstr ""
-"Un veredicte `mismatches` anomena el camp de capçalera que difereix i mostra "
-"el teu valor local al costat del valor del justificante."
+"Un veredicte `mismatches` anomena el camp de capçalera que difereix i "
+"mostra el teu valor local al costat del valor del justificante."
 
-#: ../../how-to/reconcile.md:117
+#: ../../how-to/reconcile.md:118
 msgid ""
 "Confirm the justificante is the correct one for this filing, not a "
 "different period or taxpayer. A wrong receipt is the most common cause."
 msgstr ""
-"Confirma que el justificante és el correcte per a aquesta presentació, no "
-"d'un període o contribuent diferent. Un rebut equivocat és la causa més "
+"Confirma que el justificante és el correcte per a aquesta presentació, no"
+" d'un període o contribuent diferent. Un rebut equivocat és la causa més "
 "habitual."
 
-#: ../../how-to/reconcile.md:119
+#: ../../how-to/reconcile.md:120
 msgid ""
 "If the modelo, year, or period differs, you either reconciled against the"
 " wrong filing or filed the wrong period at the portal. Re-run "
 "reconciliation with the correct selectors, or check what you submitted."
 msgstr ""
-"Si el modelo, l'any o el període difereixen, o bé has conciliat contra la "
-"presentació equivocada o bé has presentat el període equivocat al portal. "
-"Torna a executar la conciliació amb els selectors correctes, o comprova què "
-"has presentat."
+"Si el modelo, l'any o el període difereixen, o bé has conciliat contra la"
+" presentació equivocada o bé has presentat el període equivocat al "
+"portal. Torna a executar la conciliació amb els selectors correctes, o "
+"comprova què has presentat."
 
-#: ../../how-to/reconcile.md:122
+#: ../../how-to/reconcile.md:123
 msgid ""
 "If the taxpayer identifier differs, confirm the active profile matches "
 "the taxpayer the justificante was issued to."
 msgstr ""
-"Si l'identificador del contribuent difereix, confirma que el perfil actiu "
-"coincideix amb el contribuent a qui es va emetre el justificante."
+"Si l'identificador del contribuent difereix, confirma que el perfil actiu"
+" coincideix amb el contribuent a qui es va emetre el justificante."
 
-#: ../../how-to/reconcile.md:124
+#: ../../how-to/reconcile.md:125
 msgid ""
 "If the justificante itself appears wrong, contact your asesor or AEAT "
 "directly."
 msgstr ""
-"Si el justificante mateix sembla incorrecte, contacta amb el teu asesor o "
-"amb l'AEAT directament."
+"Si el justificante mateix sembla incorrecte, contacta amb el teu asesor o"
+" amb l'AEAT directament."
 
-#: ../../how-to/reconcile.md:127
+#: ../../how-to/reconcile.md:128
 msgid "If a box value looks wrong"
 msgstr "Si un valor de casilla sembla incorrecte"
 
-#: ../../how-to/reconcile.md:129
+#: ../../how-to/reconcile.md:130
 msgid ""
 "Reconciliation does not compare box (casilla) values, so it cannot tell "
 "you that a computed total differs from what you filed. To correct a box "
@@ -340,58 +348,61 @@ msgid ""
 "complementaria. See [Review and supply calculation inputs](review-"
 "calculation-values.md)."
 msgstr ""
-"La conciliació no compara els valors de les casilles, de manera que no et "
-"pot dir que un total calculat difereix del que has presentat. Per corregir "
-"un valor de casilla, fes servir el flux de treball d'esmena en lloc de la "
-"conciliació. Torna a comprovar les entrades i torna a calcular. Si el "
-"període ja s'havia presentat, presenta una complementaria. Consulta [Revisa "
-"i aporta entrades de càlcul](review-calculation-values.md)."
+"La conciliació no compara els valors de les casilles, de manera que no et"
+" pot dir que un total calculat difereix del que has presentat. Per "
+"corregir un valor de casilla, fes servir el flux de treball d'esmena en "
+"lloc de la conciliació. Torna a comprovar les entrades i torna a "
+"calcular. Si el període ja s'havia presentat, presenta una "
+"complementaria. Consulta [Revisa i aporta entrades de càlcul](review-"
+"calculation-values.md)."
 
-#: ../../how-to/reconcile.md:135
+#: ../../how-to/reconcile.md:136
 msgid "What to keep as evidence"
 msgstr "Què conservar com a evidència"
 
-#: ../../how-to/reconcile.md:137
+#: ../../how-to/reconcile.md:138
 msgid ""
 "The justificante is your proof of what AEAT received. Here is what each "
 "path stores:"
 msgstr ""
-"El justificante és la teva prova del que l'AEAT ha rebut. Vet aquí què desa "
-"cada camí:"
+"El justificante és la teva prova del que l'AEAT ha rebut. Vet aquí què "
+"desa cada camí:"
 
-#: ../../how-to/reconcile.md:140
+#: ../../how-to/reconcile.md:141
 msgid ""
 "`reconcile pull` stores the fetched justificante as an encrypted copy in "
 "your profile."
 msgstr ""
-"`reconcile pull` desa el justificante recuperat com a còpia xifrada al teu "
-"perfil."
+"`reconcile pull` desa el justificante recuperat com a còpia xifrada al "
+"teu perfil."
 
-#: ../../how-to/reconcile.md:142
+#: ../../how-to/reconcile.md:143
+#, fuzzy
 msgid ""
-"`reconcile file` reads a PDF you supply but does not store it. If you "
+"`reconcile import` reads a PDF you supply but does not store it. If you "
 "reconcile against a downloaded PDF, also pull the receipt so an encrypted"
 " copy is kept in your profile. See [Pull and store the justificante"
 "](#pull-and-store-the-justificante)."
 msgstr ""
-"`reconcile file` llegeix un PDF que aportes però no el desa. Si concilies "
-"contra un PDF descarregat, baixa també el rebut perquè es conservi una còpia "
-"xifrada al teu perfil. Consulta [Baixa i desa el justificante](#pull-and-"
-"store-the-justificante)."
+"`reconcile file` llegeix un PDF que aportes però no el desa. Si concilies"
+" contra un PDF descarregat, baixa també el rebut perquè es conservi una "
+"còpia xifrada al teu perfil. Consulta [Baixa i desa el justificante"
+"](#pull-and-store-the-justificante)."
 
-#: ../../how-to/reconcile.md:145
+#: ../../how-to/reconcile.md:146
 msgid ""
 "Reconciliation history is a read-back you can regenerate from the "
 "justificante, so it needs no separate backup."
 msgstr ""
-"L'historial de conciliacions és una relectura que pots regenerar a partir "
-"del justificante, de manera que no necessita cap còpia de seguretat a part."
+"L'historial de conciliacions és una relectura que pots regenerar a partir"
+" del justificante, de manera que no necessita cap còpia de seguretat a "
+"part."
 
-#: ../../how-to/reconcile.md:148
+#: ../../how-to/reconcile.md:149
 msgid "Review past reconciliations"
 msgstr "Revisa conciliacions anteriors"
 
-#: ../../how-to/reconcile.md:150
+#: ../../how-to/reconcile.md:151
 msgid ""
 "Each reconciliation is recorded in the profile's event history. List the "
 "past reconciliations recorded for the active profile:"
@@ -399,15 +410,15 @@ msgstr ""
 "Cada conciliació es registra a l'historial d'esdeveniments del perfil. "
 "Llista les conciliacions anteriors registrades per al perfil actiu:"
 
-#: ../../how-to/reconcile.md:157
+#: ../../how-to/reconcile.md:158
 msgid ""
 "On a fresh profile the list is empty; after you reconcile a filing a row "
 "appears for each run."
 msgstr ""
-"En un perfil nou la llista és buida; després de conciliar una presentació "
-"apareix una fila per cada execució."
+"En un perfil nou la llista és buida; després de conciliar una presentació"
+" apareix una fila per cada execució."
 
-#: ../../how-to/reconcile.md:160
+#: ../../how-to/reconcile.md:161
 msgid ""
 "Add `--work-unit-id <id>` to narrow the list to a single work unit. Each "
 "row shows when the reconciliation ran, the work unit, the evidence "
@@ -416,54 +427,55 @@ msgid ""
 "read-back rather than a separate stored record."
 msgstr ""
 "Afegeix `--work-unit-id <id>` per limitar la llista a una sola unitat de "
-"treball. Cada fila mostra quan es va executar la conciliació, la unitat de "
-"treball, la font d'evidència, el veredicte i quants camps van diferir. La "
-"conciliació és repetible a demanda a partir del justificante, de manera que "
-"això és una relectura de conveniència més que no pas un registre desat a "
-"part."
+"treball. Cada fila mostra quan es va executar la conciliació, la unitat "
+"de treball, la font d'evidència, el veredicte i quants camps van diferir."
+" La conciliació és repetible a demanda a partir del justificante, de "
+"manera que això és una relectura de conveniència més que no pas un "
+"registre desat a part."
 
-#: ../../how-to/reconcile.md:166
+#: ../../how-to/reconcile.md:167
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/reconcile.md:168
+#: ../../how-to/reconcile.md:169
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - understand what the justificante proves and what a "
 "complete audit handoff still requires."
 msgstr ""
 "[Importació, exportació i evidència](../reference/import-export-and-"
-"evidence.md) - entén què demostra el justificante i què encara requereix un "
-"traspàs d'auditoria complet."
+"evidence.md) - entén què demostra el justificante i què encara requereix "
+"un traspàs d'auditoria complet."
 
-#: ../../how-to/reconcile.md:171
+#: ../../how-to/reconcile.md:172
 msgid ""
-"[File your modelo at the AEAT portal](file-at-aeat.md) - the "
-"filing handoff that produces the justificante."
+"[File your modelo at the AEAT portal](file-at-aeat.md) - the filing "
+"handoff that produces the justificante."
 msgstr ""
 "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md) - el "
 "traspàs de presentació que produeix el justificante."
 
-#: ../../how-to/reconcile.md:173
+#: ../../how-to/reconcile.md:174
 msgid "[Quickstart](quickstart.md) - the end-to-end filing workflow."
 msgstr "[Guia ràpida](quickstart.md) - el flux de treball de presentació complet."
 
-#: ../../how-to/reconcile.md:174
+#: ../../how-to/reconcile.md:175
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "amend a filing if reconciliation finds a mismatch."
 msgstr ""
-"[Revisa i aporta entrades de càlcul](review-calculation-values.md) - esmena "
-"una presentació si la conciliació troba una discrepància."
+"[Revisa i aporta entrades de càlcul](review-calculation-values.md) - "
+"esmena una presentació si la conciliació troba una discrepància."
 
-#: ../../how-to/reconcile.md:176
+#: ../../how-to/reconcile.md:177
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referència de la CLI](../cli/index.rst) - referència completa d'opcions."
 
-#: ../../how-to/reconcile.md:177
+#: ../../how-to/reconcile.md:178
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - fix local "
 "readiness problems."
 msgstr ""
 "[Diagnostica i repara la teva configuració local](troubleshooting.md) - "
 "corregeix problemes de preparació local."
+

@@ -102,7 +102,7 @@ def test_no_absolute_self_imports_in_cadrumo_package(source_tree_ast: Mapping[Pa
         pytest.param("import cadrumo.core\n", 1, id="dotted-import"),
         pytest.param("from cadrumo.core import Period\n", 1, id="dotted-from-import"),
         pytest.param(
-            "from cadrumo.application.modelo import resolve_registry_revision_for_work_target\n",
+            "from cadrumo.application.modelo import law_selected_revision_for_work_target\n",
             1,
             id="deep-from-import",
         ),

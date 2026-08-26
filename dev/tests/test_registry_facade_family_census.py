@@ -194,8 +194,7 @@ def test_non_python_package_symbol_targets_are_attributed_to_the_exporting_row()
 def test_fully_qualified_package_access_and_aliased_registration_keep_exact_provenance() -> None:
     """Package-object spelling and register aliases resolve to the referenced family only."""
     qualified = ast.parse(
-        "import cadrumo.domain.calculations.registry\n"
-        "cadrumo.domain.calculations.registry.ValidatedRegistryAuthority\n"
+        "import cadrumo.domain.calculations.registry\ncadrumo.domain.calculations.registry.ValidatedRegistryAuthority\n"
     )
     _, qualified_aliases, qualified_members = _python_import_context(
         qualified,
@@ -418,9 +417,9 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
 
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     first, second = document["rows"][:2]
-    second["semantic_evidence"]["substitutability"]["rationale"] = first["semantic_evidence"][
-        "substitutability"
-    ]["rationale"].replace(first["rag_query"], second["rag_query"])
+    second["semantic_evidence"]["substitutability"]["rationale"] = first["semantic_evidence"]["substitutability"][
+        "rationale"
+    ].replace(first["rag_query"], second["rag_query"])
     with pytest.raises(RuntimeError, match=r"normalized rationale template|templated substitutability evidence"):
         check_matrix_document(document)
 

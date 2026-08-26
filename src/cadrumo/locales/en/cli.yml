@@ -1571,7 +1571,8 @@ cli:
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
   config:
-    app_help: Manage local configuration and diagnostics
+    app_help: Set up and repair the local profile, credentials, storage and Google
+      link.
     auth:
       apoderado:
         check_help: Verify against AEAT (unavailable; live reads are sealed). Use
@@ -3524,7 +3525,8 @@ cli:
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
-    app_app_help: Tax application commands (ledger, modelo, overview, registry).
+    app_app_help: 'Tax work: ledger, modelo, live AEAT reads, overview, registry,
+      review and run diagnostics.'
     app_help: Access application-level commands.
     app_help_help: Show help for application commands.
     debug_help: Enable detailed debug output.

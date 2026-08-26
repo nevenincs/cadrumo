@@ -113,7 +113,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "domain/manuals/_fetch.py",
         "domain/manuals/_loader.py",
         "entrypoints/cli/_config/_google.py",
-        "entrypoints/cli/_config/_google_sync_calc.py",
+        "entrypoints/cli/_modelo_spreadsheet_cli.py",
         "entrypoints/cli/errors.py",
         "entrypoints/cli/_ledger_classify_cli.py",
         "entrypoints/cli/_stdio.py",

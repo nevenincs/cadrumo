@@ -91,7 +91,7 @@ def test_live_aeat_reason_matches_the_frames_own_argv() -> None:
     ``live-aeat`` label) looks symmetric and is false: the CLI naming standard
     only requires that an AEAT fetch BE named ``pull``, never that a ``pull``
     name means AEAT, and the runner's scan is fail-closed over argv rather than
-    informed about handlers. ``ledger pull-folder`` reads Google Drive end to end
+    informed about handlers. ``ledger evidence pull-all`` reads Google Drive end to end
     while matching the scan, so demanding ``live-aeat`` there would force a false
     statement about which surface it reads. What a live token DOES establish is
     covered by :func:`test_live_token_frames_are_never_marked_unconverted`.
@@ -113,7 +113,7 @@ def test_live_token_frames_are_never_marked_unconverted() -> None:
     This is the half of the live-token cross-check that is actually sound. The
     scan is fail-closed, so a matching frame cannot execute — which rules out
     ``unconverted`` (the marker that asserts nothing blocks it) without dictating
-    WHICH blocker applies. That distinction is the point: ``ledger pull-folder``
+    WHICH blocker applies. That distinction is the point: ``ledger evidence pull-all``
     matches the scan and is blocked by Google Drive, not by AEAT, so the label it
     needs is a fact about its handler while the ban on ``unconverted`` is a fact
     about the scan.

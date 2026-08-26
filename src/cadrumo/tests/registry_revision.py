@@ -9,7 +9,7 @@ target silently moved to ``2026-y-siguientes``).
 
 from __future__ import annotations
 
-from ..application.modelo.work_addressing import resolve_registry_revision_for_work_target
+from ..application.modelo.work_addressing import law_selected_revision_for_work_target
 from ..core import Period
 
 
@@ -21,7 +21,7 @@ def active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -
     fact and never an input. Resolving it here keeps fixtures on the same
     authority the production paths use.
     """
-    return resolve_registry_revision_for_work_target(
+    return law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

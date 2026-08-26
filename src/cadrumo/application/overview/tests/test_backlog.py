@@ -1,6 +1,6 @@
 """Real-behavior tests for ``build_overview_backlog``.
 
-The deadline engine's modelo 200 ``2024-y-siguientes`` revision
+The deadline engine's modelo 200 ``2024`` revision
 currently fails registry validation, so every test below pins both
 ``from_date`` and ``to_date`` to a 2026-only window. The default-365-
 day-lookback behaviour is exercised by inspection rather than by

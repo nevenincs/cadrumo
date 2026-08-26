@@ -20,11 +20,11 @@ from pathlib import Path
 
 import pytest
 
+import cadrumo.domain.calculations.registry.modelo_localization as modelo_localization
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-import cadrumo.domain.calculations.registry.modelo_localization as modelo_localization
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..._paths import REPO_ROOT
 from .. import scan_modelo_schema_keys

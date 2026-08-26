@@ -165,7 +165,7 @@ Modelo 390 reconciles from Modelo 303:
 
 If a 303 return was filed outside Cadrumo, capture or reconcile the official
 evidence before you rely on local values, with the `live filed pull-sources` or
-`reconcile file` commands shown under
+`reconcile import` commands shown under
 [What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify)
 above. Live filed capture is read-only; reconciliation reads the justificante or
 declaration file you supply. The current Modelo 390 calculation path does not

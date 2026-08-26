@@ -328,7 +328,7 @@ def test_binding_export_selector_rejects_layout_less_revision() -> None:
         source=BindingSourceKind.COLLECTIBLE_INVOICE,
     )
     # A revision that genuinely declares no export layout, FOUND rather than
-    # pinned. This named modelo 200's 2024-y-siguientes, which was layout-less
+    # pinned. This named modelo 200's 2024, which was layout-less
     # when the test was written and has since had its generated export tree
     # authored, so the precondition became false and the selector was never
     # reached. Fourteen bundled revisions still declare none, so the real-site
@@ -430,7 +430,7 @@ def _modelo_200_envelope_discriminante_field() -> ExportFieldDefinition:
     field's id and kind are exactly what the guards below exist to watch. Finding
     it by id or by kind would make a rename or a re-kind pass vacuously.
     """
-    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
+    revision = _committed_modelo("200").revisions["2024"]
     return next(
         field
         for layout in revision.export_layouts

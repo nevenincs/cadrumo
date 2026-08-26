@@ -71,7 +71,7 @@ orden first applies to ejercicio 2012, it stays on the presentation axis and sta
 The correction cut the divergence set by eleven lines that compared an ejercicio-scoped
 window against a presentation year -- modelo 303's ``2022``, modelo 390's four revisions,
 modelo 714's four, modelo 232's and modelo 347's -- each of which claims ejercicios lying
-wholly inside its own design's window. It ADDED one: modelo 200's ``2024-y-siguientes``
+wholly inside its own design's window. It ADDED one: modelo 200's ``2024``
 claims ejercicio 2024 while citing only ``aeat-dr-200-2025``, a gap the presentation shift
 had been masking by clearing ejercicio 2024 against its 2025 filing campaign.
 

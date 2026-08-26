@@ -1671,7 +1671,8 @@ cli:
         1T-4T (negyedévek), 0A (éves), 01-12 (hónapok), és adja meg az évet a --year
         kapcsolóval (pl. --period 1T --year 2024).'
   config:
-    app_help: Helyi konfiguráció és diagnosztika kezelése.
+    app_help: A helyi profil, a hitelesítő adatok, a tárolás és a Google-kapcsolat
+      beállítása és javítása.
     auth:
       apoderado:
         check_help: Ellenőrzés az AEAT-nál (nem érhető el; az élő lekérdezés le van
@@ -3747,7 +3748,8 @@ cli:
       help: Egyetlen elem felülvizsgálati adatainak megjelenítése.
       id_help: Az elem azonosítója a felülvizsgálati sorból.
   root:
-    app_app_help: Adóalkalmazás-parancsok (ledger, modelo, overview, registry).
+    app_app_help: 'Adómunka: ledger, modelo, élő AEAT-lekérdezések, overview, registry,
+      review és futási diagnosztika.'
     app_help: Alkalmazásszintű parancsok elérése.
     app_help_help: Súgó megjelenítése az alkalmazásparancsokhoz.
     debug_help: Részletes hibakeresési kimenet engedélyezése.

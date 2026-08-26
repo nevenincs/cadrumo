@@ -91,7 +91,7 @@ def _m200_producer_snapshot():
 def _m200_entry() -> FilingExportLiveProofEntry:
     return FilingExportLiveProofEntry(
         modelo=Modelo.M200,
-        revision="2024-y-siguientes",
+        revision="2024",
         design_epoch="2025",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
@@ -172,7 +172,7 @@ def test_live_authority_rejects_a_stale_generated_output_digest(registry_authori
     _copy_m200_authored_proof_surface(tmp_path)
     output = next(
         path
-        for path in (tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export").glob(
+        for path in (tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export").glob(
             "*.toml",
         )
     )
@@ -200,9 +200,7 @@ def test_live_authority_rehashes_each_canonical_generation_semantic(
     entry = _m200_entry()
     _copy_m200_authored_proof_surface(tmp_path)
     manifest = (
-        tmp_path
-        / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export"
-        / "_generation.provenance.json"
+        tmp_path / "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export" / "_generation.provenance.json"
     )
     raw = manifest.read_bytes()
     marker = f'"{digest_field}":"'.encode()
@@ -302,6 +300,6 @@ def _copy_m200_authored_proof_surface(root: Path) -> None:
     for relative in (
         Path("dev/registry/mappings/modelo_200/2025"),
         Path("dev/registry/render_profiles/modelo_200/2025"),
-        Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export"),
+        Path("src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export"),
     ):
         shutil.copytree(_REPO_ROOT / relative, root / relative)

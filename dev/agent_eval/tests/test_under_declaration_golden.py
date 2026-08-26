@@ -21,7 +21,7 @@ cascades to a zero base and a zero cuota. The M200 2024 revision guards this EXA
 handoff with the ADVISORY predicate
 ``modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo``
 = ``implies_nonzero(["00500", "00501"])`` (declared in
-``_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/verification_expectations/
+``_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/
 0001-verification_predicates.toml``), confirmed live at HEAD by
 ``domain/calculations/registry/tests/test_modelo_200_registry.py::
 test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates``.
@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PROFILE_ID = "0ac1e000-0000-4000-8000-0000000002bb"
 _FILING_YEAR = 2024
 _PERIOD = "0A"
-_REVISION = "2024-y-siguientes"
+_REVISION = "2024"
 # legal_refs on the "modelo-200-resultado-antes-impuesto-determinado-cuando-
 # resultado-contable-positivo" ADVISORY predicate (verification_predicates.toml).
 _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")

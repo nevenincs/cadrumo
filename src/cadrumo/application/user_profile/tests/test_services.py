@@ -192,7 +192,7 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema
     report = svc.report(
         record=record,
         modelo="200",
-        revision_id="2024-y-siguientes",
+        revision_id="2024",
         period=Period.from_year_and_code(2024, "0A"),
     )
     assert report.ready is True
@@ -290,7 +290,7 @@ def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
             facts=(),
         ),
         modelo=Modelo.M200.value,
-        revision_id="2024-y-siguientes",
+        revision_id="2024",
         period=Period.from_year_and_code(2024, "0A"),
     )
 

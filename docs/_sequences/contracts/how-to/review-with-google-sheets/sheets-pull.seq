@@ -1,3 +1,3 @@
 @step Pull typed edits back from the reviewed spreadsheet.
-@static aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
+@static aeat app modelo spreadsheet pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

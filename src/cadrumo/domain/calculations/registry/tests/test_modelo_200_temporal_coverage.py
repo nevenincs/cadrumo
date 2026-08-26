@@ -1,7 +1,7 @@
 """Modelo 200 pyme bracket temporal coverage regression.
 
 LIS Art. 29 pyme/micro-empresa rates apply across the full
-``2024-y-siguientes`` revision date range (2024-01-01 onward).  An
+``2024`` revision date range (2024-01-01 onward).  An
 earlier ``is.modelo-200.tipo-gravamen-pyme`` bracket table had windows
 only from 2025-01-01, so any 2024 filing_period raised a
 ``bracket_no_window`` runtime error; the table now carries the 2024
@@ -266,7 +266,7 @@ def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
     """
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
     casilla = parameters_by_id.get(_M200_CUOTA_INTEGRA_CASILLA)
-    assert casilla is not None, "DP200014:00562 must be declared in the 2024-y-siguientes revision"
+    assert casilla is not None, "DP200014:00562 must be declared in the 2024 revision"
     assert casilla.input_kind == InputKind.COMPUTED, (
         "DP200014:00562 must be input_kind='computed'; formula modelo-200-cuota-integra owns the value"
     )
@@ -344,7 +344,7 @@ def test_cuota_integra_antitautology_manual_casilla_still_required() -> None:
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
     casilla = parameters_by_id.get(_M200_RESULTADO_CONTABLE_CASILLA)
     assert casilla is not None, (
-        "00501 must be declared in the 2024-y-siguientes revision; "
+        "00501 must be declared in the 2024 revision; "
         "if absent the snapshot failed to load the casilla TOML cluster"
     )
     assert casilla.input_kind == InputKind.MANUAL, (

@@ -137,7 +137,7 @@ class StaticBlocker(StrEnum):
     #: Reads a live AEAT surface. That is the whole criterion, and it is a fact
     #: about the HANDLER, never about the verb's name: the CLI naming standard
     #: is one-directional (an AEAT fetch MUST be named ``pull``), so a ``pull``
-    #: name does NOT imply an AEAT fetch. ``ledger pull-folder`` is the worked
+    #: name does NOT imply an AEAT fetch. ``ledger evidence pull-all`` is the worked
     #: counter-example — it reads Google Drive end to end and belongs under
     #: :attr:`EXTERNAL_SERVICE`. Note that the runner's live-token scan is
     #: deliberately fail-closed over argv, so it refuses such a frame anyway;

@@ -155,7 +155,7 @@ this version. Treat the file as opaque until an import surface returns.
 
 This is a portability gap, not a recovery one. Backup and recovery are
 unaffected and run through `aeat config profile archive export` and
-`aeat config profile restore`, which operate on the sealed profile capsule.
+`aeat config profile archive import`, which operate on the sealed profile capsule.
 
 The sealed custody archive is an encrypted profile backup, not a structured,
 readable copy of one profile's records. It excludes recovery material,

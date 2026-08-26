@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
 _M100_REVISION = "2025"
 _M130_REVISION = "2019-y-siguientes"
-_M200_REVISION = "2024-y-siguientes"
+_M200_REVISION = "2024"
 _M303_2025_REVISION = "2025"
 _M303_2026_REVISION = "2026-y-siguientes"
 _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"

@@ -352,7 +352,7 @@ def create_work_unit(
     ``revision_id``. The revision id must be known to the bundled registry, the
     period must be declared for that revision, and the revision id must be the
     law-determined revision that
-    :func:`~cadrumo.application.modelo.work_addressing.resolve_registry_revision_for_work_target`
+    :func:`~cadrumo.application.modelo.work_addressing.law_selected_revision_for_work_target`
     would select for ``(modelo, filing_year, period)`` alone -- this door
     re-confirms that pairing itself rather than trusting a caller to have
     resolved it, since a caller holding a stale or hand-picked revision id for
@@ -407,13 +407,13 @@ def create_work_unit(
     )
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
-    from .work_addressing import resolve_registry_revision_for_work_target
+    from .work_addressing import law_selected_revision_for_work_target
 
-    resolve_registry_revision_for_work_target(
+    law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        registry_revision_id=revision_id,
+        requested_revision_id=revision_id,
     )
 
     require_profile_ready_for_modelo_work(

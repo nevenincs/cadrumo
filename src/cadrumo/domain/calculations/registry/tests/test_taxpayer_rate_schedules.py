@@ -90,7 +90,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
 
     revision = _modelo_revision(
         "200",
-        "2024-y-siguientes",
+        "2024",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     parameters = {parameter.id: parameter for parameter in revision.parameters}

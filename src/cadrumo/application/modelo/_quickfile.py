@@ -63,7 +63,7 @@ from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revi
 from ._verification_actions import verify_modelo_revision
 from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
-    resolve_registry_revision_for_work_target,
+    law_selected_revision_for_work_target,
 )
 from .work_unit_repository import work_unit_catalogue_repository
 
@@ -169,7 +169,7 @@ class QuickfileCommand(BaseModel):
         period: Typed :class:`~core.Period` for the filing target.
         registry_revision_id: Optional assertion of the law-determined registry
             revision. When supplied it is validated against
-            :func:`resolve_registry_revision_for_work_target`; it never overrides
+            :func:`law_selected_revision_for_work_target`; it never overrides
             the law-determined pick.
         output_path: Destination for the terminal fichero-BOE export.
         actor: Operator label recorded into each stage's lifecycle event.
@@ -252,11 +252,11 @@ def run_modelo_quickfile(
     # caller-supplied --binding may still satisfy a source the projection reads
     # as missing.
     try:
-        registry_revision_id = resolve_registry_revision_for_work_target(
+        registry_revision_id = law_selected_revision_for_work_target(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
-            registry_revision_id=command.registry_revision_id,
+            requested_revision_id=command.registry_revision_id,
         )
     except CadrumoError as exc:
         stages.append(_refusal_outcome(QuickfileStage.READINESS, exc))
@@ -286,7 +286,7 @@ def run_modelo_quickfile(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
-            registry_revision_id=command.registry_revision_id,
+            requested_revision_id=command.registry_revision_id,
             actor=command.actor,
             catalogue=work_unit_catalogue_repository(bucket_id=command.bucket_id).load(),
         )

@@ -88,11 +88,11 @@ from pathlib import Path
 
 from cadrumo.core import Modelo
 from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 REGISTRY_ROOT = bundled_path("registry", "aeat")
 MODELOS_ROOT = REGISTRY_ROOT / "modelos"

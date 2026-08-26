@@ -323,6 +323,13 @@ _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
     (2, 4): "180",
     (5, 8): "2026",
     (9, 17): "B12345678",
+    # Razon social of the declarante. The layout declares this slot required and
+    # the parse path re-renders every value_policy-free field to prove the
+    # payload is canonical, so a blank slot here refuses on the render side
+    # rather than parsing as an absent optional. The declarante NIF above is a
+    # persona juridica, so the slot carries a razon social rather than the
+    # design's surnames-first natural-person join.
+    (18, 57): "ARRENDATARIO EJEMPLO SL".ljust(40),
     # Tipo de soporte. The layout declares this position a LITERAL "T" -- the
     # design admits only "C" (cinta magnetica) and "T" (transmision telematica),
     # and this producer writes a telematic file -- so a payload that leaves it

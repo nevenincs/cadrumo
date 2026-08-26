@@ -1924,6 +1924,82 @@ required_text = [
     "Identificación y porcentaje de participación en aquellas entidades participadas",
 ]
 
+[legal."ley-27-2014:art-45"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a45"
+document_id = "BOE-A-2014-12328"
+article = "45"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a45"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico espanolas), salvo la regla de valoracion del segundo parrafo del apartado 4 de ese articulo. Funda la seccion del Modelo 200 cuyo tag nombra el art. 45.1."
+required_text = [
+    "Las uniones temporales de empresas reguladas en la Ley 18/1982",
+    "inscritas en el registro especial",
+]
+
+[legal."ley-27-2014:art-106"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a106"
+document_id = "BOE-A-2014-12328"
+article = "106"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a106"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a106 resolved to exactly one unit through the production resolver, rubric Contratos de arrendamiento financiero, matching the section it grounds; required_text confirmed present; the minimum contract durations the provision states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 106: contratos de arrendamiento financiero. Se aplica a los contratos en que el arrendador es una entidad de credito o un establecimiento financiero de credito. El texto bundled fija duraciones minimas segun el objeto sea bien mueble o inmueble, con habilitacion reglamentaria para otros plazos; esas cifras no han sido contrastadas contra el texto vivo del BOE y no se afirman en required_text. Funda la seccion de arrendamiento financiero del Modelo 200."
+required_text = [
+    "Contratos de arrendamiento financiero",
+    "el arrendador sea una entidad de crédito o un establecimiento financiero de crédito",
+]
+
+[legal."ley-49-2002:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002.html#a20"
+document_id = "BOE-A-2002-25039"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a20"
+published_at = 2002-12-24
+effective_from = 2003-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a20 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002 (55 units, zero colliding canonical anchors in that corpus); required_text confirmed present. IMPORTANT distinction checked rather than assumed: art. 19 of this same Ley is the IRPF deduction and art. 20 is the Impuesto sobre Sociedades one, so the catalogued ley-49-2002:art-19 grounds Modelo 100 and must NOT be used for Modelo 200. The deduction percentages are described in notes and deliberately kept OUT of required_text pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "Ley 49/2002 art. 20: deduccion de la cuota del Impuesto sobre Sociedades por donativos, donaciones y aportaciones. Los sujetos pasivos del IS deducen de la cuota integra, minorada en las deducciones y bonificaciones de los capitulos correspondientes, un porcentaje de la base de deduccion determinada segun el art. 18. Es la contrapartida en el IS del art. 19, que es la deduccion en el IRPF. Funda la seccion de donativos a entidades sin fines lucrativos del Modelo 200."
+required_text = [
+    "Deducción de la cuota del Impuesto sobre Sociedades",
+    "tendrán derecho a deducir de la cuota íntegra",
+]
+
+[legal."ley-49-2002:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002.html#a22"
+document_id = "BOE-A-2002-25039"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a22"
+published_at = 2002-12-24
+effective_from = 2003-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a22 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002; required_text confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024, whose donativos chapter cites arts. 16 to 22 of this Ley; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "Ley 49/2002 art. 22: actividades prioritarias de mecenazgo. Habilita a la Ley de Presupuestos Generales del Estado para establecer una relacion de actividades prioritarias de mecenazgo dentro de los fines de interes general de la Ley, y para elevar en su caso los porcentajes y limites de deduccion aplicables a esas actividades. Funda la subseccion de donaciones para actividades prioritarias de mecenazgo del Modelo 200, que es exactamente la poblacion cuyo porcentaje esa habilitacion eleva."
+required_text = [
+    "Actividades prioritarias de mecenazgo",
+    "La Ley de Presupuestos Generales del Estado podrá establecer una relación de actividades prioritarias de mecenazgo",
+]
+
 [sources."aeat-dr-200-2010"]
 evidence_tier = "layout_authority"
 authority = "aeat"

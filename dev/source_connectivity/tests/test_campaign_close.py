@@ -53,10 +53,13 @@ def test_final_census_has_no_expired_disappearance_or_unsupported_connection() -
         row.expiry_posture(as_of=as_of) is not SourceConnectivityExpiryPosture.EXPIRED
         for row in result.manifest.entries
     )
-    assert tuple(
-        sorted(
-            row.candidate_id
-            for row in result.manifest.entries
-            if row.disposition is SourceConnectivityDisposition.CONNECTED
+    assert (
+        tuple(
+            sorted(
+                row.candidate_id
+                for row in result.manifest.entries
+                if row.disposition is SourceConnectivityDisposition.CONNECTED
+            )
         )
-    ) == connected_ids
+        == connected_ids
+    )

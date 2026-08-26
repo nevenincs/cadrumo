@@ -19,6 +19,7 @@ Submodules
    cadrumo.adapters.persistence.profile.assets
    cadrumo.adapters.persistence.profile.bienes_inversion
    cadrumo.adapters.persistence.profile.buckets
+   cadrumo.adapters.persistence.profile.confirmation_records
    cadrumo.adapters.persistence.profile.extracted_document_cache
    cadrumo.adapters.persistence.profile.extraction_drafts
    cadrumo.adapters.persistence.profile.filing_amendments

@@ -38,22 +38,22 @@ Do not reach for `aeat app ledger link` here. `attach` and `link` are different 
 
 For most receipts and invoices, `--purchase-invoice-evidence-id` above is the path to use; the evidence id comes straight from `evidence add`.
 
-The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a blob already in encrypted attachment storage, and it refuses any id that has no stored blob (`attachment_ids must reference existing secure attachment manifests and blobs`). No operator command currently prints that 64-character id - the `evidence_id` from `evidence add` is a different, shorter id and is not accepted here. Until a command surfaces the attachment id, use `--purchase-invoice-evidence-id` or `doclink` instead.
+The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a blob already in encrypted attachment storage, and it refuses any id that has no stored blob (`attachment_ids must reference existing secure attachment manifests and blobs`). No operator command currently prints that 64-character id - the `evidence_id` from `evidence add` is a different, shorter id and is not accepted here. Until a command surfaces the attachment id, use `--purchase-invoice-evidence-id` or `evidence pull` instead.
 
 ## Pull a document from Google Drive instead
 
 When the document lives in Google Drive, pull it straight into encrypted evidence storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
 
-```{cli-sequence} ledger-evidence-doclink
+```{cli-sequence} ledger-evidence-pull
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
 
 ## Bulk-fetch every invoice in a Drive folder
 
-Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `doclink`, this command reaches Google Drive and runs against your own authorized account:
+Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `evidence pull`, this command reaches Google Drive and runs against your own authorized account:
 
-```{cli-sequence} ledger-evidence-pull-folder
+```{cli-sequence} ledger-evidence-pull-all
 ```
 
 The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>`.

@@ -4,7 +4,7 @@ a stored, literal, or operator-supplied ``revision_id`` into
 
 ``select_revision``, reached exclusively through
 ``ValidatedRegistryAuthority.snapshot`` (or, for work-unit addressing,
-``resolve_registry_revision_for_work_target``), is THE single
+``law_selected_revision_for_work_target``), is THE single
 law-determined period-to-revision resolver.  The ``revision_id`` parameter on
 ``snapshot()`` / ``select_revision()`` is reclassified as an *assertion
 parameter*: legitimate only for (i) registry-derived enumeration and

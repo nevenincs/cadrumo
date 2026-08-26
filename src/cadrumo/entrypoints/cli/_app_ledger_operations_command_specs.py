@@ -482,7 +482,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="provider",
                 declarations=("--provider",),
-                value=ValueContract(DeferredTarget("cadrumo.application.ledger", "LedgerProviderID")),
+                value=ValueContract(DeferredTarget("cadrumo.application.ledger.actions_import", "LedgerProviderID")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.ledger.import.provider_help"),
                 metavar=None,

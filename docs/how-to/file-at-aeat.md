@@ -117,7 +117,7 @@ Read the cause shown in the error message before retrying.
 ## Step 5: reconcile the justificante against your local record
 
 Compare AEAT's receipt against the figures you recorded locally with the
-`reconcile file` command shown as the final frame above. Run reconciliation
+`reconcile import` command shown as the final frame above. Run reconciliation
 after step 4 so the comparison is against your filed record. It reports a
 verdict of matches or mismatches; the command refuses a PDF it cannot read as
 invalid evidence. For reading verdicts and handling mismatches, see

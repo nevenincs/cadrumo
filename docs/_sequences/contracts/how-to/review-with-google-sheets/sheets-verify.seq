@@ -1,6 +1,6 @@
 @step Verify the spreadsheet calculation for the modelo, year, and period.
-@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T
+@static aeat app modelo spreadsheet verify --modelo 303 --year 2026 --period 1T
 @blocked external-service Refuses with no registered Google OAuth client; consent cannot be granted here.
 @step Verify against an explicit scenario JSON of inputs and expected outputs.
-@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json
+@static aeat app modelo spreadsheet verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json
 @blocked external-service Needs a Google OAuth consent and a live Sheets API the sandbox has no credentials for.
