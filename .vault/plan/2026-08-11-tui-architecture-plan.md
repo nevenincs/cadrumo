@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:42363f935840d4c365cf99de4e7911e88d0367bdcb088b790c569f07560d0699'
+body_hash: 'sha256:e28e8bb8cd4ea059ffc20f2872f51d6daf67b0213bb1ba138481d75aa654b592'
 ---
 
 # `tui-architecture` plan
@@ -256,7 +256,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S244` - Prove support_matrix remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/support_matrix.py`.
 - [x] `W03.P20.S245` - Privatize the supported_filing_years implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/supported_filing_years.py`.
 - [x] `W03.P20.S246` - Prove temporal remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/temporal.py`.
-- [ ] `W03.P20.S247` - Privatize the validate implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate.py`.
+- [x] `W03.P20.S247` - Privatize the validate implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate.py`.
 - [x] `W03.P20.S248` - Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_cross_revision.py`.
 - [x] `W03.P20.S249` - Privatize the validate_references implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/validate_references.py`.
 - [x] `W03.P20.S250` - Prove validate_registry_scope remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_registry_scope.py`.
