@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:788800885a8c288632e9c807cca838b4791e3c2deb14ad570ca473581c7c1155'
 step_id: 'S09'
@@ -15,9 +15,10 @@ related:
 
 ## Scope
 
-- `dev/`
-- `src/cadrumo/_data/registry/aeat/`
-- `src/cadrumo/domain/calculations/registry/_applicability.py`
+- `dev/registry/authoring_migrate_applicability_fragments.py`
+- `src/cadrumo/_data/registry/aeat/modelos/`
+- `src/cadrumo/domain/calculations/registry/applicability.py`
+- `src/cadrumo/domain/calculations/registry/tests/test_applicability_registry_cutover.py`
 
 ## Description
 
@@ -36,16 +37,12 @@ related:
 
 ## Outcome
 
-Migration: 25/25 modelos, 39/39 revision directories, every one hydration-equals-literal, exit 0. Cutover mechanism: 3/3 new tests pass; both required conditions (function-level equivalence and staleness) proven with real behaviour, no mocks -- staleness proven twice, once in-suite and once via the out-of-repo `functools.cache` counter-demonstration. Post-flip: `ruff check` and `ruff format --check` clean; `pytest --collect-only -q` shows the same 18 pre-existing, unrelated collection errors present at session start, no new ones; the full applicability regression suite (`test_applicability_fragment_family.py` + `test_applicability_registry_cutover.py` + `test_applicability_canonical.py` + `test_modelo_applicability.py` + `test_cross_reference_applicability.py` + `test_source_applicability_window.py`) is 61/61 green.
+Commits `58d607019d` and `a284a8663c` delivered S09's exact historical cohort: 25 eligible modelos, 39 revision directories, fragments written with hydration equality, production cut over through `REGISTRY_RESOLVED_APPLICABILITY_MODELOS`, and all 25 migrated Python literals deleted atomically. The only literal rules remaining are Modelo 303 and Modelo 390, exactly the campaign-owned exclusions assigned to S19. Later directly authored applicability enrollments do not reopen or expand this historical migration cohort.
 
-Investigated and diagnosed a suite difference before accepting it, per explicit instruction to stop and report rather than adjust: 2 tests (`test_seed_modelo_applicability_legal_refs_resolve_in_registry`, `test_impatriado_in_window_routes_annual_irpf_to_modelo_151`) that failed immediately post-`--apply` on the export-layout completeness gate passed on the post-flip run. Traced both line-by-line: each touches `resources().modelos.authority` at exactly one assertion; every applicability verdict, reason and legal_ref either test checks is computed through hardcoded impatriado-routing branches in `derive_modelo_applicability` that run before the rule-table lookup and never reach the code this Step changed. Confirmed with the coordinating agent: an unrelated, operator-directed relocation of the export-layout refusal (registry-build validation to the filing boundary, in progress by other agents at the time) is what flipped `resources().modelos.authority`'s load/refuse state between the two runs, not this Step. No applicability verdict, reason, or legal_ref differs anywhere in the suite.
+The current scratch-authority cutover suite passes 3/3, proving live registry resolution and mutation visibility without the bundled tree. Commit `ea09f7c399` reconciles the exhausted migrator's documentation and retains it solely for the explicit S19 ownership release. Ruff format/check and `git diff --check` pass.
 
 ## Notes
 
-**Mixed-surface disclosure, landed state.** `_MODELO_APPLICABILITY_RULES` is now a mixed surface. `REGISTRY_RESOLVED_APPLICABILITY_MODELOS` names the 25 modelos (100, 111, 115, 117, 123, 126, 128, 130, 131, 180, 184, 187, 188, 190, 193, 194, 200, 202, 322, 347, 349, 353, 369, 720, 721) resolved live from the registry authoring tree through `resolve_applicability_rule_from_authority`. `"303"` and `"390"` remain Python literals in `_MODELO_APPLICABILITY_RULES` -- not unplaced by omission, but because their authoring trees are owned by the export-fragment-generator-authority campaign. `_modelo_applicability_rule` is the single seam deciding which surface answers for a given modelo. The end state is the registry authority as sole source: once the export-fragment campaign closes the 303/390 trees and they are migrated the same way, `_MODELO_APPLICABILITY_RULES` retires outright and this module stops authoring applicability data -- it only reads it.
+The earlier record's `UNCOMMITTED` statement and frozen description of 25 as the complete current owner set are historical. S09 is committed; the 25 are its migration cohort, while later rules may be authored directly in registry data. The migrator now yields no eligible rows because its only remaining literal inputs are the deliberately excluded 303 and 390 rules.
 
-**RegistrySnapshot asymmetry, ruled deliberate.** `RegistrySnapshot` carries a projection for every other schema family but not `applicability`. This is deliberate: applicability answers "is this modelo due, and to whom" -- the floor rung of the authority-grade ladder (scheduling reach) -- while `RegistrySnapshot` is a filing-context projection one rung up. Resolving applicability without filing-grade review is correct per that ladder, not a gate dodged; coupling it to snapshot construction would wrongly tie a floor-rung fact to filing authority it does not need. Recorded in `resolve_applicability_rule_from_authority`'s docstring.
-
-**Two expected failures, named so a later reader does not mistake them for migration damage.** `test_seed_modelo_applicability_legal_refs_resolve_in_registry` and `test_impatriado_in_window_routes_annual_irpf_to_modelo_151` failed transiently, immediately after `--apply` completed and before the cutover flip, on the wording "the revision declares a calculation-completeness manifest but NO export layout of any format" -- the hardened, operator-directed export-layout completeness gate inside `ValidatedRegistryAuthority.load()`'s `validate_registry()`, refusing 47 revisions tree-wide at that moment (including all six Modelo 303 revisions). This is not migration damage: it is the same gate the operator directed, mid-relocation from registry-build validation to the filing boundary at the exact moment these two tests ran, and both had already recovered to green by the time the flip's own regression suite ran.
-
-Migration and cutover work is UNCOMMITTED at the time of writing; the operator has not authorised commits. Not this Step's scope, explicitly held: the export-layout/withdrawal-mechanism deletion the operator directed separately (a distinct, already-complete effort by other agents on a binding-file split) and the broader "remove every degradation-allowance gate" directive, which the coordinating agent scoped to that named mechanism rather than a codebase-wide sweep from this session.
+The bundled registry ownership property currently refuses before reaching this contract because of the active Modelo 200 revision split. That foreign red is recorded rather than represented as a passing S09 gate. No migrated non-303/390 Python literal residue exists, and no M200, 303, or 390 data path was touched during reconciliation.
