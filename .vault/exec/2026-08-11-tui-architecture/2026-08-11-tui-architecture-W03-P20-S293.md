@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:48aa3d9d641ebc81d2ca78276df164cec084282c033b5e4fbf348b5ea6b1ab47'
+body_hash: 'sha256:390e7cb3913a5aa8dd7a1dbbd9c50cdee4396daf68fcd21f00bea6bce230e2f5'
 step_id: 'S293'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the cross-module private import of _ManualInputSelector: extract the manual_input selector model, its record-shape key set and is_layout_binding_selector into their own public defining module, so binding_selector_utils.py's two function-local imports of a private bindings.py symbol -- present specifically to break a real module-level import cycle -- become ordinary module-level imports of a shared public contract with no cycle, and no consumer imports a private cross-module name
 

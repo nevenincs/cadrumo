@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5365b06b8520ccf7fe1a695240a786cb1e0de53de6f30b03653b85f12066971b'
+body_hash: 'sha256:ecbd13e035145aa4f2f8024809cdb696fe08bab1ce639dd5566faf7cd79c15aa'
 step_id: 'S202'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the dedicated handoff_paths family after eliminating every definition, test, documentation, and import
 
@@ -32,23 +27,6 @@ M dev/quality/registry_facade_family_census.py
 M dev/quality/registry_facade_family_census.v1.json
 D docs/api/cadrumo.domain.calculations.registry.handoff_paths.rst
 M docs/api/cadrumo.domain.calculations.registry.rst
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 ## Notes
 

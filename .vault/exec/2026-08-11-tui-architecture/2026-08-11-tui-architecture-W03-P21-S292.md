@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:d83843d2d48e6490ec32c6fbfeef8acf29f4c60ff2ca6677da1060012f0b85ff'
+body_hash: 'sha256:d40ba0b84fde5163aaacacf499353a385460aed3c26754b80784c87afd57a98f'
 step_id: 'S292'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Establish whether a detail row's physical record occurrence number in the exported fichero carries meaning, since the renderer numbers occurrences from the detail-rows tuple order while the calculation revision's content address sorts rows before hashing so a pure reorder yields the same revision id: rule whether two ficheros differing only in row order may legitimately share one revision identity, and either make the identity order-aware or record that occurrence numbering is presentation-only and prove nothing downstream depends on it
 

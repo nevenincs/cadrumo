@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-26'
 body_schema: body-v2
-body_hash: 'sha256:0a868aa05ef74120df0f2650628b1c8653c8eb4c12e22ad26545c6760561ffe7'
+body_hash: 'sha256:da4a068b65b9228d197fa2c0abad08e0244f75629f98a2162ca006a9f5520498'
 ---
 
 # `cli-root-verb-homes` plan
@@ -145,7 +145,7 @@ Verify every surface the conformance gates do not scan, and run the full suite s
 - [x] `W05.P14.S36` - Rule on filing-record import versus observe-local: not a conflation, they sit on opposite sides of the official-AEAT-evidence boundary and both stay; `src/cadrumo/entrypoints/cli/`.
 - [x] `W05.P14.S37` - Tighten the two surviving duplicate-question pairs by help text: each verb states what it uniquely covers and points at its sibling; `src/cadrumo/locales/`.
 - [x] `W05.P14.S38` - Sweep every leaf against the D2 grammar and amend it with the missing CREATING verb category; `.vaultspec/rules/aeat-cli-contract.md`.
-- [x] `W05.P14.S39` - Ship the verb-grammar gate D6 promised: refuse a leaf that declares a transport locus while wearing a retired token; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W05.P14.S39` - Ship a verb-grammar gate enforcing D2: refuse a leaf that declares a transport locus while wearing a retired token (D6 itself promised only the placement and spelling gates); `src/cadrumo/entrypoints/cli/tests/`.
 - [x] `W05.P14.S40` - Sweep every family for synonym-split verbs and record the view-versus-show finding with evidence; `src/cadrumo/entrypoints/cli/`.
 - [x] `W05.P14.S41` - Align the eight show leaves onto view across specs, envelopes, handlers, payloads, locales and documentation; `src/cadrumo/entrypoints/cli/`.
 - [x] `W05.P14.S42` - Examine every remaining synonym group against the tree and record the three that are principled; `src/cadrumo/entrypoints/cli/`.
@@ -166,6 +166,17 @@ Verify every surface the conformance gates do not scan, and run the full suite s
 - [x] `W05.P14.S57` - Distinguish `ledger history` from `ledger track`, two verbs on one subject whose help described the same thing and one of which misdescribed its own output; `src/cadrumo/locales/`.
 - [x] `W05.P14.S58` - Re-run the same-subject scan over every leaf and give the ledger lifecycle verbs help that says which state they move a row into and which one deletes; `src/cadrumo/locales/`.
 - [x] `W05.P14.S59` - RULED: `destructive` means irreversible, so `ledger stash` moves onto the same non-destructive policy `archive` and `restore` already use; `src/cadrumo/entrypoints/cli/`.
+- [x] `W05.P14.S60` - Judge the app-versus-config home of all 45 subjects the placement gate declines to rule on, and state the criterion that separates the two roots; `src/cadrumo/entrypoints/cli/`.
+- [x] `W05.P14.S61` - Correct `config repair quarantine`, whose help told the operator active quarantine was disabled while `--yes` moves encrypted rows out of the live table; `src/cadrumo/locales/`.
+- [x] `W05.P14.S62` - Check this campaign's verb renames against the profile-bound write guard and bootstrap exemption governed by the cli-authority-verb-conformance ADR, which records a rename silently dropping six verbs out of that guard; `src/cadrumo/entrypoints/cli/`.
+- [x] `W05.P14.S63` - Audit every help string that makes a negative capability claim against the live policy declarations, including the never-file prohibition across all 294 leaves; `src/cadrumo/entrypoints/cli/`.
+- [x] `W05.P14.S64` - Check the overstating half of name/help/handler agreement across the filing, export and completeness-claiming verbs; `src/cadrumo/entrypoints/cli/`.
+- [x] `W05.P14.S65` - Audit every closed Step against its execution record and repair the one closed without one, per the no-step-complete-without-a-record rule; `.vault/exec/2026-08-26-cli-root-verb-homes/`.
+- [x] `W05.P14.S66` - Close-review finding: the accepted ADR still forbade in five places the verb the operator ruled and the tree ships, and its Rationale defended the rejected option; `.vault/adr/2026-08-26-cli-root-verb-homes-adr.md`.
+- [x] `W05.P14.S67` - Complete the close honesty review by verifying D1 through D7 against the live tree; `.vault/audit/`.
+- [x] `W05.P14.S68` - Correct the close review's claim that the app-versus-config criterion is wholly unenforced: the operator-surface contract already binds every root-to-child family to a declared root; `.vault/audit/`.
+- [x] `W05.P14.S69` - Retract the proposed granularity extension: a nested subject inherits its family's root structurally, and per-subject declaration is what the contract deliberately removed as tautological; `.vault/audit/`.
+- [x] `W05.P14.S70` - Correct S34's blocker: the tree went quiet and the capture still cannot run, because `capture_baseline.py` reads an attribute deliberately removed from LiveCommandNode three days ago; `dev/benchmarks/cli/`.
 
 ## Parallelization
 

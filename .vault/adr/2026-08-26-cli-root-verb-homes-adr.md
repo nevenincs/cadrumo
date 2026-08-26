@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:23b1b7d5341142933003a668ee9633dccfb960d42eda3722cd059a7404a24f8e'
+body_hash: 'sha256:59690fd568b81b5d37ed11b60d3441131b5b43302abc1160743f7c1d5771fe0f'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
 ---
@@ -219,14 +219,30 @@ dispositions:
 - `app ledger`: `import` / `export` complete for rows; `evidence pull` /
   `pull-all` inbound from remote, outbound absent — **declared gap**.
 - `config profile archive`: `export` / `import` complete for local.
-- `config profile mirror`: `push` outbound; `pull` absent — **declared gap**, the
-  restore path does not exist and is owed a follow-on record.
+- `config profile archive`: `push` outbound to the remote replica; `pull` absent
+  — **declared gap**, the restore path does not exist and is owed a follow-on
+  record. (Listed as `config profile mirror` before the D5 amendment.)
 - `config provision`: `pull` inbound; outbound absent **by policy** — the app
   never publishes a model.
-- Credential enrolment (`config auth certificate register`, `config auth
-  configure`, `config google register`): **carved out of D2 entirely.** These read
-  a local file to enrol a credential; the verb names the enrolment, not the
-  transport, and `import` would be a worse name.
+**A verb that CREATES a record names what it creates.** Amended 2026-08-26 after
+sweeping the whole graph against this grammar. The record first carved out
+credential enrolment (`config auth certificate register`, `config auth
+configure`, `config google register`) as a special case. It is not special: it is
+one instance of a third category the grammar was missing.
+
+`app ledger evidence add` registers purchase-invoice evidence from a PDF; `app
+ledger evidence batch` ingests a directory of documents into evidence and a
+reviewable draft; `app ledger inventory closing-authority-record` records
+evidenced closing authority. Each reads a local file, and for none of them is
+moving the file the point — the file is where the content comes from, and the
+verb names the record that results. Renaming any of them to `import` would
+describe the mechanism and hide the outcome.
+
+So the grammar has three verb categories, not two. A TRANSPORT verb moves data
+and takes one of the four tokens. A COMPUTATION verb names the computation. A
+CREATING verb names the record it creates. In the second and third, the local
+file or remote handle is declared on the parameters under D3 and is not allowed
+to claim the verb.
 
 ### D3 — Option spelling is keyed on a DECLARED locus
 
@@ -308,7 +324,18 @@ archive import --file`; `config profile archive inspect` is unchanged. The
 whole-corpus Drive mirror does NOT join that subject: `config google sync push`
 becomes `config profile mirror push`. `archive` implies a thing you can restore,
 and the mirror cannot be read back — putting it under `archive` would promise
-recoverability that does not exist. `config google sync probe` **stays where it
+recoverability that does not exist.
+
+**Superseded 2026-08-26 by operator ruling: the verb is `config profile archive
+push`.** The operator rejected `mirror` as a subject noun on the ground that it
+names nothing an operator recognises — asked what a `mirror` is, no reading
+distinguishes a backup from a malformed one. The objection this record raises
+above is answered rather than overruled: the danger was that `archive` promises
+a round trip, and the answer is that the VERB carries the promise, not the
+subject. `push` sitting beside a working `export` / `import` pair makes the
+absent `pull` loud on every help listing, where `mirror push` was quiet because
+the subject told the reader nothing to expect. The declared gap is unchanged and
+still owes a follow-on record; it is now visible in the place an operator looks. `config google sync probe` **stays where it
 is**: it is a credential and connectivity check, which is Google configuration.
 
 **Ledger evidence intake moves into its own subgroup.** `app ledger doclink`
@@ -435,7 +462,9 @@ Naming the mirror `config profile mirror push` rather than folding it into
 `archive` keeps a true promise instead of an attractive one. The operator still
 meets `push` in a place that does not round-trip, and that asymmetry is recorded
 rather than hidden — but `mirror` does not imply the recovery that `archive`
-would.
+would. **Superseded — see the D5 amendment.** The shipped verb is `config
+profile archive push`; the asymmetry is carried by `push` beside `export` and
+`import`, which states it more loudly than an unfamiliar subject noun did.
 
 Retiring three leaves is the campaign's only net simplification and should not be
 traded away under scope pressure.

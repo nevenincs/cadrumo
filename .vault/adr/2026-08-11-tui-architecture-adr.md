@@ -22,6 +22,7 @@ related:
   - '[[2026-08-24-tui-operation-observation-adr]]'
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
   - '[[2026-08-10-current-schema-only-purge-adr]]'
+  - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
 ---
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
