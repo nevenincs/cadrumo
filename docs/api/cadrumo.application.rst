@@ -60,6 +60,7 @@ Submodules
    cadrumo.application._state_projection_auth
    cadrumo.application._state_projection_readiness
    cadrumo.application.auth_credentials
+   cadrumo.application.bucket_event_repository
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
    cadrumo.application.diagnostics

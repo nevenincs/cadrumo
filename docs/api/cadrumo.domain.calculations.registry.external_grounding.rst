@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.external_grounding module
-===============================================================
+==============================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.external_grounding
    :members:

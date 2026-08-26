@@ -316,6 +316,16 @@ class SourceReference(RegistryModel):
     published_at: date | None = None
     applies_from: date | None = None
     applies_to: date | None = None
+    dictionary_casilla_id_grammar: Literal["numeric", "numeric_or_single_uppercase_letter"] = "numeric"
+    """Exact casilla-id grammar published by a dictionary source.
+
+    The default accepts the numbered ids used by every ordinary AEAT dictionary.
+    The extension is an evidence claim tied to the hash-pinned source row, not a
+    parser-side modelo, source-id, or year exception: when a reviewed dictionary
+    publishes its one-letter annex boxes, that source declares the wider grammar.
+    Its ``applies_from`` / ``applies_to`` window remains the temporal authority
+    for the source itself.
+    """
     record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
     source_url: RegistryExternalLink
     review_status: ReviewStatus
@@ -364,6 +374,10 @@ class SourceReference(RegistryModel):
     def _validate_source_reference(self) -> SourceReference:
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
+        if self.kind != "dictionary" and self.dictionary_casilla_id_grammar != "numeric":
+            raise RegistryValidationError(
+                "dictionary_casilla_id_grammar other than 'numeric' is only valid for kind='dictionary'",
+            )
         if self.period_selector is not None and self.applies_from is not None:
             if not self.period_selector.includes_year(self.applies_from.year):
                 raise RegistryValidationError(
@@ -411,6 +425,11 @@ class SourceReference(RegistryModel):
                 "one; two designs governing different periods are different epochs",
             )
         return self
+
+    @property
+    def supports_single_uppercase_letter_casilla_ids(self) -> bool:
+        """Whether this exact reviewed dictionary declares the annex-id grammar."""
+        return self.dictionary_casilla_id_grammar == "numeric_or_single_uppercase_letter"
 
     @field_validator("sha256")
     @classmethod

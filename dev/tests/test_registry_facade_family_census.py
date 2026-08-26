@@ -16,6 +16,7 @@ from dev.quality.registry_facade_family_census import (
     RelocatedFamily,
     _annotation_owners,
     _base_category,
+    _bound_plan_step,
     _dynamic_import_call,
     _evidence_census,
     _evidence_text,
@@ -421,6 +422,25 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
     ]["rationale"].replace(first["rag_query"], second["rag_query"])
     with pytest.raises(RuntimeError, match=r"normalized rationale template|templated substitutability evidence"):
         check_matrix_document(document)
+
+
+def test_plan_binding_rejects_an_unrelated_step_that_shares_one_broad_path() -> None:
+    """A shared registry path alone cannot make an unrelated plan row authoritative."""
+    plan = (
+        "- [ ] `W03.P20.S999` - Replace the tax calendar renderer and locale labels; "
+        "`src/cadrumo/domain/calculations/registry/authority.py, docs/calendar.md`.\n"
+    )
+
+    with pytest.raises(RuntimeError, match=r"scope diverges|action is unrelated"):
+        _bound_plan_step(
+            "W03.P20.S999",
+            "Harden the authority capture comparison domain and generation lifecycle",
+            (
+                "src/cadrumo/domain/calculations/registry/authority.py, "
+                "dev/tests/test_registry_authority_consumer_census.py"
+            ),
+            plan,
+        )
 
 
 def test_reviewed_rows_are_one_to_one_complete_and_not_grouped() -> None:

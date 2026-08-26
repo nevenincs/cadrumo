@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.bindings module
-=====================================================
+====================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.bindings
    :members:
