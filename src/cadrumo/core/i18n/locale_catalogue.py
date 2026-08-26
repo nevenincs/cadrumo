@@ -50,14 +50,17 @@ class LocaleCatalogueCapture:
 
     ``present`` and ``value`` are exactly what the catalogue reader returned,
     including its convention that a scaffolded-but-untranslated key is present
-    with no value. The catalogue root, its shard digest and the process
-    incarnation are folded into the opaque comparison domain and never exposed.
+    with no value. ``catalogue_digest`` is the shard fingerprint this entry was
+    read under, published because a consumer assembling a locale summary has to
+    name the catalogue it resolved against. The catalogue root and the process
+    incarnation stay folded into the opaque comparison domain.
     """
 
     locale: str
     translation_key: str
     present: bool
     value: str | None
+    catalogue_digest: str
     comparison_domain: str
     generation: int
 
@@ -197,6 +200,7 @@ def capture_locale_catalogue(translation_key: str, /, *, locale: str) -> LocaleC
             translation_key=translation_key,
             present=present,
             value=value,
+            catalogue_digest=after[1],
             comparison_domain=domain,
             generation=_locale_catalogue_generation_for(domain, after),
         )
