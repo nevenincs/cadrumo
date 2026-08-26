@@ -88,6 +88,9 @@ straight failure with no allowlist escape hatch.
 
 from __future__ import annotations
 
+import ast
+import importlib
+import pkgutil
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import cache
@@ -107,6 +110,7 @@ from ..quality.import_hygiene_scan import (
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
     ImportSite,
+    TuiBoundaryViolation,
     TuiBoundaryViolationKind,
     discover_facades,
     find_delegate_wrapper_shims,
@@ -1210,3 +1214,90 @@ def test_tui_boundary_rejects_each_ast_bypass(
     violations = _scan_planted_tui_boundary(tmp_path, dotted_rel, body)
 
     assert [violation.kind for violation in violations] == [expected_kind]
+
+
+_TUI_LAUNCH_SEAMS: Final[dict[tuple[str, str], str]] = {
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_review_cli.py",
+        "_run_review_destination",
+    ): "the CLI is the launcher for the bounded-review host; the import is function-local to that seam",
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_select_cli.py",
+        "_run_select_destination",
+    ): "the CLI is the launcher for the work picker; the import is function-local to that seam",
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_select_cli.py",
+        "_run_review_destination_for_selected_unit",
+    ): "the picker hands off to the review host; the import is function-local to that seam",
+}
+
+
+def _enclosing_function(path: Path, lineno: int) -> str:
+    """Return the function a line sits inside, or an empty string at module level.
+
+    Exemptions are keyed by enclosing function rather than line number, so an
+    edit above the import cannot silently move the exemption onto a different
+    site.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    enclosing = ""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            end = node.end_lineno or node.lineno
+            if node.lineno <= lineno <= end:
+                enclosing = node.name
+    return enclosing
+
+
+def _live_tui_boundary_violations() -> list[TuiBoundaryViolation]:
+    """Scan every shipped source file, not merely the components subtree."""
+    return find_tui_boundary_violations(sorted(PKG_ROOT.rglob("*.py")), src_root=REPO_ROOT / "src")
+
+
+def test_no_production_module_reaches_the_tui_outside_a_declared_launch_seam() -> None:
+    """The whole shipped tree is swept, so a new importer anywhere is caught."""
+    violations = _live_tui_boundary_violations()
+    unexempt = [
+        violation
+        for violation in violations
+        if (violation.importer_path, _enclosing_function(REPO_ROOT / "src" / violation.importer_path, violation.lineno))
+        not in _TUI_LAUNCH_SEAMS
+    ]
+
+    assert unexempt == [], f"undeclared TUI reach: {[(v.importer_path, v.lineno, v.target) for v in unexempt]}"
+
+
+def test_every_declared_launch_seam_still_names_a_real_import() -> None:
+    """A seam whose import moved away must fail rather than sit here forever."""
+    live = {
+        (violation.importer_path, _enclosing_function(REPO_ROOT / "src" / violation.importer_path, violation.lineno))
+        for violation in _live_tui_boundary_violations()
+    }
+    stale = sorted(seam for seam in _TUI_LAUNCH_SEAMS if seam not in live)
+
+    assert stale == [], f"declared launch seams no longer reach the TUI: {stale}"
+    assert all(_TUI_LAUNCH_SEAMS.values()), "every launch seam states why it is permitted"
+
+
+def test_textual_is_confined_to_the_canonical_tui_package() -> None:
+    """No exemption exists for the toolkit: it belongs to the TUI root alone."""
+    outside = [
+        violation
+        for violation in _live_tui_boundary_violations()
+        if violation.kind is TuiBoundaryViolationKind.TEXTUAL_LOCATION
+    ]
+
+    assert outside == [], f"textual imported outside the TUI root: {outside}"
+
+
+def test_the_canonical_tui_package_is_fully_importable() -> None:
+    """Every module imports, so a swept dependency cannot leave the package broken."""
+    package = importlib.import_module(CANONICAL_TUI_PACKAGE)
+    failures: list[tuple[str, str]] = []
+    for module in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
+        try:
+            importlib.import_module(module.name)
+        except Exception as error:
+            failures.append((module.name, f"{type(error).__name__}: {error}"))
+
+    assert failures == [], f"canonical TUI package is not fully importable: {failures}"
