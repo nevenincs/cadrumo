@@ -476,3 +476,9 @@ dev/registry/scratch*/
 # siblings. Never tracked -- they are live-process state, not content.
 **/.generated-export-transaction-*
 **/.generated-export-backup-*
+
+# TUI visual inventory review artefacts (`python -m dev.tui render`): PNG/SVG
+# renders of every TUI surface, written per run for human visual review.
+# Regenerated on demand and never durable. Matched by the /.tmp-*/ rule above
+# as well; named explicitly so a reader greps the directory and finds why.
+/.tmp-tui-visual-inventory/
