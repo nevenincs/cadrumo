@@ -49,19 +49,6 @@ from typing import Literal
 
 from pydantic import Field, PrivateAttr, computed_field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, RevisionReviewStatus
 from ._schema_family_coverage import (
     CoverageModel,
@@ -69,6 +56,18 @@ from ._schema_family_coverage import (
 from .authority import ValidatedRegistryAuthority
 from .errors import RegistryValidationError
 from .ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
+from .schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from .schema_base import EvidenceTier
+from .schema_formula import ParameterDefinition
+from .schema_references import SourceReference
+from .schema_surfaces import RelationDefinition
+from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from .snapshot import check_snapshot_filing_review_tier
 from .static_inspection import RegistryRevisionInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates
