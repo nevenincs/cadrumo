@@ -152,7 +152,7 @@ class FlowTuiApp(App[None]):
     #answer-echo { color: $success; text-style: bold; margin: $cadrumo-space-0; }
     #commit-verdicts { color: $error; margin: $cadrumo-space-0; }
     #nav-buttons { height: $cadrumo-band-height; align-horizontal: right; margin: $cadrumo-space-0; }
-    #nav-buttons Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    #nav-buttons Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     #review-header {
         dock: top;
         height: $cadrumo-band-height;

@@ -40,7 +40,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
         + CREDENTIAL_PANEL_CSS
         + """
     #login-intro { margin: $cadrumo-space-0; }
-    #login-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    #login-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     """
     )
 

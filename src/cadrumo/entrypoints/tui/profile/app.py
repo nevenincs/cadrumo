@@ -65,7 +65,7 @@ class ProfileJourneyApp(App[None]):
         align-horizontal: right;
         margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
     }
-    #journey-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    #journey-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     """
     )
 

@@ -91,7 +91,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         align-horizontal: right;
         margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
     }
-    #operation-modal-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    #operation-modal-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 

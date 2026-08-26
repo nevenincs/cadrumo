@@ -154,7 +154,7 @@ _FIELD_REVIEW_CSS = tokenised("""
     align-horizontal: right;
     margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
 }
-#censal-field-review-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+#censal-field-review-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
 """)
 
 

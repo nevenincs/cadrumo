@@ -121,6 +121,11 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-control-height": "3",
         "cadrumo-control-pad-x": "3",
         "cadrumo-control-min-width": "14",
+        # The gap between sibling action buttons. Nine stylesheets each
+        # repeated this as a literal; two bordered boxes one cell apart
+        # read as one smeared control, so the role gets a name and a
+        # value that actually separates them.
+        "cadrumo-control-gap": "2",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
     },

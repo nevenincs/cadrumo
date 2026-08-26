@@ -131,7 +131,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
     #form-table { height: auto; width: 100%; background: $surface; }
     #form-refusal { color: $error; margin: $cadrumo-space-0; }
     #form-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
-    #form-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+    #form-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     """)
 
     BINDINGS: ClassVar = [Binding("escape", "abandon", "", show=False)]

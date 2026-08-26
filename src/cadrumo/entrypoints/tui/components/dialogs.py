@@ -28,7 +28,7 @@ _EDIT_DIALOG_CSS = tokenised("""
 #edit-refusal { color: $error; }
 #edit-dialog Input { margin: $cadrumo-space-0; }
 #edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
-#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
 """)
 """Styling carried by each dialog so every host renders it consistently."""
 
@@ -43,7 +43,7 @@ _CONFIRM_DIALOG_CSS = tokenised("""
 #confirm-title { text-style: bold; margin: $cadrumo-space-0; }
 #confirm-message { color: $text; margin: $cadrumo-space-0; }
 #confirm-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
-#confirm-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1; }
+#confirm-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
 """)
 
 
