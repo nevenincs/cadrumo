@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:c3fc6e1c2885b666b29f46c94f59036ce2172146a6e7bd0b307ee94b7231394b'
 step_id: 'S04'
@@ -86,22 +86,8 @@ Verification performed for this record:
 
 ## Notes
 
-This record documents work found already present on disk from a prior working
-session and does not represent implementation performed by the agent writing
-this record. The work is UNCOMMITTED at the time of writing (`git status` shows
-`_schema.py`, `_authority.py`, `_snapshot.py`, `_m303_orden_resolution.py`,
-`_supplementary_orden.py` and the swept test file as modified/new, unstaged).
+The relocation was found uncommitted when this record was first authored, then landed in commit `a16b0b8ffd` (`registry: retire SupportRemovalDecision, add authority-grade coverage and export-completeness gate`). Later public-module relocation commits moved `_schema.py`, `_authority.py`, `_snapshot.py`, and `_m303_orden_resolution.py` to `schema.py`, `authority.py`, `snapshot.py`, and `m303_orden_resolution.py` without restoring the deleted field or branch. The S04-owned paths are clean in the current worktree.
 
-This Step's deletion-inventory item is the `m303_annual_orden` field and its
-generic-construction branch; both are gone from the shared types. The
-M303-specific `_m303_orden_*` parsing modules and the
-`M303AnnualOrdenAuthority` type itself survive deliberately, per the plan's own
-"what survives deliberately" list — migrating the annual-orden content wholesale
-into authoring-tree TOML is a named open question the ADR leaves to the
-operator, not part of this row.
+This Step's deletion-inventory item is the `m303_annual_orden` field and its generic-construction branch; both remain absent from the shared types and generic construction. The M303-specific parsing modules, `M303AnnualOrdenAuthority`, and the `Modelo.M303` dispatch-table registration survive deliberately, per the plan's own "what survives deliberately" list.
 
-Full-tree `pytest --collect-only` was attempted for this record and failed
-(exit 2) on the same review-status collision named above, tree-wide and
-unrelated to this row's files; a scoped verification was used instead per this
-project's guidance to re-run before blaming the code on a shared, actively
-edited worktree.
+A 2026-08-26 reconciliation found zero `m303_annual_orden` field declarations or generic-authority M303 branches. The focused suite produced 32 passes and 25 failures: 22 are blocked before S04 behaviour by the active Modelo 200 registry split, and three expose separate classifier-ledger drift owned by the classifier lifecycle rather than this relocation. Those reds are not represented as S04 proof; the closure rests on the committed deletion/relocation inventory and current structural inspection. S06 remains open to establish the durable planted-mutation gate.

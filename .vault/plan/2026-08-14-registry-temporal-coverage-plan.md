@@ -3,14 +3,23 @@ tags:
   - '#plan'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
+modified: '2026-08-26'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:63306824ba870ef2283072035806b8335e27009ad614a0ee72bb48b163158cb1'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S31 -->
 
@@ -44,7 +53,7 @@ Type the grade axis, derive family enrollment and dispositions, and validate the
 
 Remove the modelo-named field and authority branch, compile the annual-orden authority under the tree fingerprint, and close the open cache-conformance question.
 
-- [ ] `W01.P02.S04` - Replace the m303_annual_orden field on RegistrySnapshot and RegistryCatalogues with a generic modelo-keyed supplementary orden catalogue, delete the Modelo.M303 branch in generic authority construction, and sweep every consumer in one atomic relocation commit; `src/cadrumo/domain/calculations/registry/_schema.py; src/cadrumo/domain/calculations/registry/_authority.py; src/cadrumo/domain/calculations/registry/`.
+- [x] `W01.P02.S04` - Replace the m303_annual_orden field on RegistrySnapshot and RegistryCatalogues with a generic modelo-keyed supplementary orden catalogue, delete the Modelo.M303 branch in generic authority construction, and sweep every consumer. The relocation landed in a16b0b8ffd, and later public-module relocations moved the surviving owners without restoring the deleted surface; `src/cadrumo/domain/calculations/registry/schema.py; src/cadrumo/domain/calculations/registry/authority.py; src/cadrumo/domain/calculations/registry/_supplementary_orden.py; src/cadrumo/domain/calculations/registry/snapshot.py; src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`.
 - [ ] `W01.P02.S05` - Compile the annual-orden parse output once and cache it under the complete registry tree fingerprint, proving by parse-event observation that a fingerprint-unchanged repeat load performs zero annual-orden HTML parses and that a mutated source invalidates the compiled output; `src/cadrumo/domain/calculations/registry/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W01.P02.S06` - Add a structural gate refusing any modelo-named field on a generic registry schema type and any modelo branch in generic authority construction, proven by a planted field observed red then removed; `src/cadrumo/domain/calculations/registry/tests/; dev/`.
 - [x] `W01.P02.S07` - Measure whether the loader fingerprint caches, the TTL windows and the two unbounded cache sites honour complete-tree invalidation, closing the open staleness question, and fix any cache that can serve stale compiled output; `src/cadrumo/domain/calculations/registry/_loader_cache.py; src/cadrumo/domain/calculations/registry/_loader_fingerprints.py; src/cadrumo/domain/calculations/registry/_compiled_cache.py; src/cadrumo/domain/calculations/registry/tests/`.
