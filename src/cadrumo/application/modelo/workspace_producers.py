@@ -12,6 +12,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     Period,
     RegistryAuthorityGrade,
+    RevisionReviewStatus,
     SourceConnectivityProofAuthority,
     content_hash_hex,
 )
@@ -370,6 +371,14 @@ class ModeloWorkspaceRegistryProjectionV1(_WorkspaceProducerModel):
         assert self.snapshot is not None
         return self.snapshot.revision.id
 
+    @property
+    def review_status(self) -> RevisionReviewStatus:
+        """Return the revision's own governance stamp, whichever admission shape carries it."""
+        if self.inspection is not None:
+            return self.inspection.review_status
+        assert self.snapshot is not None
+        return self.snapshot.revision.review_status
+
 
 class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):
     """The complete readiness report set, exactly as the sole producer built it."""
@@ -390,6 +399,7 @@ class ModeloWorkspaceLocaleCatalogueProjectionV1(_WorkspaceProducerModel):
     translation_key: str
     present: bool
     value: str | None = None
+    catalogue_digest: ContentDigest
 
 
 def _declared_contract(
@@ -830,6 +840,7 @@ class ModeloWorkspaceLocaleCataloguePortV1:
                 translation_key=capture.translation_key,
                 present=capture.present,
                 value=capture.value,
+                catalogue_digest=capture.catalogue_digest,
             ),
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,
@@ -844,11 +855,17 @@ class ModeloWorkspaceLocaleCataloguePortV1:
 
 
 class ModeloWorkspaceFieldManifestPortV1:
-    """Application-owned port realization delegating to the sole FIELD_MANIFEST capture."""
+    """Application-owned port realization delegating to the sole FIELD_MANIFEST capture.
 
-    def __init__(self, *, snapshot: RegistrySnapshot) -> None:
-        """Bind the registry snapshot this port generates the field manifest from."""
-        self._snapshot = snapshot
+    S278: a static inspection and a graded snapshot make different authority
+    claims and generate over different type universes -- this port accepts
+    either admission's own authority object and dispatches to the matching
+    generator, never filtering one universe's manifest down for the other.
+    """
+
+    def __init__(self, *, authority: RegistrySnapshot | RegistryRevisionInspection) -> None:
+        """Bind the registry authority object this port generates the field manifest from."""
+        self._authority = authority
 
     @property
     def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
@@ -859,9 +876,14 @@ class ModeloWorkspaceFieldManifestPortV1:
         self,
     ) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceFieldManifestV1]:
         """Atomically capture the field manifest and stamp it with its epoch."""
-        from .workspace_manifest import capture_modelo_workspace_manifest
+        if isinstance(self._authority, RegistrySnapshot):
+            from .workspace_manifest import capture_modelo_workspace_manifest
 
-        capture = capture_modelo_workspace_manifest(self._snapshot)
+            capture = capture_modelo_workspace_manifest(self._authority)
+        else:
+            from .workspace_manifest import capture_modelo_workspace_manifest_for_inspection
+
+            capture = capture_modelo_workspace_manifest_for_inspection(self._authority)
         return _contributing_projection(
             self.producer_contract,
             projection=capture.manifest,
@@ -871,9 +893,14 @@ class ModeloWorkspaceFieldManifestPortV1:
 
     def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
         """Return the current FIELD_MANIFEST stamp and epoch for same-domain validation."""
-        from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate
+        if isinstance(self._authority, RegistrySnapshot):
+            from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate
 
-        coordinate = read_modelo_workspace_manifest_current_coordinate(self._snapshot)
+            coordinate = read_modelo_workspace_manifest_current_coordinate(self._authority)
+        else:
+            from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate_for_inspection
+
+            coordinate = read_modelo_workspace_manifest_current_coordinate_for_inspection(self._authority)
         return _current_stamp_and_epoch(self.producer_contract, coordinate)
 
 

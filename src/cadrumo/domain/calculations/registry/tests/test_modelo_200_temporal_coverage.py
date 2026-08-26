@@ -344,8 +344,7 @@ def test_cuota_integra_antitautology_manual_casilla_still_required() -> None:
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
     casilla = parameters_by_id.get(_M200_RESULTADO_CONTABLE_CASILLA)
     assert casilla is not None, (
-        "00501 must be declared in the 2024 revision; "
-        "if absent the snapshot failed to load the casilla TOML cluster"
+        "00501 must be declared in the 2024 revision; if absent the snapshot failed to load the casilla TOML cluster"
     )
     assert casilla.input_kind == InputKind.MANUAL, (
         "00501 (resultado cuenta pérdidas y ganancias) must remain input_kind='manual'; "

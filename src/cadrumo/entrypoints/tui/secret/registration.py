@@ -1,4 +1,4 @@
-"""The profile-secret application surfaces: create once, then unlock.
+"""Registration: full-screen credential entry that creates and unlocks one profile.
 
 This is the literal first surface of the application. Everything else —
 the manager, the overview, filing — is behind it, because everything else
@@ -27,7 +27,7 @@ See Also:
         provisions the key material, and leaves the session unlocked.
     :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
-    :class:`LoginApp`
+    :class:`~cadrumo.entrypoints.tui.secret.login.LoginApp`
         The other credential surface; the two share their attempt
         lifecycle and panel layout through ``CredentialApp``.
 """
@@ -37,378 +37,44 @@ from __future__ import annotations
 from contextvars import copy_context
 from dataclasses import dataclass
 from threading import Event
-from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual import on
-from textual.app import App, ComposeResult
-from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.app import ComposeResult
+from textual.containers import Container, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
-from textual.worker import Worker, WorkerState
 
-from ....core.credentials import (
-    PROFILE_PASSWORD_MIN_SCALARS,
-    PassphraseStrength,
-    ProfilePasswordAssessment,
-)
+from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
 from ....entrypoints.tui.components.widgets import ContentScroll
+from .credentials import (
+    CREDENTIAL_PANEL_CSS,
+    CredentialApp,
+    CredentialAttempt,
+    assessment_copy,
+    assessment_css_class,
+    run_credential_app,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable
 
-    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
-    from ....application.user_profile.login_session import ProfileLoginOutcome
-    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
     from ....application.user_profile.registration import ProfileRegistrationOutcome
+    from ....core.credentials import ProfilePasswordAssessment
 
-
-CREDENTIAL_PANEL_CSS: Final[str] = """
-.field-label { text-style: bold; margin: 0; }
-.field-hint { color: $text-muted; margin: 0; }
-.credential-actions { height: auto; align-horizontal: right; margin: 0; }
-"""
-"""Layout shared by the login and registration credential panels."""
-
-
-class CredentialAttempt[OutcomeT](Protocol):
-    """The secret-free result shape returned by an injected credential door."""
-
-    @property
-    def outcome(self) -> OutcomeT | None:
-        """Successful outcome, or ``None`` when the door refused."""
-        ...  # pragma: no cover
-
-    @property
-    def refusal(self) -> str | None:
-        """Safe rendered refusal, or ``None`` when no detail was supplied."""
-        ...  # pragma: no cover
-
-
-class CredentialApp[OutcomeT](App[OutcomeT | None]):
-    """Host one bounded, thread-backed credential attempt at a time."""
-
-    BINDINGS: ClassVar = [
-        Binding("f3", "toggle_appearance", "", show=False),
-        Binding("escape", "abandon", "", show=False),
-    ]
-
-    STATUS_ID: ClassVar[str] = "#credential-status"
-    ATTEMPT_NAME: ClassVar[str]
-
-    def __init__(self) -> None:
-        """Initialise an empty ephemeral attempt result."""
-        super().__init__()
-        self.outcome: OutcomeT | None = None
-        self.error: BaseException | None = None
-        self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
-
-    @property
-    def attempt_in_flight(self) -> bool:
-        """Whether a storage call is running and cannot be duplicated."""
-        return self._attempt is not None
-
-    def start_attempt(self, work: Callable[[], CredentialAttempt[OutcomeT]]) -> None:
-        """Run ``work`` off the event loop as this screen's sole attempt."""
-        if self._attempt is not None:
-            return
-        self.error = None
-        self.set_busy(busy=True)
-        self._attempt = self.run_worker(
-            work,
-            name=self.ATTEMPT_NAME,
-            group=self.ATTEMPT_NAME,
-            exit_on_error=False,
-            exclusive=True,
-            thread=True,
-        )
-
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
-        """Settle the sole attempt back on Textual's UI task."""
-        worker = self._attempt
-        event_worker = cast("Worker[CredentialAttempt[OutcomeT]]", event.worker)
-        if worker is None or event_worker is not worker or event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
-            return
-        self._attempt = None
-        if event.state is WorkerState.ERROR:
-            self.error = worker.error or RuntimeError(f"{self.ATTEMPT_NAME} worker failed")
-            self.set_busy(busy=False)
-            self.refuse(self._resolved_worker_failure(self.error))
-            return
-        attempt = worker.result
-        if attempt is None:
-            self.error = RuntimeError(f"{self.ATTEMPT_NAME} worker returned no result")
-            self.set_busy(busy=False)
-            self.refuse(self._resolved_worker_failure(self.error))
-            return
-        if attempt.outcome is None:
-            self.set_busy(busy=False)
-            self.refuse(self.resolve_attempt_refusal(attempt) or self.default_refusal())
-            return
-        self.outcome = attempt.outcome
-        self.leave(attempt.outcome)
-
-    def _resolved_worker_failure(self, error: BaseException) -> str:
-        """Render an unexpected failure without leaking diagnostic prose."""
-        try:
-            from ....core.errors import resolve_error_message
-
-            detail = resolve_error_message(error, locale=self.output_locale()).strip()
-        except (LookupError, TypeError, ValueError):
-            detail = ""
-        guidance = tr("errors.internal.internal_cli_unexpected_boundary", locale=self.output_locale())
-        return f"{detail} {guidance}".strip()
-
-    def output_locale(self) -> str | None:
-        """Return this app's explicit presentation locale, if it owns one."""
-        return None
-
-    def resolve_attempt_refusal(self, attempt: CredentialAttempt[OutcomeT]) -> str | None:
-        """Render one door refusal at this app's presentation boundary."""
-        return attempt.refusal
-
-    def default_refusal(self) -> str:
-        """Text shown when a refusal carries no message."""
-        raise NotImplementedError
-
-    def refuse(self, message: str) -> None:
-        """Show one refusal without leaving, allowing an in-place retry."""
-        self.query_one(self.STATUS_ID, PinnedStatusBar).show_error(message)
-
-    def set_busy(self, *, busy: bool) -> None:
-        """Show progress and clear the previous refusal."""
-        status = self.query_one(self.STATUS_ID, PinnedStatusBar)
-        if busy:
-            status.show_progress(self.progress_message())
-        else:
-            status.clear_message()
-
-    def progress_message(self) -> str:
-        """Operator-facing description of the subclass's in-flight attempt."""
-        raise NotImplementedError
-
-    def leave(self, outcome: OutcomeT | None) -> None:
-        """Close the screen and return its optional outcome."""
-        self.exit(outcome)
-
-    def action_abandon(self) -> None:
-        """Leave without a result unless storage work is still in flight."""
-        if self._attempt is not None:
-            return
-        self.outcome = None
-        self.leave(None)
-
-    def action_toggle_appearance(self) -> None:
-        """Switch the rendered terminal appearance."""
-        toggle_appearance(self)
-
-
-def run_credential_app[OutcomeT](app: CredentialApp[OutcomeT]) -> OutcomeT | None:
-    """Run one credential screen and return its optional outcome."""
-    app.run()
-    return app.outcome
-
-
-_STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {
-    PassphraseStrength.WEAK: "strength-weak",
-    PassphraseStrength.FAIR: "strength-fair",
-    PassphraseStrength.STRONG: "strength-strong",
-}
-
-
-def assessment_refusal(
-    assessment: ProfilePasswordAssessment,
-) -> ProspectiveProfilePasswordRefusal | None:
-    """Project a canonical assessment through the application facade."""
-    from ....application.user_profile.prospective_password import prospective_profile_password_refusal
-
-    return prospective_profile_password_refusal(assessment)
-
-
-def assessment_copy(assessment: ProfilePasswordAssessment, *, locale: str | None = None) -> str:
-    """Resolve localized validation or advisory copy for one assessment."""
-    refusal = assessment_refusal(assessment)
-    if refusal is not None:
-        return tr(refusal.translated_message, locale=locale, **dict(refusal.context))
-    match assessment.strength:
-        case PassphraseStrength.WEAK:
-            return tr("flows.registration.strength.weak", locale=locale)
-        case PassphraseStrength.FAIR:
-            return tr("flows.registration.strength.fair", locale=locale)
-        case PassphraseStrength.STRONG:
-            return tr("flows.registration.strength.strong", locale=locale)
-
-
-def assessment_css_class(assessment: ProfilePasswordAssessment) -> str:
-    """Return the presentation class for a secret-free assessment."""
-    if not assessment.accepted:
-        return "strength-refused"
-    return _STRENGTH_CLASSES[assessment.strength]
-
-
-class LoginApp(CredentialApp["ProfileLoginOutcome"]):
-    """Full-screen credential entry that unlocks one existing profile."""
-
-    CSS = (
-        BASE_CSS
-        + CREDENTIAL_PANEL_CSS
-        + """
-    #login-intro { margin: 0; }
-    #login-actions Button { margin: 0 0 0 1; }
-    """
-    )
-
-    ATTEMPT_NAME = "profile-login"
-
-    def __init__(
-        self,
-        *,
-        choices: Sequence[ProfileLoginChoice],
-        authenticate: Callable[[str, str], ProfileLoginAttempt],
-        preselected: str | None = None,
-    ) -> None:
-        """Bind the supplied profile choices and authentication callback."""
-        super().__init__()
-        if not choices:
-            raise ValueError("a login screen needs at least one profile to choose from")
-        self._choices = tuple(choices)
-        self._authenticate = authenticate
-        known = {choice.profile_id for choice in self._choices}
-        self._preselected = (
-            preselected if preselected is not None and preselected in known else self._choices[0].profile_id
-        )
-
-    @override
-    def compose(self) -> ComposeResult:
-        """Yield the banner, the two credential fields, and the footer."""
-        yield Static(id="login-banner", classes="cadrumo-banner")
-        yield PinnedStatusBar(id="credential-status")
-        with (
-            ContentScroll(classes="cadrumo-scroll"),
-            Vertical(classes="cadrumo-column"),
-            Vertical(id="login-body", classes="cadrumo-panel"),
-        ):
-            yield Static(id="login-intro")
-
-            yield Label(id="label-profile", classes="field-label")
-            yield Select[str](
-                [(choice.label, choice.profile_id) for choice in self._choices],
-                value=self._preselected,
-                allow_blank=False,
-                id="field-profile",
-            )
-
-            yield Label(id="label-passphrase", classes="field-label")
-            yield Static(id="hint-passphrase", classes="field-hint")
-            yield Input(id="field-passphrase", password=True)
-
-            with Horizontal(id="login-actions", classes="credential-actions"):
-                yield Button(tr("flows.login.cancel_button"), id="btn-cancel")
-                yield Button(tr("flows.login.unlock_button"), id="btn-unlock", classes="-primary")
-        yield Footer()
-
-    def on_mount(self) -> None:
-        """Install the theme, render copy, and focus password entry."""
-        install_cadrumo_themes(self)
-        self._render_localised_copy()
-        self.query_one("#field-passphrase", Input).focus()
-
-    def _render_localised_copy(self) -> None:
-        """Resolve every operator-facing string on the page."""
-        title = tr("flows.login.title")
-        self.title = title
-        self.sub_title = tr("flows.login.section")
-        self.query_one("#login-banner", Static).update(title)
-        self.query_one("#login-intro", Static).update(tr("flows.login.intro"))
-        self.query_one("#login-body", Vertical).border_title = tr("flows.login.section")
-        self.query_one("#label-profile", Label).update(tr("flows.login.profile_label"))
-        self.query_one("#label-passphrase", Label).update(tr("flows.login.password_label"))
-        self.query_one("#hint-passphrase", Static).update(tr("flows.login.password_hint"))
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Route an unlock or cancellation button intent."""
-        if event.button.id == "btn-unlock":
-            self.action_unlock()
-        elif event.button.id == "btn-cancel":
-            self.action_abandon()
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Enter in the password field is the unlock."""
-        if event.input.id == "field-passphrase":
-            self.action_unlock()
-
-    def selected_profile_id(self) -> str:
-        """Return the profile the chooser currently addresses."""
-        selected = cast("Select[str]", self.query_one("#field-profile", Select)).value
-        return selected if isinstance(selected, str) else self._preselected
-
-    def action_unlock(self) -> None:
-        """Hand the typed password to the injected unlock door off-loop."""
-        if self.attempt_in_flight:
-            return
-
-        passphrase = self.query_one("#field-passphrase", Input).value
-        if not passphrase:
-            self.refuse(tr("flows.login.refusal.password_required"))
-            return
-
-        profile_id = self.selected_profile_id()
-        login_context = copy_context()
-        passphrase_buffer = bytearray(passphrase, UTF_8_ENCODING)
-
-        def _unlock() -> ProfileLoginAttempt:
-            try:
-                return login_context.run(
-                    self._authenticate,
-                    profile_id,
-                    passphrase_buffer.decode(UTF_8_ENCODING),
-                )
-            finally:
-                passphrase_buffer[:] = b"\x00" * len(passphrase_buffer)
-
-        self.start_attempt(_unlock)
-
-    @override
-    def default_refusal(self) -> str:
-        return tr("flows.login.refusal.unlock_failed")
-
-    @override
-    def progress_message(self) -> str:
-        return tr("flows.login.unlock_button")
-
-    @override
-    def refuse(self, message: str) -> None:
-        """Show refusal, clear the rejected password, and focus retry."""
-        super().refuse(message)
-        field = self.query_one("#field-passphrase", Input)
-        field.value = ""
-        field.focus()
-
-    @override
-    def set_busy(self, *, busy: bool) -> None:
-        """Render unlock progress and freeze inputs during derivation."""
-        super().set_busy(busy=busy)
-        self.query_one("#field-passphrase", Input).disabled = busy
-        self.query_one("#field-profile", Select).disabled = busy
-        self.query_one("#btn-unlock", Button).disabled = busy
-        self.query_one("#btn-cancel", Button).disabled = busy
-
-
-def run_login_tui(
-    *,
-    choices: Sequence[ProfileLoginChoice],
-    authenticate: Callable[[str, str], ProfileLoginAttempt],
-    preselected: str | None = None,
-) -> ProfileLoginOutcome | None:
-    """Run the login screen and return the opened session, or ``None``."""
-    return run_credential_app(
-        LoginApp(choices=choices, authenticate=authenticate, preselected=preselected),
-    )
+__all__ = [
+    "RecoveryHandoverCancelledError",
+    "RecoveryWordsScreen",
+    "RegistrationApp",
+    "RegistrationAttempt",
+    "RegistrationRefusal",
+    "run_registration_tui",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -926,16 +592,3 @@ def run_registration_tui(
     return run_credential_app(
         RegistrationApp(assess=assess, register=register, suggested_name=suggested_name),
     )
-
-
-__all__ = [
-    "LoginApp",
-    "RecoveryHandoverCancelledError",
-    "RecoveryWordsScreen",
-    "RegistrationApp",
-    "RegistrationAttempt",
-    "RegistrationRefusal",
-    "assessment_refusal",
-    "run_login_tui",
-    "run_registration_tui",
-]

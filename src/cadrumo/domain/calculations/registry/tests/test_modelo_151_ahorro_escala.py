@@ -36,7 +36,7 @@ See Also:
         Per-band cumulative cuota and marginal-rate rows asserted here.
     :class:`~domain.calculations.registry.ModeloRevision`
         Revision container that splits the 2015 and 2025 Modelo 151 schemas.
-    :func:`~domain.calculations.registry._formula_runtime._resolve_bracket`
+    :func:`~domain.calculations.registry.formula_runtime_ops.resolve_bracket`
         Runtime bracket resolver exercised directly by these oracle checks.
     :exc:`~domain.calculations.registry.RegistryValidationError`
         Raised when the required filing-period axis is missing.
@@ -55,7 +55,7 @@ from functools import cache
 import pytest
 
 from ..errors import RegistryValidationError
-from ..formula_runtime import _resolve_bracket
+from ..formula_runtime_ops import resolve_bracket
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -103,7 +103,7 @@ def test_escala_ahorro_absent_from_2015_revision() -> None:
 
 
 def test_escala_ahorro_zero_base_resolves_zero() -> None:
-    assert _resolve_bracket(_ahorro_table(), Decimal("0"), _AS_OF) == Decimal("0")
+    assert resolve_bracket(_ahorro_table(), Decimal("0"), _AS_OF) == Decimal("0")
 
 
 @pytest.mark.parametrize(
@@ -121,7 +121,7 @@ def test_escala_ahorro_breakpoint_matches_published_cuota_integra(
 ) -> None:
     """At each breakpoint the cuota equals the BOE-published cumulative cuota
     íntegra of the bracket starting there (art. 93.2.e.2º table column 2)."""
-    assert _resolve_bracket(_ahorro_table(), breakpoint, _AS_OF) == published_cuota_integra
+    assert resolve_bracket(_ahorro_table(), breakpoint, _AS_OF) == published_cuota_integra
 
 
 @pytest.mark.parametrize(
@@ -139,7 +139,7 @@ def test_escala_ahorro_mid_bracket_matches_boe_arithmetic(base: Decimal, expecte
     """Mid-bracket cuota = published breakpoint cumulative + published marginal
     rate on the excess — the escala arithmetic the BOE fixes, never the registry
     formula re-run. The 400.000 case pins the 30% Beckham top rate."""
-    assert _resolve_bracket(_ahorro_table(), base, _AS_OF) == expected.quantize(Decimal("0.01"))
+    assert resolve_bracket(_ahorro_table(), base, _AS_OF) == expected.quantize(Decimal("0.01"))
 
 
 def test_escala_ahorro_top_bracket_is_beckham_art93_thirty_percent() -> None:
@@ -149,11 +149,11 @@ def test_escala_ahorro_top_bracket_is_beckham_art93_thirty_percent() -> None:
     legal basis and the single unified table with no autonomic split — NOT the
     marginal rate: for 2025 the general savings top is also 30% after Ley 7/2024,
     so this oracle guards the art. 93 bracket structure, not a rate difference."""
-    at_300k = _resolve_bracket(_ahorro_table(), Decimal("300000"), _AS_OF)
-    at_400k = _resolve_bracket(_ahorro_table(), Decimal("400000"), _AS_OF)
+    at_300k = resolve_bracket(_ahorro_table(), Decimal("300000"), _AS_OF)
+    at_400k = resolve_bracket(_ahorro_table(), Decimal("400000"), _AS_OF)
     assert at_400k - at_300k == Decimal("30000.00")
 
 
 def test_escala_ahorro_requires_filing_period_axis() -> None:
     with pytest.raises(RegistryValidationError):
-        _resolve_bracket(_ahorro_table(), Decimal("100000"), {})
+        resolve_bracket(_ahorro_table(), Decimal("100000"), {})

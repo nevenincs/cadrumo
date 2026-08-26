@@ -239,6 +239,7 @@ def persist_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -338,6 +339,7 @@ def persist_calculation_revision(
         source_provenance=source_provenance,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        cleared_casilla_ids=cleared_casilla_ids,
     )
     stamped_annual_summary_handoff = (
         m303_regimen_simplificado_annual_summary_handoff.stamped_for_target_calculation_revision(revision_id)
@@ -398,6 +400,7 @@ def persist_calculation_revision(
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,

@@ -12,6 +12,9 @@ from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_legal import compile_annual_orden_legal_references
+from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
+from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from ._m303_orden_source import extract_m303_annual_orden_source
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 from .loader_cache import toml_file_fingerprint
@@ -20,7 +23,6 @@ from .m303_orden_census_artefact import (
     load_m303_annual_orden_censuses,
     render_m303_annual_orden_censuses,
 )
-from .m303_orden_projection_compiler import compile_m303_annual_orden_projection
 from .m303_orden_projection_models import (
     M303AnnualOrdenAuthority,
     M303AnnualOrdenCompilation,
@@ -28,8 +30,6 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenGeneratedSource,
     M303AnnualOrdenProjection,
 )
-from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
-from .m303_orden_source import extract_m303_annual_orden_source
 from .schema_references import LegalReference, SourceReference
 
 if TYPE_CHECKING:

@@ -17,6 +17,7 @@ from dev.quality.registry_facade_family_census import (
     _annotation_owners,
     _base_category,
     _bound_plan_step,
+    _definition_lines,
     _dynamic_import_call,
     _evidence_text,
     _exact_symbol_identity,
@@ -374,11 +375,12 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
         assert "defining owner" in row["rag_query"]
         assert row["rag_query"].endswith("only:prod")
         # A row's demonstrated definition site may sit outside its own c941
-        # path when the historic facade only re-exports the symbol: the
-        # production check independently proves that external site is an
-        # exact, unique definition via ``_definition_lines`` rather than via
-        # this row's own adjudicated destinations.
-        assert result["path"] in _adjudicated_paths(row) or result["path"] != row["new_path"]
+        # path when the historic facade only re-exports the symbol, so the
+        # path is proven against the real definition sites in that module
+        # rather than against this row's own adjudicated destinations. The
+        # earlier disjunct admitted any path that was not the row's own,
+        # which an unrelated file satisfied.
+        assert result["line_start"] in _definition_lines(result["path"], result["symbol"])
         assert location in row["alternative_owner_evidence"]
         assert row["semantic_owner"] in row["alternative_owner_evidence"]
         rationale = row["semantic_evidence"]["substitutability"]["rationale"]

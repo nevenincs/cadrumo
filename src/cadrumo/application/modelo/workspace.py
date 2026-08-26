@@ -24,6 +24,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ...core import OutputLanguage, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
+from ...domain.calculations.registry.schema import FormulaDefinition, RelationDefinition
+from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
@@ -32,16 +37,57 @@ from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
-    assert_work_target_revision,
 )
 from .workspace_models import (
+    ModeloWorkspaceBaselineV1,
+    ModeloWorkspaceCapabilityDisposition,
+    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceCapabilityV1,
+    ModeloWorkspaceBoundedFacetV1,
+    ModeloWorkspaceCasillaReferenceV1,
+    ModeloWorkspaceContributorIdentityV1,
+    ModeloWorkspaceCursorV1,
+    ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceFacetName,
+    ModeloWorkspaceFormulaBindingOperandReferenceV1,
+    ModeloWorkspaceFormulaCasillaOperandReferenceV1,
+    ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
+    ModeloWorkspaceFormulaDispatchOperandReferenceV1,
+    ModeloWorkspaceFormulaLiteralOperandReferenceV1,
+    ModeloWorkspaceFormulaOperandReferenceV1,
+    ModeloWorkspaceFormulaParameterOperandReferenceV1,
+    ModeloWorkspaceFormulaRelationOperandReferenceV1,
+    ModeloWorkspaceLocaleDisposition,
+    ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceLocalizedTextV1,
+    ModeloWorkspaceRelationSourceEndpointReferenceV1,
+    ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    ModeloWorkspaceResolvedTargetV1,
+    ModeloWorkspaceSchemaClassification,
+    ModeloWorkspaceSchemaIdentityV1,
+    ModeloWorkspaceSchemaRecordV1,
+    ModeloWorkspaceWorkReviewFacetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
     ModeloWorkspaceTargetV1,
 )
 from .workspace_producers import (
+    MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
+    MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceContributingProjectionV1,
+    ModeloWorkspaceEpochV1,
+    ModeloWorkspaceFieldManifestPortV1,
+    ModeloWorkspaceLocaleCataloguePortV1,
+    ModeloWorkspaceProducerContractV1,
+    ModeloWorkspaceProducerStampV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
@@ -127,14 +173,18 @@ def resolve_modelo_workspace_revision_axes(
     the coordinates that resolution carries (``resolution.modelo``,
     ``resolution.filing_year``, ``resolution.period``) and from no other
     source. This function never captures REGISTRY itself -- it only evaluates
-    the two axes against what the caller already captured, through the sole
-    pure :func:`assert_work_target_revision`.
+    the two axes against what the caller already captured.
 
-    A mismatch on either axis is NOT swallowed into a boolean: the raised
-    :class:`ModeloWorkRegistryYearMismatchError` names which axis diverged in
-    ``err.args[0]`` prose only, so the caller wanting per-axis dispositions
-    recomputes membership by re-checking each axis against the same law
-    revision id below, once per axis, never trusting the exception's shape.
+    This function NEVER raises on a mismatch. ``ModeloWorkspaceRevisionAssertionV1``
+    has a ``MISMATCHED`` disposition member precisely because the shared
+    Workspace contract expects the mismatch surfaced as typed data, carried
+    into ``ModeloWorkspaceRevisionMismatchRefusalV1`` by the assembly layer --
+    an exception escaping here would destroy the very information that typed
+    refusal exists to carry. A caller that wants the canonical translated
+    mismatch text (for example to construct that refusal's prose) reuses the
+    sole pure :func:`assert_work_target_revision` itself, over the same
+    ``requested_revision_id`` / ``stored_revision_id`` / law revision triple
+    this function computed its dispositions from; it is not called here.
     """
     requested_revision_id = resolution.requested_revision_id
     stored_revision_id = resolution.work_unit.revision_id if resolution.work_unit is not None else None
@@ -148,28 +198,6 @@ def resolve_modelo_workspace_revision_axes(
     ):
         if candidate is not None and candidate.strip() != law_revision_id:
             mismatched.add(source)
-
-    if mismatched:
-        # Reuse the sole pure assertion to raise the canonical, translated
-        # refusal text -- assert_work_target_revision remains the single place
-        # the mismatch wording and the "why" prose are authored, even though
-        # the per-axis disposition below is what the caller actually persists.
-        # comparison_domain/generation are irrelevant to the pure check itself
-        # (only .projection.revision_id is read), so a same-process sentinel
-        # coordinate is sufficient here -- no second REGISTRY read occurs.
-        from ...domain.calculations.registry.authority import RegistryAuthorityCapture
-
-        raw_projection = (
-            registry_projection.inspection
-            if registry_projection.inspection is not None
-            else registry_projection.snapshot
-        )
-        assert raw_projection is not None
-        assert_work_target_revision(
-            RegistryAuthorityCapture(projection=raw_projection, comparison_domain=law_revision_id, generation=1),
-            requested_revision_id=requested_revision_id,
-            stored_revision_id=stored_revision_id,
-        )
 
     return ModeloWorkspaceRevisionAxes(
         law_selected_revision_id=law_revision_id,
@@ -188,14 +216,23 @@ def resolve_modelo_workspace_revision_axes(
     )
 
 
-def capture_modelo_workspace_target_axes(
+def capture_modelo_workspace_target_captures(
     target: ModeloWorkspaceTargetV1,
     *,
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
     authority: ValidatedRegistryAuthority,
-) -> tuple[ModeloWorkResolution, ModeloWorkspaceRegistryProjectionV1, ModeloWorkspaceRevisionAxes]:
+) -> tuple[
+    ModeloWorkspaceContributingProjectionV1[ModeloWorkResolution],
+    ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceRegistryProjectionV1],
+    ModeloWorkspaceRevisionAxes,
+]:
     """Capture WORK exactly once, then REGISTRY exactly once from its coordinates.
+
+    Returns the full stamped-and-epoched captures, not just their bare
+    projections, so a baseline assembler can fold the WORK/REGISTRY
+    contributor stamps and epochs into its consistency digest without a
+    second capture of either.
 
     This is the ordering-critical sequence itself: WORK is resolved first, its
     ``(modelo, filing_year, period)`` is read back to build the REGISTRY port
@@ -228,12 +265,586 @@ def capture_modelo_workspace_target_axes(
     registry_projection = registry_capture.projection
 
     axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
-    return resolution, registry_projection, axes
+    return work_capture, registry_capture, axes
+
+
+def capture_modelo_workspace_target_axes(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+) -> tuple[ModeloWorkResolution, ModeloWorkspaceRegistryProjectionV1, ModeloWorkspaceRevisionAxes]:
+    """Capture WORK exactly once, then REGISTRY exactly once from its coordinates.
+
+    Thin convenience wrapper over :func:`capture_modelo_workspace_target_captures`
+    exposing only the two bare projections plus the axes -- the shape every
+    existing caller in this module already consumes. A caller that also needs
+    the WORK/REGISTRY stamps and epochs (baseline assembly) calls the richer
+    function directly instead of re-capturing.
+    """
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=catalogue_repository,
+        authority=authority,
+    )
+    return work_capture.projection, registry_capture.projection, axes
+
+
+def resolve_modelo_workspace_target(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+) -> ModeloWorkspaceResolvedTargetV1:
+    """Capture WORK-then-REGISTRY and assemble the shared resolved-target record.
+
+    This is the shared shape both admissions build their projection or
+    refusal on top of. It carries no mismatch judgement of its own beyond
+    what ``ModeloWorkspaceRevisionAxes`` already computed: a caller finding
+    either assertion at ``MISMATCHED`` builds
+    ``ModeloWorkspaceRevisionMismatchRefusalV1`` from this same record rather
+    than treating the mismatch as an exception -- this function never raises
+    for a revision mismatch.
+    """
+    resolution, registry_projection, axes = capture_modelo_workspace_target_axes(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=catalogue_repository,
+        authority=authority,
+    )
+    work_unit = resolution.work_unit
+    assert resolution.modelo is not None
+    assert resolution.filing_year is not None
+    assert resolution.period is not None
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id=resolution.bucket_id,
+        modelo=resolution.modelo,
+        filing_year=resolution.filing_year,
+        period=resolution.period,
+        law_selected_revision_id=axes.law_selected_revision_id,
+        review_status=registry_projection.review_status,
+        requested_revision_assertion=axes.requested_revision_assertion,
+        stored_revision_assertion=axes.stored_revision_assertion,
+        work_unit_id=work_unit.work_unit_id if work_unit is not None else None,
+        work_state=work_unit.state if work_unit is not None else None,
+    )
+
+
+def _resolve_locale_summary_and_value(
+    key: str,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceLocaleSummaryV1, str | None]:
+    """Resolve one canonical locale coordinate plus its text value, for any key.
+
+    Shared by the revision-level summary (:func:`capture_modelo_workspace_locale_summary`)
+    and any per-record label resolution (schema_facet). Spanish is the source
+    language for every catalogue entry (``aeat-locales-cli``), so a requested
+    language whose own key is absent falls back to Spanish rather than to an
+    arbitrary third language; Spanish absent as well is the suppressed floor,
+    never a missing key propagated as an exception. The returned value is
+    ``None`` only when even the Spanish source is absent -- callers needing a
+    non-empty display string treat that as a distinct refusal, never a blank.
+    """
+    requested = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=output_language.value,
+    ).capture_projection_with_epoch()
+    if requested.projection.value is not None:
+        return (
+            ModeloWorkspaceLocaleSummaryV1(
+                requested_language=output_language,
+                resolved_language=output_language,
+                disposition=ModeloWorkspaceLocaleDisposition.EXACT,
+                catalogue_digest=requested.projection.catalogue_digest,
+            ),
+            requested.projection.value,
+        )
+    if output_language is OutputLanguage.ES:
+        return (
+            ModeloWorkspaceLocaleSummaryV1(
+                requested_language=output_language,
+                resolved_language=OutputLanguage.ES,
+                disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
+                catalogue_digest=requested.projection.catalogue_digest,
+            ),
+            None,
+        )
+    spanish = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=key,
+        locale=OutputLanguage.ES.value,
+    ).capture_projection_with_epoch()
+    disposition = (
+        ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+        if spanish.projection.value is not None
+        else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+    )
+    return (
+        ModeloWorkspaceLocaleSummaryV1(
+            requested_language=output_language,
+            resolved_language=OutputLanguage.ES,
+            disposition=disposition,
+            catalogue_digest=spanish.projection.catalogue_digest,
+        ),
+        spanish.projection.value,
+    )
+
+
+def capture_modelo_workspace_locale_summary(
+    resolved_target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> ModeloWorkspaceLocaleSummaryV1:
+    """Resolve the canonical locale coordinate for one resolved Workspace target.
+
+    Tests the resolved target's own revision-level display key
+    (:func:`revision_locale_key`) through the sole LOCALE_CATALOGUE port. This
+    is the natural per-read canonical key -- one Workspace read names exactly
+    one ``(modelo, revision)`` pair, and that pair's own display label is a
+    key every Workspace read already needs regardless of which facet a caller
+    goes on to request.
+    """
+    key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
+    summary, _value = _resolve_locale_summary_and_value(key, output_language=output_language)
+    return summary
+
+
+# S279 (ADR amendment "Canonical capability and refusal facade"): the
+# capability-to-producer mapping is fixed by which of the eight contributors
+# static inspection structurally never reads ("Static inspection captures
+# exactly registry, work, locale_catalogue, and field_manifest; it does not
+# read bounded_review, calculation, readiness, or closure"), not by matching
+# enum spellings. Every one of those four excluded contributors is UNMEASURED
+# for this admission per the ADR's own rule -- "absence of a producer... is
+# unmeasured, never available" -- which the ADR amendment clarifies covers an
+# admission-structural exclusion, not only a graded producer that ran and
+# declined to answer. NOT_APPLICABLE was the wrong disposition for this case;
+# it is reserved for a producer that DID run and declared the fact
+# inapplicable to the specific target.
+#
+# SCHEMA_INSPECTION is AVAILABLE (W03.P20.S278 resolved static inspection's
+# own field-manifest root, generate_modelo_workspace_field_manifest_for_inspection):
+# field_manifest is a real contributor for this admission, so schema_inspection
+# is the one capability static inspection answers AVAILABLE for.
+_STATIC_INSPECTION_CAPABILITY_DISPOSITIONS: tuple[
+    tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceProducerContractV1, ModeloWorkspaceCapabilityDisposition],
+    ...,
+] = (
+    (
+        ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
+        MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+        MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
+        MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
+        MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+    (
+        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
+        MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    ),
+)
+
+
+def static_inspection_modelo_workspace_capabilities(
+    resolved_target: ModeloWorkspaceResolvedTargetV1,
+) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
+    """Return the complete STATIC_INSPECTION capability denominator.
+
+    Every row cites the capability's own canonical producer contributor per
+    the S279 ADR amendment; see the module-level comment above this function.
+    ``schema_inspection`` is ``AVAILABLE`` -- field_manifest is a real
+    STATIC_INSPECTION contributor per S278. The other four are ``UNMEASURED``:
+    their producers are contributors this admission structurally never reads.
+    GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered question
+    and MUST NOT be derived from this table.
+    """
+    return tuple(
+        ModeloWorkspaceCapabilityV1(
+            capability=capability,
+            disposition=disposition,
+            target=resolved_target,
+            selected_revision_id=resolved_target.law_selected_revision_id,
+            producer_owner=contract.contributor.owner,
+            producer=contract.contributor.producer,
+        )
+        for capability, contract, disposition in _STATIC_INSPECTION_CAPABILITY_DISPOSITIONS
+    )
 
 
 __all__ = [
     "ModeloWorkspaceRevisionAxes",
+    "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
+    "capture_modelo_workspace_target_captures",
+    "formula_expression_operand_references",
+    "formula_operand_references_for_casilla",
     "modelo_work_selector_request_for_target",
+    "relation_source_endpoints_for_casilla",
+    "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
+    "resolve_modelo_workspace_target",
+    "STATIC_INSPECTION_WORK_REVIEW_FACET",
+    "resolve_static_inspection_baseline",
+    "resolve_static_inspection_schema_identity",
+    "static_inspection_contributors",
+    "static_inspection_evidence_horizon",
+    "static_inspection_modelo_workspace_capabilities",
+    "ModeloWorkspaceStaleCursorError",
+    "paginate_static_inspection_schema_facet",
+    "static_inspection_casilla_schema_records",
 ]
+
+
+# --- S277 (ADR amendment "Schema, materialization, and provenance
+# projection"): schema-record join semantics, each derived from the
+# registry's own declared edge direction ---
+
+
+def formula_expression_operand_references(
+    formula_id: str,
+    expression: FormulaExpression,
+) -> tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...]:
+    """Walk one formula's own declared expression tree for every operand it reads.
+
+    ``FormulaExpression`` is a self-recursive registry-declared tree: an
+    operator node carries ``args``, a leaf carries exactly one populated
+    identity field. This walks that exact structure and needs no inference --
+    every operand kind maps 1:1 to the leaf field the registry already names
+    it by (``casilla_id``, ``binding``, ``date_binding``, ``parameter``,
+    ``relation``, ``literal``, ``dispatch_table``).
+
+    This is the INPUT direction only: which identities this formula's own
+    expression reads. The OUTPUT direction (which casilla this formula
+    produces) is ``FormulaDefinition.target_casilla_id`` and is a
+    provenance-facet concern ("Provenance is projected from the canonical
+    calculation-source graph"), never a schema-record field -- the schema
+    record's plural, multi-kind-discriminated ``formula_operands`` field
+    exists to carry exactly this INPUT set, not the single producing edge.
+    """
+    if expression.op is not None:
+        references: list[ModeloWorkspaceFormulaOperandReferenceV1] = []
+        for arg in expression.args:
+            references.extend(formula_expression_operand_references(formula_id, arg))
+        return tuple(references)
+    if expression.casilla_id is not None:
+        return (ModeloWorkspaceFormulaCasillaOperandReferenceV1(formula_id=formula_id, casilla_id=expression.casilla_id),)
+    if expression.binding is not None:
+        return (ModeloWorkspaceFormulaBindingOperandReferenceV1(formula_id=formula_id, binding_id=expression.binding),)
+    if expression.date_binding is not None:
+        return (
+            ModeloWorkspaceFormulaDateBindingOperandReferenceV1(
+                formula_id=formula_id,
+                binding_id=expression.date_binding,
+            ),
+        )
+    if expression.parameter is not None:
+        return (
+            ModeloWorkspaceFormulaParameterOperandReferenceV1(formula_id=formula_id, parameter_id=expression.parameter),
+        )
+    if expression.relation is not None:
+        return (ModeloWorkspaceFormulaRelationOperandReferenceV1(formula_id=formula_id, relation_id=expression.relation),)
+    if expression.literal is not None:
+        return (ModeloWorkspaceFormulaLiteralOperandReferenceV1(formula_id=formula_id),)
+    if expression.dispatch_table is not None:
+        return (
+            ModeloWorkspaceFormulaDispatchOperandReferenceV1(
+                formula_id=formula_id,
+                parameter_ids=tuple(sorted(expression.dispatch_table.values())),
+            ),
+        )
+    return ()
+
+
+def formula_operand_references_for_casilla(
+    formulas: tuple[FormulaDefinition, ...],
+    casilla_id: str,
+) -> tuple[ModeloWorkspaceFormulaCasillaOperandReferenceV1, ...]:
+    """Return every formula-operand entry naming ``casilla_id`` as an INPUT.
+
+    Deliberately never includes the formula whose ``target_casilla_id``
+    equals ``casilla_id`` unless that same formula's own expression also
+    reads ``casilla_id`` as an operand (a self-referential formula) -- being
+    the OUTPUT of a formula is a different edge from being an INPUT to one,
+    and this function answers only the input question.
+    """
+    matches: list[ModeloWorkspaceFormulaCasillaOperandReferenceV1] = []
+    for formula in formulas:
+        for reference in formula_expression_operand_references(formula.id, formula.expression):
+            if (
+                isinstance(reference, ModeloWorkspaceFormulaCasillaOperandReferenceV1)
+                and reference.casilla_id == casilla_id
+            ):
+                matches.append(reference)
+    return tuple(matches)
+
+
+def relation_source_endpoints_for_casilla(
+    relations: tuple[RelationDefinition, ...],
+    casilla_id: str,
+) -> tuple[ModeloWorkspaceRelationSourceEndpointReferenceV1, ...]:
+    """Return the relation-source-endpoint rows whose declared source casilla matches.
+
+    ``RelationDefinition.source_casilla_id`` names the source side
+    explicitly; no inference is needed.
+    """
+    return tuple(
+        ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=relation.id, casilla_id=relation.source_casilla_id)
+        for relation in relations
+        if relation.source_casilla_id == casilla_id
+    )
+
+
+def relation_target_endpoints_for_binding(
+    relations: tuple[RelationDefinition, ...],
+    binding_id: str,
+) -> tuple[ModeloWorkspaceRelationTargetEndpointReferenceV1, ...]:
+    """Return the relation-target-endpoint rows whose declared target binding matches.
+
+    ``RelationDefinition.target_binding`` names the target side explicitly;
+    no inference is needed.
+    """
+    return tuple(
+        ModeloWorkspaceRelationTargetEndpointReferenceV1(relation_id=relation.id, binding_id=relation.target_binding)
+        for relation in relations
+        if relation.target_binding == binding_id
+    )
+
+
+def resolve_static_inspection_schema_identity(
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceSchemaIdentityV1:
+    """Build the STATIC_INSPECTION schema identity from the one REGISTRY capture already held.
+
+    ``schema_fingerprint`` is a content digest over the inspection's own
+    declared identity sets (casilla and binding ids) -- the same shape
+    ``_edit_services.py`` uses for its own, differently-typed
+    ``ModeloEditSchemaIdentityV1`` (interface-ADR-governed), adapted to the
+    flatter STATIC_INSPECTION type. ``field_manifest_digest`` is exclusively
+    the S278 inspection-rooted field manifest's own digest; the edit
+    contract's ``CalculationCompletenessManifest`` digest has its own field
+    (``completeness_manifest_digest``) on its own type and no longer shares
+    this one.
+    """
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+    return ModeloWorkspaceSchemaIdentityV1(
+        schema_id=f"modelo-{inspection.modelo_id}-{inspection.revision_id}".lower(),
+        schema_fingerprint=content_hash_hex(
+            {
+                "casilla_ids": sorted(inspection.casilla_ids),
+                "binding_ids": sorted(inspection.binding_ids),
+            }
+        ),
+        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    )
+
+
+def static_inspection_evidence_horizon(inspection: RegistryRevisionInspection) -> ModeloWorkspaceEvidenceHorizonV1:
+    """Build the evidence horizon straight from the inspection's own retained source catalogue."""
+    source_refs = tuple(sorted(inspection.source_ref_ids))
+    return ModeloWorkspaceEvidenceHorizonV1(
+        source_refs=source_refs,
+        evidence_digest=content_hash_hex({"source_refs": source_refs}),
+    )
+
+
+def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+    """Return the four contributor identities STATIC_INSPECTION actually reads.
+
+    Matches the ADR's own admission-scope sentence exactly: "Static inspection
+    captures exactly registry, work, locale_catalogue, and field_manifest."
+    """
+    return tuple(
+        sorted(
+            (
+                MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+            ),
+            key=lambda contributor: (contributor.owner, contributor.producer),
+        )
+    )
+
+
+STATIC_INSPECTION_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
+    disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+    review=None,
+)
+"""STATIC_INSPECTION never reads bounded_review (S279); this is the fixed, non-varying facet value."""
+
+
+def resolve_static_inspection_baseline(
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    locale: ModeloWorkspaceLocaleSummaryV1,
+    work_stamp: ModeloWorkspaceProducerStampV1,
+    work_epoch: ModeloWorkspaceEpochV1,
+    registry_stamp: ModeloWorkspaceProducerStampV1,
+    registry_epoch: ModeloWorkspaceEpochV1,
+    locale_stamp: ModeloWorkspaceProducerStampV1,
+    locale_epoch: ModeloWorkspaceEpochV1,
+    field_manifest_stamp: ModeloWorkspaceProducerStampV1,
+    field_manifest_epoch: ModeloWorkspaceEpochV1,
+) -> ModeloWorkspaceBaselineV1:
+    """Assemble the STATIC_INSPECTION baseline from the four contributors' own stamps and epochs.
+
+    Every stamp/epoch pair passed in MUST come from the exact same captures
+    that produced ``target``, ``schema_identity`` and ``locale`` -- this
+    function performs no capture of its own, only digesting what the caller
+    already atomically observed.
+    """
+    stamps = (work_stamp, registry_stamp, locale_stamp, field_manifest_stamp)
+    epochs = (work_epoch, registry_epoch, locale_epoch, field_manifest_epoch)
+    contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
+    contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
+    token = content_hash_hex(
+        {
+            "contributor_stamp_digest": contributor_stamp_digest,
+            "contributor_epoch_digest": contributor_epoch_digest,
+            "target": target.model_dump(mode="json"),
+            "selected_revision_id": target.law_selected_revision_id,
+            "schema_identity": schema_identity.model_dump(mode="json"),
+            "locale_catalogue_digest": locale.catalogue_digest,
+        }
+    )
+    return ModeloWorkspaceBaselineV1(
+        token=token,
+        contributor_stamp_digest=contributor_stamp_digest,
+        contributor_epoch_digest=contributor_epoch_digest,
+        target=target,
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        locale_catalogue_digest=locale.catalogue_digest,
+    )
+
+
+class ModeloWorkspaceStaleCursorError(ValueError):
+    """Raised when a cursor's pinned coordinate no longer matches the current baseline.
+
+    A stale cursor MUST refuse rather than silently return a different page:
+    resuming it against data that moved would return records the caller did
+    not ask for and has no way to detect.
+    """
+
+
+def static_inspection_casilla_schema_records(
+    inspection: RegistryRevisionInspection,
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
+    """Build one schema record per casilla identity, sorted for stable pagination.
+
+    Bounded to identity per S283: ``legal_refs`` and ``constraints`` are
+    ``None`` (this admission's producer never carries `CasillaDefinition`
+    data), never ``()``. ``formula_operands`` and ``relation_endpoints``
+    consume the S277 join functions directly rather than re-deriving either
+    edge here.
+    """
+    formulas = inspection.formulas
+    relations = inspection.relations
+    records: list[ModeloWorkspaceSchemaRecordV1] = []
+    for casilla_id in sorted(inspection.casilla_ids):
+        key = casilla_occurrence_locale_key(target.modelo, target.law_selected_revision_id, casilla_id, "label")
+        locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
+        records.append(
+            ModeloWorkspaceSchemaRecordV1(
+                reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
+                section_path=("casillas",),
+                data_type="casilla_id",
+                label=ModeloWorkspaceLocalizedTextV1(
+                    locale_key=key,
+                    value=value if value is not None else casilla_id,
+                    locale=locale_summary,
+                ),
+                classification=ModeloWorkspaceSchemaClassification.PROJECTED,
+                family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
+                legal_refs=None,
+                constraints=None,
+                formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
+                relation_endpoints=relation_source_endpoints_for_casilla(relations, casilla_id),
+            )
+        )
+    return tuple(records)
+
+
+def paginate_static_inspection_schema_facet(
+    records: tuple[ModeloWorkspaceSchemaRecordV1, ...],
+    *,
+    target: ModeloWorkspaceResolvedTargetV1,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    baseline: ModeloWorkspaceBaselineV1,
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...],
+    disposition: ModeloWorkspaceCapabilityDisposition,
+    page_size: int,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
+) -> ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]:
+    """Return one bounded, cursor-consistent page from the complete ``records`` sequence.
+
+    ``records`` MUST already be in the caller's canonical stable order --
+    pagination consumes an offset over that fixed order, never re-derives it.
+    A ``cursor`` from a DIFFERENT baseline, revision, schema identity, or
+    contributor epoch refuses outright rather than silently starting over or
+    returning a page from the wrong coordinate.
+    """
+    if cursor is not None:
+        if (
+            cursor.baseline != baseline
+            or cursor.selected_revision_id != target.law_selected_revision_id
+            or cursor.schema_identity != schema_identity
+            or cursor.facet is not ModeloWorkspaceFacetName.SCHEMA
+            or cursor.contributor_epoch_digest != baseline.contributor_epoch_digest
+        ):
+            raise ModeloWorkspaceStaleCursorError(
+                "workspace schema facet cursor no longer matches the current baseline coordinate"
+            )
+        offset = int(cursor.continuation)
+    else:
+        offset = 0
+
+    page = records[offset : offset + page_size]
+    next_offset = offset + len(page)
+    has_more = next_offset < len(records)
+    next_cursor = (
+        ModeloWorkspaceCursorV1(
+            baseline=baseline,
+            selected_revision_id=target.law_selected_revision_id,
+            schema_identity=schema_identity,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
+            contributor_epoch_digest=baseline.contributor_epoch_digest,
+            continuation=str(next_offset),
+        )
+        if has_more
+        else None
+    )
+    return ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=disposition,
+        records=page,
+        page_size=page_size,
+        next_cursor=next_cursor,
+        has_more=has_more,
+    )

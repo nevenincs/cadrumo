@@ -751,6 +751,8 @@ errors:
     modelo_revision_pick: Could not select the requested calculation revision.
     modelo_work_capture_not_current: The work selection is no longer current. Re-read
       the work target and retry.
+    modelo_work_discard_approval_stale: The work unit changed after the discard was
+      approved; review it and approve again.
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.

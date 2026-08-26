@@ -35,6 +35,7 @@ from ....application.user_profile.censal_operation import (
     CensalReviewedFieldIntent,
     CensalReviewProjectionV1,
 )
+from ....application.user_profile.presentation import ProfileFieldSourceClass, profile_field_source_class
 from ....application.user_profile.projections import record_to_effective_facts
 from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.user_profile.values import UserProfileRecord
@@ -51,12 +52,21 @@ class CensalFieldReviewRowV1:
     ``observed_value`` is populated only once a submitted operation reaches
     its REVIEW interaction and the AEAT read is known; before submission it
     is always ``None`` — there is nothing to compare against yet.
+
+    ``source`` is the persisted value's own provenance class, read through
+    the same :func:`~application.user_profile.presentation.profile_field_source_class`
+    authority the settled D6 presentation projection uses -- never a locally
+    invented classification. ``has_conflict`` is a pure equality check, the
+    same shape as :func:`censal_baseline_is_stale`: it names a divergence,
+    it does not decide which side wins.
     """
 
     path: str
     persisted_value: str | None
     suggested_intent: CensalFieldIntent
     observed_value: str | None
+    source: ProfileFieldSourceClass | None
+    has_conflict: bool
 
 
 def censal_field_review_rows(
@@ -78,12 +88,18 @@ def censal_field_review_rows(
     rows: list[CensalFieldReviewRowV1] = []
     for intent in request.field_intents:
         current = effective.get(intent.path)
+        persisted_value = None if current is None else current.value
+        observed_value = observed_by_path.get(intent.path)
         rows.append(
             CensalFieldReviewRowV1(
                 path=intent.path,
-                persisted_value=None if current is None else current.value,
+                persisted_value=persisted_value,
                 suggested_intent=intent.intent,
-                observed_value=observed_by_path.get(intent.path),
+                observed_value=observed_value,
+                source=None if current is None or current.value is None else profile_field_source_class(current.source),
+                has_conflict=(
+                    persisted_value is not None and observed_value is not None and persisted_value != observed_value
+                ),
             )
         )
     return tuple(rows)
@@ -197,20 +213,27 @@ class CensalFieldReviewScreen(ModalScreen[CensalOperationRequest | None]):
             return
         choices = self.query_one("#censal-field-review-choices", SelectionList)
         if event.button.id == "btn-censal-apply-all":
-            for index, row in enumerate(self._rows):
+            # SelectionList.select/deselect key on the option's VALUE (each
+            # row's own path), never its list position -- passing the loop
+            # index here silently no-ops, since no option's value is an int.
+            for row in self._rows:
                 if row.suggested_intent is _ADOPT:
-                    choices.select(index)
+                    choices.select(row.path)
                 else:
-                    choices.deselect(index)
+                    choices.deselect(row.path)
             return
         selected_paths = frozenset(str(token) for token in choices.selected)
         self.dismiss(censal_operation_request_from_selection(self._baseline, self._rows, selected_paths))
 
 
 def _row_label(row: CensalFieldReviewRowV1) -> str:
+    # Parentheses, never brackets: a SelectionList option renders through Rich
+    # markup, and "[token]" is a style tag the renderer would try to parse.
+    provenance = "" if row.source is None else f" ({row.source.value})"
     if row.observed_value is None:
-        return f"{row.path}: {row.persisted_value or '-'}"
-    return f"{row.path}: {row.persisted_value or '-'} -> {row.observed_value}"
+        return f"{row.path}: {row.persisted_value or '-'}{provenance}"
+    marker = " ⚠" if row.has_conflict else ""
+    return f"{row.path}: {row.persisted_value or '-'}{provenance} -> {row.observed_value}{marker}"
 
 
 class FiledHistoryProgressSummaryV1(BaseModel):

@@ -21,6 +21,7 @@ from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
+    ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
@@ -34,6 +35,7 @@ from .._edit_models import (
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
@@ -42,8 +44,11 @@ from .._edit_models import (
     ModeloScalarEditIntentV1,
 )
 from .._edit_services import (
+    _completeness_manifest_digest,
     _writable_row_group_entries,
     admit_modelo_edit,
+    modelo_edit_request_schema_identity,
+    modelo_edit_result_schema_identity,
     parse_modelo_edit_value,
     preflight_modelo_edit,
     reconfirm_modelo_edit_baseline,
@@ -69,8 +74,8 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
         contract_set_digest=_DIGEST,
         operation_definition_id="modelo.calculate",
         definition_contract_digest=_DIGEST,
-        request_schema=_schema_identity(),
-        result_schema=_schema_identity(),
+        request_schema=modelo_edit_request_schema_identity(),
+        result_schema=modelo_edit_result_schema_identity(),
         review_projection_contract_version=None,
         review_schema=None,
         workspace_refresh_target_schema=_schema_identity(),
@@ -143,9 +148,8 @@ def test_admission_resolves_a_real_registry_backed_permitted_surface() -> None:
     writable_scalars = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
     writable_rows = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)]
     assert writable_scalars, "modelo 131 declares manual casillas the surface must expose as writable"
-    assert writable_rows, "modelo 131 declares manual_input bindings the surface must expose as row groups"
+    assert not writable_rows, "no modelo 131 manual_input binding is a real row set; none may surface as a row group"
     assert len({e.casilla_id for e in writable_scalars}) == len(writable_scalars)
-    assert len({e.binding_id for e in writable_rows}) == len(writable_rows)
 
 
 def test_admission_refuses_an_absent_work_unit() -> None:
@@ -166,16 +170,86 @@ def test_admission_refuses_an_absent_work_unit() -> None:
     assert _domain_refusal_code(result) is ModeloEditRefusalCode.TARGET_ABSENT
 
 
-def test_writable_row_group_entries_surfaces_manual_input_bindings_directly() -> None:
-    """The row-group projection surfaces exactly the manual-input bindings."""
+def test_admission_refuses_a_stale_compatibility_tuple() -> None:
+    """A schema fingerprint that no longer matches this consumer's own model refuses."""
+    work_unit = _work_unit()
+    work_catalogue = WorkUnitCatalogue.from_work_units((work_unit,))
+    stale_compatibility = _compatibility().model_copy(
+        update={
+            "request_schema": _compatibility().request_schema.model_copy(
+                update={"schema_fingerprint": "f" * 64}
+            )
+        }
+    )
+    result = admit_modelo_edit(
+        ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
+        bucket_id=_BUCKET_ID,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        compatibility=stale_compatibility,
+    )
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditCompatibilityRefusalV1)
+    assert result.refusal.requested_axis == "request_schema"
+
+
+def test_writable_row_group_entries_surfaces_none_of_the_real_manual_input_bindings() -> None:
+    """No modelo 131 manual_input binding is a real row set, so none may surface as one.
+
+    A registry-wide audit found every ``manual_input`` binding declares
+    ``aggregation = {op = "copy"}`` (a 1:1 scalar copy) with no row index --
+    modelo 131's ninety-seven are static fichero-BOE record-field positions.
+    Admitting any of them under ADD_ROW/UPDATE_ROW/DELETE_ROW would let an
+    intent address a static field under a fabricated row semantic.
+    """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+    manual_input_bindings = {b.id for b in snapshot.revision.bindings if b.source.value == "manual_input"}
+    assert manual_input_bindings, "the fixture must still exercise a real manual_input population"
     entries = _writable_row_group_entries(snapshot.revision)
-    expected_ids = {b.id for b in snapshot.revision.bindings if b.source.value == "manual_input"}
-    assert expected_ids
-    assert all(isinstance(entry, ModeloEditWritableRowGroupSurfaceEntryV1) for entry in entries)
-    row_group_entries = [entry for entry in entries if isinstance(entry, ModeloEditWritableRowGroupSurfaceEntryV1)]
-    assert {entry.binding_id for entry in row_group_entries} == expected_ids
-    assert all(entry.allowed_intents for entry in row_group_entries)
+    assert entries == ()
+
+
+def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest() -> None:
+    """The edit contract's completeness digest and the S278 field-manifest digest are independent.
+
+    Both real producers run over the SAME registry revision. Proves three
+    things at once: the two digests are genuinely different values (not a
+    tautological self-comparison), they now live under distinct field names
+    on distinct types (``ModeloEditSchemaIdentityV1.completeness_manifest_digest``
+    versus ``ModeloWorkspaceSchemaIdentityV1.field_manifest_digest``), and
+    mutating ONLY the registry's completeness manifest moves the completeness
+    digest while leaving the S278 field-manifest digest -- computed from the
+    unrelated public registry TYPE denominator -- untouched.
+    """
+    from ..workspace_manifest import generate_modelo_workspace_field_manifest
+    from ..workspace_models import ModeloWorkspaceSchemaIdentityV1
+
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
+    revision = snapshot.revision
+
+    completeness_digest = _completeness_manifest_digest(revision.completeness_manifest)
+    field_manifest_digest = generate_modelo_workspace_field_manifest(snapshot).manifest_digest
+    assert completeness_digest != field_manifest_digest
+
+    edit_identity = ModeloEditSchemaIdentityV1(
+        schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, completeness_manifest_digest=completeness_digest
+    )
+    workspace_identity = ModeloWorkspaceSchemaIdentityV1(
+        schema_id="modelo-131-cross-producer", schema_fingerprint="a" * 64, field_manifest_digest=field_manifest_digest
+    )
+    assert not hasattr(edit_identity, "field_manifest_digest")
+    assert not hasattr(workspace_identity, "completeness_manifest_digest")
+
+    assert revision.completeness_manifest is not None, "modelo 131 must declare a real completeness manifest"
+    mutated_manifest = revision.completeness_manifest.model_copy(
+        update={"manual_extraction": True, "manual_extraction_reason": "cross-producer independence test"}
+    )
+    mutated_completeness_digest = _completeness_manifest_digest(mutated_manifest)
+    mutated_revision = revision.model_copy(update={"completeness_manifest": mutated_manifest})
+    mutated_snapshot = snapshot.model_copy(update={"revision": mutated_revision})
+
+    assert mutated_completeness_digest != completeness_digest
+    assert generate_modelo_workspace_field_manifest(mutated_snapshot).manifest_digest == field_manifest_digest
 
 
 def test_parse_accepts_dot_and_comma_decimal_for_the_same_money_casilla() -> None:
@@ -252,7 +326,6 @@ def test_preflight_accepts_an_admitted_intent_and_rejects_a_disallowed_one() -> 
     admitted = _admit(work_unit)
     baseline = admitted.baseline
     scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
-    row_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1))
 
     good_submission = ModeloEditSubmissionV1(
         baseline=baseline,
@@ -274,12 +347,15 @@ def test_preflight_accepts_an_admitted_intent_and_rejects_a_disallowed_one() -> 
     )
     assert isinstance(evaluated, ModeloEditPreflightEvaluatedV1)
 
+    # No modelo 131 manual_input binding admits a row-group entry (none is a
+    # real row set), so ANY row intent -- against any binding id -- refuses as
+    # disallowed; the address below names no real binding on purpose.
     bad_submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
         row_intents=(
             ModeloRowEditIntentV1(
-                address=ModeloEditExistingRowAddressV1(binding_id=row_entry.binding_id, row_index=1),
+                address=ModeloEditExistingRowAddressV1(binding_id="a" * 64, row_index=1),
                 kind=ModeloEditRowIntentKind.MOVE_ROW,
                 move_to_index=2,
             ),

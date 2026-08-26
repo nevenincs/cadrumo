@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import bundled_authority
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..m303_orden_manifest import (
@@ -22,7 +23,6 @@ from ..m303_orden_manifest import (
 )
 from ..m303_orden_projection_models import M303AnnualOrdenProjection
 from ..m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ..m303_orden_source import extract_m303_annual_orden_source
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

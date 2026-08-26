@@ -43,14 +43,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from .....core.config import override_settings
 from .....core.resources import bundled_path
-from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
-from ..verdict_cache import (
+from .._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
     verdict_cache_path,
 )
+from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
+from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

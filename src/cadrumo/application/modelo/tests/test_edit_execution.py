@@ -42,12 +42,11 @@ from .._edit_models import (
     ModeloEditSubmissionV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
-    ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
-from .._edit_services import admit_modelo_edit
+from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 
@@ -93,8 +92,8 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
         contract_set_digest=_DIGEST,
         operation_definition_id="modelo.calculate",
         definition_contract_digest=_DIGEST,
-        request_schema=_schema_identity(),
-        result_schema=_schema_identity(),
+        request_schema=modelo_edit_request_schema_identity(),
+        result_schema=modelo_edit_result_schema_identity(),
         review_projection_contract_version=None,
         review_schema=None,
         workspace_refresh_target_schema=_schema_identity(),
@@ -188,6 +187,119 @@ def test_apply_persists_a_set_typed_value_edit_and_co_commits_the_receipt(tmp_pa
     assert result.receipt.work_unit_id == work_unit.work_unit_id
 
 
+def test_apply_persists_a_clear_declared_value_edit_and_co_commits_the_receipt(tmp_path: Path) -> None:
+    """A real CLEAR_DECLARED_VALUE scalar edit reaches the engine and produces an UPDATED receipt."""
+    work_unit = _work_unit()
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_minimal_profile(profile.repository)
+        work_unit_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        bucket_event_repository = BucketEventHistoryRepository(objects=profile.repository)
+        receipt_repository = ModeloEditReceiptRepository(objects=profile.repository)
+
+        work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
+        baseline = admitted.baseline
+        scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
+
+        submission = ModeloEditSubmissionV1(
+            baseline=baseline,
+            mutation_family=ModeloEditMutationFamily.CALCULATE,
+            scalar_intents=(
+                ModeloScalarEditIntentV1(
+                    address=ModeloEditScalarAddressV1(casilla_id=scalar_entry.casilla_id),
+                    kind=ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
+                ),
+            ),
+        )
+        result = apply_modelo_edit(
+            ModeloEditApplyRequestV1(operation_id=_OPERATION_ID, submission=submission),
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            bucket_event_repository=bucket_event_repository,
+            receipt_repository=receipt_repository,
+            now=datetime(2026, 1, 10, 6, 0, tzinfo=UTC),
+            result_destination="modelo/131/2025/1T/edit-result",
+        )
+
+    assert isinstance(result, ModeloEditExecutionUpdatedV1)
+    assert result.receipt.work_unit_id == work_unit.work_unit_id
+
+
+def test_an_explicit_clear_produces_a_distinct_revision_from_one_never_declared(tmp_path: Path) -> None:
+    """The same substantive state (casilla B absent) hashes differently when explicitly cleared.
+
+    Proves the D4 distinctness requirement directly against the content
+    address rather than by field inspection alone: two submissions carry the
+    identical SET_TYPED_VALUE for casilla A and never otherwise touch casilla
+    B, differing only in whether B is explicitly CLEAR_DECLARED_VALUE'd. Both
+    produce a casilla B that is absent from ``input_values_by_casilla_id`` on
+    read, yet the two calculation revisions are proven distinct.
+    """
+    work_unit = _work_unit()
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_minimal_profile(profile.repository)
+        work_unit_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        bucket_event_repository = BucketEventHistoryRepository(objects=profile.repository)
+        receipt_repository = ModeloEditReceiptRepository(objects=profile.repository)
+
+        work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
+        baseline = admitted.baseline
+        scalar_entries = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
+        entry_a, entry_b = scalar_entries[0], scalar_entries[1]
+
+        def _apply(*, clear_b: bool) -> ModeloEditExecutionUpdatedV1:
+            re_admitted = admit_modelo_edit(
+                ModeloEditAdmissionRequestV1(
+                    target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE
+                ),
+                bucket_id=_BUCKET_ID,
+                work_catalogue=work_unit_repository.load(),
+                calculation_catalogue=calculation_repository.load(),
+                compatibility=_compatibility(),
+            )
+            assert isinstance(re_admitted, ModeloEditAdmittedV1)
+            intents = [
+                ModeloScalarEditIntentV1(
+                    address=ModeloEditScalarAddressV1(casilla_id=entry_a.casilla_id),
+                    kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                    value="200.00",
+                ),
+            ]
+            if clear_b:
+                intents.append(
+                    ModeloScalarEditIntentV1(
+                        address=ModeloEditScalarAddressV1(casilla_id=entry_b.casilla_id),
+                        kind=ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
+                    )
+                )
+            submission = ModeloEditSubmissionV1(
+                baseline=re_admitted.baseline,
+                mutation_family=ModeloEditMutationFamily.CALCULATE,
+                scalar_intents=tuple(intents),
+            )
+            outcome = apply_modelo_edit(
+                ModeloEditApplyRequestV1(operation_id=_OPERATION_ID, submission=submission),
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                bucket_event_repository=bucket_event_repository,
+                receipt_repository=receipt_repository,
+                now=datetime(2026, 1, 10, 6, 0, tzinfo=UTC),
+                result_destination="modelo/131/2025/1T/edit-result",
+            )
+            assert isinstance(outcome, ModeloEditExecutionUpdatedV1)
+            return outcome
+
+        never_touched = _apply(clear_b=False)
+        explicitly_cleared = _apply(clear_b=True)
+
+    assert never_touched.receipt.calculation_revision_id != explicitly_cleared.receipt.calculation_revision_id
+
+
 def test_apply_refuses_recalculate_with_the_typed_unsupported_reason(tmp_path: Path) -> None:
     """RECALCULATE is out of this executor's V1 scope and refuses honestly, not silently."""
     work_unit = _work_unit()
@@ -221,7 +333,6 @@ def test_apply_refuses_recalculate_with_the_typed_unsupported_reason(tmp_path: P
 @pytest.mark.parametrize(
     ("kind", "reason"),
     [
-        (ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE, ModeloEditUnsupportedIntentReason.CLEAR_DECLARED_VALUE_NOT_YET_WIRED),
         (ModeloEditScalarIntentKind.REMOVE_OVERRIDE, ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED),
     ],
 )
@@ -279,16 +390,17 @@ def test_apply_refuses_a_row_intent_by_its_specific_kind(tmp_path: Path) -> None
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        row_entry = next(
-            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
-        )
 
+        # No modelo 131 manual_input binding admits a row-group entry (none is
+        # a real row set); the executor's row-intent refusal fires on any row
+        # intent's presence, before permitted-surface admission is checked, so
+        # the address below names no real binding on purpose.
         submission = ModeloEditSubmissionV1(
             baseline=baseline,
             mutation_family=ModeloEditMutationFamily.CALCULATE,
             row_intents=(
                 ModeloRowEditIntentV1(
-                    address=ModeloEditExistingRowAddressV1(binding_id=row_entry.binding_id, row_index=1),
+                    address=ModeloEditExistingRowAddressV1(binding_id="a" * 64, row_index=1),
                     kind=ModeloEditRowIntentKind.DELETE_ROW,
                 ),
             ),

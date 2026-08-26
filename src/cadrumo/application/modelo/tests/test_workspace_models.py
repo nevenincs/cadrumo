@@ -763,3 +763,43 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     assert not remnants
     assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
     assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")
+
+
+def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:
+    """S283: None means the producer never carries the grounding; () means it does and declares none."""
+    base_payload = {
+        "reference": {"kind": "casilla", "casilla_id": "0001"},
+        "section_path": ("filing", "income"),
+        "data_type": "decimal",
+        "label": {
+            "locale_key": "casilla.0001.label",
+            "value": "Base imponible",
+            "locale": {
+                "requested_language": OutputLanguage.ES,
+                "resolved_language": OutputLanguage.ES,
+                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                "catalogue_digest": _DIGEST,
+            },
+        },
+        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+    }
+
+    unmeasured = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": None, "constraints": None})
+    declared_empty = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": (), "constraints": ()})
+
+    assert unmeasured.legal_refs is None
+    assert unmeasured.constraints is None
+    assert declared_empty.legal_refs == ()
+    assert declared_empty.constraints == ()
+    assert unmeasured != declared_empty
+
+    # Round-trip through JSON must preserve the distinction, not collapse it.
+    reloaded = ModeloWorkspaceSchemaRecordV1.model_validate_json(unmeasured.model_dump_json())
+    assert reloaded.legal_refs is None
+    assert reloaded.constraints is None
+
+    # The default stays () for every caller that does not opt into the S283 distinction.
+    defaulted = ModeloWorkspaceSchemaRecordV1.model_validate(base_payload)
+    assert defaulted.legal_refs == ()
+    assert defaulted.constraints == ()

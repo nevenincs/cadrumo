@@ -16,24 +16,31 @@ Submodules
    cadrumo.domain.calculations.registry._applicability_labels
    cadrumo.domain.calculations.registry._citation_blocklist
    cadrumo.domain.calculations.registry._compiled_cache
+   cadrumo.domain.calculations.registry._cross_revision_divergence
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal
+   cadrumo.domain.calculations.registry._m303_orden_projection_compiler
+   cadrumo.domain.calculations.registry._m303_orden_raw_models
+   cadrumo.domain.calculations.registry._m303_orden_source
    cadrumo.domain.calculations.registry._m347_threshold
+   cadrumo.domain.calculations.registry._relation_aggregation
    cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_governance
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._supplementary_orden
+   cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
    cadrumo.domain.calculations.registry._validate_completeness
    cadrumo.domain.calculations.registry._validate_constructs
+   cadrumo.domain.calculations.registry._validate_cross_revision
    cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
    cadrumo.domain.calculations.registry._validate_cross_revision_evolution
    cadrumo.domain.calculations.registry._validate_dependency_sections
@@ -93,7 +100,6 @@ Submodules
    cadrumo.domain.calculations.registry.corpus_catalogue
    cadrumo.domain.calculations.registry.counterpart_bindings
    cadrumo.domain.calculations.registry.coverage
-   cadrumo.domain.calculations.registry.cross_revision_divergence
    cadrumo.domain.calculations.registry.deadline_coordinate
    cadrumo.domain.calculations.registry.detail_record_bindings
    cadrumo.domain.calculations.registry.donativo_bindings
@@ -131,11 +137,8 @@ Submodules
    cadrumo.domain.calculations.registry.m303_exonerado_390_projection
    cadrumo.domain.calculations.registry.m303_orden_census_artefact
    cadrumo.domain.calculations.registry.m303_orden_manifest
-   cadrumo.domain.calculations.registry.m303_orden_projection_compiler
    cadrumo.domain.calculations.registry.m303_orden_projection_models
-   cadrumo.domain.calculations.registry.m303_orden_raw_models
    cadrumo.domain.calculations.registry.m303_orden_resolution
-   cadrumo.domain.calculations.registry.m303_orden_source
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
    cadrumo.domain.calculations.registry.modelo_localization
@@ -150,7 +153,6 @@ Submodules
    cadrumo.domain.calculations.registry.record_design_coverage
    cadrumo.domain.calculations.registry.record_design_schema
    cadrumo.domain.calculations.registry.record_spec
-   cadrumo.domain.calculations.registry.relation_aggregation
    cadrumo.domain.calculations.registry.relations
    cadrumo.domain.calculations.registry.remote_state_guard
    cadrumo.domain.calculations.registry.renta_web_open_oracle
@@ -172,11 +174,9 @@ Submodules
    cadrumo.domain.calculations.registry.snapshot_coordinate
    cadrumo.domain.calculations.registry.static_inspection
    cadrumo.domain.calculations.registry.support_matrix
-   cadrumo.domain.calculations.registry.supported_filing_years
    cadrumo.domain.calculations.registry.temporal
    cadrumo.domain.calculations.registry.validate
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
-   cadrumo.domain.calculations.registry.validate_cross_revision
    cadrumo.domain.calculations.registry.validate_cross_revision_advisory
    cadrumo.domain.calculations.registry.validate_references
    cadrumo.domain.calculations.registry.validate_registry_scope

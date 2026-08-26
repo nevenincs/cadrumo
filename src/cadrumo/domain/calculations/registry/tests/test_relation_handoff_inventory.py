@@ -13,9 +13,9 @@ from cadrumo.domain.calculations.registry.handoffs import (
     audit_registry_relation_handoff_applicability,
     audit_registry_relation_handoffs,
 )
-from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 
 from .....core.resources import bundled_path
+from .._relation_aggregation import relation_aggregation_op
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

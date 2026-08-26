@@ -30,16 +30,19 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationRevisionCatalogue, WorkUnit, WorkUnitCatalogue
+from ..operations.registry import OperationSchemaIdentityV1
 from ._edit_models import (
     ModeloEditAddressV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
+    ModeloEditCompatibilityRefusalV1,
     ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditFindingV1,
+    ModeloEditMutationResultReceiptV1,
     ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditParsedValueV1,
@@ -56,6 +59,7 @@ from ._edit_models import (
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
@@ -69,12 +73,9 @@ from .work_addressing import (
     resolve_modelo_work_address_unit,
     work_address_for_modelo_target,
 )
-from .workspace_models import ModeloWorkspaceSchemaIdentityV1
 
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
 _RESPONSIBLE_OWNER = "modelo.edit"
-
-_MANUAL_INPUT_SOURCE = "manual_input"
 
 
 def _target_absent_refusal() -> ModeloEditRefusalV1:
@@ -111,30 +112,38 @@ def _writable_scalar_entries(revision: ModeloRevision) -> tuple[ModeloEditPermit
 
 
 def _writable_row_group_entries(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
-    """Surface exactly the taxpayer-entered repeated-row binding groups.
+    """Return no entries: no registry-declared ``manual_input`` binding is a real row set.
 
-    ``BindingSourceKind.MANUAL_INPUT`` is the one registry-declared axis that
-    distinguishes a row group the taxpayer types (donativo, invoice, and
-    withholding rows among them) from a ledger- or profile-fed aggregation;
-    every other binding source is out of scope for this row-group surface,
-    not merely non-writable, so only manual-input bindings are listed.
+    This projection formerly classified EVERY ``BindingSourceKind.MANUAL_INPUT``
+    binding as a repeatable row group admitting ``ADD_ROW``/``UPDATE_ROW``/
+    ``DELETE_ROW``, on the theory that ``manual_input`` was the taxpayer-typed
+    row axis (donativo, invoice, withholding rows among them). A registry-wide
+    audit found no such binding: every ``manual_input`` binding across every
+    modelo declares ``aggregation = {op = "copy"}`` (a 1:1 scalar copy) and
+    none carries a row index -- most, including every one of modelo 131's
+    ninety-seven, are static fichero-BOE record-field positions (e.g. a fixed
+    "actividad-2-epigrafe" slot), not a dynamic set a taxpayer can add to,
+    remove from, or reorder. Admitting ``ADD_ROW``/``DELETE_ROW`` against a
+    static field position would let an intent address a preprinted form slot
+    under a fabricated row semantic.
+
+    The genuine repeatable, taxpayer-typed row mechanism this codebase already
+    has is the per-modelo ``ModeloDetailRow`` discriminated union (M184
+    member, M232 vinculada, M349 operador/rectificación, M347 contraparte,
+    M210 agrupación renta), threaded through the calculate boundary's
+    ``detail_rows`` and already content-addressed on the revision. It is NOT
+    ``BindingId``-keyed and does not fit this function's shape; projecting it
+    into a permitted-surface entry is out-of-scope future work, deferred
+    because which detail-row kind a given modelo may accept is not yet a
+    queryable registry authority (it is implicit in which CLI subcommand the
+    operator invokes).
+
+    Returns an empty tuple unconditionally so the row-intent admission path
+    (:func:`_validate_row_intent`) refuses every row intent as
+    ``DISALLOWED_INTENT`` against every current baseline -- correct, not
+    dormant, because no registry data today makes a different answer honest.
     """
-    entries: list[ModeloEditPermittedSurfaceEntryV1] = []
-    for binding in revision.bindings:
-        if binding.source.value != _MANUAL_INPUT_SOURCE:
-            continue
-        entries.append(
-            ModeloEditWritableRowGroupSurfaceEntryV1(
-                binding_id=binding.id,
-                allowed_intents=(
-                    ModeloEditRowIntentKind.ADD_ROW,
-                    ModeloEditRowIntentKind.UPDATE_ROW,
-                    ModeloEditRowIntentKind.DELETE_ROW,
-                ),
-                reorderable=False,
-            )
-        )
-    return tuple(entries)
+    return ()
 
 
 def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
@@ -144,10 +153,54 @@ def _permitted_surface(revision: ModeloRevision) -> tuple[ModeloEditPermittedSur
     ))
 
 
-def _field_manifest_digest(manifest: CalculationCompletenessManifest | None) -> str:
+def _completeness_manifest_digest(manifest: CalculationCompletenessManifest | None) -> str:
     if manifest is None:
         return content_hash_hex({"completeness_manifest": None})
     return content_hash_hex(manifest.model_dump(mode="json"))
+
+
+def modelo_edit_request_schema_identity() -> OperationSchemaIdentityV1:
+    """Return this consumer's own current identity for the edit submission schema.
+
+    Computed directly from the model's JSON schema rather than through
+    :meth:`OperationSchemaIdentityV1.from_model`, which additionally enforces
+    the operations subsystem's own public-model-graph contract (e.g.
+    ``validate_default=True``); the edit contract's models are governed by
+    this ADR, not that one, so only the identity TYPE is reused here.
+    """
+    return OperationSchemaIdentityV1(
+        schema_id="modelo.edit.submission",
+        schema_version=1,
+        schema_fingerprint=content_hash_hex(ModeloEditSubmissionV1.model_json_schema()),
+    )
+
+
+def modelo_edit_result_schema_identity() -> OperationSchemaIdentityV1:
+    """Return this consumer's own current identity for the edit result-receipt schema.
+
+    See :func:`modelo_edit_request_schema_identity` for why the fingerprint is
+    computed directly rather than through ``from_model``.
+    """
+    return OperationSchemaIdentityV1(
+        schema_id="modelo.edit.receipt",
+        schema_version=1,
+        schema_fingerprint=content_hash_hex(ModeloEditMutationResultReceiptV1.model_json_schema()),
+    )
+
+
+def _incompatible_axis(compatibility: ModeloEditCompatibilityTupleV1) -> str | None:
+    """Return the name of the first stale compatibility axis, or ``None`` when current.
+
+    Only the two axes this consumer owns and can independently recompute
+    (its own submission and receipt schemas) are checked; the workspace,
+    observation, REVIEW, refresh-target, and financial-operand axes are
+    owned by other contracts and are carried through unchecked here.
+    """
+    if compatibility.request_schema != modelo_edit_request_schema_identity():
+        return "request_schema"
+    if compatibility.result_schema != modelo_edit_result_schema_identity():
+        return "result_schema"
+    return None
 
 
 def admit_modelo_edit(
@@ -163,7 +216,21 @@ def admit_modelo_edit(
     Never treats a Workspace safe-read baseline as authority: the target's
     natural coordinates are the only carried-over input, and the work unit,
     registry revision, and permitted surface are all re-resolved here.
+
+    Refuses ``unsupported_edit_compatibility`` before resolving any secure
+    state (D1) when the caller's request/result schema identities do not
+    match this consumer's own current schemas -- a stale compatibility tuple
+    cached from before a contract schema changed.
     """
+    incompatible = _incompatible_axis(compatibility)
+    if incompatible is not None:
+        return ModeloEditRefusedV1(
+            refusal=ModeloEditCompatibilityRefusalV1(
+                requested_axis=incompatible,
+                responsible_owner=_RESPONSIBLE_OWNER,
+                reconsideration_condition="re-fetch the current compatibility tuple and resubmit",
+            ),
+        )
     domain_target: ModeloWorkTarget = request.target.target
     try:
         work_unit: WorkUnit = resolve_modelo_work_address_unit(
@@ -191,12 +258,12 @@ def admit_modelo_edit(
     permitted_surface_digest = content_hash_hex(
         [entry.model_dump(mode="json") for entry in permitted_surface]
     )
-    schema_identity = ModeloWorkspaceSchemaIdentityV1(
+    schema_identity = ModeloEditSchemaIdentityV1(
         schema_id=f"modelo-{work_unit.modelo}-{revision.id}".lower(),
         schema_fingerprint=content_hash_hex(
             {"casillas": [c.id for c in revision.casillas], "bindings": [b.id for b in revision.bindings]}
         ),
-        field_manifest_digest=_field_manifest_digest(revision.completeness_manifest),
+        completeness_manifest_digest=_completeness_manifest_digest(revision.completeness_manifest),
     )
     issued_at = datetime.now(UTC)
     coordinate_seed = {
@@ -404,6 +471,8 @@ def preflight_modelo_edit(
 
 __all__ = [
     "admit_modelo_edit",
+    "modelo_edit_request_schema_identity",
+    "modelo_edit_result_schema_identity",
     "parse_modelo_edit_value",
     "preflight_modelo_edit",
     "reconfirm_modelo_edit_baseline",

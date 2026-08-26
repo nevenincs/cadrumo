@@ -767,6 +767,8 @@ errors:
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
       be ujra a munkacelt, es probalja meg ismet.
+    modelo_work_discard_approval_stale: A munkaegység az elvetés jóváhagyása után
+      megváltozott; tekintse át és hagyja jóvá újra.
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.

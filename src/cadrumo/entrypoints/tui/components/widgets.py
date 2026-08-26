@@ -81,6 +81,24 @@ class StageNavigationStrip(Horizontal, can_focus=False):
         self._stages = tuple(stages)
         self._current_index = current_index
 
+    @property
+    def current_index(self) -> int:
+        """Return the stage currently marked as active."""
+        return self._current_index
+
+    def set_current_index(self, current_index: int) -> None:
+        """Advance the strip's own position and recompose in place.
+
+        A host tracking its own cursor (a wizard, a guided flow) updates
+        the SAME mounted strip instance rather than tearing it down and
+        remounting a fresh one each step -- `refresh(recompose=True)` is
+        the sync, in-place primitive for exactly that.
+        """
+        if not 0 <= current_index < len(self._stages):
+            raise ValueError("current_index must name a declared stage")
+        self._current_index = current_index
+        self.refresh(recompose=True)
+
     @override
     def compose(self) -> ComposeResult:
         for index, label in enumerate(self._stages):
@@ -167,11 +185,21 @@ class RequirementBadge(Static, can_focus=False):
 
 @dataclass(frozen=True, slots=True)
 class SourceActionDescriptor:
-    """One `Get data` source: what it is, and the action that starts it."""
+    """One `Get data` source: what it is, and the action that starts it.
+
+    ``credential_requirement_label``/``credential_requirement_status`` are an
+    optional pre-resolved requirement fact -- the caller supplies both or
+    neither, since this widget classifies nothing itself. When both are
+    present, the card renders them through the shared
+    :class:`RequirementBadge`, the same primitive `Required` uses, rather
+    than inventing a second requirement presentation for sources.
+    """
 
     title: str
     description: str
     action_label: str
+    credential_requirement_label: str | None = None
+    credential_requirement_status: RequirementStatus | None = None
 
 
 class SourceActionCard(Vertical):
@@ -183,6 +211,16 @@ class SourceActionCard(Vertical):
     Wave's focus-order proof.
     """
 
+    DEFAULT_CSS = """
+    SourceActionCard {
+        height: auto;
+    }
+    """
+    """`Vertical`'s own default is `height: 1fr` (an expanding container),
+    which is fine standing alone but stretches a card to fill whatever
+    space several 1fr siblings divide -- overriding to `auto` sizes the
+    card to its own three children instead."""
+
     def __init__(self, descriptor: SourceActionDescriptor, *, id: str | None = None) -> None:
         """Store the already-localized source description."""
         super().__init__(id=id, classes="cadrumo-source-card")
@@ -192,6 +230,10 @@ class SourceActionCard(Vertical):
     def compose(self) -> ComposeResult:
         yield Static(self._descriptor.title, classes="cadrumo-source-card-title", markup=False)
         yield Static(self._descriptor.description, classes="cadrumo-source-card-description", markup=False)
+        label = self._descriptor.credential_requirement_label
+        status = self._descriptor.credential_requirement_status
+        if label is not None and status is not None:
+            yield RequirementBadge(label, status, id="source-credential-requirement")
         yield Button(self._descriptor.action_label, id="btn-source-action", classes="cadrumo-source-card-action")
 
 

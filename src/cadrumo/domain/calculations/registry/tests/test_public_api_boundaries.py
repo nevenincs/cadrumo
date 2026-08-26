@@ -42,7 +42,7 @@ from cadrumo.domain.calculations.registry.validate_cross_revision_advisory impor
 
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
-from ..cross_revision_divergence import CrossRevisionCasillaDivergence
+from .._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ..runtime_graph import (
     expression_binding_refs,
@@ -100,7 +100,7 @@ def test_registry_casilla_continuity_reports_live_in_their_defining_modules() ->
     assert tuple(contract.__name__ for contract in contracts) == _CASILLA_CONTINUITY_PUBLIC_NAMES
     assert {contract.__module__ for contract in contracts} == {
         "cadrumo.domain.calculations.registry.schema_surfaces",
-        "cadrumo.domain.calculations.registry.cross_revision_divergence",
+        "cadrumo.domain.calculations.registry._cross_revision_divergence",
         "cadrumo.domain.calculations.registry.validate_cross_revision_advisory",
     }
 

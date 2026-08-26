@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Sequence
 from contextvars import copy_context
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
@@ -39,6 +39,12 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
+from ....application.user_profile.acquisition_sources import (
+    AcquisitionSourceCredentialPostureV1,
+    ProfileAcquisitionSourceKey,
+    ProfileAcquisitionSourceV1,
+    known_profile_acquisition_sources,
+)
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -49,7 +55,14 @@ from ....entrypoints.tui.components.theme import (
     install_cadrumo_themes,
     toggle_appearance,
 )
-from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
+from ....entrypoints.tui.components.widgets import (
+    ContentDataTable,
+    ContentScroll,
+    NoticeBand,
+    RequirementStatus,
+    SourceActionCard,
+    SourceActionDescriptor,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -257,6 +270,20 @@ other.
 """
 
 
+_SOURCE_TITLE_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+    ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.title",
+    ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.title",
+}
+_SOURCE_DESCRIPTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+    ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.description",
+    ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.description",
+}
+_SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+    ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.action",
+    ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.action",
+}
+
+
 class ProfileManagerApp(App[None]):
     """Full-screen profile overview with in-place editing."""
 
@@ -293,10 +320,29 @@ class ProfileManagerApp(App[None]):
         *,
         persist: Callable[[str, str], ProfileOverview],
         validate: Callable[[str, str], str | None] | None = None,
+        launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
+        credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._launch_source = launch_source
+        """Starts one declared acquisition source's operation, or ``None``.
+
+        Injected exactly like ``persist``: this page names which source the
+        operator picked and reports the intent, it does not compose an
+        ``OperationController`` or know how a source actually runs. A host
+        that supplies none renders every source action as present but
+        disabled, never as a silent no-op button."""
+        self._credential_postures: dict[ProfileAcquisitionSourceKey, AcquisitionSourceCredentialPostureV1] = {
+            posture.source: posture for posture in (credential_postures or ())
+        }
+        """Whether each source's declared AEAT-authentication requirement is
+        currently met, keyed by source. Injected from
+        :func:`resolve_acquisition_source_credential_postures` against the
+        real :class:`AuthState`, never guessed here. A host that supplies
+        none renders every source without a credential badge -- an unknown
+        posture is not the same claim as "credential missing"."""
         self._validate_field = validate
         """Why the write door would refuse one path's value, or ``None``.
 
@@ -347,6 +393,19 @@ class ProfileManagerApp(App[None]):
         yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             yield Vertical(id="manager-context")
+            with Vertical(id="manager-sources", classes="cadrumo-panel"):
+                for source in known_profile_acquisition_sources():
+                    requirement_label, requirement_status = self._credential_requirement_badge(source.key)
+                    yield SourceActionCard(
+                        SourceActionDescriptor(
+                            title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
+                            description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
+                            action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                            credential_requirement_label=requirement_label,
+                            credential_requirement_status=requirement_status,
+                        ),
+                        id=f"source-{source.key.value}",
+                    )
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -354,7 +413,50 @@ class ProfileManagerApp(App[None]):
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
         install_cadrumo_themes(self)
+        self._sync_source_actions()
         await self._render()
+
+    def _credential_requirement_badge(
+        self, key: ProfileAcquisitionSourceKey
+    ) -> tuple[str | None, RequirementStatus | None]:
+        """Resolve one source's credential badge from its real posture, if supplied."""
+        posture = self._credential_postures.get(key)
+        if posture is None or not posture.requires_aeat_authentication:
+            return None, None
+        if posture.credential_held:
+            return tr("profile.journey.source.credential_requirement.held"), RequirementStatus.REQUIRED_PRESENT
+        return tr("profile.journey.source.credential_requirement.missing"), RequirementStatus.REQUIRED_MISSING
+
+    def _sync_source_actions(self) -> None:
+        """Disable a launch button when the door or the credential is missing.
+
+        A present-but-inert button is honest about "this source is known but
+        not runnable from here"; a hidden action would look like the source
+        does not exist at all, and a silently-inert button would look like a
+        bug the first time an operator presses it. A missing credential
+        disables the button regardless of the injected door: the door would
+        only fail the same way the source's own implementation already does.
+        """
+        door_ready = self._launch_source is not None
+        for source in known_profile_acquisition_sources():
+            posture = self._credential_postures.get(source.key)
+            credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
+            card = self.query_one(f"#source-{source.key.value}", SourceActionCard)
+            card.query_one(Button).disabled = not (door_ready and credential_ready)
+
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Launch the pressed source's operation through the injected door only."""
+        if self._launch_source is None:
+            return
+        card = event.button.parent
+        if not isinstance(card, SourceActionCard) or card.id is None or not card.id.startswith("source-"):
+            return
+        key = card.id.removeprefix("source-")
+        source = next(
+            (candidate for candidate in known_profile_acquisition_sources() if candidate.key.value == key), None
+        )
+        if source is not None:
+            await self._launch_source(source)
 
     # ── rendering ───────────────────────────────────────────────────────
 

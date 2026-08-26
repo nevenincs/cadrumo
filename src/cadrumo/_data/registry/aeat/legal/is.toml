@@ -1979,6 +1979,7 @@ notes = "LIS art. 83: limitacion en la deduccion de gastos financieros destinado
 required_text = [
     "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
     "A los efectos de lo previsto en el artículo 16 de esta Ley",
+    "gastos financieros derivados de deudas destinadas a la adquisición de participaciones en el capital o fondos propios",
 ]
 
 [legal."ley-27-2014:art-15-bis"]
@@ -1998,6 +1999,7 @@ notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos 
 required_text = [
     "Asimetrías híbridas",
     "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
+    "no generen un ingreso, generen un ingreso exento o sujeto a una reducción del tipo impositivo",
 ]
 
 [legal."ley-27-2014:da-18"]
@@ -2017,6 +2019,7 @@ notes = "LIS disposicion adicional decimoctava: libertad de amortizacion en dete
 required_text = [
     "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
     "Las inversiones en vehículos",
+    "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
 ]
 
 [legal."ley-27-2014:art-102"]
@@ -2036,6 +2039,7 @@ notes = "LIS art. 102: libertad de amortizacion de las entidades de reducida dim
 required_text = [
     "Libertad de amortización",
     "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",
+    "la plantilla media total de la empresa se incremente respecto de la plantilla",
 ]
 
 [legal."ley-49-2002:art-20"]
@@ -2055,6 +2059,7 @@ notes = "Ley 49/2002 art. 20: deduccion de la cuota del Impuesto sobre Sociedade
 required_text = [
     "Deducción de la cuota del Impuesto sobre Sociedades",
     "tendrán derecho a deducir de la cuota íntegra",
+    "las cantidades correspondientes al período impositivo no deducidas podrán aplicarse en las liquidaciones",
 ]
 
 [legal."ley-49-2002:art-22"]

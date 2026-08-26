@@ -18,8 +18,7 @@ import pytest
 from ..... import __version__
 from .....core.config import override_settings
 from .....core.resources import bundled_path
-from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from ..verdict_cache import (
+from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,
@@ -32,6 +31,7 @@ from ..verdict_cache import (
     verdict_cache_path,
     write_verdict,
 )
+from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

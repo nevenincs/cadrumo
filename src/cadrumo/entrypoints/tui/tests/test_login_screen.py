@@ -24,7 +24,7 @@ from ....application.user_profile.login_interaction import ProfileLoginChoice, a
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.app import LoginApp
+from ....entrypoints.tui.secret.login import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [

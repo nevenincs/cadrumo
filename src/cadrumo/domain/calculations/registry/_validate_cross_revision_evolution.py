@@ -14,8 +14,8 @@ from itertools import pairwise
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
 
+from ._cross_revision_divergence import ordered_revisions, revisions_overlap
 from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
-from .cross_revision_divergence import ordered_revisions, revisions_overlap
 from .ids import RevisionId
 
 

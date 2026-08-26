@@ -72,7 +72,7 @@ from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
-from ..components.widgets import ContentScroll
+from ..components.widgets import ContentScroll, StageNavigationStrip
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -102,9 +102,10 @@ class FlowTuiApp(App[None]):
         + """
     #flow-top {
         dock: top;
-        height: 2;
+        height: auto;
         width: 100%;
     }
+    #flow-stage-strip { height: 1; width: 100%; }
     #flow-header {
         height: 1;
         width: 100%;
@@ -615,10 +616,23 @@ class QuestionScreen(Screen[None]):
         super().__init__()
         self._flow_app = flow_app
 
+    def _build_stage_strip(self, *, current_index: int = 0) -> StageNavigationStrip:
+        """Build the section-level stage strip from the flow's own titles.
+
+        One stage per declared `FlowSection`, in the definition's own
+        order -- the strip renders what the application already decided
+        the sections are; it introduces no section ordering or grouping
+        of its own.
+        """
+        titles = assemble_section_titles(self._flow_app.definition)
+        stages = [titles.get(section.id, section.id) for section in self._flow_app.definition.sections]
+        return StageNavigationStrip(stages, current_index=current_index, id="flow-stage-strip")
+
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="flow-top"):
             yield Static(id="flow-header")
+            yield self._build_stage_strip()
             yield ProgressBar(id="flow-progress", show_eta=False)
         with (
             ContentScroll(id="page-scroll", classes="cadrumo-scroll"),
@@ -700,6 +714,11 @@ class QuestionScreen(Screen[None]):
         self.query_one("#flow-header", Static).update(header)
         self.query_one("#flow-progress", ProgressBar).update(total=len(sequence), progress=position + 1)
         self.query_one("#page-body", Vertical).border_title = section_title
+        section_index = next(
+            (index for index, section in enumerate(app.definition.sections) if section.id == entry.section_id),
+            0,
+        )
+        self.query_one("#flow-stage-strip", StageNavigationStrip).set_current_index(section_index)
 
     def _render_body(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
         self.query_one("#page-prompt", Label).update(copy.prompt)
@@ -960,6 +979,10 @@ class ReviewScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
+        titles = assemble_section_titles(self._flow_app.definition)
+        stages = [titles.get(section.id, section.id) for section in self._flow_app.definition.sections]
+        stages.append(tr("flows.review.header_tui_stage_label"))
+        yield StageNavigationStrip(stages, current_index=len(stages) - 1, id="flow-stage-strip")
         yield Static(id="review-header")
         yield _ReviewTable(id="review-table", cursor_type="row")
         yield Static(id="review-blocking")

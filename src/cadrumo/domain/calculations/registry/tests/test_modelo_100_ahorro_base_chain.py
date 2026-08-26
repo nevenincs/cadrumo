@@ -44,7 +44,7 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RelationAggregationOp
-from ..relation_aggregation import relation_aggregation_op
+from .._relation_aggregation import relation_aggregation_op
 from ..relations import resolve_relation_values
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
