@@ -39,7 +39,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
     ensure_modelo_work_unit_for_active_target,
-    resolve_registry_revision_for_work_target,
+    law_selected_revision_for_work_target,
 )
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
@@ -120,8 +120,8 @@ def _validate_registry_target_before_profile_if_needed(
     if resolve_active_bucket_id() is not None:
         return
     try:
-        resolve_registry_revision_for_work_target(
-            modelo=modelo, filing_year=filing_year, period=period, registry_revision_id=registry_revision_id
+        law_selected_revision_for_work_target(
+            modelo=modelo, filing_year=filing_year, period=period, requested_revision_id=registry_revision_id
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -226,7 +226,7 @@ def work_create(
     resolved_period = resolve_year_period(year, period, modelo=modelo)
     resolved_year = resolved_period.filing_year
     _validate_registry_target_before_profile_if_needed(
-        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
+        modelo=modelo, filing_year=resolved_year, period=resolved_period, requested_revision_id=requested_revision
     )
     require_active_profile()
     guard_active_profile_foral_ccaa()
@@ -240,8 +240,8 @@ def work_create(
         period=resolved_period,
         enforce_applicability=not allow_not_applicable,
     )
-    resolved_revision_id = resolve_registry_revision_for_work_target(
-        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
+    resolved_revision_id = law_selected_revision_for_work_target(
+        modelo=modelo, filing_year=resolved_year, period=resolved_period, requested_revision_id=requested_revision
     )
     require_profile_ready_for_modelo_work(
         bucket_id=resolved_bucket,

@@ -42,7 +42,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 def _invoke_with_artefact(tmp_path: Path, payload: bytes):
     artefact = tmp_path / "certificado.pdf"
     artefact.write_bytes(payload)
-    return invoke_cached_cli(["--format", "json", "config", "profile", "censo", "file", "--file", str(artefact)])
+    return invoke_cached_cli(["--format", "json", "config", "profile", "censo", "import", "--file", str(artefact)])
 
 
 def _stderr_document(result) -> dict[str, object]:
@@ -91,7 +91,7 @@ def test_pdf_artefact_refuses_while_extraction_is_unpinned(tmp_path: Path) -> No
 
 def test_missing_artefact_is_refused_at_the_cli_boundary(tmp_path: Path) -> None:
     result = invoke_cached_cli(
-        ["--format", "json", "config", "profile", "censo", "file", "--file", str(tmp_path / "absent.pdf")],
+        ["--format", "json", "config", "profile", "censo", "import", "--file", str(tmp_path / "absent.pdf")],
     )
     assert result.exit_code != 0
 
@@ -108,9 +108,9 @@ def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
     """
     import inspect
 
-    from .. import _censo_file
+    from .. import _censo_transport
 
-    source = inspect.getsource(_censo_file.censo_file)
+    source = inspect.getsource(_censo_transport.censo_import)
     # The persistence call is apply_cotejo(...), never a bare apply_fact_changes(...)
     # write that would skip the CENSO_APPLIED emission (the prose comment naming
     # the bypassed write is not a call, so pin on the call form).

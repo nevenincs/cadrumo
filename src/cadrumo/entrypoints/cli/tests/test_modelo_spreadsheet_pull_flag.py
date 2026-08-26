@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.i18n import tr
-from ..._command_spec import DefaultKind
-from .._google_command_specs import GOOGLE_COMMAND_SPECS
+from ....core.i18n import tr
+from .._command_spec import DefaultKind
+from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _parameter():
-    pull = next(spec for spec in GOOGLE_COMMAND_SPECS if spec.key == "config_google_sync_calc_pull")
+    pull = next(spec for spec in MODELO_SPREADSHEET_COMMAND_SPECS if spec.key == "config_modelo_spreadsheet_cli_pull")
     return next(parameter for parameter in pull.parameters if parameter.name == "assemble_observations")
 
 

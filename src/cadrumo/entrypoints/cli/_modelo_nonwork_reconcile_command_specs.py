@@ -119,11 +119,11 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_reconcile_file",
+        key="app_modelo_reconcile_import",
         parent_key="app_modelo_reconcile",
-        token="file",
+        token="import",
         kind="leaf",
-        help_key=TranslationKey("cli.app.modelo.reconcile.file_help"),
+        help_key=TranslationKey("cli.app.modelo.reconcile.import_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
@@ -232,7 +232,7 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("cadrumo.entrypoints.cli._payloads_modelo_reconcile", "ModeloReconcileResult"),
-            identity="modelo.reconcile.file",
+            identity="modelo.reconcile.import",
         ),
     ),
     CommandSpec(

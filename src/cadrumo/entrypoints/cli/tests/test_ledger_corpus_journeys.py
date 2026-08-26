@@ -367,7 +367,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
 
 
 # --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------
-def test_doclink_refuses_when_document_bytes_are_unreachable() -> None:
+def test_evidence_pull_refuses_when_document_bytes_are_unreachable() -> None:
     """A Drive link the app cannot fetch (no connected Google credentials) is
     refused: evidence must carry encrypted document bytes, so the verb never
     falls back to storing the bare link, and the row gains no attachment.
@@ -378,17 +378,17 @@ def test_doclink_refuses_when_document_bytes_are_unreachable() -> None:
     link = "https://drive.google.com/file/d/ABC123ticket/view"
 
     res = _invoke(
-        ["app", "ledger", "doclink", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
+        ["app", "ledger", "evidence", "pull", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
     )
     assert res.exit_code != 0, res.output
 
     catalogue = _active_repo().load()
     txn = catalogue.get(tx)
     assert txn is not None
-    assert not txn.attachment_ids, "a refused doclink must not bind any attachment to the row"
+    assert not txn.attachment_ids, "a refused evidence pull must not bind any attachment to the row"
 
 
-def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
+def test_evidence_pull_refuses_non_link_source(tmp_path: Path) -> None:
     _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
@@ -397,7 +397,8 @@ def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
         [
             "app",
             "ledger",
-            "doclink",
+            "evidence",
+            "pull",
             tx,
             "--source",
             "LOCAL_FILE",

@@ -2,147 +2,150 @@ modelo:
   schema:
     '576':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 576. Special Tax on Certain Means of Transport. Self-assessment.
+        title: IEDMT - self-assessment on registration of certain means of transport
       revision:
         '2007':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Accrual year
           field:
-            label: null
+            label: Order EHA/1981/2005, tax year 2007
         2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
               help: null
-              label: null
+              label: C.M.T. Aircraft. Year of manufacture
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: null
-              label: null
+              label: C.M.T. Aircraft. Manufacturer
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
               help: null
-              label: null
+              label: C.M.T. Aircraft. Model
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
               help: null
-              label: null
+              label: C.M.T. Aircraft. Maximum take-off weight (in kg)
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               help: null
-              label: null
+              label: C.M.T. Aircraft. Serial number
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: null
-              label: null
+              label: C.M.T. Vessels. Maximum length (in metres)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: null
-              label: null
+              label: C.M.T. Vessels. Manufacturer or importer
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: null
-              label: null
+              label: C.M.T. Vessels. Identification (hull number)
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
               help: null
-              label: null
+              label: C.M.T. Vessels. Model
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
               help: null
-              label: null
+              label: C.M.T. Vessels. Remarks
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Date of first registration of the used means of transport
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
               help: null
-              label: null
+              label: Kilometres or hours of use
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Acquired in Spain or in a State other than Spain
             x-cdmn8bjeelincrpdelpm2p3f:
               help: null
-              label: null
+              label: C.M.T. New or used means of transport
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Identification number (chassis)
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Classification under Directive 70/156/EEC
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Engine displacement (cc)
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Classification by construction and use criteria
+                (RD 2822/1998)
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Roadworthiness code
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
               help: null
-              label: null
+              label: C.M.T. Vehicles. CO2 emissions
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Tax heading
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Roadworthiness card serial number
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Roadworthiness card type
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Make
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Model-Type
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Petrol, diesel or other engine
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Remarks
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: null
-              label: null
+              label: Cause of the taxable event
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Accrual year
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: null
-              label: null
+              label: Supplementary return. Receipt number of the previous return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: null
+              label: Return type
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
               help: null
-              label: null
+              label: 'Means of transport type (V: vehicles, E: vessels, A: aircraft)'
             x-d5n78sjfchqm6t3fe8n6sqb6:
               help: null
-              label: null
+              label: Tax ID of the person who brought the means of transport into
+                Spain
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               help: null
-              label: null
+              label: Surname and given name or company name of the party bringing
+                it into Spain
             x-dhkn2bj15li6ap3lcdkn4:
               help: null
-              label: null
+              label: Assessment. To be deducted
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
               help: null
-              label: null
+              label: Assessment. Taxable base
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               help: null
-              label: null
+              label: Assessment. Reduced taxable base
             x-dhkn2bj3elnn8o8:
               help: null
-              label: null
+              label: Assessment. Tax due
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               help: null
-              label: null
+              label: Assessment. Tax payable
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
               help: null
-              label: null
+              label: Assessment. Flat-rate deduction
             x-dhkn2bjiclpnar3kc5i6u:
               help: null
-              label: null
+              label: Assessment. Assessment result
             x-dhkn2bjkd5o6u:
               help: null
-              label: null
+              label: Assessment. Rate %
           construct:
             modelo-576-autoliquidacion:
               field:
-                title: null
+                title: Self-assessment of the Special Tax on Certain Means of Transport
           field:
-            label: null
+            label: Order EHA/3851/2007, tax years 2008 onwards

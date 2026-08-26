@@ -753,16 +753,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
+            ArgumentSpec(
                 name="package",
-                declarations=("--package",),
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.feedback_package_help"),
-                multiple=False,
-                is_flag=False,
-                flag_value=None,
-                constraint=ParameterConstraint(),
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.AUXILIARY,

@@ -483,7 +483,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
             modelo="200",
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
-            revision_id="2024-y-siguientes",
+            revision_id="2024",
         )
         result = invoke_cached_cli(
             [

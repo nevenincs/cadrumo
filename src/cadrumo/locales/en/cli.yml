@@ -937,8 +937,6 @@ cli:
         app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull
           fetches the receipt from AEAT and reconciles; file reconciles a local PDF;
           history lists past runs.'
-        file_help: Reconcile a work unit against a local justificante or declaración
-          PDF. Local-only; never contacts AEAT.
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, casilla-level reconcile,
           enrolled modelos only). Defaults to justificante.'
@@ -948,6 +946,8 @@ cli:
         history_help: List past reconciliations recorded for the active profile.
         history_work_unit_id_help: Optional work unit id to narrow the history to
           one work unit.
+        import_help: Reconcile a work unit against a local justificante or declaración
+          PDF. Local-only; never contacts AEAT.
         pull_help: Pull the justificante for a work unit from AEAT and reconcile against
           it. Contacts AEAT (read-only).
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
@@ -1999,11 +1999,11 @@ cli:
           carried: {dropped_fields}. If you did not change or close these registrations,
           this may be a partial pull - re-run the censo pull or re-enter the values;
           the home-office deduction ratio may stop resolving.'
-        file_help: Read a downloaded Certificado de Situación Censal and preview or
-          enroll its censal facts.
         file_option_help: Path to the Certificado de Situación Censal PDF downloaded
           from Sede (procedure G313).
         help: Censal artefact ingestion for the active profile.
+        import_help: Read a downloaded Certificado de Situación Censal and preview
+          or enroll its censal facts.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
         pull_apply_help: Acquire once and open the exact reviewed censo proposal before

@@ -170,7 +170,7 @@ def reconcile_file_verb(
             work_unit_id=unit.work_unit_id, source_kind=resolved_kind, source_path=file, actor=resolved_actor
         )
     )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile.file")
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
 
 def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:

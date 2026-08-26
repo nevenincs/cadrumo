@@ -140,7 +140,7 @@ def _create_work_unit() -> str:
         modelo="200",
         filing_year=2024,
         period="0A",
-        revision="2024-y-siguientes",
+        revision="2024",
     )
 
 

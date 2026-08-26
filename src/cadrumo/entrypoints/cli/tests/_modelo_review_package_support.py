@@ -22,7 +22,7 @@ from cadrumo.application.workflow.persistence import workflow_state_repository
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
+from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....core import CasillaId, Period
 from ....domain.modelos import (
     CalculationRevision,
@@ -48,7 +48,7 @@ def seed_exportable_modelo_revision(
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     filing_period = Period.from_year_and_code(filing_year, period)
-    revision_id = resolve_registry_revision_for_work_target(
+    revision_id = law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
         period=filing_period,

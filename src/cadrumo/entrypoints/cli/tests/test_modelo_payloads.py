@@ -31,7 +31,6 @@ from ....domain.modelos import (
     ModeloVerificationFindingSeverity,
     derive_calculation_revision_id,
 )
-from .._config._google_payloads import GoogleSyncCalcComputeCasillaPayload
 from .._modelo_payloads import (
     CalculationRevisionPayload,
     CasillaObservationPayload,
@@ -46,6 +45,7 @@ from .._modelo_payloads import (
 )
 from .._modelo_rendering import calculation_revision_payload
 from .._modelo_revision_payload_parts import CalculationRevisionProjectionFields, DetailRowPayload
+from .._modelo_spreadsheet_payloads import ModeloSpreadsheetCalculateCasillaPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -224,7 +224,7 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
         legal_refs=["ley-58-2003:art-120"],
         source_refs=["libro-1"],
     )
-    google = GoogleSyncCalcComputeCasillaPayload(
+    google = ModeloSpreadsheetCalculateCasillaPayload(
         casilla_id=_PAYLOAD_CASILLA,
         value="1234.56",
         formula_id="m130-test-formula",
@@ -237,7 +237,7 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
     for payload_type, payload in (
         (CasillaObservationPayload, observation.model_dump()),
         (DeltaRowPayload, delta.model_dump()),
-        (GoogleSyncCalcComputeCasillaPayload, google.model_dump()),
+        (ModeloSpreadsheetCalculateCasillaPayload, google.model_dump()),
     ):
         payload["formula_id"] = "bad formula"
         with pytest.raises(ValidationError, match="String should match pattern"):

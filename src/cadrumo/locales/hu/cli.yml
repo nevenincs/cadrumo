@@ -997,8 +997,6 @@ cli:
         app_help: 'Egyeztet egy modell munkaegységet az AEAT igazolásával: a pull
           letölti az igazolást az AEAT-tól és egyeztet; a file egy helyi PDF-et egyeztet;
           a history a korábbi futtatásokat listázza.'
-        file_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
-          ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         file_kind_help: 'Bizonyíték dokumentum típusa: justificante (AEAT igazolás,
           minden modell) vagy declaration (benyújtott bevallás PDF, rovat szintű egyeztetés,
           csak engedélyezett modellek). Alapértelmezetten justificante.'
@@ -1008,6 +1006,8 @@ cli:
         history_help: Listázza az aktív profilhoz rögzített egyeztetéseket.
         history_work_unit_id_help: Opcionális munkaegység-azonosító a történet egy
           egységre szűkítéséhez.
+        import_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
+          ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         pull_help: Letölti egy munkaegység igazolását az AEAT-tól, és egyeztet ellene.
           Kapcsolatba lép az AEAT-tal (csak olvasás).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
@@ -2136,11 +2136,11 @@ cli:
           meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
           letöltés történt: futtasd újra a censo letöltést, vagy add meg ismét az
           értékeket; az otthoni iroda levonási aránya nem biztos, hogy feloldódik.'
-        file_help: Beolvas egy letöltött Certificado de Situación Censal dokumentumot,
-          és előnézi vagy rögzíti a censal adatokat.
         file_option_help: A Sede-ről letöltött Certificado de Situación Censal PDF
           elérési útja (G313 eljárás).
         help: Censal dokumentumok beolvasása az aktív profilhoz.
+        import_help: Beolvas egy letöltött Certificado de Situación Censal dokumentumot,
+          és előnézi vagy rögzíti a censal adatokat.
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.

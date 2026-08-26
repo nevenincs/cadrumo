@@ -34,7 +34,7 @@ def test_censo_fact_payload_refuses_malformed_row(kwargs: dict[str, str]) -> Non
         CensoFactPayload(**kwargs)
 
 
-def test_censo_file_and_pull_share_one_canonical_fact_wire_projection() -> None:
+def test_censo_transport_and_pull_share_one_canonical_fact_wire_projection() -> None:
     assert not hasattr(_censo_payloads, "CensoPullFactPayload")
     assert not hasattr(_censo_payloads, "CensoFileFactPayload")
 

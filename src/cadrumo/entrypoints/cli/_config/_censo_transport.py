@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from ....domain.user_profile.values import UserProfileFact
 
 
-def censo_file(
+def censo_import(
     ctx: typer.Context,
     file: Path,
     apply: bool = False,
@@ -101,7 +101,7 @@ def censo_file(
             message=tr("cli.config.profile.censo.non_official_notice"),
         ),
     ]
-    emit_envelope(ctx, command="config.profile.censo.file", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="config.profile.censo.import", result=result, lines=lines, notices=notices)
 
 
 def censo_pull(
@@ -403,4 +403,4 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
     return notices
 
 
-__all__ = ["censo_file", "censo_pull"]
+__all__ = ["censo_import", "censo_pull"]

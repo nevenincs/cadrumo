@@ -1012,8 +1012,6 @@ cli:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
           pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
           history lista las conciliaciones anteriores.'
-        file_help: Concilia una unidad de trabajo contra un PDF de justificante o
-          declaración local. Solo local; nunca contacta con AEAT.
         file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
           todos los modelos) o declaration (PDF de declaración presentada, conciliación
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
@@ -1023,6 +1021,8 @@ cli:
         history_help: Lista las conciliaciones registradas para el perfil activo.
         history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
           historial a una unidad.
+        import_help: Concilia una unidad de trabajo contra un PDF de justificante
+          o declaración local. Solo local; nunca contacta con AEAT.
         pull_help: Descarga de AEAT el justificante de una unidad de trabajo y concilia
           contra él. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
@@ -2168,11 +2168,11 @@ cli:
           estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
           descarga del censo o reintroduce los valores; la proporción de afectación
           de la vivienda podria dejar de resolverse.'
-        file_help: Lee un Certificado de Situación Censal descargado y previsualiza
-          o registra sus datos censales.
         file_option_help: Ruta al PDF del Certificado de Situación Censal descargado
           de la Sede (trámite G313).
         help: Ingesta de artefactos censales para el perfil activo.
+        import_help: Lee un Certificado de Situación Censal descargado y previsualiza
+          o registra sus datos censales.
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.

@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             '00001':
               help: Jelző, amely azt mutatja, hogy a szervezet nonprofit-e és a 49/2002.

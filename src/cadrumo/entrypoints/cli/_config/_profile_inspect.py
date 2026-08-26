@@ -193,15 +193,15 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
 
     from ....application.modelo.work_addressing import (
         ModeloWorkRegistryYearMismatchError,
-        resolve_registry_revision_for_work_target,
+        law_selected_revision_for_work_target,
     )
 
     try:
-        return resolve_registry_revision_for_work_target(
+        return law_selected_revision_for_work_target(
             modelo=modelo,
             filing_year=period.filing_year,
             period=period,
-            registry_revision_id=revision_id,
+            requested_revision_id=revision_id,
         )
     except AmbiguousRevisionSelectionError as exc:
         # ``select_revision`` selected more than one revision. The candidate

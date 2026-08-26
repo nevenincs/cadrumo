@@ -2,147 +2,151 @@ modelo:
   schema:
     '576':
       field:
-        official_name: null
-        title: null
+        official_name: Model 576. Impost Especial sobre Determinats Mitjans de Transport.
+          Autoliquidació.
+        title: IEDMT - autoliquidació per matriculació de determinats mitjans de transport
       revision:
         '2007':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici de meritació
           field:
-            label: null
+            label: Ordre EHA/1981/2005, exercici 2007
         2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
               help: null
-              label: null
+              label: C.M.T. Aeronaus. Any de fabricació
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: null
-              label: null
+              label: C.M.T. Aeronaus. Fabricant
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
               help: null
-              label: null
+              label: C.M.T. Aeronaus. Model
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
               help: null
-              label: null
+              label: C.M.T. Aeronaus. Pes màxim d'enlairament (en kg)
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               help: null
-              label: null
+              label: C.M.T. Aeronaus. Núm. de sèrie
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: null
-              label: null
+              label: C.M.T. Embarcacions. Eslora màxima (en metres)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: null
-              label: null
+              label: C.M.T. Embarcacions. Fabricant o importador
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: null
-              label: null
+              label: C.M.T. Embarcacions. Identificació (núm. de construcció)
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
               help: null
-              label: null
+              label: C.M.T. Embarcacions. Model
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
               help: null
-              label: null
+              label: C.M.T. Embarcacions. Observacions
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Data de primera matriculació del mitjà de transport usat
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
               help: null
-              label: null
+              label: Quilòmetres o núm. d'hores d'ús
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Adquirit a Espanya o en un Estat diferent d'Espanya
             x-cdmn8bjeelincrpdelpm2p3f:
               help: null
-              label: null
+              label: C.M.T. Mitjà de transport nou o usat
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Núm. d'identificació (bastidor)
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Classificació segons la Directiva 70/156/CEE
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Cilindrada (cc)
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Classificació per criteri de construcció i d'utilització
+                (RD 2822/1998)
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Codi ITV
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Emissions de CO2
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Epígraf
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Núm. de sèrie de la targeta ITV
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Tipus de targeta ITV
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Marca
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Model-Tipus
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Motor de gasolina, dièsel o altres
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
               help: null
-              label: null
+              label: C.M.T. Vehicles. Observacions
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: null
-              label: null
+              label: Causa del fet imposable
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Exercici de meritació
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: null
-              label: null
+              label: Declaració complementària. Número de justificant de la declaració
+                anterior
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: null
+              label: Tipus de declaració
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
               help: null
-              label: null
+              label: 'Tipus de transport (V: vehicles, E: embarcacions, A: aeronaus)'
             x-d5n78sjfchqm6t3fe8n6sqb6:
               help: null
-              label: null
+              label: NIF de la persona que ha introduït el mitjà de transport a Espanya
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               help: null
-              label: null
+              label: Cognoms i nom o raó social de qui l'introdueix a Espanya
             x-dhkn2bj15li6ap3lcdkn4:
               help: null
-              label: null
+              label: Liquidació. A deduir
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
               help: null
-              label: null
+              label: Liquidació. Base imposable
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               help: null
-              label: null
+              label: Liquidació. Base imposable reduïda
             x-dhkn2bj3elnn8o8:
               help: null
-              label: null
+              label: Liquidació. Quota
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               help: null
-              label: null
+              label: Liquidació. Quota a ingressar
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
               help: null
-              label: null
+              label: Liquidació. Deducció lineal
             x-dhkn2bjiclpnar3kc5i6u:
               help: null
-              label: null
+              label: Liquidació. Resultat de la liquidació
             x-dhkn2bjkd5o6u:
               help: null
-              label: null
+              label: Liquidació. Tipus %
           construct:
             modelo-576-autoliquidacion:
               field:
-                title: null
+                title: Autoliquidació de l'Impost Especial sobre Determinats Mitjans
+                  de Transport
           field:
-            label: null
+            label: Ordre EHA/3851/2007, exercicis 2008 i següents

@@ -8,9 +8,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
-from .....domain.calculations.registry.authority import bundled_authority
-from .._google_sync_calc import _assemble_pull_observations
+from ....adapters.outbound.google import RowSetCellEdit, RowSetEdit
+from ....domain.calculations.registry.authority import bundled_authority
+from .._modelo_spreadsheet_cli import _assemble_pull_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
