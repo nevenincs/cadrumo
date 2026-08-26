@@ -227,3 +227,42 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
         rendered_error = "" if app.error is None else str(app.error)
         assert current not in rendered_error
         assert _NEW_PASSPHRASE not in rendered_error
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("size", [(80, 24), (120, 40), (200, 50)], ids=["narrow", "medium", "wide"])
+async def test_every_field_and_action_is_actually_on_screen_not_only_present(
+    tmp_path: Path,
+    size: tuple[int, int],
+) -> None:
+    """Presence in the DOM is not reachability: a control can exist and still
+    render outside any real viewport, exactly as `SourceActionCard` did before
+    its `height: auto` fix pushed a sibling 180 rows down. Every field and
+    button this screen composes must have a positive on-screen region wholly
+    inside the terminal at real narrow, ordinary, and wide sizes.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _enroll()
+        app = _app(profile_id)
+        width, height = size
+        async with app.run_test(size=size) as pilot:
+            await pilot.pause()
+            controls = [
+                app.query_one(selector, widget_type)
+                for selector, widget_type in (
+                    ("#field-current", Input),
+                    ("#field-new", Input),
+                    ("#field-confirm", Input),
+                    ("#btn-change", Button),
+                    ("#btn-cancel", Button),
+                )
+            ]
+            for control in controls:
+                region = control.region
+                assert region.width > 0 and region.height > 0, f"{control.id} has no visible area at {size}"
+                assert region.x >= 0 and region.x + region.width <= width, (
+                    f"{control.id} sits outside the {width}-column terminal: {region}"
+                )
+                assert region.y >= 0 and region.y + region.height <= height, (
+                    f"{control.id} sits outside the {height}-row terminal: {region}"
+                )
