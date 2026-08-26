@@ -36,7 +36,12 @@ reviewed_at = 2026-08-16
 
 [revisions."2023-2024".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires a source-grounded identity between two revisions. The 2015, 2016-2018, 2019-2021 and 2022 BOE PDFs are enrolled as distinct historical record-design sources, but each fails strict parsing before a complete record sheet begins at position 1. Their applicability-only headers therefore cannot establish coordinate continuity to this strictly parsed 2023-2024 layout. No evolution is declared rather than copying a later coordinate map backwards. Reconsider after strict parsing yields complete historical record sheets and a field-by-field identity comparison has been reviewed."""
+CasillaContinuidadEvolutionDefinition requires a source-grounded identity between two revisions. The 2015, \
+2016-2018, 2019-2021 and 2022 BOE PDFs are enrolled as distinct historical record-design sources, but each \
+fails strict parsing before a complete record sheet begins at position 1. Their applicability-only headers \
+therefore cannot establish coordinate continuity to this strictly parsed 2023-2024 layout. No evolution is \
+declared rather than copying a later coordinate map backwards. Reconsider after strict parsing yields complete \
+historical record sheets and a field-by-field identity comparison has been reviewed."""
 legal_refs = [
     "orden-hap-2250-2015:art-1",
     "orden-hap-2250-2015:art-2",
