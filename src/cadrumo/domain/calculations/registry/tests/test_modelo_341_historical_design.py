@@ -83,13 +83,13 @@ def test_modelo_341_refuses_pre_design_years_and_selects_two_layout_eras() -> No
 
 
 def test_modelo_341_2005_effective_date_is_an_explicit_as_of_boundary() -> None:
-    """Keep the BOE presentation boundary distinct from the ejercicio selector."""
+    """Start on the first quarterly presentation period after 1 February."""
     modelo, _catalogues = _committed_modelo("341")
 
     with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 1, 31))
+        select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 3, 31))
 
-    selected = select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 2, 1))
+    selected = select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 4, 1))
     assert selected.id == "2005-2015"
 
 

@@ -5,10 +5,11 @@ authority_grade = "applicability"
 # filing grade or claim operator-reviewed filing support. The year selector is
 # the natural ejercicio coordinate; valid_from is the independent optional
 # as-of axis. BOE-A-2004-17306's final provision admits telematic presentation
-# only from the first presentation period beginning after 2005-02-01, so an
-# explicit January 2005 as-of date truthfully refuses this otherwise-declared
-# 2005 filing year.
-valid_from = 2005-02-01
+# only from the first presentation period beginning after 2005-02-01. The
+# Modelo 341 quarterly deadline starts that first period on 2005-04-01, so an
+# earlier explicit as-of date truthfully refuses this otherwise-declared 2005
+# filing year.
+valid_from = 2005-04-01
 valid_to = 2015-12-31
 period_selector = { year_from = 2005, year_to = 2015, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]

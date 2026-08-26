@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:48d5cf44d23f5c7423c64afd02a5eb8c0f068ccf1be997c548d66e5beca12d8b'
+body_hash: 'sha256:e3dda51fefb1e6e98cbb0a8a2b674d8f3301de3f47db181741d515d291dbfdd4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
@@ -134,3 +134,48 @@ clean. The whole shipped-schema runtime localization test remains blocked by
 14,028 unrelated null translations introduced by the concurrent Modelo 200
 partition; its first failure is `modelo 200 / 2025-y-siguientes`, not Modelo
 341. S51 remains open for the other modelos in its row.
+
+## Remediation verification (2026-08-26, current HEAD)
+
+`m341-revision-localization` is closed. The generated locale migration carries
+only `2005-2015` and `2016-y-siguientes` beneath Modelo 341 in each of
+`src/cadrumo/locales/{ca,en,es,hu}/modelo/schema/341.yml`; an exact search
+finds no `2000-y-siguientes` residue. The focused test at
+`src/cadrumo/domain/calculations/registry/tests/test_modelo_341_historical_design.py:96`
+is non-tautological: it verifies the exact live casilla sets, invokes the
+production resolver for every shipped locale, and pins the three
+historical-only Spanish wire labels. An independent direct load resolved all
+108 `(revision, casilla, locale)` combinations. The seven-test focused module
+passes with the registry confcut and Ruff reports no finding.
+
+`m341-selector-validity-axis` remains a medium finding. The new comment and
+boundary test describe `2005-02-01` as the date at which Modelo 341 becomes
+selectable, but the cited BOE final provision says presentation may occur from
+the first presentation period that begins after that date. Its Modelo 341
+deadline provision places the first-quarter presentation in the first twenty
+days of April. Consequently,
+`src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml:7`
+does not ground selection at `2005-02-01`, and the new positive assertion at
+`src/cadrumo/domain/calculations/registry/tests/test_modelo_341_historical_design.py:92`
+only proves the registry's own declaration. Establish the actual `on` axis
+from the authoritative date, revise the boundary or source declaration to
+match it, and make the mutation test prove that source-derived boundary.
+
+Verdict: PASS with one residual MEDIUM; no critical or high finding remains.
+
+## Final date-axis remediation (2026-08-26)
+
+The residual medium is fixed forward without changing the 2005 ejercicio or
+the historical layout's authority window. The exact BOE-A-2004-17306 final
+provision does not make 1 February itself a Modelo 341 presentation date: it
+permits presentation from the first presentation period beginning after that
+threshold. The existing generic quarterly deadline model, grounded in Modelo
+341's plazo provision, opens the first-quarter presentation window on 1 April
+and closes it after the first twenty natural days. The historical revision's
+independent as-of axis therefore now begins on `2005-04-01`.
+
+The focused boundary regression proves both adjacent civil dates through the
+canonical selector: `2005/1T` with `on=2005-03-31` refuses and the same natural
+coordinate with `on=2005-04-01` selects `2005-2015`. This removes the
+self-grounded February admission while preserving the source-backed exercise
+and byte-layout scope. S51 remains open for the other modelos in its row.
