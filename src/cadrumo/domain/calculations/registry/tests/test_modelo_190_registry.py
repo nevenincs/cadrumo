@@ -7,25 +7,24 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.relations import (
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-from cadrumo.domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    resolve_withholding_binding_values,
-)
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
 from .....domain.deadlines import shift_deadline
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..formula_runtime import calculate_registry_snapshot
+from ..relations import (
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
+from ..withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
+)
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

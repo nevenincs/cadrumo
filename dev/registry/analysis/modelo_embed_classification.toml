@@ -161,22 +161,6 @@ symbol = "bucket"
 reason = "Decimal('0') accumulator seed for the per-party bucket; a sentinel zero."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/export_parse.py"
-classification = "regulatory_data_embed"
-justification = """
-The embed is _M100_LETTER_CASILLA_ID_FIRST_YEAR = 2024. AEAT changed the Modelo
-100 XML dictionary so casilla ids may be letters from a specific filing year;
-the year that change took effect is an AEAT publication fact versioned by
-filing year, and encoding it here makes the parser's acceptance rule
-un-versioned and invisible to registry validation. It belongs beside the export
-source declaration in the authoring tree, which already carries applies_from.
-The dictionary grammar, the parse functions and the parsed-value models are
-machinery and survive the extraction.
-"""
-destination = "registry export source declaration in the authoring tree"
-tree_ownership = "unowned"
-
-[[classification]]
 path = "src/cadrumo/domain/calculations/registry/formula_runtime.py"
 classification = "machinery"
 justification = """

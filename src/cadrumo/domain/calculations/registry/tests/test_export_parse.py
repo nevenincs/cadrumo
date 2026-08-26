@@ -14,22 +14,29 @@ each helper, not any AEAT calculation result.
 
 from __future__ import annotations
 
+import inspect
+from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
+from .. import export_parse as export_parse_module
 from ..errors import RegistryValidationError
 from ..export_parse import (
     _local_name,
     _parse_dictionary_casilla_id,
     _parse_xml_boolean,
     _parse_xml_decimal,
+    _parse_xml_dictionary_line,
     _parse_xml_dictionary_value,
+    _read_dictionary_text,
 )
+from ..schema_references import SourceReference
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -87,6 +94,7 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
 ) -> None:
     modelos_by_id, catalogues = _loaded_registry()
     layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+    source = catalogues.sources[str(layout.dictionary_source_ref)]
 
     entries = xml_dictionary_entries(
         layout,
@@ -95,6 +103,8 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
     )
     entry = next(item for item in entries if item.field_id == field_id)
 
+    assert source.applies_from == date(filing_year, 1, 1)
+    assert source.supports_single_uppercase_letter_casilla_ids
     assert entry.casilla_id == expected_casilla_id
 
 
@@ -112,6 +122,62 @@ def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_y
     entry = next(item for item in entries if item.field_id == "TITA")
 
     assert entry.casilla_id == "0001"
+
+
+def test_m100_letter_casilla_grammar_is_declared_by_the_bound_source() -> None:
+    """The earliest capable source's own temporal row begins the extension."""
+    modelos_by_id, catalogues = _loaded_registry()
+    sources = tuple(
+        catalogues.sources[
+            str(modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0].dictionary_source_ref)
+        ]
+        for filing_year in range(2020, 2026)
+    )
+    capable = tuple(source for source in sources if source.supports_single_uppercase_letter_casilla_ids)
+    capable_starts = tuple(source.applies_from for source in capable)
+
+    assert capable_starts and all(start is not None for start in capable_starts)
+    assert min(start for start in capable_starts if start is not None) == date(2024, 1, 1)
+    assert all(source.applies_from is not None for source in sources)
+    assert all(source.dictionary_casilla_id_grammar == "numeric" for source in sources[:4])
+
+
+def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed() -> None:
+    """The same published dictionary row becomes non-casilla without its capability."""
+    modelos_by_id, catalogues = _loaded_registry()
+    layout = modelos_by_id["100"].revisions["2024"].export_layouts[0]
+    source = catalogues.sources[str(layout.dictionary_source_ref)]
+    dictionary_path = _source_root() / source.corpus_path
+    line = next(item for item in _read_dictionary_text(dictionary_path).splitlines() if item.startswith("VHADQ="))
+
+    admitted = _parse_xml_dictionary_line(line, source=source, overrides={})
+    removed_capability = SourceReference.model_validate(
+        {**source.model_dump(), "dictionary_casilla_id_grammar": "numeric"},
+    )
+    refused = _parse_xml_dictionary_line(line, source=removed_capability, overrides={})
+
+    assert admitted is not None and admitted.casilla_id == "A"
+    assert refused is not None and refused.casilla_id is None
+
+
+def test_extended_dictionary_grammar_refuses_a_non_dictionary_source() -> None:
+    """Only a dictionary source may claim the annex grammar."""
+    _, catalogues = _loaded_registry()
+    source = catalogues.sources["aeat-dr-100-2024-dictionary"]
+    malformed = source.model_dump()
+    malformed["kind"] = "manual_pdf"
+
+    with pytest.raises(ValidationError, match="dictionary_casilla_id_grammar"):
+        SourceReference.model_validate(malformed)
+
+
+def test_letter_grammar_has_no_parser_year_or_source_identity_exception() -> None:
+    """The parser consumes the source capability, not a second temporal table."""
+    parser_boundary = inspect.getsource(export_parse_module._parse_xml_dictionary_line)
+
+    assert "supports_single_uppercase_letter_casilla_ids" in parser_boundary
+    assert "applies_from" not in parser_boundary
+    assert "aeat-dr-100" not in parser_boundary
 
 
 # ---------------------------------------------------------------------------
