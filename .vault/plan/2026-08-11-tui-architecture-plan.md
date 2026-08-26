@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:68dc7284c389394fb3e44e59ac696fa3885f2e82d216a221681afe65d500b708'
+body_hash: 'sha256:1ec8735547be468e563ef9bace8c8728617c90213455b84c1a650062d8921ba8'
 ---
 
 # `tui-architecture` plan
@@ -300,6 +300,7 @@ Implement edit admission, parsing, preflight, exact mutation baselines, typed sc
 - [x] `W03.P21.S275` - Extend the canonical calculation input surface to express explicit CLEAR_DECLARED_VALUE for manual scalar casillas, so an edit that withdraws a previously declared value reaches the engine through the same orchestrator every other input uses rather than a second write path, carrying its own axis on the content-addressed revision so a cleared casilla is provably distinguishable from one never declared; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused clear-versus-never-declared tests`.
 - [ ] `W03.P21.S276` - Extend the canonical calculation input surface to express repeatable-row ADD_ROW, UPDATE_ROW, DELETE_ROW and MOVE_ROW against MANUAL_INPUT binding groups so row edits reach the engine through the owning orchestrator rather than the edit executor materializing rows itself, and prove row ordering and deletion survive a real calculate and guarded persist; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused row-intent calculation and persistence tests`.
 - [ ] `W03.P21.S280` - Scope the operator binding-override edit surface that REMOVE_OVERRIDE was modelled for: decide whether an override of a binding-computed casilla is addressed by casilla or by binding, admit it as its own permitted-surface entry kind rather than a manual scalar, and either re-address the intent to the store it targets or record that the scalar-addressed spelling is retired; amend the edit-contract decision record in the same change; `the amended modelo-edit-contract ADR, src/cadrumo/application/modelo/_edit_models.py, _edit_services.py permitted-surface projection, and focused binding-override admission tests`.
+- [ ] `W03.P21.S281` - Correct the permitted-surface row-group category, which admits ADD_ROW, UPDATE_ROW and DELETE_ROW for every MANUAL_INPUT binding although every such binding in the registry is a statically positioned scalar copy with no row set: decide whether the repeatable-row surface is the per-modelo ModeloDetailRow union the calculate boundary already carries, retire or re-address the binding-keyed row-group entry accordingly, and amend the edit-contract decision record in the same change so no intent can address a static field under a row semantic; `the amended modelo-edit-contract ADR, src/cadrumo/application/modelo/_edit_services.py permitted-surface projection, _edit_models.py row addresses, and focused row-surface admission tests`.
 
 ## Wave `W04` - Canonical TUI entrypoint and components
 
