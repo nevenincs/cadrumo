@@ -76,6 +76,7 @@ def _compatibility() -> ModeloEditCompatibilityTupleV1:
 def _scalar_surface_entry() -> ModeloEditWritableScalarSurfaceEntryV1:
     return ModeloEditWritableScalarSurfaceEntryV1(
         casilla_id="casilla-01",
+        data_type="money",
         allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
     )
 
@@ -327,7 +328,7 @@ def test_admission_result_and_parse_request_round_trip_through_json() -> None:
     assert ModeloEditRefusedV1.model_validate_json(refused.model_dump_json()) == refused
 
     parse_request = ModeloEditParseRequestV1(
-        baseline_id=_BASELINE_ID,
+        baseline=_baseline(),
         address=ModeloEditScalarAddressV1(casilla_id="casilla-01"),
         input_kind=InputKind.MANUAL,
         locale=OutputLanguage.ES,

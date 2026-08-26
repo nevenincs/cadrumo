@@ -629,6 +629,13 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
             (2, 4): "349",
             (5, 8): "2026",
             (9, 17): "B12345678",
+            # Razon social of the declarante. The layout declares this slot
+            # required, and the parse path re-renders every value_policy-free
+            # field to prove the payload is canonical, so a blank slot refuses
+            # on the render side rather than parsing as an absent optional. The
+            # NIF above is a persona juridica, so the slot carries a razon
+            # social rather than the design's surnames-first natural-person join.
+            (18, 57): "OPERADOR INTRACOMUNITARIO EJEMPLO SL".ljust(40),
             (136, 137): "1T",
             (138, 146): "2".zfill(9),
             (147, 161): "150050".zfill(15),

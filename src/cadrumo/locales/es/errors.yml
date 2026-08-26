@@ -1148,6 +1148,8 @@ errors:
       para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
+    registry_closure_capture_not_current: El cierre del registro cambió durante la
+      lectura; vuelva a capturarlo.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está

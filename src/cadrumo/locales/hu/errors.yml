@@ -1081,6 +1081,8 @@ errors:
       számítási revízióval. Futtassa a aeat app modelo work calculate parancsot egy
       friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
+    registry_closure_capture_not_current: A regisztrációs lezárás megváltozott olvasás
+      közben; rögzítse újra.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem

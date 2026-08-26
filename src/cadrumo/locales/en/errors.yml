@@ -1061,6 +1061,8 @@ errors:
       calculation revision. Run aeat app modelo work calculate to produce a fresh
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
+    registry_closure_capture_not_current: The registry closure changed while it was
+      being read; capture it again.
     submission_preflight_auth_describe_failed: Auth provider failed to describe itself
       ({cause_type}).
     submission_preflight_auth_not_ready: Auth provider {kind} is not ready (configured={configured}

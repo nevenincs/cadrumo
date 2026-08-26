@@ -420,6 +420,23 @@ class OperationWorkspaceRefreshAdapter(Protocol):
         ...
 
 
+@runtime_checkable
+class OperationResultProjector(Protocol):
+    """Domain-owned, side-effect-free safe settled-result projection contract.
+
+    Symmetric with :class:`OperationReviewProjector`: the resolver reloads the
+    private settled result behind the secure application port and hands it,
+    plus the safe terminal receipt, to this projector -- never the reverse.
+    Registered only when the public result schema is a distinct projection of
+    the definition's private result type; a result schema identical to that
+    private type declares no projector.
+    """
+
+    def __call__(self, result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
+        """Project one resolved settled result and its safe terminal receipt."""
+        ...
+
+
 class OperationPublicDefinitionRegistrationV1(BaseModel):
     """Live models and adapters bound to one serializable public contract."""
 
@@ -430,6 +447,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     reviewed_operand_type: type[BaseModel] | None = None
     review_projector: OperationReviewProjector | None = None
     workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None
+    result_projector: OperationResultProjector | None = None
 
     @field_validator("schema_bindings")
     @classmethod
@@ -485,6 +503,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         reviewed_operand_type: type[BaseModel] | None = None,
         review_projector: OperationReviewProjector | None = None,
         workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None,
+        result_projector: OperationResultProjector | None = None,
     ) -> OperationPublicDefinitionRegistrationV1:
         """Compose a manifest and its runtime-only bindings from one definition."""
         bindings = tuple(
@@ -518,6 +537,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
             reviewed_operand_type=reviewed_operand_type,
             review_projector=review_projector,
             workspace_refresh_adapter=workspace_refresh_adapter,
+            result_projector=result_projector,
         )
 
 
@@ -592,11 +612,24 @@ class OperationRegistry(BaseModel):
         if definition.result_type is None:
             if contract.result_schema is not None:
                 raise ValueError("result-less operation definition cannot declare a public result schema")
-        elif (
-            contract.result_schema is not None
-            and bindings[_schema_identity_key(contract.result_schema)] is not definition.result_type
-        ):
-            raise ValueError("declared public operation result schema must bind the definition result type")
+            if registration.result_projector is not None:
+                raise ValueError("result-less operation definition cannot declare a result projector")
+        elif contract.result_schema is not None:
+            bound_result_type = bindings[_schema_identity_key(contract.result_schema)]
+            distinct_result_projection = bound_result_type is not definition.result_type
+            if distinct_result_projection != (registration.result_projector is not None):
+                raise ValueError(
+                    "a public result schema distinct from the definition result type requires one registered "
+                    "result projector, and one identical to it must not declare one"
+                )
+        elif registration.result_projector is not None:
+            raise ValueError("a result projector requires a declared public result schema")
+        if registration.result_projector is not None:
+            _require_positional_callable_signature(
+                registration.result_projector,
+                arity=2,
+                label="result projector",
+            )
         declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
         if declares_review != (contract.review_projection_schema is not None):
             raise ValueError("REVIEW operation definitions require one public review schema")
@@ -965,6 +998,7 @@ __all__ = [
     "OperationPublicSchemaId",
     "OperationReconciliationPolicy",
     "OperationRegistry",
+    "OperationResultProjector",
     "OperationReviewProjector",
     "OperationSchemaBindingV1",
     "OperationSchemaIdentityV1",

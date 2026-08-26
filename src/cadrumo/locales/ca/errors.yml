@@ -1153,6 +1153,8 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    registry_closure_capture_not_current: El tancament del registre ha canviat mentre
+      es llegia; torneu a capturar-lo.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està

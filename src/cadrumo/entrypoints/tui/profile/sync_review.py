@@ -20,8 +20,13 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, SelectionList, Static
 
+from ....application.live.filed_history_operation import FiledHistoryPublicResultV1
 from ....application.operations.events import OperationEventCode
-from ....application.operations.frontend_contracts import OperationPublicProjectionV1
+from ....application.operations.frontend_contracts import (
+    OperationPublicProjectionV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionResultV1,
+)
 from ....application.operations.models import OperationDiagnosticReference, OperationReference
 from ....application.user_profile.censal_operation import (
     CensalFieldIntent,
@@ -33,6 +38,7 @@ from ....application.user_profile.censal_operation import (
 from ....application.user_profile.projections import record_to_effective_facts
 from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.user_profile.values import UserProfileRecord
+from ..operations.controller import OperationController
 
 _ADOPT = CensalFieldIntent.ADOPT
 _PRESERVE = CensalFieldIntent.PRESERVE
@@ -208,18 +214,15 @@ def _row_label(row: CensalFieldReviewRowV1) -> str:
 
 
 class FiledHistoryProgressSummaryV1(BaseModel):
-    """The filed-history operation facts a public projection can legitimately carry.
+    """The generic filed-history facts every public projection carries.
 
-    ``build_filed_history_operation_registration`` composes the operation's
-    public contract request-only: it declares no public ``result_schema``,
-    so the settled evidence, IVA-wallet, notification and provenance facts
-    the executor's private result carries (:class:`FiledHistoryOnboardingRun`)
-    have no public door to resolve through. This summary is therefore
-    deliberately generic — stage, lifecycle, terminal condition, effect, and
-    refusal/diagnostic references, all pulled straight from
-    :class:`OperationPublicProjectionV1` — and does not attempt to
-    reconstruct the domain-specific result. ``result_available`` names that
-    gap explicitly rather than silently omitting the fields.
+    Stage, lifecycle, terminal condition, effect, and refusal/diagnostic
+    references, pulled straight from :class:`OperationPublicProjectionV1`.
+    Visible at every point in the operation's life, including before
+    settlement; the domain-specific evidence, IVA-wallet, notification, and
+    provenance facts settle later and are resolved separately, through
+    :func:`resolve_filed_history_result`, once the operation reaches a
+    settlement that carries one.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -230,16 +233,10 @@ class FiledHistoryProgressSummaryV1(BaseModel):
     effect: OperationEffect
     refusal_ref: OperationReference | None
     diagnostic_ref: OperationDiagnosticReference | None
-    result_available: bool = False
 
 
 def filed_history_progress_summary(projection: OperationPublicProjectionV1) -> FiledHistoryProgressSummaryV1:
-    """Project the generic public facts a filed-history operation exposes.
-
-    Carries no evidence, IVA-wallet, notification, or provenance detail:
-    those live only in the operation's private result type, which the
-    current public registration does not bind a schema for.
-    """
+    """Project the generic public facts a filed-history operation exposes."""
     return FiledHistoryProgressSummaryV1(
         stage=projection.phase_code,
         lifecycle=projection.lifecycle,
@@ -247,7 +244,32 @@ def filed_history_progress_summary(projection: OperationPublicProjectionV1) -> F
         effect=projection.effect,
         refusal_ref=projection.refusal_ref,
         diagnostic_ref=projection.diagnostic_ref,
-        result_available=False,
+    )
+
+
+async def resolve_filed_history_result(
+    controller: OperationController,
+    projection: OperationPublicProjectionV1,
+) -> OperationResultProjectionResultV1[FiledHistoryPublicResultV1]:
+    """Resolve the settled evidence, IVA-wallet, notification and provenance facts.
+
+    Calls the generic public result-projection door
+    (``OperationResultProjectionService``, registered against filed-history's
+    own ``FiledHistoryPublicResultV1`` schema and projector) rather than
+    reading any private result type. Only meaningful once ``projection``
+    carries a settled result reference; a caller checks
+    ``FiledHistoryProgressSummaryV1.terminal_condition`` first.
+    """
+    result_schema = projection.definition_contract.result_schema
+    if result_schema is None:
+        raise ValueError("filed-history projection does not declare a public result schema")
+    return await controller.services.result.resolve(
+        OperationResultProjectionRequestV1(
+            operation_id=projection.operation_id,
+            terminal_revision=projection.revision,
+            definition_contract_digest=projection.definition_contract.definition_contract_digest,
+            result_schema=result_schema,
+        )
     )
 
 
@@ -259,4 +281,5 @@ __all__ = [
     "censal_field_review_rows",
     "censal_operation_request_from_selection",
     "filed_history_progress_summary",
+    "resolve_filed_history_result",
 ]

@@ -12,9 +12,22 @@ from .test_revision_span_matches_published_designs import _boundaries_for, _decl
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: Spans that declare design boundaries while their own authority_grade keeps
+#: them off the filing path: modelos 126 and 128 at 'calculation', both modelo
+#: 308 eras at 'applicability'.
+#:
+#: Modelo 200's 2024 revision belongs here on grade -- it declares 'calculation'
+#: too -- and is absent only because a span needs boundaries to be counted, and
+#: that revision currently has no export fragments at all while its tree awaits
+#: regeneration. It returns to this set with them, and it is listed here in
+#: prose so its reappearance reads as the tree coming back rather than as a new
+#: regression.
 _KNOWN_UNSUPPORTED_SPANS = frozenset(
     {
-        ("200", "2024"),
+        ("126", "2019-y-siguientes"),
+        ("128", "2019-y-siguientes"),
+        ("308", "2009-2011-junio"),
+        ("308", "2011-julio-2015"),
     },
 )
 
@@ -45,7 +58,7 @@ def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
 
     error = exc_info.value
     assert str(error) == (
-        "modelo 200 revision 2024 declares 'calculation' authority grade, "
+        "modelo 200 revision 2025-y-siguientes declares 'calculation' authority grade, "
         "which cannot satisfy the requested 'filing' snapshot authority."
     )
     failure = error.registry_failure
@@ -53,7 +66,7 @@ def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
     assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
     assert failure.facts == {
         "modelo": "200",
-        "revision_id": "2024",
+        "revision_id": "2025-y-siguientes",
         "requested_authority_grade": "filing",
         "declared_authority_grade": "calculation",
         "authority_grade_declared": True,

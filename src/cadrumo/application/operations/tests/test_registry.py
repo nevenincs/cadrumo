@@ -1051,3 +1051,75 @@ def test_registry_refuses_one_schema_identity_redeclared_for_different_models() 
             definitions=(first, second),
             public_registrations=(first_registration, second_registration),
         )
+
+
+def _result_projector(result: BaseModel, terminal_receipt: OperationTerminalReceipt) -> BaseModel:
+    del result, terminal_receipt
+    return RefreshTarget(subject_ref="profile:active")
+
+
+def _no_interaction_definition(definition_id: str = "profile.sync.settled") -> OperationDefinition:
+    return OperationDefinition(
+        definition_id=definition_id,
+        request_type=RequestPayload,
+        result_type=ResultPayload,
+        executor_factory=OperationExecutorFactory(
+            request_type=RequestPayload,
+            executor_type=Executor,
+            build=executor_factory,
+        ),
+        phase_codes=("profile.sync.settled.run",),
+        interaction_kinds=frozenset(),
+        capabilities=capabilities(),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def test_registry_requires_a_result_projector_only_when_the_public_schema_diverges() -> None:
+    """Symmetric with REVIEW: identical result schema needs no projector, a distinct one requires one."""
+    item = _no_interaction_definition()
+
+    identical_registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.result", schema_version=1, model_type=ResultPayload
+        ),
+    )
+    OperationRegistry(definitions=(item,), public_registrations=(identical_registration,))
+
+    identical_with_projector = identical_registration.model_copy(update={"result_projector": _result_projector})
+    with pytest.raises(ValidationError, match="must not declare one"):
+        OperationRegistry(definitions=(item,), public_registrations=(identical_with_projector,))
+
+    distinct_registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.public-result", schema_version=1, model_type=RefreshTarget
+        ),
+        result_projector=_result_projector,
+    )
+    OperationRegistry(definitions=(item,), public_registrations=(distinct_registration,))
+
+    distinct_without_projector = distinct_registration.model_copy(update={"result_projector": None})
+    with pytest.raises(ValidationError, match="requires one registered result projector"):
+        OperationRegistry(definitions=(item,), public_registrations=(distinct_without_projector,))
+
+
+def test_registry_refuses_a_result_less_definition_declaring_a_result_projector() -> None:
+    item = _no_interaction_definition().model_copy(update={"result_type": None})
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_projector=_result_projector,
+    )
+    with pytest.raises(ValidationError, match="result-less operation definition cannot declare a result projector"):
+        OperationRegistry(definitions=(item,), public_registrations=(registration,))

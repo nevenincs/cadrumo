@@ -9,14 +9,18 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import (
+    FiledHistoryDiscoverySignal,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    RegisterScopingSignal,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.identity import AeatExpedienteId
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
 from ...domain.deadlines import TaxpayerProfile
 from ..operations.capabilities import (
@@ -27,7 +31,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest
+from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext
 from ..operations.registry import (
     OperationDefinition,
@@ -35,8 +39,9 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
 )
-from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
+from ..storage.sync_runs import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
@@ -56,6 +61,8 @@ from .filed_data_capture import (
     FILED_HISTORY_PHASE_REGISTER_ACCESS,
     FILED_HISTORY_STAGE_REFUSAL_CODE,
     FiledHistoryOnboardingRun,
+    FiledHistoryPairOutcome,
+    FiledPeriodSelectionRow,
     pull_filed_history,
 )
 
@@ -155,20 +162,165 @@ def _settled_effect(run: FiledHistoryOnboardingRun) -> OperationEffect:
     return OperationEffect.NONE
 
 
-def _result_reference(run: FiledHistoryOnboardingRun) -> str | None:
-    """Return only the canonical persisted provenance identity."""
-    return run.sync_run_ref
-
-
 async def _settlement_reference(
     run: FiledHistoryOnboardingRun,
     context: OperationExecutorContext,
 ) -> str:
-    """Retain child provenance or persist a typed result when no child exists."""
-    child_reference = _result_reference(run)
-    if child_reference is not None:
-        return child_reference
+    """Persist the full settled result and return its content reference.
+
+    Always stores through the secure operand port, rather than substituting
+    the encrypted child's own key when one exists: a result reference that
+    sometimes names a sync-run record and sometimes names a stored operand
+    cannot be resolved through one typed public door. Child provenance
+    (``sync_run_ref``) is preserved -- it travels as a field on
+    :class:`FiledHistoryPublicResultV1`, not as the top-level reference.
+    """
     return await context.operands.put(run, written_at=now())
+
+
+class FiledHistoryEvidenceNoticeV1(BaseModel):
+    """Safe public projection of one operator-facing :class:`Notice`.
+
+    A narrower sibling of :class:`~core.json_contract.Notice`, not that type
+    itself: the operations public-schema contract rejects any model whose
+    graph carries a custom serializer (``Notice.context`` declares one), and
+    this operation's notices never carry an executable ``action`` in
+    practice, so this projection omits that field entirely rather than
+    smuggling the incompatible type through under another name.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    severity: NoticeSeverity
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    context: tuple[tuple[str, str], ...] | None = None
+
+
+def _project_evidence_notice(notice: Notice) -> FiledHistoryEvidenceNoticeV1:
+    """Drop the action projection this operation's notices never carry."""
+    return FiledHistoryEvidenceNoticeV1(
+        severity=notice.severity,
+        code=notice.code,
+        message=notice.message,
+        context=None if notice.context is None else tuple(sorted(notice.context.items())),
+    )
+
+
+class FiledHistoryPairOutcomePublicV1(BaseModel):
+    """Safe public projection of one walked modelo/ejercicio pair outcome.
+
+    A distinct sibling of :class:`FiledHistoryPairOutcome`, not that type
+    itself: the private row's shared ``STRICT_FROZEN_CONFIG`` does not set
+    ``validate_default=True``, which the operations public-schema contract
+    requires, and that shared constant is not this Step's to widen.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+    row_count: int = Field(ge=0)
+    captured_count: int = Field(ge=0)
+    refused: bool
+    failure_type: str | None = Field(default=None, min_length=1, max_length=128)
+    failure_message: str | None = Field(default=None, min_length=1, max_length=2048)
+
+
+def _project_pair_outcome(pair: FiledHistoryPairOutcome) -> FiledHistoryPairOutcomePublicV1:
+    return FiledHistoryPairOutcomePublicV1(
+        modelo=pair.modelo,
+        ejercicio=pair.ejercicio,
+        signals=pair.signals,
+        row_count=pair.row_count,
+        captured_count=pair.captured_count,
+        refused=pair.refused,
+        failure_type=pair.failure_type,
+        failure_message=pair.failure_message,
+    )
+
+
+class FiledPeriodSelectionPublicRowV1(BaseModel):
+    """Safe public projection of one period's register-versus-kept row count."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    raw_row_count: int = Field(ge=0)
+    selected_count: int = Field(ge=0)
+    winning_expediente_id: AeatExpedienteId | None = None
+
+
+def _project_selection_row(row: FiledPeriodSelectionRow) -> FiledPeriodSelectionPublicRowV1:
+    return FiledPeriodSelectionPublicRowV1(
+        modelo=row.modelo,
+        ejercicio=row.ejercicio,
+        period=row.period,
+        raw_row_count=row.raw_row_count,
+        selected_count=row.selected_count,
+        winning_expediente_id=row.winning_expediente_id,
+    )
+
+
+class FiledHistoryPublicResultV1(BaseModel):
+    """Safe public projection of one settled :class:`FiledHistoryOnboardingRun`.
+
+    A distinct type from the private result, not a passthrough: every field
+    is independently declared here, so the public contract's shape is owned
+    by this module rather than mirrored from the private one it happens to
+    resemble today.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    dry_run: bool
+    captured_count: int = Field(ge=0)
+    reached_count: int = Field(ge=0)
+    scoping_signal: RegisterScopingSignal
+    carries_a_taxpayer_specific_denominator: bool
+    denominator_note: str
+    iva_wallet_status: str = Field(min_length=1, max_length=64)
+    iva_wallet_divergence: str | None = Field(default=None, min_length=1, max_length=64)
+    iva_wallet_blocked: bool
+    notificaciones_status: str = Field(min_length=1, max_length=64)
+    notificaciones_row_count: int = Field(ge=0)
+    stage_failures: tuple[str, ...]
+    sync_run_ref: SyncRunRecordReference | None
+    evidence_notices: tuple[FiledHistoryEvidenceNoticeV1, ...]
+    recapture_notices: tuple[FiledHistoryEvidenceNoticeV1, ...]
+    pairs: tuple[FiledHistoryPairOutcomePublicV1, ...]
+    selection_rows: tuple[FiledPeriodSelectionPublicRowV1, ...]
+
+
+def _project_filed_history_result(
+    result: BaseModel,
+    terminal_receipt: OperationTerminalReceipt,
+) -> BaseModel:
+    """Project the settled run into its safe public result -- never itself."""
+    del terminal_receipt
+    run = FiledHistoryOnboardingRun.model_validate(result, strict=True)
+    return FiledHistoryPublicResultV1(
+        dry_run=run.dry_run,
+        captured_count=run.captured_count,
+        reached_count=run.reached_count,
+        scoping_signal=run.scoping_signal,
+        carries_a_taxpayer_specific_denominator=run.carries_a_taxpayer_specific_denominator,
+        denominator_note=run.denominator_note,
+        iva_wallet_status=run.iva_wallet_status,
+        iva_wallet_divergence=run.iva_wallet_divergence,
+        iva_wallet_blocked=run.iva_wallet_blocked,
+        notificaciones_status=run.notificaciones_status,
+        notificaciones_row_count=run.notificaciones_row_count,
+        stage_failures=run.stage_failures,
+        sync_run_ref=run.sync_run_ref,
+        evidence_notices=tuple(_project_evidence_notice(notice) for notice in run.evidence_notices),
+        recapture_notices=tuple(_project_evidence_notice(notice) for notice in run.recapture_notices),
+        pairs=tuple(_project_pair_outcome(pair) for pair in run.pairs),
+        selection_rows=tuple(_project_selection_row(row) for row in run.selection_rows),
+    )
 
 
 class FiledHistoryOperationExecutor:
@@ -266,10 +418,25 @@ def build_filed_history_operation_definition(
 def build_filed_history_operation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the filed-history definition to its stable public schemas."""
-    return OperationPublicDefinitionRegistrationV1.compose_request_only(
+    """Bind the filed-history definition to its stable public schemas.
+
+    The public result schema is :class:`FiledHistoryPublicResultV1`, a
+    distinct projection resolved through the registered result projector --
+    never the private :class:`FiledHistoryOnboardingRun` itself.
+    """
+    return OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
-        request_schema_id="live.filed-history.pull.request",
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="live.filed-history.pull.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="live.filed-history.pull.result",
+            schema_version=1,
+            model_type=FiledHistoryPublicResultV1,
+        ),
+        result_projector=_project_filed_history_result,
     )
 
 
@@ -297,10 +464,14 @@ __all__ = [
     "FILED_HISTORY_PHASE_RESULT",
     "FILED_HISTORY_PHASE_SETTLEMENT",
     "FILED_HISTORY_STAGE_REFUSAL_CODE",
+    "FiledHistoryEvidenceNoticeV1",
     "FiledHistoryOperationExecutor",
     "FiledHistoryOperationRequest",
+    "FiledHistoryPairOutcomePublicV1",
+    "FiledHistoryPublicResultV1",
     "FiledHistoryPull",
     "FiledHistorySyncRunRepositoryFactory",
+    "FiledPeriodSelectionPublicRowV1",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
 ]
