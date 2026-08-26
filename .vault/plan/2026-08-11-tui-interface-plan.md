@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:3773e1896c65dd29ca9cceedb3942ecb27bc099bdb477699b25ebf209dde0c14'
+body_hash: 'sha256:81f4d6292d45115c89acb473e9231c228131455c9ae66c0455f4d71a0391213c'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -46,8 +46,8 @@ Create one exact receipt vocabulary and generated action denominator, then recor
 - [x] `W01.P01.S01` - Record the C1 entrance receipt with the accepted companion stem, accepting commit and body hash, canonical Casilla review evidence, and architecture migration-lane commit ancestry; `.vault/reference/2026-08-11-tui-interface-dependency-receipt.md`.
 - [x] `W01.P01.S02` - Implement only the strict current-HEAD Modelo Workspace C1-C5 interface exit receipt schemas and validators with exact predecessor digests, discriminated proofs, distinct compatibility axes, and delegated validation of architecture-owned incoming receipts; `dev/quality/modelo_workspace_receipts.py`.
 - [x] `W01.P01.S03` - Prove every receipt validator rejects reordered or drifting predecessors, non-accepted authorities, unsupported compatibility axes, unclassified actions, and availability before its owning exit is green; `dev/tests/test_modelo_workspace_receipts.py`.
-- [ ] `W01.P01.S36` - Build ModeloWorkspaceActionDenominatorV1 from the canonical action catalogue, operation definitions, complete command graph and TuiCapability values, direct effect sites, routes, action views, dispatch rows, and typed exclusions; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W01.P01.S37` - Generate the current-HEAD action-denominator artifact with every C1 direct query classified, modelo.work.create DEFERRED under work-lifecycle ownership, modelo.work.amend a distinct future C4 mutation, and modelo.work.amend_wizard FLOW_OWNED pending C4 disposition; `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator.md`.
+- [x] `W01.P01.S36` - Build ModeloWorkspaceActionDenominatorV1 from the canonical action catalogue, operation definitions, complete command graph and TuiCapability values, direct effect sites, routes, action views, dispatch rows, and typed exclusions; `dev/quality/modelo_workspace_action_denominator.py`.
+- [x] `W01.P01.S37` - Generate the current-HEAD action-denominator artifact with every C1 direct query classified, modelo.work.create DEFERRED under work-lifecycle ownership, modelo.work.amend a distinct future C4 mutation, and modelo.work.amend_wizard FLOW_OWNED pending C4 disposition; `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator.md`.
 
 ### Phase `W01.P02` - Profile presentation contract
 
