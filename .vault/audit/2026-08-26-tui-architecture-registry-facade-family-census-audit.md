@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:2da4bee82e3385df7510f0ffedebd3b83b186ca74ba530ed3450becbcef418d4'
+body_hash: 'sha256:e1aab146fdc362f1fe52b9684bdeca2be899baf23404dd242c96023a892cede8'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -35,20 +35,14 @@ Those structured RAG records carry query text, corpus/domain/preference, request
 
 A separate current-terminal report observes future S176--S254 work against the working tree. It accepts a removed public candidate or private relocation as a valid pending terminal state and never demands a shim, alias, forwarding module, or re-export. It is intentionally separate from the immutable S175 evidence check.
 
-### registry-facade-independent-review | medium | historical Sol failure and remediation
+### registry-facade-independent-review | resolved | final Sol review passed and S175 is closed
 
 Independent Sol review of frozen `976d47eb75` failed because its census was worktree-derived, did not fully resolve relative imports or `ast.TypeAlias`, dropped nonliteral dynamic imports, used imprecise package attribution, and had boilerplate semantic evidence that could not survive later H/P/D terminal changes. Its subsequent HIGH finding identified that a resolved relative import was only placed in the direct module graph, and that AST locators had been labelled as RAG results.
 
-This remediation binds the regenerated schema-v2 matrix to `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`, records direct relative-import categories, retains the two genuine semantic-search anchors, keeps structured machine-anchored source evidence and terminal-state observation, and adds regressions for source measurements, TypeAlias, fixture ordering, dynamic imports, package attributes, dirty-worktree immunity, future terminal disappearance, direct relative consumers, and RAG-schema precision. The failure and its remediation remain part of the historical review record; the final independent review below determines the current S175 outcome.
+This remediation binds the regenerated schema-v2 matrix to `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`, records direct relative-import categories, retains the two genuine semantic-search anchors, keeps structured machine-anchored source evidence and terminal-state observation, and adds regressions for source measurements, TypeAlias, fixture ordering, dynamic imports, package attributes, dirty-worktree immunity, future terminal disappearance, direct relative consumers, and RAG-schema precision. Independent Sol review passed the remediated isolated commits `9f23e2c83fa15533745a95750b165826fae60878` and `9192817886bbda187d4827d585ec476a45c9494c` with no remaining severity finding.
 
-Integrated-main follow-up found the reported `_schema_verification.py` drift in 28 externally dirty reviewed `semantic_owner` and `alternative_owner_evidence` rows, not in the immutable generator: the source files were byte-identical, fresh UV-managed checks passed from both worktrees under two hash seeds, and the checked matrix matched in the isolated review tree. This remediation nevertheless makes symbol maps, compact locators, definition-site maps, and the definition-site tie breaker total-order deterministic, and proves the semantic-evidence digest in fresh interpreters with different hash seeds and a foreign process CWD. No main file was changed by this diagnosis.
-
-### registry-facade-final-review | medium | independent Sol PASS; S175 closed
-
-The final independent Sol review passed at isolated commits `9f23e2c83fa15533745a95750b165826fae60878` and `9192817886bbda187d4827d585ec476a45c9494c`. The reviewed result was integrated into main through `019fc412c8a4a1808f8990246ff37aa72c2fe7d0`, `fefbc8ff46a91491b4f6ad4b8cccd8b6e8060cbc`, and `426fdf9e68c7bb2302238b6aab03203b830c9655`. The competing work-in-progress was preserved on recoverable branches `preserve/s175-shared-wip-20260826` and `preserve/s175-owner-evidence-wip-20260826`; faux/current-tree Vaultspec-RAG refresh processes were stopped before the final review.
-
-The isolated and integrated reviewed source/matrix bytes were proven identical. The final integrated `uv run --no-sync` immutable check passed, and the current-terminal report passed with 78 open disposition Steps: 77 ordinary open proofs and R01's future defining-owner destination pending its hard-move Step. Focused serial pytest passed all 17 tests in 166.92 seconds. No registry-family disposition was implemented, and no shim or re-export was added or remains. The independent-review condition is therefore satisfied and W03.P20.S175 is closed; the 78 row-specific disposition Steps remain the canonical follow-on work.
+Integrated-main follow-up found the reported `_schema_verification.py` drift in 28 externally dirty reviewed `semantic_owner` and `alternative_owner_evidence` rows, not in the immutable generator: the source files were byte-identical, fresh UV-managed checks passed from both worktrees under two hash seeds, and the checked matrix matched in the isolated review tree. The remediation nevertheless makes symbol maps, compact locators, definition-site maps, and the definition-site tie breaker total-order deterministic, and proves the semantic-evidence digest in fresh interpreters with different hash seeds and a foreign process CWD. The reviewed files were integrated through `019fc412c8a4a1808f8990246ff37aa72c2fe7d0`, `fefbc8ff46a91491b4f6ad4b8cccd8b6e8060cbc`, and `426fdf9e68c7bb2302238b6aab03203b830c9655`; competing output remains recoverable on `preserve/s175-shared-wip-20260826` and `preserve/s175-owner-evidence-wip-20260826`. Final integrated immutable and terminal checks passed, and focused serial pytest passed 17 tests in 166.92 seconds. S175 is closed; the 78 disposition Steps and final package gate remain open.
 
 ## Recommendations
 
-Execute exactly one canonical plan Step for each matrix row now that the independent review has cleared S175. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not use this audit or its matrix as evidence that a hard move, privatization, or deletion has already completed.
+Execute exactly one canonical plan Step for each matrix row. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not use this audit or its matrix as evidence that a hard move, privatization, or deletion has already completed.
