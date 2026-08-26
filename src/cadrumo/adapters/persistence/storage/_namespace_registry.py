@@ -1162,6 +1162,22 @@ MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+MODELO_EDIT_RECEIPT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_edit_receipt",
+    namespace="cadrumo.application.modelo.edit_receipts",
+    owner="cadrumo.application.modelo",
+    # The receipt is the domain proof a guarded compare-and-swap edit
+    # committed: work identity, resulting calculation-revision id, and
+    # bucket-event id. No financial value or raw input ever reaches it, but
+    # the identity triple it does carry is the same evidentiary provenance a
+    # ledger confirmation record carries, so it shares that FULL_CUSTODY_ONLY
+    # posture rather than the lighter structured-custody one.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{receipt_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_calculation_revision_catalogue",
     namespace="cadrumo.domain.modelos.calculation_revisions",
@@ -1226,6 +1242,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
         MODELO_RECONCILIATION_RECORDS_NAMESPACE,
+        MODELO_EDIT_RECEIPT_NAMESPACE,
         SYNC_RUN_RECORDS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,
         LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
