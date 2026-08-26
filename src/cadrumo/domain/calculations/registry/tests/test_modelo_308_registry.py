@@ -221,6 +221,11 @@ def test_modelo_308_selects_each_date_window_including_the_july_2011_boundary() 
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2008, period="AD-HOC", on=date(2008, 12, 31))
 
+    # Filing year 2011 contains two sub-year epochs. Without the filing date,
+    # generic temporal selection must refuse rather than choose one silently.
+    with pytest.raises(AmbiguousRevisionSelectionError):
+        select_revision(modelo, filing_year=2011, period="AD-HOC")
+
     selected = [
         select_revision(modelo, filing_year=year, period="AD-HOC", on=on).id
         for year, on in (
@@ -318,10 +323,17 @@ def test_modelo_308_current_layout_covers_v13_and_offset_mutation_reopens_source
 def test_modelo_308_legal_boundary_and_applicability_snapshot_are_available() -> None:
     modelo, catalogues = _modelo_308()
     july_ref = catalogues.legal["orden-eha-1033-2011:disposicion-final-unica"]
+    amendment_ref = catalogues.legal["orden-eha-1033-2011:articulo-unico"]
 
     assert july_ref.effective_from == date(2011, 7, 1)
     assert july_ref.corpus_ref.endswith("orden-eha-1033-2011.html#disposicion-final-unica")
-    assert "orden-eha-1033-2011:disposicion-final-unica" in modelo.revisions["2011-julio-2015"].orden_aplicabilidad
+    assert amendment_ref.effective_from == date(2011, 7, 1)
+    assert amendment_ref.corpus_ref.endswith("orden-eha-1033-2011.html#articulo-unico")
+    assert modelo.revisions["2011-julio-2015"].orden_aplicabilidad == (
+        "orden-eha-3786-2008:art-2",
+        "orden-eha-1033-2011:articulo-unico",
+        "orden-eha-1033-2011:disposicion-final-unica",
+    )
 
     snapshot = _committed_snapshot("308", 2009, "AD-HOC", RegistryAuthorityGrade.APPLICABILITY)
     assert snapshot.revision.id == "2009-2011-junio"

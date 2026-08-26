@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:55b4ff673545527790fe41e44eb31db62614337a74501804d3130bbb6feea998'
+body_hash: 'sha256:542f0364920e180f97f766485b9beb6b1d29b64b3a351724dad983d9656f8d53'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -25,6 +25,13 @@ The legal catalogue correctly separates `orden-eha-1033-2011:articulo-unico`, wh
 ### Modelo 308 historical epochs | medium | Undated 2011 resolution is correct but not regression-proved
 
 An undated `AD-HOC` request for 2011 currently raises `AmbiguousRevisionSelectionError`, correctly refusing to choose between the January-to-June and July-to-December eras. The focused test proves date-specific selection and an overlapping-date mutation, but never locks down the normal no-date refusal. A later resolver change could silently select an era for the undated request without failing either existing sub-year assertion.
+
+Remediation evidence (2026-08-26): the July 2011 revision's
+`orden_aplicabilidad` now names the approval article, the annex-substitution
+amendment, and the effective-date provision. The focused legal-boundary test
+asserts that exact authority set and both anchored legal records. The focused
+selector test now explicitly refuses an undated 2011 `AD-HOC` request while
+retaining the existing 30 June and 1 July explicit selections.
 
 ## Recommendations
 

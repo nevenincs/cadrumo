@@ -7,7 +7,7 @@ id = "2011-julio-2015"
 valid_from = 2011-07-01
 valid_to = 2015-12-31
 period_selector = { year_from = 2011, year_to = 2015, periods = ["AD-HOC"] }
-orden_aplicabilidad = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"]
+orden_aplicabilidad = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:articulo-unico", "orden-eha-1033-2011:disposicion-final-unica"]
 legal_refs = [
     "ley-37-1992:art-21",
     "rd-1624-1992:art-30-bis",
