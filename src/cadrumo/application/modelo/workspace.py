@@ -33,6 +33,8 @@ from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import CalculationRevision, ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..ledger.preflight import LedgerPreflightIssue
+from ..state_projection import ProjectionModeloReadiness
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloVisibleFilingTarget,
@@ -43,6 +45,7 @@ from .work_addressing import (
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBindingReferenceV1,
+    ModeloWorkspaceBindingRequirementV1,
     ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
@@ -63,12 +66,17 @@ from .workspace_models import (
     ModeloWorkspaceFormulaParameterOperandReferenceV1,
     ModeloWorkspaceFormulaReferenceV1,
     ModeloWorkspaceFormulaRelationOperandReferenceV1,
+    ModeloWorkspaceLedgerIssueV1,
+    ModeloWorkspaceLedgerPeriodSubjectV1,
+    ModeloWorkspaceLedgerTransactionSubjectV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceMaterializationRecordV1,
     ModeloWorkspaceParameterReferenceV1,
+    ModeloWorkspaceProfileRequirementV1,
     ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceReadinessV1,
     ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
@@ -513,6 +521,7 @@ __all__ = [
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
     "graded_snapshot_materialization_facet",
+    "graded_snapshot_readiness",
     "modelo_work_selector_request_for_target",
     "paginate_static_inspection_schema_facet",
     "relation_source_endpoints_for_casilla",
@@ -1225,3 +1234,69 @@ def graded_snapshot_materialization_facet(
         for (binding_id, row_index), items in sorted(grouped.items())
     )
     return scalar_records + repeated_records
+
+
+def _graded_snapshot_ledger_issue(issue: LedgerPreflightIssue) -> ModeloWorkspaceLedgerIssueV1:
+    """Project one canonical ledger-preflight issue, preserving its subject axis.
+
+    S291: ``LedgerPreflightIssue.transaction_id`` is
+    ``TransactionId | Literal["__period__"]`` for the period-level case (an
+    unsupported period with no date span). The Workspace subject is a
+    discriminated union rather than a bare id so that case is represented as
+    itself, never dropped and never pinned to a fabricated transaction.
+    """
+    subject: ModeloWorkspaceLedgerTransactionSubjectV1 | ModeloWorkspaceLedgerPeriodSubjectV1
+    if issue.transaction_id == "__period__":
+        subject = ModeloWorkspaceLedgerPeriodSubjectV1()
+    else:
+        subject = ModeloWorkspaceLedgerTransactionSubjectV1(transaction_id=issue.transaction_id)
+    return ModeloWorkspaceLedgerIssueV1(subject=subject, reason=issue.reason, detail=issue.detail)
+
+
+def graded_snapshot_readiness(readiness: ProjectionModeloReadiness) -> ModeloWorkspaceReadinessV1:
+    """Project the canonical ``ProjectionModeloReadiness`` producer output, unmodified.
+
+    Every field maps 1:1 onto its Workspace equivalent -- this is a pure
+    axis-preserving pass-through over the one existing readiness producer,
+    never a re-derivation of any readiness axis. ``ledger_issues`` is the one
+    axis that needed a shape change rather than a straight copy, since its
+    subject can be a period rather than a transaction (S291).
+    """
+    return ModeloWorkspaceReadinessV1(
+        profile_id=readiness.profile_id,
+        modelo=readiness.modelo,
+        revision_id=readiness.revision_id,
+        filing_year=readiness.filing_year,
+        period=readiness.period,
+        missing=tuple(
+            ModeloWorkspaceProfileRequirementV1(
+                selector=requirement.selector,
+                section_key=requirement.section_key,
+                field_key=requirement.field_key,
+                label=requirement.label,
+                legal_refs=requirement.legal_refs,
+                modelos=requirement.modelos,
+            )
+            for requirement in readiness.missing
+        ),
+        profile_ready=readiness.profile_ready,
+        per_operation_requirements_assessed=readiness.per_operation_requirements_assessed,
+        profile_refusal=readiness.profile_refusal,
+        registry_ready=readiness.registry_ready,
+        registry_refusal=readiness.registry_refusal,
+        binding_ready=readiness.binding_ready,
+        missing_bindings=tuple(
+            ModeloWorkspaceBindingRequirementV1(
+                binding_id=requirement.binding_id,
+                source=requirement.source,
+                input_channel=requirement.input_channel,
+            )
+            for requirement in readiness.missing_bindings
+        ),
+        ledger_preflight_required=readiness.ledger_preflight_required,
+        ledger_ready=readiness.ledger_ready,
+        ledger_period=readiness.ledger_period,
+        ledger_checked_transaction_count=readiness.ledger_checked_transaction_count,
+        ledger_issues=tuple(_graded_snapshot_ledger_issue(issue) for issue in readiness.ledger_issues),
+        ready=readiness.ready,
+    )
