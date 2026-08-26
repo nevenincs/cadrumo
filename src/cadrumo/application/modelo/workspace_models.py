@@ -260,9 +260,32 @@ class ModeloWorkspaceLocaleSummaryV1(_WorkspaceModel):
 class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
     """One localized display string with its canonical resolution coordinates."""
 
+    kind: Literal["localized"] = "localized"
     locale_key: _BoundedCode
     value: _BoundedLocalizedText
     locale: ModeloWorkspaceLocaleSummaryV1
+
+
+class ModeloWorkspaceTechnicalLabelV1(_WorkspaceModel):
+    """A row's canonical registry identifier, presented honestly as never-translated.
+
+    S284: formula, binding, relation, and parameter identities have no
+    locale-catalogue entry anywhere in the tree and are never surfaced to a
+    taxpayer as operator-facing prose -- they are registry names, always
+    shown as themselves in every diagnostic and review surface that already
+    displays them. Wrapping a bare identifier in
+    :class:`ModeloWorkspaceLocalizedTextV1` would misrepresent it as a
+    translation that happened; this type says plainly that none did.
+    """
+
+    kind: Literal["technical"] = "technical"
+    identifier: _BoundedCode
+
+
+type ModeloWorkspaceRecordLabelV1 = Annotated[
+    ModeloWorkspaceLocalizedTextV1 | ModeloWorkspaceTechnicalLabelV1,
+    Field(discriminator="kind"),
+]
 
 
 class ModeloWorkspaceSchemaIdentityV1(_WorkspaceModel):
@@ -470,7 +493,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     reference: ModeloWorkspaceSchemaReferenceV1
     section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_SECTION_DEPTH)]
     data_type: _BoundedCode
-    label: ModeloWorkspaceLocalizedTextV1
+    label: ModeloWorkspaceRecordLabelV1
     classification: ModeloWorkspaceSchemaClassification
     family_disposition: RegistrySchemaFamilyDisposition
     legal_refs: _BoundedRefList[LegalRefId] | None = ()
@@ -1194,6 +1217,7 @@ __all__ = [
     "ModeloWorkspaceProjectionV1",
     "ModeloWorkspaceProvenanceRecordV1",
     "ModeloWorkspaceReadinessV1",
+    "ModeloWorkspaceRecordLabelV1",
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",
@@ -1222,6 +1246,7 @@ __all__ = [
     "ModeloWorkspaceStaticInspectionResultV1",
     "ModeloWorkspaceStaticInspectionScopeV1",
     "ModeloWorkspaceTargetV1",
+    "ModeloWorkspaceTechnicalLabelV1",
     "ModeloWorkspaceTextFactValueV1",
     "ModeloWorkspaceVersionHeader",
     "ModeloWorkspaceVersionRefusalV1",

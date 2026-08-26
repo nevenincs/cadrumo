@@ -260,6 +260,30 @@ reference, fingerprint, and parent reference. The assembler may select and
 redact those records but cannot synthesize an alternate owner, edge, identity,
 or causal graph.
 
+**Amendment (S284): a schema record's `label` is either a real localization
+or an honest technical identifier, never a bare id presented as one.**
+`modelo_localization.py` derives locale keys for modelo, revision, construct,
+and casilla identities only; formula, binding, relation, and parameter
+identities have no key-derivation function and no locale-catalogue entry
+anywhere in the tree. Checked whether any of the four are ever
+operator-facing before ruling: every existing consumer (`work_review.py`'s
+findings, the discovery CLI's missing-binding diagnostics) already displays
+these identifiers as themselves -- registry names, never translated prose --
+so the absence of a locale convention is not an oversight to fill, it is the
+correct reflection of what these identities are.
+
+`ModeloWorkspaceSchemaRecordV1.label` is now the discriminated
+`ModeloWorkspaceRecordLabelV1 = ModeloWorkspaceLocalizedTextV1 |
+ModeloWorkspaceTechnicalLabelV1`. A CASILLA row's label is the existing
+`ModeloWorkspaceLocalizedTextV1` (`kind="localized"`), carrying a real
+resolved locale summary. A FORMULA, BINDING, RELATION, or PARAMETER row's
+label is `ModeloWorkspaceTechnicalLabelV1` (`kind="technical"`), carrying
+only its own `identifier` -- no locale summary, because none was resolved
+and claiming one would be false. This is the same shape of decision as
+S283's `None`-versus-`()`: a field whose type could not previously express
+"this row's name was never translated" now can, and a bare identifier can
+no longer silently masquerade as a localization that happened.
+
 **Amendment (S277): each schema-record join is the registry's own declared
 edge, never a name-matched inference.**
 
