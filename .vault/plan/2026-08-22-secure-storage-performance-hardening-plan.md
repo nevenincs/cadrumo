@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-23'
-body_hash: 'sha256:f4268f7e49564c3b3bccae2d04148de46253d66f4c5856b65639f072f477239d'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -14,6 +12,8 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
+modified: '2026-08-26'
+body_hash: 'sha256:f06f6d1ebf58e138d3df0abb0bd1a4a5153cbd503301d32e45c59af74ac6e99d'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -108,8 +108,8 @@ Recognize commit identity and label provenance once per capsule.
 
 Expose the minimum authenticated discovery projection.
 
-- [ ] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/_profile_repository.py`.
-- [ ] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/_profile_repository.py`.
+- [ ] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/profile_repository.py`.
+- [ ] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/profile_repository.py`.
 - [ ] `W03.P07.S28` - Export summary inventory through the lazy public facade and prove public-name parity; `src/cadrumo/application/user_profile/__init__.py`.
 - [ ] `W03.P07.S29` - Add real-store empty, populated, malformed, and concurrent inventory tests with deterministic ordering and linear reads; `src/cadrumo/application/user_profile/tests/`.
 
@@ -118,7 +118,7 @@ Expose the minimum authenticated discovery projection.
 Join active state once and render without re-entering persistence.
 
 - [ ] `W03.P08.S30` - Route config profile list through public summary inventory and one active-pointer observation; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_common.py`.
+- [ ] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`.
 - [ ] `W03.P08.S32` - Prove empty and populated listing creates no state and reaches no custody, crypto, session, or repair capability; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`.
 
 ## Wave `W04` - Enforce universal responsiveness and robustness
