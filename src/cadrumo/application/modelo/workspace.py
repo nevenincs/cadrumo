@@ -26,10 +26,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage, RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
-from ...domain.calculations.registry.schema import FormulaDefinition
+from ...domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ParameterDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
-from ...domain.calculations.registry.schema_surfaces import RelationDefinition
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import CalculationRevision, CalculationRevisionState, CalculationSourceRef, ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -51,6 +52,7 @@ from .workspace_models import (
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceCasillaReferenceV1,
+    ModeloWorkspaceConstraintReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceEvidenceHorizonV1,
@@ -613,17 +615,23 @@ __all__ = [
     "STATIC_INSPECTION_WORK_REVIEW_FACET",
     "ModeloWorkspaceRevisionAxes",
     "ModeloWorkspaceStaleCursorError",
+    "binding_schema_records",
     "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
     "capture_modelo_workspace_target_captures",
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
+    "formula_schema_records",
+    "graded_snapshot_casilla_schema_records",
     "graded_snapshot_materialization_facet",
     "graded_snapshot_modelo_workspace_capabilities",
     "graded_snapshot_provenance_facet",
     "graded_snapshot_readiness",
+    "graded_snapshot_schema_records",
     "modelo_work_selector_request_for_target",
     "paginate_static_inspection_schema_facet",
+    "parameter_schema_records",
+    "relation_schema_records",
     "relation_source_endpoints_for_casilla",
     "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
@@ -631,15 +639,11 @@ __all__ = [
     "resolve_static_inspection_baseline",
     "resolve_static_inspection_result",
     "resolve_static_inspection_schema_identity",
-    "static_inspection_binding_schema_records",
     "static_inspection_casilla_schema_records",
     "static_inspection_contributors",
     "static_inspection_evidence_horizon",
     "static_inspection_family_dispositions",
-    "static_inspection_formula_schema_records",
     "static_inspection_modelo_workspace_capabilities",
-    "static_inspection_parameter_schema_records",
-    "static_inspection_relation_schema_records",
     "static_inspection_schema_records",
 ]
 
@@ -923,22 +927,112 @@ def static_inspection_casilla_schema_records(
     return tuple(records)
 
 
-def static_inspection_binding_schema_records(
-    inspection: RegistryRevisionInspection,
+def graded_snapshot_casilla_schema_records(
+    casillas: tuple[CasillaDefinition, ...],
+    formulas: tuple[FormulaDefinition, ...],
+    relations: tuple[RelationDefinition, ...],
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
+    """Build one schema record per casilla DEFINITION, sorted for stable pagination.
+
+    S296: a ``RegistrySnapshot`` carries the full ``CasillaDefinition`` --
+    including ``legal_refs`` and ``constraints`` -- that
+    ``RegistryRevisionInspection`` deliberately excludes (S283). This is the
+    richer half the S283 ``None``-vs-``()`` arms were designed to
+    accommodate: ``legal_refs`` is the definition's own real tuple, and
+    ``constraints`` is a single self-referential
+    :class:`ModeloWorkspaceConstraintReferenceV1` when the definition
+    declares a ``CasillaConstraints`` block, empty when it declares none --
+    never ``None``, since this admission's producer DOES carry the data.
+    ``formula_operands``/``relation_endpoints`` reuse the identical S277
+    join functions the static walk uses, over the same registry-declared
+    edges, so the two walks cannot disagree about which formula or relation
+    touches a given casilla.
+    """
+    records: list[ModeloWorkspaceSchemaRecordV1] = []
+    for casilla in sorted(casillas, key=lambda item: item.id):
+        casilla_id = casilla.id
+        key = casilla_occurrence_locale_key(target.modelo, target.law_selected_revision_id, casilla_id, "label")
+        locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
+        records.append(
+            ModeloWorkspaceSchemaRecordV1(
+                reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
+                section_path=("casillas",),
+                data_type="casilla_id",
+                label=ModeloWorkspaceLocalizedTextV1(
+                    locale_key=key,
+                    value=value if value is not None else casilla_id,
+                    locale=locale_summary,
+                ),
+                classification=ModeloWorkspaceSchemaClassification.PROJECTED,
+                family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
+                legal_refs=tuple(casilla.legal_refs),
+                constraints=(
+                    (ModeloWorkspaceConstraintReferenceV1(casilla_id=casilla_id),)
+                    if casilla.constraints is not None
+                    else ()
+                ),
+                formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
+                relation_endpoints=relation_source_endpoints_for_casilla(relations, casilla_id),
+            )
+        )
+    return tuple(records)
+
+
+def graded_snapshot_schema_records(
+    casillas: tuple[CasillaDefinition, ...],
+    binding_ids: frozenset[BindingId],
+    bindings: tuple[DataBindingDefinition, ...],
+    formulas: tuple[FormulaDefinition, ...],
+    relations: tuple[RelationDefinition, ...],
+    parameters: tuple[ParameterDefinition, ...],
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    output_language: OutputLanguage,
+) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
+    """Return the complete GRADED_SNAPSHOT schema_facet across all five reference kinds.
+
+    S296: BINDING, FORMULA, RELATION and PARAMETER rows call the exact same
+    shared functions STATIC_INSPECTION calls (``binding_schema_records``,
+    ``formula_schema_records``, ``relation_schema_records``,
+    ``parameter_schema_records``) -- one implementation, not a parallel copy
+    that could drift. Only CASILLA uses a graded-specific builder, because
+    only CASILLA's underlying data genuinely differs between admissions.
+    """
+    records = (
+        graded_snapshot_casilla_schema_records(casillas, formulas, relations, target, output_language=output_language)
+        + binding_schema_records(binding_ids, bindings, relations)
+        + formula_schema_records(formulas)
+        + relation_schema_records(relations)
+        + parameter_schema_records(parameters, formulas)
+    )
+    return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))
+
+
+def binding_schema_records(
+    binding_ids: frozenset[BindingId],
+    bindings: tuple[DataBindingDefinition, ...],
+    relations: tuple[RelationDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per binding identity, sorted for stable pagination.
 
-    Unlike a casilla, ``DataBindingDefinition`` IS retained whole by the
-    inspection, so ``legal_refs`` is the binding's own real (possibly empty)
-    tuple, never ``None`` -- S283's absence rule applies only where the
-    inspection genuinely carries no such data. Per S284, the label is
-    ``ModeloWorkspaceTechnicalLabelV1``: no locale convention exists for
-    binding identities.
+    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    tuples it read internally -- ``DataBindingDefinition`` and
+    ``RelationDefinition`` are the identical type on both
+    ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
+    is ONE shared implementation both admissions call, never two copies that
+    could drift. Unlike a casilla, ``DataBindingDefinition`` IS retained
+    whole by both admissions, so ``legal_refs`` is the binding's own real
+    (possibly empty) tuple, never ``None`` -- S283's absence rule applies
+    only where an admission genuinely carries no such data. Per S284, the
+    label is ``ModeloWorkspaceTechnicalLabelV1``: no locale convention exists
+    for binding identities.
     """
-    bindings_by_id = {binding.id: binding for binding in inspection.bindings}
-    relations = inspection.relations
+    bindings_by_id = {binding.id: binding for binding in bindings}
     records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for binding_id in sorted(inspection.binding_ids):
+    for binding_id in sorted(binding_ids):
         binding = bindings_by_id.get(binding_id)
         legal_refs = tuple(binding.legal_refs) if binding is not None else None
         records.append(
@@ -957,19 +1051,22 @@ def static_inspection_binding_schema_records(
     return tuple(records)
 
 
-def static_inspection_formula_schema_records(
-    inspection: RegistryRevisionInspection,
+def formula_schema_records(
+    formulas: tuple[FormulaDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per formula, carrying its own full operand set.
 
-    A FORMULA row's ``formula_operands`` is that formula's own complete
-    input list (every operand its expression declares, of every kind) --
-    the mirror of a CASILLA row's ``formula_operands``, which lists only the
-    subset naming that one casilla. Both readings are the same field walked
-    from opposite ends of the identical S277 join.
+    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    ``formulas`` tuple -- ``FormulaDefinition`` is the identical type on both
+    admissions, so this is ONE shared implementation. A FORMULA row's
+    ``formula_operands`` is that formula's own complete input list (every
+    operand its expression declares, of every kind) -- the mirror of a
+    CASILLA row's ``formula_operands``, which lists only the subset naming
+    that one casilla. Both readings are the same field walked from opposite
+    ends of the identical S277 join.
     """
     records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for formula in sorted(inspection.formulas, key=lambda item: item.id):
+    for formula in sorted(formulas, key=lambda item: item.id):
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceFormulaReferenceV1(formula_id=formula.id),
@@ -986,18 +1083,21 @@ def static_inspection_formula_schema_records(
     return tuple(records)
 
 
-def static_inspection_relation_schema_records(
-    inspection: RegistryRevisionInspection,
+def relation_schema_records(
+    relations: tuple[RelationDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per relation, carrying both of its own endpoints.
 
-    A RELATION row states its own two endpoints directly from the
-    registry-declared fields (``source_casilla_id``, ``target_binding``) --
-    it is the one reference kind that is never ambiguous about which side it
-    claims, since it names both.
+    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    ``relations`` tuple -- ``RelationDefinition`` is the identical type on
+    both admissions, so this is ONE shared implementation. A RELATION row
+    states its own two endpoints directly from the registry-declared fields
+    (``source_casilla_id``, ``target_binding``) -- it is the one reference
+    kind that is never ambiguous about which side it claims, since it names
+    both.
     """
     records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for relation in sorted(inspection.relations, key=lambda item: item.id):
+    for relation in sorted(relations, key=lambda item: item.id):
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceRelationReferenceV1(relation_id=relation.id),
@@ -1023,19 +1123,22 @@ def static_inspection_relation_schema_records(
     return tuple(records)
 
 
-def static_inspection_parameter_schema_records(
-    inspection: RegistryRevisionInspection,
+def parameter_schema_records(
+    parameters: tuple[ParameterDefinition, ...],
+    formulas: tuple[FormulaDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per parameter, keyed off every formula that dispatches to it.
 
-    A parameter has no direct outbound edge of its own in the registry
-    schema; the only declared connection is a formula's own
-    ``dispatch_table`` operand naming it, which
+    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    ``parameters``/``formulas`` tuples -- ``ParameterDefinition`` and
+    ``FormulaDefinition`` are the identical type on both admissions, so this
+    is ONE shared implementation. A parameter has no direct outbound edge of
+    its own in the registry schema; the only declared connection is a
+    formula's own ``dispatch_table`` operand naming it, which
     :func:`formula_expression_operand_references` already extracts as
     ``ModeloWorkspaceFormulaParameterOperandReferenceV1`` and
     ``ModeloWorkspaceFormulaDispatchOperandReferenceV1`` entries.
     """
-    formulas = inspection.formulas
     parameter_operands: dict[str, list[ModeloWorkspaceFormulaOperandReferenceV1]] = {}
     for formula in formulas:
         for reference in formula_expression_operand_references(formula.id, formula.expression):
@@ -1046,7 +1149,7 @@ def static_inspection_parameter_schema_records(
                     parameter_operands.setdefault(parameter_id, []).append(reference)
 
     records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for parameter in sorted(inspection.parameters, key=lambda item: item.id):
+    for parameter in sorted(parameters, key=lambda item: item.id):
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceParameterReferenceV1(parameter_id=parameter.id),
@@ -1077,10 +1180,10 @@ def static_inspection_schema_records(
     """
     records = (
         static_inspection_casilla_schema_records(inspection, target, output_language=output_language)
-        + static_inspection_binding_schema_records(inspection)
-        + static_inspection_formula_schema_records(inspection)
-        + static_inspection_relation_schema_records(inspection)
-        + static_inspection_parameter_schema_records(inspection)
+        + binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+        + formula_schema_records(inspection.formulas)
+        + relation_schema_records(inspection.relations)
+        + parameter_schema_records(inspection.parameters, inspection.formulas)
     )
     return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))
 

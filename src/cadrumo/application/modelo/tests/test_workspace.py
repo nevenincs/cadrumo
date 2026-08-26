@@ -21,31 +21,32 @@ from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
     ModeloWorkspaceStaleCursorError,
+    binding_schema_records,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_axes,
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
+    formula_schema_records,
+    graded_snapshot_casilla_schema_records,
     graded_snapshot_materialization_facet,
     graded_snapshot_modelo_workspace_capabilities,
     graded_snapshot_provenance_facet,
     graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
     paginate_static_inspection_schema_facet,
+    parameter_schema_records,
+    relation_schema_records,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
     resolve_static_inspection_baseline,
     resolve_static_inspection_result,
     resolve_static_inspection_schema_identity,
-    static_inspection_binding_schema_records,
     static_inspection_casilla_schema_records,
     static_inspection_contributors,
     static_inspection_evidence_horizon,
     static_inspection_family_dispositions,
-    static_inspection_formula_schema_records,
     static_inspection_modelo_workspace_capabilities,
-    static_inspection_parameter_schema_records,
-    static_inspection_relation_schema_records,
     static_inspection_schema_records,
 )
 from ..workspace_models import (
@@ -875,11 +876,84 @@ def _real_303_inspection():
     return inspection
 
 
+def _real_303_snapshot():
+    from ....core import RegistryAuthorityGrade
+    from ....domain.calculations.registry.schema import RegistrySnapshot
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection(
+        "303", filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+    )
+    snapshot = capture.projection
+    assert isinstance(snapshot, RegistrySnapshot)
+    return snapshot
+
+
+def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_snapshot() -> None:
+    """S296: the shared BINDING/FORMULA/RELATION/PARAMETER builders cannot drift between admissions.
+
+    Both admissions resolve the same modelo/filing_year/period, so
+    ``inspection.bindings``/``.formulas``/``.relations``/``.parameters`` and
+    ``snapshot.revision.bindings``/etc. must be the same registry-declared
+    data -- proving the shared builders produce byte-identical output either
+    way is the guarantee that a graded and a static read cannot disagree
+    about the same revision's edges.
+    """
+    inspection = _real_303_inspection()
+    snapshot = _real_303_snapshot()
+    revision = snapshot.revision
+
+    inspection_bindings = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+    snapshot_binding_ids = frozenset(binding.id for binding in revision.bindings)
+    snapshot_bindings = binding_schema_records(snapshot_binding_ids, revision.bindings, revision.relations)
+    assert inspection_bindings == snapshot_bindings
+    assert len(inspection_bindings) > 0
+
+    inspection_formulas = formula_schema_records(inspection.formulas)
+    snapshot_formulas = formula_schema_records(revision.formulas)
+    assert inspection_formulas == snapshot_formulas
+    assert len(inspection_formulas) > 0
+
+    inspection_relations = relation_schema_records(inspection.relations)
+    snapshot_relations = relation_schema_records(revision.relations)
+    assert inspection_relations == snapshot_relations
+    assert len(inspection_relations) > 0
+
+    inspection_parameters = parameter_schema_records(inspection.parameters, inspection.formulas)
+    snapshot_parameters = parameter_schema_records(revision.parameters, revision.formulas)
+    assert inspection_parameters == snapshot_parameters
+    assert len(inspection_parameters) > 0
+
+
+def test_graded_casilla_schema_records_populate_what_static_correctly_leaves_absent() -> None:
+    """S296: the same casilla's legal_refs/constraints are None for static, real for graded."""
+    from ....core import OutputLanguage
+
+    inspection = _real_303_inspection()
+    snapshot = _real_303_snapshot()
+    revision = snapshot.revision
+
+    target = _minimal_resolved_target(inspection)
+    static_records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
+    graded_records = graded_snapshot_casilla_schema_records(
+        revision.casillas, revision.formulas, revision.relations, target, output_language=OutputLanguage.ES
+    )
+
+    assert len(graded_records) == len(revision.casillas)
+    assert all(record.legal_refs is None for record in static_records)
+    assert all(record.constraints is None for record in static_records)
+    assert all(record.legal_refs is not None for record in graded_records)
+    assert all(record.constraints is not None for record in graded_records)
+
+    # At least one real casilla in this revision declares a non-empty constraints block.
+    assert any(record.constraints for record in graded_records)
+
+
 def test_static_inspection_binding_schema_records_use_the_real_binding_definitions() -> None:
     from ..workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_binding_schema_records(inspection)
+    records = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
 
     assert len(records) == len(inspection.binding_ids)
     binding_ids = []
@@ -904,7 +978,7 @@ def test_static_inspection_formula_schema_records_carry_their_own_full_operand_s
     from ..workspace_models import ModeloWorkspaceFormulaReferenceV1, ModeloWorkspaceTechnicalLabelV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_formula_schema_records(inspection)
+    records = formula_schema_records(inspection.formulas)
 
     assert len(records) == len(inspection.formulas)
     for record in records:
@@ -922,7 +996,7 @@ def test_static_inspection_relation_schema_records_state_both_of_their_own_endpo
     )
 
     inspection = _real_303_inspection()
-    records = static_inspection_relation_schema_records(inspection)
+    records = relation_schema_records(inspection.relations)
 
     assert len(records) == len(inspection.relations)
     record = records[0]
@@ -939,7 +1013,7 @@ def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas
     from ..workspace_models import ModeloWorkspaceParameterReferenceV1
 
     inspection = _real_303_inspection()
-    records = static_inspection_parameter_schema_records(inspection)
+    records = parameter_schema_records(inspection.parameters, inspection.formulas)
 
     assert len(records) == len(inspection.parameters)
     for record in records:
