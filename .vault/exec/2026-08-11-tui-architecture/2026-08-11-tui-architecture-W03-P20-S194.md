@@ -1,0 +1,43 @@
+---
+tags:
+  - '#exec'
+  - '#tui-architecture'
+date: '2026-08-26'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:6ad9fd3f19dde627cfbf56d4288f63c3a29767fed8e6974858e48c42ee723ba8'
+step_id: 'S194'
+related:
+  - "[[2026-08-11-tui-architecture-plan]]"
+---
+
+<!-- Machine-owned: the filename, the frontmatter, the title heading and the
+     Scope list are all filled by `vaultspec-core vault add exec` from the
+     originating Step row; never hand-edit them. Add no frontmatter fields.
+     Wiki-links belong in `related:` only, never in the body. -->
+
+# Prove external_grounding remains public with locally defined symbols and direct consumer imports
+
+## Scope
+
+- `src/cadrumo/domain/calculations/registry/external_grounding.py`
+
+## Changes
+
+- `M` `.vault/plan/2026-08-11-tui-architecture-plan.md`
+- `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_keep_public_family.py -n0` -> `pass`
+
+## Notes
+
+No source change was needed: `src/cadrumo/domain/calculations/registry/external_grounding.py` already advertises only symbols it
+defines, and the registry package binds none of them. What was missing was a
+gate holding it to that adjudication, which the reviewed matrix recorded as
+`keep_public`.
+
+That gate is `test_keep_public_family.py`, one parameterized proof driven from
+the matrix rather than one hand-written test per module, so a later re-export
+or package binding reds this row specifically. It reads the AST rather than
+each object's `__module__`, because a locally defined `Annotated` alias reports
+`typing` and an attribute check would call ten honest modules liars. The gate
+was proved to bite by planting a borrowed export and observing the matching
+parameter case fail.
