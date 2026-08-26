@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
 
+from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.application.filing import (
     FilingExportConformanceReceipt,
     FilingExportConformanceRenderInputs,
@@ -796,7 +797,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
                     source_authority=self._secure_replay_source,
                     custody=self._secure_replay_custody,
                 )
-            except (FilingExportError, OSError, RegistryValidationError, ValueError):
+            except (FilingExportError, OSError, PersistenceError, RegistryValidationError, ValueError):
                 refusals.append(
                     self._refusal(
                         coordinate,

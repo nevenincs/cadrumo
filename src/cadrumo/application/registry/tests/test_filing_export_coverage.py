@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
@@ -29,6 +30,7 @@ from .. import (
     GeneratedExportFileDigest,
     compose_filing_export_coverage,
 )
+from .._filing_export_coverage import _filing_export_proof
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -190,6 +192,7 @@ def test_two_channel_public_receipts_satisfy_without_projecting_a_payload_digest
     limb = compose_filing_export_coverage(
         authority=authority,
         proof_authority=_StrictAssessmentAuthority(FilingExportProofAssessment(coordinate=coordinate, proof=proof)),
+        assessment_at=_ATTESTED_AT + timedelta(hours=1),
     ).limbs[0]
 
     assert limb.outcome == "satisfied"
@@ -198,6 +201,51 @@ def test_two_channel_public_receipts_satisfy_without_projecting_a_payload_digest
     assert "writer=cadrumo.application.filing.export_draft" in projected
     assert "payload-sha256=" not in projected
     assert "00000000-0000-4000-8000-000000000001" in projected
+
+
+def test_generic_proof_boundary_refuses_an_expired_secure_replay_receipt() -> None:
+    """A complete substitute assessment cannot make an expired custody receipt eligible."""
+    coordinate = FilingExportProofCoordinate(
+        modelo=Modelo.M100,
+        revision="2025",
+        layout_ids=("test-layout",),
+    )
+    provenance = _synthetic_public_provenance()
+    proof = FilingExportProof(
+        coordinate=coordinate,
+        conformance=FilingExportConformanceReceipt(
+            coordinate=coordinate,
+            provenance=provenance,
+            authority_id="test.public-conformance",
+            emitted_bytes=100,
+            checked_official_offsets=1,
+        ),
+        secure_replay=FilingExportSecureReplayReceipt(
+            receipt_id=UUID("00000000-0000-4000-8000-000000000002"),
+            coordinate=coordinate,
+            provenance=provenance,
+            source_authority_id="test.secure-source",
+            custody_authority_id="test.encrypted-custody",
+            attested_at=_ATTESTED_AT,
+            valid_until=_ATTESTED_AT + timedelta(days=1),
+        ),
+    )
+
+    resolved_proof, failure = _filing_export_proof(
+        proof_authority=_StrictAssessmentAuthority(FilingExportProofAssessment(coordinate=coordinate, proof=proof)),
+        snapshot=SimpleNamespace(
+            modelo=SimpleNamespace(id=Modelo.M100),
+            revision=SimpleNamespace(id="2025", export_layouts=(SimpleNamespace(id="test-layout"),)),
+        ),
+        assessment_at=_ATTESTED_AT + timedelta(days=1),
+    )
+
+    assert resolved_proof is None
+    assert failure is not None
+    assert failure.reason == "stale_evidence"
+    assert tuple((item.channel, item.reason) for item in failure.filing_channels) == (
+        ("secure_replay", "proof_validation_failed"),
+    )
 
 
 def test_two_channel_refusals_remain_typed_per_channel(registry_authority) -> None:

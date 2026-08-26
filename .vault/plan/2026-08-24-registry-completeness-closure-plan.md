@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-26'
-body_hash: 'sha256:76192e5e0e54f0dde119ba8e65bc139eaa9f90643680985e7c516bf182222f00'
+body_hash: 'sha256:5a30cc2d404924edf856e4833732e05f3e0c360e952bc4cae6af553b57992e85'
 ---
 
 # `registry-completeness-closure` plan
@@ -145,7 +145,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
 - [x] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; `materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
 - [x] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; `it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
-- [x] `W03.P05.S87` - Cut the registry closure CLI over from the disabled single-channel proof port to the canonical two-channel assessment, preserving typed per-channel refusals and public receipt secrecy, and prove an eligible two-receipt assessment can satisfy the filing-export limb without a second writer or payload digest projection; `src/cadrumo/application/registry/; src/cadrumo/application/filing/; dev/registry/conformance/; dev/registry/; src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
+- [ ] `W03.P05.S87` - Cut the registry closure CLI over from the disabled single-channel proof port to the canonical two-channel assessment, preserving typed per-channel refusals and public receipt secrecy, and prove an eligible two-receipt assessment can satisfy the filing-export limb without a second writer or payload digest projection; `src/cadrumo/application/registry/; src/cadrumo/application/filing/; dev/registry/conformance/; dev/registry/; src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
 

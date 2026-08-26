@@ -9,11 +9,12 @@ from enum import Enum
 from inspect import signature
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.persistence.storage.errors import PersistenceError, SecretStoreError
 from cadrumo.application.filing import FilingExportProofChannel, FilingExportProofCoordinate
 from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
@@ -23,14 +24,16 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority,
     load_registry_diagnostic_classification,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from .. import filing_export_proof
 from ..filing_export_proof import (
     CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,
     FilingExportConformanceVector,
     _derive_static_filing_export_conformance_enrollment,
@@ -86,6 +89,78 @@ def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> 
             secure_replay_custody=None,
             secure_replay_receipts=(object(),),
         )
+
+
+@pytest.mark.parametrize(
+    "failure",
+    (
+        PersistenceError("configured encrypted custody is unavailable"),
+        SecretStoreError("configured secret store unavailable"),
+    ),
+)
+def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_refusal(
+    monkeypatch: pytest.MonkeyPatch,
+    failure: PersistenceError,
+) -> None:
+    """A configured custody adapter stays fail-closed without leaking its storage failure."""
+    custody = _RaisingEncryptedCustody(failure)
+    authority = CanonicalTwoChannelFilingExportProofAuthority(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        authority=cast(ValidatedRegistryAuthority, object()),
+        vectors=(),
+        conformance_enrollment=FilingExportConformanceEnrollmentReport(
+            full_registry_validation_error=None,
+            provenance_candidates=(),
+            materializable_vectors=(),
+            residues=(),
+        ),
+        secure_replay_source=_ConfiguredSecureReplaySource(),
+        secure_replay_custody=custody,
+    )
+    monkeypatch.setattr(filing_export_proof, "prove_secure_export_replay", _invoke_configured_custody)
+
+    assessment = authority.assess_for(
+        FilingExportProofCoordinate(modelo="111", revision="2019-y-siguientes", layout_ids=("test-layout",)),
+    )
+
+    assert custody.called
+    assert tuple((item.channel, item.reason) for item in assessment.refusals) == (
+        (FilingExportProofChannel.CONFORMANCE, "evidence_missing"),
+        (FilingExportProofChannel.SECURE_REPLAY, "custody_failed"),
+    )
+    assert str(failure) not in assessment.model_dump_json()
+
+
+class _ConfiguredSecureReplaySource:
+    """Minimal configured source identity for the authority exception seam."""
+
+    authority_id = "test.configured-secure-replay-source"
+
+
+class _RaisingEncryptedCustody:
+    """Configured custody adapter whose governed persistence call fails."""
+
+    authority_id = "test.configured-encrypted-custody"
+
+    def __init__(self, failure: PersistenceError) -> None:
+        self._failure = failure
+        self.called = False
+
+    def persist_secure_replay(self, **_: object) -> NoReturn:
+        self.called = True
+        raise self._failure
+
+
+def _invoke_configured_custody(
+    _request: object,
+    *,
+    custody: _RaisingEncryptedCustody,
+    **_: object,
+) -> NoReturn:
+    """Exercise the configured custody adapter at the canonical proof seam."""
+    custody.persist_secure_replay()
 
 
 def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
