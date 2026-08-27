@@ -25,8 +25,8 @@ from .....adapters.persistence.storage.custody import (
 )
 from .....core.config import Settings
 from .....tests.cli_performance import (
-    DIAGNOSTIC_ONLY_PATHS,
     CliPerformanceObservation,
+    is_non_authoritative_artifact,
     profile_cli_path,
 )
 
@@ -90,7 +90,7 @@ def _publish(root: Path, profile_id: UUID, label: str) -> None:
 
 
 def _storage_state(paths: tuple[str, ...]) -> list[str]:
-    return sorted(path for path in paths if path not in DIAGNOSTIC_ONLY_PATHS)
+    return sorted(path for path in paths if not is_non_authoritative_artifact(path))
 
 
 def _assert_created_no_state(observation: CliPerformanceObservation) -> None:

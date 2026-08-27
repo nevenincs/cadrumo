@@ -71,18 +71,46 @@ third-party prefixes it also names.
 
 
 DIAGNOSTIC_ONLY_PATHS: frozenset[str] = frozenset({"logs", "logs/cadrumo.log"})
-"""Root-relative paths a read-only command may still create.
+"""Root-relative paths the process-wide diagnostic log channel creates.
 
-The process-wide diagnostic log channel is opened by ``get_logger`` at module
-import, before any command is selected, so it is a property of running the
-executable at all rather than of any one leaf -- and it is plaintext
-diagnostics, never profile storage. Every other path under the root is storage
-state.
-
-Named exactly rather than matched by prefix: a prefix rule would also excuse a
-future ``logs``-adjacent storage directory, and the point of the exemption is
-that it covers two known paths and nothing else.
+Opened by ``get_logger`` at module import, before any command is selected, so
+it is a property of running the executable at all rather than of any one leaf
+-- and it is plaintext diagnostics, never profile storage.
 """
+
+
+def is_non_authoritative_artifact(path: str) -> bool:
+    """Whether ``path`` is derived or coordination state rather than authority.
+
+    A command declaring no side effects may still leave three kinds of file
+    behind, and none of them is the profile-storage topology that the
+    side-effect declaration is about:
+
+    * the diagnostic log channel, opened before any command is chosen;
+    * the ``cache`` tree -- registry verdicts and corpus text -- which is
+      derived, rebuildable, and a byproduct of doing the work that was asked
+      for; and
+    * a ``.lock`` file, which is coordination rather than content, and which
+      lock implementations deliberately do not unlink because deleting a lock
+      races the next acquirer.
+
+    Everything else under the root is authoritative state. ``blobs``,
+    ``financial``, ``secrets``, ``submissions``, ``drafts`` and the encrypted
+    database are NOT excused here, which is what keeps the side-effect gate
+    able to fail on the defect it was written for.
+
+    The side-effect taxonomy has no member meaning "writes a derived cache":
+    ``local-state`` is bound to profile-scoped write ROUTING by the spec
+    invariant, so declaring it on a command that writes a process-wide cache
+    would assert something false about where its writes go. That gap is a real
+    one and is recorded in the campaign audit rather than papered over by
+    widening a declaration.
+    """
+    if path in DIAGNOSTIC_ONLY_PATHS:
+        return True
+    if path == "cache" or path.startswith("cache/"):
+        return True
+    return path.endswith(".lock")
 
 
 _ENV_PREFIXES = ("AEAT_", "PYTEST_", "CADRUMO_")
