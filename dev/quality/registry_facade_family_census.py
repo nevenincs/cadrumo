@@ -1055,7 +1055,13 @@ def _normalized_review_prose(value: str) -> str:
     without_identifiers = re.sub(r"\b[A-Za-z]+_[A-Za-z0-9_]*\b", "<ident>", value)
     without_identifiers = re.sub(r"\b[A-Z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*\b", "<ident>", without_identifiers)
     without_identifiers = re.sub(r"\b[A-Z][a-z0-9]+\b", "<ident>", without_identifiers)
-    normalized = re.sub(r"`[^`]+`", "<token>", without_identifiers.lower())
+    # Single-quoted code excerpts differentiate otherwise identical
+    # skeletons exactly as backtick spans do.  Erasing only backticks
+    # measured 78 of 78 rationales distinct while 31 shared one
+    # skeleton, so the distinctness proof rested on one unnormalized
+    # field.
+    without_quotes = re.sub(r"'[^']+'", "<token>", without_identifiers)
+    normalized = re.sub(r"`[^`]+`", "<token>", without_quotes.lower())
     normalized = re.sub(r"\b(?:r\d+|w\d+\.p\d+\.s\d+)\b", "<id>", normalized)
     normalized = re.sub(r"(?:src|dev|docs)/[^\s,;:]+(?::\d+)?", "<path>", normalized)
     normalized = re.sub(r"\b\d+\b", "<n>", normalized)
