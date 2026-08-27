@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b879174c7660c65c7de6db8ebf46dbe5d013ecf8f4f7aedf504d63f16998eb5'
+body_hash: 'sha256:24a5096adfaac1e32bf35b5317a52b3f2be9825bdf9cbcca012825cc121b0d5f'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -216,3 +216,48 @@ corpus (years between 2010 and 2025 not yet opened) were not checked for
 H/I or for any clave added/removed across intervening orden years. No
 binding TOML has been written; no `_InvoiceGrouping` extension has been
 made to `invoice_bindings.py`.
+
+## Open taxonomy finding: M347's binding source declaration does not match what it consumes
+
+Both `0001-counterpart-summary.toml`'s declarante-summary bindings
+(`modelo-347-declarante-numero-personas-entidades`,
+`modelo-347-declarante-importe-total-anual-operaciones`) and the new
+`0002-contraparte-clave.toml` row bindings declare
+`source = "collectible_invoice"`. Neither actually reads only collectible
+observations: `_resolve_m347_declarante_summary_values` computes its
+totals from the full `available` observation set with no `source_kind`
+filter at all (confirmed by reading it directly -- the declared `source`
+field is used only to locate invoice-family bindings and the summary
+record, never to select which observations feed the aggregation), and
+`_observations_for_binding_source` explicitly unions `payable_invoice` and
+`collectible_invoice` for any binding whose selector grouping is
+`contraparte_clave`. Both binding sets consume BOTH invoice directions
+while declaring only one.
+
+This is a real auditability gap, not cosmetic. `aeat-calculation-aggregation`
+makes `source` declared data specifically so ownership is greppable and
+gate-auditable ("a binding `source` kind maps to a resolver's
+`owned_sources`, greppable and gate-auditable"), and `owned_sources` at
+`_source_mesh.py:870` is a live routing contract. Today, grepping for every
+consumer of `payable_invoice` finds NEITHER binding set, even though both
+genuinely read it; the resolver whose declared ownership is
+`collectible_invoice` silently reaches into `payable_invoice` data for
+both.
+
+The pattern predates this Step -- the declarante-summary bindings already
+shipped this way before S294 touched the file -- so this is a pre-existing
+gap in M347's binding family that the row-binding work inherited and
+extended by following the same shape, not a defect introduced here.
+
+**Open question, not a recommendation:** `BindingSourceKind` has
+`payable_invoice`, `collectible_invoice` and `purchase_invoice_evidence`,
+but no member expressing "either direction of a third-party operation" --
+the actual population RD 1065/2007 art. 33.1 defines before any direction
+split, and the real subject of both binding sets above. Whether the fix is
+a new enum member (real work: resolver enrollment, the `owned_sources` set,
+and the registry-versus-enum parity gate, plus a sweep of the existing
+summary bindings) or something else is left open. This is its own scoped
+piece of work, not something to fold into a future export-repoint or
+grouping change -- deliberately not fixed now, since nothing consumes
+either binding set into a live export today, so no filer is affected and
+there is no urgency forcing a rushed taxonomy decision.
