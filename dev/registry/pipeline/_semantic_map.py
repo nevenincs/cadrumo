@@ -30,12 +30,12 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole
 
+from ._record_design_ir import AnchorKey, RecordKey
+
 __all__ = [
-    "AnchorKey",
     "EnvelopePrefixField",
     "EnvelopeTotalAnchor",
     "FilingEnvelopePrefixRole",
-    "RecordKey",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
@@ -58,8 +58,8 @@ def _coerce_ordinal(value: object) -> object:
     Committed semantic-map authoring data predates the parser's widened
     ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
     Coercing here lets that authored data hydrate unchanged while the anchor's
-    stored value matches the parser type exactly, so ``_semantic_anchor_key``
-    and ``_parser_anchor_key`` compare like-for-like without re-keying
+    stored value matches the parser type exactly, so ``semantic_anchor_key``
+    and ``intermediate_anchor_key`` compare like-for-like without re-keying
     committed TOML/JSON.
     """
     if value is None or isinstance(value, str):
@@ -343,8 +343,6 @@ class SemanticMap(_StrictModel):
         return self
 
 
-type AnchorKey = tuple[str, int, str | None, str | None, str]
-type RecordKey = tuple[str, str]
 
 
 def semantic_anchor_key(anchor: SemanticMapAnchor) -> AnchorKey:

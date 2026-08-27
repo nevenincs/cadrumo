@@ -41,6 +41,7 @@ from cadrumo.domain.calculations.registry.static_inspection import GeneratedArti
 
 __all__ = [
     "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",
+    "AnchorKey",
     "RecordDesignIntermediate",
     "RecordDesignIntermediateAuxiliaryEnvelopeHeader",
     "RecordDesignIntermediateAuxiliaryEnvelopeHeaderField",
@@ -51,6 +52,9 @@ __all__ = [
     "RecordDesignIntermediateSource",
     "RecordDesignIntermediateVariableEnvelope",
     "RecordDesignWorkbookFormat",
+    "RecordKey",
+    "intermediate_anchor_key",
+    "intermediate_record_key",
     "load_record_design_intermediate",
 ]
 
@@ -522,3 +526,23 @@ def _intermediate_relative_suffix(
         validation=suffix.validation,
         content=suffix.content,
     )
+
+
+type AnchorKey = tuple[str, int, str | None, str | None, str]
+type RecordKey = tuple[str, str]
+
+
+def intermediate_anchor_key(field: RecordDesignIntermediateField) -> AnchorKey:
+    """Return the identity one parser field is matched by.
+
+    The correspondence this keys is the whole point of the join: a parser field
+    and a semantic anchor are THE SAME slot when these tuples are equal. The
+    semantic side computes its half with semantic_anchor_key, and the two must
+    be spelled identically or a matched pair reads as a missing anchor.
+    """
+    return field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity
+
+
+def intermediate_record_key(sheet: RecordDesignIntermediateSheet) -> RecordKey:
+    """Return the identity one parser sheet is matched by."""
+    return sheet.sheet, sheet.record_identity
