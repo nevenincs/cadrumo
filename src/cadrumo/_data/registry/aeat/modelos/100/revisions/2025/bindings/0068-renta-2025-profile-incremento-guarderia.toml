@@ -1,0 +1,23 @@
+# Modelo 100 casilla 0613: the Art. 81.2 guardería increment, already prorated
+# and capped per child by the application layer.
+#
+# Art. 81.3 third paragraph prorates the increase by the months the apartado 1
+# and 2 requirements hold simultaneously and caps it at the spend incurred "en
+# relación con ese hijo". The registry schema has no per-descendant fold, so the
+# fold happens where the descendant records live and the registry consumes one
+# resolved value, exactly as the mínimo por descendientes aggregate does.
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-incremento-guarderia"
+source = "profile"
+selector = { profile_key = "renta_family.incremento_guarderia_2025" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+    "puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses",
+    "Límite del incremento",
+]

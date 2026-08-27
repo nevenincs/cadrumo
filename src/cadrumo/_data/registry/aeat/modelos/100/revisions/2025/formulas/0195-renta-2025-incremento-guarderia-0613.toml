@@ -1,0 +1,35 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-incremento-guarderia-0613"
+target_casilla_id = "0613"
+# Art. 81.2 LIRPF: incremento deducción maternidad por gastos de guardería.
+#
+# Cap = min(incremento_prorrateado_por_hijo, cotizaciones_SS_madre_2025).
+#
+# The first term is already prorated per child by the application layer. Art.
+# 81.3 third paragraph prorates the increase "proporcionalmente al número de
+# meses en que se cumplan de forma simultánea los requisitos exigidos en el
+# artículo 81.1 y 2" and caps it at the spend incurred "en relación con ese
+# hijo" -- per child, by its own words. Neither the proration nor the per-child
+# bound is expressible here: this schema has no per-descendant fold, and an
+# aggregate min over the household would let one child's unused ceiling absorb
+# another child's excess spend.
+#
+# The cotizaciones term stays a term: it is a separate ceiling of the same
+# article, and folding it into the resolved value would decide that question
+# here by accident.
+expression = { op = "min", args = [
+    { binding = "renta-2025-profile-incremento-guarderia" },
+    { binding = "renta-2025-profile-cotizaciones-ss-madre" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+    "incremento",
+    "guarder",
+    "cotizaciones",
+    "se calculará proporcionalmente al número de meses",
+]

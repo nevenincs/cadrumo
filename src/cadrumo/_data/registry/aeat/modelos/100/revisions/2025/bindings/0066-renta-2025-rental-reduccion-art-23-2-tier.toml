@@ -1,0 +1,11 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-rental-reduccion-art-23-2-tier"
+source = "profile"
+selector = { profile_key = "renta_rental.reduccion_art_23_2_tier_2025" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["90 por 100", "70 por 100", "60 por 100", "50 por 100"]

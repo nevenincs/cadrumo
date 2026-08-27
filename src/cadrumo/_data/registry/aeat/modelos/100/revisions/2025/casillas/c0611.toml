@@ -1,6 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0611"
 number = "0611"
+input_kind = "computed"
+formula = "renta-2025-deduccion-maternidad-0611"
 section = ["resultado_declaracion"]
 semantic_role = "irpf_deduccion_maternidad"
 legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]
