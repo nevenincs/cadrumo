@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:729a4b5c84b5d0aa1aa4e3852d91091377f570b3bda3b6254ab29b5d5f4dc43d'
+body_hash: 'sha256:b344c5ebbcee007dc995f02ce224e9c6e870f7a9560b8d89f8ec4844cd8a9b45'
 related: []
 ---
 
@@ -20,7 +20,9 @@ brief did not have: the duplicated content is 100% invariant rather than 95%,
 its only variance is a set of citations produced by string substitution rather
 than by reading, the registry carries four validity spellings rather than one,
 and the two IVA corpora are not a duplication problem at all but a live
-grounding hole whose own gate forbids closing it by copying.
+grounding hole -- one whose own gate forbids closing it by copying, and which
+measurement shows is not a shortage of evidence but year-neutral content filed
+under year-named filenames.
 
 ## Findings
 
@@ -95,8 +97,40 @@ are already admitted and the tables are missing. Their problem is grounding, and
 the gate's remedy clause is explicit that a format change cannot discharge it.
 
 The catalogue's citations are additionally machine-checked verbatim against the
-bundled corpus per `2026-08-06-iva-catalogue-prose-grounding-adr`, so any window
-spanning years has to hold that check per year rather than once.
+bundled corpus per `2026-08-06-iva-catalogue-prose-grounding-adr`.
+
+### Neither IVA corpus contains any year-dated content, and every citation predates the window
+
+Both files were read field by field. `iva/catalogues/2025.toml` carries 21
+regulations and 38 citations; every citation is a `legal_reference` to a LIVA
+article plus a verbatim `quoted_text` and a `retrieval_date`. The only year
+tokens in the file are 38 occurrences of `2026` (the retrieval dates), 38 of
+`1992` (the LIVA identifier), two of `2002` and one of `2022`. There is no
+occurrence of `2025` anywhere in the body. `iva/place_of_supply/2025.toml`
+carries 22 rules whose only year token is `1992`, 57 times.
+
+For both corpora the filename is the sole thing asserting a filing year. The
+content is entirely year-neutral statutory grounding.
+
+Resolving every reference against the legal catalogue closes the question. All
+38 catalogue citations (26 distinct references) resolve to a legal-catalogue
+entry, and all 26 carry an `effective_from`. All 57 place-of-supply references
+(12 distinct) resolve as well. Every one of those provisions took effect before
+2022 -- the latest is `ley-37-1992:art-13` at 2021-07-01, the earliest 1993-01-01
+-- and none carries an `effective_until`, so none is repealed within the
+supported window.
+
+The four-year shortfall is therefore an artefact of filing year-neutral content
+under year-named filenames, not a gap in evidence. The span these tables are
+grounded over is derivable from the legal catalogue rather than attested by an
+author, which makes a 2022-2026 window on them a checkable fact and not a
+mirror. This is the opposite of the categories case, where the year-dated
+citations are the whole of the variance.
+
+The check that this makes available is a real one: a citation's window must lie
+inside the cited provision's own effective window in the legal catalogue. It is
+mechanical, it needs no year token in the citation, and it fails closed on a
+provision that was repealed or took effect mid-window.
 
 ### The registry carries four validity spellings, not one
 
@@ -235,6 +269,9 @@ both carry loader-naming docstrings and were not checked for symbol binding. The
 - `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml:1-8` - the mirroring header
 - `src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml` - 42 profiles, 83 citations
 - `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml` - `[2022..2026]`
+- `src/cadrumo/_data/registry/aeat/iva/catalogues/2025.toml` - 21 regulations, 38 citations, no `2025` token in the body
+- `src/cadrumo/_data/registry/aeat/iva/place_of_supply/2025.toml` - 22 rules, `1992` the only year token
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml`, `iva-flow.toml`, `iva-rates.toml`, `tax-framework.toml` - the 698-entry legal catalogue the IVA citations resolve into, each entry carrying `effective_from`
 - `src/cadrumo/_data/registry/aeat/iva/rates.toml` - the `effective_from`/`effective_until` precedent and its refresh-boundary defect note
 - `src/cadrumo/_data/registry/aeat/m303_orden_anual/manifest.toml` - per-ejercicio digest-pinned rows
 - `src/cadrumo/_data/registry/aeat/authorization.d/100.toml` - `renta_years` shape

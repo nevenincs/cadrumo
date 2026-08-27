@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d68c2c5e1637bf71de79a027c691c93829d8473e1f313e2400d527e643e78e3d'
+body_hash: 'sha256:f40eda7c4e570b58954d6ea9a68e22a3e6ee4566746a7b4400061925cba46994'
 related:
   - "[[2026-08-27-registry-dated-validity-research]]"
 ---
@@ -27,9 +27,13 @@ mirrored, widening the window launders a copy into a grounding claim, silently
 and permanently. `2026-08-27-registry-dated-validity-research` measures exactly
 that condition in the reference corpus.
 
-The decision must therefore settle the format, the honesty invariant that makes
-the format safe, and the boundary against two adjacent problems it must not
-absorb: the exact-year pinning defect, and the live IVA grounding hole.
+The decision must therefore settle three things: the format, the honesty
+invariant that makes the format safe, and how far the change reaches. On the last
+point one boundary is hard and one is not. The exact-year pinning defect belongs
+to a separate brief and must not be absorbed, because a format commit that
+quietly alters refusal behaviour is unattributable. The live IVA grounding hole
+is inside the reach, because measurement shows it is a filename artefact over
+year-neutral content rather than missing evidence.
 
 ## Considerations
 
@@ -48,6 +52,10 @@ absorb: the exact-year pinning defect, and the live IVA grounding hole.
   (`2026-08-27-registry-dated-validity-research`).
 - The two IVA corpora are four supported years short and their gate is red at
   HEAD; that gate's remedy clause is grounding, and explicitly not copying
+  (`2026-08-27-registry-dated-validity-research`).
+- Neither IVA corpus contains a year-dated field; every citation resolves to a
+  legal-catalogue provision effective before 2022 and repealed in none of the
+  supported years, so their span is derivable rather than attested
   (`2026-08-27-registry-dated-validity-research`).
 - `valid_from` is canonical only inside the modelo revision parameter subsystem,
   whose resolver, gap and overlap machinery does not reach these corpora; three
@@ -86,6 +94,14 @@ the laundering failure this record exists to prevent.
 defect and the grounding defect are independent, and the format decision is what
 prevents the next mirror. Grounding is sequenced after, not before.
 
+**Migrate categories only and defer the two IVA corpora.** Rejected by the
+operator, and the rejection is correct on the evidence. The deferral rested on
+treating the IVA four-year shortfall as missing evidence needing per-year
+grounding. It is not: neither corpus carries a year-dated field, and every cited
+provision resolves to a legal-catalogue entry effective before 2022 and repealed
+in none of the supported years. Deferring would have left two corpora per-year
+and red while the very migration that makes them honest was available.
+
 ## Constraints
 
 No frontier dependency; the mechanism is TOML parsing, a date comparison and a
@@ -122,12 +138,24 @@ form. A year-neutral statutory citation states the span it is asserted over
 explicitly rather than omitting the field, which is what keeps a later undated
 addition from resolving as effective from `date.min`.
 
-**A window is a grounding claim, and a gate enforces it.** A citation whose
-`reference` or `url` names a filing year may not carry a window reaching outside
-that year. This is machine-checkable from the citation's own two fields, it fires
-on exactly the act that produced the mirror, and it makes widening-over-a-mirror
-impossible rather than discouraged. The gate is proven by breaking it: widen one
-year-dated citation's window, observe the red, restore.
+**A window is a grounding claim, and two gates enforce it.** The claim is checked
+on whichever axis the citation supplies, and every citation supplies at least one.
+
+A citation whose `reference` or `url` names a filing year may not carry a window
+reaching outside that year. This is machine-checkable from the citation's own two
+fields, it fires on exactly the act that produced the mirror in the categories
+corpus, and it makes widening-over-a-mirror impossible rather than discouraged.
+
+A citation naming a legal-catalogue provision may not carry a window reaching
+outside that provision's own `effective_from` / `effective_until`. This is the
+axis the IVA corpora supply, since they carry no year-dated text at all, and it
+is the stronger of the two: it derives the permissible span from the legal
+catalogue rather than accepting an author's assertion, and it fails closed on a
+provision that was repealed or took effect mid-window.
+
+Both gates are proven by breaking them: widen one year-dated citation past its
+named year, and widen one provision-cited window past the catalogue's effective
+date; observe each red; restore.
 
 **Covered years are derived; refusal is unchanged.** The loader derives the
 covered year set as the union of the citation windows, and the resolver continues
@@ -155,16 +183,23 @@ commit, since the year is a cache key in a second place.
 fixture and every test land in one explicit-path commit, with the old per-year
 shape and its tests deleted outright rather than bridged.
 
-**Scope, and what this excludes.** Only the categories corpus is migrated. The two
-IVA corpora are deferred: they carry no duplication to remove, and their actual
-defect is four missing supported years whose own gate forbids closing them by
-copying. Migrating their format now would design the shape around one grounded
-year and four unknown ones. The standing goal asks for the idiom registry-wide,
-and this record does not deliver that: `aeat/iva/catalogues` and
-`aeat/iva/place_of_supply` remain per-year and remain red, and they are excluded
-here on grounding-readiness rather than on format grounds. They are migrated once
-their missing years are grounded, and the reference implementation is what they
-migrate onto.
+**Scope.** All three Tier-1 corpora are migrated: `aeat/categories/profiles`,
+`aeat/iva/catalogues` and `aeat/iva/place_of_supply`. Categories lands first as
+the reference implementation, because it is the corpus with genuinely year-dated
+content and therefore exercises both gates; the two IVA corpora follow onto that
+pattern.
+
+**The IVA corpora migrate to a derived multi-year span, not a copied one.** Their
+content is year-neutral throughout, so the collapse drops nothing and retracts
+nothing. Each citation's window is authored from the cited provision's own
+effective window in the legal catalogue and checked against it, which makes a
+2022-2026 span a derived fact. The covered-year set then derives from those
+windows, and `test_year_coverage_matches_supported_filing_years` goes green
+because the grounding genuinely spans the supported window -- not because a table
+was copied into four new filenames. Where a cited provision does not in fact span
+the window, the gate refuses and that citation's true span stands; the corpus
+then covers less than the supported window and the year-coverage gate stays red,
+which is the correct and visible outcome.
 
 **Corpora ruled permanently out.** `authorization.d` is excluded structurally, not
 provisionally: its year sets are discontiguous and a span cannot express them
@@ -206,9 +241,13 @@ Preserving the exact-year refusal exactly is what keeps the blast radius
 attributable. An omissible `valid_to` would have quietly changed pinning
 behaviour inside a format commit, which is the coupling the brief forbids.
 
-Deferring the IVA corpora is the narrower claim, and it is deliberate rather than
-convenient: their gate's remedy clause rules out the only thing a format change
-could do for them.
+Including the IVA corpora follows from the same principle rather than from
+appetite. Their gate's remedy clause rules out closing the red by copying, and
+this migration does not copy: it replaces a filename-borne year claim with a
+window derived from the legal catalogue and checked against it. The corpora most
+at risk of being closed by a future mirror are precisely the ones that most need
+the gate installed, and installing it while migrating them is cheaper and safer
+than leaving them per-year with a standing red and an obvious wrong fix.
 
 ## Consequences
 
@@ -231,11 +270,18 @@ serve, and the loss becomes visible at a refusal boundary. That is the correct
 failure, and it will look like a regression to anyone reading only the coverage
 count.
 
-The two IVA corpora stay red and stay duplicated-in-waiting. Their four-year hole
-is now recorded against a decision rather than living only in a failing test, but
-this record does not close it, and it becomes more pressing when
-`2026-08-14-registry-temporal-coverage-plan` turns an unsupported year into a
-refusal.
+The IVA year-coverage gate is expected to go green, and that is the outcome most
+likely to be misread. It goes green because the covered years derive from
+provision-checked windows over content that was always year-neutral, not because
+coverage was manufactured. Anyone reviewing the diff will see one red test turn
+green beside a corpus that lost two-thirds of its filenames, which is exactly the
+shape a mirror would also produce; the provision-window gate is what distinguishes
+them, and it has to be read as part of the same change.
+
+If any cited provision turns out not to span the supported window, the gate
+refuses the wide window and the corpus covers less than the declared years. The
+red then persists for a real reason. That is a success of the design and will
+look like a failure of the migration.
 
 Collapsing three copied loaders into one shared mechanism removes a duplication
 the brief did not name, and gives the deferred corpora something to migrate onto
