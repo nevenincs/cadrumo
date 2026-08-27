@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e24851f7edb309222cbc3a5a6f0b2eb5f2e0bcc6afdf5ac33dd288abe136120'
+body_hash: 'sha256:c8aac3ded846eb10106fb00d8630abc8a8b0f8a7199041f78777d69fa3ee1b4b'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -529,3 +529,51 @@ author to land. S128's plan checkbox is left unchecked for now given that
 in-flight parallel activity on the same Step -- my own required deliverable
 (`resolve_graded_snapshot_result` plus its two originally-scoped tests) is
 complete, tested, and landed.
+
+## Closure
+
+Closed on an independent code review that returned REVISION REQUIRED on its
+first pass and cleared both blockers on re-verification.
+
+The assembly resolves a GRADED_SNAPSHOT projection over six mandatory
+contributors -- WORK, REGISTRY (graded), LOCALE_CATALOGUE, FIELD_MANIFEST,
+CALCULATION and BOUNDED_REVIEW. The sixth was a finding rather than a given:
+the ADR declares this admission eligible for the real frozen work review, so
+reusing static inspection's fixed unmeasured facet would have reported an
+absence the system does not have.
+
+Verified by the reviewer at HEAD rather than accepted from the executors:
+
+- The grade refusal admits only a `RegistryValidationError` whose typed
+  condition is the grade-sufficiency one, with a bare re-raise otherwise --
+  including the unclassified arm, which several real raise sites take. A broad
+  except here would have reported a genuine registry fault as a grade problem
+  and no happy-path test would have shown it.
+- The calculation refusal fires immediately after the WORK capture and strictly
+  before the registry port is constructed, and is unreachable from the static
+  path.
+- The bounded review is the frozen record the port returns, wrapped unmodified,
+  with no independent join of the casilla schema, values, verification,
+  findings, progress, blockers or origin.
+- The ADR's fixed-point test compares the complete facet against
+  `build_modelo_work_review` over the same coordinate and repositories by whole-
+  object equality.
+
+Two proof defects were found and fixed before closing. The no-write assertion
+checked only the first log record while its prose claimed no write occurred at
+all, so a save at any later index passed green. And the single-capture claim
+named every contributor when two are legitimately captured twice; the docstring
+now says so plainly rather than being softened.
+
+The monkeypatch proving the non-grade re-raise was challenged and upheld. The
+reviewer swept 8,064 real coordinates requesting each revision's own declared
+grade -- so the grade gate passes and the downstream battery actually runs --
+and found exactly one condition ever surfaces. The forced branch is genuinely
+unreachable from bundled data, is the one branch no other test can see, and
+fakes nothing.
+
+Carried forward as `W03.P20.S300` and `W03.P20.S301`: an absent work unit
+refuses with an instruction the operator cannot act on and which contradicts
+the refusal code's documented meaning, untested; and the typed
+materialization-provenance error is asserted only through its base class, so a
+regression to a bare raise would pass.
