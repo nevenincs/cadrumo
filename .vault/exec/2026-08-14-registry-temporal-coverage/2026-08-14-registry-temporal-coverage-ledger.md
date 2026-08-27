@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d99cf905557c9706257db946f7dd21da982d76f17d8c3771b321af0e1f4d70d'
+body_hash: 'sha256:975f0b0989d3fa0bf9bc506bd905a42c144285c9f2d2e1ca8bcbfdae06ec5fbd'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -125,3 +125,12 @@ related:
 - `S53` `T` `src/cadrumo/_data/registry/aeat/legal/is.toml`
 - `S53` `T` `src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`
 - `S53` `T` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+
+- `S37` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S37` `M` `src/cadrumo/application/modelo/profile_binding.py`
+
+- `S10` `M` `dev/quality/import_hygiene_scan.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/_validate_applicability_section.py`
+- `S34` `M` `dev/quality/import_hygiene_scan.py`
+- `S34` `M` `src/cadrumo/domain/calculations/registry/tests/__init__.py`
