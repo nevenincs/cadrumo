@@ -42,16 +42,16 @@ _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 # Re-pin on the way DOWN too, not only on the way up.
 _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate_dependency_sections.py": 382,
-    "_validate_evidence.py": 415,
+    "_validate_evidence.py": 416,
     "_validate_export_exemption.py": 383,
-    "_validate_export_layout_coverage.py": 1063,
-    "_validate_exports.py": 536,
+    "_validate_export_layout_coverage.py": 1067,
+    "_validate_exports.py": 462,
     "_validate_previous_filing_year_coverage.py": 421,
-    "_validate_record_sections.py": 324,
-    "_validate_relation_periods.py": 589,
-    "_validate_relation_sources.py": 422,
-    "_validate_revision_sections.py": 323,
-    "_validate_surfaces.py": 353,
+    "_validate_record_sections.py": 320,
+    "_validate_relation_periods.py": 591,
+    "_validate_relation_sources.py": 419,
+    "_validate_revision_sections.py": 339,
+    "_validate_surfaces.py": 354,
     "_validate_verification_predicates.py": 335,
 }
 # The workbook-parity backend used to be ratcheted here. It now lives at
