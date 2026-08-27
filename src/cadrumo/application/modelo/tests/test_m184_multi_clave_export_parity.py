@@ -25,6 +25,7 @@ from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.modelos import Modelo184MemberRow
 from ...filing._record_renderer import _record_render_rows
+from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -211,3 +212,23 @@ def test_two_supply_paths_naming_the_same_member_clave_subclave_still_union_to_o
     unioned = union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
     assert len(unioned) == 1
+
+
+def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse() -> None:
+    """The widening must not turn a genuine conflict into two "distinct" rows.
+
+    Same nif, same clave, same subclave (both None here, since clave C
+    carries none) -- the full widened identity matches -- but the two
+    supply paths disagree on the declared amount. This must still refuse,
+    naming the divergent field, exactly as it did before the identity
+    widened. If it silently unioned or silently treated the two as distinct,
+    the widening would have quietly turned a real conflict into
+    invisible data loss.
+    """
+    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
+    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("9999"), clave="C")
+
+    with pytest.raises(ModeloAggregationBindingError) as excinfo:
+        union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
+
+    assert "importe" in excinfo.value.context["divergent_fields"]
