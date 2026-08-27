@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cf7fd5492be8b8b7b20ff77142a7fc84e9f4433e878f8fa6e1551bb6d2be49e'
+body_hash: 'sha256:94ef5f0cbc5a889250a2d9e4937857accc261f53d3298c743fad0e0cf0de9f04'
 step_id: 'S145'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -23,6 +23,23 @@ related:
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/operations/tests/test_financial_operand_conformance.py -m unit -n0` -> `pass`
 
 ## Notes
+
+**Mutation proof, run from outside the repo, restored to green.** Injected
+a duplicate `operand_kind` onto a second production definition via a
+runtime monkeypatch of `build_production_operation_registry` - the
+duplicate-operand-kind assertion caught it. Separately injected a second
+definition whose executor source references `apply_modelo_edit` - the
+edit-authority assertion caught it too, but only after a fix: the FIRST
+version of that assertion checked `definition_id == "modelo.edit.apply"`
+uniqueness, which the registry already structurally enforces
+(`OperationRegistry._canonical_definitions`), so it would only ever have
+caught a bug the type system already refuses - functionally vacuous
+against the actual risk (a SECOND, differently-named definition whose
+EXECUTOR also delegates to the same writer). Rewritten to inspect executor
+source via `inspect.getsource`, the same technique
+`test_lifecycle_operation_conformance.py`'s `_KNOWN_AUTHORITIES` census
+already uses, and re-verified: both mutations now bite, both restore
+clean. Neither mutation touched a tracked file.
 
 Discovery before building found nine of the Step's eleven named proofs
 already real and passing elsewhere, discharged rather than duplicated (a

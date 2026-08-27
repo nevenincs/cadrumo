@@ -60,24 +60,27 @@ def test_no_two_production_definitions_declare_the_same_financial_operand_kind()
 def test_exactly_one_production_definition_owns_the_edit_contract_apply_authority() -> None:
     """The Edit Contract's guarded compare-and-swap apply has exactly one owning operation.
 
-    A second operation delegating to `apply_modelo_edit` would mean two
-    definitions race to be the single writer's supervised entry point, which
-    is the exact torn-write shape a single-writer primitive exists to
-    prevent.
+    Checking `definition_id` uniqueness alone would be near-vacuous: the
+    registry already structurally enforces unique ids
+    (`OperationRegistry._canonical_definitions`), so that would only ever
+    catch a bug the type system already refuses. The real risk is a SECOND,
+    differently-named definition whose EXECUTOR also delegates to
+    `apply_modelo_edit` - two supervised entry points racing to be the
+    single writer's caller, the exact torn-write shape a single-writer
+    primitive exists to prevent. Inspecting executor source is the same
+    technique `test_lifecycle_operation_conformance.py`'s
+    `_KNOWN_AUTHORITIES` census already uses for this reason.
     """
+    import inspect
+
     from ....entrypoints._operation_composition import build_production_operation_registry
-    from ...modelo._edit_execution import apply_modelo_edit
-    from ...modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 
     registry = build_production_operation_registry()
     owners = [
         definition.definition_id
         for definition in registry.definitions
-        if definition.definition_id == MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+        if "apply_modelo_edit" in inspect.getsource(definition.executor_factory.executor_type)
     ]
-    assert owners == [MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID], (
-        f"expected exactly one modelo.edit.apply definition in the production registry, found: {owners}"
-    )
-    assert apply_modelo_edit.__module__ == "cadrumo.application.modelo._edit_execution", (
-        "the edit-apply authority moved to a different module without this census being updated"
+    assert owners == ["modelo.edit.apply"], (
+        f"expected exactly one production definition delegating to apply_modelo_edit, found: {owners}"
     )
