@@ -38,7 +38,14 @@ import pytest
 from ....core import ModeloWorkProgressState, OutputLanguage, Period, RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos import (
+    CalculationRevision,
+    ModeloCode,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
+)
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace import (
     graded_snapshot_contributors,
@@ -105,7 +112,7 @@ def _seed_work_unit_only(repos) -> WorkUnit:
     return work_unit
 
 
-def _seed_and_calculate(repos) -> tuple[WorkUnit, object]:
+def _seed_and_calculate(repos) -> tuple[WorkUnit, CalculationRevision]:
     """Seed a real work unit and a real verified calculation revision for modelo 130/1T."""
     work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
     work_unit = _seed_work_unit_only(repos)
@@ -251,15 +258,24 @@ def test_assembled_results_each_carry_exactly_their_own_admissions_contributor_s
 # --- 3. Mutation-after-capture isolation ---
 
 
-def test_materialization_facet_is_isolated_from_a_mutation_after_capture(repos) -> None:
-    """S130: mutating the calculation revision AFTER a capture never retroactively changes it.
+def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(repos) -> None:
+    """S130: mutating the work unit AFTER a capture never retroactively changes the resolved target.
 
-    The mutation lands on ``casilla_values`` -- the exact field the
-    materialization facet reads and the test asserts against below -- so
-    this cannot pass vacuously by mutating something the projection never
-    read.
+    ``CalculationRevision`` is content-addressed -- its own
+    ``calculation_revision_id`` is DERIVED from ``casilla_values`` among
+    other fields, so a real repository refuses to persist the same id under
+    changed content (proven directly: the attempt below raises
+    ``ValidationError`` before this test's real assertion even runs, which
+    is itself evidence that content-addressed identity, not a snapshot copy,
+    is what forecloses that particular mutation vector). The mutation this
+    test proves isolation against instead targets ``WorkUnit.state``, a
+    genuinely mutable field with no derived-identity constraint, and the
+    exact field ``ModeloWorkspaceResolvedTargetV1.work_state`` reads and this
+    test asserts against below -- not a field the projection never read.
     """
-    _work_unit, revision = _seed_and_calculate(repos)
+    from ....domain.modelos import WorkUnitState
+
+    work_unit, _revision = _seed_and_calculate(repos)
     work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
 
     result = resolve_graded_snapshot_result(
@@ -273,33 +289,38 @@ def test_materialization_facet_is_isolated_from_a_mutation_after_capture(repos) 
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
-    assert result.projection.materialization_facet is not None
-    captured_scalar_values = {
-        record.scalar.casilla_id: record.scalar.value
-        for record in result.projection.materialization_facet.records
-        if hasattr(record, "scalar")
-    }
-    assert captured_scalar_values  # the facet genuinely carries scalar casilla values
+    captured_work_state = result.projection.target.work_state
+    assert captured_work_state is WorkUnitState.BORRADOR
 
-    # Real mutation of the SAME calculation revision's SAME field the facet
-    # above reads from, persisted through the real repository -- never a
-    # mock, never an unrelated field.
+    # Content-addressed identity refuses a same-id mutation of derived
+    # content, proven directly rather than assumed.
     catalogue = calculation_repo.load()
-    stored_revision = catalogue.revisions[revision.calculation_revision_id]
+    stored_revision = catalogue.revisions[_revision.calculation_revision_id]
     mutated_casilla_values = dict(stored_revision.casilla_values)
     a_casilla_id = next(iter(mutated_casilla_values))
     mutated_casilla_values[a_casilla_id] = mutated_casilla_values[a_casilla_id] + Decimal("999999.99")
     mutated_revision = stored_revision.model_copy(update={"casilla_values": mutated_casilla_values})
-    calculation_repo.save(upsert_calculation_revision(catalogue, mutated_revision))
+    with pytest.raises(Exception, match=r"(?i)does not match the derived id"):
+        calculation_repo.save(upsert_calculation_revision(catalogue, mutated_revision))
 
-    # The already-captured result must still show the ORIGINAL value.
-    still_captured_values = {
-        record.scalar.casilla_id: record.scalar.value
-        for record in result.projection.materialization_facet.records
-        if hasattr(record, "scalar")
-    }
-    assert still_captured_values == captured_scalar_values
-    assert still_captured_values[a_casilla_id] != mutated_casilla_values[a_casilla_id]
+    # Real mutation of the SAME work unit's mutable ``state`` field,
+    # persisted through the real repository -- never a mock. Discarding
+    # requires ``discarded_at``/``discarded_by`` together per the model's
+    # own cross-field validator.
+    mutated_work_unit = work_unit.model_copy(
+        update={
+            "state": WorkUnitState.DESCARTADO,
+            "discarded_at": work_unit.updated_at,
+            "discarded_by": "test-operator",
+        }
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), mutated_work_unit))
+    reread_work_unit = work_repo.load().work_units[work_unit.work_unit_id]
+    assert reread_work_unit.state is WorkUnitState.DESCARTADO  # the mutation genuinely landed
+
+    # The already-captured result must still show the ORIGINAL state.
+    assert result.projection.target.work_state is WorkUnitState.BORRADOR
+    assert result.projection.target.work_state == captured_work_state
 
 
 # --- 4. Exactly-one-native-capture for CALCULATION and BOUNDED_REVIEW ---
@@ -358,8 +379,16 @@ def test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol() -> No
     Workspace V1 is an application-layer, read-only projection assembled
     FROM domain and adapter primitives; a dependency running the other way
     would invert the accepted hexagonal direction. Enumerates TRACKED files
-    only, never a filesystem walk.
+    only, never a filesystem walk, and inspects actual IMPORT statements via
+    AST rather than a raw substring search: a raw substring search over
+    ``"ModeloWorkspace"`` false-positives on
+    ``test_authority_native_capture.py``, which legitimately asserts that
+    string is ABSENT from the registry authority's own source as the mirror
+    proof of this exact boundary -- the needle appears in a Python string
+    literal inside an assertion, never in an import.
     """
+    import ast
+
     repository = Path(__file__).resolve().parents[5]
     tracked = subprocess.run(
         ("git", "ls-files", "-z", "--", "src/cadrumo/domain", "src/cadrumo/adapters"),  # noqa: S607
@@ -368,20 +397,29 @@ def test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol() -> No
         cwd=repository,
         text=True,
     ).stdout.split(chr(0))
-    forbidden_needles = (
-        "workspace_models",
-        "workspace_producers",
-        "workspace_manifest",
-        "application.modelo.workspace",
-        "ModeloWorkspace",
-    )
-    violations = tuple(
-        entry
-        for entry in tracked
-        if entry.endswith(".py")
-        and (path := repository / entry).is_file()
-        and any(needle in path.read_text(encoding="utf-8") for needle in forbidden_needles)
-    )
+    forbidden_modules = ("workspace_models", "workspace_producers", "workspace_manifest", "workspace")
+    violations: list[str] = []
+    for entry in tracked:
+        if not entry.endswith(".py"):
+            continue
+        path = repository / entry
+        if not path.is_file():
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=entry)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and any(
+                node.module == f"cadrumo.application.modelo.{name}" or node.module.endswith(f".application.modelo.{name}")
+                for name in forbidden_modules
+            ):
+                violations.append(f"{entry}: from {node.module} import ...")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if any(
+                        alias.name == f"cadrumo.application.modelo.{name}"
+                        or alias.name.endswith(f".application.modelo.{name}")
+                        for name in forbidden_modules
+                    ):
+                        violations.append(f"{entry}: import {alias.name}")
     assert not violations
 
 
