@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f38bf7736543026a6a1b508ffc1d803e732af3f8ab4054474e08710f6ac57b6c'
+body_hash: 'sha256:c6e7db708c1bc50a43fe9ba597f231597b1c4bbc680f2071632b8e8165e4e39d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -85,3 +85,58 @@ proving nothing.
 Whichever is chosen, the deciding fact is that the census's remaining drift
 is real. Before tonight it could not be read at all, because 44 per cent of
 its entries were phantom paths from an interrupted benchmark run.
+
+## Outcome: the criterion was withdrawn, and the residual drift is serialized
+
+The reviewer withdrew the two-successive-HEADs bar and accepted "green at the
+reviewed HEAD, and the safe refresh preserves every adjudication". Their
+reasoning is sharper than the argument recorded above and supersedes it: the
+bar did not merely become unmeetable, it **measured the wrong property once the
+noise was removed**. When it was set, the artefact was 44 per cent gitignored
+mirror and 98.6 per cent transitive closure, so a red carried no information
+and two green HEADs was a proxy for "this gate is not pure noise". Both
+contaminants are gone. A census of live consumers *should* go stale when
+consumers change; one that did not would be measuring something other than the
+tree.
+
+They also amended their own accepted criterion after it failed in practice: the
+safe refresh must be ABLE TO RUN against the current tree, not merely preserve
+adjudications when it does. R73 proved the escape hatch could be jammed by the
+very drift it exists to absorb.
+
+### Maintenance note: a deleted dependency fails once per layer
+
+Recorded at the reviewer's direction as this pass's own finding, because it is
+a stronger claim than the one that retired the bar.
+
+When a peer retires a module a censused row depends on, the census does not
+produce one refusal to repair. It produces a chain, and each link is invisible
+until its predecessor clears. Observed in order on R73, whose anchored module
+was deleted hours after the baseline:
+
+1. `_evidence_text` raised during GENERATION, so `generated_rows()` could not
+   complete and `--check` never reached its comparison. `--refresh-reviewed`
+   died the same way -- the verb that exists to absorb drift was taken down by
+   the drift.
+2. With that made instructive, the anchor invariant refused: the re-anchored
+   symbol was not among `facade_exported_symbols`.
+3. With the absence branch added, the query invariant refused behind it: the
+   new symbol did not appear in the historic `rag_query`.
+
+Each layer had independently assumed the dependency existed. None of the three
+was visible from the others.
+
+The operational form: after any peer deletion touching a censused module,
+expect a chain and drive `--check` to green iteratively. Treating the first
+refusal as the whole repair will read as a fix and leave the row broken.
+
+The structural form, worth more than the procedure: `facade_exported_symbols`
+conflates symbols a facade REPUBLISHED with symbols the family OWNS. R73's two
+were imported from a sibling at the c941 baseline and never defined by the
+family at all, so its export list has described a different family than its
+surviving owner since the census's first generation. This is the third field
+in which that same re-export/definition conflation surfaced -- after
+`current_symbol_locators` and `owner_definition_locators`, both fixed at the
+locator layer. This one lives in the frozen historic denominator and cannot be
+fixed without rewriting history, so it is recorded as a known property rather
+than repaired. Two rows are affected and both are correct under the ruling.
