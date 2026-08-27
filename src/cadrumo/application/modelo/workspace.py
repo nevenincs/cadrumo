@@ -641,6 +641,7 @@ __all__ = [
     "relation_schema_records",
     "relation_source_endpoints_for_casilla",
     "relation_target_endpoints_for_binding",
+    "resolve_graded_snapshot_baseline",
     "resolve_graded_snapshot_schema_identity",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
@@ -922,6 +923,79 @@ def resolve_static_inspection_baseline(
     """
     stamps = (work_stamp, registry_stamp, locale_stamp, field_manifest_stamp)
     epochs = (work_epoch, registry_epoch, locale_epoch, field_manifest_epoch)
+    contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
+    contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
+    token = content_hash_hex(
+        {
+            "contributor_stamp_digest": contributor_stamp_digest,
+            "contributor_epoch_digest": contributor_epoch_digest,
+            "target": target.model_dump(mode="json"),
+            "selected_revision_id": target.law_selected_revision_id,
+            "schema_identity": schema_identity.model_dump(mode="json"),
+            "locale_catalogue_digest": locale.catalogue_digest,
+        }
+    )
+    return ModeloWorkspaceBaselineV1(
+        token=token,
+        contributor_stamp_digest=contributor_stamp_digest,
+        contributor_epoch_digest=contributor_epoch_digest,
+        target=target,
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        locale_catalogue_digest=locale.catalogue_digest,
+    )
+
+
+def resolve_graded_snapshot_baseline(
+    target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    schema_identity: ModeloWorkspaceSchemaIdentityV1,
+    locale: ModeloWorkspaceLocaleSummaryV1,
+    work_stamp: ModeloWorkspaceProducerStampV1,
+    work_epoch: ModeloWorkspaceEpochV1,
+    registry_stamp: ModeloWorkspaceProducerStampV1,
+    registry_epoch: ModeloWorkspaceEpochV1,
+    locale_stamp: ModeloWorkspaceProducerStampV1,
+    locale_epoch: ModeloWorkspaceEpochV1,
+    field_manifest_stamp: ModeloWorkspaceProducerStampV1,
+    field_manifest_epoch: ModeloWorkspaceEpochV1,
+    calculation_stamp: ModeloWorkspaceProducerStampV1,
+    calculation_epoch: ModeloWorkspaceEpochV1,
+    bounded_review_stamp: ModeloWorkspaceProducerStampV1,
+    bounded_review_epoch: ModeloWorkspaceEpochV1,
+) -> ModeloWorkspaceBaselineV1:
+    """Assemble the GRADED_SNAPSHOT baseline from the six contributors' own stamps and epochs.
+
+    Mirrors ``resolve_static_inspection_baseline`` exactly, over the wider
+    GRADED_SNAPSHOT contributor set (the four static ones plus CALCULATION
+    and BOUNDED_REVIEW). It is a sibling function, not a parameterization of
+    the static one: that function's arity is fixed at exactly four named
+    pairs and cannot accept a fifth or sixth without a signature change
+    (confirmed in the S128 sizing reference). Every stamp/epoch pair passed
+    in MUST come from the exact same captures that produced ``target``,
+    ``schema_identity`` and ``locale`` -- this function performs no capture
+    of its own, only digesting what the caller already atomically observed.
+    A mid-assembly change to any one contributor changes its stamp or epoch,
+    which changes ``contributor_stamp_digest``/``contributor_epoch_digest``,
+    which changes the pinned baseline -- an inconsistent mix can never
+    silently produce the same baseline as a consistent one.
+    """
+    stamps = (
+        work_stamp,
+        registry_stamp,
+        locale_stamp,
+        field_manifest_stamp,
+        calculation_stamp,
+        bounded_review_stamp,
+    )
+    epochs = (
+        work_epoch,
+        registry_epoch,
+        locale_epoch,
+        field_manifest_epoch,
+        calculation_epoch,
+        bounded_review_epoch,
+    )
     contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
     contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
     token = content_hash_hex(
