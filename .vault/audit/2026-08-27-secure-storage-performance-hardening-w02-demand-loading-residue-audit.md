@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9efa014843415ff0fa40ffb21fb533fc19ab237dec3678cfc51a580e165c19dc'
+body_hash: 'sha256:6b6584e563afa3272a185db7df64fd4539ce5d214f93a0fa5dab1a661399487d'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -88,6 +88,37 @@ enough to call on every emitted line", then called
 transaction journal, label-head verify-or-publish -- on every emitted line of
 every command. It now reads the summary projection, and the docstring states
 what it does.
+
+### F7 - the systemic cause: hybrid application package roots
+
+Every capability-family leak this campaign traced ends the same way, and the
+shape is worth naming once rather than rediscovering per node.
+
+A CommandSpec parameter ANNOTATION is a `DeferredTarget`. Resolving a command
+must resolve its annotations to build the Typer signature, so resolution
+imports the module that owns each annotated type. Those modules are frequently
+package roots -- `domain.modelos`, `application.registry`, `application.filing`
+-- and those roots import heavy siblings and, in two cases, ADAPTERS at module
+scope. So resolving one command pays for subsystems it never names.
+
+GROUP figures hide which node is responsible. Per-node probing narrowed it
+sharply, and the residue is far smaller than the group numbers suggest:
+
+- `registry` group: 4 of 17 nodes are heavy, all `app/registry/manuals/*`.
+- `encrypted-facts,network` group: 1 of 21, `app/ledger/import`.
+
+A union proves a set CONTAINS a violation, never which member. Two separate
+times this session a single-node probe returned clean and looked like a blind
+gate when the group was genuinely dirty.
+
+`domain.modelos` was fixable in one file because it is a PURE re-export facade
+(113 names, no other top-level code): converting it to the PEP 562 lazy map
+took it from 277 modules to 3. `application.registry` and `application.filing`
+are NOT: they are hybrids that define real code (15 and 35 top-level
+definitions) AND re-export. A lazy map cannot be dropped over them; each needs
+its definitions split from its re-exports so the root can become inert. That is
+a structural campaign, not a patch, and it is the honest reason the remaining
+capability residue stays open.
 
 ## Carry-forward
 
