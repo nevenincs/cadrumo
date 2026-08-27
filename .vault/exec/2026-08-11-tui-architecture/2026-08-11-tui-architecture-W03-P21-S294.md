@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9f87a45365f6363222e127ad61370fc3219e01843b40da18a3e3d1e4d62d7074'
+body_hash: 'sha256:a335177a0e74114d4cd9063c6d8f8bb7605085cd2f3f1ec9314151470ca1c944'
 step_id: 'S294'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -155,3 +155,50 @@ stripped hyphens and collided distinct articles (e.g. `#a3-3` and `#a33`).
 Found while grounding arts. 33/34; reported rather than worked around;
 fixed in `core/corpus_text.py` by trying a verbatim anchor match before the
 canonical one.
+
+## Closure
+
+Closed with the Step's named scope built and proven for BOTH revisions:
+the contraparte row bindings, the declarado export record repointed onto them,
+the per-row resolver, and a real multi-counterparty export parity test. Twelve
+parity tests -- six cases across two revisions -- run against each revision's
+own committed bindings through the production entry points.
+
+The Step was blocked on a classification nobody had grounded, not on code. The
+claves were tied to their governing articles from the bundled corpus: A and B
+to RD 1065/2007 arts. 31.1 and 33.1, C to the separate 300,51 threshold at
+arts. 31.3 and 33.4, D and E to the filer's own type at art. 33.3, F and G to
+RD 1619/2012's disposicion adicional cuarta -- a different regulation entirely.
+Claves H and I were confirmed absent from every bundled diseño spanning 2008 to
+2025, and the row model's closed set narrowed to A-G accordingly: an over-wide
+set does not merely permit, it lets a row carry a clave AEAT will reject.
+
+Clave E carries different language per era -- a threshold in the 2011 diseño,
+"cualquiera que sea su importe" in the 2025 one. Both are correct for their own
+orden year, which is why each revision has its own bindings rather than a copy.
+
+Three defects were found and fixed en route, each by writing a test rather than
+reasoning about the code. The shared invoice core grouped only on the
+intracommunity clave, so every M347 observation was silently filtered out and
+the first run produced an empty result set with no error. The cohort key
+separated by source, so a purchase and a sale for one counterparty would each
+have started their own row-index sequence and collided at row 1 -- the diseño
+settled that they share one stream, since clave is a field within a declarado
+record rather than a record-type discriminator. And the bindings declared one
+invoice direction while consuming both, which a new source kind grounded in
+art. 33.1's undifferentiated "operaciones con terceras personas" made honest;
+that fix dissolved the cohort special case entirely rather than adding to it.
+
+The quarterly split was the last blocker and the one the money-bearing
+condition was written to catch: importe-Q1 through Q4 is unconditional in the
+diseño, was unsourced, and repointing without it would have emitted a
+structurally valid record silently omitting every operation's quarterly
+breakdown. Quarters accumulate in the same pass that sums the annual, so the
+annual equals their sum by construction, and membership resolves through
+Period.contains() rather than re-derived month arithmetic.
+
+Carried forward as tracked Steps rather than absorbed here: S302, the
+per-counterparty identity fields still rendering as shared scalars on a
+repeating record; and S303, claves C through G, each of which needs an
+observable fact the invoice direction cannot supply. The quarterly transmisiones
+representation gap remains recorded in its own audit.
