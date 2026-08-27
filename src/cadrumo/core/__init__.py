@@ -396,6 +396,7 @@ if TYPE_CHECKING:
         BindingSourceKind,
         CalculationSourceLineageRole,
         IntracomOperationType,
+        ThirdPartyDeclarationRole,
         TravelAgencyMediationType,
     )
     from .compatibility_lifecycle import (
@@ -415,7 +416,7 @@ if TYPE_CHECKING:
         normalise_corpus_text,
         resolve_anchored_extracted_unit,
     )
-    from .external_constants import M347_THRESHOLD_EUR, OutputLanguage
+    from .external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR, OutputLanguage
     from .hashing import content_hash_hex, sha256_hex
     from .locks import exclusive_file_lock
     from .manual_corpus_sidecar import (
@@ -501,6 +502,7 @@ __all__: list[str] = [
     "LOCAL_TRANSPORT_LABEL",
     "LOCKFILE_UNLINK_RETRY_SECONDS",
     "M210_TIPO_RENTA_CODE_PROJECTION",
+    "M347_CLAVE_C_THRESHOLD_EUR",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION",
@@ -736,6 +738,7 @@ __all__: list[str] = [
     "StorageScope",
     "SyncSurface",
     "TaxDomain",
+    "ThirdPartyDeclarationRole",
     "TipoActividad",
     "TipoOperacionVinculada",
     "TipoRentaGroundingTier",
@@ -969,6 +972,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "M390RegimenSimplificadoModuleValue": "._filing_projection_ref",
     "M390RepresentativeField": "._filing_projection_ref",
     "M390RepresentativeKind": "._filing_projection_ref",
+    "M347_CLAVE_C_THRESHOLD_EUR": ".external_constants",
     "M347_THRESHOLD_EUR": ".external_constants",
     "OutputLanguage": ".external_constants",
     "OutputFormat": ".output_rendering",
@@ -1103,6 +1107,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "StorageScope": "._storage_taxonomy",
     "SyncSurface": "._sync_surface",
     "TaxDomain": "._tax_domain",
+    "ThirdPartyDeclarationRole": ".aggregation",
     "TipoActividad": "._tipos_actividad",
     "TipoOperacionVinculada": "._modelo_232_codigos",
     "TipoRentaGroundingTier": "._irnr",

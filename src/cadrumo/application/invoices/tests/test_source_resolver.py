@@ -31,6 +31,7 @@ from .._source_resolver import (
     _OWNED_SOURCES,
     M349_CLAVE_INFERRED_REASON,
     _intracommunity_clave,
+    _m347_filer_declaration_roles,
     _m347_invoice_observation,
 )
 
@@ -1251,6 +1252,19 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
     assert air_observation.operation_clave == "G"
     assert non_air_observation is not None
     assert non_air_observation.operation_clave == "A"
+
+
+def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent_bucket(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """No `UserProfileRecord` was ever seeded for this bucket -- a real absent profile.
+
+    Exercises the real repository's `ProfileNotFoundError` path, not a mock:
+    the loader must fail closed to an empty role set rather than raising, so
+    an M347 filer whose profile is otherwise incomplete or unset still
+    reaches claves A, B, F and G, and simply carries no C/D/E eligibility.
+    """
+    assert _m347_filer_declaration_roles(secure_profile.bucket_id) == frozenset()
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])

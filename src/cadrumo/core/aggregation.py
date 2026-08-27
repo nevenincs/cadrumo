@@ -918,6 +918,66 @@ class TravelAgencyMediationType(StrEnum):
     AIR_PASSENGER_TRANSPORT = "air_passenger_transport"
 
 
+class ThirdPartyDeclarationRole(StrEnum):
+    """The filer's Modelo 347 declaring role -- orthogonal to :class:`EntityType`.
+
+    :class:`EntityType` selects the TAX a taxpayer is assessed under (IRPF,
+    Impuesto sobre Sociedades, or régimen de atribución de rentas), and that
+    selection in turn drives which modelos, calendar and rate schedule apply.
+    This axis answers a different question entirely: whether the filer's own
+    institutional ROLE additionally requires declaring Modelo 347 claves C, D
+    or E, a fact that coexists with any :class:`EntityType` value unchanged. A
+    colegio profesional that also collects fees on behalf of its colegiados
+    is a ``LEGAL_ENTITY`` for tax purposes, full stop; it is SEPARATELY a
+    ``THIRD_PARTY_FEE_COLLECTOR`` for Modelo 347 clave C purposes, and neither
+    fact touches the other.
+
+    Every member is named for the population it identifies rather than for
+    the article that names it, because article numbers renumber and a
+    renumbering should be a citation update, not a member rename. Legal
+    grounding lives here and in each binding's own ``legal_refs``, never in
+    the member's own name:
+
+    Attributes:
+        THIRD_PARTY_FEE_COLLECTOR: RD 1065/2007 art. 31.3 -- a sociedad,
+            asociación, colegio profesional or other entity that collects
+            professional fees or intellectual/industrial/authorship-rights
+            income on behalf of its socios, asociados or colegiados. Feeds
+            clave C alone, at its own 300,51 EUR threshold (arts. 32.c,
+            33.4) rather than the general 3.005,06 EUR floor.
+        PROPIEDAD_HORIZONTAL_ENTITY: RD 1065/2007 art. 31.1's last
+            paragraph -- a comunidad de propietarios under Ley 49/1960 sobre
+            propiedad horizontal. Feeds clave D.
+        SOCIAL_CHARACTER_ENTITY: RD 1065/2007 art. 31.1's last paragraph,
+            cross-referencing Ley 37/1992 (LIVA) art. 20.tres -- a private
+            entity or establishment of carácter social. Feeds clave D.
+        STATUTORY_INFORMATION_DUTY_ENTITY: RD 1065/2007 art. 31.2,
+            cross-referencing Ley 58/2003 (LGT) art. 94.1 and 94.2 -- the
+            authorities, public bodies, cámaras y corporaciones, colegios y
+            asociaciones profesionales, mutualidades de previsión social and
+            other entities exercising public functions subject to the
+            general duty to supply tax information, together with the
+            partidos políticos, sindicatos and asociaciones empresariales
+            LGT art. 94.2 subjects to the same duty. Feeds clave D.
+        PUBLIC_ADMINISTRATION_ENTITY: RD 1065/2007 art. 31.2's second
+            paragraph -- "las entidades integradas en las distintas
+            Administraciones públicas", a narrower population properly
+            contained within ``STATUTORY_INFORMATION_DUTY_ENTITY`` but named
+            as its own member because clave E is EXCLUSIVE to it while
+            clave D is not: modelling the subset as a distinct member lets
+            clave D check the broader set and clave E check this member
+            alone, without re-deriving the subset relationship at each call
+            site. Feeds clave D (as part of the broader population) and,
+            exclusively, clave E.
+    """
+
+    THIRD_PARTY_FEE_COLLECTOR = "third_party_fee_collector"
+    PROPIEDAD_HORIZONTAL_ENTITY = "propiedad_horizontal_entity"
+    SOCIAL_CHARACTER_ENTITY = "social_character_entity"
+    STATUTORY_INFORMATION_DUTY_ENTITY = "statutory_information_duty_entity"
+    PUBLIC_ADMINISTRATION_ENTITY = "public_administration_entity"
+
+
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 

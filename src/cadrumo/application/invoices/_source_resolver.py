@@ -37,6 +37,7 @@ from ...core import (
     IntracomOperationType,
     Modelo,
     Period,
+    ThirdPartyDeclarationRole,
     TravelAgencyMediationType,
 )
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -603,6 +604,27 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
+def _m347_filer_declaration_roles(bucket_id: object) -> frozenset[ThirdPartyDeclarationRole]:
+    """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
+
+    Mirrors the established bucket-scoped profile-fact loading pattern (see
+    e.g. ``m111_no_retenciones_periods_for_bucket``): a missing or unset
+    profile fails closed to an empty role set rather than raising, because
+    the overwhelming majority of filers legitimately carry none. An empty
+    set means claves C, D and E simply do not classify for this filer --
+    never that A, B, F or G are affected, since those read no profile fact.
+    """
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import projection_for_taxpayer
+
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return frozenset()
+    return projection_for_taxpayer(record).declaration_roles
+
+
 def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
     """Build the M347 observation for one invoice, or ``None`` if excluded.
 
@@ -620,6 +642,13 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
     classifies as intracommunity is excluded here and routes to M349 instead
     -- the same classification M349's own branch of this resolver uses, never
     a bare country comparison.
+
+    Claves C, D and E each additionally need the filer's own
+    :class:`ThirdPartyDeclarationRole` membership, loaded by
+    :func:`_m347_filer_declaration_roles` from ``context.bucket_id`` --
+    wired in by claves C/D/E's own Steps (S308, S309), which pass ``context``
+    through to this function at that point. Adding the parameter here ahead
+    of that first real caller would be an unused argument no clave reads yet.
     """
     if _intracommunity_clave(invoice) is not None:
         return None
