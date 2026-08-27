@@ -35,11 +35,12 @@ exempted.
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+
+from cadrumo.core import read_toml
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"
@@ -166,7 +167,7 @@ def load_ledger(path: Path | None = None) -> dict[str, BranchAdjudication]:
     target = path if path is not None else LEDGER_PATH
     if not target.exists():
         return {}
-    raw = tomllib.loads(target.read_text(encoding="utf-8"))
+    raw = read_toml(target, error_factory=BranchLedgerError)
     rows: dict[str, BranchAdjudication] = {}
     for entry in raw.get("branch", []):
         key = entry.get("key")
