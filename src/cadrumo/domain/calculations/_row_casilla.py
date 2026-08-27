@@ -8,7 +8,7 @@ from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, CasillaId
 from ._row_source_identity import RowSourceIdentity
 from .registry.ids import BindingId, RevisionId
 
-RowCasillaKey = tuple[CasillaId, int]
+type RowCasillaKey = tuple[CasillaId, int]
 
 
 class DirectRowMaterializationProvenance(BaseModel):

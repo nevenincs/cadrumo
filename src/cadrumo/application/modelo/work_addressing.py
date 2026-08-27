@@ -44,6 +44,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,
@@ -1120,7 +1121,10 @@ def assert_work_target_revision(
         ModeloWorkRegistryYearMismatchError: An supplied axis diverges from the
             law-determined revision.
     """
-    law_revision_id = capture.projection.revision_id
+    projection = capture.projection
+    law_revision_id = (
+        projection.revision_id if isinstance(projection, RegistryRevisionInspection) else projection.revision.id
+    )
     for axis, candidate in (
         ("requested", requested_revision_id),
         ("stored", stored_revision_id),
@@ -1296,7 +1300,12 @@ def _work_capture_observation(
         catalogue, revision_id = catalogue_repository.load_revisioned()
         if implicit and _work_pointer_limb() != limb_before:
             continue
-        observation = (limb_before, revision_id) if implicit else (revision_id,)
+        observation: tuple[str, ...]
+        if implicit:
+            assert limb_before is not None
+            observation = (limb_before, revision_id)
+        else:
+            observation = (revision_id,)
         return bucket_id, catalogue, observation, implicit
     raise ModeloWorkCaptureError(
         translated_message="errors.refused.modelo_work_capture_not_current",

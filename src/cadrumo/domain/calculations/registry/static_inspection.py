@@ -69,6 +69,14 @@ class GeneratedArtifactSource(Protocol):
     record_design_epoch: str | None
     corpus_tier: _GeneratedArtifactCorpusTier | None
 
+    def applies_across(self, span_from: date, span_to: date | None) -> bool:
+        """Report whether this source's applicability window overlaps one date span.
+
+        See :meth:`SourceReference.applies_across` for the one definition of
+        the overlap rule this Protocol member declares.
+        """
+        ...
+
 
 class GeneratedArtifactInspection(Protocol):
     """The static revision facts required to verify a generated artefact."""

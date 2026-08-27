@@ -38,6 +38,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
@@ -446,6 +447,13 @@ def _seed_official_303_source_filings(
                 evidence_reference_id=evidence_reference_id,
                 actor="aeat-import-test",
                 expected_tax_id="X1234567L",
+                # The M303 source quarters carry operator-selected filing facts
+                # the import path cannot infer from casilla values, so they are
+                # supplied explicitly rather than defaulted.
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period,
+                    reference=evidence_reference_id,
+                ),
                 clock=_CLOCK,
             )
         default_source_metadata = {

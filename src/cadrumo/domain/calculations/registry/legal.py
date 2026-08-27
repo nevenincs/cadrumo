@@ -20,6 +20,19 @@ from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
 
+#: ``corpus_catalogue.py``'s own corpus-tier declaration check reuses the same
+#: provision-suffix filename convention this module checks its own excerpt
+#: claims against, so the compiled pattern is listed here rather than
+#: duplicated.
+__all__ = [
+    "_PROVISION_SUFFIXED_FILENAME",
+    "assert_legal_ref_ids_resolve",
+    "verify_legal_catalogue",
+    "verify_legal_catalogue_grounding",
+    "verify_legal_reference",
+    "verify_legal_reference_grounding",
+]
+
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",
     "real_decreto": "reglamento",

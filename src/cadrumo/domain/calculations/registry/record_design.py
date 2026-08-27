@@ -3469,7 +3469,9 @@ def _pdf_declared_constant(field: RecordDesignField) -> str | None:
             continue
         match = _PDF_PAGE_CONSTANT_RE.search(str(text))
         if match is not None:
-            return match.group("page")
+            page = match.group("page")
+            assert isinstance(page, str)
+            return page
     return None
 
 
@@ -3937,7 +3939,7 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
         return sheets
     recovered: list[RecordDesignSheet] = []
     for sheet in sheets:
-        fields = []
+        fields: list[RecordDesignField] = []
         for design_field in sheet.fields:
             match = _INLINE_CONSTANT_RE.search(design_field.description or "")
             if match is None:
@@ -4269,13 +4271,17 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     """
     tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
     if tag is not None:
-        return tag.group("tag")
+        tag_value = tag.group("tag")
+        assert isinstance(tag_value, str)
+        return tag_value
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
         return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
     bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
     if bare_anexo is not None:
-        return "Anexo " + bare_anexo.group("tag").upper()
+        bare_anexo_tag = bare_anexo.group("tag")
+        assert isinstance(bare_anexo_tag, str)
+        return "Anexo " + bare_anexo_tag.upper()
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
@@ -4646,6 +4652,8 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 __all__ = [
+    "_VISUAL_CHART_TYPE_CODE",
+    "_naturaleza_or_none",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

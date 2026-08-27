@@ -30,7 +30,7 @@ from ...domain.calculations.registry.schema_surfaces import CalculationCompleten
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationRevisionCatalogue, ModeloDetailRow, WorkUnit, WorkUnitCatalogue
 from ..operations.registry import OperationSchemaIdentityV1
-from ._calculation_modelo_adjustments import _DETAIL_ROW_OWNING_MODELO
+from ._calculation_modelo_adjustments import DETAIL_ROW_OWNING_MODELO
 from ._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ._edit_models import (
     ModeloEditAddressV1,
@@ -202,7 +202,7 @@ def _writable_binding_override_entries(revision: ModeloRevision) -> tuple[Modelo
 def _writable_detail_row_entries(*, modelo: str) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
     """Classify every ``ModeloDetailRow`` kind this modelo owns as writable.
 
-    Grounded in :data:`_DETAIL_ROW_OWNING_MODELO`
+    Grounded in :data:`DETAIL_ROW_OWNING_MODELO`
     (`_calculation_modelo_adjustments.py`) -- the same real, enforced table
     :func:`~._calculation_modelo_adjustments.require_detail_rows_declared_for_their_owning_modelo`
     refuses a mismatched row against -- rather than a second, independently
@@ -211,7 +211,7 @@ def _writable_detail_row_entries(*, modelo: str) -> tuple[ModeloEditPermittedSur
     owned_kinds = sorted(
         {
             row_type.model_fields["row_type"].default
-            for row_type, owner in _DETAIL_ROW_OWNING_MODELO.items()
+            for row_type, owner in DETAIL_ROW_OWNING_MODELO.items()
             if owner == modelo
         }
     )
@@ -421,7 +421,7 @@ def reconfirm_modelo_edit_baseline(
     )
 
 
-def _writable_scalar_entry(
+def writable_scalar_entry(
     baseline: ModeloEditBaselineV1, casilla_id: str
 ) -> ModeloEditWritableScalarSurfaceEntryV1 | None:
     for entry in baseline.permitted_surface:
@@ -529,7 +529,7 @@ def _parse_scalar_lexeme(*, data_type: str, raw_lexeme: str) -> ModeloScalar:
 
 def parse_modelo_edit_value(request: ModeloEditParseRequestV1) -> ModeloEditParseResultV1:
     """Parse one raw lexeme into its canonical typed value, never echoing it."""
-    entry = _writable_scalar_entry(request.baseline, request.address.casilla_id)
+    entry = writable_scalar_entry(request.baseline, request.address.casilla_id)
     if entry is None:
         return ModeloEditRefusedV1(refusal=_disallowed_intent_refusal(request.address))
     try:
@@ -546,10 +546,10 @@ def parse_modelo_edit_value(request: ModeloEditParseRequestV1) -> ModeloEditPars
     return ModeloEditParsedValueV1(address=request.address, value=value)
 
 
-def _validate_scalar_intent(
+def validate_scalar_intent(
     baseline: ModeloEditBaselineV1, address: ModeloEditScalarAddressV1, kind: ModeloEditScalarIntentKind
 ) -> ModeloEditRefusalV1 | None:
-    entry = _writable_scalar_entry(baseline, address.casilla_id)
+    entry = writable_scalar_entry(baseline, address.casilla_id)
     if entry is None or kind not in entry.allowed_intents:
         return _disallowed_intent_refusal(address)
     return None
@@ -606,7 +606,7 @@ def preflight_modelo_edit(
 
     findings: list[ModeloEditFindingV1] = []
     for intent in submission.scalar_intents:
-        refusal = _validate_scalar_intent(baseline, intent.address, intent.kind)
+        refusal = validate_scalar_intent(baseline, intent.address, intent.kind)
         if refusal is not None:
             return ModeloEditRefusedV1(refusal=refusal)
     for binding_intent in submission.binding_intents:
@@ -632,4 +632,6 @@ __all__ = [
     "parse_modelo_edit_value",
     "preflight_modelo_edit",
     "reconfirm_modelo_edit_baseline",
+    "validate_scalar_intent",
+    "writable_scalar_entry",
 ]

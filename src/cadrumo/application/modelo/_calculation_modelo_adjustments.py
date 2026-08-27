@@ -80,7 +80,7 @@ _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId]
     "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
 }
 
-_DETAIL_ROW_OWNING_MODELO: Mapping[type[ModeloDetailRow], str] = {
+DETAIL_ROW_OWNING_MODELO: Mapping[type[ModeloDetailRow], str] = {
     Modelo184MemberRow: "184",
     Modelo232VinculadaRow: "232",
     Modelo349OperadorRow: "349",
@@ -112,7 +112,7 @@ def require_detail_rows_declared_for_their_owning_modelo(
     covered.
     """
     for row in detail_rows:
-        owning_modelo = _DETAIL_ROW_OWNING_MODELO.get(type(row))
+        owning_modelo = DETAIL_ROW_OWNING_MODELO.get(type(row))
         if owning_modelo is None or str(work_unit.modelo) == owning_modelo:
             continue
         raise ModeloError(
@@ -142,9 +142,13 @@ _ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
 }
 
 
-def _uncovered_row_kinds(covered: Mapping[type, tuple[str, ...]]) -> frozenset[type]:
+def _uncovered_row_kinds(covered: Mapping[type[ModeloDetailRow], tuple[str, ...]]) -> frozenset[type]:
     """Pure comparison: every ``ModeloDetailRow`` union member absent from ``covered``."""
-    return frozenset(get_args(ModeloDetailRow)) - frozenset(covered)
+    kinds: set[type] = set()
+    for member in get_args(ModeloDetailRow):
+        assert isinstance(member, type)
+        kinds.add(member)
+    return frozenset(kinds) - frozenset(covered)
 
 
 def uncovered_detail_row_kinds() -> frozenset[type]:

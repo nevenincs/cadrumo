@@ -23,6 +23,8 @@ record's own ``required`` flag, checked by the renderer.
 
 from __future__ import annotations
 
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot import FilingProducerSnapshot, Modelo296ProfileFacts
 from ._projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
@@ -49,8 +51,8 @@ def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
 
 def build_m296_filing_projection_plan(
     *,
-    registry_snapshot: object,
-    layout: object,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
     """Project one record occurrence per row, for every modelo 296 detail family."""

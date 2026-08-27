@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Literal, get_args, get_origin
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from ....core.classification import SensitivityClass
@@ -110,6 +110,13 @@ reaches.
 """
 
 
+#: A parsed TOML tuple/list, typed at the boundary rather than left with the
+#: ``Unknown`` element type an ``isinstance(value, (tuple, list))`` narrow of a
+#: bare ``object`` carries -- both coercion hops below iterate a validated,
+#: fully-typed ``list[object]`` through this one adapter.
+_OBJECT_LIST_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object])
+
+
 def coerce_enum_member(enum_cls: type) -> Callable[[object], object]:
     """Return a scalar coercion hop for one enum-typed field.
 
@@ -150,8 +157,9 @@ def coerce_enum_tuple(enum_cls: type) -> Callable[[object], object]:
     def _coerce(value: object) -> object:
         if not isinstance(value, (tuple, list)):
             return value
+        items = _OBJECT_LIST_ADAPTER.validate_python(value)
         return tuple(
-            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item for item in value
+            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item for item in items
         )
 
     return _coerce
@@ -170,8 +178,9 @@ def coerce_decimal_tuple(value: object) -> object:
     """
     if not isinstance(value, (tuple, list)):
         return value
+    items = _OBJECT_LIST_ADAPTER.validate_python(value)
     return tuple(
-        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item for item in value
+        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item for item in items
     )
 
 

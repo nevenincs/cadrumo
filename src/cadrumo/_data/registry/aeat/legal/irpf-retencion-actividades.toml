@@ -299,3 +299,45 @@ excluidas las subvenciones de capital y las indemnizaciones'. La distincion corr
 subvenciones -- corriente entra, de capital no -- por lo que ninguna regla basada en la palabra \
 subvencion acierta con las dos. Se declara como parametro para que el conjunto excluido sea dato del \
 registro y no una lista repetida en el codigo."""
+
+# Art. 109 exempts an activity CLASS from the pago fraccionado, and the three
+# apartados that grant it name different classes: ap. 2 profesionales, ap. 3
+# agricolas o ganaderas, ap. 4 forestales. An empresario appears in none of them,
+# which is why this is a declared set and not "any actividad economica".
+[parameters."rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado"]
+evidence_tier = "legal_authority"
+value = "A02,A04,A05,B01,B02,B03"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-pago-fraccionado-exencion"
+legal_refs = ["rd-439-2007:art-109", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-review; operator to re-stamp the A04 grouping"
+notes = """Actividades a las que el art 109 concede la exencion del pago fraccionado: apartado 2 profesionales, apartado 3 agricolas o ganaderas, apartado 4 forestales. Un empresario no figura en ninguno de los tres y no tiene exencion, de modo que aplicar el 70 por ciento a cualquier actividad economica se la concederia a quien la norma no se la da. Se declara como selector propio del art 109 y no se reutiliza el del art 95: aquel reparte TIPOS DE RETENCION y si alguna vez se recorta de otro modo el alcance de esta exencion no debe moverse con el. Los codigos profesionales siguen la particion del art 95 que este registro ya fundamenta, que agrupa A04 con A05; esa agrupacion es una revision fiscal de agente y el operador debe re-sellarla."""
+
+# Only apartados 3 and 4 measure their base net of subvenciones and indemnizaciones.
+# Apartado 2 carries no such exclusion, so a profesional's base keeps every receipt
+# and must NOT be filtered by the concept set below.
+[parameters."rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones"]
+evidence_tier = "legal_authority"
+value = "A02,B01,B02,B03"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-pago-fraccionado-exencion"
+legal_refs = ["rd-439-2007:art-109", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-review"
+notes = """Actividades cuyos apartados (3 agricolas o ganaderas, 4 forestales) miden el 70 por ciento sobre los ingresos 'con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones'. El apartado 2, profesionales, no lleva esa excepcion: su base son 'los ingresos de la actividad' sin descuento, por lo que el filtro de conceptos no se le aplica."""
+
+# BROADER than the art. 110.1.c) set above, deliberately: art. 110 keeps subvenciones
+# corrientes IN the volumen de ingresos, art. 109.3/109.4 take them out.
+[parameters."rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria"]
+evidence_tier = "legal_authority"
+value = "subvencion_corriente,subvencion_capital,indemnizacion"
+unit = "concepto-ingreso-set"
+applies_to = "irpf-pago-fraccionado-exencion"
+legal_refs = ["rd-439-2007:art-109"]
+review_status = "reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-review"
+notes = """Conceptos que los apartados 3 y 4 del art 109 excluyen de la base sobre la que se mide el 70 por ciento: 'con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones'. Es un conjunto MAS AMPLIO que el del art 110.1.c declarado arriba, que mantiene dentro las subvenciones corrientes. Compartir un solo conjunto entre las dos normas acertaria con una y fallaria con la otra. La direccion del fallo no es simetrica: dejar una subvencion corriente dentro de la base del art 109 rebaja el cociente sin aportar nada al numerador, porque las subvenciones no soportan retencion, de modo que se le niega la exencion a quien la norma se la concede y acaba pagando un fraccionado que no debe."""

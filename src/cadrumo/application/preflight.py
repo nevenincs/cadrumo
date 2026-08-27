@@ -55,6 +55,7 @@ from .auth.probes import ProviderProbeResult
 from .operator_actions import ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
     from ..domain.portals import PortalDriftEvent
 
 
@@ -540,7 +541,7 @@ def probe_registry_referential_integrity() -> PreflightCheck:
     return _probe_registry_authority(authority)
 
 
-def _probe_registry_authority(authority: object) -> PreflightCheck:
+def _probe_registry_authority(authority: ValidatedRegistryAuthority) -> PreflightCheck:
     """Validate one loaded authority through the production snapshot path."""
     from collections import Counter
 
@@ -549,7 +550,7 @@ def _probe_registry_authority(authority: object) -> PreflightCheck:
     revisions_checked = 0
     failure_count = 0
     grade_counts: Counter[str] = Counter()
-    for modelo in authority.modelos:  # ty: ignore[unresolved-attribute]
+    for modelo in authority.modelos:
         for revision in modelo.revisions.values():
             filing_year, period = _representative_filing_context(revision)
             if filing_year is None or period is None:
@@ -558,7 +559,7 @@ def _probe_registry_authority(authority: object) -> PreflightCheck:
             requested_grade = revision.effective_authority_grade
             grade_counts[requested_grade.value] += 1
             try:
-                authority.snapshot(  # ty: ignore[unresolved-attribute]
+                authority.snapshot(
                     modelo.id,
                     filing_year=filing_year,
                     period=period,

@@ -205,6 +205,7 @@ class FilingExportConformanceAuthority(Protocol):
     @property
     def authority_id(self) -> str:
         """Return the stable canonical conformance authority identity."""
+        ...
 
     def resolve_conformance_vector(
         self,
@@ -217,12 +218,14 @@ class FilingExportConformanceAuthority(Protocol):
         evidence: FilingExportConformanceVectorEvidence,
     ) -> RegistrySchemaAccessor:
         """Return the law-selection provider for the resolved vector."""
+        ...
 
     def materialize_conformance_inputs(
         self,
         evidence: FilingExportConformanceVectorEvidence,
     ) -> FilingExportConformanceRenderInputs:
         """Build transient writer inputs from the authority-owned public vector."""
+        ...
 
     def verify_conformance(
         self,
@@ -233,6 +236,7 @@ class FilingExportConformanceAuthority(Protocol):
         payload: bytes,
     ) -> FilingExportConformanceReceipt:
         """Verify official source, provenance, extent, and literal spans."""
+        ...
 
 
 class FilingExportSecureReplayRequest(BaseModel):
@@ -302,18 +306,21 @@ class FilingExportSecureReplaySourceAuthority(Protocol):
     @property
     def authority_id(self) -> str:
         """Return the stable source-owned calculation authority identity."""
+        ...
 
     def resolve_secure_replay(
         self,
         request: FilingExportSecureReplayRequest,
     ) -> FilingExportSecureReplayEvidence:
         """Return the exact approved calculation revision and filing inputs."""
+        ...
 
     def schema_provider_for_secure_replay(
         self,
         evidence: FilingExportSecureReplayEvidence,
     ) -> RegistrySchemaAccessor:
         """Return the law-selection provider for the resolved source evidence."""
+        ...
 
 
 class FilingExportSecureCustodyRecord(BaseModel):
@@ -356,6 +363,7 @@ class FilingExportSecureReplayCustody(Protocol):
     @property
     def authority_id(self) -> str:
         """Return the stable encrypted operator-custody authority identity."""
+        ...
 
     def persist_secure_replay(
         self,
@@ -365,6 +373,7 @@ class FilingExportSecureReplayCustody(Protocol):
         payload: FilingExportValidatedPayload,
     ) -> FilingExportSecureCustodyRecord:
         """Seal secret-bearing result and independently check source-pinned probes."""
+        ...
 
 
 class FilingExportSecureReplayReceipt(BaseModel):
@@ -478,6 +487,7 @@ class FilingExportProofAuthority(Protocol):
 
     def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
         """Return complete two-channel proof or explicit per-channel refusal."""
+        ...
 
 
 def prove_export_conformance(
@@ -592,7 +602,7 @@ def _export_to_consumer(
     payload_consumer: FilingExportPayloadConsumer,
     schema_provider: RegistrySchemaAccessor,
 ) -> FilingExportConsumedResult:
-    result = export_draft(
+    return export_draft(
         proof_input.draft,
         payload_consumer=payload_consumer,
         producer_snapshot=proof_input.producer_snapshot,
@@ -601,9 +611,6 @@ def _export_to_consumer(
         product_software_identity=proof_input.product_software_identity,
         schema_provider=schema_provider,
     )
-    if not isinstance(result, FilingExportConsumedResult):
-        raise ValueError("secure replay canonical writer did not use the in-memory custody destination")
-    return result
 
 
 def _dictionary_mapping(values: tuple[FilingExportDictionaryValue, ...]) -> Mapping[str, object] | None:

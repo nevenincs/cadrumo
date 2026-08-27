@@ -49,7 +49,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, overload
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -850,6 +850,30 @@ def _consume_prepared_export(
     )
 
 
+@overload
+def export_draft(
+    draft: ModeloDraft,
+    *,
+    output_path: Path,
+    payload_consumer: None = None,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None = None,
+    prior_domiciliation_election: PriorDomiciliationElection | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
+    schema_provider: RegistrySchemaAccessor | None = None,
+) -> DeclaracionExportResult: ...
+@overload
+def export_draft(
+    draft: ModeloDraft,
+    *,
+    output_path: None = None,
+    payload_consumer: FilingExportPayloadConsumer,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None = None,
+    prior_domiciliation_election: PriorDomiciliationElection | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
+    schema_provider: RegistrySchemaAccessor | None = None,
+) -> FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
     *,

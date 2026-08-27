@@ -18,7 +18,7 @@ from .schema_references import LegalReference, SourceReference
 
 _CatalogueCacheKey = tuple[int, int, str | None, SourceEvidenceFingerprint]
 _CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
-_ModeloValidationCacheKey = tuple[int, int, int, str | None, str | None, SourceEvidenceFingerprint]
+_ModeloValidationCacheKey = tuple[int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]
 _ModeloValidationCacheValue = tuple[
     ModeloDefinition,
     Mapping[str, LegalReference],
@@ -29,6 +29,7 @@ _RegistryValidationCacheKey = tuple[
     tuple[int, ...],
     int,
     int,
+    tuple[int, ...],
     str | None,
     str | None,
     SourceEvidenceFingerprint,

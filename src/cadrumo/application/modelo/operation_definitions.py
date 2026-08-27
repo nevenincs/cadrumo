@@ -22,6 +22,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -641,7 +642,7 @@ class ModeloExportExecutor:
         payload = request.payload
         command = ModeloExportCommand(
             calculation_revision_id=payload.calculation_revision_id,
-            output_path=payload.output_path,
+            output_path=Path(payload.output_path),
             actor=payload.actor,
         )
         result = export_modelo_revision(command, workflow_profile=self._profile_resolver())

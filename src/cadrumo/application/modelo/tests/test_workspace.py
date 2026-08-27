@@ -1616,3 +1616,28 @@ def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() ->
         mismatched_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
         == ModeloWorkspaceCapabilityDisposition.UNMEASURED
     )
+
+
+def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_a_real_snapshot() -> None:
+    """S128: the graded schema identity/evidence horizon/contributors read the real bundled snapshot."""
+    from ..workspace import (
+        graded_snapshot_contributors,
+        graded_snapshot_evidence_horizon,
+        resolve_graded_snapshot_schema_identity,
+    )
+
+    snapshot = _real_303_snapshot()
+
+    schema_identity = resolve_graded_snapshot_schema_identity(snapshot)
+    assert schema_identity.schema_id == f"modelo-{snapshot.modelo.id}-{snapshot.revision.id}".lower()
+    assert len(schema_identity.schema_fingerprint) > 0
+    assert len(schema_identity.field_manifest_digest) > 0
+
+    evidence_horizon = graded_snapshot_evidence_horizon(snapshot)
+    assert evidence_horizon.source_refs == tuple(sorted(snapshot.sources))
+    assert len(evidence_horizon.source_refs) > 0
+
+    contributors = graded_snapshot_contributors()
+    assert len(contributors) == 5
+    contributors_again = graded_snapshot_contributors()
+    assert contributors == contributors_again  # deterministic ordering

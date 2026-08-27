@@ -41,6 +41,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ._edit_models import (
     ModeloDetailRowEditIntentV1,
+    ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowIntentKind,
@@ -58,10 +59,10 @@ from ._edit_models import (
     ModeloEditUnsupportedIntentRefusalV1,
 )
 from ._edit_services import (
-    _validate_scalar_intent,
-    _writable_scalar_entry,
     detail_row_natural_key,
     reconfirm_modelo_edit_baseline,
+    validate_scalar_intent,
+    writable_scalar_entry,
 )
 
 if TYPE_CHECKING:
@@ -86,7 +87,7 @@ _NUMERIC_DATA_TYPES = frozenset({"decimal", "money", "integer", "ratio", "year"}
 
 
 def _unsupported_intent_refusal(
-    reason: ModeloEditUnsupportedIntentReason, *, address: object = None
+    reason: ModeloEditUnsupportedIntentReason, *, address: ModeloEditAddressV1 | None = None
 ) -> ModeloEditExecutionNoEffectV1:
     return ModeloEditExecutionNoEffectV1(
         refusal=ModeloEditUnsupportedIntentRefusalV1(
@@ -130,7 +131,7 @@ def _reachable_scalar_inputs(
         if intent.kind is ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE:
             cleared_casilla_ids.append(intent.address.casilla_id)
             continue
-        entry = _writable_scalar_entry(baseline, intent.address.casilla_id)
+        entry = writable_scalar_entry(baseline, intent.address.casilla_id)
         data_type = entry.data_type if entry is not None else "text"
         if data_type in _NUMERIC_DATA_TYPES:
             casilla_inputs[intent.address.casilla_id] = Decimal(str(intent.value))
@@ -139,7 +140,7 @@ def _reachable_scalar_inputs(
     return casilla_inputs, text_casilla_inputs, tuple(cleared_casilla_ids)
 
 
-def _detail_row_natural_key_refusal(address: object) -> ModeloEditExecutionNoEffectV1:
+def _detail_row_natural_key_refusal(address: ModeloEditAddressV1) -> ModeloEditExecutionNoEffectV1:
     return ModeloEditExecutionNoEffectV1(
         refusal=ModeloEditDomainRefusalV1(
             code=ModeloEditRefusalCode.DISALLOWED_INTENT,
@@ -229,7 +230,7 @@ def apply_modelo_edit(
     casilla_inputs, text_casilla_inputs, cleared_casilla_ids = reachable
 
     for intent in submission.scalar_intents:
-        refusal = _validate_scalar_intent(baseline, intent.address, intent.kind)
+        refusal = validate_scalar_intent(baseline, intent.address, intent.kind)
         if refusal is not None:
             return ModeloEditExecutionNoEffectV1(refusal=refusal)
 

@@ -266,7 +266,7 @@ def modelo_work_profile_preflight_report(
             authority=authority,
         )
     grounding_index: Mapping[str, ProfileKeyGrounding] = (
-        build_profile_grounding_index(authority) if authority is not None else {}
+        build_profile_grounding_index(authority) if authority is not None else dict[str, ProfileKeyGrounding]()
     )
     baseline = tuple(
         _requirement_for_profile_path(path, grounding_index=grounding_index)

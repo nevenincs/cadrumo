@@ -229,6 +229,30 @@ def _canonical_row_binding_values(
     return dict(sorted(canonical.items()))
 
 
+def _string_keyed_context(context: object) -> Mapping[str, object] | None:
+    """Narrow a pydantic ``ValidationInfo``/serializer ``context`` to a string-keyed mapping.
+
+    Every caller here reads the context by a literal string marker key
+    (``"secure_calculation_revision"``); a context that is not a mapping at
+    all carries none of those markers and is treated the same as absent.
+    """
+    if not isinstance(context, Mapping):
+        return None
+    return TypeAdapter(Mapping[str, object]).validate_python(context)
+
+
+def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
+    return {}
+
+
+def _empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
+    return {}
+
+
+def _empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
+    return {}
+
+
 def _canonical_row_source_identities(
     value: Mapping[RowBindingKey, RowSourceIdentity],
 ) -> list[dict[str, object]]:
@@ -1067,12 +1091,14 @@ class CalculationRevision(BaseModel):
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
-        default_factory=dict,
+        default_factory=_empty_row_source_identities,
         repr=False,
     )
-    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=dict, repr=False)
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(
+        default_factory=_empty_row_casilla_values, repr=False
+    )
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
-        default_factory=dict,
+        default_factory=_empty_row_casilla_provenance,
         repr=False,
     )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
@@ -1186,9 +1212,9 @@ class CalculationRevision(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
-        validation_context = info.context
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(validation_context, Mapping)
+            validation_context is not None
             and validation_context.get("secure_calculation_revision") is True
             and not {"row_source_identities", "row_casilla_values", "row_casilla_provenance"}.issubset(
                 self.model_fields_set
@@ -1321,9 +1347,10 @@ class CalculationRevision(BaseModel):
     ) -> Mapping[RowBindingKey, RowSourceIdentity]:
         # Secure persistence has one canonical, duplicate-detectable list form.
         # Ordinary in-process construction retains the ergonomic mapping form.
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row source identities must use list wire form")
@@ -1342,7 +1369,7 @@ class CalculationRevision(BaseModel):
                         "row_set_grouping": raw.get("row_set_grouping"),
                     },
                 )
-                parsed_key = TypeAdapter(RowBindingKey).validate_python(key)
+                parsed_key = TypeAdapter(tuple[BindingId, int]).validate_python(key)
                 if parsed_key in typed:
                     raise ModeloValidationError("row source identities contain a duplicate coordinate")
                 typed[parsed_key] = identity
@@ -1355,18 +1382,20 @@ class CalculationRevision(BaseModel):
     @field_validator("row_casilla_values", mode="before")
     @classmethod
     def _normalise_row_casilla_values(cls, value: object, info: ValidationInfo) -> Mapping[RowCasillaKey, Decimal]:
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row casilla values must use list wire form")
+        typed: dict[RowCasillaKey, Decimal]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
         elif isinstance(value, list):
             typed = {}
             for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
                 if key in typed:
                     raise ModeloValidationError("row casilla values contain a duplicate coordinate")
                 typed[key] = TypeAdapter(Decimal).validate_python(raw.get("value"))
@@ -1381,18 +1410,20 @@ class CalculationRevision(BaseModel):
     def _normalise_row_casilla_provenance(
         cls, value: object, info: ValidationInfo
     ) -> Mapping[RowCasillaKey, DirectRowMaterializationProvenance]:
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row casilla provenance must use list wire form")
+        typed: dict[RowCasillaKey, DirectRowMaterializationProvenance]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
         elif isinstance(value, list):
             typed = {}
             for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
                 if key in typed:
                     raise ModeloValidationError("row casilla provenance contains a duplicate coordinate")
                 typed[key] = DirectRowMaterializationProvenance.model_validate(
@@ -1416,11 +1447,12 @@ class CalculationRevision(BaseModel):
         handler: SerializerFunctionWrapHandler,
         info: SerializationInfo,
     ) -> object:
-        payload = handler(self)
-        if not isinstance(payload, dict):
-            return payload
-        context = getattr(info, "context", None)
-        if not isinstance(context, Mapping) or context.get("secure_calculation_revision") is not True:
+        handled = handler(self)
+        if not isinstance(handled, dict):
+            return handled
+        payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        context = _string_keyed_context(getattr(info, "context", None))
+        if context is None or context.get("secure_calculation_revision") is not True:
             payload.pop("row_source_identities", None)
             payload.pop("row_casilla_values", None)
             payload.pop("row_casilla_provenance", None)

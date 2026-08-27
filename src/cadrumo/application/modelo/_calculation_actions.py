@@ -510,7 +510,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             revision=snapshot.revision,
             binding_values=prepared.channels.bindings,
         ),
-        **dict(prepared.backend_casilla_inputs or {}),
+        **dict(prepared.backend_casilla_inputs or dict[CasillaId, Decimal]()),
     }
     channel_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,

@@ -26,9 +26,15 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage, RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
-from ...domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ParameterDefinition
+from ...domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ParameterDefinition,
+    RegistrySnapshot,
+)
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -89,11 +95,18 @@ from .workspace_models import (
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
+    ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceGradedSnapshotResultV1,
+    ModeloWorkspaceGradedSnapshotScopeV1,
+    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceRefusedResultV1,
+    ModeloWorkspaceResultV1,
     ModeloWorkspaceScalarMaterializationRecordV1,
     ModeloWorkspaceScalarMaterializationV1,
     ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceSchemaRecordV1,
+    ModeloWorkspaceSnapshotScopeV1,
     ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTargetV1,
@@ -109,6 +122,7 @@ from .workspace_producers import (
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceCalculationPortV1,
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
@@ -623,6 +637,8 @@ __all__ = [
     "formula_operand_references_for_casilla",
     "formula_schema_records",
     "graded_snapshot_casilla_schema_records",
+    "graded_snapshot_contributors",
+    "graded_snapshot_evidence_horizon",
     "graded_snapshot_materialization_facet",
     "graded_snapshot_modelo_workspace_capabilities",
     "graded_snapshot_provenance_facet",
@@ -636,6 +652,7 @@ __all__ = [
     "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
+    "resolve_graded_snapshot_schema_identity",
     "resolve_static_inspection_baseline",
     "resolve_static_inspection_result",
     "resolve_static_inspection_schema_identity",
@@ -818,6 +835,66 @@ def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentity
                 MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+            ),
+            key=lambda contributor: (contributor.owner, contributor.producer),
+        )
+    )
+
+
+def resolve_graded_snapshot_schema_identity(snapshot: RegistrySnapshot) -> ModeloWorkspaceSchemaIdentityV1:
+    """Build the GRADED_SNAPSHOT schema identity from the one REGISTRY capture already held.
+
+    Mirrors ``resolve_static_inspection_schema_identity``'s exact shape, over
+    the snapshot's own declared identity sets. Unlike the inspection (which
+    carries ``casilla_ids``/``binding_ids`` as bare id frozensets), the
+    snapshot's ``revision.casillas``/``.bindings`` are full definition
+    tuples (S296); the fingerprint reduces them to the same id-set shape so
+    the two admissions' schema fingerprints are comparable in kind.
+    """
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=snapshot)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+    return ModeloWorkspaceSchemaIdentityV1(
+        schema_id=f"modelo-{snapshot.modelo.id}-{snapshot.revision.id}".lower(),
+        schema_fingerprint=content_hash_hex(
+            {
+                "casilla_ids": sorted(casilla.id for casilla in snapshot.revision.casillas),
+                "binding_ids": sorted(binding.id for binding in snapshot.revision.bindings),
+            }
+        ),
+        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
+    )
+
+
+def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorkspaceEvidenceHorizonV1:
+    """Build the evidence horizon straight from the snapshot's own retained source catalogue.
+
+    ``RegistrySnapshot.sources`` is the graded-admission equivalent of
+    ``RegistryRevisionInspection.source_ref_ids``: a mapping keyed by the same
+    ``SourceRefId`` identity, so ``frozenset(snapshot.sources)`` gives the
+    identical shape ``static_inspection_evidence_horizon`` reduces to.
+    """
+    source_refs = tuple(sorted(snapshot.sources))
+    return ModeloWorkspaceEvidenceHorizonV1(
+        source_refs=source_refs,
+        evidence_digest=content_hash_hex({"source_refs": source_refs}),
+    )
+
+
+def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+    """Return the five contributor identities GRADED_SNAPSHOT actually reads.
+
+    The same four STATIC_INSPECTION reads (registry, work, locale_catalogue,
+    field_manifest) plus CALCULATION -- the one contributor this admission
+    additionally materializes.
+    """
+    return tuple(
+        sorted(
+            (
+                MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1.contributor,
             ),
             key=lambda contributor: (contributor.owner, contributor.producer),
         )
@@ -1499,7 +1576,7 @@ def graded_snapshot_readiness(readiness: ProjectionModeloReadiness) -> ModeloWor
     """
     return ModeloWorkspaceReadinessV1(
         profile_id=readiness.profile_id,
-        modelo=readiness.modelo,
+        modelo=ModeloCode(readiness.modelo),
         revision_id=readiness.revision_id,
         filing_year=readiness.filing_year,
         period=readiness.period,
@@ -1510,7 +1587,7 @@ def graded_snapshot_readiness(readiness: ProjectionModeloReadiness) -> ModeloWor
                 field_key=requirement.field_key,
                 label=requirement.label,
                 legal_refs=requirement.legal_refs,
-                modelos=requirement.modelos,
+                modelos=tuple(ModeloCode(modelo) for modelo in requirement.modelos),
             )
             for requirement in readiness.missing
         ),

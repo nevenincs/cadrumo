@@ -333,7 +333,13 @@ def _walk_annotation(
             return
         visited.add(pair)
         annotations = _model_annotations(model_type)
-        fields: dict[str, FieldInfo] = model_type.model_fields
+        raw_fields = model_type.model_fields
+        assert isinstance(raw_fields, dict)
+        fields: dict[str, FieldInfo] = {}
+        for field_name_raw, field_info_raw in raw_fields.items():
+            assert isinstance(field_name_raw, str)
+            assert isinstance(field_info_raw, FieldInfo)
+            fields[field_name_raw] = field_info_raw
         for field_name, field in fields.items():
             field_annotation = annotations.get(field_name, field.annotation)
             _walk_annotation(

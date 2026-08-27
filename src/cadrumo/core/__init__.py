@@ -112,6 +112,7 @@ if TYPE_CHECKING:
     from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
     from ._concept_lifecycle import ConceptLifecycle
     from ._concepto_ingreso import (
+        INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
         ConceptoIngreso,
     )
@@ -539,6 +540,7 @@ __all__: list[str] = [
     "HEX_PATTERN_128",
     "IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "IBAN_SHAPE_RE",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE",
     "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE",
     "LLM_EXTRA",
     "LOCAL_TRANSPORT_LABEL",
@@ -1000,6 +1002,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "Hex64Str": "._hex",
     "IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
     "IBAN_SHAPE_RE": "._iban",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": "._concepto_ingreso",
     "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE": "._concepto_ingreso",
     "IdentityReferent": ".product_identity",
     "ImageMediaType": "._image_media_type",

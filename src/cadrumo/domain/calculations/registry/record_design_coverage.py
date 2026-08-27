@@ -493,7 +493,7 @@ def derive_calculation_completeness_casillas(
         # admits an exact name or that name followed by a space. It stays a
         # prefix-to-WORD-boundary comparison rather than a bare startswith, so
         # "714-1" cannot claim "714-10 Patrimonio".
-        matched = any(
+        matched = diseno_pairs is not None and any(
             number == pair_number and (segmento == sheet_name or sheet_name.startswith(f"{segmento} "))
             for sheet_name, pair_number in diseno_pairs
         )

@@ -63,7 +63,7 @@ from ._registry_resources import (
 # Casilla data types the engine represents on the numeric Decimal channel. This
 # is the one canonical declaration in this package; ``_local_observation_actions.py``
 # imports it rather than re-declaring its own copy.
-_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
+NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 
 # A boolean casilla answers on this same Decimal channel, encoded 0 / 1. That is
 # the engine's own representation rather than a convenience: the Modelo 100
@@ -279,7 +279,7 @@ def _reject_non_numeric_casilla_inputs(
     decimal_inputs: Mapping[CasillaId, Decimal],
 ) -> None:
     """Keep the numeric/boolean input-kind policy at this application boundary."""
-    accepted_data_types = _NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
+    accepted_data_types = NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
     non_numeric = sorted(
         casilla_id
         for casilla_id in decimal_inputs
@@ -588,6 +588,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 
 __all__ = [
+    "NUMERIC_CASILLA_DATA_TYPES",
     "assert_revision_content_integrity",
     "registry_root",
     "reject_incomplete_amendment_casillas",
