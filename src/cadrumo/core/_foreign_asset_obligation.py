@@ -22,7 +22,7 @@ sibling of the per-clave :class:`~core.aggregation.ForeignAssetClass`.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
@@ -64,53 +64,52 @@ class ForeignAssetObligationGroup(StrEnum):
     MONEDAS_VIRTUALES = "monedas_virtuales"
 
 
-FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS: Final[
-    Mapping[ForeignAssetObligationGroup, frozenset[str]]
+FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES: Final[
+    Mapping[ForeignAssetObligationGroup, str]
 ] = MappingProxyType(
     {
-        ForeignAssetObligationGroup.CUENTAS: frozenset({"cuentas"}),
-        ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: frozenset({"valores"}),
-        ForeignAssetObligationGroup.INMUEBLES: frozenset({"inmuebles"}),
-        ForeignAssetObligationGroup.MONEDAS_VIRTUALES: frozenset({"moneda", "monedas"}),
+        ForeignAssetObligationGroup.CUENTAS: "rd-1065-2007:art-42-bis",
+        ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "rd-1065-2007:art-42-ter",
+        ForeignAssetObligationGroup.INMUEBLES: "rd-1065-2007:art-54-bis",
+        ForeignAssetObligationGroup.MONEDAS_VIRTUALES: "rd-1065-2007:art-42-quater",
     },
 )
-"""Registry ``section`` tokens whose presence declares a bloque is in scope.
+"""The RGAT provision that ESTABLISHES each bloque's information obligation.
 
-The bloque vocabulary and the registry's own casilla ``section`` vocabulary are
-not the same words -- the registry says ``valores`` where the RGAT bloque is
-``valores_derechos_seguros``, and ``moneda`` where the bloque is
-``monedas_virtuales``. Binding the two here, on the closed enum that owns the
-taxonomy, is what lets the SCOPE of a modelo's obligation -- which bloques it
-declares at all -- be read off the casillas the revision actually ships rather
-than hand-listed in a feature module, where it could disagree with the registry
-and nothing would notice.
+Complete by construction over the enum, and each entry is the article the
+member's own documentation already cites. This is a legal fact about the
+taxonomy, which is why it lives beside the enum rather than in a feature
+module: it says which provision creates a bloque, never which modelo declares
+one.
 
-This is a vocabulary binding, not a scope declaration: it says what a section
-token means, never which modelo declares which bloque. That question is
-answered by :func:`obligation_groups_declared_by_sections` against real registry
-data, so a revision that adds or drops a bloque changes the answer without an
-edit here.
+That second question -- the SCOPE of a given revision's obligation -- is
+answered by :func:`obligation_groups_established_by_legal_refs` against the
+``legal_refs`` the registry revision actually ships on its foreign-asset
+threshold parameters. Scope is therefore registry-resident and travels with the
+grounding: a revision whose parameters cite art. 54 bis declares the inmuebles
+bloque because the citation says so, and a revision that drops the citation
+drops the bloque, with no edit here.
 """
 
 
-def obligation_groups_declared_by_sections(
-    sections: Iterable[Sequence[str]],
+def obligation_groups_established_by_legal_refs(
+    legal_refs: Iterable[str],
 ) -> frozenset[ForeignAssetObligationGroup]:
-    """Return the bloques the given casilla ``section`` paths put in scope.
+    """Return the bloques whose establishing provision appears in ``legal_refs``.
 
     Args:
-        sections: Each declared casilla's ``section`` path, as shipped by the
-            registry revision.
+        legal_refs: Legal references declared by a revision's foreign-asset
+            threshold parameters.
 
     Returns:
-        Every :class:`ForeignAssetObligationGroup` whose registry section token
-        appears anywhere in those paths.
+        Every :class:`ForeignAssetObligationGroup` whose establishing article is
+        cited.
     """
-    tokens = {str(part) for section in sections for part in section}
+    cited = set(legal_refs)
     return frozenset(
         group
-        for group, group_tokens in FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS.items()
-        if tokens & group_tokens
+        for group, article in FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES.items()
+        if article in cited
     )
 
 
@@ -186,10 +185,10 @@ def foreign_asset_obligation_group(asset_class: ForeignAssetClass) -> ForeignAss
 
 __all__ = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
-    "FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS",
+    "FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "ForeignAssetObligationGroup",
     "M720AssetClassCode",
     "foreign_asset_obligation_group",
-    "obligation_groups_declared_by_sections",
+    "obligation_groups_established_by_legal_refs",
 ]

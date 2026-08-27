@@ -196,12 +196,12 @@ if TYPE_CHECKING:
     )
     from ._foreign_asset_obligation import (
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
-        FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS,
+        FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
         M720AssetClassCode,
         foreign_asset_obligation_group,
-        obligation_groups_declared_by_sections,
+        obligation_groups_established_by_legal_refs,
     )
     from ._fsync import fsync_parent_dir
     from ._fts_query import fts_or_group
@@ -530,6 +530,7 @@ __all__: list[str] = [
     "FOREIGN_ADDRESS_COMPONENTS",
     "FOREIGN_ADDRESS_INFIX",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
+    "FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES",
     "GOOGLE_EXTRA",
     "HARDWARE_TIER_CAPABLE_FLOOR_BYTES",
     "HARDWARE_TIER_MODEST_FLOOR_BYTES",
@@ -828,7 +829,6 @@ __all__: list[str] = [
     "fold_diacritics",
     "fold_printed_phrase",
     "foreign_asset_obligation_group",
-    "obligation_groups_declared_by_sections",
     "freeze_toml",
     "freeze_toml_value",
     "fsync_parent_dir",
@@ -850,6 +850,7 @@ __all__: list[str] = [
     "normalise_corpus_text",
     "normalise_iban",
     "normalise_product_identity_references",
+    "obligation_groups_established_by_legal_refs",
     "optional_extra_available",
     "optional_extra_for_module",
     "orden_anual_iva_activity_anchors",
@@ -984,7 +985,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FilingProjectionRef": "._filing_projection_ref",
     "FindingResolutionAction": "._confirmation_gate",
     "FingerprintParticipation": "._storage_taxonomy",
-    "FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS": "._foreign_asset_obligation",
+    "FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES": "._foreign_asset_obligation",
     "ForeignAssetObligationGroup": "._foreign_asset_obligation",
     "FormerProductStateError": "._config_state_root",
     "GOOGLE_EXTRA": "._optional_extras",
@@ -1232,7 +1233,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "fold_diacritics": ".text_fold",
     "fold_printed_phrase": ".text_fold",
     "foreign_asset_obligation_group": "._foreign_asset_obligation",
-    "obligation_groups_declared_by_sections": "._foreign_asset_obligation",
+    "obligation_groups_established_by_legal_refs": "._foreign_asset_obligation",
     "freeze_toml": "._toml",
     "freeze_toml_value": "._toml",
     "fsync_parent_dir": "._fsync",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -12,7 +12,7 @@ from ..core import (
     ForeignAssetObligationGroup,
     Modelo,
     RevisionReviewStatus,
-    obligation_groups_declared_by_sections,
+    obligation_groups_established_by_legal_refs,
 )
 from ..core.resources import bundled_path
 from ..domain.calculations.registry.errors import RegistryValidationError
@@ -95,7 +95,6 @@ def foreign_asset_declaration_thresholds(
     return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
         parameters=selected.parameters,
-        obligation_groups=_declared_obligation_groups(selected),
         filing_date=date(filing_year, 12, 31),
         revision_review_status=selected.review_status,
     )
@@ -119,7 +118,6 @@ def foreign_asset_declaration_thresholds_for_revision(
     return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
         parameters=revision.parameters,
-        obligation_groups=_declared_obligation_groups(revision),
         filing_date=filing_date,
         revision_review_status=revision.review_status,
     )
@@ -129,7 +127,6 @@ def foreign_asset_declaration_thresholds_for_parameters(
     *,
     modelo: str,
     parameters: Sequence[ParameterDefinition],
-    obligation_groups: Collection[ForeignAssetObligationGroup],
     filing_date: date,
     revision_review_status: RevisionReviewStatus,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
@@ -142,11 +139,6 @@ def foreign_asset_declaration_thresholds_for_parameters(
     Args:
         modelo: The Modelo 720/721 code the thresholds are declared under.
         parameters: The selected revision's parameter declarations.
-        obligation_groups: The bloques this revision declares, derived from the
-            casillas it actually ships rather than hand-listed here. Passed in
-            because the scope of an obligation is registry data: a revision that
-            adds or drops a bloque must change the answer with no edit to this
-            module.
         filing_date: The date used to resolve a date-scoped parameter value.
         revision_review_status: The selected revision's attestation stamp, carried
             onto every threshold so a consumer can tell whether the figures rest
@@ -160,13 +152,6 @@ def foreign_asset_declaration_thresholds_for_parameters(
     redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo_member)
     if initial_parameter_id is None or redeclaration_parameter_id is None:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract")
-    groups = tuple(sorted(obligation_groups, key=lambda group: group.value))
-    if not groups:
-        raise RegistryValidationError(
-            f"modelo {modelo} revision declares no foreign-asset obligation bloque; "
-            "the thresholds have no scope to apply to",
-        )
-
     by_id = {parameter.id: parameter for parameter in parameters}
     initial = _required_parameter(by_id, initial_parameter_id, modelo)
     redeclaration = _required_parameter(by_id, redeclaration_parameter_id, modelo)
@@ -175,6 +160,13 @@ def foreign_asset_declaration_thresholds_for_parameters(
     redeclaration_value = resolve_parameter(redeclaration, date_context)
     legal_refs = tuple(sorted(set(initial.legal_refs) | set(redeclaration.legal_refs)))
     source_refs = tuple(sorted(set(initial.source_refs) | set(redeclaration.source_refs)))
+    groups = tuple(sorted(obligation_groups_established_by_legal_refs(legal_refs), key=lambda group: group.value))
+    if not groups:
+        raise RegistryValidationError(
+            f"modelo {modelo} revision cites no RGAT provision establishing a foreign-asset bloque, "
+            "so its thresholds have no scope to apply to; the obligation's scope is read from the "
+            "establishing articles the threshold parameters declare in legal_refs",
+        )
     thresholds = {
         group: ForeignAssetDeclarationThreshold(
             group=group,
@@ -187,17 +179,6 @@ def foreign_asset_declaration_thresholds_for_parameters(
         for group in groups
     }
     return MappingProxyType(thresholds)
-
-
-def _declared_obligation_groups(revision: ModeloRevision) -> frozenset[ForeignAssetObligationGroup]:
-    """Return the bloques ``revision`` declares, read off its own casillas.
-
-    The scope of a foreign-asset obligation -- which bloques a modelo partitions
-    declared assets into -- is registry data, not a fact about this module. It is
-    derived from the ``section`` path of every casilla the revision ships, so a
-    revision that gains or loses a bloque changes the answer here without an edit.
-    """
-    return obligation_groups_declared_by_sections(casilla.section for casilla in revision.casillas)
 
 
 def _required_parameter(
