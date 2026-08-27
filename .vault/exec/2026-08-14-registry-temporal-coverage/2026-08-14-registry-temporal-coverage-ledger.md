@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c27f6695ca125c792a40d940ced68af8710dbe1d376b54a7df5ddde1e3da9f7'
+body_hash: 'sha256:4746c4f467827a3daf80bf9897b49ceed96f01af536ddaecc6a8d390875e8cc9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -758,3 +758,62 @@ Separately measured while here: the audit's other channel,
 `RegistryCoverageAudit.ok` is `not self.required_gate_failures`, so those are
 advisory and fail nothing. The earlier note naming Modelos 714 and 200 as the
 blocker was reading a truncated output; the single blocking entry is Modelo 165.
+
+
+### Modelo 308 ejercicio 2011 AD-HOC: adjudicated irreducible, not a defect
+
+The residue cell refusing `modelo 308, 2011, AD-HOC` between revisions
+`2009-2011-junio` and `2011-julio-2015` is CORRECT behaviour, and the queue
+item's proposed remedy -- "constrain the overlapping selector" -- would have
+been fabrication. Both revisions genuinely govern parts of ejercicio 2011.
+
+Grounding, verified against the bundled consolidated corpus rather than the
+registry's own `required_text`: `orden-eha-1033-2011.html` states "La presente
+Orden entrara en vigor el dia 1 de julio de 2011" verbatim, and the legal
+catalogue entry `orden-eha-1033-2011:disposicion-final-unica` carries
+`effective_from = 2011-07-01`, matching the revision's `valid_from`
+independently of the revision's own claim. The mid-year boundary is AEAT's.
+
+The discriminator is the PERIOD axis, and the corpus makes it visible. Five
+modelos split mid-year with co-claimants: 303 (2024), 308 (2011), 369 (2021),
+490 (2022) and 763 (2018). Only 308 refuses, because only 308 declares the
+same period token -- `AD-HOC` -- on both sides. Everywhere else the halves
+carry disjoint period sets (`1T` vs `2T-4T`, `1T-3T` vs `4T`, the three OSS
+schemes), so the period names the design without a date. `AD-HOC` has no
+sub-year granularity, so neither year nor period can discriminate; only a date
+can, and `select_revision(..., on=...)` resolves each half correctly.
+
+A date-aware coverage probe was measured and REJECTED. Passing a date drawn
+from each revision's own window flips exactly 2 cells to validated -- the M308
+pair -- and reproduces all 1,718 others. It was not taken: a date drawn from
+the revision's own window satisfies the window predicate by construction, so it
+would weaken the window axis to near-tautology across all 1,718 cells to clear
+two. Trading a strong check for a weak one to clear a residue cell is the
+inverse of what the residue exists to surface.
+
+Landed instead: `src/cadrumo/application/registry/tests/`
+`test_irreducible_year_only_selection_refusals.py`, holding every year-only
+refusal to its justification -- co-claimants overlapping on period, windows
+disjoint and breaking inside the refused year, and the later half grounded in a
+legal entry whose own `effective_from` falls on that boundary. Grounding is
+read from the legal catalogue, never from the revision that claims it, so a
+revision cannot vouch for its own date.
+
+No tallies and no hardcoded modelo: a new grounded mid-year AD-HOC split passes
+untouched, an ungrounded one fails. Two proofs beyond the positive case -- an
+anti-tautology proof that a date resolves each refused coordinate to a distinct
+revision (so "refuses and is grounded" cannot be satisfied by a corpus no date
+can resolve either), and a discrimination proof that period-separated splits
+resolve without a date, so the rule is not a rubber stamp licensing any overlap.
+
+Gate proven to bite by runtime monkeypatch from OUTSIDE the repo (nothing under
+`src/` edited, so a peer sweep cannot commit the mutation): moving every legal
+`effective_from` reds the grounding test with `modelo 308: revision
+2011-julio-2015 opens on 2011-07-01 ... but no orden it cites carries that
+effective_from`. 5 passed clean; 1 failed under the mutation.
+
+The residue cell stays refused. It is now a documented, grounded and tested
+fact rather than an unexplained entry -- the coverage matrix's `(year, period)`
+coordinate is coarser than the law it measures, for exactly one boundary AEAT
+published.
+

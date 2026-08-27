@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:e9fd09f6cb37582ea86f29bcf29616fb99ed9e14ea7a10d58caed2ab85e8771d'
+body_hash: 'sha256:777ac91317bff7aa8cbdf6ed7b1cde23f2b109501a43e3ec116a9f112ef77968'
 ---
 
 <!-- RETIRED: S01 -->
@@ -65,6 +65,7 @@ Turn the hunt's findings into product behaviour. Each fix reuses the mechanism t
 - [x] `P05.S20` - Derive the Art. 30.2.5.a insured population and its two limbs from the family profile, keeping membership and limb as separate questions and refusing the wider Art. 58.1 set that would admit a non-cohabiting dependent child and an over-25 child with discapacidad, and expose it beside the one canonical reconstruction of the family record from stored facts; `src/cadrumo/domain/contribuyente/ and src/cadrumo/application/modelo/profile_binding.py`.
 - [x] `P05.S21` - Wire the LIRPF art. 30.2.5.a insured-person counts into the shipped aggregation so both cap limbs reach production; `src/cadrumo/application/aggregation/tests/test_seguro_enfermedad_cap_reaches_production.py`.
 - [x] `P05.S22` - Ground every category citation on inline corpus text with a declared verified, refused or not-bundled state; `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`.
+- [x] `P05.S23` - Retire the fabricated home-office usage-ratio default so a suministro deduction requires the taxpayer's own declared proportion; `src/cadrumo/domain/usage_ratios/tests/test_model.py`.
 
 ## Parallelization
 

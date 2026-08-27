@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:7847138bb44100b26adcab2558ab474d7957ca88e83c3b74367a16b730be6c4f'
+body_hash: 'sha256:34cc7d07195e9c95eb0423186dd6e86ab4b49822b513084f71b687836695df84'
 related: []
 ---
 
@@ -556,3 +556,90 @@ sees a missing optional field.
 
 The two statutory-cap variant labels added with the seguro fix were also never authored
 in the four catalogues. Both are closed, and the `"None"` shape is now gated.
+
+## Defect hunt, round two: four candidates, four verdicts
+
+### CONFIRMED -- the home-office suministros deduction supplied its own second factor
+
+LIRPF art. 30.2.5.b, verbatim from the bundled consolidated corpus:
+
+> b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al
+> desarrollo de la actividad economica, los gastos de suministros de dicha vivienda,
+> tales como agua, gas, electricidad, telefonia e Internet, en el porcentaje resultante
+> de aplicar el 30 por ciento a la proporcion existente entre los metros cuadrados de
+> la vivienda destinados a la actividad respecto a su superficie total, salvo que se
+> pruebe un porcentaje superior o inferior.
+
+The deductible share is a PRODUCT: the statutory 30 per cent times the taxpayer's own
+measured area proportion. The article supplies the first factor and nothing supplies
+the second, which is why the sentence ends inviting proof of a different figure rather
+than naming a fallback.
+
+Five categories shipped `default_ratio = "0.30"` beside `statutory_multiplier = "0.30"`.
+The evaluator reads `default_ratio` in the same slot as a STORED ratio, and stored
+ratios are already effective -- `derive_home_office_ratios_from_censo` multiplies the
+raw proportion by the statutory factor before saving. The default therefore asserted an
+EFFECTIVE thirty per cent, reachable only at a raw afectacion of 1.00.
+
+**Direction of error: OVER-deduction, so under-declared tax.** A 15 m2 room in a 90 m2
+flat is a 16.7 per cent proportion, so the lawful figure is about 5 per cent of the
+utility bill against the 30 per cent that shipped -- roughly six times over, silently,
+on a return the taxpayer signs. This is the first finding in this campaign pointing
+that way; the previous four all cost the taxpayer money rather than exposing them.
+
+Fixed in Step P05.S23 by removing the fabricated factor, which is the ruling this
+codebase had already made once: the same stray `default_ratio` was dropped from the
+HOME_OFFICE_OWNERSHIP siblings in `2026-08-05-ledger-invoice-decomposition` P06.S61 as
+"not a legally established default, just an arbitrary guess". The suministros family
+was left behind by that pass, where the guess was harder to see because 0.30 is also
+the statutory multiplier's own value.
+
+### CONFIRMED, NOT FIXED -- the escape clause has no channel
+
+The same sentence ends "salvo que se pruebe un porcentaje superior o inferior". A
+taxpayer who can prove a different percentage is entitled to it.
+`load_usage_ratios_with_censo_guard` compares a persisted home-office ratio against the
+censo-derived one by EXACT equality and raises `CensoRatioMismatchError` on any
+difference, and refuses outright when no censo is bound. There is no representation for
+a proven percentage, so the second half of the provision cannot be exercised at all.
+
+Direction of error: over-payment for a taxpayer who can prove a HIGHER percentage, who
+is forced down to 30 per cent of area.
+
+Not fixed here, and deliberately so. The guard is doing a legitimate job -- it exists to
+stop a stale stored ratio silently disagreeing with the bound censo, per the
+modelo-036-037 foundation contract amendment. What it lacks is the ability to tell
+"stale" from "deliberately different because proven", and giving it that means adding a
+proven-percentage field with its evidence and deciding how the censo guard treats it.
+That is a schema and contract change against an existing amendment, so it needs a
+decision rather than a tick. **Blocked on an operator/ADR decision, recorded rather
+than smoothed over.**
+
+### CLEARED -- gastos de dificil justificacion carries both its clauses
+
+LIRPF art. 30.2.4a caps the difficult-to-justify provision at 5 per cent of net income
+AND at 2.000 euros annually. Both ship as separate registry parameters
+(`...gastos-dificil-justificacion-rate` value 5 percent,
+`...-cap` value 2000 EUR) and the formula for casilla 0222 is
+`min(max(...), cap)`, so both clauses are applied. No defect.
+
+### SCOPED OUT -- the art. 28.3 three-year clawback is unmodelled, not half-modelled
+
+Art. 28.3 provides that afectacion or desafectacion is not an alteracion patrimonial
+while the asset stays in the taxpayer's patrimony, and that no afectacion is deemed to
+have occurred if the asset is sold within three years. Nothing in the tree implements
+either clause, because asset disposal of elementos afectos is not modelled at all. That
+is an absent feature and a scope question, not a provision the code half-implements, so
+it is recorded here without a CONFIRMED verdict rather than being counted as a defect
+of this class.
+
+### What round two adds to the class
+
+The restated class held: three of the first four defects were lost qualifiers. This
+round's confirmed defect is the same shape seen from the other side -- not a qualifier
+dropped from a value, but a MISSING factor supplied with a plausible number. The tell
+was that the invented factor and the real one carried the same digits, so the data read
+as consistent. A product of two factors where one is a taxpayer measurement is worth
+checking wherever it appears: the code cannot know the second factor, so any value
+sitting in its place was authored, and an authored figure in that slot is a defect
+whatever its magnitude.
