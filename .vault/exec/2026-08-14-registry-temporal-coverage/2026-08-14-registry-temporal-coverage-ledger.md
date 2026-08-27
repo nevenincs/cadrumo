@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:38b921262c8f6ffd0b36cc454e68fcebe321c3d5954d1700f36be5ec0ce04be6'
+body_hash: 'sha256:e064503e50b58be7fed1e104d5853d1bb94ecbec152006013ac3f9f3de40b9c4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -194,6 +194,14 @@ related:
 
 - `S11` `M` `src/cadrumo/domain/calculations/registry/authority.py`
 - `S11` `A` `src/cadrumo/domain/calculations/registry/tests/test_filing_bound_cell_advisories.py`
+
+- `S18` `A` `dev/registry/analysis/coverage_residue_worklist.py`
+- `S18` `A` `dev/registry/tests/test_coverage_residue_worklist.py`
+- `S18` `A` `.vault/audit/2026-08-27-registry-temporal-coverage-coverage-residue-state-audit.md`
+
+- `S15` `A` `dev/registry/retire_applicability_grade_markers.py`
+- `S15` `A` `dev/registry/tests/test_applicability_grade_marker_retirement.py`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/`
 
 ## Notes
 

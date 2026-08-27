@@ -9,7 +9,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
 modified: '2026-08-27'
-body_hash: 'sha256:6298435c7234535370b0db479d459dcf2695c1ffdf8266201e906244c1875615'
+body_hash: 'sha256:7b20ee937522781c6839498cba567ae42c297117f2cfb5c6ee129d623f29e0d1'
 ---
 
 <!-- RETIRED: S31 -->
@@ -127,10 +127,10 @@ Runs the one-shot migration programs over the corpus: prose-marker grade transcr
 
 Transcribe, bound and derive everything evidence settles across the unowned trees, and emit the human residue as a matrix-derived worklist.
 
-- [ ] `W03.P07.S15` - Build and run a one-shot transcriber writing the typed applicability grade into every manifest whose prose self-declares the scheduling grade and deleting the prose marker comment in the same edit so the typed field is the single declaration, proven by property that the marker-grammar set is empty afterwards and the typed set equals the pre-run marker set; `dev/; src/cadrumo/_data/registry/aeat/`.
+- [x] `W03.P07.S15` - Build and run a one-shot transcriber writing the typed applicability grade into every manifest whose prose self-declares the scheduling grade and deleting the prose marker comment in the same edit so the typed field is the single declaration, proven by property that the marker-grammar set is empty afterwards and the typed set equals the pre-run marker set; `dev/; src/cadrumo/_data/registry/aeat/`.
 - [ ] `W03.P07.S16` - Build and run a one-shot bounds applier terminating superseded epochs and repairing the mechanically boundable selectors and the selector-versus-validity coherence mismatches evidence settles, outside the campaign-owned trees, emitting the unsettled remainder to the worklist; `dev/; src/cadrumo/_data/registry/aeat/`.
 - [ ] `W03.P07.S17` - BLOCKED on operator attestation: build the grade-candidate deriver emitting a reviewable promotion proposal per remaining unowned revision, then apply exactly the proposals the operator approves, with no program raising a grade on its own; `dev/; src/cadrumo/_data/registry/aeat/`.
-- [ ] `W03.P07.S18` - Emit the residue worklist from the coverage matrix as a finite diffable report of every cell only adjudication can settle, and persist the campaign state as a vault audit rather than source annotations; `dev/; .vault/audit/`.
+- [x] `W03.P07.S18` - Emit the residue worklist from the coverage matrix as a finite diffable report of every cell only adjudication can settle, and persist the campaign state as a vault audit rather than source annotations; `dev/; .vault/audit/`.
 
 ### Phase `W03.P08` - owned-tree sweep and flip
 
