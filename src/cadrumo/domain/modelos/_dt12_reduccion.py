@@ -22,16 +22,16 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core.external_constants import DT12_RESCATE_REDUCCION_RATE
+from ...core.external_constants import (
+    DT12_CLIFF_LAST_YEAR,
+    DT12_GENERAL_WINDOW_FOLLOWING_YEARS,
+    DT12_RESCATE_REDUCCION_RATE,
+    DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR,
+    DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR,
+    DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS,
+)
 from ...core.money import round_to_cents
 from .errors import PensionReduccionError
-
-# DT 12ª apartado 3 boundary years (LIRPF, added by Ley 26/2014 art. 1.85).
-_DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR = 2011
-_DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR = 2014
-_DT12_GENERAL_WINDOW_FOLLOWING_YEARS = 2  # "o en los dos ejercicios siguientes"
-_DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS = 8  # "hasta la finalización del octavo ejercicio siguiente"
-_DT12_CLIFF_LAST_YEAR = 2018  # "hasta el 31 de diciembre de 2018"
 
 
 def compute_dt12_reduccion_plan_pensiones(
@@ -168,13 +168,13 @@ def dt12_regime_window_eligibility(
 
     if contingencia_year <= 2010:
         branch = Dt12WindowBranch.CLIFF_2010_OR_EARLIER
-        eligible_through_year = _DT12_CLIFF_LAST_YEAR
-    elif _DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR <= contingencia_year <= _DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR:
+        eligible_through_year = DT12_CLIFF_LAST_YEAR
+    elif DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR <= contingencia_year <= DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR:
         branch = Dt12WindowBranch.TRANSITIONAL_2011_2014
-        eligible_through_year = contingencia_year + _DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS
+        eligible_through_year = contingencia_year + DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS
     else:
         branch = Dt12WindowBranch.GENERAL
-        eligible_through_year = contingencia_year + _DT12_GENERAL_WINDOW_FOLLOWING_YEARS
+        eligible_through_year = contingencia_year + DT12_GENERAL_WINDOW_FOLLOWING_YEARS
 
     eligible = contingencia_year <= rescate_year <= eligible_through_year
     return Dt12WindowEligibility(
