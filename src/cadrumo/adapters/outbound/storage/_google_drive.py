@@ -264,7 +264,7 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _is_owned_drive_match(entry: dict[str, Any], *, prefix: str, object_key_hmac: str) -> bool:
+def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_hmac: str) -> bool:
     """Confirm a listed Drive entry is THIS object and is Cadrumo-owned.
 
     The 8-hex filename prefix is only a search key, so a listing can return

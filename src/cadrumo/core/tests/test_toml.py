@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import freeze_toml, parse_toml_text, read_toml, to_str_keyed_dict
+from .. import freeze_toml, read_toml, to_str_keyed_dict
+from .._toml import parse_toml_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

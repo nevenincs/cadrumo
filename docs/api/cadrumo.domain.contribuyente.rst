@@ -40,3 +40,4 @@ Submodules
    cadrumo.domain.contribuyente._normalise
    cadrumo.domain.contribuyente._renta_codes
    cadrumo.domain.contribuyente.errors
+   cadrumo.domain.contribuyente.seguro_enfermedad_insured

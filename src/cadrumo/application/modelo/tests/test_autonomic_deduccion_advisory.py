@@ -44,11 +44,11 @@ from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerification
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile.projections import profile_fact_index
 from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     madrid_nacimiento_adopcion_candidate_weighted_count,
-    profile_fact_index,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

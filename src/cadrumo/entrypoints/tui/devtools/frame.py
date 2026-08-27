@@ -35,6 +35,9 @@ def _widget_label(widget: object) -> str:
     return f"{name}#{ident}" if ident else name
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: Textual's App[ReturnType] is an
+# invariant generic; this devtool accepts any concrete app regardless of the
+# type it returns from run(), which only Any satisfies for every instantiation.
 def screen_text(app: App[Any], width: int, height: int) -> str:
     """The painted cells as plain text.
 
@@ -54,6 +57,7 @@ def screen_text(app: App[Any], width: int, height: int) -> str:
     return console.export_text(styles=False).rstrip("\n")
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: see screen_text above.
 def focus_band(app: App[Any]) -> tuple[str, list[str]]:
     """The focused control and the full tab cycle."""
     chain = [_widget_label(w) for w in app.screen.focus_chain]
@@ -61,6 +65,7 @@ def focus_band(app: App[Any]) -> tuple[str, list[str]]:
     return focused, chain
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: see screen_text above.
 def key_band(app: App[Any]) -> list[str]:
     """Every binding active right now, as ``key=action`` pairs.
 
@@ -78,6 +83,7 @@ def key_band(app: App[Any]) -> list[str]:
     return offered
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: see screen_text above.
 def engine_band(app: App[Any]) -> list[str]:
     """What the flow engine holds, for a surface that has one.
 
@@ -110,6 +116,7 @@ def engine_band(app: App[Any]) -> list[str]:
     return lines
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: see screen_text above.
 def geometry_band(app: App[Any], width: int) -> list[str]:
     """Appearance defects, reported as readings rather than assertions.
 
@@ -189,6 +196,7 @@ class Frame:
         return "\n".join(out)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: see screen_text above.
 def capture(
     app: App[Any],
     *,

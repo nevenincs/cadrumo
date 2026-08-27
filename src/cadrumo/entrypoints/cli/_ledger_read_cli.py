@@ -52,7 +52,7 @@ from ...domain.categories import (
     SpendingCategoryFamily,
 )
 from ...domain.invoices import LinkInconsistency
-from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
+from ...domain.transactions import Transaction, TransactionCatalogue, ledger_irpf_category_catalogue
 from ._common import (
     _bad,
     _canonical_period,

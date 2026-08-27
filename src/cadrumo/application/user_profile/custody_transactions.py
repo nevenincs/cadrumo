@@ -131,6 +131,9 @@ def _computed_self_digest(model: BaseModel, *, maximum_bytes: int, subject: str)
     )
 
 
+# KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: shared field-construction helper
+# behind three unrelated pydantic models (journal, receipt, owner receipt),
+# each with its own field shapes; the caller's model_type pins the real types.
 def _model_json_with_self_digest(
     model_type: type[BaseModel],
     values: dict[str, Any],
@@ -182,6 +185,7 @@ class CustodyDigestModel(BaseModel):
             subject=self._digest_subject,
         )
 
+    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: shared by three concrete models; caller's own type pins field shapes.
     @classmethod
     def _create_with_self_digest(cls: type[_ModelT], values: dict[str, Any], error_message: str) -> _ModelT:
         try:
@@ -371,6 +375,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
         """Return the journal payload excluding the self-digest field."""
         return _payload_without_self_digest(self)
 
+    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
     def create(cls, **values: Any) -> ProfileCustodyTransactionJournal:
         """Construct a journal with a canonical self-digest."""
@@ -416,6 +421,7 @@ class ProfileCustodyTransactionReceipt(CustodyDigestModel):
             raise ValueError("custody receipt self digest does not match")
         return self
 
+    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
     def create(cls, **values: Any) -> ProfileCustodyTransactionReceipt:
         """Construct a receipt with a canonical self-digest."""
@@ -443,6 +449,7 @@ class ProfileCustodyOwnerReceipt(CustodyDigestModel):
             raise ValueError("custody owner receipt self digest does not match")
         return self
 
+    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
     def create(cls, **values: Any) -> ProfileCustodyOwnerReceipt:
         return cls._create_with_self_digest(values, "cannot construct custody owner receipt")
