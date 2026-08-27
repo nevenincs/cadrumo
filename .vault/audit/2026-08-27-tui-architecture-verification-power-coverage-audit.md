@@ -5,48 +5,103 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:de59d0a6d7a76aafa3b2c5ea87b403fc8986dda173922d7c233434de6fd73701'
+body_hash: 'sha256:1601c6a1d5f9a110cb23fa493b381f019d067a588748b60d61843b40e06614ca'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
+# `tui-architecture` audit: verification power across the registry
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+## Why this, and not a list of bad tests
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+The tautology hunt asks of any calculation test: "would this fail if the registry
+formula were wrong against AEAT?" Reading the suite for individually bad tests
+found none worth reporting. What it found instead is that the question mostly
+cannot be answered in the affirmative, because for most of the registry there is
+no AEAT authority in the tree to fail against.
 
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
+`test_external_oracle_grounding_enrolled.py` already holds the oracle RELATION at
+zero in both directions: no bundled oracle value is stranded, and no declared
+grounding claim lacks evidence. That gate is sound and this audit does not
+disturb it. Its own docstring names what it does not measure: "Enrollment ... is
+a ceiling; verification POWER is the count of casillas whose engine value is
+reconciled against an AEAT-authoritative expected value."
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
+Nothing reports that number. This audit reports it.
 
-# `tui-architecture` audit: `Independent oracle grounding covers 12 of 128 registry revisions`
+## The measurement
 
-## Scope
+Taken with the repository's own fold, `audit_bundled_external_grounding()`, not a
+reimplementation.
 
-<!-- What was audited and why -->
+- 26 bundled external oracle evidence entries.
+- 128 registry revisions audited.
+- **12 revisions have at least one independently checked casilla. 116 have none.**
 
-## Findings
+Coverage within the 12, as `independent_check_coverage`:
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+| modelo | checked casillas | coverage |
+|---|---|---|
+| 322 | 3 | 100 % |
+| 353 | 3 | 100 % |
+| 390 | 3 | 75 % |
+| 303 | 10 | 38 % |
+| 200 | 3 | 30 % |
+| 100 | 29 | 15.5 % |
+| 202 | 1 | 7.7 % |
+| 100 | 8 | 5.1 % |
+| 100 | 8 | 4.7 % |
+| 303 | 1 | 3.6 % |
+| 100 | 5 | 3.3 % |
+| 100 | 1.9 % | 4 |
 
-       ### Independent oracle grounding covers 12 of 128 registry revisions | {level} | {summary}
+The two modelos at 100 % reach it with three casillas each. Modelo 100, the
+IRPF flagship, peaks at 15.5 % and has a revision at 1.9 %.
 
-     followed by a paragraph carrying the detail. Independent oracle grounding covers 12 of 128 registry revisions is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+The 116 uncovered revisions span 58 modelos, including every revision of 184,
+763, 714, 131, 165, 308, 309, 490 and 194, and single revisions of 111, 115,
+130, 190, 193, 210, 216, 296, 347, 360 and 720.
 
-## Recommendations
+## What follows from it
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+For those 116 revisions every numeric assertion in the suite rests on arithmetic
+someone authored. That is not the same as saying those tests are wrong -- most
+are continuity and wiring assertions that legitimately test structure rather than
+an AEAT figure, and they are honest about it. It does mean that a systematic
+engine error in those revisions would be reproduced by the tests rather than
+caught, which is precisely the failure mode `no-silent-under-declaration`
+describes: "A value reconciled only against the app's own engine cannot catch a
+systematic engine error the filing matches."
+
+## A gate weakness worth an owner's ruling
+
+The existing gate's coverage assertions are `assert audit.inventory.evidence`,
+`assert audit.rows` and `assert audit.checked_revision_count` -- all non-emptiness
+checks. Deleting 25 of the 26 bundled oracle payloads would leave every assertion
+green, provided no revision still DECLARES a grounding claim for the deleted
+evidence. Verification power can therefore fall silently.
+
+The obvious remedy is a floor, and `aeat-quality-gates` forbids exactly that:
+"Never hardcode an exact count as a pass condition... Gate on the property, not
+the tally." A raw count floor would trade one defect for a rule violation, so the
+shape of the ratchet is a genuine design decision and is left to an owner rather
+than guessed at here.
+
+## Checked and found SOUND
+
+`test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` is the reference
+shape for a non-tautological registry assertion and should be copied. It derives
+the wiring assertion from the live snapshot parameter, and separately pins the
+statutory 18 % (LIS art. 40.2) as a literal whose only job is to catch registry
+drift. Its comments reason about the tautology risk explicitly.
+
+The 130 assertions whose expected side reads the system under test were reviewed
+and are, on inspection, overwhelmingly carry-forward and wiring invariants over
+test-authored inputs -- structural claims, not AEAT numeric claims.
+
+## Probe limitation, stated
+
+The provenance classifier (`tautology_scan.py`) sorts by keyword and cannot
+recognise an oracle test that binds its expected value to a plain `expected`
+variable; it reported zero oracle-derived assertions, which is false. Its buckets
+are not trustworthy as counts and were used only to select candidates for reading.
+The coverage figures above come from the repository's own fold, not from it.
