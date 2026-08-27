@@ -42,7 +42,12 @@ def run_loopback_server(
         handler records onto.
     """
     events: Queue[dict[str, object]] = Queue()
-    handler_class.events = events  # type: ignore[attr-defined]
+    # The events queue is a dynamically attached class attribute the caller's
+    # handler subclass declares (see docstring); BaseHTTPRequestHandler itself
+    # has no such attribute, so this is a genuine dynamic assignment rather
+    # than a statically-known one.
+    events_attribute_name = "events"
+    setattr(handler_class, events_attribute_name, events)
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler_class)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

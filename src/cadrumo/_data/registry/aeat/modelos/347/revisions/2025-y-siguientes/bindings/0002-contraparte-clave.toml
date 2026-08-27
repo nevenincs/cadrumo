@@ -10,17 +10,17 @@
 # operations simply carry operation_clave = None and are skipped by
 # _build_contraparte_clave_rows, not silently mis-declared.
 #
-# `source` is declared "collectible_invoice" on every binding here as a
-# formality the registry schema requires; _observations_for_binding_source
-# reads BOTH payable_invoice and collectible_invoice observations for any
-# binding whose selector grouping is contraparte_clave, regardless of which
-# one source value it names -- mirroring the collectible+payable union
-# 0001-counterpart-summary.toml's declarante-summary bindings already apply
-# at the scalar level.
+# `source` is declared "m347_third_party_operation" -- the combined-direction
+# source RD 1065/2007 art. 33.1 already treats as one concept (see the enum
+# member's docstring in core/aggregation.py) -- on every binding here;
+# _observations_for_binding_source reads BOTH payable_invoice and
+# collectible_invoice observations for that source, mirroring the same union
+# 0001-counterpart-summary.toml's declarante-summary bindings apply at the
+# scalar level.
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-nif"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 aggregation = { op = "rows" }
 legal_refs = [
@@ -38,7 +38,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-nombre"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 aggregation = { op = "rows" }
 legal_refs = [
@@ -56,7 +56,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-clave"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "row_field", row_field = "clave", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 aggregation = { op = "rows" }
 legal_refs = [
@@ -72,7 +72,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-importe"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "row_field", row_field = "importe_total", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 aggregation = { op = "rows" }
 legal_refs = [

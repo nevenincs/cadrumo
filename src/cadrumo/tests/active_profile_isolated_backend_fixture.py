@@ -48,7 +48,7 @@ def _seeded_world(
         if settings_overrides is None:
             resolved_overrides = {}
         elif isinstance(settings_overrides, Mapping):
-            resolved_overrides = settings_overrides
+            resolved_overrides = dict(settings_overrides)
         else:
             resolved_overrides = settings_overrides(root)
         settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()

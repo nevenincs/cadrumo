@@ -6,8 +6,9 @@
 :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
 into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
-:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
+:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
+:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
+:attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
 
 The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
@@ -61,6 +62,7 @@ from ..aggregation import (
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {

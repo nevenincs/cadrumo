@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
+from pydantic import TypeAdapter
 
 from ..core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ..core.i18n import route_key_to_shard
@@ -45,6 +46,8 @@ __all__ = [
 #: three gates and missed by a fourth.
 CATALOGUE_LANGUAGES: tuple[str, ...] = tuple(str(language) for language in SUPPORTED_OUTPUT_LANGUAGES)
 
+_STR_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+
 
 def catalogue_shard_path(language: str, dotted_key: str) -> Path:
     """Return the shard file owning ``dotted_key`` in ``language``.
@@ -61,13 +64,16 @@ def catalogue_shard_path(language: str, dotted_key: str) -> Path:
 def shard_payload(language: str, dotted_key: str) -> Mapping[str, object]:
     """Return the parsed shard owning ``dotted_key`` in ``language``."""
     text = catalogue_shard_path(language, dotted_key).read_text(encoding="utf-8")
-    payload = yaml.safe_load(text)
-    if not isinstance(payload, dict):
+    raw_payload = yaml.safe_load(text)
+    if not isinstance(raw_payload, dict):
         raise TypeError(f"locale shard for {language!r}/{dotted_key!r} is not a mapping")
+    payload = _STR_KEYED_MAPPING_ADAPTER.validate_python(raw_payload)
     # A shard may or may not be wrapped in its language code depending on how it
     # was authored; unwrap the wrapper when it is the sole top-level key.
     inner = payload.get(language)
-    return inner if isinstance(inner, dict) and set(payload) == {language} else payload
+    if isinstance(inner, dict) and set(payload) == {language}:
+        return _STR_KEYED_MAPPING_ADAPTER.validate_python(inner)
+    return payload
 
 
 def flatten_catalogue(node: object, prefix: str = "") -> Iterator[tuple[str, object]]:

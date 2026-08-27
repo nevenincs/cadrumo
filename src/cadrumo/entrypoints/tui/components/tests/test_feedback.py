@@ -12,6 +12,8 @@ reach, looks identical to a working one until driven at a real geometry.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import LoadingIndicator, Static
@@ -24,6 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 class _StatusHarness(App[None]):
+    @override
     def compose(self) -> ComposeResult:
         yield PinnedStatusBar(summary="Sync", id="status")
 
@@ -55,10 +58,20 @@ async def test_status_bar_spinner_is_visible_only_while_the_tone_is_progress() -
         assert not spinner.display
 
 
-def _record(**overrides: object) -> SafeErrorRecord:
-    fields = {"code": "profile_refused", "category": "REFUSED", "message": "The operation could not continue."}
-    fields.update(overrides)
-    return SafeErrorRecord(**fields)  # type: ignore[arg-type]
+def _record(
+    *,
+    action_label: str | None = None,
+    retryable: bool = False,
+    runbook_id: str | None = None,
+) -> SafeErrorRecord:
+    return SafeErrorRecord(
+        code="profile_refused",
+        category="REFUSED",
+        message="The operation could not continue.",
+        action_label=action_label,
+        retryable=retryable,
+        runbook_id=runbook_id,
+    )
 
 
 class _ErrorHarness(App[None]):
@@ -66,6 +79,7 @@ class _ErrorHarness(App[None]):
         super().__init__()
         self._record = record
 
+    @override
     def compose(self) -> ComposeResult:
         yield ErrorPanel(self._record, id="error")
 
@@ -102,22 +116,23 @@ async def test_error_panel_renders_every_typed_safe_extension_field_when_supplie
 def test_safe_error_record_never_accepts_context_or_trace_fields() -> None:
     """`ErrorEnvelope.context`/`.trace_id` stay operator-support-only, never a public TUI field."""
     with pytest.raises(TypeError):
-        SafeErrorRecord(  # type: ignore[call-arg]
+        SafeErrorRecord(
             code="profile_refused",
             category="REFUSED",
             message="The operation could not continue.",
-            context={"k": "v"},
+            context={"k": "v"},  # type: ignore[call-arg]  # ty: ignore[unknown-argument]  # reason: an unaccepted context field IS the refusal under test
         )
     with pytest.raises(TypeError):
-        SafeErrorRecord(  # type: ignore[call-arg]
+        SafeErrorRecord(
             code="profile_refused",
             category="REFUSED",
             message="The operation could not continue.",
-            trace_id="trace-1",
+            trace_id="trace-1",  # type: ignore[call-arg]  # ty: ignore[unknown-argument]  # reason: an unaccepted trace_id field IS the refusal under test
         )
 
 
 class _EmptyLogHarness(App[None]):
+    @override
     def compose(self) -> ComposeResult:
         yield BoundedLogPanel((), id="logs")
 
@@ -137,6 +152,7 @@ async def test_bounded_log_panel_renders_a_real_empty_state_and_is_keyboard_focu
 
 
 class _PopulatedLogHarness(App[None]):
+    @override
     def compose(self) -> ComposeResult:
         yield BoundedLogPanel(
             (SafeLogRecord(LogSeverity.INFO, "first record"), SafeLogRecord(LogSeverity.ERROR, "second record")),

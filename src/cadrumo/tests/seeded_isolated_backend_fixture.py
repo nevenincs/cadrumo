@@ -110,7 +110,8 @@ def seeded_isolated_backend_fixture(
 
     @pytest.fixture(name=name, autouse=autouse)
     def _copied_backend(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[None]:
-        origin: Path = request.getfixturevalue(origin_name)
+        origin = request.getfixturevalue(origin_name)
+        assert isinstance(origin, Path)
         clone = tmp_path / "seeded-world"
         shutil.copytree(origin, clone)
         with _open_world(clone):

@@ -568,16 +568,17 @@ def resolve_invoice_family_row_values(
     the cohort key (``cohort_by_source = True``) so a different counterpart
     source kind does not share rows; the invoice family does not.
 
-    M347's ``contraparte_clave`` grouping is the one exception to
-    ``cohort_by_source``, regardless of the flag's value: the diseño de
-    registro's Tipo-2 declarado record is ONE shared physical sequence for
-    every clave (grounded in the tui-architecture modelo 347 contraparte
-    binding inventory reference), so a purchase-sourced (payable_invoice)
-    clave-A row and a sale-sourced (collectible_invoice) clave-B row for
-    different counterparties must share one row-index sequence rather than
-    each restarting at 1 and colliding in the same physical record slot.
-    M349's own two groupings are unaffected -- this reads ``grouping``, not
-    the ``cohort_by_source`` flag every OTHER family still controls.
+    M347's ``contraparte_clave`` grouping needs every clave to share ONE row
+    sequence, because the diseño de registro's Tipo-2 declarado record is one
+    shared physical sequence regardless of clave (grounded in the
+    tui-architecture modelo 347 contraparte binding inventory reference).
+    That now falls out of ``cohort_by_source`` directly rather than needing a
+    grouping-keyed exception: every ``contraparte_clave`` binding declares the
+    combined-direction :attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
+    source (see that member's docstring), so ``binding.source`` is already
+    identical across claves and the cohort key naturally coincides. M349's own
+    two groupings, which still declare distinct ``payable_invoice`` /
+    ``collectible_invoice`` sources per binding, are unaffected.
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
@@ -591,8 +592,7 @@ def resolve_invoice_family_row_values(
         if selector.fact != "row_field":
             continue
         assert selector.grouping is not None  # guarded by validator
-        shares_one_sequence_across_sources = selector.grouping == "contraparte_clave"
-        cohort_source = binding.source if cohort_by_source and not shares_one_sequence_across_sources else None
+        cohort_source = binding.source if cohort_by_source else None
         cohort_key = (
             cohort_source,
             selector.grouping,
@@ -680,16 +680,15 @@ def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: DataBindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
-    if dict(binding.selector).get("grouping") == "contraparte_clave":
-        # M347's contraparte_clave family reads BOTH invoice directions
-        # regardless of which one binding.source names, mirroring
-        # _resolve_m347_declarante_summary_values's union of collectible and
-        # payable observations for the scalar declarante-summary bindings --
-        # the same union, now applied to the row-producer family so a
-        # purchase (clave A) and a sale (clave B) share one row sequence in
-        # the single Tipo-2 declarado record stream (grounded in the
-        # tui-architecture modelo 347 contraparte binding inventory
-        # reference).
+    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
+        # A binding declaring the combined-direction source reads BOTH
+        # underlying invoice directions: each InvoiceObservation still
+        # carries its own true PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction
+        # as its own source_kind (see M347_THIRD_PARTY_OPERATION's
+        # docstring), so this union is the resolver honouring what the
+        # binding's own declared source now truthfully claims to consume --
+        # the M347 declarante-summary totals and the per-counterparty
+        # contraparte_clave row family both declare this source.
         return tuple(
             observation
             for observation in observations
