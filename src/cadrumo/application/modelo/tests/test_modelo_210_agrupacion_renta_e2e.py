@@ -27,7 +27,7 @@ from .._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_r
 from .._calculation_actions import calculate_modelo_revision
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
 from .._work_lifecycle import create_work_unit
-from .._work_plazo import calculated_m210_plazo_notice
+from .._work_plazo import calculated_m210_plazo_resolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -151,7 +151,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             bucket_event_repository=event_repo,
             clock=_CLOCK,
         )
-        plazo_notice = calculated_m210_plazo_notice(
+        plazo_resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=active_taxpayer_profile(work_unit),
@@ -160,9 +160,9 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
     assert revision.detail_rows == rows
     assert revision.m210_official_tipo_renta_code == "01"
     assert revision.casilla_values["base_imponible"] == Decimal("900.00")
-    assert plazo_notice is not None
-    assert plazo_notice.code == "modelo.work.m210.plazo_resolved"
-    assert plazo_notice.context == {
+    assert plazo_resolution is not None
+    assert plazo_resolution.closes_on
+    assert plazo_resolution.context == {
         "modelo": "210",
         "filing_year": "2025",
         "period": "0A",
@@ -267,7 +267,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
             ),
         )
         calculate_notices = tuple(
-            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
+            resolution for resolution in calculation_result.plazo_resolutions
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
@@ -319,7 +319,7 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
             ),
         )
         calculate_notices = tuple(
-            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
+            resolution for resolution in calculation_result.plazo_resolutions
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
@@ -362,7 +362,7 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
             ),
         )
         calculate_notices = tuple(
-            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
+            resolution for resolution in calculation_result.plazo_resolutions
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 

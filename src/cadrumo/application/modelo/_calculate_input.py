@@ -48,7 +48,6 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
-from ...core.json_contract import Notice
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
@@ -103,6 +102,7 @@ from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
+from ._work_plazo import M210PlazoResolution
 from .profile_binding import MaternidadMesesResolution
 from .work_addressing import (
     ModeloWorkSelectorRequest,
@@ -309,7 +309,7 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -355,25 +355,25 @@ def calculate_modelo_work_revision(
         catalogue=catalogue,
         bucket_id=bucket_id,
     )
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo.M210:
         from ._m303_regimen_simplificado_scope import active_taxpayer_profile
-        from ._work_plazo import calculated_m210_plazo_notice
+        from ._work_plazo import calculated_m210_plazo_resolution
 
-        notice = calculated_m210_plazo_notice(
+        resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=active_taxpayer_profile(work_unit),
         )
-        if notice is not None:
-            plazo_notices = (notice,)
+        if resolution is not None:
+            plazo_resolutions = (resolution,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
-        plazo_notices=plazo_notices,
+        plazo_resolutions=plazo_resolutions,
     )
 
 

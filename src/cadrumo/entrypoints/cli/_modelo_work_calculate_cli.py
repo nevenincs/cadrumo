@@ -55,6 +55,7 @@ from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
     calculation_revision_state_label,
+    m210_plazo_notice,
     source_diagnostic_notice,
     source_diagnostic_notice_text,
     work_unit_deadline_output,
@@ -212,7 +213,7 @@ def _run_work_calculate(
         notices=[
             *authorization_notices,
             *source_advisory_notices,
-            *calculation_result.plazo_notices,
+            *(m210_plazo_notice(resolution) for resolution in calculation_result.plazo_resolutions),
             *deadline_notices,
         ],
     )

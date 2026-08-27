@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 from ...application.modelo._result_summary import calculation_result_summary
 from ...application.modelo._verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo._work_plazo import (
+    M210PlazoResolution,
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
@@ -74,6 +75,25 @@ _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
 # --binding override on 1577.
 _M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
 _M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
+
+
+def m210_plazo_notice(resolution: M210PlazoResolution) -> Notice:
+    """Render the resolved Modelo 210 filing window as an operator notice.
+
+    The application layer resolves the window and hands back facts; the
+    prose is built here, which is the only layer allowed to localize. The
+    notice context is the resolution's own metadata, so the JSON envelope and
+    the text line cannot describe different windows.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="modelo.work.m210.plazo_resolved",
+        message=tr(
+            "cli.app.modelo.work.m210_plazo_resolved",
+            closes_on=resolution.closes_on,
+        ),
+        context=dict(resolution.context),
+    )
 
 
 def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
