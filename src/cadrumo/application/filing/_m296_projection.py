@@ -23,6 +23,7 @@ record's own ``required`` flag, checked by the renderer.
 
 from __future__ import annotations
 
+from ...core import FilingProjectionRef
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot import FilingProducerSnapshot, Modelo296ProfileFacts
@@ -47,6 +48,15 @@ def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
     if collection is None:
         return ()
     return tuple(getattr(profile, collection, ()) or ())
+
+
+def _m296_field_name(reference: FilingProjectionRef) -> str:
+    """Return the row-attribute name carried by a supported M296 reference."""
+    match reference.projection_kind:
+        case "m296_perceptor" | "m296_perceptor_intereses" | "m296_anexo_pago" | "m296_anexo_certificado":
+            return reference.field.value
+        case _:
+            raise ValueError(f"unsupported modelo 296 projection kind {reference.projection_kind!r}")
 
 
 def build_m296_filing_projection_plan(
@@ -88,7 +98,7 @@ def build_m296_filing_projection_plan(
                     # The reference's field IS the row attribute -- the row types are generated
                     # from the same enums -- so a missing one is a defect rather than an absent
                     # value, and getattr without a default is what surfaces it.
-                    value=getattr(row, ref.field.value),
+                    value=getattr(row, _m296_field_name(ref)),
                 )
                 for ref in refs
             )

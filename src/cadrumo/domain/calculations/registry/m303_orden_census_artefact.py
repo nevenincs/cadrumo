@@ -36,6 +36,7 @@ See Also:
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -108,7 +109,7 @@ def render_m303_annual_orden_censuses(censuses: tuple[M303AnnualOrdenSourceCensu
 def load_m303_annual_orden_censuses(
     root: Path,
     *,
-    sources: dict[SourceRefId, SourceReference] | None = None,
+    sources: Mapping[SourceRefId, SourceReference] | None = None,
 ) -> dict[SourceRefId, M303AnnualOrdenSourceCensus] | None:
     """Load the shipped censuses for ``root``, or ``None`` to extract instead.
 
@@ -151,7 +152,7 @@ def load_m303_annual_orden_censuses(
 
 def _censuses_match_pinned_sources(
     censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus],
-    sources: dict[SourceRefId, SourceReference],
+    sources: Mapping[SourceRefId, SourceReference],
 ) -> bool:
     """Whether every shipped census describes the source the registry pins."""
     for source_ref, census in censuses.items():

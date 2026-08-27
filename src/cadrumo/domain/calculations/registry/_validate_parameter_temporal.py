@@ -13,6 +13,12 @@ from datetime import date, timedelta
 from .schema import ModeloRevision
 from .schema_formula import DatedValue, ParameterDefinition
 
+__all__ = [
+    "_bracket_coverage_gaps",
+    "validate_bracket_table_temporal_coverage",
+    "validate_dated_values",
+]
+
 _FAR_FUTURE = date(9999, 12, 31)
 
 

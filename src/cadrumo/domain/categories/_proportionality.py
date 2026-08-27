@@ -308,16 +308,53 @@ class StatutoryCapPeriod(StrEnum):
 
 
 class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
-    """One legally distinct daily cap inside a statutory-cap rule."""
+    """One legally distinct cap inside a statutory-cap rule, selected by a condition.
+
+    The condition is what makes a variant a variant; the UNIT of the amount is
+    incidental and the law uses both. RIRPF art. 9.A.3.a distinguishes con and sin
+    pernocta and states DAILY amounts; LIRPF art. 30.2.5.a distinguishes a person with
+    discapacidad from one without and states ANNUAL per-person amounts. Modelling only
+    the daily unit is why the second provision could ship with one of its two limbs
+    missing.
+
+    Attributes:
+        id: Stable identifier the calculation context selects on.
+        label: Translation key for the human-readable label.
+        statutory_cap_eur_per_day: A daily amount, for a rule capped per day.
+        statutory_cap_eur: An annual amount, for a rule capped per period. Exactly
+            one of the two is set: a variant carrying both would leave the unit to
+            the call site, and a variant carrying neither caps nothing.
+    """
 
     id: str = Field(min_length=1, max_length=64)
     label: tr = Field(description="Translation key for the human-readable label.")
-    statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
+    statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
+    statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
 
     @model_validator(mode="after")
     def _validate_label(self) -> StatutoryCapVariant:
         _require_translatable_text(self.label, "statutory cap variant label")
+        declared = (self.statutory_cap_eur_per_day is not None, self.statutory_cap_eur is not None)
+        if not any(declared):
+            raise CategoryValidationError(
+                f"statutory cap variant {self.id!r} declares no amount; a variant that caps "
+                "nothing cannot be selected for anything",
+            )
+        if all(declared):
+            raise CategoryValidationError(
+                f"statutory cap variant {self.id!r} declares both a daily and an annual amount; "
+                "the unit must be fixed by the variant, not chosen at the call site",
+            )
         return self
+
+    @property
+    def is_per_day(self) -> bool:
+        """Return whether this variant's amount is a daily one.
+
+        Returns:
+            ``True`` when the variant carries :attr:`statutory_cap_eur_per_day`.
+        """
+        return self.statutory_cap_eur_per_day is not None
 
 
 class StatutoryCapAmount(_ProportionalityStrictFrozenModel):
@@ -471,6 +508,18 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         variant_ids = [variant.id for variant in self.statutory_cap_variants]
         if len(set(variant_ids)) != len(variant_ids):
             raise CategoryValidationError("statutory cap variant ids must be unique")
+        if self.statutory_cap_variants:
+            units = {variant.is_per_day for variant in self.statutory_cap_variants}
+            if len(units) > 1:
+                raise CategoryValidationError(
+                    "statutory cap variants must agree on their unit; mixing a daily variant with "
+                    "an annual one leaves the resolver to guess which the rule is capped in",
+                )
+            if not next(iter(units)) and self.statutory_cap_period is None:
+                raise CategoryValidationError(
+                    "annual statutory cap variants require statutory_cap_period, which is the "
+                    "period the per-person amount applies over",
+                )
 
     def _reject_contradictory_scheduled_caps(self) -> None:
         """Two different amounts covering one filing year is a contradiction.

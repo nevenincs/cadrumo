@@ -73,11 +73,11 @@ _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=T
 # ---------------------------------------------------------------------------
 
 
-_M184_CLAVE = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
-_M184_SUBCLAVE = Literal["01", "02", "03", "04", "05", "06"]
-_M184_NATURALEZA_INMUEBLE = Literal["1", "2"]
-_M184_SITUACION_INMUEBLE = Literal["1", "2", "3", "4", "5"]
-_M184_CLAVE_DECLARADO = Literal["N", "T", "U", "O"]
+type M184Clave = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
+type M184Subclave = Literal["01", "02", "03", "04", "05", "06"]
+type M184NaturalezaInmueble = Literal["1", "2"]
+type M184SituacionInmueble = Literal["1", "2", "3", "4", "5"]
+type M184ClaveDeclarado = Literal["N", "T", "U", "O"]
 
 
 class Modelo184MemberRow(BaseModel):
@@ -134,8 +134,8 @@ class Modelo184MemberRow(BaseModel):
     # (member, clave, subclave) repetition axis. clave is required -- the
     # socio record's own diseño has no row without one; subclave is optional
     # because claves C and E carry no subclave table at all.
-    clave: _M184_CLAVE
-    subclave: _M184_SUBCLAVE | None = None
+    clave: M184Clave
+    subclave: M184Subclave | None = None
 
     # Always-present-per-row facts, independent of clave.
     codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
@@ -144,10 +144,10 @@ class Modelo184MemberRow(BaseModel):
     domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
 
     # Clave-C inmueble sub-block.
-    naturaleza_inmueble: _M184_NATURALEZA_INMUEBLE | None = None
-    situacion_inmueble: _M184_SITUACION_INMUEBLE | None = None
+    naturaleza_inmueble: M184NaturalezaInmueble | None = None
+    situacion_inmueble: M184SituacionInmueble | None = None
     referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
-    clave_declarado: _M184_CLAVE_DECLARADO | None = None
+    clave_declarado: M184ClaveDeclarado | None = None
     porcentaje_titularidad_inmueble: Decimal | None = None
     dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
 
@@ -992,6 +992,11 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
 
 
 __all__ = [
+    "M184Clave",
+    "M184ClaveDeclarado",
+    "M184NaturalezaInmueble",
+    "M184SituacionInmueble",
+    "M184Subclave",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
     "Modelo210AgrupacionRentaRow",

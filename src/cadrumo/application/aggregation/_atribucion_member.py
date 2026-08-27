@@ -15,6 +15,8 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import ClassVar
 
+from pydantic import TypeAdapter
+
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import tax_id_identity_token
@@ -22,7 +24,14 @@ from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,
 )
-from ...domain.modelos import Modelo184MemberRow
+from ...domain.modelos import (
+    M184Clave,
+    M184ClaveDeclarado,
+    M184NaturalezaInmueble,
+    M184SituacionInmueble,
+    M184Subclave,
+    Modelo184MemberRow,
+)
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import numeric_value_refusal
@@ -238,16 +247,16 @@ def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
         nombre=str(socio.values["name"]).strip(),
         porcentaje=_decimal(socio.values["share_pct"]),
         importe=_decimal(socio.values["base_imponible_assigned"]),
-        clave=str(socio.values["clave"]),
-        subclave=_optional_str(socio.values.get("subclave")),
+        clave=_clave(socio.values["clave"]),
+        subclave=_optional_subclave(socio.values.get("subclave")),
         codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
         miembro_a_31_diciembre=_optional_bool(socio.values.get("miembro_a_31_diciembre")),
         dias_miembro=_optional_int(socio.values.get("dias_miembro")),
         domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
-        naturaleza_inmueble=_optional_str(socio.values.get("naturaleza_inmueble")),
-        situacion_inmueble=_optional_str(socio.values.get("situacion_inmueble")),
+        naturaleza_inmueble=_optional_naturaleza_inmueble(socio.values.get("naturaleza_inmueble")),
+        situacion_inmueble=_optional_situacion_inmueble(socio.values.get("situacion_inmueble")),
         referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
-        clave_declarado=_optional_str(socio.values.get("clave_declarado")),
+        clave_declarado=_optional_clave_declarado(socio.values.get("clave_declarado")),
         porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
         dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
         reduccion=_optional_decimal(socio.values.get("reduccion")),
@@ -262,6 +271,41 @@ def _optional_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value).strip() or None
+
+
+_CLAVE_ADAPTER: TypeAdapter[M184Clave] = TypeAdapter(M184Clave)
+_SUBCLAVE_ADAPTER: TypeAdapter[M184Subclave] = TypeAdapter(M184Subclave)
+_NATURALEZA_INMUEBLE_ADAPTER: TypeAdapter[M184NaturalezaInmueble] = TypeAdapter(M184NaturalezaInmueble)
+_SITUACION_INMUEBLE_ADAPTER: TypeAdapter[M184SituacionInmueble] = TypeAdapter(M184SituacionInmueble)
+_CLAVE_DECLARADO_ADAPTER: TypeAdapter[M184ClaveDeclarado] = TypeAdapter(M184ClaveDeclarado)
+
+
+def _clave(value: object) -> M184Clave:
+    return _CLAVE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_subclave(value: object) -> M184Subclave | None:
+    if value is None:
+        return None
+    return _SUBCLAVE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_naturaleza_inmueble(value: object) -> M184NaturalezaInmueble | None:
+    if value is None:
+        return None
+    return _NATURALEZA_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_situacion_inmueble(value: object) -> M184SituacionInmueble | None:
+    if value is None:
+        return None
+    return _SITUACION_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_clave_declarado(value: object) -> M184ClaveDeclarado | None:
+    if value is None:
+        return None
+    return _CLAVE_DECLARADO_ADAPTER.validate_python(str(value).strip())
 
 
 def _optional_bool(value: object) -> bool | None:

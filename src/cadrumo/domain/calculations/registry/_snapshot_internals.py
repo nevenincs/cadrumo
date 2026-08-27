@@ -755,3 +755,23 @@ def collect_snapshot_ref_ids(
         include_deadline_windows=include_deadline_windows,
     )
     return legal_ids, source_ids
+
+
+#: This module's docstring already states the boundary this enforces: kept
+#: private so a caller OUTSIDE the package cannot bind to a validation step or
+#: cache the contract does not promise. Within the package, :mod:`snapshot`
+#: and :mod:`authority` are the sanctioned consumers of the construction
+#: internals below, so this lists every name they (and this module's own test
+#: suite) actually reach across the module boundary -- never a wildcard, and
+#: never widened to symbols nothing outside this file uses.
+__all__ = [
+    "_SNAPSHOT_CACHE",
+    "_SUBSTANTIVE_LAW_KINDS",
+    "_build_validated_snapshot",
+    "_check_revision_scoped_legal_windows",
+    "_check_snapshot_filing_capability",
+    "_validate_materialized_export_record_families",
+    "_validate_modelo_once",
+    "check_snapshot_filing_review_tier",
+    "collect_snapshot_ref_ids",
+]

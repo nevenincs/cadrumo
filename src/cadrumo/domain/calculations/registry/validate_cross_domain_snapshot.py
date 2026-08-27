@@ -53,6 +53,7 @@ class CrossDomainSnapshotCheck(Protocol):
         revision_binding_ids: frozenset[BindingId] = ...,
     ) -> list[str]:
         """Return the snapshot-routing failures detected by this peer-domain check."""
+        ...
 
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []

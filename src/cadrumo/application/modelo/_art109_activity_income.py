@@ -35,7 +35,6 @@ from ...domain.calculations.registry.formula_runtime_ops import resolve_paramete
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos import WorkUnit
-from ...core import TipoActividad
 from ...domain.transactions import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     IRPF_CATEGORY_TRABAJO,

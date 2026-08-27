@@ -110,9 +110,7 @@ def _coverage(*rows: Transaction):
 
 def _declared_concepts(parameter_id: str) -> frozenset[ConceptoIngreso]:
     parameter = load_legal_parameters_only(bundled_path("registry", "aeat"))[parameter_id]
-    return frozenset(
-        ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip()
-    )
+    return frozenset(ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip())
 
 
 def test_the_two_provisions_disagree_on_exactly_one_concept() -> None:
@@ -212,8 +210,7 @@ def test_a_subsidy_no_longer_depresses_the_ratio_for_an_agrarian_filer() -> None
 
     assert coverage.status is Art109ActivityIncomeCoverageStatus.PROVEN
     assert coverage.denominator == Decimal("7000.00"), (
-        "the subsidy is still in the base; art. 109.3 excludes it and the filer is being "
-        "denied an exemption they hold"
+        "the subsidy is still in the base; art. 109.3 excludes it and the filer is being denied an exemption they hold"
     )
     assert coverage.meets_threshold is True
 

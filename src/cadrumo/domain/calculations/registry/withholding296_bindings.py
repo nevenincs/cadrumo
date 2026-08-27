@@ -30,6 +30,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "Withholding296Observation",
+    "_Withholding296Selector",
     "resolve_withholding296_binding_row_values",
     "validate_withholding296_binding_selector_shape",
 ]

@@ -15,9 +15,11 @@ from ....core.identity import TaxIdIdentityToken
 from ._m347_threshold import m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
+    M347_OPERATION_CLAVES,
     BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
+    operation_clave_validator,
     selector_against_model,
     unique_tuple,
     uppercase_alpha_code,
@@ -55,6 +57,7 @@ __all__ = [
     "compute_modelo_349_operador_totals_parity",
     "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
+    "m347_operation_clave",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_invoice_family_row_values",
@@ -79,7 +82,10 @@ class InvoiceObservation(BaseModel):
     transaction. ``base_amount`` carries the taxable base; ``invoice_total_amount``
     carries the gross invoice total for modelos such as M347 whose declaration
     floor is not the taxable-base amount. ``intracommunity_clave`` follows the
-    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C).
+    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C) for M349.
+    ``operation_clave`` carries M347's OWN, unrelated clave-de-operacion
+    vocabulary (A-G; see :func:`m347_operation_clave`) -- the two claves share
+    no values in common and a row must never mix them.
     ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
     classification alongside.
     """
@@ -95,6 +101,7 @@ class InvoiceObservation(BaseModel):
     invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
+    operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
     rectified_period: str | None = Field(default=None, max_length=8)
@@ -103,6 +110,9 @@ class InvoiceObservation(BaseModel):
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
+    _operation_clave_valid = field_validator("operation_clave")(
+        operation_clave_validator(field_label="operation_clave", claves=M347_OPERATION_CLAVES),
+    )
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -212,6 +222,39 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
     if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
         return False
     return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
+
+
+def m347_operation_clave(source_kind: BindingSourceKind) -> str | None:
+    """Return the M347 clave de operacion determinable from ``source_kind`` alone.
+
+    Grounded against RD 1065/2007 arts. 31/33 and RD 1619/2012 disposicion
+    adicional cuarta (recorded in the tui-architecture modelo 347 contraparte
+    binding inventory reference). Only two of the seven claves are
+    determinable from the invoice direction alone:
+
+    * ``PAYABLE_INVOICE`` (an invoice the taxpayer must pay -- a purchase) is
+      clave ``A``, adquisiciones de bienes y servicios superiores a
+      3.005,06 EUR.
+    * ``COLLECTIBLE_INVOICE`` (an invoice the taxpayer will collect -- a
+      sale) is clave ``B``, entregas de bienes y prestaciones de servicios
+      superiores a 3.005,06 EUR.
+
+    The remaining five claves each key on a fact this function's single
+    ``source_kind`` argument cannot carry: ``C`` (cobros por cuenta de
+    terceros) needs a professional-fees-collection classification distinct
+    from ordinary purchase/sale direction; ``D``/``E`` key on the FILER's own
+    type (entidad pública, partido, sindicato, ...) rather than on any
+    transaction classification; ``F``/``G`` key on a mediación-de-agencia-de-
+    viajes fact under RD 1619/2012, unrelated to IVA direction. Returns
+    ``None`` for those and for any non-invoice source kind, rather than
+    guessing -- a caller distinguishing them needs a fact this function does
+    not have, not a default.
+    """
+    if source_kind is BindingSourceKind.PAYABLE_INVOICE:
+        return "A"
+    if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE:
+        return "B"
+    return None
 
 
 def invoice_binding_requirements(

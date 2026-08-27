@@ -17,6 +17,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 from .schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 __all__ = [
+    "M347_OPERATION_CLAVES",
     "BindingExportDataType",
     "BindingExportSelector",
     "BindingFixedExportSelector",
@@ -31,6 +32,7 @@ __all__ = [
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "manual_input_record_field_selector",
+    "operation_clave_validator",
     "selector_against_model",
     "selector_as_dict",
     "unique_tuple",
@@ -612,6 +614,12 @@ def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | Non
 
 
 _AEAT_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
+#: Modelo 347's OWN clave de operacion vocabulary (RD 1065/2007 arts. 31/33,
+#: RD 1619/2012 disposicion adicional cuarta), disjoint from M349's
+#: intracommunity clave set above -- the letter A means a different thing in
+#: each. Confirmed against every bundled M347 diseno de registro (2008-2009,
+#: 2010, 2011, 2025-y-siguientes): none declares an "H" or "I" clave.
+M347_OPERATION_CLAVES: frozenset[str] = frozenset({"A", "B", "C", "D", "E", "F", "G"})
 
 
 def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]:
@@ -622,14 +630,29 @@ def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]
     optional, must be uppercase, and must be one of the closed AEAT clave de
     operación set. The single factory replaces both copies.
     """
+    return operation_clave_validator(field_label="intracommunity_clave", claves=_AEAT_OPERATION_CLAVES)
+
+
+def operation_clave_validator(
+    *,
+    field_label: str,
+    claves: frozenset[str],
+) -> Callable[[type, str | None], str | None]:
+    """Build an optional, uppercase, closed-set clave-de-operacion field validator.
+
+    Generalises :func:`intracommunity_clave_validator` to any closed clave
+    vocabulary -- a modelo's clave letters mean nothing outside their own
+    modelo's set, so the closed set is a parameter, never a hand-listed
+    literal at the call site.
+    """
 
     def _validate(cls: type, value: str | None) -> str | None:
         if value is None:
             return None
         if value != value.upper():
-            raise RegistryValidationError("intracommunity_clave must be uppercase")
-        if value not in _AEAT_OPERATION_CLAVES:
-            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
+            raise RegistryValidationError(f"{field_label} must be uppercase")
+        if value not in claves:
+            raise RegistryValidationError(f"{field_label} {value!r} is not an AEAT clave de operacion")
         return value
 
     return _validate

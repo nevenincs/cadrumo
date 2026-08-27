@@ -121,7 +121,14 @@ def previous_filing_observation_requirements(
     source_presence_groups_by_key: dict[tuple[ModeloId, int, str], set[tuple[CasillaId, ...]]] = {}
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
-    dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str | None] = {}
+    # Same closed vocabulary as
+    # :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`
+    # and :attr:`RegistryFoldRequirement.dependency_treatment`, which this
+    # value ultimately feeds -- typed to match rather than widened to `str`.
+    dependency_treatment_by_key: dict[
+        tuple[ModeloId, int, str],
+        Literal["direct_annual_settlement", "factual_evidence", "non_dependency"] | None,
+    ] = {}
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }

@@ -268,6 +268,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
             "id": data.get("id"),
             "label": tr(str(data.get("label"))),
             "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
+            "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
         },
     )
 

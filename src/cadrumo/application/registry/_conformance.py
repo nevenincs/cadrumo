@@ -126,6 +126,7 @@ from ...domain.calculations.registry.classification_coherence import (
 from ...domain.calculations.registry.coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from ...domain.calculations.registry.coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from ...domain.calculations.registry.coverage import ConstructEvidenceRow as _ConstructEvidenceRow
+from ...domain.calculations.registry.coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
 from ...domain.calculations.registry.coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
 from ...domain.calculations.registry.coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
 from ...domain.calculations.registry.coverage import RegistryCoverageAudit as _RegistryCoverageAudit
@@ -683,7 +684,7 @@ class RevisionConstructEvidence(ConformanceModel):
     ledger: _ConstructEvidenceLedger
 
     @property
-    def authority_scope(self) -> CoverageAuthorityScope:
+    def authority_scope(self) -> RevisionCoverageAuthorityScope:
         """Return the authority scope declared by the underlying ledger."""
         return self.ledger.authority_scope
 
@@ -1342,7 +1343,7 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
     """
     if not ledgers:
         raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
-    gates_by_tier = {
+    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]] = {
         tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
         for tier in (*_REQUIRED_COVERAGE_TIERS, "executable_parity_evidence")
     }
@@ -1360,7 +1361,7 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
             for ledger in ledgers
         )
     )
-    scopes = {ledger.authority_scope for ledger in ledgers}
+    scopes: set[RevisionCoverageAuthorityScope] = {ledger.authority_scope for ledger in ledgers}
     authority_scope: RevisionCoverageAuthorityScope = next(iter(scopes)) if len(scopes) == 1 else "mixed"
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,

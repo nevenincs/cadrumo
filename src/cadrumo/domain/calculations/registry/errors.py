@@ -48,7 +48,7 @@ class RegistryFailureClassification:
     facts: Mapping[str, str | int | bool]
 
 
-class RegistryError(TerminalPreconditionErrorMixin, CadrumoError, ValueError):
+class RegistryError(TerminalPreconditionErrorMixin[object], CadrumoError, ValueError):
     """Base error retaining domain facts for a higher-layer action projection."""
 
     def __init__(

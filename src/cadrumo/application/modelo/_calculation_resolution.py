@@ -249,7 +249,7 @@ def build_calculation_replay_payloads(
     resolved_enum_bindings: Mapping[BindingId, str],
     resolved_date_bindings: Mapping[BindingId, date],
     resolved_relations: Mapping[RelationId, Decimal],
-    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
 ) -> CalculationReplayPayloads:
     """Convert resolved engine inputs into persisted :class:`CalculationReplayPayloads`.
 
@@ -287,14 +287,26 @@ def build_calculation_replay_payloads(
 
 
 def _row_binding_replay_values(
-    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str],
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str | int | bool],
 ) -> dict[BindingId, dict[str, str]]:
     replay_values: dict[BindingId, dict[str, str]] = {}
     for (binding_id, row_index), value in sorted(resolved_row_bindings.items()):
         if row_index < 1:
             raise ValueError(f"row binding {binding_id!r} carries non-positive row index {row_index!r}")
         row_values = replay_values.setdefault(binding_id.strip(), {})
-        row_values[str(row_index)] = _canonical_decimal_str(value) if isinstance(value, Decimal) else value.strip()
+        if isinstance(value, bool):
+            # A subclass of ``int``, so tested before ``int``/``Decimal`` --
+            # matches the boolean-to-Decimal("1")/Decimal("0") convention
+            # already established for engine-facing binding channels (see
+            # ``profile_binding._decimal_value``).
+            canonical = _canonical_decimal_str(Decimal("1") if value else Decimal("0"))
+        elif isinstance(value, Decimal):
+            canonical = _canonical_decimal_str(value)
+        elif isinstance(value, int):
+            canonical = _canonical_decimal_str(Decimal(value))
+        else:
+            canonical = value.strip()
+        row_values[str(row_index)] = canonical
     return replay_values
 
 
