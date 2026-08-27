@@ -74,3 +74,35 @@ governing authority. This decision should land as its own ADR-level
 ruling if it changes the row model's shape, since a shape change to a
 detail-row model used by threshold validation and (once built) export
 rendering has effects wider than this one Step.
+
+### modelo 347 contraparte quarterly transmisiones representation gap | update | the legitimacy question is now resolved, grounded against the bundled law
+
+Read RD 1065/2007 art. 34.1 in the bundled consolidated text
+(`corpus/normatives/html/rd-1065-2007.html.extracted.md`, "Artículo 34.
+Cumplimentación de la declaración anual de operaciones con terceras
+personas"). Paragraph 1.i) states verbatim: "Se harán constar separadamente
+de otras operaciones que, en su caso, se realicen entre las mismas partes,
+las cantidades que se perciban en contraprestación por transmisiones de
+inmuebles, efectuadas o que se deban efectuar, que constituyan entregas
+sujetas en el Impuesto sobre el Valor Añadido." (amounts received as
+consideration for real-estate transfers subject to IVA must be stated
+SEPARATELY from other operations with the same counterparty). This is the
+legal basis for the diseño's paired "IMPORTE PERCIBIDO POR TRANSMISIONES"
+sub-field at each quarter.
+
+This resolves explanation (a) from the finding above against the evidence:
+the sub-field is not scoped exclusively to the sibling "registro de
+inmueble" record -- art. 34.1.i) requires the separate declaration
+specifically WITHIN the per-counterparty operations reporting this record
+carries, keyed by the same counterparty and quarter as the main amount.
+Explanation (b) -- a genuine gap in `Modelo347ContraparteRow` -- is now the
+better-supported reading: the row model has no field to carry a legally
+required, separately-declarable amount for any filer with real-estate
+transfer consideration among their M347-reportable operations.
+
+This is still not a ruling that a field must be added, only that the
+omission is real and grounded rather than speculative. Whether and how to
+add it (a new field per quarter, a separate typed observation, or something
+else) is a row-model shape decision with the same wider-effects caveat the
+original recommendation names, and belongs with whoever picks up the
+deferred S294 build.
