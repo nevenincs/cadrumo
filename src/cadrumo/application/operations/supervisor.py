@@ -24,14 +24,14 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
 from ._execution_context import DefinitionBoundContext
-from .financial_operand import (
-    OperationTransientFinancialOperandDelivery,
-    OperationTransientFinancialOperandRequirement,
-)
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .capabilities import OperationRequestStoragePolicy
 from .errors import OperationDeclarationError
 from .event_replay import OperationEventCursor
+from .financial_operand import (
+    OperationTransientFinancialOperandDelivery,
+    OperationTransientFinancialOperandRequirement,
+)
 from .financial_operand_submission import (
     BoundTransientFinancialOperandAccess,
     OperationTransientFinancialOperandBroker,

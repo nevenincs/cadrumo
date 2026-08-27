@@ -812,6 +812,39 @@ wizard:
         prompt: First taxpayer sex code
       title: First taxpayer
     taxpayer-type:
+      declaration-roles:
+        choices:
+          propiedad-horizontal-entity:
+            description: An entity to which Ley 49/1960 on propiedad horizontal applies.
+            label: Propiedad horizontal community
+          public-administration-entity:
+            description: An entity integrated in a public administration, additionally
+              subject to declaring the subvenciones, auxilios or ayudas it grants
+              (RD 1065/2007 art. 31.2, second paragraph).
+            label: Entity integrated in a public administration
+          social-character-entity:
+            description: A private entity or establishment of carácter social under
+              LIVA (Ley 37/1992) art. 20.tres.
+            label: Carácter social entity
+          statutory-information-duty-entity:
+            description: An authority, public body, cámara or corporación, colegio
+              or asociación profesional, mutualidad de previsión social, partido político,
+              sindicato or asociación empresarial subject to the duty to supply tax
+              information (LGT art. 94.1 and 94.2).
+            label: Entity subject to the general information duty
+          third-party-fee-collector:
+            description: A sociedad, asociación, colegio profesional or other entity
+              that collects professional fees or intellectual/industrial/authorship-rights
+              income on behalf of its socios, asociados or colegiados (RD 1065/2007
+              art. 31.3).
+            label: Collects fees on behalf of third parties
+        help: 'Institutional roles that unlock Modelo 347 claves C, D or E: collecting
+          professional fees on behalf of third parties (art. 31.3), a propiedad horizontal
+          community (Ley 49/1960), a carácter social entity (LIVA art. 20.tres), an
+          entity subject to the general information duty (LGT art. 94), or an entity
+          integrated in a public administration. Leave blank if none apply.'
+        prompt: Does the declaring entity hold any of these institutional roles for
+          Modelo 347 (third-party operations) purposes?
       entity-type:
         choices:
           attribution-entity:

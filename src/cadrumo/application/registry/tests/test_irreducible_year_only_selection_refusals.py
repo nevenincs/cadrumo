@@ -34,6 +34,7 @@ AD-HOC split passes without editing this file; an ungrounded one fails.
 from __future__ import annotations
 
 from datetime import date
+from itertools import pairwise
 
 import pytest
 
@@ -59,8 +60,7 @@ def _co_claimants(modelo, filing_year: int, period: str):
         (
             revision
             for revision in modelo.revisions.values()
-            if revision.period_selector.includes_year(filing_year)
-            and period in set(revision.period_selector.periods)
+            if revision.period_selector.includes_year(filing_year) and period in set(revision.period_selector.periods)
         ),
         key=lambda revision: revision.valid_from,
     )
@@ -94,7 +94,7 @@ def test_every_refused_split_has_disjoint_windows_breaking_inside_the_year() -> 
         modelo = next(candidate for candidate in authority.modelos if candidate.id == str(row.modelo))
         claimants = _co_claimants(modelo, row.filing_year, str(row.period))
 
-        for earlier, later in zip(claimants, claimants[1:], strict=False):
+        for earlier, later in pairwise(claimants):
             assert earlier.valid_to is not None, (
                 f"modelo {row.modelo}: revision {earlier.id} co-claims {row.filing_year} with "
                 f"{later.id} but never closes; two open windows overlap forever"
@@ -192,9 +192,7 @@ def test_a_period_separated_midyear_split_is_not_treated_as_undecidable() -> Non
                 continue
             year = revision.valid_from.year
             siblings = [
-                other
-                for other in revisions
-                if other.id != revision.id and other.period_selector.includes_year(year)
+                other for other in revisions if other.id != revision.id and other.period_selector.includes_year(year)
             ]
             if not siblings:
                 continue

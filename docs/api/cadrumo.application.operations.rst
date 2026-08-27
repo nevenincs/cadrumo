@@ -22,8 +22,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.operations._execution_context
-   cadrumo.application.operations._financial_operand
-   cadrumo.application.operations._financial_operand_custody
    cadrumo.application.operations._model_contract
    cadrumo.application.operations._supervisor_lease
    cadrumo.application.operations.capabilities
@@ -31,6 +29,8 @@ Submodules
    cadrumo.application.operations.errors
    cadrumo.application.operations.event_replay
    cadrumo.application.operations.events
+   cadrumo.application.operations.financial_operand
+   cadrumo.application.operations.financial_operand_custody
    cadrumo.application.operations.financial_operand_submission
    cadrumo.application.operations.frontend_contracts
    cadrumo.application.operations.interactions

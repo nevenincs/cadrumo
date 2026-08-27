@@ -828,6 +828,40 @@ wizard:
         prompt: Sexe del primer declarant
       title: Primer declarant
     taxpayer-type:
+      declaration-roles:
+        choices:
+          propiedad-horizontal-entity:
+            description: Entitat a la qual és aplicable la Llei 49/1960 sobre propietat
+              horitzontal.
+            label: Comunitat de propietaris
+          public-administration-entity:
+            description: Entitat integrada en les diferents administracions públiques,
+              subjecta a més al deure de declarar les subvencions, auxilis o ajudes
+              que concedeixi (art. 31.2, segon paràgraf, RD 1065/2007).
+            label: Entitat integrada en una administració pública
+          social-character-entity:
+            description: Entitat o establiment privat de caràcter social segons l'article
+              20.tres de la Llei 37/1992 de l'IVA.
+            label: Entitat de caràcter social
+          statutory-information-duty-entity:
+            description: Autoritat, organisme públic, cambra o corporació, col·legi
+              o associació professional, mutualitat de previsió social, partit polític,
+              sindicat o associació empresarial subjectes al deure de subministrar
+              informació tributària (art. 94.1 i 94.2 de la Llei 58/2003 General Tributària).
+            label: Entitat sotmesa al deure general d'informar
+          third-party-fee-collector:
+            description: Societat, associació, col·legi professional o una altra entitat
+              que cobra honoraris professionals o drets de propietat intel·lectual,
+              industrial o d'autor per compte dels seus socis, associats o col·legiats
+              (art. 31.3 RD 1065/2007).
+            label: Cobrament d'honoraris per compte de tercers
+        help: 'Papers institucionals que activen les claus C, D o E del Model 347:
+          cobrament d''honoraris per compte de tercers (art. 31.3), comunitat de propietaris
+          (Llei 49/1960), entitat de caràcter social (art. 20.tres LIVA), entitat
+          sotmesa al deure general d''informar (art. 94 LGT) o entitat integrada en
+          una administració pública. Deixeu-ho en blanc si no correspon.'
+        prompt: L'entitat declarant exerceix algun d'aquests papers institucionals
+          als efectes del Model 347 (operacions amb terceres persones)?
       entity-type:
         choices:
           attribution-entity:

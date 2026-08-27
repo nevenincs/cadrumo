@@ -116,9 +116,17 @@ _REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
 #: Production source root in the CURRENT worktree.
 _SOURCE_ROOT: Final[Path] = _REPOSITORY_ROOT / "src" / "cadrumo"
 
-if not (_SOURCE_ROOT / "core").is_dir():  # pragma: no cover - configuration guard
-    message = f"identifier gate lost the production source root: {_SOURCE_ROOT}"
-    raise RuntimeError(message)
+
+@pytest.fixture(autouse=True)
+def _production_source_root_resolved() -> None:
+    """Fail this module's tests if the depth arithmetic retargeted.
+
+    Checked per test rather than at import. Collection must stay side-effect
+    free, and a guard that raises during collection reports a broken module
+    rather than a named gate that lost its root, which is harder to act on.
+    """
+    assert (_SOURCE_ROOT / "core").is_dir(), f"identifier gate lost the production source root: {_SOURCE_ROOT}"
+
 
 #: The root pydantic base every model in this tree ultimately derives from.
 _MODEL_ROOT: Final[str] = "BaseModel"

@@ -846,6 +846,41 @@ wizard:
         prompt: Az első adózó neme
       title: Első adózó
     taxpayer-type:
+      declaration-roles:
+        choices:
+          propiedad-horizontal-entity:
+            description: Olyan entitás, amelyre a 49/1960. törvény (társasházi tulajdon)
+              vonatkozik.
+            label: Társasházi közösség
+          public-administration-entity:
+            description: Valamely közigazgatási szervbe integrált entitás, amely emellett
+              köteles bejelenteni az általa nyújtott támogatásokat és segélyeket (RD
+              1065/2007 31.2. cikk, második bekezdés).
+            label: Közigazgatási szervbe integrált entitás
+          social-character-entity:
+            description: Az LIVA (37/1992. törvény) 20.tres cikke szerinti szociális
+              jellegű magánszervezet vagy intézmény.
+            label: Szociális jellegű szervezet
+          statutory-information-duty-entity:
+            description: Hatóság, közintézmény, kamara vagy testület, szakmai kamara
+              vagy egyesület, kölcsönös biztosító egyesület, politikai párt, szakszervezet
+              vagy szakmai szövetség, amelyre az adóügyi adatszolgáltatási kötelezettség
+              vonatkozik (LGT 94.1. és 94.2. cikk).
+            label: Az általános adatszolgáltatási kötelezettség alá tartozó szervezet
+          third-party-fee-collector:
+            description: Olyan társaság, egyesület, szakmai kamara vagy más szervezet,
+              amely tagjai, társult tagjai vagy kamarai tagjai nevében szakmai díjakat
+              vagy szellemi, ipari vagy szerzői jogi jövedelmet szed be (RD 1065/2007
+              31.3. cikk).
+            label: Harmadik felek nevében történő díjbeszedés
+        help: 'A 347-es adatlap C, D vagy E kulcsát aktiváló intézményi szerepek:
+          harmadik felek nevében történő díjbeszedés (31.3. cikk), lakásszövetkezet
+          jellegű társasház (49/1960. törvény), szociális jellegű szervezet (LIVA
+          20.tres cikk), az általános adatszolgáltatási kötelezettség alá tartozó
+          szervezet (LGT 94. cikk), vagy közigazgatási szervbe integrált entitás.
+          Hagyja üresen, ha egyik sem alkalmazandó.'
+        prompt: A bejelentő szervezet betölt-e valamelyik alábbi intézményi szerepet
+          a 347-es adatlap (harmadik felekkel folytatott ügyletek) szempontjából?
       entity-type:
         choices:
           attribution-entity:

@@ -28,11 +28,6 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
-from .financial_operand import OperationTransientFinancialOperandDeclaration
-from .financial_operand_custody import (
-    OperationFinancialOperandCrashClassification,
-    OperationFinancialOperandCustodyCheckpoint,
-)
 from ._model_contract import require_strict_frozen_operation_model_graph
 from .capabilities import (
     OperationBaselinePolicy,
@@ -44,6 +39,11 @@ from .capabilities import (
     OperationSensitiveInputPolicy,
 )
 from .events import OperationEventCode
+from .financial_operand import OperationTransientFinancialOperandDeclaration
+from .financial_operand_custody import (
+    OperationFinancialOperandCrashClassification,
+    OperationFinancialOperandCustodyCheckpoint,
+)
 from .interactions import OperationInteractionRequest
 from .models import (
     CredentialFreeOperationRequest,
@@ -904,9 +904,7 @@ def _validate_credential_free_schema(schema: object) -> None:
                 continue
             if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
                 continue
-            raise ValueError(
-                f"credential-free journal request field {field_name!r} has a forbidden security meaning"
-            )
+            raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
     for value in mapping.values():
         _validate_credential_free_schema(value)
 
