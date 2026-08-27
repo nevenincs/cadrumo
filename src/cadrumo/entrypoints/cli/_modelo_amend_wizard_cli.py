@@ -79,6 +79,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
@@ -262,7 +263,7 @@ def run_modelo_work_amend_wizard(
     )
 
 
-def _baseline_casilla_rows(unit: WorkUnit) -> tuple[Any, ...]:
+def _baseline_casilla_rows(unit: WorkUnit) -> tuple[ModeloCasillaRow, ...]:
     """Return every casilla the registry declares for the unit's revision, for display."""
     report = registry_casillas_for_registry_scope(
         str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token
@@ -270,7 +271,7 @@ def _baseline_casilla_rows(unit: WorkUnit) -> tuple[Any, ...]:
     return tuple(report.rows)
 
 
-def _amendable_rows(casilla_rows: tuple[Any, ...], baseline_revision: CalculationRevision) -> tuple[Any, ...]:
+def _amendable_rows(casilla_rows: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision) -> tuple[ModeloCasillaRow, ...]:
     """Return the registry rows that carry a baseline value, in casilla-number order.
 
     These are exactly the casillas the operator may amend: every casilla the
@@ -297,8 +298,8 @@ def _run_flow(definition: FlowDefinition) -> FlowState:
 
 
 def _prompt_selection(
-    *, amendable: tuple[Any, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
-) -> tuple[Any, ...]:
+    *, amendable: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
+) -> tuple[ModeloCasillaRow, ...]:
     """Ask which casillas changed through a single CHECKBOX page.
 
     The checkbox lists every baseline casilla value; each choice's label is
@@ -315,7 +316,7 @@ def _prompt_selection(
 
 
 def _selection_definition(
-    *, amendable: tuple[Any, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
+    *, amendable: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
@@ -360,12 +361,12 @@ def _selection_definition(
     )
 
 
-def _selected_rows(*, amendable: tuple[Any, ...], unit: WorkUnit, state: FlowState) -> tuple[Any, ...]:
+def _selected_rows(*, amendable: tuple[ModeloCasillaRow, ...], unit: WorkUnit, state: FlowState) -> tuple[ModeloCasillaRow, ...]:
     """Map the CHECKBOX answer back to the selected registry rows, in flow order."""
     raw = state.answers.get(_SELECTION_PAGE_ID, "")
     selected_ids = [token for token in raw.split(",") if token]
     rows_by_id = {row.casilla_id: row for row in amendable}
-    selected: list[Any] = []
+    selected: list[ModeloCasillaRow] = []
     for casilla_id in selected_ids:
         row = rows_by_id.get(casilla_id)
         if row is None:
@@ -401,9 +402,9 @@ def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
 
 
 def _prompt_values_kind_reason(
-    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
+    *, selected: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
 ) -> tuple[
-    tuple[tuple[Any, Decimal, Decimal], ...], CalculationRevisionAmendmentKind, M303RectificativaMotive | None, str
+    tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...], CalculationRevisionAmendmentKind, M303RectificativaMotive | None, str
 ]:
     """Ask the corrected value per selected casilla, the amendment kind, and the reason.
 
@@ -419,7 +420,7 @@ def _prompt_values_kind_reason(
         selected=selected, baseline_revision=baseline_revision, modelo=modelo, period=period, run_token=run_token
     )
     state = _run_flow(definition)
-    corrections: list[tuple[Any, Decimal, Decimal]] = []
+    corrections: list[tuple[ModeloCasillaRow, Decimal, Decimal]] = []
     for row in selected:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
         corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
@@ -433,7 +434,7 @@ def _prompt_values_kind_reason(
 
 
 def _values_kind_reason_definition(
-    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
+    *, selected: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
 ) -> FlowDefinition:
     """Project the corrected-value, amendment-kind, and reason questions into one flow.
 
@@ -460,7 +461,7 @@ def _values_kind_reason_definition(
 
 
 def _correction_value_pages(
-    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
+    *, selected: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
 ) -> list[FlowPage]:
     pages: list[FlowPage] = []
     for row in selected:
@@ -487,7 +488,7 @@ def _correction_value_pages(
     return pages
 
 
-def _value_help_ref(*, row: Any, run_token: str, table: dict[str, str]) -> str | None:
+def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, str]) -> str | None:
     if not row.help_text:
         return None
     help_ref = _copy_ref(run_token, f"val:{row.casilla_id}:help")
@@ -609,7 +610,7 @@ def _emit_amend_wizard_result(
     amendment_kind: CalculationRevisionAmendmentKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     reason: str,
-    corrections: tuple[tuple[Any, Decimal, Decimal], ...],
+    corrections: tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
 ) -> None:
     from ._modelo_rendering import filing_record_payload
 

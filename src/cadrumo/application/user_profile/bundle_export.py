@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import fsync_parent_dir
+from ...core import fsync_parent_dir, is_link_like
 from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.directory_scan import scan_directory
 from ...core.external_constants import UTF_8_ENCODING
@@ -589,7 +589,7 @@ def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path,
             for entry in scan_directory(parent)
             if entry.name.startswith(inner_prefix) and entry.name.endswith(_HARDENED_INNER_TEMP_SUFFIX)
         )
-    return tuple(path for path in candidates if not path.is_symlink())
+    return tuple(path for path in candidates if not is_link_like(path))
 
 
 def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:

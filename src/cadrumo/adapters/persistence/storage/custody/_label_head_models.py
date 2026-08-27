@@ -48,7 +48,7 @@ class _CustodyDigestModel(BaseModel):
         )
 
     @classmethod
-    def _create_with_self_digest(cls: type[_ModelT], values: dict[str, Any], error_message: str) -> _ModelT:
+    def _create_with_self_digest(cls: type[_ModelT], values: dict[str, object], error_message: str) -> _ModelT:
         try:
             payload = cls.model_construct(**values, self_digest="").model_dump(mode="json")
             payload["self_digest"] = canonical_json_digest(

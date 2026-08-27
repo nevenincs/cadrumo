@@ -138,7 +138,7 @@ class ProfileJourneyApp(App[None]):
         if self._stage is ProfileJourneyStage.GET_DATA:
             return [Static(tr("profile.journey.get_data.placeholder"), id="get-data-placeholder", markup=False)]
         if self._stage is ProfileJourneyStage.REQUIRED:
-            return list(compose_required_stage(self._presentation))  # type: ignore[arg-type]
+            return list[Widget](compose_required_stage(self._presentation))
         if self._stage is ProfileJourneyStage.REVIEW:
             return [Static(tr("profile.journey.review.placeholder"), id="review-placeholder", markup=False)]
         return [ReadyStageBody(self._presentation, id="ready-stage-body")]

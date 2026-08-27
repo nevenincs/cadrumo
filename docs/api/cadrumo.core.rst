@@ -139,6 +139,7 @@ Submodules
    cadrumo.core.auth_session_keys
    cadrumo.core.base64_codec
    cadrumo.core.bucket_pointer
+   cadrumo.core.calendar_shift
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle
@@ -168,7 +169,6 @@ Submodules
    cadrumo.core.setup_answers
    cadrumo.core.source_connectivity
    cadrumo.core.storage_materialization
-   cadrumo.core.storage_route_guidance
    cadrumo.core.tabular
    cadrumo.core.text_fold
    cadrumo.core.transport_locus

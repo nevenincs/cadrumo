@@ -83,7 +83,7 @@ def archive_export(
     # resolver rather than inside the service.
     pointer = resolve_profile_by_label(name)
     receipt = export_profile_capsule_archive(
-        profile_id=UUID(str(pointer.bucket_id)),  # type: ignore[attr-defined]  # reason: the injected resolver returns a ProfileBucketPointer; typing it here would import the workflow package into this module's import-time surface
+        profile_id=UUID(str(pointer.bucket_id)),
         target=output,
     )
 

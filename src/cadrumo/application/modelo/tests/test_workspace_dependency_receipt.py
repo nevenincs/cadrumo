@@ -255,8 +255,47 @@ def _assert_no_legacy_identifier(module: ModuleType) -> None:
             assert marker not in lowered, f"{module.__name__} declares identifier {name!r} carrying {marker!r}"
 
 
+_CLEAN_COMMIT_PATHS: tuple[str, ...] = (
+    "src/cadrumo/application/modelo/workspace.py",
+    "src/cadrumo/application/modelo/workspace_models.py",
+    "src/cadrumo/application/modelo/workspace_producers.py",
+    "src/cadrumo/application/modelo/workspace_manifest.py",
+    ".vault/adr/2026-08-24-tui-registry-api-gate-adr.md",
+    ".vault/adr/2026-08-24-tui-modelo-workspace-interface-adr.md",
+    ".vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md",
+    ".vault/audit/2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit.md",
+)
+
+
+def _assert_clean_commit() -> None:
+    """Refuse to mint over an uncommitted change to any file this receipt actually depends on.
+
+    This worktree is shared and routinely carries OTHER agents' unrelated
+    in-flight edits (auth, edit-services, etc. today); requiring the WHOLE
+    repository to report zero uncommitted changes would make minting
+    impossible on this tree in practice and would not make the receipt any
+    more truthful about the ONE thing it certifies. Scoped instead to the
+    exact files this receipt reads evidence from: if any of THOSE carries an
+    uncommitted change, the receipt would attest to a state the cited commit
+    does not actually contain, and minting must refuse rather than proceed.
+    """
+    status = subprocess.run(  # noqa: S603
+        ("git", "status", "--porcelain", "--", *_CLEAN_COMMIT_PATHS),  # noqa: S607
+        capture_output=True,
+        check=True,
+        cwd=_ROOT,
+        text=True,
+    ).stdout
+    assert not status.strip(), f"uncommitted change to a receipt-dependency path:\n{status}"
+
+
 def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2DependencyReceiptV1:
     """Derive the C2 receipt fresh from the current tree; mint nothing durable."""
+    _assert_clean_commit()
+    clean_commit = ModeloWorkspaceC2PassedProofV1(
+        evidence=f"git status --porcelain reports zero changes across {len(_CLEAN_COMMIT_PATHS)} dependency paths"
+    )
+
     gate_heading = _status_heading(_GATE_ADR)
     assert "`accepted`" in gate_heading, gate_heading
     gate_body_hash = _body_hash(_GATE_ADR)
@@ -375,8 +414,47 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
         evidence="every canonical Workspace assembly/model/producer entry point is defined in exactly one module"
     )
 
+    native_owner_surfaces = tuple(sorted(kind.value for kind in ModeloWorkspaceContributorKindV1))
+    producer_stamps = tuple(
+        sorted(
+            (
+                ModeloWorkspaceC2ProducerStampSummaryV1(
+                    contributor_kind=contract.contributor_kind.value,
+                    owner=contract.contributor.owner,
+                    producer=contract.contributor.producer,
+                    contract_digest=contract.contract_digest,
+                )
+                for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts
+            ),
+            key=lambda stamp: stamp.contributor_kind,
+        )
+    )
+    epoch_schema_digest = workspace_producers.modelo_workspace_projection_schema_fingerprint(
+        workspace_producers.ModeloWorkspaceEpochV1
+    )
+    workspace_schema_fingerprint = workspace_producers.modelo_workspace_projection_schema_fingerprint(
+        workspace_models.ModeloWorkspaceProjectionV1
+    )
+    # The two entry points ARE the C2 read destinations: no frontend/interface
+    # consumer exists in the tracked tree yet (S129's own census), so the
+    # only real, currently-checkable "route opened" is the application-layer
+    # function this gate authorizes a caller to invoke, not a UI screen that
+    # does not exist. Naming anything more specific would fabricate a
+    # destination nothing in the tree can corroborate.
+    read_destinations = (
+        "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
+        "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result",
+    )
+
     return ModeloWorkspaceC2DependencyReceiptV1(
         current_head_commit=_current_head_commit(),
+        native_owner_surfaces=native_owner_surfaces,
+        producer_stamps=producer_stamps,
+        epoch_schema_digest=epoch_schema_digest,
+        workspace_schema_fingerprint=workspace_schema_fingerprint,
+        field_manifest_digest=manifest.manifest_digest,
+        read_destinations=read_destinations,
+        clean_commit_proof=clean_commit,
         predecessors=ModeloWorkspaceC2PredecessorTupleV1(
             gate_adr=ModeloWorkspaceC2AdrPredecessorV1(
                 stem=_GATE_ADR.stem, status="accepted", body_hash=gate_body_hash
@@ -421,6 +499,7 @@ def test_c2_receipt_validates_against_the_current_tree() -> None:
     assert all(
         isinstance(proof, ModeloWorkspaceC2PassedProofV1)
         for proof in (
+            receipt.clean_commit_proof,
             receipt.adr_status_proof,
             receipt.interface_adr_status_proof,
             receipt.c1_exit_receipt_proof,
@@ -435,6 +514,39 @@ def test_c2_receipt_validates_against_the_current_tree() -> None:
             receipt.redeclaration_proof,
         )
     )
+
+
+def test_producer_stamps_agree_exactly_with_declared_native_owner_surfaces() -> None:
+    """S140: the minted stamp set and the declared surface set cannot silently diverge."""
+    receipt = validate_modelo_workspace_c2_dependency_receipt()
+    stamped = {stamp.contributor_kind for stamp in receipt.producer_stamps}
+    assert stamped == set(receipt.native_owner_surfaces)
+    assert stamped == {kind.value for kind in ModeloWorkspaceContributorKindV1}
+
+
+def test_read_destinations_name_real_importable_entry_points() -> None:
+    """S140: the opened routes are the two real functions, not a fabricated screen/route."""
+    import importlib
+
+    receipt = validate_modelo_workspace_c2_dependency_receipt()
+    for destination in receipt.read_destinations:
+        module_path, _, function_name = destination.rpartition(".")
+        module = importlib.import_module(module_path)
+        assert hasattr(module, function_name), destination
+
+
+def test_clean_commit_proof_refuses_when_a_dependency_path_is_dirty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """S140: a receipt cannot be minted over an uncommitted change to something it depends on."""
+    # Real git status against a real dirty file, never a fabricated refusal:
+    # touch a tracked dependency path and prove _assert_clean_commit refuses.
+    target = _ROOT / _CLEAN_COMMIT_PATHS[0]
+    original = target.read_bytes()
+    try:
+        target.write_bytes(original + b"\n# S140 clean-commit proof canary\n")
+        with pytest.raises(AssertionError, match="uncommitted change"):
+            _assert_clean_commit()
+    finally:
+        target.write_bytes(original)
 
 
 def test_not_applicable_proof_requires_every_named_field() -> None:
