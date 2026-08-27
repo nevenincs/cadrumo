@@ -172,5 +172,6 @@ Submodules
    cadrumo.core.text_fold
    cadrumo.core.transport_locus
    cadrumo.core.tty
+   cadrumo.core.validity_window
    cadrumo.core.wizard_catalogue
    cadrumo.core.workbook

@@ -20,7 +20,7 @@ import pytest
 
 from .. import SpendingCategory, load_category_profiles_from_manual, resolve_category_profiles
 from .._proportionality import ProportionalityKind
-from .._registry import load_category_profile_file
+from .._registry import load_category_profiles
 from ..errors import CategoryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -111,10 +111,10 @@ def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
         load_category_profiles_from_manual(2099)
 
 
-def test_load_category_profile_file_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
+def test_load_category_profiles_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
     """Registry file access failures stay inside the Cadrumo exception hierarchy."""
 
     missing = tmp_path / "missing-category-profile.toml"
 
     with pytest.raises(CategoryValidationError, match=r"cannot stat category profile registry"):
-        load_category_profile_file(missing)
+        load_category_profiles(missing)

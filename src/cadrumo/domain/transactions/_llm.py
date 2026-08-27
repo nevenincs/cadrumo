@@ -367,12 +367,13 @@ def default_prompt_spec() -> PromptSpec:
 
 def prompt_spec_with_every_spending_category(
     *,
+    year: int,
     classifications: tuple[ClassificationChoice, ...] | None = None,
 ) -> PromptSpec:
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
-    Pulls authoritative Spanish display labels from
-    :data:`cadrumo.domain.categories.resolve_category_profiles(2025)` rather than
+    Pulls authoritative Spanish display labels from the category profile
+    registry for ``year`` rather than
     inventing ad-hoc hints from the enum value -- the LLM picks
     categories far more accurately against the real AEAT terminology
     than against mangled snake_case. Categories with no registered
@@ -381,6 +382,9 @@ def prompt_spec_with_every_spending_category(
     fall back to the humanised enum value.
 
     Args:
+        year: Filing year whose category profiles supply the hints. Passed
+            explicitly because the proportionality kind a category carries is
+            year-versioned regulatory data.
         classifications: Optional override for the classification
             choices; defaults to :func:`default_classification_choices`.
 
@@ -388,7 +392,9 @@ def prompt_spec_with_every_spending_category(
         A :class:`PromptSpec` whose ``categories`` tuple covers every
         registered :class:`cadrumo.domain.categories.SpendingCategory`.
     """
-    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
+    category_choices = tuple(
+        CategoryChoice(value=value, hint=_category_hint(value, year=year)) for value in SpendingCategory
+    )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
@@ -471,6 +477,7 @@ def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
 
 def prompt_spec_with_saturation_fields(
     *,
+    year: int,
     classifications: tuple[ClassificationChoice, ...] | None = None,
 ) -> PromptSpec:
     """Return a prompt spec for full saturation: spending + IVA category selection.
@@ -483,6 +490,9 @@ def prompt_spec_with_saturation_fields(
     emitted by the model.
 
     Args:
+        year: Filing year whose category profiles supply the hints. Passed
+            explicitly because the proportionality kind a category carries is
+            year-versioned regulatory data.
         classifications: Optional override for the classification choices;
             defaults to :func:`default_classification_choices`.
 
@@ -490,7 +500,9 @@ def prompt_spec_with_saturation_fields(
         A :class:`PromptSpec` carrying both the spending-category and the
         IVA-category allow-lists.
     """
-    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
+    category_choices = tuple(
+        CategoryChoice(value=value, hint=_category_hint(value, year=year)) for value in SpendingCategory
+    )
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
@@ -498,12 +510,12 @@ def prompt_spec_with_saturation_fields(
     )
 
 
-def _category_hint(value: SpendingCategory) -> str:
-    """Return the best available hint string for a SpendingCategory.
+def _category_hint(value: SpendingCategory, *, year: int) -> str:
+    """Return the best available hint string for a SpendingCategory in ``year``.
 
     Resolves the display label and ``notes`` translation keys to Spanish at
-    read time, and pairs them with the proportionality kind from
-    :data:`cadrumo.domain.categories.resolve_category_profiles(2025)` -- gives the
+    read time, and pairs them with the proportionality kind the category
+    profile registry declares for ``year`` -- gives the
     LLM the authoritative AEAT terminology AND the deductibility
     context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
     disambiguates home-office from premises rent or drives MIXED vs
@@ -514,7 +526,7 @@ def _category_hint(value: SpendingCategory) -> str:
     loader is cached: resolving there would bake one operator's locale
     into the shared profile and serve it to the next operator.
     """
-    profile = resolve_category_profiles(2025).get(value)
+    profile = resolve_category_profiles(year).get(value)
     if profile is None:
         return value.value.replace("_", " ")
     # Pinned to Spanish regardless of operator locale: the classifier reasons

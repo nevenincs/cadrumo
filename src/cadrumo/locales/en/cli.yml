@@ -39,7 +39,6 @@ cli:
           party is established.'
         note_help: What the answer rests on, in your own words. Recorded, never consulted.
         scope_help: The IVA territory the counterparty is established in.
-        show_help: Show the establishment confirmed for a counterparty, if any.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw what was confirmed about a counterparty, stating the
           earlier answer was wrong.
@@ -260,8 +259,6 @@ cli:
           resolve_action: Unknown resolution action.
           resolve_shape: Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.
             A choose names the reading by its value or by the digest review showed.
-          show_help: Show one pending draft field by field, with its findings and
-            blockers.
           unknown_reference: No pending draft for that reference.
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
@@ -403,6 +400,8 @@ cli:
         unset_category_help: Category id whose ratio you want to clear
         unset_help: Remove the specific ratio for a category
         validate_help: Validate ratios against eligible categories and bounds
+        year_help: Filing year whose category profiles supply the statutory ratios.
+          Defaults to the current year.
       rule:
         actor_help: Operator identifier recorded in the rule provenance.
         add_help: Add a classification rule that auto-classifies matching transactions.
@@ -631,7 +630,6 @@ cli:
           incomplete.
         group_help: Evidence bundle audit verbs (show/check/export).
         output_help: Output path for the bundle ZIP archive.
-        show_help: Render an evidence bundle's manifest and referenced records
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -942,10 +940,6 @@ cli:
           enrolled modelos only). Defaults to justificante.'
         file_path_help: Path to the local justificante or declaración PDF to reconcile
           against.
-        history_empty: No reconciliations recorded yet.
-        history_help: List past reconciliations recorded for the active profile.
-        history_work_unit_id_help: Optional work unit id to narrow the history to
-          one work unit.
         import_help: Reconcile a work unit against a local justificante or declaración
           PDF. Local-only; never contacts AEAT.
         pull_help: Pull the justificante for a work unit from AEAT and reconcile against
@@ -3138,7 +3132,6 @@ cli:
           sweep.
         modelo_audit_check: Check bundled evidence for a filing revision.
         modelo_audit_export: Export the evidence audit for a filing revision.
-        modelo_audit_show: Show the evidence audit for a filing revision.
         modelo_bindings: Inspect registry binding coverage.
         modelo_describe: Describe one modelo revision.
         modelo_list: List supported modelos.
@@ -3184,7 +3177,6 @@ cli:
         profile_list: List profile facts.
         profile_login: Log in to a profile and make it the active one.
         profile_logout: Close the active profile session.
-        profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
         reset_resume: Continue an incomplete reset operation.
         reset_start: Start a new irreversible reset of every locally stored profile.
@@ -3199,7 +3191,6 @@ cli:
         storage_init: Create any storage directory that is missing
         storage_list: See where every kind of local data is kept
         storage_reclaim: Free space by deleting a storage area the app can rebuild
-        storage_show: Look at one storage area in detail
       root:
         diagnostics_logs: Show the log path and latest lines.
         diagnostics_overview_verbose: Show general state with additional detail.

@@ -39,7 +39,6 @@ cli:
         note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
           használjuk fel.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
-        show_help: Mutassa meg az ügyfélhez megerősített letelepedést, ha van ilyen.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
           hogy a korábbi válasz téves volt.
@@ -279,8 +278,6 @@ cli:
           resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
             A choose az olvasatot az értékével vagy a review által mutatott kivonattal
             nevezi meg.
-          show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
-            es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
@@ -432,6 +429,8 @@ cli:
         unset_category_help: A törlendő arányú kategóriaazonosító.
         unset_help: Egy kategória konkrét arányának eltávolítása.
         validate_help: Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.
+        year_help: Az az adóév, amelynek kategóriaprofiljai a törvényes arányokat
+          adják. Alapértelmezés szerint az aktuális év.
       rule:
         actor_help: Operátor azonosító, amely a szabály eredetében kerül rögzítésre.
         add_help: Osztályozási szabály hozzáadása, amely automatikusan osztályozza
@@ -679,7 +678,6 @@ cli:
           hiányosként jelöli a csomagot.
         group_help: Bizonyítékcsomag-audit parancsok (show/check/export).
         output_help: A csomag ZIP-archívumának kimeneti útvonala.
-        show_help: Bizonyítékcsomag manifesztjének és hivatkozott rekordjainak megjelenítése.
       bindings:
         app_help: Egy AEAT adónyomtatvány kötéseinek vizsgálata és előnézete.
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -1002,10 +1000,6 @@ cli:
           csak engedélyezett modellek). Alapértelmezetten justificante.'
         file_path_help: A helyi igazolás vagy bevallás PDF útvonala, amellyel egyeztetni
           kell.
-        history_empty: Még nincsenek rögzített egyeztetések.
-        history_help: Listázza az aktív profilhoz rögzített egyeztetéseket.
-        history_work_unit_id_help: Opcionális munkaegység-azonosító a történet egy
-          egységre szűkítéséhez.
         import_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
           ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         pull_help: Letölti egy munkaegység igazolását az AEAT-tól, és egyeztet ellene.
@@ -3349,7 +3343,6 @@ cli:
           bevallási előzményt.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
-        modelo_audit_show: Megjeleníti egy bevallásrevízió bizonyíték-auditját.
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
         modelo_list: Támogatott nyomtatványok listázása.
@@ -3396,7 +3389,6 @@ cli:
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
-        profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
@@ -3413,7 +3405,6 @@ cli:
         storage_init: Létrehozza a hiányzó tárolókönyvtárakat
         storage_list: Megnézheted, hol tárolódik minden helyi adattípus
         storage_reclaim: Hely felszabadítása egy újraépíthető tárolóterület törlésével
-        storage_show: Egy tárolóterület részletes megtekintése
       root:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.

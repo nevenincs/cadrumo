@@ -43,7 +43,7 @@ class CensoFactPayload(OutputSchema):
 
 
 class CensoFileIngestResult(OutputSchema):
-    """Result of ``config profile censo file``: previewed or enrolled facts."""
+    """Result of ``config profile censo import``: previewed or enrolled facts."""
 
     applied: bool
     facts: tuple[CensoFactPayload, ...] = ()

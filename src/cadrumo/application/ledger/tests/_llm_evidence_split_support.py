@@ -47,7 +47,7 @@ print({response_json!r})
         name="claude",
         command=(sys.executable, "-c", script),
         model=model,
-        spec=prompt_spec_with_saturation_fields(),
+        spec=prompt_spec_with_saturation_fields(year=2025),
     )
 
 

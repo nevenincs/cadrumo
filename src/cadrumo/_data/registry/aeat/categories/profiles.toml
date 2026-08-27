@@ -1,3 +1,28 @@
+# Spending-category deductibility profiles for IRPF.
+#
+# THE FILE CARRIES NO YEAR. The proportionality rules -- kind, ratios, the
+# statutory multiplier, the caps -- are framework values that do not vary by
+# filing year, and versioning them by copying the whole file once cost 1013
+# duplicated lines to vary 82 lines of citation metadata. What genuinely enters
+# per year is the evidence, so the year lives on the evidence: every citation
+# declares the closed span it is asserted over, and the years this corpus can be
+# resolved for are DERIVED from those spans.
+#
+# A WINDOW IS A GROUNDING CLAIM. Widening one asserts that the cited document
+# supports the rule across the wider span. Do not widen a window to admit a
+# filing year; read that year's source and add its citation. A citation whose
+# reference or url names a year may not reach outside it, and a gate enforces
+# that -- it is the exact act that produced the retired 2024 mirror, whose 41
+# year-dated citations were rewritten by string substitution from this file and
+# are not carried forward.
+#
+# EVERY SPAN HERE IS 2025 BECAUSE 2025 IS WHAT WAS REVIEWED. The statutory
+# citations are almost certainly stable across neighbouring years, but these
+# citations carry free-text references rather than registry legal-reference ids,
+# so no gate can check a wider span and an author's confidence is not evidence.
+# Converting them to legal-reference ids is what would let the provision-window
+# gate widen them honestly.
+
 [[profiles]]
 category = "cuotas_colegiales"
 display_label = "categories.registry.cuotas_colegiales.label"
@@ -13,6 +38,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.cuotas_colegiales.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "cuotas_autonomos_ss"
@@ -29,6 +56,8 @@ reference = "AEAT ayuda Renta 2025"
 locator = "Cotizaciones al RETA"
 url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/7-cumplimentacion-irpf/7_4-rendimientos-actividades-economicas/7_4_2-regimen-estimacion-directa/7_4_2_3-gastos-fiscalmente-deducibles/cotizaciones-reta.html"
 quote = "categories.registry.cuotas_autonomos_ss.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -36,6 +65,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Seguridad Social del titular"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.cuotas_autonomos_ss.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "mutualidad_alternativa"
@@ -54,6 +85,8 @@ reference = "AEAT ayuda Renta 2025"
 locator = "Cotizaciones al RETA"
 url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/7-cumplimentacion-irpf/7_4-rendimientos-actividades-economicas/7_4_2-regimen-estimacion-directa/7_4_2_3-gastos-fiscalmente-deducibles/cotizaciones-reta.html"
 quote = "categories.registry.mutualidad_alternativa.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -61,6 +94,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Seguridad Social del titular"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.mutualidad_alternativa.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "arrendamiento_local"
@@ -77,6 +112,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Arrendamientos y cánones"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.arrendamiento_local.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -84,6 +121,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.arrendamiento_local.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "arrendamiento_vivienda_afecto"
@@ -107,6 +146,8 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (afectación parcial de la vivienda arrendada)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.arrendamiento_vivienda_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -114,6 +155,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta - arrendamiento"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.arrendamiento_vivienda_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "ibi_local_afecto"
@@ -130,6 +173,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Tributos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.ibi_local_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -137,6 +182,8 @@ reference = "Ley 35/2006"
 locator = "art. 14 LIS por remisión"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_local_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_local_afecto"
@@ -160,6 +207,8 @@ reference = "Ley 35/2006"
 locator = "art. 29.1.a"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_local_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -167,6 +216,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_local_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_home_office_luz"
@@ -185,6 +236,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_luz.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -192,6 +245,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.suministros_home_office_luz.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_home_office_agua"
@@ -210,6 +265,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_agua.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -217,6 +274,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.suministros_home_office_agua.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_home_office_gas"
@@ -235,6 +294,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_gas.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -242,6 +303,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.suministros_home_office_gas.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_home_office_internet"
@@ -260,6 +323,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_internet.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -267,6 +332,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.suministros_home_office_internet.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "telefonia_movil"
@@ -283,6 +350,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Afectación exclusiva del elemento patrimonial"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.telefonia_movil.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "reglamento_irpf"
@@ -290,6 +359,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.telefonia_movil.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "telefonia_fija"
@@ -315,6 +386,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.telefonia_fija.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -322,6 +395,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.telefonia_fija.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "material_oficina"
@@ -338,6 +413,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.material_oficina.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -345,6 +422,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.material_oficina.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "software_suscripcion"
@@ -361,6 +440,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.software_suscripcion.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -368,6 +449,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.software_suscripcion.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "hardware_amortizable"
@@ -384,6 +467,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Amortizaciones del inmovilizado"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.hardware_amortizable.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -391,6 +476,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.hardware_amortizable.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "mobiliario_amortizable"
@@ -407,6 +494,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Amortizaciones del inmovilizado"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.mobiliario_amortizable.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -414,6 +503,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.mobiliario_amortizable.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "reparaciones_conservacion"
@@ -430,6 +521,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.reparaciones_conservacion.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -437,6 +530,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.reparaciones_conservacion.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "vehiculo_combustible"
@@ -453,6 +548,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_combustible.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -460,6 +557,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vehículos y afectación exclusiva"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.vehiculo_combustible.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "vehiculo_mantenimiento"
@@ -476,6 +575,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_mantenimiento.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -483,6 +584,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vehículos y afectación exclusiva"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.vehiculo_mantenimiento.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "vehiculo_seguro"
@@ -499,6 +602,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_seguro.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -506,6 +611,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vehículos y afectación exclusiva"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.vehiculo_seguro.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "vehiculo_peaje"
@@ -522,6 +629,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_peaje.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -529,6 +638,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vehículos y afectación exclusiva"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.vehiculo_peaje.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "vehiculo_parking"
@@ -545,6 +656,8 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_parking.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -552,6 +665,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vehículos y afectación exclusiva"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.vehiculo_parking.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "manutencion_dietas_nacional"
@@ -578,6 +693,8 @@ reference = "Ley 6/2017 / Ley IRPF"
 locator = "art. 30.2.5.c"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.manutencion_dietas_nacional.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "reglamento_irpf"
@@ -585,6 +702,8 @@ reference = "Reglamento IRPF"
 locator = "art. 9.A.3.a"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.manutencion_dietas_nacional.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "manutencion_dietas_extranjero"
@@ -611,6 +730,8 @@ reference = "Ley 6/2017 / Ley IRPF"
 locator = "art. 30.2.5.c"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.manutencion_dietas_extranjero.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "reglamento_irpf"
@@ -618,6 +739,8 @@ reference = "Reglamento IRPF"
 locator = "art. 9.A.3.a"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.manutencion_dietas_extranjero.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "asesoria_fiscal"
@@ -634,6 +757,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Servicios de profesionales independientes"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.asesoria_fiscal.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -641,6 +766,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_fiscal.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "asesoria_juridica"
@@ -657,6 +784,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Servicios de profesionales independientes"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.asesoria_juridica.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -664,6 +793,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_juridica.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "asesoria_contable"
@@ -680,6 +811,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Servicios de profesionales independientes"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.asesoria_contable.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -687,6 +820,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_contable.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "publicidad_marketing"
@@ -703,6 +838,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Otros servicios exteriores"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.publicidad_marketing.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -710,6 +847,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.publicidad_marketing.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "formacion_profesional"
@@ -726,6 +865,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Otros servicios exteriores"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.formacion_profesional.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -733,6 +874,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.formacion_profesional.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "viajes_transporte"
@@ -749,6 +892,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Otros servicios exteriores"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.viajes_transporte.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -756,6 +901,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.viajes_transporte.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "viajes_alojamiento"
@@ -772,6 +919,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Otros servicios exteriores"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.viajes_alojamiento.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -779,6 +928,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.viajes_alojamiento.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "seguros_responsabilidad_civil"
@@ -795,6 +946,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.seguros_responsabilidad_civil.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -802,6 +955,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.seguros_responsabilidad_civil.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "seguros_salud_autonomo"
@@ -820,6 +975,8 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.c regla 1.a"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.seguros_salud_autonomo.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -827,6 +984,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Primas de seguro de enfermedad"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.seguros_salud_autonomo.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "gastos_bancarios"
@@ -843,6 +1002,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Gastos financieros y bancarios"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.gastos_bancarios.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -850,6 +1011,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.gastos_bancarios.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "gastos_financieros"
@@ -866,6 +1029,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Gastos financieros y bancarios"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.gastos_financieros.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -873,6 +1038,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.gastos_financieros.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "suministros_cliente_directos"
@@ -889,6 +1056,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.suministros_cliente_directos.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -896,6 +1065,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_cliente_directos.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "subcontratacion"
@@ -912,6 +1083,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Servicios de profesionales independientes"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.subcontratacion.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -919,6 +1092,8 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.subcontratacion.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "tributos_fiscalmente_deducibles"
@@ -935,6 +1110,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Tributos fiscalmente deducibles"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.tributos_fiscalmente_deducibles.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -942,6 +1119,8 @@ reference = "Ley 35/2006"
 locator = "art. 14 LIS por remisión"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.tributos_fiscalmente_deducibles.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "amortizacion_vivienda_afecto"
@@ -958,6 +1137,8 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (amortización de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.amortizacion_vivienda_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -965,6 +1146,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta - amortización"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.amortizacion_vivienda_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "ibi_vivienda_afecto"
@@ -981,6 +1164,8 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (tributos no estatales de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_vivienda_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -988,6 +1173,8 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta - IBI"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.ibi_vivienda_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles]]
 category = "comunidad_vivienda_afecto"
@@ -1004,6 +1191,8 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (gastos de titularidad de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.comunidad_vivienda_afecto.citations.0.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -1011,3 +1200,5 @@ reference = "Manual práctico Renta 2025"
 locator = "Vivienda parcialmente afecta - gastos de comunidad"
 url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.comunidad_vivienda_afecto.citations.1.quote"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

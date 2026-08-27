@@ -71,7 +71,7 @@ def test_vision_classifier_classifies_from_images() -> None:
     images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
     def _call() -> LLMClassificationResponse:
-        classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), model="llava-test")
+        classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(year=2025), model="llava-test")
         return classifier.classify(_transaction("ev-1"), evidence_images=images)
 
     observed, response = _run_against_loopback_ollama(classification_json, _call)
@@ -108,7 +108,7 @@ def test_image_evidence_classifies_with_no_provider() -> None:
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             vision_classifier=None,
             vision_model=None,
             settings=load_settings(),
@@ -138,7 +138,7 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
             _transaction("ev-1"),
             None,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             vision_classifier=None,
             vision_model=None,
             settings=load_settings(),
@@ -164,7 +164,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         },
     )
     classifier = LocalVisionLLMClassifier(
-        spec=prompt_spec_with_saturation_fields(),
+        spec=prompt_spec_with_saturation_fields(year=2025),
         settings=unreachable_settings,
     )
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
@@ -172,7 +172,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             vision_classifier=classifier,
             vision_model=None,
             settings=unreachable_settings,
@@ -204,7 +204,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
     def _call() -> tuple[LLMClassificationResponse, str]:
         settings = load_settings()
         classifier = LocalVisionLLMClassifier(
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             model="qwen2.5vl:7b",
             client=LLMClient(
                 settings=settings,
@@ -216,7 +216,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             vision_classifier=classifier,
             vision_model="qwen2.5vl:7b",
             settings=settings,

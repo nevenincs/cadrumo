@@ -32,25 +32,25 @@ _OTHER_BUCKET_ID = "20202020-2020-4020-8020-202020202020"
 class TestEligible:
     def test_eligible_lists_every_eligible_category(self) -> None:
         empty_profile = UsageRatioProfile()
-        rows = eligible_ratio_categories(empty_profile)
+        rows = eligible_ratio_categories(empty_profile, year=2025)
         assert {row.category for row in rows} == set(ELIGIBLE_USAGE_RATIO_CATEGORIES)
 
     def test_eligible_rows_are_sorted_by_category_value(self) -> None:
-        rows = eligible_ratio_categories(UsageRatioProfile())
+        rows = eligible_ratio_categories(UsageRatioProfile(), year=2025)
         category_values = [row.category.value for row in rows]
         assert category_values == sorted(category_values)
 
     def test_eligible_flags_override_presence(self) -> None:
         sample_category = next(iter(ELIGIBLE_USAGE_RATIO_CATEGORIES))
         profile = UsageRatioProfile(ratios={sample_category: Decimal("0.40")})
-        rows = eligible_ratio_categories(profile)
+        rows = eligible_ratio_categories(profile, year=2025)
         targeted = next(row for row in rows if row.category is sample_category)
         assert targeted.override_present is True
         others = [row for row in rows if row.category is not sample_category]
         assert all(row.override_present is False for row in others)
 
     def test_eligible_default_ratios_are_in_range_when_present(self) -> None:
-        rows = eligible_ratio_categories(UsageRatioProfile())
+        rows = eligible_ratio_categories(UsageRatioProfile(), year=2025)
         for row in rows:
             if row.default_ratio is not None:
                 assert Decimal("0") <= row.default_ratio <= Decimal("1")
@@ -150,7 +150,7 @@ class TestRuntimeFacade:
             assert report.profile_present is True
             assert report.overrides_count == 1
 
-            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id)
+            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025)
             targeted = next(row for row in rows if row.category is SpendingCategory.TELEFONIA_MOVIL)
             assert targeted.override_present is True
 

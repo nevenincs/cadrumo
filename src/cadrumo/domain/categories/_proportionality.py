@@ -11,6 +11,8 @@ explainable. Every :class:`ProportionalityRule` carries at least one
 
 from __future__ import annotations
 
+import re
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from urllib.parse import urlsplit
@@ -20,6 +22,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator,
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
+from ...core.validity_window import ValidityWindow
 from .errors import CategoryValidationError
 
 #: The only scheme a citation may cite. Every AEAT and BOE surface the
@@ -86,6 +89,23 @@ class CategoryCitationSource(StrEnum):
     AEAT_HELP = "aeat_help"
 
 
+#: Citation sources published as a dated ANNUAL EDITION, as opposed to a statute
+#: whose reference year is its enactment. The distinction is what makes the
+#: anti-mirror invariant precise rather than a year-sniffing heuristic: "Manual
+#: práctico Renta 2025" names the edition read, while "Ley 35/2006" names when
+#: the law was passed and says nothing about which filing year it covers.
+ANNUAL_EDITION_CITATION_SOURCES: frozenset[CategoryCitationSource] = frozenset(
+    {
+        CategoryCitationSource.MANUAL_RENTA,
+        CategoryCitationSource.MANUAL_IVA,
+        CategoryCitationSource.AEAT_HELP,
+    },
+)
+
+#: Matches the four-digit edition year in an annual publication's reference.
+_EDITION_YEAR_PATTERN = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+
+
 class CategoryCitation(_ProportionalityStrictFrozenModel):
     """Traceable citation backing one category or proportionality rule.
 
@@ -99,6 +119,9 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
             to an official AEAT or BOE origin over ``https`` -- see
             :meth:`_validate_authoritative_url`.
         quote: Authoritative Spanish-language quote backing the rule.
+        valid_from: First date this citation is asserted to support the rule.
+        valid_to: Last date, inclusive. Both bounds are required: the span is
+            the claim, and a defaulted one would assert grounding nobody typed.
     """
 
     source: CategoryCitationSource
@@ -106,6 +129,18 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
     quote: tr = Field(description="Authoritative Spanish-language quote.")
+    valid_from: date
+    valid_to: date
+
+    @property
+    def window(self) -> ValidityWindow:
+        """Return the closed span this citation is asserted over.
+
+        Returns:
+            The :class:`~core.validity_window.ValidityWindow` the two declared
+            bounds describe.
+        """
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @field_validator("url", mode="after")
     @classmethod
@@ -133,7 +168,48 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_quote(self) -> CategoryCitation:
         _require_translatable_text(self.quote, "category citation quote")
+        # Constructing the window is the validation: an inverted span refuses
+        # here, where the citation was written, rather than silently covering
+        # no year at all downstream.
+        _ = self.window
+        self._validate_edition_year_bounds_the_window()
         return self
+
+    def _validate_edition_year_bounds_the_window(self) -> None:
+        """Refuse an annual-edition citation whose window reaches past its edition.
+
+        THIS IS THE ANTI-MIRROR INVARIANT, and it is enforced here, at
+        construction, rather than only in a gate: a corpus that refuses the
+        shape cannot acquire it, whereas a gate can be run late or not at all.
+
+        A citation naming an annual edition asserts that THAT edition supports
+        the rule. Stretching its window over a neighbouring year converts a
+        document nobody read into a grounding claim, which is precisely how the
+        retired per-year mirror was produced -- its year-dated references were
+        rewritten by string substitution from a reviewed year, so the copy
+        asserted 41 times that a manual nobody opened said something.
+
+        The edition year is required, not merely checked when present. An annual
+        publication cited without an edition is unciteable in the first place,
+        and leaving the year optional would hand an author a one-token escape
+        from the invariant.
+        """
+        if self.source not in ANNUAL_EDITION_CITATION_SOURCES:
+            return
+        edition_years = {int(match.group()) for match in _EDITION_YEAR_PATTERN.finditer(self.reference)}
+        if not edition_years:
+            raise CategoryValidationError(
+                f"category citation from {self.source.value!r} must name the edition year it was read "
+                f"from in its reference, but reference={self.reference!r} carries none; an annual "
+                "publication cited without an edition cannot be checked against its window",
+            )
+        outside = sorted(year for year in self.window.years() if year not in edition_years)
+        if outside:
+            raise CategoryValidationError(
+                f"category citation reference={self.reference!r} names edition year(s) "
+                f"{sorted(edition_years)} but its validity window reaches {outside}; read the source "
+                "for those years and cite it, never widen an edition-dated citation to cover them",
+            )
 
 
 _HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)

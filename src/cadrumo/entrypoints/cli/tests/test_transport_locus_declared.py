@@ -2,8 +2,8 @@
 
 The spelling convention for local-path options is only checkable if something
 says which parameters carry local paths. Nothing else in the graph can answer
-that. Type cannot: ``app ledger classify --file`` and ``app ledger pull-folder
---folder`` are both ``str``, and one is a file on the operator's disk while the
+that. Type cannot: ``app ledger classify --file`` and ``app ledger evidence
+pull-all --folder`` are both ``str``, and one is a file on the operator's disk while the
 other is a Drive identifier. Spelling cannot either, because a gate that reads
 the option's name to decide whether the option's name is correct proves nothing.
 

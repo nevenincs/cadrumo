@@ -6,7 +6,13 @@ that captures the operator's persisted business / personal split coefficients
 ``cadrumo.domain.deductibility`` to look up an override before falling back to
 the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived once at
-import time from :func:`domain.categories.resolve_category_profiles`.
+import time from every year the category-profile corpus ships, never from one
+pinned year: eligibility gates what a persisted profile may STORE, so a
+year-scoped set would invalidate an operator's stored overrides the moment the
+filing year rolled over. The year-versioned half -- the statutory multiplier
+and default ratio the law fixes per year -- is read at use time from
+:func:`domain.categories.resolve_category_profiles`, which takes the year
+explicitly.
 """
 
 from __future__ import annotations
@@ -21,8 +27,8 @@ from ...core import STRICT_FROZEN_CONFIG
 from ..categories import (
     ProportionalityKind,
     SpendingCategory,
-    resolve_category_profiles,
 )
+from ..categories._registry import load_category_profiles
 from .errors import UsageRatioValidationError
 
 __all__ = [
@@ -65,10 +71,17 @@ _USER_RATIO_KINDS: frozenset[ProportionalityKind] = frozenset(
 
 
 def _eligible_categories() -> frozenset[SpendingCategory]:
-    """Return the categories whose proportionality kind accepts a user ratio."""
+    """Return every category the shipped corpus makes eligible for a user ratio.
+
+    Read from the undated corpus rather than from any resolved filing year. A
+    category the operator was permitted to override under one filing year must
+    stay loadable under the next, and the proportionality kind is one of the
+    framework facts that does not vary by year, so year selection would add a
+    dependency this set must not have.
+    """
     return frozenset(
         category
-        for category, profile in resolve_category_profiles(2025).items()
+        for category, profile in load_category_profiles().items()
         if profile.proportionality.kind in _USER_RATIO_KINDS
     )
 
@@ -76,8 +89,8 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
 ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCategory] = _eligible_categories()
 """Categories for which a :class:`UsageRatioProfile` may carry an override.
 
-Derived from :func:`domain.categories.resolve_category_profiles` at import
-time: a category is eligible iff its
+Derived at import time from the undated category-profile corpus: a
+category is eligible iff its
 :attr:`domain.categories.ProportionalityRule.kind` is
 :attr:`domain.categories.ProportionalityKind.USAGE_RATIO_HOME_AREA` or
 :attr:`domain.categories.ProportionalityKind.USAGE_RATIO_PERSONAL`.

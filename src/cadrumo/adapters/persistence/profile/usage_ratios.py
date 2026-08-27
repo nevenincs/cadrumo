@@ -183,7 +183,7 @@ def load_usage_ratios_with_censo_guard(
     *,
     bucket_id: str,
     raw_afectacion_ratio: Decimal | None,
-    year: int = 2025,
+    year: int,
     objects: SecureObjectRepository | None = None,
 ) -> UsageRatioProfile:
     """Load a usage-ratio profile and refuse on censo disagreement.

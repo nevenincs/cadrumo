@@ -42,7 +42,7 @@ def _output_language(language: str) -> Iterator[None]:
 
 
 def _hints() -> dict[SpendingCategory, str]:
-    return {category: _category_hint(category) for category in SpendingCategory}
+    return {category: _category_hint(category, year=2025) for category in SpendingCategory}
 
 
 def test_category_hints_do_not_follow_the_operator_language() -> None:

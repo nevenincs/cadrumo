@@ -28,6 +28,7 @@ def test_no_warning_for_non_home_office_category() -> None:
         category=SpendingCategory.TELEFONIA_MOVIL,
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
+        year=2025,
     )
 
     assert result is None
@@ -38,6 +39,7 @@ def test_warning_emitted_when_home_office_override_diverges() -> None:
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
+        year=2025,
     )
 
     assert isinstance(result, RatiosCensoOverrideWarning)
@@ -56,6 +58,7 @@ def test_no_warning_when_suministros_override_matches_30pct_of_raw() -> None:
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
+        year=2025,
     )
 
     assert result is None
@@ -71,6 +74,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
         category=SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         override_ratio=raw,
         raw_afectacion_ratio=raw,
+        year=2025,
     )
 
     assert result is None
@@ -81,6 +85,7 @@ def test_business_pct_is_none_when_censo_unset() -> None:
         censo_business_pct_for(
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
             None,
+            year=2025,
         )
         is None
     )
@@ -91,6 +96,7 @@ def test_business_pct_is_none_for_non_home_office_category() -> None:
         censo_business_pct_for(
             SpendingCategory.TELEFONIA_MOVIL,
             Decimal("0.20"),
+            year=2025,
         )
         is None
     )
@@ -104,6 +110,7 @@ def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor() -> None
     suministros = censo_business_pct_for(
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         raw,
+        year=2025,
     )
 
     assert suministros == Decimal("0.060")
@@ -117,6 +124,7 @@ def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
     ownership = censo_business_pct_for(
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
         raw,
+        year=2025,
     )
 
     assert ownership == raw
@@ -127,6 +135,7 @@ def test_warning_carries_censo_derived_ratio() -> None:
         category=SpendingCategory.IBI_VIVIENDA_AFECTO,
         override_ratio=Decimal("0.40"),
         raw_afectacion_ratio=Decimal("0.20"),
+        year=2025,
     )
 
     assert result is not None

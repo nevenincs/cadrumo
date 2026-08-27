@@ -19,8 +19,9 @@ class UsageRatioCensoGuardLoader(Protocol):
         *,
         bucket_id: str,
         raw_afectacion_ratio: Decimal | None,
+        year: int,
     ) -> UsageRatioProfile:
-        """Return the guarded ratio profile for ``bucket_id``."""
+        """Return the guarded ratio profile for ``bucket_id`` under ``year``'s rules."""
         ...
 
 
@@ -78,8 +79,9 @@ def usage_ratio_profile_with_censo_guard(
     *,
     bucket_id: str,
     raw_afectacion_ratio: Decimal | None,
+    year: int,
 ) -> UsageRatioProfile:
-    """Resolve and invoke the composed censo-guarded ratio loader."""
+    """Resolve and invoke the composed censo-guarded ratio loader for ``year``."""
     try:
         loader = _BOUND_USAGE_RATIO_CENSO_GUARD_LOADER.get()
     except LookupError as error:
@@ -87,6 +89,7 @@ def usage_ratio_profile_with_censo_guard(
     return loader(
         bucket_id=bucket_id,
         raw_afectacion_ratio=raw_afectacion_ratio,
+        year=year,
     )
 
 
