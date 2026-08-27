@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a8dceeaef40bb8353208c8f1cd0501ce1bfe255a73b822b88543d145c63689c'
+body_hash: 'sha256:8f607c1680e1ac8de00e5ced738721826bb1a712dd45e4acf45dc8f807fb80f5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -562,7 +562,6 @@ change cannot be staged safely in a tree where another process commits the
 working directory. Whoever schedules it should hold the tree, or work in an
 isolated worktree, and land it in a single commit.
 
-
 FINAL SIZING of the `S23`/`S40` family, derived from the corpus.
 
 Of the 128 revisions, 68 claim filing grade and so must resolve every enrolled
@@ -587,7 +586,6 @@ That is the honest size, and it is why this belongs in its own campaign with its
 own research pass rather than inside `S23` or `S40`. The grounding is available
 for every one of them -- the disenos are bundled and enrolled -- but availability
 is not the same as having been read.
-
 
 BREAKTHROUGH on the `S23`/`S40` family, which changes it from speculative to
 schedulable. The authoring cost was the blocker: 54 filing-grade revisions each
@@ -620,7 +618,6 @@ What remains for whoever schedules the commit: the schema model and field, the
 generated declarations for all 68 revisions, and the core-to-application
 inversion, landing together. Every input is now derived and gated.
 
-
 The `S23`/`S40` family is blocked on `W03.P08.S19`, and therefore on the
 export-fragment campaign's `S84`. This dependency is not recorded on the plan,
 and it is the third such omission this campaign has surfaced.
@@ -650,3 +647,39 @@ the disposition SEMANTICS only, not which casilla holds the result. The casilla
 identification is not derivable -- the semantic roles disagree across modelos --
 and deriving it would reintroduce the modelo-to-role transcription this
 migration exists to remove.
+
+
+`W02.P05.S51` is COMPLETE, and was completed by peer work during this campaign
+rather than being blocked on external acquisition as this ledger earlier
+recorded. Verified against all three of the row's own conditions.
+
+The whole-tree claimed-year layout-design gate passes: ten tests green in
+`test_layout_design_applies_to_claimed_years.py`, with no allowlist, no xfail
+and no skip anywhere in the module, and its own anti-tautology proof
+(`test_a_genuine_presentation_span_violation_is_still_detected`) passing
+alongside.
+
+Nothing was backdated. Every one of the eleven named modelos plus Modelo 180
+carries fully hash-pinned record designs -- 35 designs, 35 with a `sha256`, each
+with a real sede.agenciatributaria.gob.es source URL, a `retrieved_at` stamp and
+`applies_from`/`applies_to` bounds. The historical eras the row asked for are
+there: Modelo 180 back to 2000, Modelo 309 to 2004, Modelo 341 to 2005, Modelo
+576 to 2008, Modelos 181 and 308 to 2009. Several carry a `retrieved_at` of
+2026-08-25, which is this campaign acquiring them.
+
+Modelo 180 ejercicio 2022 is adjudicated: the modelo carries a bounded
+`2019-2022` revision closing 2022-12-31 and a `2023-y-siguientes` successor, so
+the ejercicio resolves to exactly one revision and the presentation axis is
+settled.
+
+The one failure in the neighbouring catalogue suite --
+`executable_parity_evidence` coverage gaps on Modelos 714 and 200 -- is a
+different axis and a different blocker; Modelo 714 waits on a wealth-asset
+register that does not exist yet.
+
+Note for `W02.P05.S25`, which this ledger recorded as depending on `S51`: that
+dependency is now discharged, but `S25` is NOT thereby unblocked. Its own
+blocker is the separate finding that 37 of the 58 bundled modelos ship revisions
+for years the supported-year declaration does not carry. `S51` constrained
+claimed-year LAYOUT coverage; it did not reconcile the declared support window
+with the shipped revision set.

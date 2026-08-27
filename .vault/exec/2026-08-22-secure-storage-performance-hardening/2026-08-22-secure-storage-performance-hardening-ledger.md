@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:415579403e32734965f76a07d82f11da349c9d81f1b136fac63b01e7b8df87ca'
+body_hash: 'sha256:85817dfa934b6f130005445088c7ababd73fca8b241e21b5afeb754ba129b305'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
@@ -51,3 +51,11 @@ related:
 - `S57` `T` `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`
 - `S58` `T` `dev/packaging/ and dev/release/`
 - `S59` `T` `.vault/audit/`
+
+- `S26` `T` `src/cadrumo/application/user_profile/profile_summary.py`
+- `S27` `T` `src/cadrumo/application/user_profile/profile_summary.py`
+- `S28` `T` `src/cadrumo/application/user_profile/profile_summary.py`
+- `S29` `T` `src/cadrumo/application/user_profile/tests/test_profile_summary_inventory.py`
+- `S30` `T` `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`
+- `S31` `T` `src/cadrumo/entrypoints/cli/_config/_profile_list_payloads.py`
+- `S32` `T` `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`

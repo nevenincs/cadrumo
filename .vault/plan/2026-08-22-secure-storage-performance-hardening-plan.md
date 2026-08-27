@@ -12,8 +12,8 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
-modified: '2026-08-26'
-body_hash: 'sha256:6887362c46edb377909525cebdab878fe70110380e63b85fd568f26b60fa7c02'
+modified: '2026-08-27'
+body_hash: 'sha256:0779af9588c7e24320263a8d8ff41f6e3c4afb7ed09e4914c3430f12fbf6b2bf'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -108,18 +108,18 @@ Recognize commit identity and label provenance once per capsule.
 
 Expose the minimum authenticated discovery projection.
 
-- [ ] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/profile_repository.py`.
-- [ ] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/profile_repository.py`.
-- [ ] `W03.P07.S28` - Export summary inventory through the lazy public facade and prove public-name parity; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W03.P07.S29` - Add real-store empty, populated, malformed, and concurrent inventory tests with deterministic ordering and linear reads; `src/cadrumo/application/user_profile/tests/`.
+- [x] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/profile_repository.py`.
+- [x] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/profile_repository.py`.
+- [x] `W03.P07.S28` - Export summary inventory through the lazy public facade and prove public-name parity; `src/cadrumo/application/user_profile/__init__.py`.
+- [x] `W03.P07.S29` - Add real-store empty, populated, malformed, and concurrent inventory tests with deterministic ordering and linear reads; `src/cadrumo/application/user_profile/tests/`.
 
 ### Phase `W03.P08` - Single-pass CLI consumption
 
 Join active state once and render without re-entering persistence.
 
-- [ ] `W03.P08.S30` - Route config profile list through public summary inventory and one active-pointer observation; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`.
-- [ ] `W03.P08.S32` - Prove empty and populated listing creates no state and reaches no custody, crypto, session, or repair capability; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`.
+- [x] `W03.P08.S30` - Route config profile list through public summary inventory and one active-pointer observation; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [x] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`.
+- [x] `W03.P08.S32` - Prove empty and populated listing creates no state and reaches no custody, crypto, session, or repair capability; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`.
 
 ## Wave `W04` - Enforce universal responsiveness and robustness
 
@@ -129,9 +129,9 @@ Turn the architectural properties into permanent gates over every CLI node and r
 
 Prove each live node resolution graph is a subset of its declared capabilities.
 
-- [ ] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [ ] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
 - [ ] `W04.P09.S34` - Keep state-free nodes free of registry, calculation, filing, network, browser, Google, crypto, keyring, and storage materialization; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
-- [ ] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [ ] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
 - [ ] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
 
 ### Phase `W04.P10` - Whole-tree latency, scaling, and side-effect gates
