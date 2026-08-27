@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d7097634713a2891ff2842b4aa332ba84049583826ff4856860c2966f1461e9'
+body_hash: 'sha256:2949c75d8f46fac276a9246a800058e28bc081e98f183d42d8e43ce2a64a29ad'
 step_id: 'S310'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -53,5 +53,3 @@ also the first direct test coverage `_validate_credential_free_schema` has
 ever had; no prior test exercised its name-refusal directly.
 
 Unblocks `W05.P23.S144`.
-
-## Changes
