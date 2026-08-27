@@ -708,3 +708,74 @@ def test_snapshot_refuses_to_overwrite_the_canonical_review() -> None:
     with pytest.raises(typer.Exit) as refusal:
         snapshot_command(name="current")
     assert refusal.value.exit_code == 1
+
+
+def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> None:
+    """No cell a band covers may fall through to the page colour.
+
+    This is the bug the whole review instrument turned on. Columns were mapped
+    with ``int(x // cell_width)``, and 536.8 / 12.2 is 43.99999999999999 in
+    IEEE floating point -- so a band landed one column left, left the column it
+    should have covered unpainted, and that bare cell showed the page colour
+    through as a stray block: pale on the light appearance, dark on the dark
+    one. Buttons appeared to have holes punched in them.
+
+    Asserting on the RENDERED PIXELS rather than on the mapping arithmetic,
+    because the arithmetic is exactly what was wrong and a test written in its
+    own terms would have agreed with it.
+    """
+    import html
+
+    svg = _sample_svg()
+    destination = tmp_path / "frame.png"
+    cell_height = 20
+    _raster.rasterise(svg, destination, cell_height=cell_height)
+
+    markup = svg.read_text(encoding=UTF_8)
+    cell_width_units, cell_height_units = _raster._cell_size(markup)
+    image = Image.open(destination).convert("RGB")
+    cell_width = image.width // round(
+        float(_raster._TERMINAL_CLIP.search(markup)["width"]) / cell_width_units,
+    )
+
+    def expected(colour: str) -> tuple[int, int, int]:
+        raw = colour.lstrip("#")
+        return tuple(int(raw[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+
+    # Cells carrying a glyph are excluded: the glyph's own ink legitimately
+    # differs from the band colour underneath it.
+    inked: set[tuple[int, int]] = set()
+    for run in _raster._TEXT_RUN.finditer(markup):
+        row = int(float(run["y"]) // cell_height_units)
+        start = round(float(run["x"]) / cell_width_units)
+        for index, character in enumerate(html.unescape(run["content"])):
+            if character.strip():
+                inked.add((row, start + index))
+
+    holes: list[str] = []
+    for band in _raster._CELL_RECT.finditer(markup):
+        row = int(float(band["y"]) // cell_height_units)
+        start = round(float(band["x"]) / cell_width_units)
+        span = max(round(float(band["width"]) / cell_width_units), 1)
+        for column in range(start, start + span):
+            if (row, column) in inked:
+                continue
+            x = column * cell_width + cell_width // 2
+            y = row * cell_height + cell_height // 2
+            if not (0 <= x < image.width and 0 <= y < image.height):
+                continue
+            if image.getpixel((x, y)) != expected(band["colour"]):
+                holes.append(f"row {row} col {column}: expected {band['colour']}, got {image.getpixel((x, y))}")
+
+    assert holes == [], "background bands not painted (stray blocks):\n" + "\n".join(holes[:12])
+
+
+def test_column_mapping_survives_floating_point_cell_origins() -> None:
+    """The exact arithmetic trap, pinned so it cannot come back.
+
+    Every value here is a real cell origin taken from a Textual export.
+    """
+    cell = 12.2
+    for origin, column in ((536.8, 44), (719.8, 59), (561.2, 46), (707.6, 58), (0.0, 0)):
+        assert round(origin / cell) == column, f"{origin} should map to column {column}"
+    assert int(536.8 // cell) == 43, "the floored form is wrong here; that is why rounding is used"
