@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:13b5ac48b40d0fbfac7104eaca65dcc98c39bf9dc7ed22fb481933e3b401e4c7'
+body_hash: 'sha256:8f34ee4d7f84d2bb546b17970c52ac054aee369463e577ee42ffa367bd400c55'
 step_id: 'S130'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -73,18 +73,30 @@ CANNOT BE PROVEN, reported rather than fabricated: "closure parity". No
 (stays at its `()` default) or `readiness` (stays `None`) on the assembled
 projection. S128's own exec record already recorded this as deliberately
 deferred ("readiness/closure ports remain genuinely OPTIONAL"). There is
-nothing to compare parity against; this should be tracked as its own
-follow-up Step rather than silently marked done or silently dropped.
+nothing to compare parity against. Carved out as its own Step,
+`W03.P20.S305`: implement the facet and prove it against the canonical
+closure authority the way `ModeloWorkReview` is proven against its sole
+public producer, or rule that the projection carries no closure and remove
+the expectation. Not silently marked done, not silently dropped.
 
-Resolved one ambiguity by reading rather than guessing: "bounded
-non-retention" appears in the governing ADR only inside a C3/C4
-interface-cohort receipt list (`sensitive_non_retention`) for the LATER TUI
-operation-handoff phase, with no implementation to test yet -- the same
-shape as the closure gap above. Read this Step's "bounded non-retention" as
-the pagination-cap property instead (already covered by the existing
-7-page cursor round-trip and stale-cursor-refusal tests in
-`test_workspace.py`), reported to the team lead before building on that
-reading.
+"BOUNDED NON-RETENTION" -- both plausible readings are satisfied, stated
+explicitly rather than resolved in one direction silently. Two candidate
+readings exist: (a) the projection retains no live reference back to its
+own mutable sources, and (b) a bounded facet's page never exceeds its
+declared cap. Reading (a) is exactly what item 3 above,
+mutation-after-capture isolation, proves: the captured result's own field
+does not track a later mutation of its source. Reading (b) is already
+covered by the existing 7-page cursor round-trip and stale-cursor-refusal
+tests in `test_workspace.py`. A third candidate reading -- the ADR's own
+`sensitive_non_retention`, a C3/C4 interface-cohort receipt requirement for
+the LATER TUI operation-handoff phase -- has no implementation anywhere to
+test against: `workspace.py` contains zero occurrences of `non_retention`
+or `sensitive` (confirmed by direct grep), and the ADR names
+`sensitive_non_retention` only inside that later receipt list. That absence
+is the evidence the narrow reading is not an evasion of a real, buildable
+property; there is nothing there to build against yet. All three candidate
+readings are therefore either satisfied by existing proof or have no
+implementation to prove against.
 
 Two real bugs surfaced by actually RUNNING the tests rather than trusting
 the first draft, both fixed before landing:
