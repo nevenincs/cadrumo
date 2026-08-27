@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a6fe50241c19aa1d8216a99bffc01c2a7d009f02fbb474b40800cb076bed687'
+body_hash: 'sha256:cc12afa478d7b6521cc15637928b5db52bc6c49531e4b2df21163ef0d8c48007'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -405,3 +405,18 @@ capabilities) together into one validated
 `resolve_static_inspection_result`'s discipline -- has still not been
 built. All prerequisite pieces (S287, S290, S291, S296, the graded capture
 core) are now in place for it.
+
+Resumed 2026-08-27, re-read HEAD before trusting the prior sizing
+(commit `926a57ec3e`-era; ~100 peer commits landed meanwhile, one relevant:
+`snapshot.py` split/renamed to `_snapshot_internals.py`, function bodies
+unchanged). Resolved the one open item from the sizing reference:
+`ModeloWorkspaceSnapshotScopeV1.effective_grade` is a genuine contract gap
+(commit `1238b3306b`), not implementation surface -- `rg` finds exactly one
+occurrence of `effective_grade` in the entire tree (the field declaration
+itself), no constructor, no test, and the ADR names the three-way
+requested/declared/effective distinction without ever defining what
+"effective" means. This is the fourteenth real finding this session.
+Blocks `resolve_graded_snapshot_result`'s `ModeloWorkspaceSnapshotScopeV1`
+construction until ruled: retire the field, define and build a real
+narrowing, or confirm it is deliberately always equal to `declared_grade`
+with the reason stated. S128 stays unchecked pending that ruling.
