@@ -27,11 +27,14 @@ from ._record_design_ir import (
     RecordDesignIntermediateVariableEnvelope,
 )
 from ._semantic_map import (
+    AnchorKey,
+    RecordKey,
     SemanticMap,
-    SemanticMapAnchor,
     SemanticMapEntry,
     SemanticMapRecord,
     VariableEnvelopeSemantic,
+    semantic_anchor_key,
+    semantic_record_key,
 )
 from ._semantic_map_validation import (
     SemanticMapAnomalyException,
@@ -53,8 +56,6 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-type _AnchorKey = tuple[str, int, str | None, str | None, str]
-type _RecordKey = tuple[str, str]
 
 
 class JoinedRecordDesignField(_StrictModel):
@@ -65,7 +66,7 @@ class JoinedRecordDesignField(_StrictModel):
 
     @model_validator(mode="after")
     def _require_same_exact_anchor(self) -> JoinedRecordDesignField:
-        if _parser_anchor_key(self.parser_field) != _semantic_anchor_key(self.semantic_entry.anchor):
+        if _parser_anchor_key(self.parser_field) != semantic_anchor_key(self.semantic_entry.anchor):
             raise ValueError("joined record-design field requires the same complete exact anchor")
         return self
 
@@ -177,8 +178,8 @@ def _join_record_design_semantics(
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
-    entries_by_anchor = {_semantic_anchor_key(entry.anchor): entry for entry in semantic_map.entries}
-    records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
+    entries_by_anchor = {semantic_anchor_key(entry.anchor): entry for entry in semantic_map.entries}
+    records_by_anchor = {semantic_record_key(record): record for record in semantic_map.records}
     joined_records = tuple(
         JoinedRecordDesignRecord(
             parser_sheet=sheet,
@@ -218,7 +219,7 @@ def _join_record_design_semantics(
 
 
 def _require_semantic_entry(
-    entries_by_anchor: dict[_AnchorKey, SemanticMapEntry],
+    entries_by_anchor: dict[AnchorKey, SemanticMapEntry],
     field: RecordDesignIntermediateField,
 ) -> SemanticMapEntry:
     """Resolve one parser field's reviewed meaning, or refuse by name.
@@ -241,17 +242,13 @@ def _require_semantic_entry(
     return entry
 
 
-def _parser_anchor_key(field: RecordDesignIntermediateField) -> _AnchorKey:
+def _parser_anchor_key(field: RecordDesignIntermediateField) -> AnchorKey:
     return field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity
 
 
-def _semantic_anchor_key(anchor: SemanticMapAnchor) -> _AnchorKey:
-    return anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity
 
 
-def _intermediate_record_key(sheet: RecordDesignIntermediateSheet) -> _RecordKey:
+def _intermediate_record_key(sheet: RecordDesignIntermediateSheet) -> RecordKey:
     return sheet.sheet, sheet.record_identity
 
 
-def _semantic_record_key(record: SemanticMapRecord) -> _RecordKey:
-    return record.sheet, record.record_identity

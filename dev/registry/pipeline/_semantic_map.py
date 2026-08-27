@@ -31,14 +31,18 @@ from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRe
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole
 
 __all__ = [
+    "AnchorKey",
     "EnvelopePrefixField",
     "EnvelopeTotalAnchor",
     "FilingEnvelopePrefixRole",
+    "RecordKey",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
     "SemanticMapRecord",
     "VariableEnvelopeSemantic",
+    "semantic_anchor_key",
+    "semantic_record_key",
 ]
 
 
@@ -337,3 +341,24 @@ class SemanticMap(_StrictModel):
         if duplicate_envelopes:
             raise ValueError(f"semantic map contains duplicate variable-envelope identities: {duplicate_envelopes!r}")
         return self
+
+
+type AnchorKey = tuple[str, int, str | None, str | None, str]
+type RecordKey = tuple[str, str]
+
+
+def semantic_anchor_key(anchor: SemanticMapAnchor) -> AnchorKey:
+    """Return the identity one anchor is matched and de-duplicated by.
+
+    The join and the validation both key anchors, and they must key them the
+    SAME way: the join looks an entry up by this tuple while the validation
+    decides whether two anchors collide. Two spellings that drift make a pair
+    the validation calls distinct unreachable to the join, which then reports
+    a missing anchor rather than the collision that caused it.
+    """
+    return anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity
+
+
+def semantic_record_key(record: SemanticMapRecord) -> RecordKey:
+    """Return the identity one record is matched and de-duplicated by."""
+    return record.sheet, record.record_identity
