@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb10a3fdedfe420757115dd402d85a6070bfc03410e939d9b5232c42526d78a2'
+body_hash: 'sha256:de5e87727fe55d4dde5d72a072232371705dbeb374b965e662c11a340201d2ab'
 step_id: 'S294'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -31,8 +31,21 @@ related:
 - `A` `src/cadrumo/domain/calculations/registry/tests/test_m349_rows_unaffected_by_contraparte_clave_extension.py`
 - `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_347_contraparte_clave_bindings.py`
 - `M` `src/cadrumo/core/corpus_text.py` -- resolves an anchor verbatim before canonicalising (fixes a pre-existing 114-collision corpus-wide defect this Step's grounding surfaced)
+- `M` `src/cadrumo/core/aggregation.py` -- new `BindingSourceKind.M347_THIRD_PARTY_OPERATION`, grounded on RD 1065/2007 art. 33.1; added to `INVOICE_BINDING_SOURCE_KINDS`
+- `M` `src/cadrumo/application/aggregation/_source_mesh.py` -- new member added to the `deterministic_lock` precedence tier
+- `M` `src/cadrumo/application/invoices/_source_resolver.py` -- new member added to `_OWNED_SOURCES`
+- `M` `src/cadrumo/domain/calculations/registry/bindings.py` -- new member registered in both selector-model and validator dispatch tables
+- `M` `src/cadrumo/application/modelo/_data_inventory.py` -- new member added to `_LIVE_OBSERVATION_SOURCE_KINDS`
+- `M` `src/cadrumo/application/state_projection.py` -- new member added to the readiness locale-key and operator-action projections (new locale key `cli.app.modelo.bindings.readiness.operacion_tercero`)
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-counterpart-summary.toml` -- retargeted `source` to `m347_third_party_operation`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/bindings/0001-counterpart-summary.toml` -- retargeted `source`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/bindings/0002-contraparte-clave.toml` -- retargeted `source`
+- `M` locale catalogues (es/en/ca/hu): `docs.casilla.binding_source.m347_third_party_operation`, `flows.modelo_review.filter.option.binding_source.m347_third_party_operation`, `cli.app.modelo.bindings.readiness.operacion_tercero`
+- `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`, `test_invoice_measure_classification.py`, `test_modelo_347_registry_bindings.py`, `src/cadrumo/application/aggregation/tests/test_precedence_ladder_conformance.py`, `src/cadrumo/application/invoices/tests/test_source_resolver.py` -- updated to the honest source declaration
 - `verify:` `uv run --no-sync python -c "from cadrumo.domain.calculations.registry.authority import bundled_authority; bundled_authority()"` -> `pass` (registry loads clean)
-- `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests -q -m unit -k "347 or invoice or binding_selector or counterpart or clave or contraparte or m349 or legal_grounding"` -> `pass` (222 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests -q -m unit -k "347 or invoice or binding_selector or counterpart or clave or contraparte or m349 or legal_grounding or source_kind or taxonomy" src/cadrumo/application/aggregation/tests/test_precedence_ladder_conformance.py` -> `pass` (251 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/invoices/tests/test_source_resolver.py src/cadrumo/entrypoints/cli/tests/test_modelo_readiness_action_projection.py` -> `pass` (36 passed)
+- `verify:` `grep -rn 'm347_third_party_operation' src/cadrumo/_data/registry` -> 8 bindings declare it (all six the finding named, plus the two pre-existing 2011-2024 declarante-summary bindings retargeted in the same sweep)
 
 ## Notes
 
@@ -58,13 +71,21 @@ Explicitly deferred, stated rather than silently dropped:
 - The 2011-2024 revision (needs the same buildout; both revisions carry
   only the thin declarant-summary placeholder today).
 - The export layout repoint and its parity test.
-- A source-declaration auditability gap this Step inherited rather than
-  introduced: both the pre-existing declarante-summary bindings and the new
-  contraparte-clave bindings declare `source = "collectible_invoice"` while
-  consuming both invoice directions. Recorded as its own open taxonomy
-  finding in the reference doc; deliberately not fixed here since it pulls
-  in resolver enrollment, `owned_sources`, and the enum-registry parity
-  gate, and nothing consumes either binding set into a live export today.
+- ~~A source-declaration auditability gap...~~ RESOLVED: both the
+  pre-existing declarante-summary bindings (both revisions) and the new
+  contraparte-clave bindings now declare the honest combined-direction
+  `BindingSourceKind.M347_THIRD_PARTY_OPERATION`, grounded in RD 1065/2007
+  art. 33.1's undifferentiated "operaciones" concept. Two-bindings-per-field
+  was investigated and found non-viable: each casilla binds to exactly one
+  `BindingId` in the export layout, so a competing pair would need either an
+  arbitrary export-layer pick or a merge concept the registry does not have.
+  Enrolled through every consumer surface a grep found: the LOCK precedence
+  tier, `_OWNED_SOURCES`, both bindings-dispatch tables, the data-inventory
+  live-observation classification, and the readiness locale-key/operator-
+  action projections (new locale key, all four languages). A grep for the
+  new source kind now finds every one of the six named bindings (plus the
+  two 2011-2024 bindings retargeted in the same sweep) -- the auditability
+  property the change exists for.
 
 Structural grounding for the cohort/union fix, restated per instruction: the
 diseño de registro's only sequence split is REGISTRO DE DECLARADO versus
