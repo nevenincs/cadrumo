@@ -225,8 +225,6 @@ def _seguro_enfermedad_person_counts(
             record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return {}
-    if record is None:
-        return {}
     counts = seguro_enfermedad_insured_counts_from_facts(
         profile_fact_index(record, load_user_profile_schema()),
         filing_year=filing_year,

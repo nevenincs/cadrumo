@@ -20,13 +20,17 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -36,11 +40,21 @@ from ...core import (
     OperationEffect,
     OperationInteractionKind,
     PaymentElection,
+    Period,
     RefundElection,
 )
 from ...core.errors import CadrumoError
-from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    ContentDigest,
+    ModeloEditBaselineId,
+    WorkUnitId,
+)
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.modelos import CalculationRevisionAmendmentKind, ModeloCode
 from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
+from ..operations._financial_operand import OperationTransientFinancialOperandDeclaration
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -59,6 +73,21 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ._amendment_actions import amend_modelo_revision
+from ._edit_execution import apply_modelo_edit
+from ._edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditApplyRequestV1,
+    ModeloEditBaselineV1,
+    ModeloEditCompatibilityTupleV1,
+    ModeloEditExecutionNoEffectV1,
+    ModeloEditMutationFamily,
+    ModeloEditMutationResultReceiptV1,
+    ModeloEditPermittedSurfaceEntryV1,
+    ModeloEditSchemaIdentityV1,
+    ModeloEditSubmissionV1,
+    ModeloRowEditIntentV1,
+    ModeloScalarEditIntentV1,
+)
 from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -77,6 +106,7 @@ MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
 MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
+MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
@@ -861,6 +891,275 @@ def build_modelo_work_amend_registration(
     )
 
 
+_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND = "modelo.edit.manual_casilla_override"
+
+#: Declared but not yet reachable from inside the executor: the manual
+#: override amount already crosses fully typed and pre-admitted as part of
+#: ModeloEditSubmissionV1 (the Edit Contract admission phase already
+#: validated it), so nothing here asks the operator for it mid-flight today.
+#: The declaration documents the operand this family is defined over and lets
+#: a future mid-flight ask enroll under it; OperationExecutorContext has no
+#: accessor for OperationTransientFinancialOperandProtocolV1 yet, so no
+#: executor anywhere can exercise the broker side of this contract.
+_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND = OperationTransientFinancialOperandDeclaration(
+    operand_kind=_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND,
+    currency="EUR",
+    scale=2,
+    minimum=Decimal("-999999999999.99"),
+    maximum=Decimal("999999999999.99"),
+    lifetime=timedelta(minutes=5),
+)
+
+
+class ModeloEditApplyBaselineV1(BaseModel):
+    """Wire mirror of ModeloEditBaselineV1 with a plain-string modelo code.
+
+    Every field of ModeloEditBaselineV1 except ``modelo`` already crosses an
+    operation payload safely: Hex64Str, bounded Annotated str, Period and the
+    permitted-surface union are all plain Pydantic shapes with no custom core
+    schema. Only ``modelo: ModeloCode`` does - it is a str subclass that
+    customises its Pydantic core schema, which the operations payload-graph
+    gate refuses inside a registered request payload - so only that one field
+    is mirrored here. ``to_baseline`` re-validates it through the real type.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    compatibility: ModeloEditCompatibilityTupleV1
+    bucket_id: BucketId
+    modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^\d{3}$")]
+    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    period_filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    period_code: Annotated[str, Field(min_length=1, max_length=16)]
+    work_unit_id: WorkUnitId
+    work_catalogue_revision: ContentDigest
+    calculation_catalogue_revision: ContentDigest
+    current_calculation_revision_id: CalculationRevisionId | None
+    law_selected_revision_id: RevisionId
+    schema_identity: ModeloEditSchemaIdentityV1
+    schema_version: Annotated[int, Field(ge=1)]
+    permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=2000)]
+    permitted_surface_digest: ContentDigest
+    mutation_family: ModeloEditMutationFamily
+    issued_at: datetime
+    expires_at: datetime
+    baseline_id: ModeloEditBaselineId
+
+    def to_baseline(self) -> ModeloEditBaselineV1:
+        """Translate back to the real, fully re-validated domain baseline.
+
+        ``period`` is mirrored the same way as ``modelo``: ``Period`` is a
+        core ``BaseModel`` that does not declare ``strict=True``, which the
+        operations payload-graph gate also refuses, so the wire form carries
+        its two source fields and reconstructs the real type here.
+        """
+        data = self.model_dump(mode="python")
+        data["modelo"] = ModeloCode(data["modelo"])
+        period_filing_year = data.pop("period_filing_year")
+        period_code = data.pop("period_code")
+        data["period"] = Period.from_year_and_code(period_filing_year, period_code)
+        return ModeloEditBaselineV1.model_validate(data)
+
+
+class ModeloEditApplySubmissionV1(BaseModel):
+    """Wire mirror of ModeloEditSubmissionV1 carrying a payload-safe baseline.
+
+    Scalar, binding and row intents are the real Edit Contract types
+    unchanged: none of them embeds ``ModeloCode`` or any other
+    custom-core-schema type, so only the baseline needed mirroring for those
+    three families - a total translation, every field converts.
+
+    ``detail_row_intents`` is deliberately ABSENT from this wire type, not
+    silently emptied: ``ModeloDetailRow`` (the per-modelo M184/M232/M349/
+    M347/M210 row union) embeds coercive ``BeforeValidator`` code-hydration
+    on many fields - built for CLI ``--row key=value`` parsing, not a static
+    wire shape - and the payload-graph gate refuses that structurally,
+    regardless of whether any row is actually submitted. Mirroring all six
+    row types field-by-field is real, sizeable, per-modelo work belonging to
+    its own Step. This operation cannot carry a detail-row edit yet; that is
+    loud (the type cannot be constructed with one at all), not silent.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    edit_contract_version: Literal[1] = 1
+    baseline: ModeloEditApplyBaselineV1
+    mutation_family: ModeloEditMutationFamily
+    scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=500)] = ()
+    binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=500)] = ()
+    row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=500)] = ()
+
+    @model_validator(mode="after")
+    def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
+        """Enforce the manual-override operand's own declared currency, scale and range.
+
+        The broker path (`OperationTransientFinancialOperandProtocolV1`) that
+        would normally enforce `_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND` is not
+        reachable from any executor today (`OperationExecutorContext` has no
+        accessor for it). The manual-override amount instead arrives here,
+        through the already-admitted scalar intent value, so this duplicates
+        the bounds the declaration promises rather than leaving them
+        unenforced. It should collapse into the broker once that wire lands.
+        """
+        for intent in self.scalar_intents:
+            if isinstance(intent.value, Decimal) and not _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(intent.value):
+                raise ValueError(
+                    "scalar edit intent amount is outside the declared manual-override financial operand bounds"
+                )
+        return self
+
+    def to_submission(self) -> ModeloEditSubmissionV1:
+        """Translate back to the real, fully re-validated domain submission.
+
+        ``detail_row_intents`` is always empty: this wire type structurally
+        cannot carry one (see the class docstring), so there is nothing to
+        translate for that family yet.
+        """
+        return ModeloEditSubmissionV1(
+            baseline=self.baseline.to_baseline(),
+            mutation_family=self.mutation_family,
+            scalar_intents=self.scalar_intents,
+            binding_intents=self.binding_intents,
+            row_intents=self.row_intents,
+        )
+
+
+class ModeloEditApplyOperationRequestV1(CredentialFreeOperationRequest):
+    """The admitted Edit Contract submission this operation is authorized to apply.
+
+    Credential-free by construction: every field is a pre-validated,
+    pre-admitted coordinate or typed value the Edit Contract admission
+    phase already produced, so nothing here is unsafe to journal.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    submission: ModeloEditApplySubmissionV1
+
+
+class ModeloEditApplyPublicResultV1(BaseModel):
+    """The settled receipt id a caller outside this package may see.
+
+    Only the id: the full receipt is the domain record of truth, addressable
+    through ModeloEditReceiptRepository, and this result exists to confirm
+    which one a submission produced.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+def project_modelo_edit_apply_result(receipt: ModeloEditMutationResultReceiptV1) -> ModeloEditApplyPublicResultV1:
+    """Project one settled receipt onto the safe public result."""
+    return ModeloEditApplyPublicResultV1(
+        receipt_id=str(receipt.receipt_id),
+        calculation_revision_id=str(receipt.calculation_revision_id),
+    )
+
+
+class ModeloEditApplyExecutor:
+    """Run the Edit Contract's guarded compare-and-swap apply under one recorded identity.
+
+    apply_modelo_edit already owns the commit-point baseline recheck, the
+    calculate/recalculate discrimination (recalculate refuses honestly, by
+    design, until it is wired) and the co-committed result receipt; this only
+    binds the running operation's own identity to that call and re-implements
+    no lifecycle policy.
+    """
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloEditApplyOperationRequestV1],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to apply_modelo_edit and return the settled receipt id.
+
+        A failed compare-and-swap is a typed domain fact
+        (ModeloEditExecutionNoEffectV1), not an unexpected error, but the
+        executor protocol this method implements returns only an optional
+        reference. No channel exists yet to carry the typed refusal back to a
+        caller outside this package through the operation result path, so it
+        is reported here as a no-effect None rather than fabricated into an
+        exception the refusal was deliberately designed not to be.
+        """
+        submission = request.payload.submission.to_submission()
+        baseline = submission.baseline
+        apply_request = ModeloEditApplyRequestV1(
+            operation_id=context.identity.operation_id,
+            submission=submission,
+        )
+        outcome = apply_modelo_edit(
+            apply_request,
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+            receipt_repository=ModeloEditReceiptRepository(),
+            now=datetime.now(UTC),
+            result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
+        )
+        if isinstance(outcome, ModeloEditExecutionNoEffectV1):
+            return None
+        return str(outcome.receipt.receipt_id)
+
+
+def build_modelo_edit_apply_definition() -> OperationDefinition:
+    """Bind the Edit Contract's guarded apply path to its registered operation contract."""
+
+    def build() -> ModeloEditApplyExecutor:
+        return ModeloEditApplyExecutor()
+
+    return OperationDefinition(
+        definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        request_type=ModeloEditApplyOperationRequestV1,
+        result_type=ModeloEditApplyPublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloEditApplyOperationRequestV1,
+            executor_type=ModeloEditApplyExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.edit.apply",),
+        interaction_kinds=frozenset[OperationInteractionKind](),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        transient_financial_operands=(_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND,),
+    )
+
+
+def build_modelo_edit_apply_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the edit-apply definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.edit.apply.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.edit.apply.result",
+            schema_version=1,
+            model_type=ModeloEditApplyPublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition() -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -916,6 +1215,7 @@ def build_modelo_work_rename_registration(
 
 
 __all__ = [
+    "MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID",
     "MODELO_EXPORT_OPERATION_DEFINITION_ID",
     "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
@@ -923,6 +1223,9 @@ __all__ = [
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_PROGRESS_UNIT",
+    "ModeloEditApplyExecutor",
+    "ModeloEditApplyOperationRequestV1",
+    "ModeloEditApplyPublicResultV1",
     "ModeloExportExecutor",
     "ModeloExportPublicResultV1",
     "ModeloExportRequest",
@@ -946,6 +1249,8 @@ __all__ = [
     "ModeloWorkVerifyExecutor",
     "ModeloWorkVerifyPublicResultV1",
     "ModeloWorkVerifyRequest",
+    "build_modelo_edit_apply_definition",
+    "build_modelo_edit_apply_registration",
     "build_modelo_export_definition",
     "build_modelo_export_registration",
     "build_modelo_lifecycle_operation_definitions",
@@ -960,6 +1265,7 @@ __all__ = [
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
     "build_modelo_work_verify_registration",
+    "project_modelo_edit_apply_result",
     "project_modelo_export_result",
     "project_modelo_work_verify_result",
 ]
@@ -973,6 +1279,7 @@ def build_modelo_lifecycle_operation_definitions() -> tuple[OperationDefinition,
     shape this population exists to make impossible to ship.
     """
     return (
+        build_modelo_edit_apply_definition(),
         build_modelo_export_definition(),
         build_modelo_work_amend_definition(),
         build_modelo_work_discard_definition(),
@@ -987,6 +1294,7 @@ def build_modelo_lifecycle_operation_registrations(
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind each lifecycle definition to its stable public schemas."""
     builders = {
+        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID: build_modelo_edit_apply_registration,
         MODELO_EXPORT_OPERATION_DEFINITION_ID: build_modelo_export_registration,
         MODELO_WORK_AMEND_OPERATION_DEFINITION_ID: build_modelo_work_amend_registration,
         MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID: build_modelo_work_discard_registration,

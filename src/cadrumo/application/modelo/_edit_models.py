@@ -20,9 +20,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, OutputLanguage, Period
+from ...core import CasillaId, OutputLanguage, Period
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -62,7 +62,7 @@ type _BoundedRefList = Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX
 class _EditModel(BaseModel):
     """The common fail-closed boundary posture for Edit Contract V1 records."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
 class ModeloEditMutationFamily(StrEnum):

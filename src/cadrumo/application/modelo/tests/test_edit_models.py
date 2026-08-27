@@ -7,8 +7,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from ....core import OutputLanguage, Period
+from ....core import Modelo, OutputLanguage, Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.modelos import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloBindingEditIntentV1,
@@ -105,7 +106,7 @@ def _baseline(
     return ModeloEditBaselineV1(
         compatibility=_compatibility(),
         bucket_id="edit-bucket",
-        modelo="130",
+        modelo=ModeloCode(Modelo.M130.value),
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         work_unit_id=_WORK_UNIT_ID,
@@ -155,7 +156,7 @@ def test_baseline_is_frozen_and_rejects_unknown_fields() -> None:
     """The baseline is strict, frozen, and rejects extra fields at construction."""
     baseline = _baseline()
     with pytest.raises(ValidationError):
-        baseline.baseline_id = "changed"  # type: ignore[misc]
+        baseline.baseline_id = "changed"  # type: ignore[misc]  # ty: ignore[invalid-assignment]  # reason: mutating a frozen field IS the refusal under test
     with pytest.raises(ValidationError, match="Extra inputs"):
         ModeloEditBaselineV1(
             **{**baseline.model_dump(mode="python"), "unexpected_field": "x"}  # ty: ignore[invalid-argument-type]  # reason: deliberately malformed kwargs to prove the strict extra="forbid" refusal

@@ -140,6 +140,7 @@ Submodules
    cadrumo.core.base64_codec
    cadrumo.core.bucket_pointer
    cadrumo.core.calendar_shift
+   cadrumo.core.citation_grounding
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle

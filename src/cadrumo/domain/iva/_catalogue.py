@@ -22,9 +22,10 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core.citation_grounding import CitationGrounding
 from ...core.resources import bundled_path
 from ...core.validity_window import years_covered_by_every_group
-from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
+from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 from .errors import IvaCatalogueError
 
 
@@ -175,7 +176,7 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
             # translation key: verifying a quotation against the bundled
             # corpus needs the literal text at the citation site.
             "quoted_text": str(data.get("quoted_text") or ""),
-            "grounding": IvaCitationGrounding(str(data.get("grounding") or "verified")),
+            "grounding": CitationGrounding(str(data.get("grounding") or "verified")),
             "unresolved_reason": str(data.get("unresolved_reason") or ""),
             "valid_from": data.get("valid_from"),
             "valid_to": data.get("valid_to"),

@@ -31,6 +31,7 @@ from pydantic import (
 )
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.citation_grounding import CitationGrounding
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
@@ -648,27 +649,6 @@ class IvaRateRecord(_IvaStrictFrozen):
         return self
 
 
-class IvaCitationGrounding(StrEnum):
-    """Whether a citation's text was read against the corpus, or refused.
-
-    The distinction is the point. An unverified citation and one examined and
-    found unsupportable look identical when both simply lack text, and the
-    catalogue spent its whole life in that state: every quotation was a
-    translation key resolving to the literal word "Quoted text", so nothing
-    could tell a grounded citation from an ungrounded one.
-    """
-
-    VERIFIED = "verified"
-    """The quotation was read from the bundled corpus and supports the claim."""
-
-    UNRESOLVED = "unresolved"
-    """Examined and refused: the cited article does not support the category.
-
-    Not "not yet checked". A citation carrying this has been read against the
-    corpus and the reason it failed is recorded beside it.
-    """
-
-
 class IvaCitation(_IvaStrictFrozen):
     """A legal or regulatory citation backing a :class:`IvaRegulation`.
 
@@ -701,8 +681,8 @@ class IvaCitation(_IvaStrictFrozen):
         default="",
         description="Verbatim Spanish from the bundled corpus; empty only when grounding is unresolved.",
     )
-    grounding: IvaCitationGrounding = Field(
-        default=IvaCitationGrounding.VERIFIED,
+    grounding: CitationGrounding = Field(
+        default=CitationGrounding.VERIFIED,
         description="Whether the quotation was verified against the corpus, or examined and refused.",
     )
     unresolved_reason: str = Field(
@@ -741,7 +721,7 @@ class IvaCitation(_IvaStrictFrozen):
         # year at all, and must refuse where it was written rather than make the
         # citation silently vanish from every filing year downstream.
         _ = self.window
-        if self.grounding is IvaCitationGrounding.VERIFIED:
+        if self.grounding is CitationGrounding.VERIFIED:
             if not self.quoted_text.strip():
                 raise IvaValidationError(f"{where}: a verified citation must carry its verbatim quotation")
             if self.unresolved_reason.strip():
