@@ -6,7 +6,7 @@ expression = { op = "lookup_bracket", args = [
     { parameter = "renta-2024-escala-autonomica-base-ahorro" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-76"]
+legal_refs = ["ley-35-2006:art-76-2023"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]

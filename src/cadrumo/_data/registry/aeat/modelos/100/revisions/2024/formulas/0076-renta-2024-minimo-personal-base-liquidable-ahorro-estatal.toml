@@ -9,7 +9,7 @@ expression = { op = "min", args = [
     { casilla_id = "0510" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66-2023"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]

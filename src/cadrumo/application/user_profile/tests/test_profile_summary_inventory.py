@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -55,7 +56,13 @@ def _kdf() -> ProfileCustodyKdfParameters:
     )
 
 
-def _publish(root: Path, profile_id: UUID, label: str, *, publication_kind: str = "enroll") -> Path:
+def _publish(
+    root: Path,
+    profile_id: UUID,
+    label: str,
+    *,
+    publication_kind: Literal["enroll", "restore"] = "enroll",
+) -> Path:
     envelope = ProfileCustodyEnvelope.create(
         profile_id=profile_id,
         password_generation=1,

@@ -44,7 +44,13 @@ def _seeded_world(
     def _seeded(root: Path) -> Iterator[None]:
         if dispose_engine_around:
             dispose_engine()
-        resolved_overrides = settings_overrides(root) if callable(settings_overrides) else settings_overrides
+        resolved_overrides: Mapping[str, object]
+        if settings_overrides is None:
+            resolved_overrides = {}
+        elif isinstance(settings_overrides, Mapping):
+            resolved_overrides = settings_overrides
+        else:
+            resolved_overrides = settings_overrides(root)
         settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
         with (
             settings_cm,
