@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:975f0b0989d3fa0bf9bc506bd905a42c144285c9f2d2e1ca8bcbfdae06ec5fbd'
+body_hash: 'sha256:d5c342f12d70304328a3ba0231ea40f4adaac2c4138557aa7cb5b19b3bc40517'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -134,3 +134,5 @@ related:
 - `S10` `M` `src/cadrumo/domain/calculations/registry/_validate_applicability_section.py`
 - `S34` `M` `dev/quality/import_hygiene_scan.py`
 - `S34` `M` `src/cadrumo/domain/calculations/registry/tests/__init__.py`
+
+- `S55` `A` `src/cadrumo/application/registry/tests/test_exact_key_corpus_year_coverage.py`
