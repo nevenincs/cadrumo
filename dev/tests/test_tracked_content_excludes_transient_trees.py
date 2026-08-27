@@ -42,6 +42,7 @@ DECLARED_NAMING_SITES: Final[dict[str, str]] = {
     "dev/quality/tests/test_no_dunder_init_module_imports.py": "excludes the snapshot from its import scan",
     "src/cadrumo/application/modelo/tests/test_workspace_producers.py": "asserts the snapshot stays out of its producer walk",
     "src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py": "excludes the snapshot from its boundary scan",
+    "dev/registry/analysis/regulatory_prose_parser_channel.py": "prunes the snapshot from its module walk",
     "dev/tests/test_tracked_content_excludes_transient_trees.py": "declares the segments and this allowlist",
 }
 
