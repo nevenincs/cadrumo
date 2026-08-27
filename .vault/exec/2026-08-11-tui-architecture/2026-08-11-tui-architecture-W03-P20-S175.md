@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e07b4b14cfae87beb7709c976e570e21303edd4dbae471e62b0ebe00133717fb'
+body_hash: 'sha256:420f926a05b77971df053ae741aa6d43d2eb9df5cb14c615cfc01c8b0bfa2a95'
 step_id: 'S175'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
