@@ -5,13 +5,13 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:247aa97691c1aaa6bcf45625cbcb8c41490bdf15d9d67ccc6516ab9051bca512'
+body_hash: 'sha256:e9262c55d26bd6c6cd0fed67820711e77eaebdcfeb51d96d5c87131830a40c2d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-27-tui-architecture-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
 ---
 
-# `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `proposed`)
+# `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
 
 ## Problem Statement
 
