@@ -77,7 +77,7 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-saturate-1",
-        booked_date=date(2026, 5, 1),
+        booked_date=date(2025, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,
         currency="EUR",
@@ -109,7 +109,7 @@ def _seed_business(
     """Persist one ACTIVE BUSINESS transaction with no IVA substrate and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-derive-1",
-        booked_date=date(2026, 5, 1),
+        booked_date=date(2025, 5, 1),
         value_date=date(2026, 5, 1),
         amount=amount,
         currency="EUR",
