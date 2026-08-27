@@ -181,7 +181,6 @@ Submodules
    cadrumo.domain.calculations.registry.support_matrix
    cadrumo.domain.calculations.registry.temporal
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
-   cadrumo.domain.calculations.registry.validate_cross_revision_advisory
    cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
    cadrumo.domain.calculations.registry.verification_tolerance

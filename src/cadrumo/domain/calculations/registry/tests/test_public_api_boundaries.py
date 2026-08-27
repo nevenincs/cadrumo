@@ -35,10 +35,6 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
     validate_ledger_oss_aggregation_binding_definition,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
-from cadrumo.domain.calculations.registry.validate_cross_revision_advisory import (
-    CrossRevisionCasillaDriftSummary,
-    summarize_non_overlapping_cross_revision_casilla_drift,
-)
 
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
@@ -69,8 +65,6 @@ _LEDGER_BINDING_PUBLIC_NAMES = (
 _CASILLA_CONTINUITY_PUBLIC_NAMES = (
     "CasillaContinuidadEvolutionDefinition",
     "CrossRevisionCasillaDivergence",
-    "CrossRevisionCasillaDriftSummary",
-    "summarize_non_overlapping_cross_revision_casilla_drift",
 )
 _MODELO_REGISTRY_PRIVATE_MODULES = ("_bindings", "_errors", "_record_design", "_schema")
 
@@ -93,15 +87,12 @@ def test_registry_casilla_continuity_reports_live_in_their_defining_modules() ->
     contracts = (
         CasillaContinuidadEvolutionDefinition,
         CrossRevisionCasillaDivergence,
-        CrossRevisionCasillaDriftSummary,
-        summarize_non_overlapping_cross_revision_casilla_drift,
     )
 
     assert tuple(contract.__name__ for contract in contracts) == _CASILLA_CONTINUITY_PUBLIC_NAMES
     assert {contract.__module__ for contract in contracts} == {
         "cadrumo.domain.calculations.registry.schema_surfaces",
         "cadrumo.domain.calculations.registry._cross_revision_divergence",
-        "cadrumo.domain.calculations.registry.validate_cross_revision_advisory",
     }
 
 

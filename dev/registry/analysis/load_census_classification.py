@@ -434,11 +434,11 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         classification="conditionally_reachable",
         trigger="cross-revision contiguity advisory raised during registry validation",
         reason=(
-            "Reached from _validate_cross_revision, which runs on a cold load. The advisory "
-            "builders inside it fire only for a corpus with a contiguity divergence, which the "
-            "bundled corpus does not currently present."
+            "Reached from _validate_cross_revision_evolution, which runs on a cold load. The "
+            "contiguity failure builders inside it fire only for a corpus with a contiguity "
+            "divergence, which the bundled corpus does not currently present."
         ),
-        members=_registry("validate_cross_revision_advisory"),
+        members=_registry("_validate_cross_revision_contiguity"),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
