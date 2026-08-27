@@ -1,0 +1,30 @@
+[[revisions."2024".casillas]]
+id = "03630"
+number = "03630"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2025"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024".casillas]]
+id = "03631"
+number = "03631"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2025"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024".casillas]]
+id = "03632"
+number = "03632"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2025"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_canarias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
