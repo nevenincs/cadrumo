@@ -223,7 +223,27 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
                 annotation=typer.Context,
             )
         )
-    parameters.extend(_parameter(parameter) for parameter in spec.parameters)
+    # Python constrains signature order twice over: a KEYWORD_ONLY parameter
+    # may not precede a POSITIONAL_OR_KEYWORD one, and within the positional
+    # group a parameter with no default may not follow one that has a default.
+    # A spec violating either builds an illegal signature, so the command
+    # cannot be constructed AT ALL -- `app ledger ratios set`,
+    # `app ledger evidence batch` and `app modelo reconcile import` all shipped
+    # in that state, unreachable through the real CLI. Sorting here makes the
+    # violation unrepresentable instead of leaving every spec author to
+    # rediscover the rule. The sort is stable, so arguments keep the relative
+    # order the spec declares them in -- the part an operator actually observes
+    # as positional order.
+    built = [_parameter(parameter) for parameter in spec.parameters]
+    parameters.extend(
+        sorted(
+            built,
+            key=lambda parameter: (
+                parameter.kind is inspect.Parameter.KEYWORD_ONLY,
+                parameter.default is not inspect.Parameter.empty,
+            ),
+        )
+    )
     invoke.__name__ = f"invoke_{spec.key}"
     invoke.__qualname__ = invoke.__name__
     signature = inspect.Signature(parameters)
