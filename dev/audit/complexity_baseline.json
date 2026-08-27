@@ -118,7 +118,7 @@
             "src/cadrumo/application/live/snapshot_base.py::enforce_snapshot_state_invariants": 12,
             "src/cadrumo/application/modelo/_art109_activity_income.py::_classify_current_period_row": 11,
             "src/cadrumo/application/modelo/_attribution_received_advisory.py::_attribution_received_base_for_year": 11,
-            "src/cadrumo/application/modelo/_borrador_binding.py::resolve_modelo_100_borrador_bindings": 11,
+            "src/cadrumo/application/modelo/borrador_binding.py::resolve_modelo_100_borrador_bindings": 11,
             "src/cadrumo/application/modelo/_calculate_input.py::build_work_calculate_input_bundle": 13,
             "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_m131_objective_estimation_data_base_inputs": 22,
             "src/cadrumo/application/modelo/_calculation_source_staging.py::materialise_registry_values_for_source_resolution": 11,
