@@ -229,7 +229,11 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         ),
     )
 
-    assert resolution.owned_sources == (BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE)
+    assert resolution.owned_sources == (
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.PAYABLE_INVOICE,
+    )
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
@@ -675,6 +679,7 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
         "base_amount",
         "invoice_total_amount",
         "intracommunity_clave",
+        "operation_clave",
         "party_legal_name",
     },
 )
@@ -753,6 +758,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("3000.00"),
         "invoice_total_amount": Decimal("3000.00"),
         "intracommunity_clave": "I",
+        "operation_clave": None,
         "party_legal_name": "Servizi SRL",
     }
 
@@ -839,6 +845,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("1500.00"),
         "invoice_total_amount": Decimal("1815.00"),
         "intracommunity_clave": None,
+        "operation_clave": None,
         "party_legal_name": "Cliente M347 SL",
     }
 
