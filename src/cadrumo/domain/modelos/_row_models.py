@@ -677,7 +677,7 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 # ---------------------------------------------------------------------------
 
 # Valid clave de operacion codes per M347 form / Orden EHA/3012/2008.
-_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G"]
 
 
 class Modelo347ContraparteRow(BaseModel):
