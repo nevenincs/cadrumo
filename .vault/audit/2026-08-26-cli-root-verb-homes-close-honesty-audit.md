@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:277ae47a6d2806bdcd75a62c11974c7368a94ca93292f375ff278cd6853cdc04'
+body_hash: 'sha256:cc8fe589dc231f46f0eec3d3281f3747db8d00e25c6bb63f4c7721a31d339f0f'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
   - "[[2026-08-26-cli-root-verb-homes-adr]]"
@@ -489,3 +489,79 @@ accepts the loss. Both are recorded rather than resolved, and the standing goal
 still asks for what the convenient option excludes: that every command writing a
 secure-object namespace carries a declared policy, whichever transport token now
 names it.
+
+## Ninth addendum: the eighth understated it — the rename broke policy coverage in BOTH directions, and twelve live writers are ungoverned
+
+The eighth addendum reported one stale row and named deletion as the
+gate-satisfying fix. Delegated research, independently re-verified here, shows
+that fix is necessary but not sufficient, and that the exposure is larger than a
+single row.
+
+**The successor still writes the namespace its predecessor was catalogued for.**
+`app modelo spreadsheet push` reaches `record_sync_run(...
+surface=SyncSurface.CALC_SHEETS_EXPORT ...)` on both the success and the failure
+path, at `application/storage/calc_sheets/_export_service.py:123` and `:134`. The
+chain is `modelo_spreadsheet_push` (`entrypoints/cli/_modelo_spreadsheet_cli.py:140`)
+into `execute_google_sheets_export` (`:204`), composed with
+`sync_run_repository=SyncRunRecordRepository()`
+(`entrypoints/_operation_composition.py:90`), whose namespace is bound to
+`SYNC_RUN_RECORDS_NAMESPACE` at `adapters/persistence/profile/sync_runs.py:22`.
+That is exactly the namespace the retired row declares at
+`application/repair_integrity.py:847`. So the write did not stop; only the
+governance did.
+
+**Twelve of the fifteen unselected `push`/`pull` leaves are unconditional
+writers**, and a thirteenth, `config profile censo pull`, writes under `--apply`.
+Only three do not write: `app modelo spreadsheet pull`, `config provision pull`,
+and `config profile archive push`. The last of those deserves a note of its own —
+it is the broadest *reader* in the set, walking every secure-object row
+(`entrypoints/cli/_config/_google.py:1074`), so a predicate widened on writes
+alone would still leave it uncovered.
+
+Seven of the writers are peer-owned `app live *` surfaces and five are
+campaign-owned, so widening the predicate would pull about half its new coverage
+into another campaign's territory. That is the cost side of the ruling, and it is
+now a measured cost rather than an estimated one.
+
+**The gate is red in both directions, not one.** Recomputing
+`_requires_policy_coverage` over the static command graph gives twenty selected
+paths against seventeen catalogued rows. One catalogued row is dead — `config
+google sync calc export`, the known one. But **four selected leaves were never
+catalogued at all**: `app modelo reconcile import`, `config profile archive
+export`, `config profile archive import`, and `config profile censo import`.
+Every one of those is a D5 rename *into* the predicate's vocabulary. The campaign
+renamed verbs out of coverage in one direction and into it in the other, and
+added no rows for the arrivals.
+
+This is stated as a static prediction. The gate itself walks the materialised
+click tree, which cannot currently run because a concurrent peer's in-flight
+`ratios` specs declare `value=ValueContract(int)`; the recomputation uses the
+same predicate against `COMMAND_GRAPH` instead. It should agree on leaf names,
+but it has not been observed failing.
+
+**Consequence for the ruling.** Deleting the stale row no longer makes the gate
+green on its own: the four uncatalogued arrivals must be added regardless, and
+that work is campaign-owned rather than optional. The remaining choice is
+unchanged in shape but sharper in cost — widen the predicate to the remote
+transport tokens and carry rows for twelve or thirteen writers across two
+campaigns' territory, or leave it and accept a loss that is now quantified at
+twelve unconditional ungoverned writers rather than an unexamined fifteen.
+
+**Two gaps in the research above are now closed, and both matter only if the
+ruling widens the predicate — because writing a policy row requires naming the
+namespaces it governs.**
+
+First, the single-modelo and bulk filed reads differ. `record_sync_run(...
+SyncSurface.FILED_DECLARATIONS ...)` at
+`application/live/filed_data_capture.py:969` sits inside
+`_persisted_bulk_filed_capture_report` (defined `:950`), which is called from one
+place only, `:1112` inside `capture_filed_data_bulk` (`:997`). The single-modelo
+`capture_filed_data` (`:671`) never reaches it. So `app live filed pull-all`
+writes `SYNC_RUN_RECORDS` and `app live filed pull` does not; both still write
+the filed-declaration artefact namespace, so neither changes its writer verdict.
+
+Second, the censo `--apply` write lands on namespace `cadrumo.workflow`, key
+`state` — documented at `application/workflow/persistence.py:414`, reached
+through `workflow_state_repository()` (`:547`, class at `:298`) from
+`entrypoints/cli/_config/_censo_transport.py:89-91`. The earlier description
+"profile record / workflow state" named the shape; this names the row.

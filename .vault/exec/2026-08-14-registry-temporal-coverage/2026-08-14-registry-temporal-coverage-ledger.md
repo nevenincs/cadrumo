@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d655a5c758ff21a0dae615148f06f62cf5570d9427f928ca0fcb64ed1c4a0bad'
+body_hash: 'sha256:7b1e5d5f4f5195ba4f780663d4728c52a8f87fe1eefa81061da5a7eb4474fbf1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -180,3 +180,11 @@ related:
 - `S39` `A` `dev/registry/analysis/modelo_branch_classification.py`
 - `S39` `A` `dev/registry/analysis/modelo_branch_classification.toml`
 - `S39` `A` `dev/registry/tests/test_modelo_branch_classification.py`
+
+- `S38` `A` `dev/registry/analysis/regulatory_prose_parser_channel.py`
+- `S38` `A` `dev/registry/analysis/regulatory_prose_parser_channel.toml`
+- `S38` `A` `dev/registry/tests/test_regulatory_prose_parser_channel.py`
+
+- `S25` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S25` `A` `src/cadrumo/domain/calculations/registry/tests/test_supported_filing_year_consumption_refusal.py`
+- `S40` `M` `src/cadrumo/core/_amendment_kind_regime.py`
