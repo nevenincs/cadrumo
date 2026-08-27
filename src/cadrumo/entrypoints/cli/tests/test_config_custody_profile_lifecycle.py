@@ -192,14 +192,35 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile\tcustody" in logged_out.stdout
 
-    switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
+    # Login takes its passphrase over the bounded strict-JSON channel and
+    # nowhere else: the machine-secret boundary refuses to resolve a scalar
+    # secret from settings or the environment, so the storage settings this
+    # subprocess is handed do not unlock anything on their own.
+    switched = _run_cadrumo(
+        tmp_path,
+        ("config", "login", "custody", "--secrets-stdin"),
+        stdin_payload=json.dumps(
+            {"passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()},
+        ),
+    )
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
+    # Deletion refuses while the profile is active -- a contract with its own
+    # coverage in this module -- so the reopened session is closed again first.
+    closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
+    assert closed_again.returncode == 0, _combined_output(closed_again)
+
     deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
     assert deleted.returncode == 0, _combined_output(deleted)
-    assert "status\ttombstoned" in deleted.stdout
-    assert "active_profile\t<none>" in deleted.stdout
+    # ``deleted`` is the field that separates the confirmed run from the
+    # preflight posture the same schema serves, so it is what proves the
+    # capsule was destroyed rather than merely described.
+    assert "deleted\ttrue" in deleted.stdout
+
+    remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert remaining.returncode == 0, _combined_output(remaining)
+    assert json.loads(remaining.stdout)["result"]["profiles"] == []
 
     retired = _run_cadrumo(tmp_path, ("config", "init", "--help"))
     assert retired.returncode != 0
