@@ -36,6 +36,7 @@ from ....core import (
     OperationEffect,
     OperationLifecycle,
 )
+from ....core.identity import ContentDigest, WorkUnitId
 from ....core.operations import OperationInteractionKind
 from ...operator_actions import ActionReference
 from ..capabilities import (
@@ -49,6 +50,7 @@ from ..capabilities import (
 )
 from ..interactions import OperationInteractionRequest
 from ..models import (
+    CredentialFreeOperationRequest,
     OperationIdentity,
     OperationRequest,
     OperationSnapshot,
@@ -65,6 +67,8 @@ from ..registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
+    _strict_model_json_schema,
+    _validate_credential_free_schema,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -806,6 +810,72 @@ def test_public_schema_identity_refuses_secret_capable_schema_branches() -> None
             schema_version=1,
             model_type=SecretPayload,
         )
+
+
+class _DigestNamedContentDigestPayload(CredentialFreeOperationRequest):
+    """A digest-named field genuinely typed as ContentDigest - the admitted case."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    permitted_surface_digest: ContentDigest
+
+
+class _DigestNamedPlainStringPayload(CredentialFreeOperationRequest):
+    """A digest-named field with no Hex64 shape at all - stays refused."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    permitted_surface_digest: str
+
+
+class _KeyNamedContentDigestPayload(CredentialFreeOperationRequest):
+    """A Hex64-shaped field named for a DIFFERENT forbidden token - stays refused.
+
+    The tripwire against the exemption swallowing a hex-encoded 256-bit
+    secret that happens to share ``ContentDigest``'s 64-character shape.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    encryption_key: ContentDigest
+
+
+class _DigestNamedSiblingConceptPayload(CredentialFreeOperationRequest):
+    """A digest-named field typed as a Hex64-shaped SIBLING concept - admitted.
+
+    ``ContentDigest is WorkUnitId`` at runtime (both are ``= Hex64Str``), so
+    there is no type-identity test available; this pins the residual risk
+    the ADR accepts (a Hex64-shaped, digest-named field declared for a
+    sibling concept is also admitted) as a documented test outcome rather
+    than an undiscovered gap.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_digest: WorkUnitId
+
+
+def test_credential_free_schema_admits_hex64_shaped_digest_named_field() -> None:
+    schema = _strict_model_json_schema(_DigestNamedContentDigestPayload)
+    _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refuses_plain_string_digest_named_field() -> None:
+    schema = _strict_model_json_schema(_DigestNamedPlainStringPayload)
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refuses_hex64_shaped_field_named_for_another_forbidden_token() -> None:
+    schema = _strict_model_json_schema(_KeyNamedContentDigestPayload)
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_admits_hex64_shaped_sibling_concept_named_digest() -> None:
+    """Pins the ADR's named residual risk rather than leaving it undiscovered."""
+    schema = _strict_model_json_schema(_DigestNamedSiblingConceptPayload)
+    _validate_credential_free_schema(schema)
 
 
 def test_public_schema_identity_refuses_computed_fields_absent_from_validation_schema() -> None:

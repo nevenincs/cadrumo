@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bb19d519a99eaf64943a378560de105ed865dd9559d542e5a84b04a49a36d47'
+body_hash: 'sha256:830cb7031aabc5eaba1cffc9d3eaa9fbb0da48b31e93fa71aafbe2cdc1e2eb9c'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - '[[2026-08-11-tui-architecture-research]]'
@@ -115,52 +115,85 @@ proceed until the check itself is corrected.
   this one. Recorded here as the escalation path if the residual risk below
   is ever judged unacceptable.
 
+## Residual risk
+
+What the check now guarantees: a field is admitted only when its declared
+shape is exactly Hex64 (64 lowercase hex characters, matching
+`Hex64Str`/`ContentDigest`'s constraint) AND its name matches only the
+`digest` token among the forbidden set. What it does NOT guarantee: that the
+field was declared specifically as `ContentDigest` rather than one of its
+shape-sharing siblings (`WorkUnitId`, `CalculationRevisionId`, `SnapshotId`,
+`TransactionId`), and that a Hex64-shaped field named `*_digest` cannot, in
+principle, hold a 256-bit secret hex-encoded to the same width.
+
+The gap is tolerated because exploiting it requires DELIBERATE misuse, not
+an easy mistake: someone would have to name a real key or secret field
+`*_digest` specifically, constrain it to exactly 64 hex characters, and
+avoid every other forbidden token (`key`, `secret`, `auth`, and the rest
+still bite on any of those). A field genuinely meant to carry key material
+is overwhelmingly more likely to be named for what it is, and the existing
+name check continues to refuse it the moment it is. If this residual is
+ever judged unacceptable, the escalation path is the distinct-marker option
+above, not a further loosening of the shape test.
+
 ## Constraints
 
-- The fix lives in the shared operations contract module
-  (`_model_contract.py` / `registry.py`'s `_validate_credential_free_schema`),
-  consumed by every registered operation definition across the codebase.
-  The boundary that must not move: a field is admitted ONLY when it is BOTH
-  typed `ContentDigest` AND name-matched as digest-shaped; a field that is
-  name-matched but NOT `ContentDigest`-typed (`encryption_key: ContentDigest`
-  included, since its name does not match the digest pattern) is refused
-  exactly as before, and a field that is `ContentDigest`-typed but not
-  name-matched is unaffected because the name check never flagged it. No
-  admission decision may rest on type alone.
+- The fix lives in the operations registry's request-storage validator
+  (`registry.py`'s `_validate_credential_free_schema`, distinct from the
+  STRUCTURAL model-graph check in `_model_contract.py`'s
+  `require_strict_frozen_operation_model_graph` - same call chain, via
+  `_strict_model_json_schema`, but a different concern: one refuses lax
+  model shapes, the other refuses secret-shaped field names), consumed by
+  every registered operation definition across the codebase. The boundary
+  that must not move: a field is admitted ONLY when it is BOTH Hex64-shaped
+  AND name-matched as digest-shaped and no other forbidden token; a field
+  that is name-matched but NOT Hex64-shaped (a bare unconstrained `str`
+  named `*_digest`) is refused exactly as before; a field that is
+  Hex64-shaped but not name-matched is unaffected because the name check
+  never flagged it; and a field matching `digest` AND a second forbidden
+  token (`session_key_digest`) is refused regardless of shape. No admission
+  decision may rest on shape alone.
 - No frontier or unstable dependency; this is a pure typing/introspection
   change to an existing, already-shipped validator.
 
 ## Implementation
 
-Extend the schema-walk that backs `_validate_credential_free_schema` (or the
-call site that invokes it from `_strict_model_json_schema`) to carry the
-originating Pydantic field's annotated type alongside its JSON-schema
-fragment, rather than walking a bare JSON-schema dict with no type context.
+Extend the schema-walk that backs `_validate_credential_free_schema` to
+carry each field's JSON-schema SHAPE (its `pattern`, `minLength` and
+`maxLength`, already present in the schema fragment being walked - no
+separate pass over the Pydantic field graph is needed) alongside its name.
 The `digest` name token is split out of the general forbidden-parts set into
 its own narrower rule: a field whose name matches ONLY the `digest` token
-(and no OTHER forbidden token) is admitted when its declared type is exactly
-`ContentDigest` (or a `ContentDigest`-typed optional/tuple thereof), and
+(and no OTHER forbidden token) is admitted when its schema shape is exactly
+Hex64 (`minLength == maxLength == 64` and the lowercase-hex pattern), and
 refused otherwise exactly as today. A field matching ANY other forbidden
 token - `secret`, `key`, `auth`, `password`, and the rest - is refused
-regardless of type and regardless of whether it also matches `digest`; the
+regardless of shape and regardless of whether it also matches `digest`; the
 exemption never widens any token but `digest`, and never overrides a second,
 independently-matched forbidden token on the same field. A conformance test
-proves all three directions: a `ContentDigest`-typed field named `*_digest`
-is admitted; a plain-`str` field named `*_digest` is still refused; and a
-`ContentDigest`-typed field named for a DIFFERENT forbidden token
-(`encryption_key: ContentDigest`) is still refused.
+proves all four directions: a Hex64-shaped field named `*_digest` is
+admitted; a plain-`str` field named `*_digest` is still refused; a
+Hex64-shaped field named for a DIFFERENT forbidden token
+(`encryption_key: ContentDigest`) is still refused; and a Hex64-shaped field
+typed for a DIFFERENT Hex64-shaped concept (`WorkUnitId`) but still named
+`*_digest` is ADMITTED - documenting, rather than silently permitting, the
+residual risk this ADR accepts.
 
 ## Rationale
 
 The check's purpose - keep secret-shaped values out of a clear-text journal
-- is served exactly as well, and more precisely, by admitting a field whose
-TYPE proves it cannot hold a secret. The alternative options either
-sacrifice the check's own integrity for every future caller (renaming),
-make a storage decision for a reason disconnected from storage risk
-(`SECURE_REFERENCE`), or require fabricating data that does not exist
-(dropping the fields). The type-aware check is a strict narrowing: it
-removes exactly the population of false positives this defect describes and
-touches no other case.
+- is served better, though not perfectly, by admitting a field whose SHAPE
+rules out most of what the check exists to catch. A true type-identity test
+was considered but is not achievable without minting a distinct marker
+(see Considered options), which is a bigger, separately-decided change; the
+shape test is the strongest guarantee available without it, and its
+residual risk is named and bounded above rather than left implicit. The
+alternative options either sacrifice the check's own integrity for every
+future caller (renaming), make a storage decision for a reason disconnected
+from storage risk (`SECURE_REFERENCE`), or require fabricating data that
+does not exist (dropping the fields). The shape-aware check is a strict
+narrowing of the false-positive population this defect describes, accepting
+one named, bounded residual in exchange.
 
 ## Consequences
 
@@ -168,13 +201,21 @@ touches no other case.
   enrollment) from having to choose between a forbidden workaround and an
   incorrect storage policy whenever a compare-and-swap coordinate happens to
   be named for what it is.
-- The shared gate gains one more type-aware exemption, precedent for
-  extending the same treatment to other provably-non-secret domain types in
+- The shared gate gains one more shape-aware exemption, precedent for
+  extending the same treatment to other provably-non-secret-shaped fields in
   future, should one surface the same false positive - each such extension
   should be its own reviewed change, not a blanket carve-out.
-- Requires a conformance test asserting the boundary does not move: a
-  `ContentDigest`-typed, digest-named field is admitted; a plain-`str`
-  digest-named field stays refused; and a `ContentDigest`-typed field
-  matching a DIFFERENT forbidden token (`encryption_key`) stays refused -
-  the explicit tripwire against the exemption swallowing a hex-encoded
-  secret that happens to share `ContentDigest`'s 64-character shape.
+- Requires a conformance test asserting the boundary does not move, in four
+  directions: a Hex64-shaped, digest-named field is admitted; a plain-`str`
+  digest-named field stays refused; a Hex64-shaped field matching a
+  DIFFERENT forbidden token (`encryption_key`) stays refused - the tripwire
+  against the exemption swallowing a hex-encoded secret sharing
+  `ContentDigest`'s shape; and a Hex64-shaped field typed for a sibling
+  concept (`WorkUnitId`) but named `*_digest` is admitted - the residual
+  risk this ADR accepts, pinned as a test rather than left to be discovered
+  later.
+- This is also the first direct test coverage `_validate_credential_free_schema`
+  has ever had: no existing test exercised its name-refusal directly before
+  this change, so a credential-leak guard on a filing-grade journal had been
+  defended only incidentally, by operation definitions that happened to
+  satisfy it.

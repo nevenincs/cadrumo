@@ -830,8 +830,61 @@ class OperationRegistry(BaseModel):
         return definition.request_type.model_validate_json(raw)
 
 
+_HEX64_DIGEST_PATTERN = "^[0-9a-f]{64}$"
+
+
+def _is_hex64_shaped_schema(value: object) -> bool:
+    """Report whether one field's JSON-schema fragment matches the Hex64Str/ContentDigest shape.
+
+    ``ContentDigest`` is a bare assignment to ``Hex64Str`` (``ContentDigest
+    is Hex64Str``), not a distinct type, and ``Hex64Str`` is deliberately
+    shared by several unrelated concepts (``WorkUnitId``,
+    ``CalculationRevisionId``, ``SnapshotId``, ``TransactionId``). There is
+    therefore no runtime type-identity test for "declared as
+    ``ContentDigest`` specifically" - only a SHAPE test for "64 lowercase
+    hex characters", which every one of those sibling concepts also
+    satisfies. Recurses through ``anyOf`` (an ``X | None`` field) and
+    ``items`` (a ``tuple[X, ...]`` field) to reach the underlying string
+    schema.
+    """
+    if not isinstance(value, dict):
+        return False
+    mapping = cast(dict[str, object], value)
+    if (
+        mapping.get("type") == "string"
+        and mapping.get("pattern") == _HEX64_DIGEST_PATTERN
+        and mapping.get("minLength") == 64
+        and mapping.get("maxLength") == 64
+    ):
+        return True
+    any_of = mapping.get("anyOf")
+    if isinstance(any_of, list):
+        return any(
+            _is_hex64_shaped_schema(item)
+            for item in cast(list[object], any_of)
+            if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
+        )
+    items = mapping.get("items")
+    if isinstance(items, dict):
+        return _is_hex64_shaped_schema(items)
+    return False
+
+
 def _validate_credential_free_schema(schema: object) -> None:
-    """Reject request schemas capable of carrying credentials or opaque transports."""
+    """Reject request schemas capable of carrying credentials or opaque transports.
+
+    A field name matching ONLY the ``digest`` forbidden token (no other
+    forbidden token also matches) is admitted when its schema shape is
+    exactly Hex64 - a compare-and-swap content digest, never a bearer token
+    or passphrase by shape. A field matching any OTHER forbidden token is
+    refused regardless of shape, and regardless of whether it also matches
+    ``digest``; the exemption never widens any token but ``digest`` and
+    never overrides a second, independently-matched forbidden token on the
+    same field. See ``2026-08-27-tui-architecture-credential-free-type-aware-gate-adr``
+    for the residual risk this accepts: a Hex64-shaped field declared as one
+    of ``ContentDigest``'s shape-sharing siblings, named ``*_digest``, is
+    also admitted by this rule.
+    """
     if isinstance(schema, list):
         for item in cast(list[object], schema):
             _validate_credential_free_schema(item)
@@ -844,12 +897,16 @@ def _validate_credential_free_schema(schema: object) -> None:
         raise ValueError("credential-free journal request schema contains a secret-capable format")
     properties = mapping.get("properties")
     if isinstance(properties, dict):
-        for field_name in cast(dict[str, object], properties):
+        for field_name, field_schema in cast(dict[str, object], properties).items():
             parts = set(field_name.lower().replace("-", "_").split("_"))
-            if parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS:
-                raise ValueError(
-                    f"credential-free journal request field {field_name!r} has a forbidden security meaning"
-                )
+            matched = parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
+            if not matched:
+                continue
+            if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
+                continue
+            raise ValueError(
+                f"credential-free journal request field {field_name!r} has a forbidden security meaning"
+            )
     for value in mapping.values():
         _validate_credential_free_schema(value)
 
