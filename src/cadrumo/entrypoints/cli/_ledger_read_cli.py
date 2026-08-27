@@ -12,7 +12,7 @@ and :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -76,7 +76,7 @@ if TYPE_CHECKING:
         LlmDiagnosticsReport,
         LlmUsageCostProviderMetrics,
     )
-    from ...application.ledger.preflight import LedgerPreflightReport
+    from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightReport
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
@@ -445,7 +445,7 @@ def _emit_ledger_check_period(
     *,
     bucket_id: str,
     period: Period,
-    catalogue: Any,
+    catalogue: TransactionCatalogue,
     link_rows: list[LedgerLinkInconsistencyPayload],
     link_lines: list[str],
     link_notices: list[Notice],
@@ -529,7 +529,7 @@ def _emit_ledger_check_all_periods(
     *,
     bucket_id: str,
     years: list[int],
-    catalogue: Any,
+    catalogue: TransactionCatalogue,
     link_rows: list[LedgerLinkInconsistencyPayload],
     link_lines: list[str],
     link_notices: list[Notice],
@@ -537,7 +537,7 @@ def _emit_ledger_check_all_periods(
     from ...application.ledger.preflight import preflight_transaction_catalogue
     from ._ledger_payloads import LedgerCheckResult
 
-    aggregated_issues: list[Any] = []
+    aggregated_issues: list[LedgerPreflightIssue] = []
     aggregated_payload_issues: list[dict[str, object]] = []
     checked_total = 0
     for year in years:
@@ -582,7 +582,7 @@ def _ledger_check_issue_lines(report: LedgerPreflightReport) -> list[str]:
     return _ledger_check_issue_lines_from_items(report.issues)
 
 
-def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
+def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue]) -> list[str]:
     return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
 

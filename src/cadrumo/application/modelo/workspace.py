@@ -1627,10 +1627,12 @@ def resolve_graded_snapshot_result(
     baseline is pinned from the stamps/epochs those captures hold -- no
     contributor's CONTENT is read a second time from a different capture.
 
-    Refuses ``CALCULATION_UNAVAILABLE`` immediately after the WORK capture,
-    BEFORE the REGISTRY grade admission, when the target's work unit carries
-    no calculation revision yet -- the first fact that makes a graded result
-    impossible, not the last check that happens to fail. Refuses
+    Refuses ``TARGET_NOT_FOUND`` immediately after the WORK capture when no
+    work unit exists at all for the target's natural coordinate, and
+    ``CALCULATION_UNAVAILABLE`` when a work unit DOES exist there but carries
+    no calculation revision yet -- both BEFORE the REGISTRY grade admission,
+    the first facts that make a graded result impossible, not the last check
+    that happens to fail. Refuses
     ``AUTHORITY_GRADE_UNAVAILABLE`` around the REGISTRY capture when the
     revision's declared grade cannot satisfy ``required_grade``, distinguished
     from any other :class:`RegistryValidationError` by its typed
@@ -1656,7 +1658,18 @@ def resolve_graded_snapshot_result(
     assert resolution.period is not None
 
     work_unit = resolution.work_unit
-    if work_unit is None or work_unit.current_calculation_revision_id is None:
+    if work_unit is None:
+        return ModeloWorkspaceRefusedResultV1(
+            refusal=ModeloWorkspaceDomainRefusalV1(
+                code=ModeloWorkspaceRefusalCode.TARGET_NOT_FOUND,
+                boundary="admission",
+                requested_target=target,
+                selected_target=None,
+                responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
+                reconsideration_condition="create a work unit for this target, then request a graded snapshot again",
+            )
+        )
+    if work_unit.current_calculation_revision_id is None:
         return ModeloWorkspaceRefusedResultV1(
             refusal=ModeloWorkspaceDomainRefusalV1(
                 code=ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,

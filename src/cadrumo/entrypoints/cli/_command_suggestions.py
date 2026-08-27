@@ -54,6 +54,7 @@ from typer._click.core import make_default_short_help
 # TyperGroup is built on typer's vendored click, so its resolve_command raises
 # the vendored UsageError rather than top-level click's distinct exception.
 from typer._click.exceptions import UsageError as TyUsageError
+from typer._click.formatting import HelpFormatter as TyHelpFormatter
 from typer._click.shell_completion import CompletionItem
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
@@ -566,7 +567,7 @@ class CadrumoTyperGroup(TyperGroup):
         return sorted(merged)
 
     @override
-    def format_commands(self, ctx: TyContext, formatter: Any) -> None:
+    def format_commands(self, ctx: TyContext, formatter: TyHelpFormatter) -> None:
         """Render lazy command rows from registration metadata only.
 
         Typer's implementation obtains every command object before rendering

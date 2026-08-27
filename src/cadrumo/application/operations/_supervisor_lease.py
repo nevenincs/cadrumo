@@ -131,6 +131,9 @@ class OperationSupervisorLeaseMixin:
             raise ValueError("operation lease no longer matches this supervisor's exact held lease")
         return held
 
+    # KWARGS-ANY-RATIONALE-COROUTINE-PROTOCOL: a coroutine's yield/send type
+    # positions are structurally Any for any plain `async def` body -- only
+    # its return type (here `object`) is a meaningful signature position.
     async def _renew_while_executing(
         self,
         *,

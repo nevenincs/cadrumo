@@ -1319,6 +1319,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
 
     from ....core import validated_casilla_id
     from ....domain.modelos import CalculationRevision, CalculationRevisionState, derive_work_unit_id
+    from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
 
     bucket_id = "30330300-0000-4000-8000-000000000601"
     row_casilla = validated_casilla_id("00181")
@@ -1345,7 +1346,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
         filing_instance_evidence=None,
     )
 
-    with pytest.raises(ValueError, match="row_casilla_provenance"):
+    with pytest.raises(ModeloWorkspaceMaterializationProvenanceMissingError, match="row_casilla_provenance"):
         graded_snapshot_materialization_facet(revision)
 
 
@@ -1719,6 +1720,47 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     # ADR fixed point, refusal arm: a refused result carries no projection at
     # all -- structurally, not merely by omission -- so no review, stale or
     # otherwise, can ever leak through this outcome.
+    assert not hasattr(result, "projection")
+
+
+def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_unit_exists(
+    repos,
+) -> None:
+    """An absent work unit refuses TARGET_NOT_FOUND, never CALCULATION_UNAVAILABLE.
+
+    The prior refusal test always creates its work unit first, so it can
+    never exercise this branch: a work unit that merely has no calculation is
+    a different fact from no work unit existing at all, and only the first
+    can be remedied by "calculate this work unit". Confirms the WORK
+    selector's ``ABSENT`` state (no matching ``WorkUnit`` in the catalogue)
+    reaches this admission rather than being refused upstream by the
+    selector itself.
+    """
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
+
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    authority = bundled_authority()
+    target = _visible_target(bucket_id)
+
+    result = resolve_graded_snapshot_result(
+        target,
+        required_grade=RegistryAuthorityGrade.CALCULATION,
+        bucket_id=bucket_id,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    assert isinstance(result, ModeloWorkspaceRefusedResultV1)
+    assert result.refusal.kind == "domain"
+    assert result.refusal.code is ModeloWorkspaceRefusalCode.TARGET_NOT_FOUND
+    assert "create a work unit" in result.refusal.reconsideration_condition
     assert not hasattr(result, "projection")
 
 

@@ -39,7 +39,6 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import date
 from decimal import Decimal
-from typing import TypeGuard
 
 from pydantic import BaseModel
 
@@ -73,7 +72,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
-from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
+from ...domain.user_profile.values import UserProfileFactValue
 from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

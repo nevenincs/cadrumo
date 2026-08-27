@@ -162,8 +162,12 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # ``casilla_values``, not defaulted); mirrors the shared M303 export fixture's
 # ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS`` without a cross-package import
 # into a sibling test package's private support module.
+# Casilla 18 is NOT listed: the recargo de equivalencia super-reducido cuota
+# is bound to the ledger IVA aggregation, which owns it on this path. A
+# caller zero would override a source-derived liability, so the bucket
+# aggregation refuses it. The scenario declares no recargo supply, so the
+# resolver supplies the same zero from the ledger.
 _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
-    "18": Decimal("0.00"),
     "58": Decimal("0.00"),
     "68": Decimal("0.00"),
     "70": Decimal("0.00"),

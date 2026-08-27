@@ -424,6 +424,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         residence_ccaa=residence_ccaa,
         region_category_overrides=region_category_overrides,
         iva_deduction_ratio=iva_deduction_ratio,
+        profile_record=profile_record,
     )
 
 
@@ -440,6 +441,7 @@ def aggregate_renta_ledger_expenses(
     residence_ccaa: CCAA | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     iva_deduction_ratio: Decimal | None = None,
+    profile_record: UserProfileRecord | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -467,6 +469,10 @@ def aggregate_renta_ledger_expenses(
             so the non-recoverable share of a fact's input IVA joins its
             IRPF-deductible cost basis. ``None`` (the default) preserves the
             historic base-only behaviour.
+        profile_record: Optional :class:`UserProfileRecord` override; when ``None``
+            the record is loaded from the bucket. Supplies the LIRPF art. 30.2.5.a
+            insured-person counts that split the seguro de enfermedad cap across
+            its 500 and 1.500 euro limbs.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
