@@ -17,6 +17,14 @@
 # collectible_invoice observations for that source, mirroring the same union
 # 0001-counterpart-summary.toml's declarante-summary bindings apply at the
 # scalar level.
+#
+# The four `importe-q{n}` bindings carry the diseño's mandatory, unconditional
+# quarterly desagregación (RD 1065/2007 art. 33.1: "se suministrará
+# desglosada trimestralmente"), distinct from the conditional
+# transmisiones-inmuebles pair (real-estate operations only) and from
+# importe-metalico/operacion-seguro/arrendamiento-local-negocio (each gated
+# by its own "Sólo..." exception in the diseño text) -- those stay
+# unbound/scalar by design, not by omission; see the reference doc.
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-nif"
@@ -79,6 +87,70 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-34",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-importe-q1"
+source = "m347_third_party_operation"
+selector = { fact = "row_field", row_field = "importe_q1", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-importe-q2"
+source = "m347_third_party_operation"
+selector = { fact = "row_field", row_field = "importe_q2", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-importe-q3"
+source = "m347_third_party_operation"
+selector = { fact = "row_field", row_field = "importe_q3", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-importe-q4"
+source = "m347_third_party_operation"
+selector = { fact = "row_field", row_field = "importe_q4", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
 ]
 source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
 

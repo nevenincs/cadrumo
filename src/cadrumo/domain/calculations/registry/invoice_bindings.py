@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from ._m347_threshold import m347_declarable_party_ids
@@ -41,6 +41,10 @@ _InvoiceRowField = Literal[
     "clave",
     "base_imponible",
     "importe_total",
+    "importe_q1",
+    "importe_q2",
+    "importe_q3",
+    "importe_q4",
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
@@ -1042,6 +1046,33 @@ def _build_operator_clave_rows(
     return tuple(rows)
 
 
+_M347_QUARTER_TOKENS: tuple[Literal["1T", "2T", "3T", "4T"], ...] = ("1T", "2T", "3T", "4T")
+_M347_QUARTER_ROW_FIELDS: Mapping[Literal["1T", "2T", "3T", "4T"], str] = {
+    "1T": "importe_q1",
+    "2T": "importe_q2",
+    "3T": "importe_q3",
+    "4T": "importe_q4",
+}
+
+
+def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
+    """Return the calendar quarter token ``value`` falls in.
+
+    Routed through :meth:`~core.Period.contains`, the one canonical period
+    boundary authority (``aeat-registry-authority-flow``'s period-boundary
+    rule) -- no locally re-derived month-range arithmetic. Uses ``value``'s
+    OWN calendar year, not a filing-year argument this row-producer has no
+    access to: the diseño's Q1-Q4 fields are the ordinary calendar quarter an
+    operation falls in, independent of which filing year's declaration
+    reports it.
+    """
+    for token in _M347_QUARTER_TOKENS:
+        if Period.from_year_and_code(value.year, token).contains(value):
+            return token
+    msg = f"date {value!r} does not fall in any calendar quarter"  # pragma: no cover - contains() is exhaustive
+    raise RegistryValidationError(msg)
+
+
 class _ContraparteClaveAccumulator(BaseModel):
     """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
 
@@ -1052,6 +1083,10 @@ class _ContraparteClaveAccumulator(BaseModel):
     clave: str
     party_legal_name: str | None
     importe_total: Decimal
+    importe_q1: Decimal
+    importe_q2: Decimal
+    importe_q3: Decimal
+    importe_q4: Decimal
 
 
 def _build_contraparte_clave_rows(
@@ -1071,6 +1106,16 @@ def _build_contraparte_clave_rows(
     total contraprestacion including cuotas and recargos, not the taxable
     base alone (recorded in the tui-architecture modelo 347 contraparte
     binding inventory reference).
+
+    Also buckets that same amount into the calendar quarter of
+    ``transaction_date`` -- the diseño's mandatory, unconditional "IMPORTE DE
+    LAS OPERACIONES [Nth] TRIMESTRE" fields (RD 1065/2007 art. 33.1's "se
+    suministrará desglosada trimestralmente"), ungated by any "Sólo..."
+    exception the way ``importe-metalico`` / ``operacion-seguro`` /
+    ``arrendamiento-local-negocio`` / the transmisiones-inmuebles pair are.
+    The quarterly buckets accumulate in the SAME loop that sums
+    ``importe_total``, so the annual total is the sum of the four quarters by
+    construction, not by a separate reconciling step.
     """
     grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
     for observation in observations:
@@ -1094,9 +1139,15 @@ def _build_contraparte_clave_rows(
                 clave=observation.operation_clave,
                 party_legal_name=observation.party_legal_name,
                 importe_total=Decimal("0"),
+                importe_q1=Decimal("0"),
+                importe_q2=Decimal("0"),
+                importe_q3=Decimal("0"),
+                importe_q4=Decimal("0"),
             ),
         )
         bucket.importe_total += observation.invoice_total_amount
+        quarter_field = _M347_QUARTER_ROW_FIELDS[_m347_quarter_of(observation.transaction_date)]
+        setattr(bucket, quarter_field, getattr(bucket, quarter_field) + observation.invoice_total_amount)
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
             bucket.party_legal_name = observation.party_legal_name
     rows: list[Mapping[str, Decimal | str]] = []
@@ -1107,6 +1158,10 @@ def _build_contraparte_clave_rows(
             "party_tax_id": bucket.party_tax_id,
             "clave": bucket.clave,
             "importe_total": bucket.importe_total,
+            "importe_q1": bucket.importe_q1,
+            "importe_q2": bucket.importe_q2,
+            "importe_q3": bucket.importe_q3,
+            "importe_q4": bucket.importe_q4,
         }
         if bucket.party_legal_name is not None:
             row["party_legal_name"] = bucket.party_legal_name
