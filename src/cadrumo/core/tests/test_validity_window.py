@@ -57,7 +57,7 @@ def test_the_window_is_frozen_and_forbids_extra_fields() -> None:
     window = _window("2025-01-01", "2025-12-31")
 
     with pytest.raises(ValidationError):
-        window.valid_from = date(2024, 1, 1)  # ty: ignore[invalid-assignment]
+        window.valid_from = date(2024, 1, 1)
 
     with pytest.raises(ValidationError):
         ValidityWindow.model_validate(

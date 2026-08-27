@@ -17,7 +17,7 @@ from textual.widgets import Button
 
 from .....application.auth.models import AuthState
 from .....application.user_profile.acquisition_sources import resolve_acquisition_source_credential_postures
-from .....application.user_profile.overview import build_profile_overview
+from .....application.user_profile.overview import ProfileOverview, build_profile_overview
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....entrypoints.tui.components.widgets import RequirementBadge, RequirementStatus
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PASSPHRASE = "acquisition-capability-passphrase"  # noqa: S105 - isolated integration fixture
 
 
-def _persist_not_exercised(path: str, value: str) -> object:
+def _persist_not_exercised(path: str, value: str) -> ProfileOverview:
     raise AssertionError("no field edit is exercised by this test")
 
 

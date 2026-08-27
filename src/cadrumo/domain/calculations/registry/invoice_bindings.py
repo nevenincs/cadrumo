@@ -242,7 +242,7 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
     return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
 
 
-def m347_operation_clave(source_kind: BindingSourceKind) -> str | None:
+def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
     """Return the M347 clave de operacion determinable from ``source_kind`` alone.
 
     Grounded against RD 1065/2007 arts. 31/33 and RD 1619/2012 disposicion
@@ -267,6 +267,11 @@ def m347_operation_clave(source_kind: BindingSourceKind) -> str | None:
     ``None`` for those and for any non-invoice source kind, rather than
     guessing -- a caller distinguishing them needs a fact this function does
     not have, not a default.
+
+    ``source_kind`` also accepts a bare ``str`` value-equal to a member: the
+    registry's own TOML-to-enum hydration boundary can still hold the raw
+    value when this is consulted, and comparison below is by equality, never
+    identity, so a value-equal string classifies exactly like its member.
     """
     if source_kind == BindingSourceKind.PAYABLE_INVOICE:
         return "A"

@@ -182,6 +182,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
     # The refusal renders through the locale catalogue, so the offending token
     # and the canonical casilla it should have named live in the TYPED context,
     # not in str(exc) -- which is only the message key.
+    assert exc_info.value.context is not None
     context = dict(exc_info.value.context)
     assert input_key in context["input_keys"]
     reference = next(ref for ref in context["noncanonical_references"] if ref["token"] == input_key)

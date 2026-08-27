@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ..directory_scan import scan_directory
 from ..manual_corpus_sidecar import (
@@ -25,13 +25,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # src/cadrumo/core/tests/ -> parents[3] is src/cadrumo.
 _MANUAL_CORPUS_TEXT_ROOT = Path(__file__).resolve().parents[1].parent / "_data" / "manual_corpus_text"
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
 def _first_committed_sidecar_payload() -> dict[str, object]:
     sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX}", recursive=True)
     assert sidecars, "no committed manual corpus text sidecars found"
-    payload: dict[str, object] = json.loads(sidecars[0].read_text(encoding="utf-8"))
-    return payload
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecars[0].read_text(encoding="utf-8")))
 
 
 def test_every_committed_sidecar_satisfies_the_shared_contract() -> None:

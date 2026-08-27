@@ -21,9 +21,11 @@ not, which is why no review of the numbers would ever have found it.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
+from .. import Arrendamiento
 from .._tier_resolver import (
     REHAB_LOOKBACK_YEARS,
     _qualifies_for_tier_60_rehab,
@@ -33,13 +35,17 @@ from .._tier_resolver import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _contract(*, celebrated: date, finished: date | None) -> object:
+def _contract(*, celebrated: date, finished: date | None) -> Arrendamiento:
     """Only the two dates the tier c) predicate reads are meaningful here."""
-    from types import SimpleNamespace
-
-    return SimpleNamespace(
+    return Arrendamiento(
+        finca_id=1,
         contract_celebration_date=celebrated,
+        tenant_count=1,
+        qualifying_co_tenant_count=0,
+        initial_rent=Decimal("1000.00"),
+        is_first_rental=False,
         rehabilitation_finished_date=finished,
+        lau_17_6_compliant=True,
     )
 
 

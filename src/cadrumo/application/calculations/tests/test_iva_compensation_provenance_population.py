@@ -240,7 +240,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
             _RESULTADO_FINAL_CASILLA: _APP_FILING_RESULTADO,
         },
     )
-    casilla_values = {item.casilla_id: item.value for item in observations if item.value is not None}
+    casilla_values = {item.casilla_id: item.value for item in observations if isinstance(item.value, Decimal)}
     filing_instance_evidence = general_m303_filing_evidence(
         work_unit.period,
         reference="test:iva-compensation-provenance-population",

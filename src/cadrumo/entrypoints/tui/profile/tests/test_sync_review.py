@@ -14,12 +14,14 @@ action is launched only through the injected door -- never implicitly.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import override
 from uuid import UUID
 
 import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Button, SelectionList
 
+from .....application.user_profile.acquisition_sources import ProfileAcquisitionSourceV1
 from .....application.user_profile.censal_operation import (
     CENSAL_ADOPTABLE_PATHS,
     CensalFieldIntent,
@@ -30,14 +32,19 @@ from .....application.user_profile.censal_operation import (
     CensalReviewProjectionV1,
 )
 from .....application.user_profile.login_session import login_profile
-from .....application.user_profile.overview import build_profile_overview
+from .....application.user_profile.overview import ProfileOverview, build_profile_overview
 from .....application.user_profile.presentation import ProfileFieldSourceClass
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
 from ..overview import ProfileManagerApp
-from ..sync_review import CensalFieldReviewScreen, censal_field_review_rows, censal_operation_request_from_selection
+from ..sync_review import (
+    CensalFieldReviewRowV1,
+    CensalFieldReviewScreen,
+    censal_field_review_rows,
+    censal_operation_request_from_selection,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -112,11 +119,12 @@ def test_a_conflict_is_exactly_a_persisted_observed_divergence_nothing_more(tmp_
 class _ReviewHostApp(App[None]):
     """A bare host: the review dialog is what these proofs drive."""
 
+    @override
     def compose(self) -> ComposeResult:
         yield from ()
 
 
-def _screen(baseline: CensalProfileBaseline, rows: tuple) -> CensalFieldReviewScreen:
+def _screen(baseline: CensalProfileBaseline, rows: tuple[CensalFieldReviewRowV1, ...]) -> CensalFieldReviewScreen:
     return CensalFieldReviewScreen(
         baseline,
         rows,
@@ -194,7 +202,7 @@ async def test_confirm_produces_the_exact_operator_selection_never_a_wider_or_na
     assert outcome == expected, "the dispatched request must be exactly the operator's rebuilt selection"
 
 
-def _persist_not_exercised(path: str, value: str) -> object:
+def _persist_not_exercised(path: str, value: str) -> ProfileOverview:
     raise AssertionError("no field edit is exercised by this test")
 
 
@@ -204,8 +212,8 @@ async def test_source_action_launches_only_through_the_injected_door_never_impli
     overview = build_profile_overview(record)
     launched: list[str] = []
 
-    async def _launch(source: object) -> None:
-        launched.append(source.key.value)  # type: ignore[attr-defined]
+    async def _launch(source: ProfileAcquisitionSourceV1) -> None:
+        launched.append(source.key.value)
 
     app = ProfileManagerApp(overview, persist=_persist_not_exercised, launch_source=_launch)
     async with app.run_test(size=(120, 40)) as pilot:

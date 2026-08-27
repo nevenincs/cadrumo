@@ -29,6 +29,7 @@ from ..export_value_policy import ExportValuePolicy
 from ..fixed_width_codec import render_fixed_width_export_field
 from ..loader import load_modelo_source
 from ..loader_cache import discover_modelo_sources
+from ..schema_exports import ExportFieldDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -106,7 +107,7 @@ def _published_multi_field_groups():
 _GROUPS = _published_multi_field_groups()
 
 
-def _policies(fields) -> tuple[ExportValuePolicy | None, ...]:
+def _policies(fields: list[ExportFieldDefinition]) -> tuple[ExportValuePolicy | None, ...]:
     return tuple(field.value_policy for field in fields)
 
 

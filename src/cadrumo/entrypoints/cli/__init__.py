@@ -37,7 +37,9 @@ if TYPE_CHECKING:
     from ._command_spec import CommandSpec
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
+    from ._verb_input_schema import VerbInputSchema as VerbInputSchema
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
+    from ._verb_input_schema import is_exposable_command as is_exposable_command
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 

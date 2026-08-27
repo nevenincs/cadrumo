@@ -492,7 +492,7 @@ def _login_in_separate_process(
 ) -> _ChildLoginResult:
     """Run one login in its own interpreter, which is what every ``aeat`` call is."""
     context = get_context("spawn")
-    result_queue: Queue[_ChildLoginResult] = context.Queue()
+    result_queue: Queue[_ChildLoginResult] = Queue(ctx=context)
     child = context.Process(
         target=_login_in_separate_process_child,
         args=(storage_root, profile, password, now, result_queue),
@@ -512,7 +512,7 @@ def _login_in_separate_process(
 def _probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeResult:
     """Measure recovered key material from a process that never held the session."""
     context = get_context("spawn")
-    result_queue: Queue[_ResumeProbeResult] = context.Queue()
+    result_queue: Queue[_ResumeProbeResult] = Queue(ctx=context)
     child = context.Process(target=_resume_probe_child, args=(storage_root, profile, result_queue))
     child.start()
     try:
@@ -678,7 +678,7 @@ def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(
     watching = context.Event()
     ready = context.Event()
     release = context.Event()
-    result_queue: Queue[str] = context.Queue()
+    result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_block_idempotent_journal_cleanup_after_publication,
         args=(
@@ -797,7 +797,7 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
         activation_at=datetime(2026, 8, 14, 9, 31, tzinfo=UTC),
     )
     context = get_context("spawn")
-    result_queue: Queue[str] = context.Queue()
+    result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_in_child,
         args=(str(_handover_journal_path(storage_root)), replacement.canonical_json_bytes(), result_queue),
@@ -836,7 +836,7 @@ def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_pa
     )
     context = get_context("spawn")
     ready = context.Event()
-    result_queue: Queue[str] = context.Queue()
+    result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_after_cas_stage_appears,
         args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), ready, result_queue),
@@ -873,7 +873,7 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
         activation_at=datetime(2026, 8, 14, 9, 33, tzinfo=UTC),
     )
     context = get_context("spawn")
-    result_queue: Queue[str] = context.Queue()
+    result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_in_child,
         args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), result_queue),
@@ -1102,7 +1102,7 @@ def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) 
         context = get_context("spawn")
         candidate_ready = context.Event()
         allow_authentication = context.Event()
-        result_queue: Queue[_ConflictResult] = context.Queue()
+        result_queue: Queue[_ConflictResult] = Queue(ctx=context)
         child = context.Process(
             target=_conflicted_b_handover_child,
             args=(storage_root, profile_a, profile_b, candidate_ready, allow_authentication, result_queue),
@@ -1136,7 +1136,7 @@ def test_keyring_acceleration_failure_leaves_b_process_scoped_after_handover(tmp
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         context = get_context("spawn")
-        result_queue: Queue[_AccelerationResult] = context.Queue()
+        result_queue: Queue[_AccelerationResult] = Queue(ctx=context)
         child = context.Process(
             target=_acceleration_failure_handover_child,
             args=(storage_root, profile_a, profile_b, result_queue),
@@ -1177,7 +1177,7 @@ def test_crash_after_b_handover_recovers_only_durable_b_pointer(
             current_pointer = read_pointer(storage_root)
             assert current_pointer.bucket_id == profile_b
 
-            result_queue: Queue[_RecoveryResult] = context.Queue()
+            result_queue: Queue[_RecoveryResult] = Queue(ctx=context)
             recovery_child = context.Process(
                 target=_recover_selected_profile_child,
                 args=(storage_root, profile_b, result_queue),
@@ -1336,7 +1336,7 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
                 assert crashed["resumed"] is True
                 assert crashed["dek_length"] == 32
 
-            result_queue: Queue[_RecoveryResult] = context.Queue()
+            result_queue: Queue[_RecoveryResult] = Queue(ctx=context)
             recovery_child = context.Process(
                 target=_recover_selected_profile_child,
                 args=(storage_root, profile_b, result_queue),

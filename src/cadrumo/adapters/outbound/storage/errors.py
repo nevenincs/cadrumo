@@ -26,6 +26,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ....application.operator_actions import PreconditionVerdict
 from ....core.errors import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
@@ -41,7 +43,14 @@ class OutboundStorageValidationError(OutboundStorageError, ValueError):
     validators while staying catchable as :class:`OutboundStorageError`.
     """
 
-    def __init__(self, message: str | None = None, *, context=None, translated_message=None, precondition_verdict=None):
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         """Initialize this public contract."""
         super().__init__(
             message,
@@ -108,7 +117,14 @@ class StorageCorruptionError(TerminalPreconditionErrorMixin[PreconditionVerdict]
     error surfaces schema-level violations in the sidecar metadata file itself.
     """
 
-    def __init__(self, message=None, *, context=None, translated_message=None, precondition_verdict=None):
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         """Initialize this public contract."""
         super().__init__(
             message,

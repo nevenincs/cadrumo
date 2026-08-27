@@ -247,9 +247,9 @@ def test_registry_probe_binds_the_snapshot_grade_to_the_observed_revision_grade(
 
 def test_registry_probe_still_reports_real_dangling_references() -> None:
     """Removing the real legal catalogue makes snapshot reference validation red."""
-    from ...domain.calculations import registry as registry_module
+    from ...domain.calculations.registry.authority import bundled_authority
 
-    authority = registry_module.bundled_authority()
+    authority = bundled_authority()
     broken = replace(
         authority,
         catalogues=authority.catalogues.model_copy(update={"legal": {}}),
@@ -266,10 +266,10 @@ def test_registry_probe_still_reports_real_dangling_references() -> None:
 
 def test_registry_probe_keeps_an_ungraded_revision_fail_closed() -> None:
     """Passing the effective floor never turns an absent grade into a declaration."""
-    from ...domain.calculations import registry as registry_module
+    from ...domain.calculations.registry.authority import bundled_authority
     from ..preflight import _probe_registry_authority
 
-    authority = registry_module.bundled_authority()
+    authority = bundled_authority()
     source_modelo = authority.modelos[0]
     source_revision = next(iter(source_modelo.revisions.values()))
     ungraded = source_revision.model_copy(update={"authority_grade": None})

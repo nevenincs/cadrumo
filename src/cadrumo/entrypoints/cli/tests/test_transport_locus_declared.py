@@ -29,20 +29,20 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.transport_locus import TransportLocus, TransportRole
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .._command_spec import CommandSpecNode, ParameterSpec
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _leaves() -> tuple:
+def _leaves() -> tuple[CommandSpecNode, ...]:
     return tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")
 
 
-def _is_path_typed(parameter: object) -> bool:
-    value = getattr(parameter, "value", None)
-    annotation = getattr(value, "annotation", None)
-    return getattr(annotation, "module", None) == "pathlib" and getattr(annotation, "qualname", None) == "Path"
+def _is_path_typed(parameter: ParameterSpec) -> bool:
+    annotation = parameter.value.annotation
+    return annotation.module == "pathlib" and annotation.qualname == "Path"
 
 
 def test_every_path_typed_parameter_declares_a_transport_locus() -> None:
@@ -81,7 +81,7 @@ def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: Trans
     """
     offenders = []
     for node in _leaves():
-        by_shape: dict[object, list[str]] = {}
+        by_shape: dict[TransportShape, list[str]] = {}
         for parameter in node.spec.parameters:
             if parameter.transport_locus is not locus or parameter.transport_role is not TransportRole.PRIMARY:
                 continue

@@ -157,6 +157,7 @@ def test_modelo_353_2025_december_calendar_is_window_scoped_not_revision_scoped(
     assert revision.valid_to is not None
     assert calendar.applies_from is not None
     assert calendar.applies_from > revision.valid_to
+    assert calendar.applies_to is not None
     assert december.closes_on <= calendar.applies_to
     assert calendar_id in december.source_refs
     assert calendar_id not in revision.source_refs

@@ -304,7 +304,15 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     )
 
 
-_ParamCheck = Callable[[SecureRepositoryContractCase[BaseModel]], None]
+_ParamCheck = Callable[..., None]
+"""Each entry is one of the ``[T]``-generic check functions below, instantiated
+at whatever ``T`` the caller's :class:`SecureRepositoryContractCase` carries.
+A precise ``Callable[[SecureRepositoryContractCase[BaseModel]], None]`` cannot
+hold a generic function without erasing it back to one concrete ``T``, which
+is exactly the erasure :func:`assert_secure_repository_contract` already
+performs at the call site (see its own cast rationale). Declaring the
+parameter shape here would just repeat that erasure one level up; the ellipsis
+states plainly that this table does not itself enforce it."""
 
 _PARAM_CHECKS: tuple[tuple[str, _ParamCheck], ...] = (
     ("test_round_trip_preserves_payload", _round_trip_preserves_payload),

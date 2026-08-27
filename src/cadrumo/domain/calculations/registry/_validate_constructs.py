@@ -22,7 +22,6 @@ from collections.abc import Mapping
 
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_revision_context import ConstructMemberObject
 from .schema import ModeloRevision
 from .schema_references import LegalReference, SourceReference
 
@@ -48,7 +47,7 @@ def validate_construct_closure(
     scope: str,
     revision: ModeloRevision,
     *,
-    member_objects: Mapping[str, Mapping[str, ConstructMemberObject]],
+    member_objects: Mapping[str, Mapping[str, object]],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -61,6 +60,17 @@ def validate_construct_closure(
     included by the construct that claims it, and
     :class:`~cadrumo.domain.calculations.registry.validate_evidence.EvidenceValidator`
     enforces official-source grounding for the construct itself.
+
+    ``member_objects`` values are typed ``object`` here rather than the closed
+    :class:`~cadrumo.domain.calculations.registry._validate_revision_context.ConstructMemberObject`
+    union its real caller narrows to: the production caller always supplies
+    that narrower, already-validated mapping (a narrower argument fits a wider
+    parameter), and the direct ``member.legal_refs`` / ``member.source_refs``
+    reads below -- never a tolerant ``getattr(..., default=())`` -- are what
+    actually enforces the contract, raising ``AttributeError`` loud on a member
+    that does not carry them. Narrowing this parameter back to the closed union
+    would just move that same runtime guarantee out of reach of a caller
+    proving it, not strengthen it.
     """
     failures: list[str] = []
     for construct in revision.constructs:
@@ -84,19 +94,21 @@ def validate_construct_closure(
                 # extraction profile, cross-reference, workbook parity
                 # reference, verification expectation, application link,
                 # deadline window, filing schedule, dependency
-                # classification). Direct attribute access, not a
+                # classification). ``getattr`` with no default, not a
                 # ``getattr(..., default=())`` reach-around: a member kind
                 # ever added here whose class does NOT declare the field
-                # must fail loud, never silently under-count the construct's
-                # required grounding.
-                member_legal_refs = set(member.legal_refs)
+                # must fail loud with ``AttributeError``, never silently
+                # under-count the construct's required grounding. The no-default
+                # form (rather than ``member.legal_refs``) is what lets this
+                # accept ``member_objects`` typed generically at this boundary.
+                member_legal_refs = set(getattr(member, "legal_refs"))
                 missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
                 if missing_legal:
                     failures.append(
                         f"{scope}: construct {construct.id!r} does not include legal refs "
                         f"{missing_legal!r} required by {kind} {member_id!r}",
                     )
-                member_source_refs = set(member.source_refs)
+                member_source_refs = set(getattr(member, "source_refs"))
                 missing_sources = sorted(member_source_refs.difference(construct_source_refs))
                 if missing_sources:
                     failures.append(

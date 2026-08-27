@@ -263,7 +263,11 @@ def _declared_exports(tree: ast.Module) -> list[str] | None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == "__all__" for t in node.targets):
             if isinstance(node.value, ast.List | ast.Tuple):
-                return [e.value for e in node.value.elts if isinstance(e, ast.Constant)]
+                return [
+                    e.value
+                    for e in node.value.elts
+                    if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                ]
     return None
 
 

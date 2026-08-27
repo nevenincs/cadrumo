@@ -35,6 +35,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus
+from .._command_spec import CommandSpecNode
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -61,11 +62,11 @@ _RETIRED_TRANSPORT_TOKENS = frozenset(
 _TRANSPORT_TOKENS = frozenset({"export", "import", "pull", "push"})
 
 
-def _leaves() -> tuple:
+def _leaves() -> tuple[CommandSpecNode, ...]:
     return tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")
 
 
-def _declares_a_locus(node: object) -> bool:
+def _declares_a_locus(node: CommandSpecNode) -> bool:
     return any(parameter.transport_locus is not TransportLocus.NONE for parameter in node.spec.parameters)
 
 

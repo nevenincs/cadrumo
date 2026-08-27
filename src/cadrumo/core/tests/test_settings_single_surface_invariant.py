@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # AEAT-prefixed variable is the only legitimate option. Each entry must
 # carry its rationale inline in the source — when reviewing this list,
 # verify the rationale matches "no Settings write API exists for this".
-_ALLOWLIST: frozenset[str] = frozenset()
+_ALLOWLIST: frozenset[str] = frozenset[str]()
 
 _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT_[A-Z0-9_]+$")
 

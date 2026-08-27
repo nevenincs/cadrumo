@@ -76,7 +76,11 @@ def test_every_statutory_citation_names_a_provision_the_catalogue_carries() -> N
 
     assert citations, "no statutory citations were measured; every assertion here would be vacuous"
 
-    unresolved = sorted({citation.legal_ref for _label, citation in citations if citation.legal_ref not in catalogue})
+    statutory_refs: list[str] = []
+    for _label, citation in citations:
+        assert citation.legal_ref is not None, f"statutory citation {_label!r} carries no legal_ref"
+        statutory_refs.append(citation.legal_ref)
+    unresolved = sorted({ref for ref in statutory_refs if ref not in catalogue})
     assert unresolved == [], (
         f"these category citations name provisions absent from the legal catalogue: {unresolved}. "
         "Enrol the provision with its corpus_ref and effective span, or cite one that exists."

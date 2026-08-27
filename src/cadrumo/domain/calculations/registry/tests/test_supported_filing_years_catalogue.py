@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import Modelo
 from .....core.resources import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError
@@ -57,7 +58,7 @@ def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue() -
     catalogue = authority.catalogues.supported_filing_years
     assert catalogue is not None
 
-    orden = authority.catalogues.supplementary_ordenes["303"]
+    orden = authority.catalogues.supplementary_ordenes[Modelo.M303]
     assert tuple(sorted({projection.ejercicio for projection in orden.projections})) == catalogue.years
 
 

@@ -80,7 +80,7 @@ def _register_in_separate_process_child(
 def _register_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRegistrationResult:
     """Run one registration in its own interpreter, which is what every ``aeat`` call is."""
     context = get_context("spawn")
-    result_queue: Queue[_ChildRegistrationResult] = context.Queue()
+    result_queue: Queue[_ChildRegistrationResult] = Queue(ctx=context)
     child = context.Process(
         target=_register_in_separate_process_child,
         args=(storage_root, label, password, result_queue),
@@ -127,7 +127,7 @@ def _attempt_registration_in_separate_process_child(
 
 def _attempt_registration_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRefusalResult:
     context = get_context("spawn")
-    result_queue: Queue[_ChildRefusalResult] = context.Queue()
+    result_queue: Queue[_ChildRefusalResult] = Queue(ctx=context)
     child = context.Process(
         target=_attempt_registration_in_separate_process_child,
         args=(storage_root, label, password, result_queue),

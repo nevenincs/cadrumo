@@ -121,4 +121,4 @@ def test_the_filter_scrubs_a_field_outside_the_exemption_set() -> None:
     record.smuggled = "12345678Z"
 
     assert SecretScrubbingFilter().filter(record) is True
-    assert "12345678Z" not in str(record.smuggled)
+    assert "12345678Z" not in str(getattr(record, "smuggled", ""))

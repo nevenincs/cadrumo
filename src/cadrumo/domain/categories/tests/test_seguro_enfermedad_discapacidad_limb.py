@@ -63,8 +63,10 @@ def test_the_higher_limb_is_three_times_the_lower_as_the_article_sets_them() -> 
     """A property of the two figures, so a typo in either is caught rather than copied."""
     rule = _shipped_rule()
     amounts = {variant.id: variant.statutory_cap_eur for variant in rule.statutory_cap_variants}
+    general = amounts["general"]
+    assert general is not None
 
-    assert amounts["discapacidad"] == amounts["general"] * 3
+    assert amounts["discapacidad"] == general * 3
 
 
 def test_the_rule_no_longer_carries_a_single_flat_limit() -> None:

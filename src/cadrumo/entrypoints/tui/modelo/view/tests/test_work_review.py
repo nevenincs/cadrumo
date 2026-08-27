@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+from enum import Enum
 from pathlib import Path
 from typing import cast, get_args
 
@@ -82,7 +83,7 @@ def _option_prompts(chooser: Select[object]) -> tuple[str, ...]:
     return tuple(str(option_list.get_option_at_index(index).prompt) for index in range(option_list.option_count))
 
 
-def _enum_option_index(enum_type: type, member: object) -> int:
+def _enum_option_index(enum_type: type[Enum], member: object) -> int:
     """Return an enum member's visible index after the universal ``All`` option."""
     return list(enum_type).index(member) + 1
 

@@ -25,6 +25,7 @@ import sys
 import textwrap
 
 import pytest
+from pydantic import TypeAdapter
 
 from ....entrypoints.cli import command_graph
 from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
@@ -32,6 +33,7 @@ from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _COMPLETED = "PROBE-COMPLETED"
+_LOADED_FAMILIES_ADAPTER: TypeAdapter[dict[str, list[str]]] = TypeAdapter(dict[str, list[str]])
 
 _PROBE = textwrap.dedent(
     """
@@ -85,7 +87,7 @@ def _probe(paths: list[list[str]]) -> dict[str, list[str]]:
     assert completed.returncode == 0, completed.stderr
     lines = [line for line in completed.stdout.splitlines() if line.strip()]
     assert _COMPLETED in lines, f"the probe did not reach its assertion: {completed.stdout}{completed.stderr}"
-    return json.loads(lines[0]) if lines[0] != _COMPLETED else {}
+    return _LOADED_FAMILIES_ADAPTER.validate_python(json.loads(lines[0])) if lines[0] != _COMPLETED else {}
 
 
 def test_the_state_free_declaration_still_covers_real_nodes() -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 
@@ -868,7 +869,9 @@ def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> No
 
 
 @pytest.mark.parametrize("merge", [merge_source_resolutions, merge_source_resolutions_by_precedence])
-def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(merge: object) -> None:
+def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(
+    merge: Callable[[Sequence[CalculationSourceResolution]], CalculationSourceResolution],
+) -> None:
     identity = _row_identity()
 
     def resolution(resolver_id: str) -> CalculationSourceResolution:
@@ -884,7 +887,7 @@ def test_source_resolution_merges_refuse_duplicate_row_casilla_ownership(merge: 
         )
 
     with pytest.raises(AggregationValidationError) as exc_info:
-        merge((resolution("inventory-left"), resolution("inventory-right")))  # type: ignore[operator]
+        merge((resolution("inventory-left"), resolution("inventory-right")))
 
     assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_row_casilla_owner"
     assert exc_info.value.context == {

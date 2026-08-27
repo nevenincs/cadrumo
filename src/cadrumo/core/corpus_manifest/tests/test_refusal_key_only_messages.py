@@ -106,7 +106,7 @@ def _zip_with(target: Path, members: dict[str, str]) -> Path:
 
 def test_corpus_entry_path_refusals_are_key_only() -> None:
     """Each of the four path-traversal branches refuses through the key alone."""
-    cases = (
+    cases: tuple[tuple[str, dict[str, object]], ...] = (
         ("..", {"relative_path": "..", "dot_token": True}),
         ("a\\..\\b", {"relative_path": "a\\..\\b", "posix_separators_only": False}),
         ("/etc/passwd", {"relative_path": "/etc/passwd", "absolute": True}),

@@ -42,8 +42,11 @@ import textwrap
 from typing import Final
 
 import pytest
+from pydantic import TypeAdapter
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"active-profile"})
 """Taxonomy-vocabulary literals this module deliberately pins.
@@ -171,8 +174,7 @@ def _run_console_less_login(storage_root: pathlib.Path) -> dict[str, object]:
         )
 
     assert verdict_path.is_file(), "the console-less login produced no verdict"
-    verdict: dict[str, object] = json.loads(verdict_path.read_text(encoding="utf-8"))
-    return verdict
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(verdict_path.read_text(encoding="utf-8")))
 
 
 def test_login_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: pathlib.Path) -> None:

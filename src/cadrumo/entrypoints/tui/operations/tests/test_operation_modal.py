@@ -9,7 +9,7 @@ never see more than the public frontend contracts C0 already froze.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -44,6 +44,7 @@ from .....application.operations.frontend_contracts import (
 )
 from .....application.operations.interactions import OperationActorReference
 from .....application.operations.models import OperationRequest
+from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationRegistry
 from .....application.user_profile.censal_observation import (
     CensalObservation,
@@ -107,7 +108,7 @@ def _observation() -> CensalObservation:
 def _runtime(
     tmp_path: Path,
     *,
-    before_irreversible_section: object = None,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
 ) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
     """One real production-shaped registry, journal, lease, and custody set."""
 
@@ -340,7 +341,7 @@ def test_fold_event_page_resynchronizes_and_then_replays_cursor_forward() -> Non
         operation_id=initial.operation_id,
         anchor_cursor=50,
         requested_cursor=0,
-        status="expired",
+        status=OperationReplayStatus.EXPIRED,
         events=(),
         next_cursor=50,
         restart_cursor=50,
@@ -354,7 +355,7 @@ def test_fold_event_page_resynchronizes_and_then_replays_cursor_forward() -> Non
         operation_id=initial.operation_id,
         anchor_cursor=50,
         requested_cursor=50,
-        status="caught_up",
+        status=OperationReplayStatus.CAUGHT_UP,
         events=(),
         next_cursor=50,
         restart_cursor=None,

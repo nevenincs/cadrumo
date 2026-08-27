@@ -165,7 +165,7 @@ def _import_targets(path: Path) -> tuple[str, ...]:
             base = _relative_target(path, node) if node.level else node.module
             targets.append(base or "<relative>")
         elif isinstance(node, ast.Call):
-            targets.extend(_dynamic_import_targets(ast.Module(body=[node], type_ignores=[])))
+            targets.extend(_dynamic_import_targets(ast.Module(body=[ast.Expr(value=node)], type_ignores=[])))
     return tuple(targets)
 
 
@@ -173,7 +173,7 @@ def _constant_string(node: ast.AST) -> str | None:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     if isinstance(node, ast.JoinedStr) and all(isinstance(value, ast.Constant) for value in node.values):
-        return "".join(str(value.value) for value in node.values)
+        return "".join(str(value.value) for value in node.values if isinstance(value, ast.Constant))
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
         left = _constant_string(node.left)
         right = _constant_string(node.right)

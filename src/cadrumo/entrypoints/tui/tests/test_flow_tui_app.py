@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
@@ -40,6 +40,7 @@ from ....application.flows.definition import (
 from ....application.flows.engine import answer, page_status, start_flow
 from ....application.flows.errors import FlowCheckpointError
 from ....core.config import TuiAppearance
+from ....core.external_constants import OutputLanguage
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -107,6 +108,9 @@ class _Answers(BaseModel):
     """Trivial answers model; only the type identity is consumed."""
 
 
+_STR_ANSWERS_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str])
+
+
 class _JsonFileCheckpointStore:
     """A real :class:`CheckpointStore` persisting answers to one JSON file.
 
@@ -128,8 +132,7 @@ class _JsonFileCheckpointStore:
         path = self._path(flow_id)
         if not path.is_file():
             return None
-        loaded: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
-        return loaded
+        return _STR_ANSWERS_ADAPTER.validate_python(json.loads(path.read_text(encoding="utf-8")))
 
     def discard(self, flow_id: str) -> None:
         self._path(flow_id).unlink(missing_ok=True)
@@ -1096,13 +1099,13 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
         payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
 
-    with output_language_scope("en"), locales_root_scope(root):
+    with output_language_scope(OutputLanguage.EN), locales_root_scope(root):
         app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
-            activate_output_language("es")
+            activate_output_language(OutputLanguage.ES)
             app.rebuild_for_locale()
             await pilot.pause()
 
@@ -1146,10 +1149,10 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
             # ``override_settings`` contextvar Token could not be reset from
             # here. ``activate_output_language`` drops plain caches instead
             # and has no such boundary; the enclosing scope owns the restore.
-            activate_output_language("es")
+            activate_output_language(OutputLanguage.ES)
             holder["app"].rebuild_for_locale()
 
-    with output_language_scope("en"), locales_root_scope(root):
+    with output_language_scope(OutputLanguage.EN), locales_root_scope(root):
         app = FlowTuiApp(
             _definition(),
             mode=FlowMode.MODIFY,

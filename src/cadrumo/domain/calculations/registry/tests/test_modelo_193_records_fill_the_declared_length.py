@@ -46,6 +46,7 @@ import pytest
 from .....core.resources import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
+from ..record_design_schema import RecordDesignSheet
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -101,7 +102,7 @@ def _blank_positions(sheet) -> set[int]:
     return blank
 
 
-def _design_reach(sheet) -> int:
+def _design_reach(sheet: RecordDesignSheet) -> int:
     return max(
         (field.offset + (field.length or 1) - 1 for field in sheet.fields if field.offset is not None),
         default=0,
