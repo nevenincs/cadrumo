@@ -596,7 +596,24 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
 
 
 def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
-    if invoice.counterparty_country != "ES":
+    """Build the M347 observation for one invoice, or ``None`` if excluded.
+
+    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
+    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    its nine enumerated items (see `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`).
+    The diseño de registro's own `pais-codigo` field (a "XX" alphabetic slot
+    for a non-established non-resident declarado) is direct evidence AEAT
+    expects some M347 counterparties to be non-resident.
+
+    The one residency-shaped exclusion the article DOES state is art.
+    33.2.i): an operation already reported through a coincident periodic
+    informativa. For an invoice, that informativa is Modelo 349's
+    intracommunity recapitulativa, so an operation `_intracommunity_clave`
+    classifies as intracommunity is excluded here and routes to M349 instead
+    -- the same classification M349's own branch of this resolver uses, never
+    a bare country comparison.
+    """
+    if _intracommunity_clave(invoice) is not None:
         return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party
