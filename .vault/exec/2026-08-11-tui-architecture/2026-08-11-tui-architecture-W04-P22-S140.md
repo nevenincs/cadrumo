@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8340c54091eec66b174f8508c079caf58718d8e004b074c8d64b689c86ce389f'
+body_hash: 'sha256:bfb6f4558d5e8fca286af5dbae93aac9c38cec9c3426f7ba9bbf9be0d69066dc'
 step_id: 'S140'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -21,7 +21,7 @@ related:
 
 - `A` `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
 - `M` `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`
-- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py -m unit -q -n0` -> `pass` (14 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py -m unit -q -n0` -> `pass` (15 passed)
 - `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py` -> `pass`
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py` -> `pass`
 
@@ -101,3 +101,26 @@ The worktree's branch situation resolved during this Step: a merge commit
 the checkout now points to `main`. Both S140 commits (`f3c1b45a2a`,
 `99fa5c4989`) landed there, per "keep committing where the worktree
 points".
+
+FOLLOW-UP CONDITION FROM REVIEW: the epoch tuple and read destinations
+initially recorded their coverage/level reasoning only in this exec record,
+not in the minted artifact itself. Per review, a downstream Step consuming
+the receipt must be able to tell "coordinate-agnostic by design" from
+"surfaces missing" by reading the receipt ALONE. Reworked
+`epoch_schema_digest: str` into `epoch_tuple: ModeloWorkspaceC2EpochTupleV1`
+(digest plus `covered_surfaces`/`excluded_surfaces`/`exclusion_reason`,
+naming LOCALE_CATALOGUE/FIELD_MANIFEST/READINESS/CLOSURE as covered and
+WORK/REGISTRY/CALCULATION/BOUNDED_REVIEW as excluded by declared design),
+and `read_destinations: tuple[str, ...]` into
+`tuple[ModeloWorkspaceC2ReadDestinationV1, ...]` (each carrying its own
+`route_level="function"` and rationale). A cross-field validator requires
+the covered/excluded partition to account for exactly the declared
+`native_owner_surfaces`, gated on the property rather than a hardcoded
+4-and-4 split. Hit a second real, transient environment refusal while
+re-minting -- a different peer's in-flight edit briefly broke
+`domain.contribuyente`'s package import, unrelated to any of this receipt's
+8 dependency paths -- waited for it to clear (confirmed by direct
+re-invocation) rather than adjusting anything, then re-minted over the next
+verified-clean commit, `bf72d25c16` (commits `aaecf1eb76`, `64726e6d8b`),
+re-confirmed the 8 dependency paths were still `git status --porcelain`-empty
+both immediately before and after writing.
