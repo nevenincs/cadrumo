@@ -29,8 +29,12 @@ def test_resolve_catalogue_2025_returns_committed_entry() -> None:
 
 
 def test_resolve_catalogue_requires_exact_year() -> None:
-    with pytest.raises(IvaCatalogueError, match="year=2024"):
-        resolve_catalogue(on=date(2024, 6, 15))
+    # The witness year is deliberately OUTSIDE the registry's supported filing
+    # window. A supported year used here would assert that a year the product
+    # claims to file is permanently ungrounded, pinning today's coverage gap as
+    # the contract and reddening the moment that year is correctly added.
+    with pytest.raises(IvaCatalogueError, match="year=1990"):
+        resolve_catalogue(on=date(1990, 6, 15))
 
 
 def test_load_iva_catalogue_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
