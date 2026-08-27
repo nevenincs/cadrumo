@@ -649,3 +649,29 @@ def test_current_head_commit_is_a_real_forty_character_hex_sha() -> None:
     receipt = validate_modelo_workspace_c2_dependency_receipt()
     assert len(receipt.current_head_commit) == 40
     int(receipt.current_head_commit, 16)  # raises if not valid hex
+
+
+def test_minted_c2_receipt_reproduces_every_field_except_the_moving_commit_stamp() -> None:
+    """S140: the durable artifact must not silently drift from what the live validator derives.
+
+    ``current_head_commit`` is excluded from the comparison deliberately: it
+    advances on every commit by construction, so comparing it would make
+    this test fail on the very next unrelated commit rather than on a
+    genuine drift in what the receipt actually attests.
+    """
+    minted_path = _ROOT / ".vault" / "reference" / "2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md"
+    assert minted_path.is_file(), minted_path
+    import json
+
+    minted = json.loads(minted_path.read_text(encoding="utf-8"))
+    assert minted["receipt_schema"] == "ModeloWorkspaceC2DependencyReceiptV1"
+    assert minted["validation_result"] == "PASSED"
+
+    current = validate_modelo_workspace_c2_dependency_receipt()
+    minted_receipt = dict(minted["receipt"])
+    minted_receipt.pop("current_head_commit")
+    minted_receipt.pop("predecessors")  # c1_exit_receipt.path separator may differ by platform
+    current_dump = current.model_dump(mode="json")
+    current_dump.pop("current_head_commit")
+    current_dump.pop("predecessors")
+    assert minted_receipt == current_dump
