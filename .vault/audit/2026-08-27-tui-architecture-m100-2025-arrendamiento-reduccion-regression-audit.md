@@ -5,11 +5,46 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c102b47d45bfd0ca96ea9355970bf0a2c5a5b718994f65f19add45b717c33f2'
+body_hash: 'sha256:4f0c1086d497297d279364aad2619734a96afb4e9e579e4ea6de33d5a72b3ecb'
 related: []
 ---
 
 # `tui-architecture` audit: the 2025 arrendamiento reduction is no longer computed
+
+## CORRECTION — this audit's central claim is wrong
+
+Casillas 0150 and 0613 are NOT a regression. They are a **deliberate, tested
+deferral**, and this audit missed the guard that says so.
+
+`domain/calculations/registry/tests/test_modelo_100_2025_semantic_boundaries.py`
+states the contract in its own docstring:
+
+> The 2025 declarations for casillas 0150, 0613, and 1481 are measured
+> cross-revision divergences. They must not acquire a prior-year producer until
+> their row-specific legal, input-contract, and independent-value evidence has
+> been accepted. These tests exercise the loaded registry graph so an accidental
+> formula, profile binding, or Modelo 131 relation cannot be added silently.
+
+One of its tests asserts that the 2025 revision carries **no** guardería profile
+binding at all. Another asserts 0150 and 0613 resolve to `manual` with no
+formula and a producer trace carrying no formula, binding or relation.
+
+So the absence of a producer is the *recorded state of an open question*, not an
+omission. The reasoning below about direction and blast radius still describes
+what a taxpayer experiences if the boxes are left blank, and the 2024-versus-2025
+comparison is still accurate. What is wrong is the conclusion that this is a
+defect to be fixed by porting the 2024 wiring.
+
+Acting on that conclusion, the wiring was implemented and then reverted in
+`8258892c64` after it broke 39 Modelo 100 registry tests, including the guards
+above. The revert restores 449 passing.
+
+What this audit should have done, and what the finding now is: the deferral is
+real and its evidence bar is written down — row-specific legal, input-contract,
+and independent-value evidence. Whether that bar has since been met for the
+art. 23.2 arrendamiento reduction and the art. 81.2 guardería increment is the
+open question, and it belongs to an owner. The method failure was mine: I did not
+search for a guard on the rows before calling their state a defect.
 
 ## The finding
 
