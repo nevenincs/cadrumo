@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:5de22b1ef3b13114753f5c1b1e23879c80cb0eb7263872f88f0466cb9fd68a6c'
+body_hash: 'sha256:51d6f34294686bc52475eaec37b7904fd4057df1f57a342bb10c69ba128f9e5c'
 ---
 
 <!-- RETIRED: S01 -->
@@ -54,6 +54,12 @@ Close the coverage red the format migration correctly surfaced, by grounding wha
 - [x] `P04.S14` - Enrol RIRPF art. 9 and art. 22 in the legal catalogue from the already-bundled consolidated RD 439/2007, with required_text phrases read out of that file and verified present before writing, agent_reviewed provenance and an explicit operator-re-stamp note; `src/cadrumo/_data/registry/aeat/legal/irpf.toml`.
 - [x] `P04.S15` - Partition the citation sources so every citation is bounded on exactly one axis, require a provision id on statutory citations, derive each statutory window from its provision's effective span intersected with the supported filing window, and give the three statutorily-uncited profiles the article their rule rests on quoted verbatim from the bundled corpus; `src/cadrumo/domain/categories/ and src/cadrumo/_data/registry/aeat/categories/profiles.toml`.
 - [x] `P04.S16` - Prove every new gate bites by mutating the shipped corpus from outside the tracked tree, covering a stripped provision id, a window widened past its provision, a cap edited away from the AEAT figure and a cap schedule moved off a year the citations still cover, then re-run both coverage gates; `src/cadrumo/domain/categories/ and src/cadrumo/application/registry/tests/`.
+
+### Phase `P05` - Fix the defects the frozen-constant hunt confirmed
+
+Turn the hunt's findings into product behaviour. Each fix reuses the mechanism this codebase already has for the job rather than adding a second way to say the same thing, and lands with a gate proven to bite from outside the tracked tree.
+
+- [x] `P05.S17` - Measure the Art. 109 seventy per cent over the base the reglamento names: exclude subvenciones corrientes, subvenciones de capital and indemnizaciones for the agrarian apartados, gate the exemption to the activity classes art. 109 grants it to, and fail closed on a row that does not declare its activity class rather than guessing an exemption for it; `src/cadrumo/core/_concepto_ingreso.py, src/cadrumo/domain/transactions/, src/cadrumo/application/modelo/_art109_activity_income.py and src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml`.
 
 ## Parallelization
 
