@@ -26,10 +26,11 @@ See Also:
 
 from __future__ import annotations
 
+from ....application.operator_actions import PreconditionVerdict
 from ....core.errors import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
 
-class OutboundStorageError(TerminalPreconditionErrorMixin[object], CadrumoError):
+class OutboundStorageError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for every outbound storage-provider failure."""
 
 
@@ -95,7 +96,7 @@ class OutboundStorageUnavailableError(OutboundStorageError):
     """Raised when the backend is reachable but signals temporary unavailability."""
 
 
-class StorageCorruptionError(TerminalPreconditionErrorMixin[object], CoreError):
+class StorageCorruptionError(TerminalPreconditionErrorMixin[PreconditionVerdict], CoreError):
     """Raised when a sidecar file contains structurally invalid field types.
 
     As a :class:`core.errors.CoreError`, this indicates on-disk data

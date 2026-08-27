@@ -47,7 +47,7 @@ _MID_YEAR_HALVES = {
 _CROSS_YEAR_SPANS = {("200", "2024")}
 
 
-def _by_subject() -> dict[tuple[str, str], dict]:
+def _by_subject() -> dict[tuple[str, str], dict[tuple[int, int], list[str]]]:
     return {(modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _filing_revisions()}
 
 

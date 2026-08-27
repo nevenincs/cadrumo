@@ -9,6 +9,7 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from ..errors import NoRevisionForPeriodError
+from ..schema import DataBindingDefinition
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
@@ -124,7 +125,7 @@ def test_m390_preserves_canonical_casilla_and_calculation_identities_across_epoc
     modelo, _catalogues = _committed_modelo("390")
     baseline = modelo.revisions["2022"]
 
-    def _stripped(bindings: object) -> set[str]:
+    def _stripped(bindings: tuple[DataBindingDefinition, ...]) -> set[str]:
         return {_M390_BINDING_YEAR_TOKEN.sub("modelo-390.", str(item.id)) for item in bindings}
 
     for year in ("2023", "2024", "2025"):

@@ -27,6 +27,7 @@ breaking it.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 
 import pytest
 
@@ -49,7 +50,7 @@ _DATA_BEARING = {"binding", "casilla", "draft", "literal", "producer", "projecti
 _PAGE_RECORD = re.compile(r"^modelo-390-page-(?P<page>\d+)(?P<bis>b?)$")
 
 
-def _sheet_for(record_id: str, sheets: dict[str, object]):
+def _sheet_for(record_id: str, sheets: Mapping[str, object]):
     match = _PAGE_RECORD.match(record_id)
     if match is None:
         return None

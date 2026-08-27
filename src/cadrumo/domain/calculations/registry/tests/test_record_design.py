@@ -1293,6 +1293,7 @@ def test_a_declared_end_of_record_terminator_is_separated_and_kept() -> None:
     envelopes = [sheet.variable_envelope for sheet in extract_record_design(design).accept_partial()]
     envelope = next(item for item in envelopes if item is not None)
 
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.closing.length == 18, "the closing identifier must remain the closing identifier"
     assert envelope.terminator is not None, (
         "the end-of-record row was consumed instead of kept; its two bytes are part of the record"
@@ -1391,6 +1392,7 @@ def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
         "a design that declares no end-of-record row acquired one; peeling must be conditional "
         "on the row being present, never inferred from the closing's shape"
     )
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.closing.length == 18
 
 
@@ -1901,4 +1903,8 @@ class TestSinglePositionCorrection:
         declarante = next(sheet for sheet in extraction.sheets if sheet.name.startswith("Tipo 1"))
         corrected = next(field for field in declarante.fields if field.offset == 58)
         assert (corrected.length, corrected.type_code) == (1, "Alfabético")
-        assert [correction.position for correction in declarante.corrections] == [58]
+        positions = []
+        for correction in declarante.corrections:
+            assert isinstance(correction, RecordDesignSinglePositionCorrection)
+            positions.append(correction.position)
+        assert positions == [58]

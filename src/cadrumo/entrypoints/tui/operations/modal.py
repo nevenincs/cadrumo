@@ -129,16 +129,20 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
                 await asyncio.sleep(_POLL_INTERVAL.total_seconds())
                 continue
             self._log_view = fold_event_page(self._log_view, observed.event_page)
-            cursor = self._log_view.restart_cursor if self._log_view.resynchronized else self._log_view.next_cursor
+            if self._log_view.resynchronized:
+                assert self._log_view.restart_cursor is not None
+                cursor = self._log_view.restart_cursor
+            else:
+                cursor = self._log_view.next_cursor
             self._view_model = build_operation_modal_view_model(observed.projection)
             self._interaction = await resolve_modal_interaction_state(self._controller, observed.projection)
-            self._render()
+            self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))
                 return
             await asyncio.sleep(_POLL_INTERVAL.total_seconds())
 
-    def _render(self) -> None:
+    def _refresh_view_state(self) -> None:
         view_model = self._view_model
         if view_model is None:
             return
@@ -176,7 +180,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         elif event.button.id == "btn-operation-reject":
             await self._respond(intent="reject")
         elif event.button.id == "btn-operation-close":
-            self.action_request_close()
+            await self.action_request_close()
 
     async def action_request_close(self) -> None:
         """Close the modal, detaching first if the operation is still live."""

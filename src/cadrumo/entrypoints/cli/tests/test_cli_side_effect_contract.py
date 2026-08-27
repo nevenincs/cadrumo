@@ -30,12 +30,15 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from pydantic import TypeAdapter
 
 from ....tests.cli_performance import is_non_authoritative_artifact
 from .. import command_graph
 from .._command_spec import CommandSpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_CREATED_PATHS_ADAPTER: TypeAdapter[list[str]] = TypeAdapter(list[str])
 
 #: Commands that open the cold-bootstrap secure-object store and so create the
 #: encrypted database on first access. Each entry states WHY, because this is
@@ -111,7 +114,7 @@ def _created_paths(argv: tuple[str, ...]) -> list[str]:
             check=False,
         )
         assert completed.returncode == 0, f"{argv}: probe crashed\n{completed.stderr}"
-        return json.loads(completed.stdout.strip().splitlines()[-1])
+        return _CREATED_PATHS_ADAPTER.validate_python(json.loads(completed.stdout.strip().splitlines()[-1]))
 
 
 def test_the_side_effect_free_declaration_still_covers_real_leaves() -> None:

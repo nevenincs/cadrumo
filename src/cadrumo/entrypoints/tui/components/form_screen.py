@@ -192,7 +192,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         application, which has no such method — and precisely the kind of
         collision that only appears once the page becomes a screen.
         """
-        table: DataTable[str] = self.query_one("#form-table", DataTable)
+        table = self.query_one("#form-table", DataTable)
         rows = tuple(
             (
                 form_field.key,

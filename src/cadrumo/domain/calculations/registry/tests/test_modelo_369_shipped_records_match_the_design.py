@@ -37,6 +37,7 @@ import pytest
 from .....core.resources import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
+from ..record_design_schema import RecordDesignSheet
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FILING_YEAR = 2021
 
 
-def _design_sheets_by_token() -> dict[str, object]:
+def _design_sheets_by_token() -> dict[str, RecordDesignSheet]:
     """``leading sheet token -> sheet``, keyed for EQUALITY rather than prefix."""
     _modelo, catalogues = _committed_modelo("369")
     source = catalogues.sources["aeat-dr-369-2021"]
@@ -61,7 +62,7 @@ def _design_sheets_by_token() -> dict[str, object]:
         f"unparsed one: {[(sheet.name, sheet.reason) for sheet in extraction.skipped]}"
     )
 
-    by_token: dict[str, object] = {}
+    by_token: dict[str, RecordDesignSheet] = {}
     for sheet in extraction.sheets:
         token = sheet.name.split()[0].upper()
         assert token not in by_token, f"two design sheets share the leading token {token!r}"
@@ -87,7 +88,7 @@ def _written_positions(record) -> set[int]:
     return written
 
 
-def _design_reach(sheet) -> int:
+def _design_reach(sheet: RecordDesignSheet) -> int:
     return max(
         (field.offset + (field.length or 1) - 1 for field in sheet.fields if field.offset is not None),
         default=0,

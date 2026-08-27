@@ -1884,6 +1884,95 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     assert result.refusal.code is ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE
 
 
+def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation_error(
+    repos,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """S128: only the typed SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT condition maps to AUTHORITY_GRADE_UNAVAILABLE.
+
+    ``RegistryValidationError`` is a broad type; a catch that maps every
+    instance of it to ``AUTHORITY_GRADE_UNAVAILABLE`` would silently report a
+    genuine, unrelated registry defect as a grade problem, sending an
+    operator to the wrong remedy and hiding the real one behind a green
+    happy-path test. ``TREE_QUIESCENT`` (a real, typed condition this error
+    carries in production for a concurrent registry-tree write) is not
+    reachable through the bundled fixture registry on demand, so this proof
+    monkeypatches the ONE call `resolve_graded_snapshot_result` makes for
+    REGISTRY -- ``ValidatedRegistryAuthority.capture_law_selected_projection``
+    on this specific, real authority instance -- to raise that real, typed
+    error instead of admitting a snapshot. No data is faked and no other
+    behaviour is touched; only the one failure path this bundled fixture
+    registry cannot otherwise exercise is forced, to prove the except clause
+    discriminates by condition rather than by type.
+    """
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.errors import (
+        RegistryFailureClassification,
+        RegistryFailureCondition,
+        RegistryValidationError,
+    )
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("130")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="130-2026-1T",
+        current_calculation_revision_id="a" * 64,
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    def _raise_unrelated_registry_failure(*args: object, **kwargs: object) -> None:
+        raise RegistryValidationError(
+            "registry tree is mid-write; retry once quiescent",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"modelo": str(modelo)},
+            ),
+        )
+
+    monkeypatch.setattr(authority, "capture_law_selected_projection", _raise_unrelated_registry_failure)
+
+    target = _visible_target_for(modelo, filing_year=filing_year, period="1T", bucket_id=bucket_id)
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        resolve_graded_snapshot_result(
+            target,
+            required_grade=RegistryAuthorityGrade.CALCULATION,
+            bucket_id=bucket_id,
+            catalogue_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+        )
+
+    assert excinfo.value.registry_failure is not None
+    assert excinfo.value.registry_failure.condition is RegistryFailureCondition.TREE_QUIESCENT
+
+
 def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_write(
     repos,
     caplog: pytest.LogCaptureFixture,

@@ -41,13 +41,19 @@ from .....application.aggregation import (
 # under no longer exists, which stopped this module COLLECTING at all -- a
 # gate running zero assertions rather than failing loudly.
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
-from .....core import BindingSourceKind
+from .....core import BindingSourceKind, RegistryAuthorityGrade
 from ..authority import bundled_authority
 from ..errors import AmbiguousRevisionSelectionError
 from ..schema_input_kind import InputKind
 from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _SnapshotKwargs(TypedDict):
+    filing_year: int
+    period: str
+    grade: RegistryAuthorityGrade
 
 
 class _ScanResult(TypedDict):
@@ -100,7 +106,7 @@ def _scan() -> _ScanResult:
                 modelo.revisions[revision_id].period_selector,
             )
             declared = modelo.revisions[revision_id]
-            snapshot_kwargs = {
+            snapshot_kwargs: _SnapshotKwargs = {
                 "filing_year": scope_year,
                 "period": scope_period,
                 # Ask for the rung the revision itself declares. The bindings

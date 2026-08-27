@@ -35,12 +35,13 @@ import pytest
 from .....core.resources import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_coverage import build_diseno_coverage_report
+from ..schema import ModeloRevision, RegistryCatalogues
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _design_path(revision, catalogues) -> Path:
+def _design_path(revision: ModeloRevision, catalogues: RegistryCatalogues) -> Path:
     design_refs = [
         ref
         for ref in revision.source_refs
@@ -55,7 +56,7 @@ def _design_path(revision, catalogues) -> Path:
     return path
 
 
-def _design_record_names(revision, catalogues) -> set[str]:
+def _design_record_names(revision: ModeloRevision, catalogues: RegistryCatalogues) -> set[str]:
     """Every record the cited design DEFINES, read from its sheets.
 
     Deliberately not read from the coverage report's casilla set. That set holds

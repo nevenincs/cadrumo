@@ -73,11 +73,11 @@ def _verify_plazo_notices(calculation_revision_id: str) -> tuple[dict[str, objec
         ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
     )
     assert result.exit_code in {0, 1}, result.output
-    return tuple(
-        notice
-        for notice in unwrap_envelope_notices(result.output)
-        if notice["code"] == "modelo.work.m210.plazo_resolved"
-    )
+    notices: list[dict[str, object]] = []
+    for notice in unwrap_envelope_notices(result.output):
+        if notice["code"] == "modelo.work.m210.plazo_resolved":
+            notices.append(dict(notice))
+    return tuple(notices)
 
 
 def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path(tmp_path: Path) -> None:

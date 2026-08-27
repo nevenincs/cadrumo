@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....application.operator_actions import no_action_precondition_verdict
+from .....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from .....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.errors import CadrumoError, TerminalPreconditionErrorMixin
 
@@ -57,7 +57,7 @@ def browser_no_action_verdict(
     )
 
 
-class BrowserError(TerminalPreconditionErrorMixin[object], CadrumoError):
+class BrowserError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for browser-related failures.
 
     ``failure_mode`` may be a :class:`BrowserFailureMode` member or an existing
@@ -73,7 +73,7 @@ class BrowserError(TerminalPreconditionErrorMixin[object], CadrumoError):
         failure_mode: BrowserFailureMode | str | None = None,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
-        precondition_verdict: object | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         """Construct a browser error with an optional failure-mode tag."""
         enriched_context = dict(context) if context is not None else {}

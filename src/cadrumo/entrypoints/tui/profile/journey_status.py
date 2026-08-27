@@ -14,6 +14,7 @@ already decided by :func:`~cadrumo.application.user_profile.presentation
 from __future__ import annotations
 
 from collections.abc import Iterator
+from typing import override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -133,6 +134,7 @@ class ReadyStageBody(Vertical, can_focus=False):
         super().__init__(id=id)
         self._presentation = presentation
 
+    @override
     def compose(self) -> ComposeResult:
         """Render the readiness summary line, then every current blocker as a badge."""
         yield Static(overview_readiness_summary(self._presentation), id="ready-summary", markup=False)
