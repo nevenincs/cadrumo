@@ -24,7 +24,11 @@ from .....adapters.persistence.storage.custody import (
     publish_profile_custody_capsule,
 )
 from .....core.config import Settings
-from .....tests.cli_performance import CliPerformanceObservation, profile_cli_path
+from .....tests.cli_performance import (
+    DIAGNOSTIC_ONLY_PATHS,
+    CliPerformanceObservation,
+    profile_cli_path,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -85,19 +89,8 @@ def _publish(root: Path, profile_id: UUID, label: str) -> None:
     )
 
 
-# The process-wide diagnostic log channel is the ONE path a read-only command
-# may still create. It is opened by `get_logger` at module import, before any
-# command is selected, so it is a property of running the executable at all
-# rather than of this leaf -- and it is a plaintext diagnostic channel, never
-# profile storage. Every other directory under the root is storage state and
-# must not appear. Naming the exemption exactly, rather than relaxing the
-# assertion to a prefix match, keeps a real regression (`blobs`, `financial`,
-# `secrets`, the `cache` tree) failing loudly.
-_ALLOWED_DIAGNOSTIC_PATHS = frozenset({"logs", "logs/cadrumo.log"})
-
-
 def _storage_state(paths: tuple[str, ...]) -> list[str]:
-    return sorted(path for path in paths if path not in _ALLOWED_DIAGNOSTIC_PATHS)
+    return sorted(path for path in paths if path not in DIAGNOSTIC_ONLY_PATHS)
 
 
 def _assert_created_no_state(observation: CliPerformanceObservation) -> None:
@@ -131,15 +124,14 @@ def test_listing_an_empty_store_creates_no_state_at_all(tmp_path: Path) -> None:
     profile = profile_cli_path(_LIST_PATH, storage_root=root)
 
     _assert_created_no_state(profile.invocation)
-    assert profile.invocation.initial_filesystem_digest == profile.invocation.observed_root_identity or True
     assert "profiles\t<none>" in profile.invocation.stdout
 
 
 def test_listing_a_populated_store_reads_without_writing_anything(populated_root: Path) -> None:
     """Listing real capsules must leave every byte of the store untouched."""
-    before = sorted(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*"))
+    before = _storage_state(tuple(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*")))
     profile = profile_cli_path(_LIST_PATH, storage_root=populated_root)
-    after = sorted(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*"))
+    after = _storage_state(tuple(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*")))
 
     _assert_created_no_state(profile.invocation)
     assert before == after

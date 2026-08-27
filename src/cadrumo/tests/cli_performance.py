@@ -70,6 +70,21 @@ third-party prefixes it also names.
 """
 
 
+DIAGNOSTIC_ONLY_PATHS: frozenset[str] = frozenset({"logs", "logs/cadrumo.log"})
+"""Root-relative paths a read-only command may still create.
+
+The process-wide diagnostic log channel is opened by ``get_logger`` at module
+import, before any command is selected, so it is a property of running the
+executable at all rather than of any one leaf -- and it is plaintext
+diagnostics, never profile storage. Every other path under the root is storage
+state.
+
+Named exactly rather than matched by prefix: a prefix rule would also excuse a
+future ``logs``-adjacent storage directory, and the point of the exemption is
+that it covers two known paths and nothing else.
+"""
+
+
 _ENV_PREFIXES = ("AEAT_", "PYTEST_", "CADRUMO_")
 _QUIET_CONTROL_PATH: tuple[str, ...] = ()
 _QUIET_CONTROL_INVOCATION_ARGS = ("--version",)

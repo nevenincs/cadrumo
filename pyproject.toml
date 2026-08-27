@@ -615,6 +615,11 @@ convention = "google"
 # argv is `sys.executable` plus a literal probe source and JSON built from
 # the command graph this repository ships; no operator input reaches it.
 "src/cadrumo/entrypoints/cli/tests/test_state_free_capability_isolation.py" = ["S603"]
+# Invokes live CLI leaves in FRESH interpreters against throwaway storage
+# roots: what a command writes is a property of a cold start against an
+# empty root. argv is `sys.executable` plus a literal probe source and JSON
+# built from the shipped command graph; no operator input reaches it.
+"src/cadrumo/entrypoints/cli/tests/test_side_effect_contract.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
