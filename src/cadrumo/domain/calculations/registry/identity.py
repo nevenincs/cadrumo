@@ -43,7 +43,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -141,13 +141,19 @@ def registry_identity_stamp_location(registry_root: Path) -> Path:
     return registry_root.parent / REGISTRY_IDENTITY_STAMP_FILENAME
 
 
-def compute_walked_tree_digest(fingerprints: FingerprintTuples) -> str:
+def compute_walked_tree_digest(fingerprints: Iterable[Iterable[object]]) -> str:
     """Digest the complete fingerprint tuples into a walked-tree identity.
 
     Folds every field of every tuple, so any content, size, mtime or path change
     anywhere in the tree yields a different identity -- the complete-tree
     invariant the registry authority flow requires. Costs no filesystem calls:
     the caller has already paid for the walk that produced ``fingerprints``.
+
+    Typed as a bare iterable-of-iterables rather than :data:`FingerprintTuples`:
+    the fold below reads every field of every entry generically (``str(field)``)
+    with no positional or count assumption, so the wider, honest type is the one
+    this function actually relies on. Every real caller still passes
+    :data:`FingerprintTuples`, which satisfies this parameter.
 
     Returns:
         The hex SHA-256 identity of the walked tree.

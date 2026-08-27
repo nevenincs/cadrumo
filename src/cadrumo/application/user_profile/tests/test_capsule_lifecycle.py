@@ -38,7 +38,7 @@ from ..capsule_record import (
 )
 from ..custody_ports import ProfileCustodyRecoveryEnvelopePort
 from ..custody_repository import profile_custody_transaction_lock
-from ..custody_transactions import ProfileCustodyTransactionConflictError
+from ..custody_transactions import ProfileCustodyTransactionConflictError, ProfileCustodyTransactionRefusalError
 from ..lifecycle import ProfileCapsuleLifecycle
 from ..profile_record_repository import (
     ProfileRecordRepository,
@@ -185,7 +185,7 @@ def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path
     envelope, sentinel, data_files, dek = _current_capsule_input()
     record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     try:
-        with pytest.raises(ValueError, match="requires creation recovery material"):
+        with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
             ProfileCapsuleLifecycle(root=tmp_path).create(
                 label="Explicit None recovery",
                 profile_id=_PROFILE_ID,

@@ -491,12 +491,14 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
 
         def _rebuilt_with(marker_update: dict[str, str]) -> None:
+            deletion_marker = target.deletion_marker
+            assert deletion_marker is not None
             ConfigResetOperation.model_validate_json(
                 interrupted.model_copy(
                     update={
                         "targets": (
                             target.model_copy(
-                                update={"deletion_marker": target.deletion_marker.model_copy(update=marker_update)},
+                                update={"deletion_marker": deletion_marker.model_copy(update=marker_update)},
                             ),
                         ),
                     },

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 def _never_called() -> object:
     from ....adapters.persistence.storage import get_master_key_provider
 
-    return get_master_key_provider()
+    return get_master_key_provider
 
 
 def _annotated(session: BucketSession | None) -> object:

@@ -10,7 +10,9 @@ without creating a second export authoring path or projecting secret payloads.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Protocol
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
@@ -269,10 +271,54 @@ def _layout_byte_evidence(
     return tuple(evidence), None
 
 
+class _FilingExportSnapshotLayout(Protocol):
+    """The one export-layout fact :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+
+class _FilingExportSnapshotRevision(Protocol):
+    """The revision facts :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def export_layouts(self) -> Iterable[_FilingExportSnapshotLayout]: ...
+
+
+class _FilingExportSnapshotModelo(Protocol):
+    """The modelo fact :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+
+class _FilingExportSnapshotLike(Protocol):
+    """Narrow structural need :func:`_filing_export_proof` has of a registry snapshot.
+
+    Deliberately narrower than :class:`~domain.calculations.registry.RegistrySnapshot`:
+    this coordinate-derivation step reads only the modelo/revision identity and the
+    declared export layouts, and ``FilingExportProofCoordinate`` performs the real
+    typed validation of the values this function passes through. Read-only
+    ``@property`` accessors keep every attribute covariant, so a concrete
+    :class:`~domain.calculations.registry.RegistrySnapshot` (whose ids are
+    ``Annotated[str, ...]`` registry alias types) satisfies this Protocol
+    structurally.
+    """
+
+    @property
+    def modelo(self) -> _FilingExportSnapshotModelo: ...
+
+    @property
+    def revision(self) -> _FilingExportSnapshotRevision: ...
+
+
 def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
-    snapshot: RegistrySnapshot,
+    snapshot: _FilingExportSnapshotLike,
     assessment_at: UtcInstant,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
     """Require one exact two-channel assessment at the law-selected coordinate."""

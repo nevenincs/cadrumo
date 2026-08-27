@@ -637,6 +637,7 @@ def graded_snapshot_modelo_workspace_capabilities(
 
 __all__ = [
     "STATIC_INSPECTION_WORK_REVIEW_FACET",
+    "ModeloWorkspaceMaterializationProvenanceMissingError",
     "ModeloWorkspaceRevisionAxes",
     "ModeloWorkspaceStaleCursorError",
     "binding_schema_records",
@@ -1051,6 +1052,17 @@ class ModeloWorkspaceStaleCursorError(ValueError):
     A stale cursor MUST refuse rather than silently return a different page:
     resuming it against data that moved would return records the caller did
     not ask for and has no way to detect.
+    """
+
+
+class ModeloWorkspaceMaterializationProvenanceMissingError(ValueError):
+    """Raised when a repeated-row materialization value carries no provenance entry.
+
+    ``CalculationRevision`` itself enforces
+    ``set(row_casilla_values) == set(row_casilla_provenance)`` at construction,
+    so this shape can never reach the facet through normal validated
+    construction; the check exists as a belt-and-suspenders refusal the
+    facet owns itself, never a silent fabricated grouping.
     """
 
 
@@ -1603,11 +1615,17 @@ def resolve_graded_snapshot_result(
 
     Mirrors ``resolve_static_inspection_result``'s discipline: WORK captured
     exactly once, REGISTRY captured exactly once from WORK's own resolved
-    coordinate (never the target's raw operands), every remaining
-    contributor (LOCALE_CATALOGUE, FIELD_MANIFEST, CALCULATION,
-    BOUNDED_REVIEW) captured exactly once each, and the baseline pinned from
-    the stamps/epochs those captures already hold -- no second read of any
-    contributor anywhere in this function.
+    coordinate (never the target's raw operands). CALCULATION and
+    BOUNDED_REVIEW are each captured exactly once. LOCALE_CATALOGUE and
+    FIELD_MANIFEST are each captured twice -- once inside
+    ``capture_modelo_workspace_locale_summary``/
+    ``resolve_graded_snapshot_schema_identity`` to resolve their content, and
+    once more here to fold their stamp/epoch into the baseline -- the exact
+    same inherited shape ``resolve_static_inspection_result`` already has;
+    both reads observe the same immutable content, so this cannot desync the
+    baseline, but it is not a single read and is not claimed as one. The
+    baseline is pinned from the stamps/epochs those captures hold -- no
+    contributor's CONTENT is read a second time from a different capture.
 
     Refuses ``CALCULATION_UNAVAILABLE`` immediately after the WORK capture,
     BEFORE the REGISTRY grade admission, when the target's work unit carries
@@ -1852,7 +1870,7 @@ def graded_snapshot_materialization_facet(
     for (casilla_id, row_index), value in calculation_revision.row_casilla_values.items():
         provenance = calculation_revision.row_casilla_provenance.get((casilla_id, row_index))
         if provenance is None:
-            raise ValueError(
+            raise ModeloWorkspaceMaterializationProvenanceMissingError(
                 f"calculation revision row casilla value {(casilla_id, row_index)!r} has no "
                 "row_casilla_provenance entry naming its source binding"
             )

@@ -83,7 +83,8 @@ class _ModelStoreLoopbackHandler(SilentLoopbackHandler):
     @override
     def do_DELETE(self) -> None:
         raw = read_text_body(self)
-        payload: dict[str, object] = json.loads(raw) if raw else {}
+        parsed = json.loads(raw) if raw else {}
+        payload: dict[str, object] = parsed if isinstance(parsed, dict) else {}
         self.events.put({"method": "DELETE", "path": self.path, "body": payload})
         if self.delete_status is not HTTPStatus.OK:
             write_json_response(self, {"error": "refused"}, status=self.delete_status)

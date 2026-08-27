@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from io import StringIO
 from pathlib import Path
 from typing import Any
@@ -26,7 +27,7 @@ _PROFILE_ID = "28282828-2828-4282-8282-282828282828"
 
 
 @pytest.fixture
-def isolated_profile(tmp_path: Path) -> TestRuntimeProfile:
+def isolated_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         yield profile
 

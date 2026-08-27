@@ -1716,6 +1716,10 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     assert isinstance(result, ModeloWorkspaceRefusedResultV1)
     assert result.refusal.kind == "domain"
     assert result.refusal.code is ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE
+    # ADR fixed point, refusal arm: a refused result carries no projection at
+    # all -- structurally, not merely by omission -- so no review, stale or
+    # otherwise, can ever leak through this outcome.
+    assert not hasattr(result, "projection")
 
 
 def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_real_calculation(
@@ -1812,6 +1816,27 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     assert projection.schema_facet.records  # a real, non-empty graded schema facet
     assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
 
+    # ADR fixed point: BOUNDED_REVIEW is a pass-through, never a second,
+    # independently maintained review join. The projection's work_review MUST
+    # equal, field for field, the exact record the sole canonical producer
+    # (build_modelo_work_review) assembles for the SAME coordinate and the
+    # SAME repositories -- not a spot-checked subset of fields, since a
+    # future edit that reinterprets findings ordering, blockers, origin or
+    # evidence references would red nothing under a subset comparison.
+    from ..work_review import build_modelo_work_review
+
+    canonical_review = build_modelo_work_review(
+        bucket_id,
+        modelo,
+        filing_year,
+        period,
+        authority=authority,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+    )
+    assert projection.work_review.review == canonical_review
+
     # Round-trip through JSON must reproduce the identical result.
     reloaded = ModeloWorkspaceGradedSnapshotResultV1.model_validate_json(result.model_dump_json())
     assert reloaded == result
@@ -1882,6 +1907,10 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     assert isinstance(result, ModeloWorkspaceRefusedResultV1)
     assert result.refusal.kind == "domain"
     assert result.refusal.code is ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE
+    # ADR fixed point, refusal arm: a refused result carries no projection at
+    # all -- structurally, not merely by omission -- so no review, stale or
+    # otherwise, can ever leak through this outcome.
+    assert not hasattr(result, "projection")
 
 
 def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation_error(
@@ -2091,7 +2120,7 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
         if "loaded work-unit catalogue" in message or "saved work-unit catalogue" in message
     ]
     assert catalogue_records  # the assembly touches the work-unit catalogue at all
-    assert "loaded work-unit catalogue" in catalogue_records[0]
+    assert all("loaded work-unit catalogue" in message for message in catalogue_records)
 
 
 def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_change(

@@ -567,6 +567,17 @@ def resolve_invoice_family_row_values(
     bindings on the same row. The counterpart family adds ``binding.source`` to
     the cohort key (``cohort_by_source = True``) so a different counterpart
     source kind does not share rows; the invoice family does not.
+
+    M347's ``contraparte_clave`` grouping is the one exception to
+    ``cohort_by_source``, regardless of the flag's value: the diseño de
+    registro's Tipo-2 declarado record is ONE shared physical sequence for
+    every clave (grounded in the tui-architecture modelo 347 contraparte
+    binding inventory reference), so a purchase-sourced (payable_invoice)
+    clave-A row and a sale-sourced (collectible_invoice) clave-B row for
+    different counterparties must share one row-index sequence rather than
+    each restarting at 1 and colliding in the same physical record slot.
+    M349's own two groupings are unaffected -- this reads ``grouping``, not
+    the ``cohort_by_source`` flag every OTHER family still controls.
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
@@ -580,7 +591,8 @@ def resolve_invoice_family_row_values(
         if selector.fact != "row_field":
             continue
         assert selector.grouping is not None  # guarded by validator
-        cohort_source = binding.source if cohort_by_source else None
+        shares_one_sequence_across_sources = selector.grouping == "contraparte_clave"
+        cohort_source = binding.source if cohort_by_source and not shares_one_sequence_across_sources else None
         cohort_key = (
             cohort_source,
             selector.grouping,
@@ -668,6 +680,21 @@ def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: DataBindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
+    if dict(binding.selector).get("grouping") == "contraparte_clave":
+        # M347's contraparte_clave family reads BOTH invoice directions
+        # regardless of which one binding.source names, mirroring
+        # _resolve_m347_declarante_summary_values's union of collectible and
+        # payable observations for the scalar declarante-summary bindings --
+        # the same union, now applied to the row-producer family so a
+        # purchase (clave A) and a sale (clave B) share one row sequence in
+        # the single Tipo-2 declarado record stream (grounded in the
+        # tui-architecture modelo 347 contraparte binding inventory
+        # reference).
+        return tuple(
+            observation
+            for observation in observations
+            if observation.source_kind in (BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE)
+        )
     return tuple(observation for observation in observations if observation.source_kind == binding.source)
 
 

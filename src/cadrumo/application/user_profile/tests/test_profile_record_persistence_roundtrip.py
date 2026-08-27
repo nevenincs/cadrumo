@@ -219,7 +219,10 @@ def test_schema_identity_fields_are_pinned_not_merely_defaulted() -> None:
     class is therefore not catchable by callers of this boundary, so the
     message is what the assertion has to bind to.
     """
-    canonical_version: int = UserProfileRecord.model_fields["schema_version"].default_factory()  # type: ignore[assignment,misc]
+    schema_version_default_factory = UserProfileRecord.model_fields["schema_version"].default_factory
+    assert schema_version_default_factory is not None
+    canonical_version = schema_version_default_factory()
+    assert isinstance(canonical_version, int)
     cases: tuple[tuple[dict[str, object], str], ...] = (
         ({"schema_id": "cadrumo.user_profile.other"}, "is not the canonical profile schema"),
         ({"schema_version": canonical_version + 1}, "is not the canonical profile schema version"),
