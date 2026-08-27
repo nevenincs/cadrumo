@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f8c0d53b775baf5107ff0f7c236d62fdc1361bd61ce54f8e185e335c807c03c'
+body_hash: 'sha256:7847138bb44100b26adcab2558ab474d7957ca88e83c3b74367a16b730be6c4f'
 related: []
 ---
 
@@ -492,3 +492,67 @@ provisions the code half-implements, not for values that look stale.
   sentence it sits in, found three of the four defects.
 - When a value is cleared, quote the provision that clears it. A clearance
   without the text is the same unverified assertion the hunt exists to find.
+
+## Citation grounding: the corpus carried pointers, not evidence
+
+Closed in Step P05.S22. All eighty-three category citations set `quote` to a dotted
+locale key, no `categories.registry.` key exists in any of the four catalogues, and
+the loader resolved each through the translation fallback to the literal word "Quote".
+The check that should have caught it asserted the translatable was non-empty AFTER
+that resolution, so it inspected "Quote", found it non-empty, and passed eighty-three
+times. The maintenance tooling documented the opposite intent the whole time: citation
+quotes are "verbatim AEAT excerpts and are authored as Spanish text in the registry
+TOML, never translated".
+
+Forty-five statutory citations now carry verbatim Spanish transcribed from the bundled
+consolidated corpus, covering LIRPF arts. 28, 29 and 30 and RIRPF arts. 9 and 22 across
+thirteen distinct excerpts. Each is read back through `legal_reference_quotes_corpus`,
+the same containment mechanism the IVA catalogue adopted for the identical defect, so
+the invariant is containment rather than non-emptiness -- what a paraphrase fails and a
+length check cannot.
+
+### CONFIRMED -- the seguro citation pointed at the wrong letter of its own rule
+
+`seguros_salud_autonomo` cited LIRPF "art. 30.2.5.c regla 1.a". Letter c of that rule
+is *gastos de manutencion del propio contribuyente*; regla 1.a is *aportaciones a
+mutualidades de prevision social*. The premium deduction is letter a:
+
+> a) Las primas de seguro de enfermedad satisfechas por el contribuyente en la parte
+> correspondiente a su propia cobertura y a la de su conyuge e hijos menores de
+> veinticinco anos que convivan con el.
+
+Direction of error: none reached the taxpayer -- the cap amounts were read from the
+registry, not from the locator, so no figure was wrong. The loss was auditability. An
+operator following the citation landed on a rule about restaurant meals, and the
+locale key is precisely why it survived: a citation that renders as "Quote" cannot be
+read against the article it names, so the two are never compared.
+
+### The state of the absent evidence is now declared, not assumed
+
+Forty-one citations name AEAT *Manual practico* editions and portal help pages. None
+is in the bundled corpus, so no verbatim excerpt can be transcribed from anything this
+repository holds. They carry `source_not_bundled` with a stated reason rather than
+invented text, and the model refuses a quotation parked in that state -- the
+containment gate skips it by design, so parked text would read as evidence to anyone
+printing it while never being checked against anything.
+
+`SOURCE_NOT_BUNDLED` is deliberately a third state rather than a reuse of the IVA
+catalogue's `UNRESOLVED`. Unresolved asserts the provision was read and found not to
+support the rule; these were not read at all. Collapsing them would assert a reading
+nobody performed. The shared enum was relocated to `core.citation_grounding` in the
+same change, since a symbol gaining a second domain gets a neutral canonical home
+rather than an alias.
+
+### Two of my own earlier defects, found by this pass
+
+The mutualidad rule's `notes` key sat AFTER its cap-schedule array-of-tables, so TOML
+bound it to the final schedule row and the rule itself declared none. The locale
+scanner stringified that absence into the literal key `"None"` -- unauthorable in any
+catalogue, and so a permanently red parity gate with no fix available inside the
+locale tooling. Introduced by the dated cap-schedule work earlier in this campaign.
+The lesson generalises past this file: in TOML an array-of-tables header ENDS the
+parent table, so a scalar written after one silently changes owner, and no validator
+sees a missing optional field.
+
+The two statutory-cap variant labels added with the seguro fix were also never authored
+in the four catalogues. Both are closed, and the `"None"` shape is now gated.

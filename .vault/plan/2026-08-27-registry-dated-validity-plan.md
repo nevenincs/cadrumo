@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:186d00abfcfaa1dd8f25b5c14d650811b0f26bdee22e93468917127156147266'
+body_hash: 'sha256:e9fd09f6cb37582ea86f29bcf29616fb99ed9e14ea7a10d58caed2ab85e8771d'
 ---
 
 <!-- RETIRED: S01 -->
@@ -64,6 +64,7 @@ Turn the hunt's findings into product behaviour. Each fix reuses the mechanism t
 - [x] `P05.S19` - Count the tier c) rehabilitation window in calendar years rather than in days, relocating the leap-clamping year shift out of the retention domain into a neutrally named core primitive both consumers read, and retiring the days-declared registry parameter across every revision that carried it so no declaration describes a unit the code no longer uses; `src/cadrumo/core/calendar_shift.py and src/cadrumo/domain/fincas/ and src/cadrumo/domain/retention/ and src/cadrumo/_data/registry/aeat/modelos/100/revisions/`.
 - [x] `P05.S20` - Derive the Art. 30.2.5.a insured population and its two limbs from the family profile, keeping membership and limb as separate questions and refusing the wider Art. 58.1 set that would admit a non-cohabiting dependent child and an over-25 child with discapacidad, and expose it beside the one canonical reconstruction of the family record from stored facts; `src/cadrumo/domain/contribuyente/ and src/cadrumo/application/modelo/profile_binding.py`.
 - [x] `P05.S21` - Wire the LIRPF art. 30.2.5.a insured-person counts into the shipped aggregation so both cap limbs reach production; `src/cadrumo/application/aggregation/tests/test_seguro_enfermedad_cap_reaches_production.py`.
+- [x] `P05.S22` - Ground every category citation on inline corpus text with a declared verified, refused or not-bundled state; `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`.
 
 ## Parallelization
 
