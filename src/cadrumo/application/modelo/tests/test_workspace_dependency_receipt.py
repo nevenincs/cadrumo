@@ -151,6 +151,44 @@ class ModeloWorkspaceC2ProducerStampSummaryV1(BaseModel):
     contract_digest: Annotated[str, Field(min_length=1, max_length=128)]
 
 
+class ModeloWorkspaceC2EpochTupleV1(BaseModel):
+    """The captured epoch tuple/digest, with its own coverage stated as DATA.
+
+    A downstream Step consuming this receipt must be able to tell
+    "coordinate-agnostic by design" from "six surfaces missing" by reading
+    THIS record alone -- never by cross-referencing the exec record that
+    minted it, which does not travel with the artifact. The C2 gate
+    authorizes the CAPABILITY, not one target's read, so WORK, REGISTRY,
+    CALCULATION, and BOUNDED_REVIEW are excluded by declared DESIGN
+    (each requires a work-unit/modelo/period or registry-snapshot
+    coordinate no capability-level gate can supply without fabricating
+    one), not by omission.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    digest: Annotated[str, Field(min_length=1, max_length=128)]
+    covered_surfaces: Annotated[tuple[str, ...], Field(min_length=1)]
+    excluded_surfaces: Annotated[tuple[str, ...], Field(min_length=1)]
+    exclusion_reason: Annotated[str, Field(min_length=1, max_length=512)]
+
+    @model_validator(mode="after")
+    def _require_disjoint_coverage(self) -> ModeloWorkspaceC2EpochTupleV1:
+        if set(self.covered_surfaces) & set(self.excluded_surfaces):
+            raise ValueError("a surface cannot be both covered and excluded")
+        return self
+
+
+class ModeloWorkspaceC2ReadDestinationV1(BaseModel):
+    """One C2 read route, at the level real today -- a function, not a fabricated screen."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    qualified_name: Annotated[str, Field(min_length=1, max_length=256)]
+    route_level: Literal["function"] = "function"
+    route_level_rationale: Annotated[str, Field(min_length=1, max_length=512)]
+
+
 class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     """The C2 complex-read dependency receipt named by the tui-registry-api-gate ADR.
 
@@ -166,10 +204,10 @@ class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     predecessors: ModeloWorkspaceC2PredecessorTupleV1
     native_owner_surfaces: Annotated[tuple[str, ...], Field(min_length=1)]
     producer_stamps: Annotated[tuple[ModeloWorkspaceC2ProducerStampSummaryV1, ...], Field(min_length=1)]
-    epoch_schema_digest: Annotated[str, Field(min_length=1, max_length=128)]
+    epoch_tuple: ModeloWorkspaceC2EpochTupleV1
     workspace_schema_fingerprint: Annotated[str, Field(min_length=1, max_length=128)]
     field_manifest_digest: Annotated[str, Field(min_length=1, max_length=128)]
-    read_destinations: Annotated[tuple[str, ...], Field(min_length=1)]
+    read_destinations: Annotated[tuple[ModeloWorkspaceC2ReadDestinationV1, ...], Field(min_length=1)]
     clean_commit_proof: ModeloWorkspaceC2ProofV1
     adr_status_proof: ModeloWorkspaceC2ProofV1
     interface_adr_status_proof: ModeloWorkspaceC2ProofV1
@@ -189,6 +227,11 @@ class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
         stamped_kinds = {stamp.contributor_kind for stamp in self.producer_stamps}
         if stamped_kinds != set(self.native_owner_surfaces):
             raise ValueError("producer_stamps must name exactly the declared native_owner_surfaces, no more, no fewer")
+        epoch_coverage = set(self.epoch_tuple.covered_surfaces) | set(self.epoch_tuple.excluded_surfaces)
+        if epoch_coverage != set(self.native_owner_surfaces):
+            raise ValueError(
+                "epoch_tuple's covered+excluded surfaces must partition exactly the declared native_owner_surfaces"
+            )
         return self
 
 
@@ -429,28 +472,57 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
             key=lambda stamp: stamp.contributor_kind,
         )
     )
-    epoch_schema_digest = workspace_producers.modelo_workspace_projection_schema_fingerprint(
-        workspace_producers.ModeloWorkspaceEpochV1
+    # The captured epoch tuple/digest is a CAPABILITY-scope fact, not a
+    # per-target read: it covers exactly the native surfaces whose epoch is
+    # meaningful WITHOUT naming a work-unit/modelo/period/snapshot
+    # coordinate (LOCALE_CATALOGUE, FIELD_MANIFEST, READINESS, CLOSURE).
+    # WORK, REGISTRY, CALCULATION, and BOUNDED_REVIEW are excluded by
+    # declared DESIGN, stated here as data rather than only in the exec
+    # record that minted this receipt: each requires a coordinate this
+    # capability-level gate has no reason to name, so binding the tuple to
+    # one arbitrarily chosen target would make the receipt attest to a
+    # coordinate nobody asked about. A reader of this receipt alone -- not
+    # the exec record beside it -- must be able to tell "coordinate-agnostic
+    # by design" from "four surfaces missing".
+    epoch_tuple = ModeloWorkspaceC2EpochTupleV1(
+        digest=workspace_producers.modelo_workspace_projection_schema_fingerprint(
+            workspace_producers.ModeloWorkspaceEpochV1
+        ),
+        covered_surfaces=("locale_catalogue", "field_manifest", "readiness", "closure"),
+        excluded_surfaces=("work", "registry", "calculation", "bounded_review"),
+        exclusion_reason=(
+            "WORK, REGISTRY, CALCULATION, and BOUNDED_REVIEW each require a "
+            "work-unit/modelo/period or registry-snapshot coordinate; the C2 "
+            "gate authorizes the CAPABILITY, not one target's read, so it "
+            "names no coordinate for these four rather than fabricate one"
+        ),
     )
     workspace_schema_fingerprint = workspace_producers.modelo_workspace_projection_schema_fingerprint(
         workspace_models.ModeloWorkspaceProjectionV1
     )
-    # The two entry points ARE the C2 read destinations: no frontend/interface
-    # consumer exists in the tracked tree yet (S129's own census), so the
+    # The two entry points ARE the C2 read destinations, at the function
+    # level -- the level real today. No frontend/interface consumer exists
+    # in the tracked tree yet (S129's own census, not an assumption), so the
     # only real, currently-checkable "route opened" is the application-layer
     # function this gate authorizes a caller to invoke, not a UI screen that
-    # does not exist. Naming anything more specific would fabricate a
-    # destination nothing in the tree can corroborate.
+    # does not exist. A later Step adding a frontend route EXTENDS this list
+    # with a screen-level entry; it does not replace these two.
     read_destinations = (
-        "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
-        "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result",
+        ModeloWorkspaceC2ReadDestinationV1(
+            qualified_name="cadrumo.application.modelo.workspace.resolve_static_inspection_result",
+            route_level_rationale="no frontend/interface consumer exists yet (S129 census); the function IS the route",
+        ),
+        ModeloWorkspaceC2ReadDestinationV1(
+            qualified_name="cadrumo.application.modelo.workspace.resolve_graded_snapshot_result",
+            route_level_rationale="no frontend/interface consumer exists yet (S129 census); the function IS the route",
+        ),
     )
 
     return ModeloWorkspaceC2DependencyReceiptV1(
         current_head_commit=_current_head_commit(),
         native_owner_surfaces=native_owner_surfaces,
         producer_stamps=producer_stamps,
-        epoch_schema_digest=epoch_schema_digest,
+        epoch_tuple=epoch_tuple,
         workspace_schema_fingerprint=workspace_schema_fingerprint,
         field_manifest_digest=manifest.manifest_digest,
         read_destinations=read_destinations,
@@ -530,9 +602,26 @@ def test_read_destinations_name_real_importable_entry_points() -> None:
 
     receipt = validate_modelo_workspace_c2_dependency_receipt()
     for destination in receipt.read_destinations:
-        module_path, _, function_name = destination.rpartition(".")
+        assert destination.route_level == "function"
+        module_path, _, function_name = destination.qualified_name.rpartition(".")
         module = importlib.import_module(module_path)
-        assert hasattr(module, function_name), destination
+        assert hasattr(module, function_name), destination.qualified_name
+
+
+def test_epoch_tuple_states_its_own_coverage_and_exclusion_as_data() -> None:
+    """S140: a reader of the receipt alone must be able to tell design from omission.
+
+    The covered/excluded partition must exactly account for every declared
+    native owner surface -- proven here as a property, never a hardcoded
+    4-and-4 split that a ninth surface could silently break.
+    """
+    receipt = validate_modelo_workspace_c2_dependency_receipt()
+    covered = set(receipt.epoch_tuple.covered_surfaces)
+    excluded = set(receipt.epoch_tuple.excluded_surfaces)
+    assert not covered & excluded
+    assert covered | excluded == set(receipt.native_owner_surfaces)
+    assert {"work", "registry", "calculation", "bounded_review"} == excluded
+    assert receipt.epoch_tuple.exclusion_reason
 
 
 def test_clean_commit_proof_refuses_when_a_dependency_path_is_dirty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
