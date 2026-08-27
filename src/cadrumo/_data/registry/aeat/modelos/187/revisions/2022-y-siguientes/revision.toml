@@ -1,7 +1,4 @@
 [revisions."2022-y-siguientes"]
-# Applicability grade: Article 2 has independent withholding and RGAT Article 42
-# filer limbs; an ordinary participant is not itself made a filer by holding IIC
-# interests. The current single payer-fact selector only decides the former limb.
 authority_grade = "applicability"
 valid_from = 2022-01-01
 period_selector = { year_from = 2022, periods = ["0A"] }

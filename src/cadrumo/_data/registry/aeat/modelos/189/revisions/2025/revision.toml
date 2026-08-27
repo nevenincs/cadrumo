@@ -1,6 +1,4 @@
 [revisions."2025"]
-# Applicability grade: the annual declaration of valores, seguros y rentas is filed by
-# financial institutions holding the instruments, never by their owner.
 authority_grade = "applicability"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }

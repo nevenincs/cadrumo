@@ -1,6 +1,4 @@
 [revisions."2023-y-siguientes"]
-# Applicability grade: rentas from life and disability insurance are declared by the
-# insurer, never by the beneficiary.
 authority_grade = "applicability"
 valid_from = 2023-01-01
 period_selector = { year_from = 2023, periods = ["0A"] }

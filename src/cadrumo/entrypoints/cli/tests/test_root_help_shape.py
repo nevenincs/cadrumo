@@ -564,7 +564,17 @@ class TestBareInvocationWithActiveProfile:
         assert "aeat app ledger import" in missing.output
 
         assert active.exit_code == 0, active.output
-        assert "Active profile: `operator`." in active.output
+        # Rendered from the key the landing itself uses, not the sentence it
+        # produced when this was written: the message is localised, and it has
+        # since been reworded, which a prose pin reads as a broken landing.
+        assert (
+            tr(
+                "cli.operator_surface.landing.active_profile_message",
+                locale=OutputLanguage.EN,
+                profile="operator",
+            )
+            in active.output
+        )
         assert CLI_PROFILE_ID_PLACEHOLDER not in active.output
         assert overview.exit_code == 0, overview.output
         assert active.output != overview.output

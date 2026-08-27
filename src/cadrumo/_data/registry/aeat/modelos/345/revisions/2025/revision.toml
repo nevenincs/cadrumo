@@ -1,6 +1,4 @@
 [revisions."2025"]
-# Applicability grade: the pension-plan declaration is filed by the managing entity,
-# never by the participant claiming the reduction.
 authority_grade = "applicability"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
