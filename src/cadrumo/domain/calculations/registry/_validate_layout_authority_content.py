@@ -70,8 +70,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from ....core.external_constants import UTF_8_ENCODING
-from ....core.resources import resolve_companion_binary
+from ._source_file_text import read_source_file_text
 from .schema_references import SourceReference
 
 #: The norm-text tree whose files are prose an author can under-transcribe. A
@@ -91,21 +90,6 @@ _LAYOUT_VOCABULARY: Final = re.compile(
     r"dise\w*\s+de\s+registros?|(?<!dis)posiciones\b|tipo\s+de\s+registro",
     re.IGNORECASE,
 )
-
-
-def _read_source_text(source_root: Path, source: SourceReference) -> str | None:
-    """Return the bundled file's raw text, or None when it cannot be read here."""
-    candidates = (
-        source_root / source.corpus_path,
-        source_root / "src" / "cadrumo" / "_data" / source.corpus_path,
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate.read_text(encoding=UTF_8_ENCODING, errors="replace")
-    companion = resolve_companion_binary(*source.corpus_path.split("/"))
-    if companion is not None and companion.is_file():
-        return companion.read_text(encoding=UTF_8_ENCODING, errors="replace")
-    return None
 
 
 def _carries_layout_content(raw: str) -> bool:
@@ -147,7 +131,7 @@ def validate_layout_authority_content(
         corpus_path = source.corpus_path
         if not corpus_path.startswith(_NORMATIVES_HTML_PREFIX) or not corpus_path.endswith(".html"):
             continue
-        raw = _read_source_text(source_root, source)
+        raw = read_source_file_text(source_root, source)
         if raw is None or _carries_layout_content(raw):
             continue
         failures.append(
