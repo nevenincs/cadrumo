@@ -5,16 +5,11 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bdbfe0a7139e41db86426d05efd4360cce85b7c859820876e78496925b6ae6a'
+body_hash: 'sha256:a6adb49c04f5d5f734bc5575e010f6577f19b03d8136a6819aac92f8400a2148'
 step_id: 'S299'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Widen Modelo184MemberRow's identity to (nif, clave, subclave) per the accepted row-shape ADR, add its clave-conditional fields, extend the S288 natural-key tuple for the miembro row kind to match, extend AtribucionMemberSourceResolver to read S297's new profile facts into per-row bindings mirroring the existing nif/name/share/base wiring, add the registry bindings and repoint the corresponding socio export fields from kind='casilla' to kind='binding', and extend _ROW_IDENTITY_FIELDS's Modelo184MemberRow entry to (nif, clave, subclave) in the same change so S298's two-source union does not collide two of one member's rows declared under different claves. Only once every money-bearing field in this scope has a real per-row source, declare the record repeat = 'binding_rows'. Excludes clave-A reduccion, provisiones-gastos and clave-E exactly as S297 excludes them. Prove a real multi-member, multi-clave attribution emits one occurrence per (member, clave, subclave) with the right values in every field this scope covers, not merely the right count, and prove two rows for one member under different claves survive S298's union as distinct rows rather than colliding
 
