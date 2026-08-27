@@ -7,11 +7,11 @@ amounts, applies :data:`~cadrumo.core.external_constants.DT12_RESCATE_REDUCCION_
 rounds with :func:`cadrumo.core.money.round_to_cents`, and raises
 :class:`PensionReduccionError` for invalid preconditions.
 
-DT 12ª apartado 4 (added by Ley 26/2014, ``BOE-A-2014-12327``) restricts the whole
+DT 12ª apartado 3 (added by Ley 26/2014, ``BOE-A-2014-12327``) restricts the whole
 transitional régimen — and therefore the 40% reducción — to prestaciones percibidas
 within a time window measured from the contingencia year.
 :func:`dt12_regime_window_eligibility` is the pure predicate implementing the three
-verbatim apartado-4 branches; it is consumed by the calculate-shortcut path to
+verbatim apartado-3 branches; it is consumed by the calculate-shortcut path to
 fact-gate the injection (withhold the reducción when the declared years prove the
 window closed), never by forking the core compute.
 """
@@ -26,7 +26,7 @@ from ...core.external_constants import DT12_RESCATE_REDUCCION_RATE
 from ...core.money import round_to_cents
 from .errors import PensionReduccionError
 
-# DT 12ª apartado 4 boundary years (LIRPF, added by Ley 26/2014 art. 1.86).
+# DT 12ª apartado 3 boundary years (LIRPF, added by Ley 26/2014 art. 1.85).
 _DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR = 2011
 _DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR = 2014
 _DT12_GENERAL_WINDOW_FOLLOWING_YEARS = 2  # "o en los dos ejercicios siguientes"
@@ -84,7 +84,7 @@ def compute_dt12_reduccion_plan_pensiones(
 
 
 class Dt12WindowBranch(StrEnum):
-    """Which LIRPF DT 12ª apartado-4 branch governs a rescate's eligibility window.
+    """Which LIRPF DT 12ª apartado-3 branch governs a rescate's eligibility window.
 
     Attributes:
         GENERAL: Contingencia in 2015 or later — the general rule: eligible in
@@ -102,7 +102,7 @@ class Dt12WindowBranch(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Dt12WindowEligibility:
-    """Typed verdict of the LIRPF DT 12ª apartado-4 time-window predicate.
+    """Typed verdict of the LIRPF DT 12ª apartado-3 time-window predicate.
 
     Attributes:
         contingencia_year: The year the contingencia (retirement, disability,
@@ -110,7 +110,7 @@ class Dt12WindowEligibility:
         rescate_year: The year the prestación is percibida (normally the filing
             year).
         branch: The :class:`Dt12WindowBranch` the contingencia year selects.
-        eligible: Whether the rescate falls inside the apartado-4 window and may
+        eligible: Whether the rescate falls inside the apartado-3 window and may
             therefore apply the 40% reducción.
         eligible_through_year: The last ejercicio in which a rescate for this
             contingencia year may still apply the régimen.
@@ -128,9 +128,9 @@ def dt12_regime_window_eligibility(
     contingencia_year: int,
     rescate_year: int,
 ) -> Dt12WindowEligibility:
-    """Evaluate the LIRPF DT 12ª apartado-4 time-window eligibility (pure predicate).
+    """Evaluate the LIRPF DT 12ª apartado-3 time-window eligibility (pure predicate).
 
-    Apartado 4 (added by Ley 26/2014 art. 1.86, ``BOE-A-2014-12327``) restricts
+    Apartado 4 (added by Ley 26/2014 art. 1.85, ``BOE-A-2014-12327``) restricts
     the transitional régimen — and therefore the 40% reducción — to prestaciones
     percibidas within a window measured from the contingencia year:
 

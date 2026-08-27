@@ -1,9 +1,9 @@
-"""LIRPF DT 12ª apartado-4 time-window eligibility predicate tests.
+"""LIRPF DT 12ª apartado-3 time-window eligibility predicate tests.
 
 The window rule is certain date arithmetic over two declared years, grounded in
-the bundled consolidated LIRPF (``ley-35-2006.html#dtduodecima`` apartado 4,
+the bundled consolidated LIRPF (``ley-35-2006.html#dtduodecima`` apartado 3,
 added by Ley 26/2014, ``BOE-A-2014-12327``). Expected verdicts are derived from
-the verbatim apartado-4 branches, not from the predicate's own output, per the
+the verbatim apartado-3 branches, not from the predicate's own output, per the
 aeat-quality-gates rule:
 
 - Contingencia in 2015 or later: eligible in the ejercicio the contingencia
