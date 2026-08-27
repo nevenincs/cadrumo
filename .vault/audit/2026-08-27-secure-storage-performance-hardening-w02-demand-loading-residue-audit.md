@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:5857c6130e016b1f56a7dc182701de18e5141b0c67877fbccdb46d134e1ba3db'
+body_hash: 'sha256:9efa014843415ff0fa40ffb21fb533fc19ab237dec3678cfc51a580e165c19dc'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -181,3 +181,46 @@ what it does.
   coordination rather than content and are deliberately not unlinked (deleting
   a lock races the next acquirer), so this is recorded as expected rather than
   as a leak -- but it is the reason the predicate exempts `*.lock` at all.
+
+- `W04.P09.S36` asks for static AND executed import-graph checks. The EXECUTED
+  half exists and is maintained (`src/cadrumo/tests/test_deferred_cross_layer_imports.py`);
+  this campaign declared its one new deferral there and deleted the row its
+  sandbox-notice change retired. The STATIC half -- eager cross-layer edges and
+  cycles -- is `.importlinter`, and it is DEAD: `uv run --no-sync lint-imports`
+  aborts with "Modules have shared descendants." and never evaluates any of its
+  11 contracts. Re-verified directly at HEAD here. A peer already owns this in
+  `2026-08-27-tui-architecture-import-linter-suite-aborts-audit`, so it is not
+  duplicated, but S36 CANNOT be closed on the executed half alone: half the
+  Step's guarantee is currently unenforced, and closing it would record a
+  protection the tree does not have.
+- The deferred-edge inventory has drifted independently of this campaign: 4
+  undeclared edges (`filing/_runtime_repository`, two more in
+  `ledger/actions_common`, `modelo/_taxation_comparison`) and 25 stale rows
+  (`bucket_maintenance/_service`, `auth/sessions`, `live/*`, `workflow/_adapters`,
+  and several `core/resources/_repos` loaders that no longer defer). Adding the
+  undeclared ones as UNADJUDICATED without reading them is exactly the silent
+  absorption the gate exists to catch, so they are left for their owners.
+
+- **UPDATE on the dead import-linter.** Root-caused and fixed rather than left
+  as a dependency. One contract aborted the whole file:
+  `tui-feature-independence` listed its modules as `<pkg>.**`, and a `**`
+  expression expands to every descendant, so a package with a test subpackage
+  yields both `<pkg>.tests` and `<pkg>.tests.test_x` -- an ancestor and its own
+  descendant inside ONE listed expression, which an independence contract
+  refuses. Import Linter reports that during contract CONSTRUCTION and aborts
+  before evaluating anything, so a single malformed contract silenced all
+  eleven. Isolated by running each contract alone: every other one evaluates
+  normally.
+
+  The suite now analyses 5481 files and 29127 dependencies: **4 kept, 6
+  broken**. The six were invisible while it aborted -- the llm-to-persistence
+  reach, four TUI contracts, and the LAYERED contract itself (e.g.
+  `application.live.censo -> adapters.outbound.aeat.sede`). They are
+  pre-existing debt owned by other campaigns; restoring the enforcement is what
+  makes them visible.
+
+  Consequence for `W04.P09.S36`: the static half now RUNS, but it does not
+  PASS. The Step asked for checks covering eager cross-layer edges and cycles;
+  those checks exist and enforce again, while six contracts report real
+  violations outside this campaign's scope. S36 should close on "the checks
+  enforce" only alongside this record, never as "the graph is clean".
