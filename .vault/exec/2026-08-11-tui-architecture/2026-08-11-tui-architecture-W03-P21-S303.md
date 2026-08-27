@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e47b9d23baa5c8598aa419bc62a4a510cbe26c6982b38f5d08ca5abd5ae2539'
+body_hash: 'sha256:0c86d3052a75011ddf9e4e8f0a01d53eccda04fed84664bfc83afa8b03c1dcf9'
 step_id: 'S303'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -52,3 +52,23 @@ Claves C, D and E remain unbuildable within this Step -- tracked separately
 as `W03.P21.S308` (C) and `W03.P21.S309` (D+E) -- and still return `None`
 from both `m347_operation_clave` and `_m347_operation_clave`, exactly as
 before.
+
+## Provenance correction
+
+The commits cited above at scaffold time (`9aef0441b0`, `708526f45b`) are
+vault-only -- this Step's own exec record and plan-close. The CODE landed
+in two peers' unrelated commits via worktree capture, the fourth such
+capture in this campaign:
+
+- `TravelAgencyMediationType` (`core/aggregation.py`) landed in `aaef2f0e02`,
+  "feat(categories): localise the citation quote grounding surface".
+- The resolver wiring, its tests, both `0002-contraparte-clave.toml`
+  revisions and `invoice_bindings.py`'s docstring correction landed in
+  `3a7d403319`, "fix(invoices): require operator input for the usage ratio
+  and tighten the contraparte clave binding" -- bundled with an unrelated
+  peer's usage-ratio work.
+
+Content is correct at HEAD and every proof passes; per standing capture
+discipline this is not rewritten, only recorded here so the provenance is
+recoverable from this record rather than from the (misleading) commit
+messages above.
