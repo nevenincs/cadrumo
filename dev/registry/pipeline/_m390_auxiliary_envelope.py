@@ -19,7 +19,11 @@ from cadrumo.application.filing import render_envelope_prefix_field
 from cadrumo.core import AeatProductSoftwareIdentity, Modelo, Period, StandardPeriodCode, sha256_hex
 from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignAuxiliaryEnvelopeHeaderRole
+from cadrumo.domain.calculations.registry.record_design_schema import (
+    AUXILIARY_ENVELOPE_HEADER_ORDINALS,
+    AUXILIARY_ENVELOPE_HEADER_ROWS,
+    RecordDesignAuxiliaryEnvelopeHeaderRole,
+)
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.filing import FilingExportValidationError
 
@@ -292,11 +296,13 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must be contiguous")
     if fields[0].offset != 1 or fields[-1].offset + fields[-1].length - 1 != 328:
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must occupy positions 1 through 328")
-    if tuple(field.source_row for field in fields) != tuple(range(6, 19)):
+    if tuple(field.source_row for field in fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
         raise RegistryValidationError("Modelo 390 auxiliary header source rows must retain their exact anchors")
-    if tuple(field.source_cell for field in fields) != tuple(f"A{row}" for row in range(6, 19)):
+    if tuple(field.source_cell for field in fields) != tuple(
+        f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS
+    ):
         raise RegistryValidationError("Modelo 390 auxiliary header source cells must retain their exact anchors")
-    if tuple(field.ordinal for field in fields) != tuple(str(i) for i in range(1, 14)):
+    if tuple(field.ordinal for field in fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
         raise RegistryValidationError("Modelo 390 auxiliary header ordinals must retain their exact anchors")
     expected_contents = (
         'Constante "<T"',
