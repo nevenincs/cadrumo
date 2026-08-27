@@ -180,6 +180,57 @@ def _cell_size(markup: str) -> tuple[float, float]:
     return median(advances), median(gaps)
 
 
+_BLOCK_FRACTIONS: Final[dict[str, tuple[float, float, float, float]]] = {
+    # character: (left, top, right, bottom) as fractions of one cell.
+    "█": (0.0, 0.0, 1.0, 1.0),  # full block
+    "▀": (0.0, 0.0, 1.0, 0.5),  # upper half
+    "▄": (0.0, 0.5, 1.0, 1.0),  # lower half
+    "▌": (0.0, 0.0, 0.5, 1.0),  # left half
+    "▐": (0.5, 0.0, 1.0, 1.0),  # right half
+    "▁": (0.0, 0.875, 1.0, 1.0),
+    "▂": (0.0, 0.75, 1.0, 1.0),
+    "▃": (0.0, 0.625, 1.0, 1.0),
+    "▅": (0.0, 0.375, 1.0, 1.0),
+    "▆": (0.0, 0.25, 1.0, 1.0),
+    "▇": (0.0, 0.125, 1.0, 1.0),
+    "▉": (0.0, 0.0, 0.875, 1.0),
+    "▊": (0.0, 0.0, 0.75, 1.0),
+    "▋": (0.0, 0.0, 0.625, 1.0),
+    "▍": (0.0, 0.0, 0.375, 1.0),
+    "▎": (0.0, 0.0, 0.25, 1.0),
+    "▏": (0.0, 0.0, 0.125, 1.0),
+    "▕": (0.875, 0.0, 1.0, 1.0),
+    "▔": (0.0, 0.0, 1.0, 0.125),
+}
+"""Block-element characters and the portion of the cell each one fills.
+
+Drawn as rectangles rather than glyphs so adjacent cells tile with no seam.
+"""
+
+
+def _fill_block(
+    draw: ImageDraw.ImageDraw,
+    column: int,
+    row: int,
+    cell_width: int,
+    cell_height: int,
+    fraction: tuple[float, float, float, float],
+    colour: str,
+) -> None:
+    """Paint one block-element cell as exact geometry."""
+    left, top, right, bottom = fraction
+    x0, y0 = column * cell_width, row * cell_height
+    draw.rectangle(
+        (
+            x0 + round(left * cell_width),
+            y0 + round(top * cell_height),
+            x0 + round(right * cell_width) - 1,
+            y0 + round(bottom * cell_height) - 1,
+        ),
+        fill=colour,
+    )
+
+
 @dataclass(frozen=True)
 class RasterResult:
     """A written PNG, and what the pinned font could not draw into it.
@@ -243,8 +294,21 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
     if not runs:
         raise RasterError("the SVG carries no text runs")
 
-    chrome = _CHROME.search(markup)
-    background = chrome["colour"] if chrome is not None else "#000000"
+    # The page colour is the terminal's OWN background, taken as the colour
+    # covering the most cells. It is emphatically NOT the `rx`-rounded chrome
+    # rect: that is the window frame Rich draws around the screenshot, it is
+    # near-black in both appearances, and filling the canvas with it made
+    # every cell that carries no explicit background band show through as a
+    # dark bar -- which on the light appearance reads as a mystery black
+    # element that exists nowhere in the terminal.
+    coverage: dict[str, int] = {}
+    for band in bands:
+        coverage[band.colour] = coverage.get(band.colour, 0) + band.columns * band.rows
+    if coverage:
+        background = max(coverage.items(), key=lambda entry: entry[1])[0]
+    else:
+        chrome = _CHROME.search(markup)
+        background = chrome["colour"] if chrome is not None else "#000000"
 
     image = Image.new("RGB", (columns * cell_width, rows * cell_height), background)
     draw = ImageDraw.Draw(image)
@@ -265,6 +329,19 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
         for offset, character in enumerate(run.text):
             if not character.strip():
                 continue
+
+            # Block elements are drawn as geometry, never as glyphs. The font
+            # is sized so its ADVANCE fits the cell, which leaves every glyph
+            # a little smaller than the cell it occupies -- invisible for
+            # letters, and ruinous for the block characters that are supposed
+            # to tile seamlessly. Textual draws button edges and scrollbars
+            # out of these, so glyph-rendered blocks produced a brick-wall
+            # pattern along edges that are solid in a real terminal.
+            fraction = _BLOCK_FRACTIONS.get(character)
+            if fraction is not None:
+                _fill_block(draw, run.column + offset, run.row, cell_width, cell_height, fraction, run.colour)
+                continue
+
             if _is_missing(glyph, glyph_pixels, character):
                 missing.add(character)
             position = ((run.column + offset) * cell_width, run.row * cell_height + baseline_offset)

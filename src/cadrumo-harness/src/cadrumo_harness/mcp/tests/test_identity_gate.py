@@ -29,7 +29,7 @@ from .._identity_gate import (
     identity_gate_refusal,
 )
 from .._tools import build_tool_descriptors
-from .session import connected_server_and_client_session as connect
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -11,13 +11,6 @@
                 "reason": "White-box test reach: the consent-ledger test subclasses the provider adapter ABC to capture the dispatched ProviderRequest against the REAL client dispatch path rather than a double, so the consent ledger is exercised through actual adapter selection. `_ProviderAdapter` is declared private on purpose -- its docstring names it the private interface every concrete provider adapter implements, and every production implementation lives inside cadrumo.llm._providers. Deliberately NOT promoted: publishing it would advertise an extension point for out-of-package provider adapters, which is a design question for the llm package owner, not a side effect of satisfying an import gate. The normalized contract types the same test needs (ProviderRequest, ProviderCompletion) WERE promoted onto the cadrumo.llm facade, so this entry covers only the private ABC."
             },
             {
-                "importer_path": "src/cadrumo/adapters/persistence/profile/tests/test_iva_deduction_schema_migration.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.adapters.persistence.storage.sql._secure_object_crypto",
-                "imported_names": ["derive_revision_id"],
-                "reason": "White-box roundtrip over the encrypted secure-object substrate: the test must derive the same revision id the production writer derives in order to assert an on-disk row is the one it wrote. Re-implementing the derivation in the test would make the assertion tautological against the test's own arithmetic rather than against the writer. Revision derivation is internal to the crypto layer and deliberately not on the storage facade, since a caller that can mint revision ids can defeat the optimistic-concurrency guard."
-            },
-            {
                 "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
                 "occurrence": 1,
                 "target_mod": "cadrumo.entrypoints.cli._common",

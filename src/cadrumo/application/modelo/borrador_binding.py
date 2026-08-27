@@ -256,6 +256,7 @@ class Modelo100BorradorSourceResolver:
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
     ) -> None:
+        """Bind the borrador snapshot and the caller-supplied binding values."""
         self._borrador_snapshot_id = borrador_snapshot_id
         self._caller_binding_values = caller_binding_values
         self._caller_enum_binding_values = caller_enum_binding_values

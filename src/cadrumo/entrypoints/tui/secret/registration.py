@@ -140,14 +140,15 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #registration-intro { margin: $cadrumo-space-0; }
+    #registration-intro { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-space-0; }
     #registration-why {
         color: $text-muted;
         border-left: $cadrumo-rule $accent;
-        padding: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1;
-        margin: $cadrumo-space-0;
+        padding: $cadrumo-tight $cadrumo-space-0 $cadrumo-tight $cadrumo-space-1;
+        margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-space-0;
     }
-    #strength-line { margin: $cadrumo-space-0; }
+    /* Belongs to the password field above it, so it stays tight. */
+    #strength-line { margin: $cadrumo-tight $cadrumo-space-0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }

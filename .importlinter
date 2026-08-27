@@ -652,7 +652,7 @@ ignore_imports =
     cadrumo.application.live.notifications -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live.notifications -> cadrumo.adapters.persistence.**
     cadrumo.application.live.verify -> cadrumo.adapters.persistence.**
-    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo.borrador_binding -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
     # Reconciliation compares a filed declaracion and its justificante against
     # the local calculation. Both arrive as externally-authored documents an

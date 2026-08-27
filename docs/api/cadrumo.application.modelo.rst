@@ -24,7 +24,6 @@ Submodules
    cadrumo.application.modelo._bienes_inversion_advisory
    cadrumo.application.modelo._binding_readiness
    cadrumo.application.modelo._binding_resolution
-   cadrumo.application.modelo._borrador_binding
    cadrumo.application.modelo._calculate_input
    cadrumo.application.modelo._calculation_actions
    cadrumo.application.modelo._calculation_aggregation_context
@@ -114,6 +113,7 @@ Submodules
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
+   cadrumo.application.modelo.borrador_binding
    cadrumo.application.modelo.calculation
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_route

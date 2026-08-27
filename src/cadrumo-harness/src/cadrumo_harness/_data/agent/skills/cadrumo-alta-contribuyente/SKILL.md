@@ -17,7 +17,7 @@ confirm readiness. No tax value is computed here.
 
 1. Create the profile: `aeat config profile create` with the taxpayer's label and
    identity. Read the envelope; note the profile is now the active context.
-2. Confirm it: `aeat config profile show` - verify the identity (NIF/CIF/DNI/NIE/
+2. Confirm it: `aeat config profile view` - verify the identity (NIF/CIF/DNI/NIE/
    NII) and circumstances are recorded correctly.
 3. Establish read-only AEAT access if the engagement needs live reads:
    `aeat config auth configure`, then `aeat config auth status` and
@@ -27,7 +27,7 @@ confirm readiness. No tax value is computed here.
 
 ## Success assertions
 
-- `aeat config profile show` returns `status` success with the taxpayer's identity
+- `aeat config profile view` returns `status` success with the taxpayer's identity
   present.
 - `aeat app overview status` reports the profile as active.
 - No secret material appears in any narration; custody stays in the bucket.

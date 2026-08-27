@@ -37,6 +37,7 @@ Run as ``python -m dev.audit.vacuity_screen``.
 from __future__ import annotations
 
 import ast
+import subprocess
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -228,15 +229,38 @@ def module_proofs_by_corpus(parsed: ast.AST) -> list[frozenset[str]]:
     return proofs
 
 
+def _tracked_test_paths(root: Path) -> frozenset[str]:
+    """Return the repository-tracked paths under the screened trees.
+
+    ``scanned`` is the denominator of the vacuity proportion, so an untracked
+    tree inflates it silently: the screen reports a healthier ratio while
+    walking files no reviewer can act on.  An interrupted benchmark run leaves
+    a gitignored copy of the whole source tree under ``dev``, which is exactly
+    that failure.  Absence of git is raised rather than degraded to a
+    filesystem walk, because a silent fallback restores the defect.
+    """
+    listed = subprocess.run(  # noqa: S603  # fixed read-only git subcommand assembled only by this module
+        ("git", "ls-files", "-z", "--", *SCREENED_TREES),  # noqa: S607  # repository tool is fixed
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return frozenset(entry for entry in listed.split(chr(0)) if entry)
+
+
 def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
     """Return the module count screened and the flagged ``(path, function, line)``."""
     flagged: list[tuple[str, str, int]] = []
+    tracked = _tracked_test_paths(root)
     scanned = 0
     for tree in SCREENED_TREES:
         base = root / tree
         if not base.is_dir():
             raise SystemExit(f"screened tree is missing, so the result would be meaningless: {base}")
         for path in scan_directory(base, pattern="test_*.py", recursive=True, prune_directories=("__pycache__",)):
+            if path.relative_to(root).as_posix() not in tracked:
+                continue
             scanned += 1
             try:
                 parsed = ast.parse(path.read_text(encoding=_UTF_8))

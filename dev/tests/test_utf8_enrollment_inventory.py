@@ -216,7 +216,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 #   application/invoices/_source_resolver.py:145
 #       hashlib.sha256(payload.encode('utf-8')).hexdigest()
 #
-#   application/modelo/_borrador_binding.py:223
+#   application/modelo/borrador_binding.py:223
 #       hashlib.sha256(result.borrador_snapshot_id.encode('utf-8')).hexdigest()
 #
 # If the hash-allowlist criteria in ``UTF8_HASH_ALLOWLIST_TOKENS`` are ever

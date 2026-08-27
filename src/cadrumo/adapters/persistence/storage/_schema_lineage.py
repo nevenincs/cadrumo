@@ -33,16 +33,13 @@ inventory keyed on the raise could not find them; the AST gate in
 comparison instead, for exactly that reason.
 
 Namespaces version INDEPENDENTLY: most sit at schema version 1, several at 2,
-and one at 3. The upgrader registry below is therefore not empty — two
-namespaces landed a real one-hop upgrader alongside their bump. Those two are
-ahead of the current obligation rather than meeting it: while the
-compatibility regime is pre-release, each namespace's durability floor chases
-its own current version, older shapes are deleted rather than migrated, and
-the lineage gate (``tests/test_schema_lineage.py``) does not demand a chain.
-At the checkpoint flip the floors freeze and that gate starts requiring the
-one-hop upgrader for every namespace above the frozen floor, in the same
-change as the bump. An upgrader MUST re-stamp the payload's inner envelope
-version; see
+and one at 3. The upgrader registry below is EMPTY, and that is the
+pre-release posture: each namespace's durability floor chases its own current
+version, older shapes are deleted rather than migrated, and the lineage gate
+(``tests/test_schema_lineage.py``) does not demand a chain. At the checkpoint
+flip the floors freeze and that gate starts requiring the one-hop upgrader for
+every namespace above the frozen floor, in the same change as the bump. An
+upgrader MUST re-stamp the payload's inner envelope version; see
 :func:`register_secure_object_schema_upgrader` for the obligation and why
 forgetting it is silent at layer one and loud only at layer two.
 :data:`SECURE_OBJECT_DURABILITY_FLOOR` moves forward only deliberately, once
@@ -316,31 +313,6 @@ def inner_envelope_classification_is_expected(
         ``True`` when the stored classification is exactly the expected one.
     """
     return stored is expected
-
-
-# Keep durable-format upgrade ownership beside the lineage registry, rather
-# than relying on an incidental import of a profile repository.  That makes
-# every real secure-object reader see the same complete chain before it opens
-# any taxpayer data.
-from ._iva_deduction_schema import (  # noqa: E402
-    upgrade_bienes_inversion_v1_payload,
-    upgrade_transaction_catalogue_v1_payload,
-)
-from ._namespace_registry import (  # noqa: E402
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
-    TRANSACTION_CATALOGUE_NAMESPACE,
-)
-
-register_secure_object_schema_upgrader(
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-    1,
-    upgrade_bienes_inversion_v1_payload,
-)
-register_secure_object_schema_upgrader(
-    TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-    1,
-    upgrade_transaction_catalogue_v1_payload,
-)
 
 
 __all__ = [

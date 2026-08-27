@@ -597,7 +597,6 @@ msgstr ""
 "visszatéréséig kezeld a fájlt átláthatatlan adatként."
 
 #: ../../reference/import-export-and-evidence.md:156
-#, fuzzy
 msgid ""
 "This is a portability gap, not a recovery one. Backup and recovery are "
 "unaffected and run through `aeat config profile archive export` and `aeat"
@@ -606,7 +605,7 @@ msgid ""
 msgstr ""
 "Ez hordozhatósági rés, nem helyreállítási hiba. A mentés és a "
 "helyreállítás változatlanul a `aeat config profile archive export` és "
-"`aeat config profile restore` parancsokon keresztül működik, "
+"`aeat config profile archive import` parancsokon keresztül működik, "
 "amelyek a lezárt profil-kapszulán dolgoznak."
 
 #: ../../reference/import-export-and-evidence.md:160

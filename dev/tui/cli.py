@@ -23,6 +23,7 @@ import typer
 from .._paths import UTF_8
 from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
+    DEFAULT_RUN_NAME,
     FailedFrame,
     InterfaceRecord,
     Manifest,
@@ -30,6 +31,7 @@ from ._artifacts import (
     RenderedFrame,
     SkippedFrame,
     digest,
+    known_runs,
     now,
     read_manifest,
     run_directory,
@@ -45,7 +47,7 @@ app = typer.Typer(
 )
 
 THEMES = ("dark", "light")
-DEFAULT_RUN = "latest"
+DEFAULT_RUN = DEFAULT_RUN_NAME
 
 
 def _echo(text: str) -> None:
@@ -70,6 +72,34 @@ def viewports_command() -> None:
     for viewport in _viewports.VIEWPORTS.values():
         default = " (default)" if viewport.name in _viewports.DEFAULT_VIEWPORTS else ""
         _echo(f"{viewport.name:<10} {viewport.label:>8}  {viewport.orientation:<9} {viewport.summary}{default}")
+
+
+@app.command("runs")
+def runs_command() -> None:
+    """List every review run on disk, newest first.
+
+    A partial run is marked. Nine directories once sat side by side with no way
+    to tell a forty-frame review from a three-frame experiment, which is what
+    made the artefact tree untrustworthy to review from.
+    """
+    entries = known_runs()
+    if not entries:
+        _echo(f"no runs yet; render one with `python -m dev.tui render` -> runs/{DEFAULT_RUN_NAME}/")
+        return
+    rows = []
+    for directory in entries:
+        try:
+            manifest = read_manifest(directory)
+        except (ManifestVersionError, FileNotFoundError) as refusal:
+            rows.append((directory.name, "", f"unreadable: {refusal}"))
+            continue
+        state = "complete"
+        if manifest.failures or manifest.skipped:
+            state = f"PARTIAL ({len(manifest.failures)} failed, {len(manifest.skipped)} skipped)"
+        marker = "  <- default" if directory.name == DEFAULT_RUN_NAME else ""
+        rows.append((directory.name, manifest.generated_at, f"{len(manifest.frames):3} frames  {state}{marker}"))
+    for name, stamp, detail in sorted(rows, key=lambda row: row[1], reverse=True):
+        _echo(f"{name:<16} {stamp:<26} {detail}")
 
 
 @app.command("inventory")
@@ -230,7 +260,6 @@ def render_command(
         list[str] | None,
         typer.Option("--theme", "-t", help="Render under this appearance; repeatable."),
     ] = None,
-    run: Annotated[str, typer.Option("--run", help="Name of the run directory to write.")] = DEFAULT_RUN,
     cell_height: Annotated[
         int,
         typer.Option("--cell-height", help="Pixel height of one terminal cell; raises the output resolution."),
@@ -251,7 +280,16 @@ def render_command(
         ),
     ] = True,
 ) -> None:
-    """Render surfaces to PNG and SVG under the run directory."""
+    """Render surfaces to PNG and SVG into the canonical review directory.
+
+    There is deliberately no `--run` here. The review path is a CONTRACT, not
+    a per-invocation choice: `runs/current` is where a render lands, always,
+    so the reviewer opens one path and never has to be told which of nine
+    directories the last session happened to name. To keep a run for later
+    comparison, take a `snapshot` of it under a name; that is an explicit act
+    with an explicit name, rather than a render quietly aimed somewhere else.
+    """
+    run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
     interfaces = _inventory.scan()
     _coverage.check(interfaces, tuple(item.name for item in available))
@@ -377,6 +415,34 @@ def render_command(
     if failures:
         _echo(f"{len(failures)} failed")
         raise typer.Exit(code=1)
+
+
+@app.command("snapshot")
+def snapshot_command(
+    name: Annotated[str, typer.Argument(help="Name to keep the current review under.")],
+) -> None:
+    """Copy the canonical review aside so a later render can be diffed against it.
+
+    The only sanctioned way to create a second run directory. Rendering itself
+    always targets `runs/current`, so a named run can only ever be a
+    deliberate snapshot of a review that actually happened.
+    """
+    import shutil
+
+    if name == DEFAULT_RUN_NAME:
+        _echo(f"{name!r} is the canonical review; choose another name for a snapshot")
+        raise typer.Exit(code=1)
+
+    source = run_directory(DEFAULT_RUN_NAME)
+    if not (source / "manifest.json").is_file():
+        _echo(f"nothing to snapshot: {source} holds no run")
+        raise typer.Exit(code=1)
+
+    destination = run_directory(name)
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source, destination)
+    _echo(f"snapshot: {destination}")
 
 
 @app.command("rasterise")

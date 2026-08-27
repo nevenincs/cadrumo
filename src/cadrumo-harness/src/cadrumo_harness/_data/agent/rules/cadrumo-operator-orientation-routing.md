@@ -92,7 +92,7 @@ authority this table paraphrases, and it grows as command families are added.
 ## Custody and profile questions
 
 - "Set up or inspect the taxpayer profile" → `aeat config profile create` and
-  `aeat config profile show`.
+  `aeat config profile view`.
 - "Configure AEAT read access" → `aeat config auth`.
 
 ## Storage and disk-space questions
@@ -100,8 +100,8 @@ authority this table paraphrases, and it grows as command families are added.
 - "Where is my data, and is anything empty that should not be?" → `aeat config
   storage list` — every declared category, its resolved path, and whether it
   holds anything.
-- "What does one category actually contain?" → `aeat config storage show
-  <category>`.
+- "What does one category actually contain?" → `aeat config storage view
+  <area>`.
 - "Has the on-disk tree drifted from what it should be?" → `aeat config
   storage check` — read-only; reports, never repairs. Two of its findings
   (a missing directory, a path already occupied by the wrong kind of node)

@@ -122,7 +122,7 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.live.verify",
         "cadrumo.application.modelo._amendment_actions",
         "cadrumo.application.modelo._art109_activity_income",
-        "cadrumo.application.modelo._borrador_binding",
+        "cadrumo.application.modelo.borrador_binding",
         "cadrumo.application.modelo._calculate_input",
         "cadrumo.application.modelo._calculation_actions",
         "cadrumo.application.modelo._calculation_preparation",

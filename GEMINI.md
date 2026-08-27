@@ -605,10 +605,12 @@ Gates in this repository: `test_documented_command_conformance.py` and
 `ResultSchemaSpec` kernel after the `SCHEMA_REGISTRY` it originally walked was
 retired; it walks every spec declaring a result-schema target and refuses a
 bespoke `next` / `suggestion` / `*_advisory` field beside the envelope's one
-diagnostic channel. `test_rule_surface_conformance.py` is deliberately NOT named
-here any more: it shipped inside the cadrumo-harness client and left with it when
-that client was rehomed out of this repository, so naming it here pointed every
-reader at a file this tree does not contain. Source:
+diagnostic channel. `test_rule_surface_conformance.py`, in the harness's own
+test package, enforces the harness-citation clause above: it resolves every verb
+cited in an operator rule, persona or skill against the live manifest. The
+harness client was rehomed out of this repository and later restored, so check
+the tree before concluding a harness gate is gone -- and expect the restored
+client to lag the product surfaces it couples to. Source:
 ADRs `2026-06-10-cli-pull-file-standard-adr`,
 `2026-06-10-cli-envelope-notice-standardisation-adr`,
 `2026-06-10-ledger-interface-contract-adr`,
