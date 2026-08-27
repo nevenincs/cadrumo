@@ -85,7 +85,7 @@ class MaritimeExemptionResult(BaseModel):
         :class:`~domain.calculations.registry.CasillaObservation`
         provenance.
         """
-        return {obs.casilla_id: obs.value for obs in self.observations}
+        return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
 
 
 def resolve_maritime_exemption(

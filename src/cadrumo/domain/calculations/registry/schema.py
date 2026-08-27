@@ -1416,7 +1416,9 @@ class RegistryCatalogues(RegistryModel):
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(default_factory=dict)
+    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
+        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
+    )
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
 
 
@@ -1442,7 +1444,9 @@ class RegistrySnapshot(RegistryModel):
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(default_factory=dict)
+    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
+        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
+    )
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:

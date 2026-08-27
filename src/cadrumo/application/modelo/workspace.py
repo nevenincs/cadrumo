@@ -21,11 +21,13 @@ those once that is resolved -- do not infer the missing semantics.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import OutputLanguage, RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
 from ...domain.calculations.registry.schema import (
@@ -33,11 +35,19 @@ from ...domain.calculations.registry.schema import (
     FormulaDefinition,
     ParameterDefinition,
     RegistrySnapshot,
+    SchemaFamilyDispositionDeclaration,
 )
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import CalculationRevision, CalculationRevisionState, CalculationSourceRef, ModeloCode
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogueRepositoryProtocol,
+    CalculationRevisionState,
+    CalculationSourceRef,
+    ModeloCode,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
 from ..state_projection import ProjectionModeloReadiness
@@ -60,6 +70,7 @@ from .workspace_models import (
     ModeloWorkspaceConstraintReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCursorV1,
+    ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceFacetName,
@@ -73,6 +84,8 @@ from .workspace_models import (
     ModeloWorkspaceFormulaParameterOperandReferenceV1,
     ModeloWorkspaceFormulaReferenceV1,
     ModeloWorkspaceFormulaRelationOperandReferenceV1,
+    ModeloWorkspaceGradedSnapshotResultV1,
+    ModeloWorkspaceGradedSnapshotScopeV1,
     ModeloWorkspaceLedgerIssueV1,
     ModeloWorkspaceLedgerPeriodSubjectV1,
     ModeloWorkspaceLedgerTransactionSubjectV1,
@@ -85,12 +98,15 @@ from .workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceReadinessV1,
+    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceRefusedResultV1,
     ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceRepeatedRowMaterializationRecordV1,
     ModeloWorkspaceRepeatedRowMaterializationV1,
     ModeloWorkspaceResolvedTargetV1,
+    ModeloWorkspaceResultV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
@@ -99,6 +115,7 @@ from .workspace_models import (
     ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceSchemaRecordV1,
+    ModeloWorkspaceSnapshotScopeV1,
     ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTargetV1,
@@ -114,6 +131,8 @@ from .workspace_producers import (
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceBoundedReviewPortV1,
+    ModeloWorkspaceCalculationPortV1,
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
@@ -630,6 +649,7 @@ __all__ = [
     "graded_snapshot_casilla_schema_records",
     "graded_snapshot_contributors",
     "graded_snapshot_evidence_horizon",
+    "graded_snapshot_family_dispositions",
     "graded_snapshot_materialization_facet",
     "graded_snapshot_modelo_workspace_capabilities",
     "graded_snapshot_provenance_facet",
@@ -642,6 +662,7 @@ __all__ = [
     "relation_source_endpoints_for_casilla",
     "relation_target_endpoints_for_binding",
     "resolve_graded_snapshot_baseline",
+    "resolve_graded_snapshot_result",
     "resolve_graded_snapshot_schema_identity",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
@@ -873,11 +894,15 @@ def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorksp
 
 
 def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
-    """Return the five contributor identities GRADED_SNAPSHOT actually reads.
+    """Return the six contributor identities GRADED_SNAPSHOT actually reads.
 
     The same four STATIC_INSPECTION reads (registry, work, locale_catalogue,
-    field_manifest) plus CALCULATION -- the one contributor this admission
-    additionally materializes.
+    field_manifest) plus CALCULATION and BOUNDED_REVIEW -- the two
+    contributors this admission additionally materializes. ``work_review`` is
+    a required field on ``ModeloWorkspaceProjectionV1`` and GRADED_SNAPSHOT is
+    the ADR's one ELIGIBLE admission for the real ``ModeloWorkReview``
+    (STATIC_INSPECTION gets the fixed ``UNMEASURED`` constant instead), so
+    BOUNDED_REVIEW belongs in this denominator alongside CALCULATION.
     """
     return tuple(
         sorted(
@@ -887,6 +912,7 @@ def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1
                 MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor,
             ),
             key=lambda contributor: (contributor.owner, contributor.producer),
         )
@@ -1394,21 +1420,22 @@ def paginate_static_inspection_schema_facet(
     )
 
 
-def static_inspection_family_dispositions(
-    inspection: RegistryRevisionInspection,
+def _not_applicable_family_dispositions(
+    family_dispositions: Mapping[str, SchemaFamilyDispositionDeclaration],
 ) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
-    """Project only the family dispositions the inspection can honestly attest to.
+    """Project only the family dispositions the declarations mapping can honestly attest to.
 
-    ``inspection.family_dispositions`` carries exactly the families the
-    revision has explicitly declared NOT_APPLICABLE, each grounded with its
-    own reason/legal_refs/source_refs -- a substantive claim the registry
-    itself made. A family absent from that mapping is not reported here at
-    all: the inspection carries no data for most schema families (it strips
-    everything but casilla/binding/formula/relation/parameter/projection-endpoint/
-    workbook-parity/live-cross-reference identifiers), so silently
-    defaulting an unreported family to POPULATED or BLOCKED_PENDING_EVIDENCE
-    would assert a fact the inspection has no basis for. Reporting nothing is
-    honest; guessing is not.
+    S296 verified ``RegistryRevisionInspection.family_dispositions`` and
+    ``ModeloRevision.family_dispositions`` are the identical mapping (the
+    inspection copies it straight from the revision at construction), so
+    this one function is shared by both admissions rather than written
+    twice. It carries exactly the families the revision has explicitly
+    declared NOT_APPLICABLE, each grounded with its own
+    reason/legal_refs/source_refs -- a substantive claim the registry itself
+    made. A family absent from this mapping is not reported here at all:
+    silently defaulting an unreported family to POPULATED or
+    BLOCKED_PENDING_EVIDENCE would assert a fact this data has no basis for.
+    Reporting nothing is honest; guessing is not.
     """
     return tuple(
         sorted(
@@ -1419,11 +1446,34 @@ def static_inspection_family_dispositions(
                     legal_refs=tuple(declaration.legal_refs),
                     source_refs=tuple(declaration.source_refs),
                 )
-                for family, declaration in inspection.family_dispositions.items()
+                for family, declaration in family_dispositions.items()
             ),
             key=lambda item: item.family,
         )
     )
+
+
+def static_inspection_family_dispositions(
+    inspection: RegistryRevisionInspection,
+) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
+    """Project only the family dispositions the inspection can honestly attest to.
+
+    See :func:`_not_applicable_family_dispositions` for the shared logic;
+    the inspection carries no data for most schema families (it strips
+    everything but casilla/binding/formula/relation/parameter/projection-endpoint/
+    workbook-parity/live-cross-reference identifiers).
+    """
+    return _not_applicable_family_dispositions(inspection.family_dispositions)
+
+
+def graded_snapshot_family_dispositions(
+    snapshot: RegistrySnapshot,
+) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
+    """Project only the family dispositions the snapshot's revision has explicitly declared.
+
+    See :func:`_not_applicable_family_dispositions` for the shared logic.
+    """
+    return _not_applicable_family_dispositions(snapshot.revision.family_dispositions)
 
 
 def resolve_static_inspection_result(
@@ -1532,6 +1582,249 @@ def resolve_static_inspection_result(
         capabilities=capabilities,
     )
     return ModeloWorkspaceStaticInspectionResultV1(projection=projection)
+
+
+_GRADED_SNAPSHOT_RESPONSIBLE_OWNER = "application.modelo.workspace"
+
+
+def resolve_graded_snapshot_result(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    required_grade: RegistryAuthorityGrade,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+    output_language: OutputLanguage,
+    page_size: int = 200,
+) -> ModeloWorkspaceResultV1:
+    """Assemble the complete GRADED_SNAPSHOT result for one target, or refuse honestly.
+
+    Mirrors ``resolve_static_inspection_result``'s discipline: WORK captured
+    exactly once, REGISTRY captured exactly once from WORK's own resolved
+    coordinate (never the target's raw operands), every remaining
+    contributor (LOCALE_CATALOGUE, FIELD_MANIFEST, CALCULATION,
+    BOUNDED_REVIEW) captured exactly once each, and the baseline pinned from
+    the stamps/epochs those captures already hold -- no second read of any
+    contributor anywhere in this function.
+
+    Refuses ``CALCULATION_UNAVAILABLE`` immediately after the WORK capture,
+    BEFORE the REGISTRY grade admission, when the target's work unit carries
+    no calculation revision yet -- the first fact that makes a graded result
+    impossible, not the last check that happens to fail. Refuses
+    ``AUTHORITY_GRADE_UNAVAILABLE`` around the REGISTRY capture when the
+    revision's declared grade cannot satisfy ``required_grade``, distinguished
+    from any other :class:`RegistryValidationError` by its typed
+    ``registry_failure`` condition rather than message text.
+
+    ``work_review`` is the exact frozen :class:`ModeloWorkReview` the
+    BOUNDED_REVIEW port captures -- never independently re-derived or
+    reinterpreted here, per the ADR's canonical-bounded-review-facet
+    constraint. GRADED_SNAPSHOT is an ELIGIBLE admission for it (static
+    inspection is not), so this never reuses
+    ``STATIC_INSPECTION_WORK_REVIEW_FACET``.
+    """
+    request = modelo_work_selector_request_for_target(target, bucket_id=bucket_id)
+    work_port = ModeloWorkspaceWorkPortV1(
+        request=request,
+        catalogue_repository=catalogue_repository,
+        mode=ModeloWorkSelectionMode.VISIBLE_OR_EXACT,
+    )
+    work_capture = work_port.capture_projection_with_epoch()
+    resolution = work_capture.projection
+    assert resolution.modelo is not None
+    assert resolution.filing_year is not None
+    assert resolution.period is not None
+
+    work_unit = resolution.work_unit
+    if work_unit is None or work_unit.current_calculation_revision_id is None:
+        return ModeloWorkspaceRefusedResultV1(
+            refusal=ModeloWorkspaceDomainRefusalV1(
+                code=ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
+                boundary="admission",
+                requested_target=target,
+                selected_target=None,
+                responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
+                reconsideration_condition="calculate this work unit, then request a graded snapshot again",
+            )
+        )
+
+    registry_port = ModeloWorkspaceRegistryPortV1(
+        authority=authority,
+        modelo_id=resolution.modelo,
+        filing_year=resolution.filing_year,
+        period=resolution.period.registry_token,
+        grade=required_grade,
+    )
+    try:
+        registry_capture = registry_port.capture_projection_with_epoch()
+    except RegistryValidationError as exc:
+        if (
+            exc.registry_failure is not None
+            and exc.registry_failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+        ):
+            return ModeloWorkspaceRefusedResultV1(
+                refusal=ModeloWorkspaceDomainRefusalV1(
+                    code=ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE,
+                    boundary="admission",
+                    requested_target=target,
+                    selected_target=None,
+                    responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
+                    reconsideration_condition="request a grade the selected revision's declared authority can satisfy",
+                )
+            )
+        raise
+    registry_projection = registry_capture.projection
+    snapshot = registry_projection.snapshot
+    assert snapshot is not None
+
+    axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
+    resolved_target = ModeloWorkspaceResolvedTargetV1(
+        bucket_id=resolution.bucket_id,
+        modelo=resolution.modelo,
+        filing_year=resolution.filing_year,
+        period=resolution.period,
+        law_selected_revision_id=axes.law_selected_revision_id,
+        review_status=registry_projection.review_status,
+        requested_revision_assertion=axes.requested_revision_assertion,
+        stored_revision_assertion=axes.stored_revision_assertion,
+        work_unit_id=work_unit.work_unit_id,
+        work_state=work_unit.state,
+    )
+
+    calculation_capture = ModeloWorkspaceCalculationPortV1(
+        calculation_revision_id=work_unit.current_calculation_revision_id,
+        calculation_repository=calculation_repository,
+    ).capture_projection_with_epoch()
+    calculation_revision = calculation_capture.projection
+
+    bounded_review_capture = ModeloWorkspaceBoundedReviewPortV1(
+        bucket_id=resolved_target.bucket_id,
+        modelo=resolved_target.modelo,
+        filing_year=resolved_target.filing_year,
+        period=resolved_target.period,
+        authority=authority,
+        work_unit_repository=catalogue_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+    ).capture_projection_with_epoch()
+    work_review = ModeloWorkspaceWorkReviewFacetV1(
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        review=bounded_review_capture.projection,
+    )
+
+    schema_identity = resolve_graded_snapshot_schema_identity(snapshot)
+    locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)
+    locale_key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
+    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=locale_key,
+        locale=output_language.value,
+    ).capture_projection_with_epoch()
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=snapshot)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+
+    baseline = resolve_graded_snapshot_baseline(
+        resolved_target,
+        schema_identity=schema_identity,
+        locale=locale,
+        work_stamp=work_capture.stamp,
+        work_epoch=work_capture.epoch,
+        registry_stamp=registry_capture.stamp,
+        registry_epoch=registry_capture.epoch,
+        locale_stamp=locale_capture.stamp,
+        locale_epoch=locale_capture.epoch,
+        field_manifest_stamp=field_manifest_capture.stamp,
+        field_manifest_epoch=field_manifest_capture.epoch,
+        calculation_stamp=calculation_capture.stamp,
+        calculation_epoch=calculation_capture.epoch,
+        bounded_review_stamp=bounded_review_capture.stamp,
+        bounded_review_epoch=bounded_review_capture.epoch,
+    )
+    contributors = graded_snapshot_contributors()
+
+    records = graded_snapshot_schema_records(
+        snapshot.revision.casillas,
+        frozenset(binding.id for binding in snapshot.revision.bindings),
+        snapshot.revision.bindings,
+        snapshot.revision.formulas,
+        snapshot.revision.relations,
+        snapshot.revision.parameters,
+        resolved_target,
+        output_language=output_language,
+    )
+    schema_facet = paginate_static_inspection_schema_facet(
+        records,
+        target=resolved_target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=page_size,
+    )
+
+    evidence_horizon = graded_snapshot_evidence_horizon(snapshot)
+    family_dispositions = graded_snapshot_family_dispositions(snapshot)
+    capabilities = graded_snapshot_modelo_workspace_capabilities(
+        resolved_target, calculation_revision=calculation_revision
+    )
+
+    materialization_records = graded_snapshot_materialization_facet(calculation_revision)
+    materialization_facet = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1](
+        selected_revision_id=resolved_target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        records=materialization_records[:page_size],
+        page_size=page_size,
+        has_more=len(materialization_records) > page_size,
+    )
+
+    provenance_records = graded_snapshot_provenance_facet(calculation_revision.source_provenance)
+    provenance_facet = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1](
+        selected_revision_id=resolved_target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.PROVENANCE,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        records=provenance_records[:page_size],
+        page_size=page_size,
+        has_more=len(provenance_records) > page_size,
+    )
+
+    projection = ModeloWorkspaceProjectionV1(
+        admission=ModeloWorkspaceGradedSnapshotScopeV1(
+            scope=ModeloWorkspaceSnapshotScopeV1(
+                required_grade=required_grade,
+                declared_grade=snapshot.revision.effective_authority_grade,
+                snapshot_scope_digest=content_hash_hex(
+                    {
+                        "required_grade": required_grade.value,
+                        "declared_grade": snapshot.revision.effective_authority_grade.value,
+                        "selected_revision_id": resolved_target.law_selected_revision_id,
+                    }
+                ),
+            )
+        ),
+        target=resolved_target,
+        schema_identity=schema_identity,
+        locale=locale,
+        evidence_horizon=evidence_horizon,
+        family_dispositions=family_dispositions,
+        contributors=contributors,
+        baseline=baseline,
+        schema_facet=schema_facet,
+        materialization_facet=materialization_facet,
+        provenance_facet=provenance_facet,
+        work_review=work_review,
+        capabilities=capabilities,
+    )
+    return ModeloWorkspaceGradedSnapshotResultV1(projection=projection)
 
 
 def graded_snapshot_materialization_facet(

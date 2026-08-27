@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 from decimal import Decimal
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -18,6 +19,7 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFinding,
@@ -25,6 +27,7 @@ from ....domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
+    VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
@@ -34,6 +37,7 @@ from ....domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
+from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from .._calculation_actions import calculate_modelo_revision
@@ -558,7 +562,13 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
     assert review.calculation_revision_id == revision_id
 
 
-def _review_arguments(repos: Repos) -> dict[str, object]:
+class _ReviewArguments(TypedDict):
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    verification_repository: VerificationReportCatalogueRepositoryProtocol
+
+
+def _review_arguments(repos: Repos) -> _ReviewArguments:
     work_repo, calculation_repo, _filing_repo, verification_repo, _events = repos
     return {
         "work_unit_repository": work_repo,

@@ -24,6 +24,7 @@ from .ids import LegalRefId, SourceRefId
 __all__ = [
     "GOVERNANCE_STAMP",
     "MANIFEST_ONLY",
+    "REGISTRY_SOURCE_GROUNDING_TIERS",
     "SCHEMA_FAMILY",
     "CalculationClass",
     "DateAxis",
@@ -418,6 +419,16 @@ EvidenceTier = Literal[
     "executable_parity_evidence",
     "layout_authority",
 ]
+#: The tiers that ground a registry entity on AEAT-published MATERIAL, as
+#: distinct from the law itself (``legal_authority``) and from executable
+#: parity artefacts. Three section validators require exactly this pair
+#: through ``require_any_source_tier``; named once because a tier added to
+#: one copy alone would let the same source ground a casilla while failing
+#: the revision that declares it.
+REGISTRY_SOURCE_GROUNDING_TIERS: tuple[EvidenceTier, ...] = (
+    "official_source_guidance",
+    "layout_authority",
+)
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]

@@ -365,6 +365,9 @@ def test_statutory_annual_cap_limits_health_insurance_amount() -> None:
     )
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
+    # One insured person and nothing declared about discapacidad: the ordinary limb
+    # applies, which is what shipped before the higher limb existed. The lawful sum
+    # over both limbs is covered in test_seguro_cap_sums_both_limbs.
     assert result.statutory_cap_applied == Decimal("500")
     assert result.deductible_amount == Decimal("500")
     assert result.non_deductible_amount == Decimal("300.00")

@@ -57,7 +57,7 @@ def browser_no_action_verdict(
     )
 
 
-class BrowserError(TerminalPreconditionErrorMixin, CadrumoError):
+class BrowserError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base class for browser-related failures.
 
     ``failure_mode`` may be a :class:`BrowserFailureMode` member or an existing

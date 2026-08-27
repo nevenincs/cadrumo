@@ -815,6 +815,7 @@ def assemble_atribucion_observations(
                     transaction_date=default_date,
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
                     base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),
+                    clave=_coerce_text(fields.get("clave")),
                 ),
             )
         except ValidationError as exc:

@@ -601,7 +601,7 @@ def _requirements_by_binding(
                     requirement.source_modelo,
                     requirement.filing_year,
                     set(),
-                    requirement.dependency_treatment,
+                    requirement.dependency_treatment or "",
                 ),
             )
             current[2].add(requirement.periods[0])

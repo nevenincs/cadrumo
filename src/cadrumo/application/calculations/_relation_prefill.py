@@ -209,7 +209,7 @@ def _relation_value_grounding(
         ),
         # Carried from the requirement, which already holds the registry's declared
         # treatment. Empty when no requirement resolved it, which is not a treatment.
-        "dependency_treatment": requirement.dependency_treatment if requirement is not None else "",
+        "dependency_treatment": (requirement.dependency_treatment or "") if requirement is not None else "",
         "legal_refs": tuple(relation.legal_refs),
         "source_refs": tuple(relation.source_refs),
     }
@@ -572,7 +572,9 @@ def resolve_relations_from_local_store(
 
         active_bucket_id = resolve_active_bucket_id()
         m111_no_retenciones_periods = (
-            m111_no_retenciones_periods_for_bucket(active_bucket_id) if active_bucket_id is not None else frozenset()
+            m111_no_retenciones_periods_for_bucket(active_bucket_id)
+            if active_bucket_id is not None
+            else frozenset[tuple[int, str]]()
         )
     if not_applicable_source_modelos is None:
         from ...core.bucket_pointer import resolve_active_bucket_id
@@ -581,7 +583,7 @@ def resolve_relations_from_local_store(
         not_applicable_source_modelos = (
             _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
             if active_bucket_id is not None
-            else frozenset()
+            else frozenset[str]()
         )
     observations = _gather_observations_for_snapshot(
         snapshot,

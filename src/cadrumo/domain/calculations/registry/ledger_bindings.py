@@ -921,7 +921,7 @@ def unsupported_ledger_iva_observations(
 # this family, not an unfilled placeholder, and
 # ``test_ledger_quantity_screen_partition`` asserts it so the claim is checked
 # rather than left as an absence a later author could fill in unnoticed.
-_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {}
+_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = dict[str, str]()
 
 #: DERIVED as the complement, exactly as the renta side derives its own, so the
 #: two sets cannot drift apart.

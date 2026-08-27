@@ -99,7 +99,14 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
     assert vehicle.proportionality.default_ratio is None
     assert health.proportionality.kind.value == "statutory_cap"
     assert health.proportionality.statutory_cap_eur_per_day is None
-    assert health.proportionality.statutory_cap_eur == Decimal("500")
+    # LIRPF art. 30.2.5.a states TWO limits -- 500 per person, 1.500 for a person with
+    # discapacidad -- so the rule carries both as variants rather than one flat amount.
+    # A lone statutory_cap_eur here is the shape that lost the higher limb.
+    assert health.proportionality.statutory_cap_eur is None
+    assert {v.id: v.statutory_cap_eur for v in health.proportionality.statutory_cap_variants} == {
+        "general": Decimal("500"),
+        "discapacidad": Decimal("1500"),
+    }
     assert health.proportionality.statutory_cap_period is not None
     assert health.proportionality.statutory_cap_period.value == "year_per_person"
 

@@ -58,12 +58,12 @@ from .corpus_catalogue import verify_source_catalogue
 from .errors import RegistryValidationError
 from .legal import verify_legal_catalogue_grounding
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from .schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from .validate_registry_scope import validate_registry_scope
 
 if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
 
-_MODELO_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 class RegistryValidator:
@@ -211,7 +211,9 @@ class RegistryValidator:
         failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
         failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         failures.extend(
-            self._evidence.require_any_source_tier("modelo", modelo.id, modelo.source_refs, _MODELO_SOURCE_TIERS)
+            self._evidence.require_any_source_tier(
+                "modelo", modelo.id, modelo.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS
+            )
         )
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))

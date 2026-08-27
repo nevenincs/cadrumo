@@ -1071,9 +1071,29 @@ iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
-statutory_cap_eur = "500"
 statutory_cap_period = "year_per_person"
 notes = "categories.registry.seguros_salud_autonomo.notes"
+
+# LIRPF art. 30.2.5.a states TWO limits, not one: "El limite maximo de deduccion
+# sera de 500 euros por cada una de las personas senaladas anteriormente o de
+# 1.500 euros por cada una de ellas con discapacidad." Only the 500 shipped, so the
+# higher limb was unavailable to exactly the population it exists to protect, and
+# the direction of that error is over-payment: the filer deducts less than the law
+# allows, the return is valid, and nothing warns.
+#
+# Both figures are literals in the article and neither is year-referenced, so these
+# are variants rather than a dated schedule. RIRPF art. 72 fixes who qualifies:
+# "tendran la consideracion de persona con discapacidad aquellos contribuyentes con
+# un grado de minusvalia igual o superior al 33 por ciento".
+[[profiles.proportionality.statutory_cap_variants]]
+id = "general"
+label = "categories.registry.seguros_salud_autonomo.statutory_cap_variants.general.label"
+statutory_cap_eur = "500"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "discapacidad"
+label = "categories.registry.seguros_salud_autonomo.statutory_cap_variants.discapacidad.label"
+statutory_cap_eur = "1500"
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"

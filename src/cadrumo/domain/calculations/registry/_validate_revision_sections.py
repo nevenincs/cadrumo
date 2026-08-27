@@ -56,6 +56,7 @@ from ._validate_surfaces import (
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from .export import derive_export_layouts_from_bindings
 from .schema import ModeloDefinition, ModeloRevision
+from .schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from .schema_references import LegalReference, SourceReference
 from .validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
@@ -63,8 +64,6 @@ from .validate_revision_identity import (
 from .validate_revision_identity import (
     revision_reference_identity_failures,
 )
-
-_REVISION_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 def _requires_workbook_parity_coverage(revision: ModeloRevision) -> bool:
@@ -296,7 +295,11 @@ def validate_revision_definition(
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
-    failures.extend(evidence.require_any_source_tier(prefix, "revision", revision.source_refs, _REVISION_SOURCE_TIERS))
+    failures.extend(
+        evidence.require_any_source_tier(
+            prefix, "revision", revision.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS
+        ),
+    )
     _validate_revision_reference_surfaces(
         failures,
         prefix=prefix,

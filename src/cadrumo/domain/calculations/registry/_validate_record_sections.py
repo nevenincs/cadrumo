@@ -40,10 +40,9 @@ from .bindings import (
 from .ids import BindingId
 from .manual_input_selector import is_layout_binding_selector
 from .schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from .schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from .schema_references import LegalReference, SourceReference
 from .schema_surfaces import CasillaDefinition
-
-_CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 def _validate_casilla_grounding(
@@ -59,7 +58,7 @@ def _validate_casilla_grounding(
     failures.extend(missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
     failures.extend(missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
     failures.extend(
-        evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+        evidence.require_any_source_tier(prefix, owner, casilla.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS)
     )
     if casilla.constraints is not None:
         constraint_owner = f"casilla {casilla.id} constraints"
@@ -70,7 +69,7 @@ def _validate_casilla_grounding(
                 prefix,
                 constraint_owner,
                 casilla.constraints.source_refs,
-                _CASILLA_METADATA_SOURCE_TIERS,
+                REGISTRY_SOURCE_GROUNDING_TIERS,
             ),
         )
     for alias in casilla.aliases:
@@ -78,7 +77,7 @@ def _validate_casilla_grounding(
         failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
         failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
         failures.extend(
-            evidence.require_any_source_tier(prefix, alias_owner, alias.source_refs, _CASILLA_METADATA_SOURCE_TIERS),
+            evidence.require_any_source_tier(prefix, alias_owner, alias.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS),
         )
 
 

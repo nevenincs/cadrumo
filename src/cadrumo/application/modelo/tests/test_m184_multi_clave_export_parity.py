@@ -13,19 +13,23 @@ code paths: :func:`resolve_atribucion_binding_row_values`,
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TypedDict, Unpack
 
 import pytest
 from pydantic import ValidationError
 
+from ....core import CasillaId
 from ....domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,
 )
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.modelos import Modelo184MemberRow
 from ...filing._record_renderer import _record_render_rows
+from ...filing._record_types import RecordRenderRow
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 
@@ -50,6 +54,48 @@ def _socio_record(revision) -> ExportRecordDefinition:
     )
 
 
+def _render_rows(
+    record: ExportRecordDefinition,
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool],
+    casilla_values: dict[CasillaId, object],
+) -> tuple[RecordRenderRow, ...]:
+    """Widen a resolver's row-indexed output to the renderer's generic mapping shape.
+
+    ``resolve_atribucion_binding_row_values`` returns the row index as a bare
+    ``int`` and the value as the resolver's own closed scalar union; the
+    renderer's ``binding_values`` parameter is intentionally generic (``object``
+    values, an optional row index) to admit every registry family's resolver
+    output, not just this one's. ``dict(...)`` copy-constructs a fresh mapping
+    so the wider parameter type is genuine, not an aliased view.
+    """
+    binding_values: dict[tuple[BindingId, int | None], object] = dict(resolved.items())
+    return _record_render_rows(record, binding_values, casilla_values)
+
+
+class _ObservationExtras(TypedDict, total=False):
+    """Every clave/subclave-conditional field ``AtributionMemberObservation`` accepts.
+
+    Typed exactly so a per-scenario ``**extra`` splat resolves each supplied
+    key against its own field type, rather than a single ``object`` value
+    type that would have to satisfy every field at once.
+    """
+
+    country_code: str
+    codigo_provincia: str
+    miembro_a_31_diciembre: str
+    dias_miembro: int
+    domicilio_fiscal: str
+    naturaleza_inmueble: str
+    situacion_inmueble: str
+    referencia_catastral: str
+    clave_declarado: str
+    porcentaje_titularidad_inmueble: Decimal
+    dias_arrendamiento: int
+    reduccion: Decimal
+    rendimiento_neto_previo_eo: Decimal
+    rendimiento_neto_minorado_agricola_eo: Decimal
+
+
 def _observation(
     *,
     source_id: str,
@@ -59,7 +105,7 @@ def _observation(
     base: str,
     clave: str,
     subclave: str | None = None,
-    **extra: object,
+    **extra: Unpack[_ObservationExtras],
 ) -> AtributionMemberObservation:
     from datetime import date
 
@@ -188,7 +234,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_resolved_row() -> None:
     )
 
     resolved = resolve_atribucion_binding_row_values(revision, observations)
-    rows = _record_render_rows(record, resolved, {})
+    rows = _render_rows(record, resolved, {})
 
     assert len({row.row_index for row in rows}) == 3
 
@@ -248,7 +294,11 @@ def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse
     with pytest.raises(ModeloAggregationBindingError) as excinfo:
         union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
-    assert "importe" in excinfo.value.context["divergent_fields"]
+    context = excinfo.value.context
+    assert context is not None
+    divergent_fields = context["divergent_fields"]
+    assert isinstance(divergent_fields, list)
+    assert "importe" in divergent_fields
 
 
 def test_clave_a_reduccion_is_refused_at_the_row_boundary() -> None:
@@ -343,5 +393,5 @@ def test_an_ordinary_multi_member_attribution_emits_one_row_per_member_with_the_
         expected_base = next(Decimal(base) for candidate_nif, _name, base in members if candidate_nif == nif)
         assert bases_by_row[row_index] == expected_base, f"row {row_index} carries the wrong member's base_imponible_assigned"
 
-    rendered = _record_render_rows(record, resolved, {})
+    rendered = _render_rows(record, resolved, {})
     assert len({row.row_index for row in rendered}) == 4, "the render layer must emit one occurrence per member"

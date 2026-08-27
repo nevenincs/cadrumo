@@ -487,10 +487,14 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         """STATUTORY_CAP rules require exactly one cap mode and a coherent (eur, period) pair."""
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_scheduled_cap = bool(self.statutory_cap_schedule)
-        has_generic_cap = self.statutory_cap_eur is not None or (
-            self.statutory_cap_period is not None and not has_scheduled_cap
-        )
         has_variant_caps = bool(self.statutory_cap_variants)
+        # A bare period is only a cap MODE of its own when nothing else claims it.
+        # A dated schedule and an annual variant set both legitimately declare the
+        # period the per-person amount applies over, and counting that as a second
+        # mode would refuse two shapes the law actually uses.
+        has_generic_cap = self.statutory_cap_eur is not None or (
+            self.statutory_cap_period is not None and not has_scheduled_cap and not has_variant_caps
+        )
         if not (has_daily_cap or has_generic_cap or has_variant_caps or has_scheduled_cap):
             raise CategoryValidationError("statutory_cap rules require a cap amount")
         mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap))
@@ -500,6 +504,10 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             if self.statutory_cap_period is None:
                 raise CategoryValidationError("statutory_cap_schedule requires statutory_cap_period")
             self._reject_contradictory_scheduled_caps()
+        elif has_variant_caps:
+            # Annual variants already required the period above; a daily variant set
+            # needs none, and neither shape carries a flat statutory_cap_eur.
+            pass
         else:
             if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
                 raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")

@@ -101,7 +101,7 @@ def live_read_no_recovery_verdict(
     )
 
 
-class LiveApplicationError(TerminalPreconditionErrorMixin, CadrumoError):
+class LiveApplicationError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Raised when live AEAT read orchestration fails.
 
     Accepts an optional ``precondition_verdict`` so a raise site that has

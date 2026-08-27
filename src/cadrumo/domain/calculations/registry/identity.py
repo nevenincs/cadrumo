@@ -47,6 +47,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel, ConfigDict
 
@@ -113,9 +114,11 @@ class RegistryIdentity:
     origin: RegistryIdentityOrigin
     fingerprints: FingerprintTuples
 
+    @override
     def __hash__(self) -> int:
         return hash(self.digest)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, RegistryIdentity) and self.digest == other.digest
 

@@ -250,9 +250,9 @@ def m347_operation_clave(source_kind: BindingSourceKind) -> str | None:
     guessing -- a caller distinguishing them needs a fact this function does
     not have, not a default.
     """
-    if source_kind is BindingSourceKind.PAYABLE_INVOICE:
+    if source_kind == BindingSourceKind.PAYABLE_INVOICE:
         return "A"
-    if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE:
+    if source_kind == BindingSourceKind.COLLECTIBLE_INVOICE:
         return "B"
     return None
 
@@ -364,7 +364,7 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # rows require it, and a missing legal_name in an observation is a
 # real-data defect that must surface loudly at row-build time rather
 # than be filtered out by a binding-validation guard.
-_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset()
+_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
 
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
