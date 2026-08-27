@@ -362,7 +362,7 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
         (
             "app.live.borrador.100.list",
             "state",
-            "application.live:SnapshotStateFilter",
+            "application.live.snapshot_base:SnapshotStateFilter",
         ),
     ],
 )
