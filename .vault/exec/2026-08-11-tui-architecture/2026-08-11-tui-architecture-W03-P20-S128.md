@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc12afa478d7b6521cc15637928b5db52bc6c49531e4b2df21163ef0d8c48007'
+body_hash: 'sha256:e02373e0b7aacce41a6ab3bbe3855d8653d5cb540bf1c783b919e041517e7c58'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -420,3 +420,35 @@ Blocks `resolve_graded_snapshot_result`'s `ModeloWorkspaceSnapshotScopeV1`
 construction until ruled: retire the field, define and build a real
 narrowing, or confirm it is deliberately always equal to `declared_grade`
 with the reason stated. S128 stays unchecked pending that ruling.
+
+Ruled: retire (commit `81b6c02e82`), verified landed via `git log -1 -S`.
+`ModeloWorkspaceSnapshotScopeV1` now carries only `required_grade`,
+`declared_grade`, `snapshot_scope_digest`; reintroduction condition stated
+on the model docstring and the ADR amendment.
+
+Building blocks for `resolve_graded_snapshot_result`, each real and tested
+against the bundled modelo 303 registry: `resolve_graded_snapshot_schema_identity`,
+`graded_snapshot_evidence_horizon`, `graded_snapshot_contributors` (commits
+split by a shared-index capture into peer commits `91a7b9b561`/`6babb35980`,
+verified fully present and correct at HEAD); `resolve_graded_snapshot_baseline`
+(commit `362848d606`, mirrors the static one's exact digesting shape over
+six stamp/epoch pairs instead of four -- the static function's arity is
+fixed and confirmed unable to take a fifth or sixth).
+
+Found while sizing the main assembly: `work_review` is REQUIRED on
+`ModeloWorkspaceProjectionV1`, and the ADR states GRADED_SNAPSHOT is an
+ELIGIBLE admission for the real `ModeloWorkReview` (static is named as one
+of the INELIGIBLE paths that get the fixed `UNMEASURED` constant instead).
+This raises the mandatory contributor count from 5 to 6: WORK, REGISTRY
+(graded), LOCALE_CATALOGUE, FIELD_MANIFEST, CALCULATION, and BOUNDED_REVIEW
+-- `graded_snapshot_contributors`/`resolve_graded_snapshot_baseline` above
+already reflect 6, but `resolve_graded_snapshot_result` itself (the
+top-level orchestration: WORK-then-REGISTRY(graded) capture with the
+CALCULATION_UNAVAILABLE/AUTHORITY_GRADE_UNAVAILABLE refusal paths,
+CALCULATION port capture, BOUNDED_REVIEW port capture, the materialization/
+provenance facets, schema_facet, capabilities, and the final projection/
+result assembly, plus the single-read and epoch-consistency proofs) is
+still NOT built. `ModeloWorkspaceBoundedReviewPortV1` needs a
+`verification_repository` dependency `resolve_static_inspection_result`'s
+signature never carried, so the graded assembly's signature is wider than
+its static counterpart, not merely `grade` added. S128 stays unchecked.
