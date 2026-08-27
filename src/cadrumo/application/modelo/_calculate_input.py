@@ -197,7 +197,7 @@ class WorkCalculateInputBundle:
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
 
-    Carries the DT 12ª apartado-4 window diagnostics
+    Carries the DT 12ª apartado-3 window diagnostics
     (:func:`apply_calculation_shortcut_inputs`) so the calculate service can fold
     them into its ``source_diagnostics`` / ``source_advisories`` channel. The
     shortcut path is the only site with the contingencia/rescate year facts, so
@@ -1289,7 +1289,7 @@ def apply_calculation_shortcut_inputs(
     unique semantic-role casillas. The Modelo 303 autoconsumo-promotor shortcut
     writes the backend-owned binding consumed by the registry engine.
 
-    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-4 time
+    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-3 time
     window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
     contingencia year and the window predicate
     (:func:`~cadrumo.domain.modelos.dt12_regime_window_eligibility`) proves the
@@ -1355,7 +1355,7 @@ def _dt12_window_verdict(
     contingencia_year: int | None,
     rescate_year: int | None,
 ) -> Dt12WindowEligibility | None:
-    """Evaluate the DT 12ª apartado-4 window when the contingencia year is declared.
+    """Evaluate the DT 12ª apartado-3 window when the contingencia year is declared.
 
     The contingencia year is the load-bearing fact: without it the window cannot
     be evaluated and the caller emits the unverified-window advisory. The rescate
@@ -1390,7 +1390,7 @@ def _dt12_window_decision(
             reason="dt12_regime_window_unverified",
             source_kind="dt12_regime_window",
             message=(
-                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-4 time "
+                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-3 time "
                 "window (LIRPF DT 12ª.4, Ley 26/2014) was not verified because no contingencia year "
                 "was declared. The régimen applies only to prestaciones percibidas within the window "
                 "measured from the contingencia year (the contingencia year plus the two following, "
@@ -1410,7 +1410,7 @@ def _dt12_window_decision(
         reason="dt12_regime_window_closed",
         source_kind="dt12_regime_window",
         message=(
-            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-4 time window "
+            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-3 time window "
             "(LIRPF DT 12ª.4, Ley 26/2014) is CLOSED for this rescate: a contingencia in "
             f"{eligibility.contingencia_year} was eligible only for prestaciones percibidas through "
             f"{eligibility.eligible_through_year}, but the rescate is declared in "
@@ -1429,7 +1429,7 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
         source_kind="dt12_regime_window",
         message=(
             "DT 12ª parcial rescate: every partial cobro of the same contingency shares ONE "
-            "apartado-4 time window, measured once from the contingencia year (it does not restart "
+            "apartado-3 time window, measured once from the contingencia year (it does not restart "
             "per withdrawal). Confirm each cobro falls inside that window, and note that a mixed "
             "capital/renta rescate may forfeit the transitional régimen (DGT criteria: the "
             "prestación must be received en forma de capital)."
