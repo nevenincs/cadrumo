@@ -28,8 +28,8 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
-from ._financial_operand import OperationTransientFinancialOperandDeclaration
-from ._financial_operand_custody import (
+from .financial_operand import OperationTransientFinancialOperandDeclaration
+from .financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
     OperationFinancialOperandCustodyCheckpoint,
 )

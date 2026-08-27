@@ -16,7 +16,7 @@ paths race for it, because a second release would clear a buffer another path
 believes it still owns.
 
 See Also:
-    :class:`~cadrumo.application.operations._financial_operand.OperationTransientFinancialOperandRequirement`
+    :class:`~cadrumo.application.operations.financial_operand.OperationTransientFinancialOperandRequirement`
         The durable, amount-free identity every checkpoint is written against.
 """
 
@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
-from ._financial_operand import (
+from .financial_operand import (
     OperationFinancialOperandKind,
     OperationFinancialOperandRefusalReason,
     OperationTransientFinancialOperandRequirement,

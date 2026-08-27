@@ -37,7 +37,7 @@ from ....core.operations import (
     OperationInteractionKind,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._financial_operand import (
+from ..financial_operand import (
     OperationFinancialOperandRefusalReason,
     OperationTransientFinancialOperandAcknowledgement,
     OperationTransientFinancialOperandDeclaration,
@@ -45,7 +45,7 @@ from .._financial_operand import (
     OperationTransientFinancialOperandRefusal,
     OperationTransientFinancialOperandRequirement,
 )
-from .._financial_operand_custody import OperationFinancialOperandCustodyState
+from ..financial_operand_custody import OperationFinancialOperandCustodyState
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

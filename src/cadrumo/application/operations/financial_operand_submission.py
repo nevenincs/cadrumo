@@ -21,7 +21,7 @@ returns a durable derivative of one. The value leaves only through
 executor that declared it.
 
 See Also:
-    :class:`~cadrumo.application.operations._financial_operand.OperationTransientFinancialOperandProtocolV1`
+    :class:`~cadrumo.application.operations.financial_operand.OperationTransientFinancialOperandProtocolV1`
         The broker contract this class implements.
     :class:`~cadrumo.application.operations.secret_submission.EphemeralSecretBroker`
         The sibling broker for credential material, deliberately separate.
@@ -33,7 +33,7 @@ from threading import RLock
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core import content_hash_hex
-from ._financial_operand import (
+from .financial_operand import (
     OperationFinancialOperandRefusalReason,
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandAcknowledgement,
@@ -43,7 +43,7 @@ from ._financial_operand import (
     OperationTransientFinancialOperandRelease,
     OperationTransientFinancialOperandRequirement,
 )
-from ._financial_operand_custody import (
+from .financial_operand_custody import (
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyState,
     advance_custody,
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     from datetime import datetime
     from decimal import Decimal
 
-    from ._financial_operand import (
+    from .financial_operand import (
         OperationFinancialOperandKind,
         OperationTransientFinancialOperandDelivery,
     )

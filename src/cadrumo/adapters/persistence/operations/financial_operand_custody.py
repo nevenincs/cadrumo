@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from ....application.operations._financial_operand_custody import (
+from ....application.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyCheckpoint,
 )
 from ....application.operations.persistence.financial_operand_custody import (

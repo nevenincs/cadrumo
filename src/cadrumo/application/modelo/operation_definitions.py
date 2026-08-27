@@ -50,7 +50,7 @@ from ...core.identity import (
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import CalculationRevisionAmendmentKind, ModeloCode
 from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
-from ..operations._financial_operand import OperationTransientFinancialOperandDeclaration
+from ..operations.financial_operand import OperationTransientFinancialOperandDeclaration
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

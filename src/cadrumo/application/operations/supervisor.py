@@ -24,7 +24,7 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
 from ._execution_context import DefinitionBoundContext
-from ._financial_operand import (
+from .financial_operand import (
     OperationTransientFinancialOperandDelivery,
     OperationTransientFinancialOperandRequirement,
 )

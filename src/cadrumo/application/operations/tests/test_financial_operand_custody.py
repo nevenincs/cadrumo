@@ -7,8 +7,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from .._financial_operand import OperationFinancialOperandRefusalReason
-from .._financial_operand_custody import (
+from ..financial_operand import OperationFinancialOperandRefusalReason
+from ..financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyError,

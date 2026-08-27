@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .._financial_operand import (
+from ..financial_operand import (
     OperationFinancialOperandRefusalReason,
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandAcknowledgement,

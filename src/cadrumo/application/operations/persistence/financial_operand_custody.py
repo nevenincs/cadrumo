@@ -10,7 +10,7 @@ rather than only in memory. The in-process transition table refuses an illegal
 move; this refuses a legal move applied twice.
 
 See Also:
-    :class:`~cadrumo.application.operations._financial_operand_custody.OperationFinancialOperandCustodyCheckpoint`
+    :class:`~cadrumo.application.operations.financial_operand_custody.OperationFinancialOperandCustodyCheckpoint`
         The non-sensitive record this contract persists and replays.
 """
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from .._financial_operand_custody import OperationFinancialOperandCustodyCheckpoint
+    from ..financial_operand_custody import OperationFinancialOperandCustodyCheckpoint
 
 
 class OperationFinancialOperandCustodyConflictError(RuntimeError):

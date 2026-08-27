@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect
-from .._financial_operand import (
+from ..financial_operand import (
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandDeclaration,
     OperationTransientFinancialOperandRequirement,
