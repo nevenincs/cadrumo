@@ -53,6 +53,7 @@ from pydantic import BaseModel, ConfigDict
 from .... import __version__
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import blake2b_hex
 from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]
@@ -171,7 +172,7 @@ def _file_content_digest(path: Path) -> str:
         The hex BLAKE2b digest of the file's bytes, or an ``unreadable:`` marker.
     """
     try:
-        return hashlib.blake2b(path.read_bytes(), digest_size=16).hexdigest()
+        return blake2b_hex(path.read_bytes())
     except OSError:
         _LOGGER.debug("Registry file %s could not be read while stamping identity", path, exc_info=True)
         return "unreadable"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -16,6 +15,7 @@ from ....core import (
     normalise_corpus_text,
     resolve_anchored_extracted_unit,
 )
+from ....core.hashing import blake2b_hex
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
@@ -423,7 +423,7 @@ def _sidecar_content_digest(sidecar: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}",
         ) from exc
-    return hashlib.blake2b(data, digest_size=16).hexdigest()
+    return blake2b_hex(data)
 
 
 def _assert_redactions_are_not_fused(
