@@ -167,7 +167,10 @@ _PAYLOADS = "cadrumo.entrypoints.cli._config_payloads"
 _PAYLOADS_ARCHIVE_RECONCILE = "cadrumo.entrypoints.cli._config._archive_reconcile_payloads"
 _PAYLOADS_ARCHIVE_PUSH = "cadrumo.entrypoints.cli._config._archive_push_payloads"
 _CONFIG = "cadrumo.entrypoints.cli._config"
-_WIZARD = "cadrumo.application.wizard"
+#: Both wizard result schemas are defined in this module. The package
+#: namespace above it is inert and re-exports nothing, so naming the package
+#: leaves the spec pointing at an attribute that does not exist.
+_WIZARD = "cadrumo.application.wizard.results"
 
 _WIZARD_CONFIRM_FIELDS = frozenset(
     """new-entity-first-two-profit-periods ley-49-2002-option-declared

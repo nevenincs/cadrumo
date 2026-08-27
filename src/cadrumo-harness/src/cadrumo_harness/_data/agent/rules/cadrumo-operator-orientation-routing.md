@@ -40,7 +40,7 @@ authority this table paraphrases, and it grows as command families are added.
   fichero-BOE) and `aeat app modelo work file` (mark internally filed). Neither
   submits to AEAT — see the safety rule.
 - "Did AEAT actually receive it?" → `aeat app modelo reconcile pull` (fetch and
-  reconcile the justificante from AEAT) or `aeat app modelo reconcile file --file
+  reconcile the justificante from AEAT) or `aeat app modelo reconcile import --file
   ...` (reconcile against a local artefact you already hold). A local export alone
   never answers this question.
 - "What blocks a filing that depends on a prior period or another modelo?" →

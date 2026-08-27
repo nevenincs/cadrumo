@@ -34,7 +34,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "informative",
               "title": "Operaciones de entidades inscritas en registros públicos (informativa mensual)"
             },
@@ -184,7 +184,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "informative",
               "title": "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
             },
@@ -224,7 +224,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "informative",
               "title": "Entidades en régimen de atribución de rentas (informativa anual)"
             },
@@ -294,7 +294,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 3,
               "tax_domain": "cross_tax",
               "title": "Retenciones capital mobiliario y transmisión de activos - resumen anual"
             },
@@ -304,7 +304,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "is",
               "title": "IS autoliquidación anual"
             },
@@ -374,7 +374,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "informative",
               "title": "Resumen anual de retenciones del gravamen especial sobre premios de loterías"
             },
@@ -414,7 +414,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "iva",
               "title": "IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"
             },
@@ -424,7 +424,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "iva",
               "title": "IVA. Declaración-liquidación no periódica"
             },
@@ -444,7 +444,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "iva",
               "title": "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
             },
@@ -534,7 +534,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "iedmt",
               "title": "IEDMT - autoliquidación por matriculación de determinados medios de transporte"
             },
@@ -574,7 +574,7 @@
               "local_work_guidance": "Modelo 721 (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.",
               "local_work_status": "unsupported-local-work",
               "local_work_supported": false,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "informative",
               "title": "Monedas virtuales en el extranjero (informativa anual)"
             },
@@ -584,7 +584,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 6,
               "tax_domain": "juego",
               "title": "Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)"
             },
@@ -629,7 +629,7 @@
         "notices": [],
         "result": {
           "domain_filter": null,
-          "modelo_count": 52,
+          "modelo_count": 47,
           "modelos": [
             {
               "cadence": "ad_hoc",
@@ -647,7 +647,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "informative",
               "title": "Operaciones de entidades inscritas en registros públicos (informativa mensual)"
             },
@@ -787,7 +787,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "informative",
               "title": "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
             },
@@ -813,21 +813,11 @@
             },
             {
               "cadence": "annual",
-              "code": "182",
-              "local_work_guidance": null,
-              "local_work_status": "supported-model-level",
-              "local_work_supported": true,
-              "revision_count": 1,
-              "tax_domain": "informative",
-              "title": "Donativos, donaciones y aportaciones recibidas y disposiciones realizadas (informativa anual)"
-            },
-            {
-              "cadence": "annual",
               "code": "184",
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "informative",
               "title": "Entidades en régimen de atribución de rentas (informativa anual)"
             },
@@ -883,21 +873,11 @@
             },
             {
               "cadence": "annual",
-              "code": "194",
-              "local_work_guidance": null,
-              "local_work_status": "supported-model-level",
-              "local_work_supported": true,
-              "revision_count": 1,
-              "tax_domain": "cross_tax",
-              "title": "Retenciones capital mobiliario y transmisión de activos - resumen anual"
-            },
-            {
-              "cadence": "annual",
               "code": "200",
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "is",
               "title": "IS autoliquidación anual"
             },
@@ -932,16 +912,6 @@
               "title": "IRNR retenciones e ingresos a cuenta"
             },
             {
-              "cadence": "annual",
-              "code": "220",
-              "local_work_guidance": null,
-              "local_work_status": "supported-model-level",
-              "local_work_supported": true,
-              "revision_count": 2,
-              "tax_domain": "is",
-              "title": "IS autoliquidación anual régimen de consolidación fiscal (grupos)"
-            },
-            {
               "cadence": "quarterly",
               "code": "222",
               "local_work_guidance": null,
@@ -960,16 +930,6 @@
               "revision_count": 2,
               "tax_domain": "is",
               "title": "Operaciones vinculadas y paraísos fiscales (informativa anual)"
-            },
-            {
-              "cadence": "annual",
-              "code": "270",
-              "local_work_guidance": null,
-              "local_work_status": "supported-model-level",
-              "local_work_supported": true,
-              "revision_count": 1,
-              "tax_domain": "informative",
-              "title": "Resumen anual de retenciones del gravamen especial sobre premios de loterías"
             },
             {
               "cadence": "annual",
@@ -997,7 +957,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "iva",
               "title": "IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"
             },
@@ -1007,7 +967,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 4,
               "tax_domain": "iva",
               "title": "IVA. Declaración-liquidación no periódica"
             },
@@ -1027,7 +987,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "iva",
               "title": "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
             },
@@ -1097,7 +1057,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 2,
               "tax_domain": "iedmt",
               "title": "IEDMT - autoliquidación por matriculación de determinados medios de transporte"
             },
@@ -1122,22 +1082,12 @@
               "title": "Bienes y derechos en el extranjero (informativa anual)"
             },
             {
-              "cadence": "annual",
-              "code": "721",
-              "local_work_guidance": "Modelo 721 (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.",
-              "local_work_status": "unsupported-local-work",
-              "local_work_supported": false,
-              "revision_count": 1,
-              "tax_domain": "informative",
-              "title": "Monedas virtuales en el extranjero (informativa anual)"
-            },
-            {
               "cadence": "profile_based",
               "code": "763",
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 1,
+              "revision_count": 6,
               "tax_domain": "juego",
               "title": "Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)"
             },

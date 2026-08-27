@@ -14,12 +14,12 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core import CasillaId
 from .....core.resources import bundled_path
 from .....domain.deadlines import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

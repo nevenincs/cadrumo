@@ -10,6 +10,7 @@ import pytest
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings_previous_filing import previous_filing_source_reference
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
@@ -18,7 +19,6 @@ from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 

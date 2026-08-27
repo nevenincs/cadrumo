@@ -6,12 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from .._loader_internals import _revision_section_fragment_paths, load_modelo_file
 from ..errors import RegistryLoadError
-from ..loader import (
-    _revision_section_fragment_paths,
-    load_modelo_directory,
-    load_modelo_file,
-)
+from ..loader import load_modelo_directory
 from ._loader_directory_mode_support import (
     _COMPLETENESS_CASILLA_0001,
     _COMPLETENESS_CASILLA_0002,

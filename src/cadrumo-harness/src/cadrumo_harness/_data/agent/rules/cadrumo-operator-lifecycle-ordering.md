@@ -26,7 +26,7 @@ work around, not a shortcut to take.
   filed) are the terminal, irreversible steps of the local half. Both still stop
   short of AEAT — see the safety rule.
 - **Reconcile is a separate, later step.** `aeat app modelo reconcile pull` or
-  `reconcile file --file ...` runs after the human has actually filed outside the
+  `reconcile import --file ...` runs after the human has actually filed outside the
   application. Never report a filing as reconciled or accepted before this step
   has actually run and returned official evidence.
 

@@ -25,13 +25,13 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
+from .._snapshot_internals import _check_snapshot_filing_capability
 from .._validate_export_exemption import (
     modelo_publishes_a_record_design,
     validate_export_exemption_declarations,
 )
 from ..authority import ValidatedRegistryAuthority
 from ..schema import ModeloRevision
-from ..snapshot import _check_snapshot_filing_capability
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

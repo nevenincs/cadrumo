@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.modelo.view.work_review
+   cadrumo.entrypoints.tui.modelo.view.work_select

@@ -37,6 +37,7 @@ from ....entrypoints.tui.components.theme import (
     NOTICE_BAND_CSS,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
@@ -55,13 +56,13 @@ _ACTIVE_MARKER = "●"
 class StatusApp(App[None]):
     """Full-screen read-only projection of the operator's configuration state."""
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + NOTICE_BAND_CSS
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
-    .status-commands { color: $text-muted; margin: 0; }
+    .status-commands { color: $text-muted; margin: $cadrumo-space-0; }
     """
     )
 

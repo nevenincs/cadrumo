@@ -157,7 +157,7 @@ Place a root option before the command path. Name the exact profile on the
 target command when it accepts a profile target. For example:
 
 ```text
-aeat --profile-secrets-stdin config profile show PROFILE
+aeat --profile-secrets-stdin config profile view PROFILE
 ```
 
 This source is used only after the exact profile is known, the command requires

@@ -30,7 +30,7 @@ from textual.widgets import Button, Footer, Input, Label, Static
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
+from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
@@ -89,12 +89,12 @@ class PassphraseChangeAttempt:
 class PassphraseApp(CredentialApp["ProfilePassphraseRotationOutcome"]):
     """Full-screen credential entry that re-wraps one profile's password."""
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #passphrase-intro { margin: 0; }
-    #strength-line { margin: 0; }
+    #passphrase-intro { margin: $cadrumo-space-0; }
+    #strength-line { margin: $cadrumo-space-0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }

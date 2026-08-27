@@ -19,6 +19,7 @@ from .....core import (
 )
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
+from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
 from .._validate_references import check_all_id_references
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
@@ -53,7 +54,6 @@ from ..schema_surfaces import (
     RelationDefinition,
 )
 from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
-from ..snapshot import _build_validated_snapshot as build_snapshot_at_grade
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -25,7 +25,7 @@ from textual.worker import Worker, WorkerState
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import toggle_appearance
+from ....entrypoints.tui.components.theme import toggle_appearance, tokenised
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -42,11 +42,11 @@ __all__ = [
     "run_credential_app",
 ]
 
-CREDENTIAL_PANEL_CSS: Final[str] = """
-.field-label { text-style: bold; margin: 0; }
-.field-hint { color: $text-muted; margin: 0; }
-.credential-actions { height: auto; align-horizontal: right; margin: 0; }
-"""
+CREDENTIAL_PANEL_CSS: Final[str] = tokenised("""
+.field-label { text-style: bold; margin: $cadrumo-space-0; }
+.field-hint { color: $text-muted; margin: $cadrumo-space-0; }
+.credential-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+""")
 """Layout shared by the login and registration credential panels."""
 
 

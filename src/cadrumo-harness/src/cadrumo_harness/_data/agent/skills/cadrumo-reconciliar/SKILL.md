@@ -21,10 +21,10 @@ compare, and record - never assert acceptance from a local export.
 
 1. Pull the official justificante: `aeat app modelo reconcile pull`. If you only
    have a local artefact, reconcile against it:
-   `aeat app modelo reconcile file --file JUSTIFICANTE.pdf`.
+   `aeat app modelo reconcile import --file JUSTIFICANTE.pdf`.
 2. Compare the official evidence to the prepared revision. Report any divergence
    with its `legal_refs`/`source_refs`.
-3. Review the audit trail: `aeat app modelo reconcile history`.
+3. Review the audit trail: `aeat app modelo reconcile list`.
 
 ## Success assertions
 

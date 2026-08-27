@@ -24,10 +24,10 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

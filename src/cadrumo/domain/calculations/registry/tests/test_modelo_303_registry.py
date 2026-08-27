@@ -21,6 +21,7 @@ from ....iva import (
     IvaDeductionClassificationProvenance,
     IvaLedgerObservationRole,
 )
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..binding_aggregation import binding_aggregation_op
 from ..binding_selector_utils import selector_as_dict
@@ -31,7 +32,6 @@ from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

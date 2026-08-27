@@ -21,9 +21,9 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
 )
 
 from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .._validate import RegistryValidator
 from ..schema_base import SourceCitation
 from ..schema_input_kind import InputKind
-from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

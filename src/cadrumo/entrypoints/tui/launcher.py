@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+from collections.abc import AsyncGenerator, Generator
+from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...domain.modelos import WorkUnitCatalogue
+
+if TYPE_CHECKING:
+    from ...application.operations.composition import OperationComposedServices
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
@@ -94,4 +98,26 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
         yield storage_root
 
 
-__all__ = ["load_modelo_work_unit_catalogue", "profile_storage_scope"]
+@asynccontextmanager
+async def operation_services_scope() -> AsyncGenerator[OperationComposedServices]:
+    """Compose the operation platform for one TUI run and settle it after.
+
+    This is the sole TUI composition seam permitted to build the operation
+    registry, journal, leases and supervisor. Screens and controllers receive
+    the composed services; none of them constructs the graph, so a TUI session
+    has exactly one place where that inventory comes into being.
+
+    The factory itself lives one level up, shared with the CLI. Moving it into
+    this package would oblige every other frontend to import the TUI to reach
+    it, which is the dependency the TUI boundary exists to forbid.
+    """
+    from .._operation_composition import compose_operation_dependencies
+
+    services = compose_operation_dependencies()
+    try:
+        yield services
+    finally:
+        await services.shutdown()
+
+
+__all__ = ["load_modelo_work_unit_catalogue", "operation_services_scope", "profile_storage_scope"]

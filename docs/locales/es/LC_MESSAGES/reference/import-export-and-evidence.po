@@ -619,9 +619,9 @@ msgid ""
 "capsule."
 msgstr ""
 "Esto es una carencia de portabilidad, no de recuperación. La copia de "
-"seguridad y la recuperación no se ven afectadas y funcionan mediante "
-"`aeat config profile archive export` y `aeat config profile restore`, que"
-" operan sobre la cápsula sellada del perfil."
+"seguridad y la recuperación no se ven afectadas y funcionan mediante `aeat "
+"config profile archive export` y `aeat config profile restore`, que "
+"operan sobre la cápsula sellada del perfil."
 
 #: ../../reference/import-export-and-evidence.md:160
 msgid ""

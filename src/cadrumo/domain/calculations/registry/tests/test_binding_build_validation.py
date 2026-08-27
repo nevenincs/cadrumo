@@ -30,12 +30,12 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..bindings import (
     _BINDING_SELECTOR_REGISTRY,
     _BINDING_VALIDATOR_REGISTRY,

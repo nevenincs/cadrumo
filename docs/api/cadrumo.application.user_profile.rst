@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.user_profile.acquisition_sources
    cadrumo.application.user_profile.aggregate
    cadrumo.application.user_profile.authentication
    cadrumo.application.user_profile.bundle

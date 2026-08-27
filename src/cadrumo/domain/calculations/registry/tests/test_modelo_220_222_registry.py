@@ -25,8 +25,8 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

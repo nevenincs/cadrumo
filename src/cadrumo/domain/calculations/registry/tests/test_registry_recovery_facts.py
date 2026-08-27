@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from .._snapshot_internals import _check_snapshot_filing_capability
 from ..applicability_modelo202 import Modelo202Modality, modelo_202_modality_from_inputs
 from ..authority import bundled_authority
 from ..errors import RegistryFailureCondition, RegistryValidationError
 from ..queries import RegistryQueryService, _casilla_detail_report
-from ..snapshot import _check_snapshot_filing_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

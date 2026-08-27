@@ -1,7 +1,7 @@
 @step Show the resolved capability posture.
-aeat config profile capabilities show
+aeat config profile capabilities view
 @step Turn the on-host vision model off for the active profile.
 aeat config profile capabilities set llm_vision off
-@result aeat --format json config profile capabilities show
+@result aeat --format json config profile capabilities view
 @expect result.capabilities[0].enabled == false
 @expect exit_code == 0

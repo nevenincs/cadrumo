@@ -10,6 +10,7 @@ import pytest
 from .....core import CasillaId, normalise_corpus_text, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
@@ -19,7 +20,6 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

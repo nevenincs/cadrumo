@@ -14,10 +14,10 @@ the taxpayer and never treat a local export as official.
 
 - After the human files, pull the official justificante
   (`aeat app modelo reconcile pull`) or reconcile against a local artefact
-  (`aeat app modelo reconcile file --file ...`).
+  (`aeat app modelo reconcile import --file ...`).
 - Compare the official evidence to the prepared revision and report any
   divergence with its grounding.
-- Review prior reconciliations (`aeat app modelo reconcile history`) so the audit
+- Review prior reconciliations (`aeat app modelo reconcile list`) so the audit
   trail is complete.
 
 ## What you do not do

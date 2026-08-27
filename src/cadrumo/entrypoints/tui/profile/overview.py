@@ -54,6 +54,7 @@ from ....entrypoints.tui.components.theme import (
     NOTICE_BAND_CSS,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from ....entrypoints.tui.components.widgets import (
     ContentDataTable,
@@ -112,11 +113,11 @@ read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
 
-_EDIT_DIALOG_CSS = """
+_EDIT_DIALOG_CSS = tokenised("""
 #edit-dialog {
-    border: thick $accent;
+    border: $cadrumo-radius-overlay $accent;
     background: $surface;
-    padding: 0 1;
+    padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
 }
@@ -124,10 +125,10 @@ _EDIT_DIALOG_CSS = """
 #edit-hint { color: $text-muted; }
 #edit-refusal { color: $error; text-style: bold; }
 #edit-masked-note { color: $text-muted; }
-#edit-dialog Input { margin: 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 0; }
-#edit-actions Button { margin: 0 0 0 1; }
-"""
+#edit-dialog Input { margin: $cadrumo-space-0; }
+#edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
+""")
 
 
 class FieldEditScreen(ModalScreen[str | None]):

@@ -20,7 +20,7 @@ from textual.widgets import DataTable, Static
 
 from .....core.i18n import tr
 from .....domain.modelos import WorkUnit
-from ...components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ...components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ...components.widgets import ContentDataTable, ContentScroll
 
 _COLUMN_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "name", "state")
@@ -111,12 +111,12 @@ class ModeloWorkSelectApp(App[str | None]):
     ``exit(value)``), or ``None`` when the operator quits without choosing.
     """
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + """
     #modelo-select-body { width: 100%; height: 1fr; }
     #modelo-select-table { width: 100%; height: auto; background: $surface; }
-    .modelo-select-empty { padding: 1 2; }
+    .modelo-select-empty { padding: $cadrumo-space-1 $cadrumo-gutter; }
     """
     )
 

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import OperationCancellation, OperationDurability, OperationEffect, OperationInteractionKind
+from ....core import OperationCancellation, OperationDurability, OperationEffect
 from ....domain.modelos import CalculationRevisionAmendmentKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,
@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _definition():
-    return build_modelo_work_rename_definition(actor="operator")
+    return build_modelo_work_rename_definition()
 
 
 def test_the_definition_enrolls_the_declared_lifecycle_subject() -> None:
@@ -139,7 +139,7 @@ def test_the_definition_module_is_public_and_importable_directly() -> None:
 
 
 def _discard_definition():
-    return build_modelo_work_discard_definition(actor="operator")
+    return build_modelo_work_discard_definition()
 
 
 def test_discard_requires_an_exact_approval_baseline() -> None:
@@ -192,14 +192,20 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
 
 def _verify_definition():
-    return build_modelo_work_verify_definition(actor="operator", profile_resolver=lambda: None)
+    return build_modelo_work_verify_definition(profile_resolver=lambda: None)
 
 
-def test_verify_declares_review_and_its_progress_phases() -> None:
-    """Verification is reviewable work with declared phases, not a silent write."""
+def test_verify_declares_its_progress_phases_and_claims_no_interaction() -> None:
+    """Verification reports progress, and claims no interaction it never performs.
+
+    The platform's REVIEW contract means the executor presents a reviewed
+    operand and settles on the operator's verdict. This executor runs straight
+    through, so declaring REVIEW would promise an interaction that never
+    happens and the registry refuses the registration outright.
+    """
     definition = _verify_definition()
 
-    assert OperationInteractionKind.REVIEW in definition.interaction_kinds
+    assert definition.interaction_kinds == frozenset()
     assert definition.phase_codes == ("modelo.work.verify.gates", "modelo.work.verify.persist")
     assert definition.capabilities.cancellation is OperationCancellation.COOPERATIVE
 
@@ -251,7 +257,7 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
 
 
 def _file_definition():
-    return build_modelo_work_file_definition(actor="operator", profile_resolver=lambda: None)
+    return build_modelo_work_file_definition(profile_resolver=lambda: None)
 
 
 def test_filing_approval_names_the_verification_that_justified_it() -> None:
@@ -346,17 +352,23 @@ def test_the_export_executor_reaches_no_remote_surface() -> None:
         )
 
 
-def test_the_export_identity_is_resolved_not_replayed() -> None:
-    """A replayed export must not stamp an artefact with a stale identity."""
+def test_the_export_stamps_the_identity_this_invocation_recorded() -> None:
+    """The artefact carries the acting operator the journalled request names.
+
+    The acting operator is a fact of the invocation, so it belongs on the
+    request the journal preserves rather than in a closure captured when the
+    definition was composed. Presenter, taxpayer and product identities stay
+    off the request: those are resolved from live state at export time.
+    """
     fields = set(ModeloExportRequest.model_fields)
 
-    assert {"calculation_revision_id", "output_path"} <= fields
-    for identity in ("presenter", "taxpayer_identity", "product_software_identity", "actor"):
-        assert identity not in fields, f"the request pins an identity that should be resolved: {identity}"
+    assert {"calculation_revision_id", "output_path", "actor"} <= fields
+    for resolved in ("presenter", "taxpayer_identity", "product_software_identity"):
+        assert resolved not in fields, f"the request pins an identity that should be resolved: {resolved}"
 
 
 def _amend_definition():
-    return build_modelo_work_amend_definition(actor="operator")
+    return build_modelo_work_amend_definition()
 
 
 def test_an_amendment_is_bound_to_the_filed_baseline_it_corrects() -> None:
@@ -365,7 +377,7 @@ def test_an_amendment_is_bound_to_the_filed_baseline_it_corrects() -> None:
 
     assert set(ModeloWorkAmendBaseline.model_fields) == {"from_filing_record_id"}
     assert definition.capabilities.baseline is OperationBaselinePolicy.EXACT_APPROVAL
-    assert OperationInteractionKind.REVIEW in definition.interaction_kinds
+    assert definition.interaction_kinds == frozenset()
 
 
 def test_an_amendment_cannot_be_filed_without_a_stated_reason() -> None:

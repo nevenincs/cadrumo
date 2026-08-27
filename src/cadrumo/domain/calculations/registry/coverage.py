@@ -54,6 +54,7 @@ from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, Revisio
 from ._schema_family_coverage import (
     CoverageModel,
 )
+from ._snapshot_internals import check_snapshot_filing_review_tier
 from .authority import ValidatedRegistryAuthority
 from .errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from .ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
@@ -69,7 +70,6 @@ from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference
 from .schema_surfaces import RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-from .snapshot import check_snapshot_filing_review_tier
 from .static_inspection import RegistryRevisionInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates
 

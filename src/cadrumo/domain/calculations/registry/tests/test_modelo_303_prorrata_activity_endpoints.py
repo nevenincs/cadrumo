@@ -19,6 +19,7 @@ from .....core import (
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
+from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..export import clasificar_casillas_oficiales
@@ -28,7 +29,6 @@ from ..m303_prorrata_activity_projection import project_m303_prorrata_activity_r
 from ..record_design import extract_record_design
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

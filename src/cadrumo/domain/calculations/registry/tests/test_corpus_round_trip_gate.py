@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 
 from .....core.resources import bundled_path
-from ..validate import RegistryValidator
+from .._validate import RegistryValidator
 from ._gate_support import catalogues_for_m130_gate_tests
 from ._registry_schema_support import _committed_modelo
 

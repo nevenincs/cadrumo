@@ -14,11 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.loader import (
-    _collect_registry_tree_fingerprints,
-    _load_registry_tree_cached,
-    load_registry_tree,
-)
+from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
 from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
 from .....core.config import override_settings
@@ -30,6 +26,7 @@ from .._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
+from .._loader_internals import _collect_registry_tree_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

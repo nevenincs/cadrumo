@@ -13,10 +13,10 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.loader import _collect_registry_tree_fingerprints
 from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
 from .....core import CasillaId, Period, validated_casilla_id
+from .._loader_internals import _collect_registry_tree_fingerprints
 from ..loader_cache import registry_disk_cache_dir
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

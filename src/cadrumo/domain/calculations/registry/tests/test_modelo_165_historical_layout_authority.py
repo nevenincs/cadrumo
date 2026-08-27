@@ -14,13 +14,13 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from .._validate_export_exemption import validate_export_exemption_declarations
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ..errors import RegistryValidationError
 from ..loader import load_catalogue_file, load_modelo_directory, load_registry_tree
 from ..record_design import extract_record_design
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

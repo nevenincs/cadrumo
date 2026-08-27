@@ -8,4 +8,4 @@
 @blocked operator-artifact Needs a real AEAT justificante PDF and its evidence id; no local chain produces one and it must not be fabricated as a committed fixture.
 @step Inspect, check, and export an evidence bundle by id.
 @static aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
-@blocked unconverted No aeat verb creates an evidence bundle, so no id exists to address: the audit show, check and export verbs only read bundles, and nothing in the CLI writes one.
+@blocked unconverted No aeat verb creates an evidence bundle, so no id exists to address: the audit view, check and export verbs only read bundles, and nothing in the CLI writes one.

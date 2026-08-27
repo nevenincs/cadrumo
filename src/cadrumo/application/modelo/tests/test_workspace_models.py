@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import subprocess
 import sys
 from pathlib import Path
 
@@ -752,11 +753,19 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     repository = Path(__file__).resolve().parents[5]
     private_module = "_workspace" + "_models"
     public_module = "workspace_models"
-    scanned_paths = (
-        *sorted((repository / "src").rglob("*.py")),
-        *sorted((repository / "docs").rglob("*.rst")),
-        *sorted((repository / "dev").rglob("*.py")),
-        *sorted((repository / "dev").rglob("*.toml")),
+    tracked = subprocess.run(
+        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),
+        capture_output=True,
+        check=True,
+        cwd=repository,
+        text=True,
+    ).stdout.split(chr(0))
+    scanned_paths = tuple(
+        sorted(
+            repository / entry
+            for entry in tracked
+            if entry.endswith((".py", ".rst", ".toml"))
+        ),
     )
     remnants = tuple(
         path.relative_to(repository)

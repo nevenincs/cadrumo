@@ -8,10 +8,10 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....tests.registry_tree import bundled_registry_tree
+from .._snapshot_internals import _build_validated_snapshot
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..snapshot import _build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

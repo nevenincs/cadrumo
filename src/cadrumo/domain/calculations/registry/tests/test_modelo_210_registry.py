@@ -13,11 +13,11 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
 from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

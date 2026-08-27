@@ -30,10 +30,10 @@ import pytest
 
 from .....core import RegistryAuthorityGrade, RevisionReviewStatus, TaxDomain
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..snapshot import build_snapshot, build_validated_snapshot
 from ..support_matrix import revision_capability_probe
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -30,8 +30,8 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 
 from .....core import Period
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
-from ..validate import RegistryValidator
 from ._registry_schema_support import (
     _NUMERIC_CASILLA_01,
     _as_communication_revision,

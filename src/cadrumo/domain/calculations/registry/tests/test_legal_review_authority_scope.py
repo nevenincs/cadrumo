@@ -11,9 +11,10 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from .....core import LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
+from .._snapshot_internals import _check_snapshot_filing_capability
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
-from ..snapshot import _check_snapshot_filing_capability, build_validated_snapshot
+from ..snapshot import build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

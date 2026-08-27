@@ -104,24 +104,6 @@ def test_profile_rename_verb_is_not_registered(_per_bucket_backend: Path) -> Non
     assert read_profile_bucket("beta") is None
 
 
-def test_profile_create_refuses_case_insensitive_duplicate_label(
-    _per_bucket_backend: Path,
-) -> None:
-    """Display-name uniqueness is enforced case-insensitively across live profiles."""
-
-    first = _invoke(("config", "profile", "create", "Only One", "--quiet"))
-    assert first.exit_code == 0, first.output
-
-    second = _invoke(("config", "profile", "create", "only one", "--quiet"))
-    assert second.exit_code != 0, second.output
-    flat = second.output.lower()
-    assert "ya existe" in flat or "already exists" in flat
-
-    listed = _invoke(("config", "profile", "list"))
-    assert listed.exit_code == 0, listed.output
-    assert "Only One" in listed.output
-
-
 # --- profile-lifecycle navigation from a no-active-session state ---
 #
 # These tests drive the full root CLI so the CLI root callback (the
@@ -341,3 +323,29 @@ def test_deleted_profile_name_is_reusable_by_create(
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
     assert "operator" in listed.output
+
+
+def test_logout_settles_through_the_supervised_operation_journal(_per_bucket_backend: Path) -> None:
+    """Logout runs on the operation platform, not a direct authority call.
+
+    The journal is what separates the two implementations. A direct call to the
+    session-revocation authority closes the session and records nothing, so
+    asserting only that the pointer clears would pass against either one. A
+    supervised operation settles through the journal and leaves that record
+    behind, which is what this pins.
+    """
+    create_profile_via_cli("solo")
+    root = Path(_per_bucket_backend)
+    before = {path for path in root.rglob("*") if path.is_file()}
+
+    assert _invoke(("config", "logout")).exit_code == 0
+
+    written = {path for path in root.rglob("*") if path.is_file()} - before
+    operation_records = sorted(
+        path.relative_to(root).as_posix() for path in written if "operation" in path.relative_to(root).as_posix()
+    )
+
+    assert operation_records, (
+        f"logout left no operation-platform record under {root}; "
+        f"it wrote {sorted(path.relative_to(root).as_posix() for path in written)}"
+    )

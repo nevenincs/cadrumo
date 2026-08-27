@@ -156,7 +156,7 @@ a document you supplied, not from an AEAT-confirmed read, so profile views show
 their provenance and the filing calendar's `censo.enrolment_unverified`
 warning still applies. Where a certificate value disagrees with an answer you
 gave in setup, the profile keeps a record of the divergence and
-`aeat config profile show` warns you until you resolve it.
+`aeat config profile view` warns you until you resolve it.
 
 ```{note}
 Reading the certificate's contents is not yet active: the command currently
@@ -187,10 +187,10 @@ If the profile still reports missing facts, edit those fields directly:
 ```{cli-sequence} censo-update-edit-field
 ```
 
-For modelo-specific readiness, use profile preflight:
+For modelo-specific readiness, use modelo readiness:
 
 ```{cli-sequence} censo-update-preflight
-:verify: Confirm the profile preflight runs for the target modelo and period.
+:verify: Confirm the readiness check runs for the target modelo and period.
 ```
 
 ## Keep the facts current

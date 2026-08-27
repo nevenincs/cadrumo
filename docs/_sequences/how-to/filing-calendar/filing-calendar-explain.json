@@ -48,7 +48,7 @@
             "tax_id": "sha256:1c9f9632",
             "third_party_transactions_above_347_threshold": false
           },
-          "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Declare primero el tipo de entidad y, en su caso, las categorías de renta del IRPF con 'aeat config profile edit'.",
+          "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso, las categorías de renta del IRPF.",
           "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",
           "verdict": "incomplete",
           "year": 2026

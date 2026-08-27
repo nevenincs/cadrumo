@@ -9,12 +9,12 @@ import pytest
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..deadline_coordinate import deadline_semantic_coordinate
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 

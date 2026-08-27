@@ -37,6 +37,7 @@ from ....core import (
 )
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._relation_aggregation import relation_aggregation_op
+from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
 from .bindings import bound_casilla_binding_ids
 from .errors import RegistryValidationError
@@ -44,7 +45,6 @@ from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, Source
 from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
-from .validate import RegistryValidator
 
 __all__ = [
     "HandoffPathClassification",

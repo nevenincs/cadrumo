@@ -45,6 +45,7 @@ from .theme import (
     BASE_CSS,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from .widgets import ContentDataTable, ContentScroll
 
@@ -126,12 +127,12 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
     drift apart the first time either one changed.
     """
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     #form-table { height: auto; width: 100%; background: $surface; }
-    #form-refusal { color: $error; margin: 0; }
-    #form-actions { height: auto; align-horizontal: right; margin: 0; }
-    #form-actions Button { margin: 0 0 0 1; }
-    """
+    #form-refusal { color: $error; margin: $cadrumo-space-0; }
+    #form-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+    #form-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
+    """)
 
     BINDINGS: ClassVar = [Binding("escape", "abandon", "", show=False)]
 

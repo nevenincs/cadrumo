@@ -378,7 +378,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+          "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3877,7 +3877,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1`.",
+          "saved_confirmation": "Saved as draft calculation revision 5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3915,9 +3915,9 @@
           "revision_count": 1,
           "revisions": [
             {
-              "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+              "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
               "created_at": "2026-04-01T09:00:00+00:00",
-              "short_calculation_revision_id": "c59f57c8e2c1",
+              "short_calculation_revision_id": "1c351dc8d215",
               "short_work_unit_id": "af6b2264dd9d",
               "state": "borrador",
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"

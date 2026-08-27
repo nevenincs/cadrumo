@@ -6,6 +6,7 @@ aeat --format json app overview explain 303 --year 2026
 @expect result.applicable == true
 @expect result.verdict == "applicable"
 @step Check filing readiness for the first-quarter Modelo 303 context.
-@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
-@expect result.ready == true
-@expect exit_code == 0
+@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T
+@expect result.profile_ready == true
+@expect result.binding_ready == false
+@expect exit_code == 2

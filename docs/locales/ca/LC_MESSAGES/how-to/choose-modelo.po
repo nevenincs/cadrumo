@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-26 15:14+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -189,11 +189,11 @@ msgstr ""
 "justificació ho indica, i en aquest cas cap canvi del perfil no altera el"
 " veredicte."
 
-#: ../../how-to/choose-modelo.md:38
+#: ../../how-to/choose-modelo.md:39
 msgid "When the verdict is incomplete"
 msgstr "Quan el veredicte és incomplet"
 
-#: ../../how-to/choose-modelo.md:40
+#: ../../how-to/choose-modelo.md:41
 msgid ""
 "An incomplete verdict usually means the decision depends on facts your "
 "profile doesn't declare yet. The main groups:"
@@ -201,7 +201,7 @@ msgstr ""
 "Un veredicte incomplet normalment significa que la decisió depèn de dades"
 " que el teu perfil encara no declara. Els grups principals:"
 
-#: ../../how-to/choose-modelo.md:42
+#: ../../how-to/choose-modelo.md:43
 msgid ""
 "**Who you are** - your taxpayer type and entity form (an individual "
 "identified by NIF; a company identified by NIF or CIF; an entity in "
@@ -211,7 +211,7 @@ msgstr ""
 "persona física identificada per NIF; una empresa identificada per NIF o "
 "CIF; una entitat en atribución de rentas)."
 
-#: ../../how-to/choose-modelo.md:43
+#: ../../how-to/choose-modelo.md:44
 msgid ""
 "**Your income-tax situation** - your IRPF estimation regime and which "
 "income categories you receive."
@@ -219,7 +219,7 @@ msgstr ""
 "**La teva situació d'IRPF**: el teu règim d'estimació de l'IRPF i quines "
 "categories de renda percep."
 
-#: ../../how-to/choose-modelo.md:44
+#: ../../how-to/choose-modelo.md:45
 msgid ""
 "**Your IVA situation** - your IVA regime and any special enrolments, such"
 " as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop"
@@ -229,7 +229,7 @@ msgstr ""
 " com ara el ROI (Registro de Operadores Intracomunitarios), l'OSS (One-"
 "Stop Shop) o les operacions intracomunitàries."
 
-#: ../../how-to/choose-modelo.md:45
+#: ../../how-to/choose-modelo.md:46
 msgid ""
 "**Whether you employ or withhold** - employees on payroll, or "
 "withholdings on professional fees, rent, or capital payments."
@@ -238,7 +238,7 @@ msgstr ""
 "retencions sobre honoraris professionals, lloguers o pagaments de "
 "capital."
 
-#: ../../how-to/choose-modelo.md:46
+#: ../../how-to/choose-modelo.md:47
 msgid ""
 "**Informative-declaration thresholds** - facts such as third-party "
 "transaction volume or assets held abroad, which gate the informative "
@@ -248,7 +248,7 @@ msgstr ""
 "d'operacions amb terceres persones o els béns tinguts a l'estranger, que "
 "condicionen els formularis informatius."
 
-#: ../../how-to/choose-modelo.md:48
+#: ../../how-to/choose-modelo.md:49
 msgid ""
 "Fix the missing facts by hand with the [profile setup guide](profile-"
 "setup.md). For your censo - your AEAT census record, the registration "
@@ -263,71 +263,63 @@ msgstr ""
 "amb la [guia de dades censals](censo-update.md). Després torna a executar"
 " `overview explain` i llegeix el nou veredicte."
 
-#: ../../how-to/choose-modelo.md:50
+#: ../../how-to/choose-modelo.md:51
 msgid "Check readiness for one filing"
 msgstr "Comprova la preparació per a una presentació concreta"
 
-#: ../../how-to/choose-modelo.md:52
+#: ../../how-to/choose-modelo.md:53
 msgid ""
 "When you already know which modelo, year, and period you're aiming at, "
-"ask for a preflight check with `aeat config profile preflight`, the "
-"closing frame of the card above."
-msgstr ""
-"Quan ja saps a quin model, any i període apuntes, demanes una comprovació"
-" de preflight amb `aeat config profile preflight`, el tram de tancament "
-"de la targeta anterior."
+"ask for a readiness check with `aeat app modelo readiness`, the closing "
+"frame of the card above."
+msgstr "Quan ja sàpigues a quin model, any i període apuntes, demana una comprovació de preparació amb `aeat app modelo readiness`, el plafó final de la targeta de dalt."
 
-#: ../../how-to/choose-modelo.md:54
+#: ../../how-to/choose-modelo.md:55
 msgid ""
-"The preflight reports the profile facts still missing for that specific "
-"filing context. Where `overview explain` answers whether the form "
-"applies, preflight answers whether you're ready to work on it."
-msgstr ""
-"El preflight informa de les dades del perfil que encara falten per a "
-"aquell context de presentació concret. Mentre que `overview explain` "
-"respon si el formulari s'aplica, el preflight respon si estàs preparats "
-"per treballar-hi."
+"Readiness reports what still stands between you and working on that "
+"specific filing: the profile facts still missing, the registry revision "
+"that applies, and any ledger rows that would block a calculation. Where "
+"`overview explain` answers whether the form applies, readiness answers "
+"whether you're ready to work on it."
+msgstr "La comprovació de preparació informa del que encara s'interposa entre tu i el treball en aquesta presentació concreta: les dades de perfil que falten, la revisió del registre que correspon i les files del llibre que bloquejarien un càlcul. Mentre que `overview explain` respon si el formulari correspon, la preparació respon si estàs a punt per treballar-hi."
 
-#: ../../how-to/choose-modelo.md:56
+#: ../../how-to/choose-modelo.md:57
 msgid ""
 "These two commands read different facts, so they can disagree for the "
 "same profile and modelo, and that is expected. `overview explain` checks "
 "applicability facts (taxpayer type, regime, income categories); on a "
 "profile that has not declared its taxpayer type it returns `applicable "
 "false / verdict incomplete` (\"el tipo de contribuyente no está "
-"declarado\"). `profile preflight` checks filing-context facts for working"
-" on that period; the same profile can return `readiness ready / missing "
-"0`. A `ready` preflight is not a confirmation that the form applies to "
-"you - read `overview explain` for applicability and `profile preflight` "
+"declarado\"). `modelo readiness` checks whether you can work on that "
+"period. A `ready` result is not a confirmation that the form applies to "
+"you - read `overview explain` for applicability and `modelo readiness` "
 "for filing readiness, not one as a proxy for the other."
-msgstr ""
-"Aquestes dues ordres llegeixen dades diferents, de manera que poden "
-"discrepar per al mateix perfil i model, i això és esperable. `overview "
-"explain` comprova dades d'aplicabilitat (tipus de contribuent, règim, "
-"categories de renda); en un perfil que no ha declarat el seu tipus de "
-"contribuent retorna `applicable false / verdict incomplete` («el tipo de "
-"contribuyente no está declarado»). `profile preflight` comprova les dades"
-" del context de presentació per treballar en aquell període; el mateix "
-"perfil pot retornar `readiness ready / missing 0`. Un preflight `ready` "
-"no és una confirmació que el formulari se t'apliqui: llegeix `overview "
-"explain` per a l'aplicabilitat i `profile preflight` per a la preparació "
-"de la presentació, i no un com a substitut de l'altre."
+msgstr "Aquestes dues ordres llegeixen dades diferents, així que poden discrepar per al mateix perfil i model, i això és el que s'espera. `overview explain` comprova les dades d'aplicabilitat (tipus de contribuent, règim, categories de renda); en un perfil que no ha declarat el seu tipus de contribuent retorna `applicable false / verdict incomplete` (\"el tipo de contribuyente no está declarado\"). `modelo readiness` comprova si pots treballar en aquest període. Un resultat `ready` no confirma que el formulari et correspongui: llegeix `overview explain` per a l'aplicabilitat i `modelo readiness` per a la preparació de la presentació, i no usis l'una com a substitut de l'altra."
 
-#: ../../how-to/choose-modelo.md:58
+#: ../../how-to/choose-modelo.md:59
 msgid ""
-"The preflight picks the active revision for that modelo, year, and period"
-" automatically. Add `--revision-id` only when you need to pin an exact "
-"past revision for replay."
-msgstr ""
-"El preflight tria automàticament la revisió activa per a aquell model, "
-"any i període. Afegeix `--revision-id` només quan necessites fixar una "
-"revisió passada exacta per a una reproducció."
+"Readiness reports several axes separately, and a complete profile is only"
+" one of them. A freshly set up profile commonly returns `profile_ready "
+"True` alongside `binding_ready False`: your own details are in place, but"
+" the figures the form pulls from - the sources listed under "
+"`missing_bindings` - are not yet available. Readiness exits with status "
+"`2` while any axis is unready, so read the axis that is `False` rather "
+"than the single overall verdict."
+msgstr "La comprovació de preparació informa de diversos eixos per separat, i un perfil complet només és un d'ells. Un perfil acabat de configurar sol retornar `profile_ready True` juntament amb `binding_ready False`: les teves dades hi són, però les xifres de què s'alimenta el formulari -les fonts llistades a `missing_bindings`- encara no estan disponibles. La comprovació acaba amb estat `2` mentre algun eix no estigui a punt, així que llegeix l'eix que apareix com a `False` en lloc del veredicte global."
 
-#: ../../how-to/choose-modelo.md:60
+#: ../../how-to/choose-modelo.md:61
+msgid ""
+"Readiness picks the active revision for that modelo, year, and period "
+"automatically. Add `--revision-id` only when you need to pin an exact "
+"past revision for replay; it is accepted only when it names the same "
+"revision the year and period already select."
+msgstr "La comprovació de preparació tria automàticament la revisió activa per a aquest model, any i període. Afegeix `--revision-id` només quan necessitis fixar una revisió passada exacta per reproduir-la; només s'accepta si anomena la mateixa revisió que l'any i el període ja seleccionen."
+
+#: ../../how-to/choose-modelo.md:63
 msgid "Browse the catalogue"
 msgstr "Navega pel catàleg"
 
-#: ../../how-to/choose-modelo.md:62
+#: ../../how-to/choose-modelo.md:65
 msgid ""
 "To see every form the tool knows, list the catalogue with `aeat app "
 "modelo list`, add `--year` to narrow it to one fiscal year, then look one"
@@ -338,7 +330,7 @@ msgstr ""
 "fiscal i, tot seguit, consulta un formulari en detall amb `aeat app "
 "modelo describe 303`:"
 
-#: ../../how-to/choose-modelo.md:68
+#: ../../how-to/choose-modelo.md:71
 msgid ""
 "The list shows each modelo's code, official Spanish title, cadence, tax "
 "domain, and revision count. Cadence values include `quarterly`, `annual`,"
@@ -359,7 +351,7 @@ msgstr ""
 "sobre activitats econòmiques). Que un formulari aparegui a la llista no "
 "vol dir que se t'apliqui: el catàleg cobreix tot el que l'eina entén."
 
-#: ../../how-to/choose-modelo.md:70
+#: ../../how-to/choose-modelo.md:73
 msgid ""
 "The description shows the form's official name (Spanish), domain, "
 "cadence, active revision ID, the full list of revision IDs, the valid "
@@ -376,11 +368,11 @@ msgstr ""
 "totes dues ordres com a ajudes de consulta. L'aplicabilitat sempre prové "
 "d'`overview explain`."
 
-#: ../../how-to/choose-modelo.md:72
+#: ../../how-to/choose-modelo.md:75
 msgid "What these commands don't tell you"
 msgstr "Què no et diuen aquestes ordres"
 
-#: ../../how-to/choose-modelo.md:74
+#: ../../how-to/choose-modelo.md:77
 msgid ""
 "These commands read your local profile and the built-in rules only. They "
 "do not file, submit, or contact AEAT, and they cannot tell you what AEAT "
@@ -394,7 +386,7 @@ msgstr ""
 "d'**Aplicable** és una afirmació sobre les regles i les teves dades, no "
 "una confirmació que existeixi o estigui pendent una presentació."
 
-#: ../../how-to/choose-modelo.md:76
+#: ../../how-to/choose-modelo.md:79
 msgid ""
 "For AEAT's own view of your situation, see the [notifications guide"
 "](check-aeat-notifications.md)."
@@ -402,7 +394,7 @@ msgstr ""
 "Per a la visió que la mateixa AEAT té de la teva situació, consulta la "
 "[guia de notificacions](check-aeat-notifications.md)."
 
-#: ../../how-to/choose-modelo.md:77
+#: ../../how-to/choose-modelo.md:80
 msgid ""
 "For deadlines and what's due when, see the [filing calendar guide"
 "](filing-calendar.md)."
@@ -410,11 +402,11 @@ msgstr ""
 "Per als terminis i què cal presentar i quan, consulta la [guia del "
 "calendari de presentacions](filing-calendar.md)."
 
-#: ../../how-to/choose-modelo.md:79
+#: ../../how-to/choose-modelo.md:82
 msgid "Where to get help"
 msgstr "On obtenir ajuda"
 
-#: ../../how-to/choose-modelo.md:81
+#: ../../how-to/choose-modelo.md:84
 #, python-brace-format
 msgid ""
 "If a verdict looks wrong or a command fails, see the [troubleshooting "
@@ -429,35 +421,35 @@ msgstr ""
 "la sortida d'una ordre per demanar ajuda, elimina els identificadors "
 "fiscals personals com ara el teu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/choose-modelo.md:83
+#: ../../how-to/choose-modelo.md:86
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/choose-modelo.md:85
+#: ../../how-to/choose-modelo.md:88
 msgid "[Plan your filing deadlines](filing-calendar.md)"
 msgstr "[Planifica els teus terminis de presentació](filing-calendar.md)"
 
-#: ../../how-to/choose-modelo.md:86
+#: ../../how-to/choose-modelo.md:89
 msgid "[Set up or correct your profile](profile-setup.md)"
 msgstr "[Configura o corregeix el teu perfil](profile-setup.md)"
 
-#: ../../how-to/choose-modelo.md:87
+#: ../../how-to/choose-modelo.md:90
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Model 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/choose-modelo.md:88
+#: ../../how-to/choose-modelo.md:91
 msgid "[Start from nothing with the quickstart](quickstart.md)"
 msgstr "[Comença de zero amb el començament ràpid](quickstart.md)"
 
-#: ../../how-to/choose-modelo.md:89
+#: ../../how-to/choose-modelo.md:92
 msgid "[Prepare Modelo 303](modelo-303.md)"
 msgstr "[Prepara el Model 303](modelo-303.md)"
 
-#: ../../how-to/choose-modelo.md:90
+#: ../../how-to/choose-modelo.md:93
 msgid "[Prepare Modelo 390](modelo-390.md)"
 msgstr "[Prepara el Model 390](modelo-390.md)"
 
-#: ../../how-to/choose-modelo.md:91
+#: ../../how-to/choose-modelo.md:94
 msgid "[Browse the full CLI reference](../cli/index.rst)"
 msgstr "[Consulta la referència completa de la CLI](../cli/index.rst)"
 

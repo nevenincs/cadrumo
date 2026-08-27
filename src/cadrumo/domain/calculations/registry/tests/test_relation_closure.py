@@ -14,6 +14,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from .._validate import RegistryValidator
 from .._validate_relation_sources import (
     RelationSourceYearCoverageAllowance,
     validate_relation_closure,
@@ -28,7 +29,6 @@ from ..relations import (
 )
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

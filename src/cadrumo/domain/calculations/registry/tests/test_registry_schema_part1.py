@@ -10,13 +10,14 @@ from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ...export_field_kind import CasillaFieldKind
+from .._loader_internals import load_modelo_file
+from .._validate import RegistryValidator
 from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
 from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..export_semantics import ExportDraftAttribute
-from ..loader import load_modelo_file
 from ..schema import (
     DataBindingDefinition,
     ModeloDefinition,
@@ -32,7 +33,6 @@ from ..schema_surfaces import (
     CasillaDefinition,
 )
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._registry_schema_support import (
     _EXPECTED_LIVE_CROSS_REFERENCES,
     _NUMERIC_CASILLA_01,

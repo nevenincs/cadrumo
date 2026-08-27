@@ -131,7 +131,7 @@ def test_is_tool_in_persona_scope_allows_declared_family_commands() -> None:
     assert is_tool_in_persona_scope(persona=AgentPersona.VERIFIER, command_key="modelo.work.verify") is True
     assert is_tool_in_persona_scope(persona=AgentPersona.VERIFIER, command_key="modelo.export") is True
     assert is_tool_in_persona_scope(persona=AgentPersona.RECONCILER, command_key="modelo.reconcile.pull") is True
-    assert is_tool_in_persona_scope(persona=AgentPersona.RECONCILER, command_key="modelo.reconcile.history") is True
+    assert is_tool_in_persona_scope(persona=AgentPersona.RECONCILER, command_key="modelo.reconcile.list") is True
 
 
 def test_is_tool_in_persona_scope_refuses_out_of_family_commands() -> None:

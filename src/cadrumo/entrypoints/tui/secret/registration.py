@@ -49,7 +49,7 @@ from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
+from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
@@ -136,18 +136,18 @@ def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
 class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     """Full-screen credential entry that creates and unlocks one profile."""
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #registration-intro { margin: 0; }
+    #registration-intro { margin: $cadrumo-space-0; }
     #registration-why {
         color: $text-muted;
-        border-left: outer $accent;
-        padding: 0 0 0 1;
-        margin: 0;
+        border-left: $cadrumo-rule $accent;
+        padding: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-1;
+        margin: $cadrumo-space-0;
     }
-    #strength-line { margin: 0; }
+    #strength-line { margin: $cadrumo-space-0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }
@@ -490,21 +490,21 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 class RecoveryWordsScreen(Screen[None]):
     """Show the mnemonic once and return masked exact re-entry proof."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RecoveryWordsScreen {
         align: center middle;
     }
     #words-panel {
         width: 100%;
         height: auto;
-        border: round $primary;
-        padding: 1 2;
+        border: $cadrumo-radius $primary;
+        padding: $cadrumo-space-1 $cadrumo-gutter;
     }
     #words-heading { text-style: bold; margin-bottom: 1; }
     #words-value { color: $warning; margin-bottom: 1; }
     #words-warning { color: $text-muted; margin-bottom: 1; }
     #words-actions { height: auto; align-horizontal: right; }
-    """
+    """)
 
     def __init__(
         self,

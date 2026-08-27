@@ -609,8 +609,8 @@ msgid ""
 msgstr ""
 "Això és una mancança de portabilitat, no de recuperació. La còpia de "
 "seguretat i la recuperació no es veuen afectades i funcionen mitjançant "
-"`aeat config profile archive export` i `aeat config profile restore`, que"
-" operen sobre la càpsula segellada del perfil."
+"`aeat config profile archive export` i `aeat config profile archive "
+"import`, que operen sobre la càpsula segellada del perfil."
 
 #: ../../reference/import-export-and-evidence.md:160
 msgid ""

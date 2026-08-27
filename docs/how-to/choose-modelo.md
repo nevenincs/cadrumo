@@ -50,13 +50,15 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight`, the closing frame of the card above.
+When you already know which modelo, year, and period you're aiming at, ask for a readiness check with `aeat app modelo readiness`, the closing frame of the card above.
 
-The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
+Readiness reports what still stands between you and working on that specific filing: the profile facts still missing, the registry revision that applies, and any ledger rows that would block a calculation. Where `overview explain` answers whether the form applies, readiness answers whether you're ready to work on it.
 
-These two commands read different facts, so they can disagree for the same profile and modelo, and that is expected. `overview explain` checks applicability facts (taxpayer type, regime, income categories); on a profile that has not declared its taxpayer type it returns `applicable false / verdict incomplete` ("el tipo de contribuyente no está declarado"). `profile preflight` checks filing-context facts for working on that period; the same profile can return `readiness ready / missing 0`. A `ready` preflight is not a confirmation that the form applies to you - read `overview explain` for applicability and `profile preflight` for filing readiness, not one as a proxy for the other.
+These two commands read different facts, so they can disagree for the same profile and modelo, and that is expected. `overview explain` checks applicability facts (taxpayer type, regime, income categories); on a profile that has not declared its taxpayer type it returns `applicable false / verdict incomplete` ("el tipo de contribuyente no está declarado"). `modelo readiness` checks whether you can work on that period. A `ready` result is not a confirmation that the form applies to you - read `overview explain` for applicability and `modelo readiness` for filing readiness, not one as a proxy for the other.
 
-The preflight picks the active revision for that modelo, year, and period automatically. Add `--revision-id` only when you need to pin an exact past revision for replay.
+Readiness reports several axes separately, and a complete profile is only one of them. A freshly set up profile commonly returns `profile_ready True` alongside `binding_ready False`: your own details are in place, but the figures the form pulls from - the sources listed under `missing_bindings` - are not yet available. Readiness exits with status `2` while any axis is unready, so read the axis that is `False` rather than the single overall verdict.
+
+Readiness picks the active revision for that modelo, year, and period automatically. Add `--revision-id` only when you need to pin an exact past revision for replay; it is accepted only when it names the same revision the year and period already select.
 
 ## Browse the catalogue
 

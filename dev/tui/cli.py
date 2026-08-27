@@ -1,8 +1,9 @@
 """The TUI visual inventory command line.
 
-Four verbs. ``inventory`` answers what interfaces exist and which of them a
-render reaches; ``render`` produces the images; ``diff`` compares one run
-against another; ``viewports`` prints the geometries a render covers.
+Five verbs. ``inventory`` answers what interfaces exist and which of them a
+render reaches; ``render`` produces the images; ``rasterise`` repaints an
+existing run without re-driving the harness; ``diff`` compares one run against
+another; ``viewports`` prints the geometries a render covers.
 
 Rendering shells out to the in-boundary devtool harness once per frame, so a
 full matrix is minutes rather than seconds -- each frame rebuilds its app
@@ -13,6 +14,7 @@ frame is a cached statement about a tree that existed earlier.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -24,6 +26,7 @@ from ._artifacts import (
     FailedFrame,
     InterfaceRecord,
     Manifest,
+    ManifestVersionError,
     RenderedFrame,
     SkippedFrame,
     digest,
@@ -46,8 +49,15 @@ DEFAULT_RUN = "latest"
 
 
 def _echo(text: str) -> None:
-    """Write a line as UTF-8 whatever the console code page claims."""
-    typer.echo(text)
+    """Write a line as UTF-8 whatever the console code page claims.
+
+    Written as bytes rather than through ``print``: a Windows console defaults
+    to cp1252, which mangles the box-drawing and dash characters the harness's
+    own diagnostics are built from -- the same reason the in-boundary harness
+    encodes its output by hand.
+    """
+    sys.stdout.buffer.write(text.encode(UTF_8, errors="replace") + b"\n")
+    sys.stdout.buffer.flush()
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -80,7 +90,7 @@ def inventory_command(
     directory = run_directory(run)
     rendered: dict[str, tuple[str, ...]] = {}
     if (directory / "manifest.json").is_file():
-        manifest = read_manifest(directory)
+        manifest = _load_manifest(run)
         rendered = {record.qualname: record.rendered_by for record in manifest.interfaces}
         _echo(f"coverage from run {run!r} ({manifest.generated_at})")
     else:
@@ -104,6 +114,19 @@ def inventory_command(
         _echo(f"       {mark}{suffix}")
     _echo("")
     _echo(f"{len(interfaces)} interfaces, {uncovered} not rendered")
+
+
+def _load_manifest(name: str) -> Manifest:
+    """Read a run's manifest, turning its refusals into clean CLI exits.
+
+    A stale or absent run is an ordinary operator mistake, not a bug, so it
+    earns a sentence and a non-zero exit rather than a stack trace.
+    """
+    try:
+        return read_manifest(run_directory(name))
+    except (FileNotFoundError, ManifestVersionError) as refusal:
+        _echo(str(refusal))
+        raise typer.Exit(code=1) from None
 
 
 def _first_refusal_line(detail: str) -> str:
@@ -356,6 +379,61 @@ def render_command(
         raise typer.Exit(code=1)
 
 
+@app.command("rasterise")
+def rasterise_command(
+    run: Annotated[str, typer.Option("--run", help="Run whose SVGs to repaint.")] = DEFAULT_RUN,
+    cell_height: Annotated[
+        int,
+        typer.Option("--cell-height", help="Pixel height of one terminal cell."),
+    ] = _raster.DEFAULT_CELL_HEIGHT,
+) -> None:
+    """Repaint an existing run's PNGs from the SVGs it already holds.
+
+    The harness is not driven at all. A run's SVGs are the harness's own
+    output and stay valid however this tool's rasteriser changes, so fixing a
+    rendering defect -- or simply wanting the frames at another resolution --
+    should not cost another full matrix at minutes per frame. Only the
+    raster-derived fields are rewritten; the captured text, the timings and
+    the geometry readings still belong to the run that produced them.
+    """
+    directory = run_directory(run)
+    manifest = _load_manifest(run)
+    if not manifest.frames:
+        _echo(f"run {run!r} holds no frames to repaint")
+        raise typer.Exit(code=1)
+
+    repainted: list[RenderedFrame] = []
+    missing_svgs: list[str] = []
+    for index, frame in enumerate(manifest.frames, start=1):
+        svg_path = directory / frame.svg
+        if not svg_path.is_file():
+            _echo(f"[{index}/{len(manifest.frames)}] {frame.key} — SVG missing, kept as recorded")
+            missing_svgs.append(frame.key)
+            repainted.append(frame)
+            continue
+        _echo(f"[{index}/{len(manifest.frames)}] {frame.key}")
+        png_path = directory / frame.png
+        raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
+        repainted.append(
+            frame.model_copy(
+                update={
+                    "png_sha256": digest(png_path),
+                    "missing_glyphs": raster.missing_glyphs,
+                },
+            ),
+        )
+
+    updated = manifest.model_copy(update={"cell_height": cell_height, "frames": tuple(repainted)})
+    write_manifest(directory, updated)
+    write_index(directory, updated)
+
+    _echo("")
+    _echo(f"repainted {len(manifest.frames) - len(missing_svgs)} frames at cell height {cell_height}")
+    if missing_svgs:
+        _echo(f"{len(missing_svgs)} frames had no SVG and were left as recorded")
+        raise typer.Exit(code=1)
+
+
 @app.command("diff")
 def diff_command(
     baseline: Annotated[str, typer.Argument(help="Run to compare against.")],
@@ -367,7 +445,7 @@ def diff_command(
 ) -> None:
     """Report what changed between two runs."""
     baseline_root, candidate_root = run_directory(baseline), run_directory(candidate)
-    before, after = read_manifest(baseline_root), read_manifest(candidate_root)
+    before, after = _load_manifest(baseline), _load_manifest(candidate)
     diffs = _diff.compare(baseline_root, before, candidate_root, after)
     _echo(_diff.render_report(diffs))
 

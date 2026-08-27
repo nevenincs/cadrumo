@@ -60,16 +60,16 @@
         "config",
         "google",
         "folder",
-        "get"
+        "view"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "config.google.folder.get",
+        "command": "config.google.folder.view",
         "notices": [],
         "result": {
           "configured": true,
-          "operation": "config.google.folder.get",
+          "operation": "config.google.folder.view",
           "profile": "<profile-id>",
           "root_folder_id": "docs-folder-123"
         },

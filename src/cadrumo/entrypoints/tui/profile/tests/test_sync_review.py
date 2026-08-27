@@ -273,4 +273,3 @@ async def test_apply_all_selects_by_value_reverting_to_the_suggested_intents(tmp
     assert outcome is not None
     accepted_paths = {intent.path for intent in outcome.field_intents if intent.intent is CensalFieldIntent.ADOPT}
     assert accepted_paths == {"contact.postcode"}
-

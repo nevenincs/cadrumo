@@ -21,6 +21,7 @@ Submodules
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
    cadrumo.domain.calculations.registry._ledger_binding_resolution
+   cadrumo.domain.calculations.registry._loader_internals
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal
@@ -32,10 +33,12 @@ Submodules
    cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_governance
+   cadrumo.domain.calculations.registry._snapshot_internals
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers
+   cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
@@ -98,7 +101,6 @@ Submodules
    cadrumo.domain.calculations.registry.censo_modelos
    cadrumo.domain.calculations.registry.checker_oracle_flow
    cadrumo.domain.calculations.registry.classification_coherence
-   cadrumo.domain.calculations.registry.constructs
    cadrumo.domain.calculations.registry.convenio
    cadrumo.domain.calculations.registry.corpus_catalogue
    cadrumo.domain.calculations.registry.counterpart_bindings
@@ -177,7 +179,6 @@ Submodules
    cadrumo.domain.calculations.registry.static_inspection
    cadrumo.domain.calculations.registry.support_matrix
    cadrumo.domain.calculations.registry.temporal
-   cadrumo.domain.calculations.registry.validate
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
    cadrumo.domain.calculations.registry.validate_cross_revision_advisory
    cadrumo.domain.calculations.registry.validate_registry_scope

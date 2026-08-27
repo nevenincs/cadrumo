@@ -6,10 +6,10 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._validate import RegistryValidator
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
