@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:64c596389e3f60610b6780f368758fcd0147b07bc14f9de7b9424caf69b5a808'
+body_hash: 'sha256:0c2c21ebb6698b35a60ef11e928f0b44660792285b25624155d7d87c0e074e9b'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -126,3 +126,35 @@ what it does.
   can explain itself to the operator; a function returning a pointer-or-`None`
   cannot, and an empty result there reads as "you have no profiles". Any future
   consumer of `summary_inventory` must make that same choice deliberately.
+
+- The `domain.modelos` lazy-facade conversion was baselined rather than argued
+  for. A detached worktree at the commit before it ran the same
+  `application/modelo` suite: 158 failed / 1828 passed / 5 errors at BOTH
+  revisions, and the failing NAME sets are byte-identical (163 = 163, empty
+  diff both directions). Those failures are pre-existing peer breakage. The
+  check was worth its fifteen minutes: a lazy facade breaks exactly the code
+  that relied on import as a side effect, and one of the errors
+  (`wizard.compiler` missing `WIZARD_FLOWS`) has that shape, so "the error
+  types look domain-ish" would not have been evidence.
+- The remaining capability-family leaks are NOT gratuitous eager imports, and
+  must not be closed by widening declarations until each is adjudicated:
+  - `encrypted-facts` retains ~5 registry modules, which are only
+    `registry/__init__` plus the `registry.ids` leaf, pulled because
+    `_row_source_identity` takes `BindingId` from there. The same file imports
+    `ContentDigest` from `core.identity` two lines above; `BindingId` belongs
+    there too. Placement, not thresholds -- a "fewer than N modules" gate would
+    be the hardcoded-count anti-pattern.
+  - `encrypted-facts,network` retains 152 registry modules through
+    `ledger.actions_common` typing against `domain.modelos` protocols ->
+    `CalculationRevision` -> `registry.bindings`. That chain is semantically
+    real: a module typed against calculation revisions needs registry types.
+    Either those nodes genuinely touch calculations and should DECLARE
+    `calculation`, or the protocol module needs splitting so typing does not
+    drag the registry. Widening the declaration to make a gate green would be
+    weakening the claim, not satisfying it.
+- `application/ledger/actions_common.py` no longer imports the concrete
+  calculation catalogue adapter at module scope; it is constructed only when a
+  caller injects no repository. This removes an application-to-adapter
+  module-scope edge and is correct on layering grounds, but it did NOT move the
+  152-module measurement, because the protocol chain above still pulls the
+  registry. Recorded as a layering fix with no measured performance effect.
