@@ -121,6 +121,15 @@ def _isolated_environment(work_dir: Path) -> dict[str, str]:
 def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     """Drive actual production entry points inside the core-only installed cohort."""
     surfaces = json.dumps([{"name": name, "call": call} for name, call in _GUARDED_SURFACES])
+    # Derived from the surface table rather than restated: a hand-written import
+    # list drifts the moment a surface is enrolled, and the probe then reports
+    # NameError -- which reads as "this surface did not refuse properly" when
+    # the truth is that the probe never reached it. `MultimodalImageInput` is a
+    # helper the calls construct, not a guarded surface, so it stays explicit.
+    llm_imports = "\n".join(
+        f"            {name},"
+        for name in sorted({name for name, _call in _GUARDED_SURFACES} | {"MultimodalImageInput"})
+    )
     code = textwrap.dedent(
         f"""
         import json
@@ -137,15 +146,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
             optional_extra_available,
         )
         from cadrumo.llm import (
-            LocalTextLLMClassifier,
-            LocalVisionDocumentTranscriber,
-            LocalVisionLLMClassifier,
-            MultimodalImageInput,
-            SemanticColumnRoleMapper,
-            TextInvoiceFieldExtractor,
-            extract_invoice_fields_from_text,
-            rasterise_pdf_pages_to_base64_png,
-            transcribe_document_images,
+{llm_imports}
         )
 
         _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
