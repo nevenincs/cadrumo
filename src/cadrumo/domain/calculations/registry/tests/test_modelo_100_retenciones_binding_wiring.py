@@ -125,6 +125,14 @@ def _base_binding_values_2025(
         "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Art. 23.2 / art. 81 LIRPF reliefs, computed in 2025 as in 2024:
+        # zero in these retenciones scenarios, which declare no qualifying
+        # tenancy and no qualifying descendant.
+        "renta-2025-profile-deduccion-maternidad": Decimal("0"),
+        "renta-2025-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2025-profile-incremento-guarderia": Decimal("0"),
+        "renta-2025-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2025-profile-descendientes-guarderia": Decimal("0"),
     }
     if m111 is not None:
         values["renta-2025-modelo-111-retenciones-periodicas"] = m111

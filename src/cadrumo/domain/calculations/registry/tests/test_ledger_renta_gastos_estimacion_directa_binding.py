@@ -226,6 +226,13 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # autonómico halves, regardless of the Madrid tax residence below.
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # Art. 23.2 / art. 81 LIRPF reliefs are computed in 2025 as in 2024.
+            # Childless profile with no qualifying tenancy: all neutral zero.
+            "renta-2025-profile-deduccion-maternidad": Decimal("0"),
+            "renta-2025-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2025-profile-incremento-guarderia": Decimal("0"),
+            "renta-2025-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-2025-profile-descendientes-guarderia": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
