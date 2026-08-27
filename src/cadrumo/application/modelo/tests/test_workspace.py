@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -2368,6 +2370,11 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
     prose_remnants = tuple(
         path.relative_to(repository)
         for path in scanned_paths
-        if path.resolve() not in excluded_paths and "_workspace_projection.py" in path.read_text(encoding="utf-8")
+        if path.resolve() not in excluded_paths
+        # Match the forbidden module as a whole filename, not a substring: the
+        # live conformance suite legitimately names test_workspace_projection.py,
+        # which CONTAINS the rejected _workspace_projection.py and would otherwise
+        # red this gate on correct code.
+        and re.search(r"(?<![A-Za-z0-9_])_workspace_projection\.py", path.read_text(encoding="utf-8"))
     )
     assert not prose_remnants
