@@ -22,9 +22,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period
 from ....domain.modelos import (
     ModeloCode,

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.workflow.persistence import WorkflowRunRepository
-from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails
-
 from ....core import Period
 from ...calculations import CalculationObservationRepository
+from ...workflow.persistence import WorkflowRunRepository
+from ...workflow.run_models import WorkflowDeadlineContextDetails
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,

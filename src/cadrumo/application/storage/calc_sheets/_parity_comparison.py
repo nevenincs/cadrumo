@@ -63,7 +63,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+    from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 
 class CasillaParity(BaseModel):

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
+from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -305,7 +306,7 @@ def _require_isolated_target_context(
     for name in ("revision.toml", "export"):
         _require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
     stale_sibling_manifest = revision_root / "export.provenance.json"
-    if stale_sibling_manifest.exists() or stale_sibling_manifest.is_symlink() or stale_sibling_manifest.is_junction():
+    if stale_sibling_manifest.exists() or is_link_like(stale_sibling_manifest):
         raise RegistryValidationError(
             f"generated target revision refuses stale sibling export provenance manifest: {stale_sibling_manifest}",
         )
@@ -398,7 +399,7 @@ def _require_directory(path: Path, *, subject: str) -> Path:
 
 
 def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if path.is_symlink() or path.is_junction():
+    if is_link_like(path):
         raise RegistryValidationError(f"{subject} must not be a link: {path}")
     if not path.exists():
         raise RegistryValidationError(f"{subject} is missing: {path}")
@@ -411,6 +412,6 @@ def _children_without_links(directory: Path, *, subject: str) -> tuple[Path, ...
     # onto the shared scanner; this keeps that.
     children = tuple(sorted(iter_directory(directory, require_root=True), key=lambda path: path.name))
     for child in children:
-        if child.is_symlink() or child.is_junction():
+        if is_link_like(child):
             raise RegistryValidationError(f"{subject} contains a linked member: {child}")
     return children

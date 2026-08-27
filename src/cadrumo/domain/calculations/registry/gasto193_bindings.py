@@ -31,6 +31,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "Gasto193Observation",
+    "_Gasto193Selector",
     "resolve_gasto193_binding_row_values",
     "resolve_gasto193_binding_values",
     "validate_gasto193_binding_selector_shape",

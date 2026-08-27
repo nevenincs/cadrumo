@@ -21,11 +21,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
-
 from ..application.aggregation import CalculationSourceDiagnostic
 from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.errors import RegistryValidationError
+from ..domain.calculations.registry.legal import assert_legal_ref_ids_resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

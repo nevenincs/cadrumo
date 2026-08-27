@@ -38,9 +38,8 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema_references import LegalParameter
-
     from ...domain.calculations.registry.ids import SourceRefId
+    from ...domain.calculations.registry.schema_references import LegalParameter
     from ...domain.modelos import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016

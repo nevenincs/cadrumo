@@ -13,11 +13,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import (
-    LiveCrossReferenceDecision,
-    ProfilePredicateDefinition,
-)
-
 from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistryValidationError
 from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -29,6 +24,7 @@ from ..live_parity import (
     resolve_cross_reference_oracle,
 )
 from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schema_verification import LiveCrossReferenceDecision, ProfilePredicateDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

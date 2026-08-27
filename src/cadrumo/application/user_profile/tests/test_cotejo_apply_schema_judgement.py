@@ -108,8 +108,12 @@ def test_apply_cotejo_refuses_an_adopted_value_at_a_path_the_schema_never_declar
             )
 
         context = refusal.value.context or {}
-        assert UNKNOWN_FIELD_ISSUE_CODE in context["issue_codes"]
-        assert _UNDECLARED_CENSO_PATH in context["issue_paths"]
+        issue_codes = context["issue_codes"]
+        issue_paths = context["issue_paths"]
+        assert isinstance(issue_codes, tuple)
+        assert isinstance(issue_paths, tuple)
+        assert UNKNOWN_FIELD_ISSUE_CODE in issue_codes
+        assert _UNDECLARED_CENSO_PATH in issue_paths
         assert _record_revision(profile_id, storage_root) == before, (
             "the refusal must land before the record command, leaving the revision untouched"
         )
@@ -139,7 +143,9 @@ def test_apply_cotejo_refuses_an_adopted_certificate_value_in_the_wrong_shape(tm
             )
 
         context = refusal.value.context or {}
-        assert DATE_VALUE_ISSUE_CODE in context["issue_codes"]
+        issue_codes = context["issue_codes"]
+        assert isinstance(issue_codes, tuple)
+        assert DATE_VALUE_ISSUE_CODE in issue_codes
         assert _record_revision(profile_id, storage_root) == before
 
 

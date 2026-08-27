@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
+from ..errors import RegistryValidationError
 from ._registry_schema_support import _committed_registry, _revision, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

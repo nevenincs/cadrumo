@@ -11,13 +11,12 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.application.auth.certificate_sources as _certificate_sources_module
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....core.config import Settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
+from ...workflow.persistence import workflow_state_repository
+from .. import certificate_sources as _certificate_sources_module
 from ..certificate_source_operations import (
     list_operator_certificate_sources,
     register_operator_certificate_source,

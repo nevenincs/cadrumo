@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 

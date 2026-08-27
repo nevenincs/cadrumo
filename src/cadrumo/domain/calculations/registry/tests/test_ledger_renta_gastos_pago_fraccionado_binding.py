@@ -21,16 +21,15 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
+from .....core import CasillaId, validated_casilla_id
+from .....core.resources import bundled_path
+from ..binding_selector_utils import selector_as_dict
+from ..ledger_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
-from .....core import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
-from ..binding_selector_utils import selector_as_dict
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

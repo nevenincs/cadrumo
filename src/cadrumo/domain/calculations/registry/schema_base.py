@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Literal, get_args, get_origin
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from ....core.classification import SensitivityClass
@@ -24,6 +24,7 @@ from .ids import LegalRefId, SourceRefId
 __all__ = [
     "GOVERNANCE_STAMP",
     "MANIFEST_ONLY",
+    "REGISTRY_SOURCE_GROUNDING_TIERS",
     "SCHEMA_FAMILY",
     "CalculationClass",
     "DateAxis",
@@ -110,6 +111,13 @@ reaches.
 """
 
 
+#: A parsed TOML tuple/list, typed at the boundary rather than left with the
+#: ``Unknown`` element type an ``isinstance(value, (tuple, list))`` narrow of a
+#: bare ``object`` carries -- both coercion hops below iterate a validated,
+#: fully-typed ``list[object]`` through this one adapter.
+_OBJECT_LIST_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object])
+
+
 def coerce_enum_member(enum_cls: type) -> Callable[[object], object]:
     """Return a scalar coercion hop for one enum-typed field.
 
@@ -150,8 +158,9 @@ def coerce_enum_tuple(enum_cls: type) -> Callable[[object], object]:
     def _coerce(value: object) -> object:
         if not isinstance(value, (tuple, list)):
             return value
+        items = _OBJECT_LIST_ADAPTER.validate_python(value)
         return tuple(
-            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item for item in value
+            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item for item in items
         )
 
     return _coerce
@@ -170,8 +179,9 @@ def coerce_decimal_tuple(value: object) -> object:
     """
     if not isinstance(value, (tuple, list)):
         return value
+    items = _OBJECT_LIST_ADAPTER.validate_python(value)
     return tuple(
-        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item for item in value
+        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item for item in items
     )
 
 
@@ -409,6 +419,16 @@ EvidenceTier = Literal[
     "executable_parity_evidence",
     "layout_authority",
 ]
+#: The tiers that ground a registry entity on AEAT-published MATERIAL, as
+#: distinct from the law itself (``legal_authority``) and from executable
+#: parity artefacts. Three section validators require exactly this pair
+#: through ``require_any_source_tier``; named once because a tier added to
+#: one copy alone would let the same source ground a casilla while failing
+#: the revision that declares it.
+REGISTRY_SOURCE_GROUNDING_TIERS: tuple[EvidenceTier, ...] = (
+    "official_source_guidance",
+    "layout_authority",
+)
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]

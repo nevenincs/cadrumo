@@ -381,11 +381,11 @@ def _decline_invoice_draft(
     bucket's store at all.
     """
     from ...domain.buckets import BucketEventType
-    from .actions_common import _bucket_event_repository
+    from .actions_common import resolve_bucket_event_repository
     from .evidence import emit_evidence_event as _emit_evidence_event
 
     event_id = _emit_evidence_event(
-        event_repository=_bucket_event_repository(
+        event_repository=resolve_bucket_event_repository(
             bucket_id=bucket_id,
             repository=bucket_event_repository,
         ),

@@ -134,6 +134,6 @@ def test_every_parameter_annotation_is_a_deferred_target() -> None:
         and not isinstance(parameter.value.annotation, DeferredTarget)
     ]
 
-    assert offenders == [], (
-        "parameter annotations must be DeferredTarget references, not types: " + "; ".join(sorted(offenders))
+    assert offenders == [], "parameter annotations must be DeferredTarget references, not types: " + "; ".join(
+        sorted(offenders)
     )

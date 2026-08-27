@@ -2,7 +2,7 @@
 
 import pytest
 
-import cadrumo.application.wizard.catalogue as _catalogue
+from ..wizard import catalogue as _catalogue
 
 
 @pytest.fixture(autouse=True, scope="session")

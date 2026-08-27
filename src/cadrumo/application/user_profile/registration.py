@@ -226,7 +226,8 @@ def register_profile_with_credentials(
         # 24 words are zeroised on every exit -- the successful one, the
         # refused one, and the one where the handover itself raises.
         enrollment = mint_profile_creation_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
-        recovery_scope.enter_context(enrollment.recovery_key)
+        enrollment.recovery_key.__enter__()
+        recovery_scope.callback(enrollment.recovery_key.__exit__, None, None, None)
         # Delivered BEFORE the capsule is published, and the ordering is
         # the whole safety property. A channel can fail at the moment of
         # writing rather than when it is chosen -- a detached process is
@@ -246,10 +247,7 @@ def register_profile_with_credentials(
         # undeliverable-wrapper state is neither.
         supplied_recovery_proof = recovery_handover(enrollment)
         try:
-            if not isinstance(supplied_recovery_proof, str) or not compare_digest(
-                supplied_recovery_proof,
-                enrollment.recovery_key.mnemonic,
-            ):
+            if not compare_digest(supplied_recovery_proof, enrollment.recovery_key.mnemonic):
                 raise ProfileRegistrationError(
                     "recovery phrase possession proof did not match the enrolled phrase",
                 )

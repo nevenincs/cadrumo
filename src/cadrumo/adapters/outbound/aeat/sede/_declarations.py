@@ -32,8 +32,6 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-
 from .....core import CasillaId, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -41,6 +39,7 @@ from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
+from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.relations import (
     relation_source_requirements,

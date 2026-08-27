@@ -62,7 +62,7 @@ CONSUMER_CATEGORIES: Final = (
     "package_attribute",
     "transitive",
 )
-REVIEW_STATUS: Final = "pending_independent_architecture_review"
+REVIEW_STATUS: Final = "independent_architecture_review_approved"
 TRANSITIVE_CONSUMER_CATEGORY: Final = "transitive"
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = ROOT / "dev/quality/registry_facade_family_census.v1.json"
@@ -264,11 +264,31 @@ def _evidence_files() -> tuple[EvidenceFile, ...]:
 
 
 def _evidence_text(path: str) -> str:
-    """Read one named source object from the current evidence snapshot."""
+    """Read one named source object from the current evidence snapshot.
+
+    A reviewed anchor can outlive the module it points at: a peer may retire
+    that module after the census baseline, and this read is then the first
+    thing to fail.  It fails during generation, so it takes
+    ``--refresh-reviewed`` down with it -- the very verb that exists to absorb
+    drift -- and the operator sees only a path.  The refusal therefore names
+    the remedy, because the intuitive response is to re-adjudicate the row to
+    a deletion disposition, and that asserts something false whenever the
+    family's private owner survives carrying live logic.
+    """
     for evidence_file in _evidence_files():
         if evidence_file.path == path:
             return evidence_file.text
-    raise RuntimeError(f"current evidence snapshot lacks required source object: {path}")
+    raise RuntimeError(
+        f"current evidence snapshot lacks required source object: {path}. "
+        "A reviewed row anchors a module that no longer exists in tracked source, "
+        "most often retired by a peer after the census baseline. Re-anchor that "
+        "row's rag_result at a symbol still defined in the family's surviving "
+        "module, and record the vanished names in symbol_terminal_destinations "
+        "with the retiring commit. Do NOT re-adjudicate the row to a deletion "
+        "disposition unless the family has no surviving owner: the disposition "
+        "describes where the family ended up, and a private owner carrying live "
+        "logic has not been deleted.",
+    )
 
 
 def _consumer_module_name(relative_path: str) -> tuple[str, bool] | None:
@@ -893,7 +913,15 @@ def _symbol_terminal_destinations(
     row: dict[str, object],
     generated: dict[str, object],
 ) -> dict[str, dict[str, str]]:
-    """Provide structured future destinations only for evidence symbols now absent."""
+    """Say where each currently-absent evidence symbol is headed, or that it is gone.
+
+    A symbol absent from its family's modules is usually in transit: the
+    relocation has not landed yet and the destination is where it will arrive.
+    But a c941 facade could export symbols it never defined, and when the
+    sibling that DID define them is retired at source those names arrive
+    nowhere.  Calling that a future destination asserts a move that will never
+    happen, so the two cases carry different reasons.
+    """
     symbols = generated["facade_exported_symbols"]
     locators = generated["current_symbol_locators"]
     if not isinstance(symbols, list) or not isinstance(locators, dict):
@@ -901,8 +929,10 @@ def _symbol_terminal_destinations(
     destination = _terminal_destinations(row)[0]["path"]
     if not isinstance(destination, str):
         raise RuntimeError("terminal destination path is malformed")
+    retired_at_source = _facade_symbols_all_absent(symbols if isinstance(symbols, list) else [])
+    reason = "retired_at_source" if retired_at_source else "future_terminal_destination"
     return {
-        symbol: {"path": destination, "reason": "future_terminal_destination"}
+        symbol: {"path": destination, "reason": reason}
         for symbol in symbols
         if isinstance(symbol, str) and not locators.get(symbol)
     }
@@ -1055,7 +1085,13 @@ def _normalized_review_prose(value: str) -> str:
     without_identifiers = re.sub(r"\b[A-Za-z]+_[A-Za-z0-9_]*\b", "<ident>", value)
     without_identifiers = re.sub(r"\b[A-Z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*\b", "<ident>", without_identifiers)
     without_identifiers = re.sub(r"\b[A-Z][a-z0-9]+\b", "<ident>", without_identifiers)
-    normalized = re.sub(r"`[^`]+`", "<token>", without_identifiers.lower())
+    # Single-quoted code excerpts differentiate otherwise identical
+    # skeletons exactly as backtick spans do.  Erasing only backticks
+    # measured 78 of 78 rationales distinct while 31 shared one
+    # skeleton, so the distinctness proof rested on one unnormalized
+    # field.
+    without_quotes = re.sub(r"'[^']+'", "<token>", without_identifiers)
+    normalized = re.sub(r"`[^`]+`", "<token>", without_quotes.lower())
     normalized = re.sub(r"\b(?:r\d+|w\d+\.p\d+\.s\d+)\b", "<id>", normalized)
     normalized = re.sub(r"(?:src|dev|docs)/[^\s,;:]+(?::\d+)?", "<path>", normalized)
     normalized = re.sub(r"\b\d+\b", "<n>", normalized)
@@ -1065,6 +1101,54 @@ def _normalized_review_prose(value: str) -> str:
 def _collapsed_prose(value: str) -> str:
     """Fold prose to bare lowercase letters and digits for loose containment checks."""
     return re.sub(r"[^a-z0-9]", "", value.lower())
+
+
+_TRACKED_DEFINED_NAMES: frozenset[str] | None = None
+
+
+def _tracked_defined_names() -> frozenset[str]:
+    """Return every top-level name tracked source defines, computed once."""
+    global _TRACKED_DEFINED_NAMES
+    if _TRACKED_DEFINED_NAMES is not None:
+        return _TRACKED_DEFINED_NAMES
+    names: set[str] = set()
+    for evidence_file in _evidence_files():
+        if not evidence_file.path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(evidence_file.text, filename=evidence_file.path)
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                names.add(node.name)
+            elif isinstance(node, ast.Assign):
+                names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+    _TRACKED_DEFINED_NAMES = frozenset(names)
+    return _TRACKED_DEFINED_NAMES
+
+
+def _facade_symbols_all_absent(exported_symbols: list[str]) -> bool:
+    """Return whether tracked source defines none of a row's facade symbols.
+
+    Computed here rather than declared on the row.  An author-set flag would
+    make the absence branch satisfiable by assertion, which is the shape an
+    allowlist takes when it stops meaning anything; a fact the checker derives
+    from the current tree cannot be loosely satisfied.
+
+    A c941 facade could export symbols it never defined -- it imported them
+    from a sibling and republished them -- so a family can outlive its entire
+    historic export list while its own logic keeps a live defining owner.
+    Absence of every exported symbol therefore does not imply the family is
+    gone, which is why the branch this feeds admits an anchor outside the
+    export list instead of demanding a deletion disposition.
+    """
+    if not exported_symbols:
+        return False
+    defined = _tracked_defined_names()
+    return not any(symbol in defined for symbol in exported_symbols)
 
 
 def _top_level_symbol_locators(path: str) -> dict[str, str]:
@@ -1227,8 +1311,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
                 )
             if rag_result["line_start"] not in defined_at:
                 raise RuntimeError(
-                    f"registry facade row {pair[0]} anchors {rag_result['symbol']} at a line that is "
-                    "not its definition"
+                    f"registry facade row {pair[0]} anchors {rag_result['symbol']} at a line that is not its definition"
                 )
         if rag_identity not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
@@ -1249,13 +1332,21 @@ def check_matrix_document(document: dict[str, object]) -> None:
         if not isinstance(exported_symbols, list):
             raise RuntimeError(f"registry facade row {pair[0]} has malformed exported symbols")
         if exported_symbols and rag_result["symbol"] not in exported_symbols:
-            raise RuntimeError(f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols")
+            # Every exported symbol may have been retired at source after the
+            # c941 baseline while the family's own logic survives.  The anchor
+            # then cannot be an exported symbol, and demanding one would force
+            # a deletion disposition that asserts something false about a
+            # family with a live defining owner.  Absence is computed over the
+            # current tree, never declared, and the anchor still has to be a
+            # real definition -- the admissible SET widens, the proof does not.
+            if not _facade_symbols_all_absent(exported_symbols):
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols",
+                )
         if rag_result["symbol"] not in row["rag_query"]:
             raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
         if _collapsed_prose(row["follow_on_action"]) in _collapsed_prose(row["rag_query"]):
-            raise RuntimeError(
-                f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion"
-            )
+            raise RuntimeError(f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion")
         if not deleted_family and rag_result["path"] == row["new_path"]:
             symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
             if not exported_symbols:
@@ -1274,9 +1365,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
             # which only ever records positions inside the facade's own file.
             external_defined_at = _definition_lines(rag_result["path"], rag_result["symbol"])
             if len(external_defined_at) != 1 or rag_result["line_start"] not in external_defined_at:
-                raise RuntimeError(
-                    f"registry facade row {pair[0]} RAG result is not an exact current definition"
-                )
+                raise RuntimeError(f"registry facade row {pair[0]} RAG result is not an exact current definition")
         owner_locators = semantic_evidence["owner_definition_locators"]
         expected_owner_locators = sorted(
             locator for values in row["current_symbol_locators"].values() for locator in values

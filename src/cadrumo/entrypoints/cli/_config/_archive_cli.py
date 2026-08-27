@@ -7,7 +7,7 @@ sealed, AEAD-encrypted archive an operator can copy to another machine, and
 **There is no ``import`` verb, and its absence is the design.** An archive and
 a capsule directory differ only in how their material is READ; both produce a
 :class:`ProfileCapsuleSource`, and from there both reach one shared publication
-authority. ``config profile restore`` therefore takes either shape and tells
+authority. ``config profile archive import`` therefore takes either shape and tells
 them apart by asking the filesystem. A second import verb would be a second
 door onto the same authority, and would leave an operator guessing which of two
 commands restores their backup.

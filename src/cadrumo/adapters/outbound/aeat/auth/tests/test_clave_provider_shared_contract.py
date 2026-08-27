@@ -43,8 +43,6 @@ from urllib.parse import quote
 
 import pytest
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from ......core import AuthProviderKind
 from ......core.config import Settings
 from ......core.errors import AeatLoginAssertionError
@@ -56,6 +54,7 @@ from ......tests.aeat_literal_fixtures import (
     WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY,
 )
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from .. import session_store as session_store
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_permanente import ClavePermanenteAuthProvider

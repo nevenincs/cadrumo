@@ -25,10 +25,9 @@ from importlib.util import find_spec
 import pytest
 from pydantic import AnyUrl
 
-import cadrumo.core as core
-import cadrumo.domain.calculations.registry as registry
-from cadrumo.core.external_constants import load_external_constants
-from cadrumo.core.remote_authority import (
+from ..... import core as core
+from .....core.external_constants import load_external_constants
+from .....core.remote_authority import (
     REMOTE_READ_SCHEME,
     aeat_host_suffixes,
     canonical_remote_hostname,
@@ -37,8 +36,8 @@ from cadrumo.core.remote_authority import (
     is_sanctioned_gov_idp_host,
     sanctioned_gov_idp_host_suffixes,
 )
-
 from .....tests.aeat_literal_fixtures import aeat_host, aeat_url, configured_path
+from ... import registry as registry
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,

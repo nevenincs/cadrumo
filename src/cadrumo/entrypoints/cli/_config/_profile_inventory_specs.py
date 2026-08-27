@@ -43,7 +43,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._config_payloads", "ConfigListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._config._profile_list_payloads", "ConfigListResult"),
             identity="config.profile.list",
         ),
     ),

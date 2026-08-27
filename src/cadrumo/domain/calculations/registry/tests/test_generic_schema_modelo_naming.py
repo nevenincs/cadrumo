@@ -54,7 +54,12 @@ _NAME_CODE = re.compile(r"(?:^|_)(?:modelo_?|m_?)(\d{3})(?=$|_|[a-z])", re.IGNOR
 def _modelo_codes_in_name(name: str) -> frozenset[str]:
     """Return the canonical modelo codes a snake_case or CamelCase name carries."""
     spaced = re.sub(r"(?<=[a-z])(?=[A-Z])", "_", name)
-    return frozenset(match.group(1) for match in _NAME_CODE.finditer(spaced)) & _CODES
+    codes: set[str] = set()
+    for match in _NAME_CODE.finditer(spaced):
+        code = match.group(1)
+        assert isinstance(code, str)
+        codes.add(code)
+    return frozenset(codes) & _CODES
 
 
 def _registry_items() -> tuple[tuple[Path, ast.AST], ...]:

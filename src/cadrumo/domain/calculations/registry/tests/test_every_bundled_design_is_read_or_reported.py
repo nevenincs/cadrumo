@@ -50,14 +50,6 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-from cadrumo.domain.calculations.registry.record_design_schema import (
-    RecordDesignCorrection,
-    RecordDesignFieldTypeCorrection,
-    RecordDesignHeaderCellCorrection,
-    RecordDesignSinglePositionCorrection,
-)
-
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from ..record_design import (
@@ -65,6 +57,13 @@ from ..record_design import (
     _extract_pdf_text_lines,
     _join_wrapped_row_descriptions,
     _parse_pdf_row,
+    extract_record_design,
+)
+from ..record_design_schema import (
+    RecordDesignCorrection,
+    RecordDesignFieldTypeCorrection,
+    RecordDesignHeaderCellCorrection,
+    RecordDesignSinglePositionCorrection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

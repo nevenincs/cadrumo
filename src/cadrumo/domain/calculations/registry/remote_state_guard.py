@@ -13,17 +13,16 @@ from urllib.parse import urlparse
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
-from cadrumo.core.remote_authority import (
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.remote_authority import (
     REMOTE_READ_SCHEME,
     canonical_remote_hostname,
     first_aeat_host,
     is_aeat_host,
     is_sanctioned_gov_idp_host,
 )
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-
-from ....core import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
+from .schema_verification import LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[
     "open_simulator",

@@ -240,7 +240,10 @@ def test_modelo_309_2004_single_record_does_not_reuse_the_modern_two_record_shap
     assert len(layout.records) == 1
     assert record.record_type == "historical_fixed_width"
     assert record.fields[0].offset == 1
-    assert record.fields[-1].offset + record.fields[-1].length - 1 == 1300
+    last_field = record.fields[-1]
+    assert last_field.offset is not None
+    assert last_field.length is not None
+    assert last_field.offset + last_field.length - 1 == 1300
 
 
 def test_modelo_309_selector_boundary_mutation_is_refused() -> None:

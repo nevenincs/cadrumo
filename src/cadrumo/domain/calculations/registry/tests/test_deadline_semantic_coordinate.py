@@ -6,14 +6,13 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.deadline_coordinate import (
+from .....core import Period, ResultDisposition
+from ..deadline_coordinate import (
     DeadlineSemanticCoordinate,
     deadline_semantic_coordinate,
     deadline_window_semantic_coordinates,
 )
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
-
-from .....core import Period, ResultDisposition
+from ..schema import DeadlineWindowDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -41,6 +41,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
+from pydantic import TypeAdapter
 
 from .....core import Period, is_aeat_csv
 from .....core.directory_scan import scan_directory
@@ -65,6 +66,8 @@ _SYNTHETIC_TAX_ID_RE = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
 # Pattern used to verify that the CSV token in the manifest is what we expect
 # the parser to extract.  The sanitiser always uses SANITIZED{modelo}{year}.
 _CSV_SYNTHETIC_RE = re.compile(r"^SANITIZED(\d{3})(\d{4})$")
+
+_REPLACEMENTS_ADAPTER: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
 
 # Fixtures where the PDF body prints only the ejercicio year as the period
 # (no explicit "Período N" label) — the parser's observed period therefore
@@ -129,8 +132,9 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
     corpus).
     """
     data = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    replacements = data.get("replacements_applied", [])
-    synthetics = {r["synthetic"] for r in replacements}
+    raw_replacements = data.get("replacements_applied", []) if isinstance(data, dict) else []
+    replacements = _REPLACEMENTS_ADAPTER.validate_python(raw_replacements)
+    synthetics = {value for r in replacements if isinstance(value := r.get("synthetic"), str)}
 
     # Locate the SANITIZED<modelo><year> token — it is the parser's expected CSV.
     csv_token: str | None = next(

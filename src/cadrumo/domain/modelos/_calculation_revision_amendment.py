@@ -6,12 +6,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import FilingRecordId
+from ..calculations.registry.ids import RevisionId
+from ..calculations.registry.schema import RegistrySnapshot
+from ..calculations.registry.schema_references import SourceReference
 from .errors import ModeloValidationError
 
 

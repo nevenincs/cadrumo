@@ -6,14 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import (
-    _m303_iae_epigraph_wire_value,
-    project_m303_regimen_simplificado_rows,
-    validate_m303_regimen_simplificado_endpoint_epoch,
-)
-
 from .....application.calculations import calculate_m303_regimen_simplificado_result
 from .....core import (
     M303RegimenSimplificadoActivityField,
@@ -37,6 +29,13 @@ from .....domain.iva import (
 )
 from ....filing_evidence import FilingEvidenceReference
 from ..authority import bundled_authority
+from ..errors import RegistryValidationError
+from ..m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ..m303_regimen_simplificado_projection import (
+    _m303_iae_epigraph_wire_value,
+    project_m303_regimen_simplificado_rows,
+    validate_m303_regimen_simplificado_endpoint_epoch,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -127,7 +126,7 @@ def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_des
 def test_projection_identity_never_uses_json_serialisation() -> None:
     import inspect
 
-    import cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection as module
+    from .. import m303_regimen_simplificado_projection as module
 
     source = inspect.getsource(module)
     assert "model_dump_json" not in source

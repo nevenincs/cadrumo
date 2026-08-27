@@ -481,6 +481,8 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
             terminal = await supervisor.start(operation_id)
             reloaded = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=100)
+            assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref is not None
             settled_run = await operands.resolve(terminal.terminal_receipt.result_ref, FiledHistoryOnboardingRun)
             return terminal, reloaded, replay.events, settled_run
 

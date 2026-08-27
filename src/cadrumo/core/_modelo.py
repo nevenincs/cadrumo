@@ -249,7 +249,7 @@ class Modelo(StrEnum):
 #: classifies a member correctly; it does not, and cannot, prove any actually
 #: declared obligation is correct. The first real entry therefore inherits a gate
 #: that already bites.
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = dict[Modelo, str]()
 
 
 #: Registry modelos (with a TOML definition) deliberately out of scope of the

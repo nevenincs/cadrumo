@@ -57,10 +57,7 @@ def test_an_undeclared_parser_refuses() -> None:
     """Anti-tautology: withhold one enrolment and reconciliation must report it."""
     parsers = derive_prose_parsers()
     assert parsers, "no derived parsers to withhold"
-    full = {
-        parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r")
-        for parser in parsers
-    }
+    full = {parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r") for parser in parsers}
     withheld = parsers[0].module
     partial = {key: row for key, row in full.items() if key != withheld}
 
@@ -73,10 +70,7 @@ def test_an_undeclared_parser_refuses() -> None:
 def test_a_stale_enrolment_refuses() -> None:
     """Anti-tautology: an enrolment for a module the derivation no longer yields is reported."""
     parsers = derive_prose_parsers()
-    rows = {
-        parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r")
-        for parser in parsers
-    }
+    rows = {parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r") for parser in parsers}
     rows["dev/gone.py"] = ProseParserEnrolment(module="dev/gone.py", corpus="c", reason="r")
 
     unenrolled, stale = reconcile(parsers, rows)

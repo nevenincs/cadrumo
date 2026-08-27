@@ -25,9 +25,8 @@ import asyncio
 
 import pytest
 
-from cadrumo.domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload
-
 from ......core.config import Settings
+from ......domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
 from .._renta_web_open_safety import install_page_safety_net

@@ -27,14 +27,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_impatriado_bindings import (
+from .....core import CasillaId, validated_casilla_id
+from .....core.resources import bundled_path
+from ..ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
 )
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
-from .....core import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

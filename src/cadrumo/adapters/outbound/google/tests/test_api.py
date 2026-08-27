@@ -24,6 +24,7 @@ from googleapiclient.model import JsonModel
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...storage import (
+    OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
@@ -37,12 +38,13 @@ PostProcessor = Callable[[httplib2.Response, bytes], GoogleApiResponseBody]
 
 
 def _assert_verdict(
-    exc: BaseException,
+    exc: OutboundStorageError,
     condition_id: str,
     outcome: NoRecoveryOutcome,
     expected_facts: dict[str, object],
 ) -> None:
     verdict = exc.terminal_precondition_verdict
+    assert verdict is not None
     assert verdict.failed_condition_id == condition_id
     assert verdict.action is None
     assert verdict.argument_bindings == ()

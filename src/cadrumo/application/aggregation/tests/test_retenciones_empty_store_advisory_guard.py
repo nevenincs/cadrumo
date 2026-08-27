@@ -14,11 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from ....core import NoRecoveryOutcome, Period
 from ....core.aggregation import BindingSourceKind
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition

@@ -13,10 +13,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority as _bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-
 from ...adapters.outbound.google import (
     GoogleAuthError,
     relation_edit_payload,
@@ -30,6 +26,9 @@ from ...adapters.outbound.storage import (
 from ...core import CasillaId, Period, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal import coerce_decimal
+from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId, RelationId
 from ._common import emit_envelope
 from ._config._google_errors import _google_refusal
 from ._modelo_spreadsheet_payloads import (
@@ -46,13 +45,12 @@ from .errors import CliRefusedBoundaryError
 if TYPE_CHECKING:
     import typer
 
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
     from ...adapters.outbound.google import (
         PullResult,
         RowSetEdit,
     )
     from ...application.export import GoogleSheetsExportOperationResult
+    from ...domain.calculations.registry.schema import RegistrySnapshot
 
 
 def resolve_credentials_and_root(profile: str) -> tuple[object, str]:

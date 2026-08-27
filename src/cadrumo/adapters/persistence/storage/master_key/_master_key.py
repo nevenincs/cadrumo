@@ -65,14 +65,14 @@ class MasterKeyProvider(Protocol):
     session (idle-timeout guard, in-memory key cache) and exiting tears
     it down. Every concrete provider implements the protocol verbatim.
 
-    The ``_session`` / ``_activation_cm`` slots are the bookkeeping the
+    The ``session`` / ``_activation_cm`` slots are the bookkeeping the
     shared enter/exit machinery binds onto: entering stores the opened
     :class:`BucketSession` and its activation context manager, exiting
     tears both down. Every concrete provider declares them in
     ``__init__``.
     """
 
-    _session: BucketSession | None
+    session: BucketSession | None
     _activation_cm: AbstractContextManager[None] | None
 
     def get_master_key(self) -> bytes:

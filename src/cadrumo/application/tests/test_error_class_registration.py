@@ -157,7 +157,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 
 
 def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from cadrumo.application.workflow.errors import WorkflowInputMismatchError
+    from ..workflow.errors import WorkflowInputMismatchError
 
     _assert_registered_and_roundtrip(WorkflowInputMismatchError)
 
@@ -261,6 +261,6 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:
     """The profile tax-id probe is narrow and remains publicly importable."""
-    import cadrumo.application.auth.operator_probes as probes
+    from ..auth import operator_probes as probes
 
     assert hasattr(probes, "live_auth_identity_state")

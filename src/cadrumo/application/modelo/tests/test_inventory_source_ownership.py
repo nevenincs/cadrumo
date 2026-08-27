@@ -6,12 +6,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ....core import BindingSourceKind, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import _reject_caller_overrides_of_source_bindings
 from .._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES

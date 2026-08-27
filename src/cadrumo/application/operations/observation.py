@@ -43,7 +43,6 @@ from .persistence.events import (
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationReconciliationEvent,
-    OperationTerminalEvent,
 )
 from .persistence.journal import (
     OperationObservationCursorAheadError,
@@ -264,9 +263,10 @@ def _project_pending_interaction(
             expires_at=request.expires_at,
             review_reference=reference,
         )
-    if request.kind in {OperationInteractionKind.INPUT, OperationInteractionKind.CHOICE}:
+    kind = request.kind
+    if kind is OperationInteractionKind.INPUT or kind is OperationInteractionKind.CHOICE:
         return OperationUnsupportedInteractionV1(
-            interaction_kind=request.kind,
+            interaction_kind=kind,
             interaction_id=request.interaction_id,
             revision=request.revision,
             presentation_code=request.presentation_code,
@@ -344,20 +344,18 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
             code=event.code,
             interaction_id=event.interaction_id,
         )
-    if isinstance(event, OperationTerminalEvent):
-        receipt = event.receipt
-        return OperationPublicTerminalEventV1(
-            revision=event.revision,
-            sequence=event.sequence,
-            timestamp=event.timestamp,
-            code=event.code,
-            condition=receipt.condition,
-            effect=receipt.effect,
-            result_ref=receipt.result_ref,
-            refusal_ref=receipt.refusal_ref,
-            diagnostic_ref=receipt.diagnostic_ref,
-        )
-    raise TypeError("unknown operation event variant")
+    receipt = event.receipt
+    return OperationPublicTerminalEventV1(
+        revision=event.revision,
+        sequence=event.sequence,
+        timestamp=event.timestamp,
+        code=event.code,
+        condition=receipt.condition,
+        effect=receipt.effect,
+        result_ref=receipt.result_ref,
+        refusal_ref=receipt.refusal_ref,
+        diagnostic_ref=receipt.diagnostic_ref,
+    )
 
 
 __all__ = ["OperationObservationService"]

@@ -122,17 +122,17 @@ class TestRunContextOutcome:
         tmp_path: Path,
     ) -> None:
         run_id = "1111111111111111"
-        with (
-            override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings,
-            pytest.raises(RunTracePersistenceError) as excinfo,
-            run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
-        ):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / TRACE_FILENAME
-            trace_path.mkdir(parents=True)
+            with (
+                pytest.raises(RunTracePersistenceError) as excinfo,
+                run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
+            ):
+                trace_path.mkdir(parents=True)
 
-        assert excinfo.value.operation == "save_trace"
-        assert excinfo.value.path == trace_path
-        assert current_run_context() is None
+            assert excinfo.value.operation == "save_trace"
+            assert excinfo.value.path == trace_path
+            assert current_run_context() is None
 
     def test_trace_persistence_failure_does_not_mask_body_error(
         self,

@@ -224,6 +224,7 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
         settings: Settings | None = None,
         storage_root: Path | None = None,
     ) -> None:
+        """Bind the journal to the effective storage root for these settings."""
         root = effective_storage_root(storage_root, settings=settings)
         super().__init__(
             journal_dirname=PROFILE_EXPORT_JOURNAL_DIRNAME,

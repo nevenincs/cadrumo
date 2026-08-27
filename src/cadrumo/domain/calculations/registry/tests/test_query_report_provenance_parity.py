@@ -17,10 +17,9 @@ from collections.abc import Mapping
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from .....core import CasillaId, validated_casilla_id
 from ..query_reports import CasillaGroundingReport, ModeloCasillaDetailReport, ModeloCasillaRow
+from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -44,19 +44,15 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.capsule_record import (
+from ....core import SecureObjectWrite
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ..capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,
     ProfileRecordStore,
     profile_record_object_key,
 )
-from cadrumo.application.user_profile.custody_ports import (
-    profile_custody_secure_object_namespace,
-    profile_custody_secure_object_repository,
-)
-
-from ....core import SecureObjectWrite
-from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ..custody_ports import profile_custody_secure_object_namespace, profile_custody_secure_object_repository
 from ._profile_record_boundary_support import (
     CREATED_AT,
     PROFILE_ID,
@@ -223,7 +219,10 @@ def test_schema_identity_fields_are_pinned_not_merely_defaulted() -> None:
     class is therefore not catchable by callers of this boundary, so the
     message is what the assertion has to bind to.
     """
-    canonical_version: int = UserProfileRecord.model_fields["schema_version"].default_factory()  # type: ignore[assignment,misc]
+    schema_version_default_factory = UserProfileRecord.model_fields["schema_version"].default_factory
+    assert schema_version_default_factory is not None
+    canonical_version = schema_version_default_factory()
+    assert isinstance(canonical_version, int)
     cases: tuple[tuple[dict[str, object], str], ...] = (
         ({"schema_id": "cadrumo.user_profile.other"}, "is not the canonical profile schema"),
         ({"schema_version": canonical_version + 1}, "is not the canonical profile schema version"),

@@ -51,10 +51,9 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistrySnapshotError
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import NoRevisionForPeriodError, RegistrySnapshotError
+from ....domain.calculations.registry.schema import ModeloRevision
 from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -14,16 +14,12 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import (
-    CasillaContinuidadEvolutionDefinition,
-    CasillaDefinition,
-)
-
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from .ids import RevisionId
+from .schema import ModeloDefinition, ModeloRevision
+from .schema_references import PeriodSelector
+from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",

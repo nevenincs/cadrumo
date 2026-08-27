@@ -12,9 +12,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....application.workflow.persistence import workflow_state_repository
 from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,

@@ -37,14 +37,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
-    resolve_available_bound_inputs_by_casilla_id,
-)
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -54,6 +46,13 @@ from ....core import AggregationCaptureKind, CasillaId, Period, RegistryAuthorit
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.snapshot import build_snapshot
+from ....domain.calculations.registry.temporal import select_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree

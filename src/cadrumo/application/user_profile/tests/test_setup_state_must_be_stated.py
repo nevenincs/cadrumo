@@ -130,4 +130,6 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
     # all. That is the same guard enforced sooner, not a weaker one -- the
     # writer backstop below still refuses a record that evades construction.
     with pytest.raises(ValidationError):
-        UserProfileRecord(profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e")
+        UserProfileRecord(  # ty: ignore[missing-argument]  # reason: omitting setup_state IS the refusal under test
+            profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e",
+        )

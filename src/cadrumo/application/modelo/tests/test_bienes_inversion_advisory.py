@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind
 from ....domain.bienes_inversion import (
@@ -31,6 +29,7 @@ from ....domain.bienes_inversion import (
     BienInversionKind,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 

@@ -192,6 +192,7 @@ def collect_registry_tree_fingerprints_for_cache(
 
 
 __all__ = [
+    "_registry_fingerprint_cache",
     "bind_tree_fingerprint_collectors",
     "clear_fingerprint_cache",
     "collect_registry_tree_fingerprints_for_cache",

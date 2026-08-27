@@ -87,7 +87,7 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+    from ....application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = list_profile_buckets()
     if existing:

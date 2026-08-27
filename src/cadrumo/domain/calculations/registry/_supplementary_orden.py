@@ -13,10 +13,6 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_base import RegistryModel
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-
 from ....core import Modelo
 from .ids import LegalRefId, SourceRefId
 from .m303_orden_manifest import (
@@ -27,6 +23,9 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenAuthority,
     M303AnnualOrdenCompilation,
 )
+from .schema import ModeloDefinition
+from .schema_base import RegistryModel
+from .schema_references import LegalReference, SourceReference
 
 
 class SupplementaryOrdenCompiler(Protocol):

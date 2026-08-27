@@ -32,13 +32,13 @@ than a timing artefact.
 from __future__ import annotations
 
 from multiprocessing import get_context
+from multiprocessing.queues import Queue
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 if TYPE_CHECKING:
-    from multiprocessing.queues import Queue
     from multiprocessing.synchronize import Barrier
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -51,10 +51,9 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
     """Register the shared label from a separate process, reporting the outcome."""
     from pathlib import Path as _Path
 
-    from cadrumo.application.user_profile.registration import register_profile_with_credentials
-
     from ....tests.profile_persistence import composed_profile_persistence_ports
     from ....tests.secure_sql import isolated_profile_storage_root
+    from ..registration import register_profile_with_credentials
 
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)), composed_profile_persistence_ports():
         barrier.wait()
@@ -77,13 +76,12 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
     failure this guards against is the operator-visible one -- a label bound to
     two committed capsules, leaving every later selection ambiguous.
     """
-    from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
-
     from ....tests.secure_sql import isolated_profile_storage_root
+    from ..profile_repository import CommittedProfileRepository
 
     context = get_context("spawn")
     barrier = context.Barrier(2)
-    results: Queue[tuple[str, str]] = context.Queue()
+    results: Queue[tuple[str, str]] = Queue(ctx=context)
     workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()
@@ -117,7 +115,7 @@ def test_the_race_actually_reached_the_registration_path(tmp_path: Path) -> None
     """
     context = get_context("spawn")
     barrier = context.Barrier(2)
-    results: Queue[tuple[str, str]] = context.Queue()
+    results: Queue[tuple[str, str]] = Queue(ctx=context)
     workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING, Annotated
 
 from sqlalchemy import (
     Boolean,
@@ -48,6 +49,70 @@ class Base(DeclarativeBase):
     """Declarative base for every ORM mapper class in this package."""
 
 
+# Named `Annotated` column-type aliases shared across mapper classes below.
+#
+# `mapped_column()` is declared to return `MappedColumn[Any]` (SQLAlchemy relies
+# on its mypy plugin, not available here, to narrow that to `Mapped[T]` at the
+# assignment site). Folding the `mapped_column(...)` call into the annotation
+# itself via `Mapped[Annotated[T, mapped_column(...)]]` -- SQLAlchemy's own
+# documented alternative to the assignment form -- makes every attribute a bare
+# annotation with no right-hand side, so there is no `MappedColumn[Any]` value
+# ever assigned to a `Mapped[T]`-declared name to be unsound.
+_intpk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
+
+_str8 = Annotated[str, mapped_column(String(8), nullable=False)]
+_str32 = Annotated[str, mapped_column(String(32), nullable=False)]
+_str32_opt = Annotated[str | None, mapped_column(String(32), nullable=True)]
+_str48 = Annotated[str, mapped_column(String(48), nullable=False)]
+_str64 = Annotated[str, mapped_column(String(64), nullable=False)]
+_str64_unique = Annotated[str, mapped_column(String(64), unique=True, nullable=False)]
+_str64_opt = Annotated[str | None, mapped_column(String(64), nullable=True)]
+_str128 = Annotated[str, mapped_column(String(128), nullable=False)]
+_str128_opt = Annotated[str | None, mapped_column(String(128), nullable=True)]
+_str255 = Annotated[str, mapped_column(String(255), nullable=False)]
+_str255_opt = Annotated[str | None, mapped_column(String(255), nullable=True)]
+_str512 = Annotated[str, mapped_column(String(512), nullable=False)]
+_str1024 = Annotated[str, mapped_column(String(1024), nullable=False)]
+_text_opt = Annotated[str | None, mapped_column(Text, nullable=True)]
+
+_int_required = Annotated[int, mapped_column(Integer, nullable=False)]
+_int_opt = Annotated[int | None, mapped_column(Integer, nullable=True)]
+_int_default_zero = Annotated[int, mapped_column(Integer, nullable=False, default=0)]
+
+_date_required = Annotated[date, mapped_column(Date(), nullable=False)]
+_date_opt = Annotated[date | None, mapped_column(Date(), nullable=True)]
+_datetime_tz = Annotated[datetime, mapped_column(DateTime(timezone=True), nullable=False)]
+_datetime_tz_opt = Annotated[datetime | None, mapped_column(DateTime(timezone=True), nullable=True)]
+
+_decimal_15_2 = Annotated[Decimal, mapped_column(Numeric(15, 2), nullable=False)]
+_decimal_15_2_opt = Annotated[Decimal | None, mapped_column(Numeric(15, 2), nullable=True)]
+_decimal_8_4_opt = Annotated[Decimal | None, mapped_column(Numeric(8, 4), nullable=True)]
+
+_bool_default_false = Annotated[bool, mapped_column(Boolean, nullable=False, default=False)]
+_bool_default_true = Annotated[bool, mapped_column(Boolean, nullable=False, default=True)]
+
+_large_binary = Annotated[bytes, mapped_column(LargeBinary, nullable=False)]
+_hashed_lookup = Annotated[bytes, mapped_column(HashedLookup(), nullable=False)]
+_encrypted_string = Annotated[str, mapped_column(EncryptedString(), nullable=False)]
+
+_portal_modelo_fk = Annotated[
+    int | None,
+    mapped_column(ForeignKey("modelos.id", ondelete="SET NULL"), nullable=True),
+]
+_corpus_modelo_fk = Annotated[
+    int,
+    mapped_column(ForeignKey("modelos.id", ondelete="CASCADE"), nullable=False),
+]
+_finca_fk = Annotated[
+    int,
+    mapped_column(ForeignKey("rental_fincas.id", ondelete="CASCADE"), nullable=False),
+]
+_contract_fk = Annotated[
+    int,
+    mapped_column(ForeignKey("rental_contracts.id", ondelete="CASCADE"), nullable=False),
+]
+
+
 class ModeloRow(Base):
     """Row in the ``modelos`` table.
 
@@ -59,9 +124,9 @@ class ModeloRow(Base):
 
     __tablename__ = "modelos"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    id: Mapped[_intpk]
+    identifier: Mapped[_str64_unique]
+    name: Mapped[_str255]
 
 
 class PortalOrmRow(Base):
@@ -83,17 +148,17 @@ class PortalOrmRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    base_url: Mapped[str] = mapped_column(String(512), nullable=False)
-    auth_method: Mapped[str] = mapped_column(String(32), nullable=False)
-    modelo_id: Mapped[int | None] = mapped_column(
-        ForeignKey("modelos.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    label: Mapped[str] = mapped_column(String(255), nullable=False)
+    id: Mapped[_intpk]
+    identifier: Mapped[_str64_unique]
+    base_url: Mapped[_str512]
+    auth_method: Mapped[_str32]
+    modelo_id: Mapped[_portal_modelo_fk]
+    label: Mapped[_str255]
 
-    modelo: Mapped[ModeloRow | None] = relationship("ModeloRow", lazy="joined")
+    if TYPE_CHECKING:
+        modelo: Mapped[ModeloRow | None]
+    else:
+        modelo = relationship("ModeloRow", lazy="joined")
 
 
 class CorpusArtifactRow(Base):
@@ -119,18 +184,18 @@ class CorpusArtifactRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    year: Mapped[int] = mapped_column(Integer, nullable=False)
-    modelo_id: Mapped[int] = mapped_column(
-        ForeignKey("modelos.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
-    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
-    source_url: Mapped[str] = mapped_column(String(1024), nullable=False)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    id: Mapped[_intpk]
+    year: Mapped[_int_required]
+    modelo_id: Mapped[_corpus_modelo_fk]
+    file_path: Mapped[_str1024]
+    sha256: Mapped[_str64]
+    source_url: Mapped[_str1024]
+    fetched_at: Mapped[_datetime_tz]
 
-    modelo: Mapped[ModeloRow] = relationship("ModeloRow", lazy="joined")
+    if TYPE_CHECKING:
+        modelo: Mapped[ModeloRow]
+    else:
+        modelo = relationship("ModeloRow", lazy="joined")
 
 
 class TransactionDateIndexRow(Base):
@@ -193,13 +258,13 @@ class TransactionDateIndexRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    bucket_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    transaction_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    filing_date: Mapped[date] = mapped_column(Date(), nullable=False)
-    filing_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    eligible_from: Mapped[date] = mapped_column(Date(), nullable=False)
-    eligible_to: Mapped[date] = mapped_column(Date(), nullable=False)
+    id: Mapped[_intpk]
+    bucket_id: Mapped[_str64]
+    transaction_id: Mapped[_str64]
+    filing_date: Mapped[_date_required]
+    filing_year: Mapped[_int_required]
+    eligible_from: Mapped[_date_required]
+    eligible_to: Mapped[_date_required]
 
 
 class SecureObjectRow(Base):
@@ -234,23 +299,23 @@ class SecureObjectRow(Base):
         _nullable_fixed_length_check("ciphertext_hash", _HASH_HEX_LENGTH),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    namespace: Mapped[str] = mapped_column(String(128), nullable=False)
-    object_key: Mapped[bytes] = mapped_column(HashedLookup(), nullable=False)
-    classification: Mapped[str] = mapped_column(String(32), nullable=False)
-    schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    previous_revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    revision_ancestor_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
-    previous_payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    ciphertext_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    revision_written_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    write_provenance: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source_event_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    conflict_policy: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    payload: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    id: Mapped[_intpk]
+    namespace: Mapped[_str128]
+    object_key: Mapped[_hashed_lookup]
+    classification: Mapped[_str32]
+    schema_version: Mapped[_int_required]
+    written_at: Mapped[_datetime_tz]
+    revision_id: Mapped[_str64_opt]
+    previous_revision_id: Mapped[_str64_opt]
+    revision_ancestor_ids: Mapped[_text_opt]
+    previous_payload_hash: Mapped[_str64_opt]
+    payload_hash: Mapped[_str64_opt]
+    ciphertext_hash: Mapped[_str64_opt]
+    revision_written_at: Mapped[_datetime_tz_opt]
+    write_provenance: Mapped[_str255_opt]
+    source_event_id: Mapped[_str128_opt]
+    conflict_policy: Mapped[_str32_opt]
+    payload: Mapped[_large_binary]
 
 
 _RENTAL_USE_TYPE_VALUES = (
@@ -321,19 +386,19 @@ class FincaRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    address: Mapped[str] = mapped_column(EncryptedString(), nullable=False)
-    valor_catastral_total: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    valor_catastral_construccion: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    valor_catastral_revision_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    coste_adquisicion: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    coste_adquisicion_construccion: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    acquisition_date: Mapped[date] = mapped_column(Date(), nullable=False)
-    disposal_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
-    use_type: Mapped[str] = mapped_column(String(32), nullable=False)
-    is_stressed_area: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
+    id: Mapped[_intpk]
+    identifier: Mapped[_str64_unique]
+    address: Mapped[_encrypted_string]
+    valor_catastral_total: Mapped[_decimal_15_2]
+    valor_catastral_construccion: Mapped[_decimal_15_2]
+    valor_catastral_revision_year: Mapped[_int_opt]
+    coste_adquisicion: Mapped[_decimal_15_2]
+    coste_adquisicion_construccion: Mapped[_decimal_15_2]
+    acquisition_date: Mapped[_date_required]
+    disposal_date: Mapped[_date_opt]
+    use_type: Mapped[_str32]
+    is_stressed_area: Mapped[_bool_default_false]
+    schema_version: Mapped[_str8]
 
 
 class ArrendamientoRow(Base):
@@ -393,30 +458,30 @@ class ArrendamientoRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    finca_id: Mapped[int] = mapped_column(
-        ForeignKey("rental_fincas.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    contract_celebration_date: Mapped[date] = mapped_column(Date(), nullable=False)
-    contract_termination_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
-    tenant_count: Mapped[int] = mapped_column(Integer, nullable=False)
-    qualifying_co_tenant_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    tenant_min_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    tenant_max_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    tenant_is_public_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    tenant_is_ley_49_2002_entity_with_social_use: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    tenant_is_imv_beneficiary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    dwelling_in_public_program: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    prior_contract_last_rent: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
-    prior_contract_indexation: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
-    initial_rent: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    is_first_rental: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    rehabilitation_finished_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
-    lau_17_6_compliant: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
+    id: Mapped[_intpk]
+    finca_id: Mapped[_finca_fk]
+    contract_celebration_date: Mapped[_date_required]
+    contract_termination_date: Mapped[_date_opt]
+    tenant_count: Mapped[_int_required]
+    qualifying_co_tenant_count: Mapped[_int_default_zero]
+    tenant_min_age: Mapped[_int_opt]
+    tenant_max_age: Mapped[_int_opt]
+    tenant_is_public_admin: Mapped[_bool_default_false]
+    tenant_is_ley_49_2002_entity_with_social_use: Mapped[_bool_default_false]
+    tenant_is_imv_beneficiary: Mapped[_bool_default_false]
+    dwelling_in_public_program: Mapped[_bool_default_false]
+    prior_contract_last_rent: Mapped[_decimal_15_2_opt]
+    prior_contract_indexation: Mapped[_decimal_8_4_opt]
+    initial_rent: Mapped[_decimal_15_2]
+    is_first_rental: Mapped[_bool_default_false]
+    rehabilitation_finished_date: Mapped[_date_opt]
+    lau_17_6_compliant: Mapped[_bool_default_true]
+    schema_version: Mapped[_str8]
 
-    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
+    if TYPE_CHECKING:
+        finca: Mapped[FincaRow]
+    else:
+        finca = relationship("FincaRow", lazy="joined")
 
 
 class FincaRendimientoRecordRow(Base):
@@ -450,17 +515,17 @@ class FincaRendimientoRecordRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    contract_id: Mapped[int] = mapped_column(
-        ForeignKey("rental_contracts.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    period_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    gross_rent_received: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    dias_alquilados: Mapped[int] = mapped_column(Integer, nullable=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
+    id: Mapped[_intpk]
+    contract_id: Mapped[_contract_fk]
+    period_year: Mapped[_int_required]
+    gross_rent_received: Mapped[_decimal_15_2]
+    dias_alquilados: Mapped[_int_required]
+    schema_version: Mapped[_str8]
 
-    contract: Mapped[ArrendamientoRow] = relationship("ArrendamientoRow", lazy="joined")
+    if TYPE_CHECKING:
+        contract: Mapped[ArrendamientoRow]
+    else:
+        contract = relationship("ArrendamientoRow", lazy="joined")
 
 
 class FincaGastoRow(Base):
@@ -492,17 +557,17 @@ class FincaGastoRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    finca_id: Mapped[int] = mapped_column(
-        ForeignKey("rental_fincas.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    period_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    category: Mapped[str] = mapped_column(String(48), nullable=False)
-    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
+    id: Mapped[_intpk]
+    finca_id: Mapped[_finca_fk]
+    period_year: Mapped[_int_required]
+    category: Mapped[_str48]
+    amount: Mapped[_decimal_15_2]
+    schema_version: Mapped[_str8]
 
-    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
+    if TYPE_CHECKING:
+        finca: Mapped[FincaRow]
+    else:
+        finca = relationship("FincaRow", lazy="joined")
 
 
 class FincaAmortizacionLedgerRow(Base):
@@ -523,22 +588,19 @@ class FincaAmortizacionLedgerRow(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    finca_id: Mapped[int] = mapped_column(
-        ForeignKey("rental_fincas.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    period_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    dias_alquilados: Mapped[int] = mapped_column(Integer, nullable=False)
-    basis_used: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    amortization_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    cumulative_amortization_through_year: Mapped[Decimal] = mapped_column(
-        Numeric(15, 2),
-        nullable=False,
-    )
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
+    id: Mapped[_intpk]
+    finca_id: Mapped[_finca_fk]
+    period_year: Mapped[_int_required]
+    dias_alquilados: Mapped[_int_required]
+    basis_used: Mapped[_decimal_15_2]
+    amortization_amount: Mapped[_decimal_15_2]
+    cumulative_amortization_through_year: Mapped[_decimal_15_2]
+    schema_version: Mapped[_str8]
 
-    finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
+    if TYPE_CHECKING:
+        finca: Mapped[FincaRow]
+    else:
+        finca = relationship("FincaRow", lazy="joined")
 
 
 metadata = Base.metadata

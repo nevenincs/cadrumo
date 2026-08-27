@@ -286,7 +286,7 @@ def run_modelo_quickfile(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
-            requested_revision_id=command.registry_revision_id,
+            registry_revision_id=registry_revision_id,
             actor=command.actor,
             catalogue=work_unit_catalogue_repository(bucket_id=command.bucket_id).load(),
         )

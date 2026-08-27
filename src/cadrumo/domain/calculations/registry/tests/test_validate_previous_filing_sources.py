@@ -18,13 +18,12 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement
-
 from .....core import CasillaId, validated_casilla_id
 from ..authority import bundled_authority
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
 )
+from ..relations import RegistryFoldRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -20,12 +20,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -66,7 +65,12 @@ def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> 
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
         text_inputs={},
     )
-    return {observation.casilla_id: observation.value for observation in result.observations}
+    values: dict[CasillaId, Decimal] = {}
+    for observation in result.observations:
+        value = observation.value
+        assert isinstance(value, Decimal)
+        values[observation.casilla_id] = value
+    return values
 
 
 def test_boolean_casilla_is_declared_boolean_and_operator_supplied() -> None:

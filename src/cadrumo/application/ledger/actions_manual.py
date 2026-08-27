@@ -64,38 +64,38 @@ from ...domain.usage_ratios import (
 )
 from ..review import LedgerReviewStatus
 from .actions_common import (
-    _bucket_event_repository,
-    _build_bucket_event,
-    _command_matches_current,
-    _decimal_to_string,
-    _display_decimal,
-    _EventSpec,
-    _evidence_event_ids,
-    _invoice_repository,
-    _is_evidence_only_command,
-    _merge_identifier_tuple,
-    _mutation_signature,
-    _normalise_attachment_patch_ids,
-    _normalise_timestamp,
-    _optional_decimal,
-    _optional_patched,
-    _primary_lineage_event_id,
-    _raise_finalized_modelo_blocked,
-    _replace_transaction,
-    _require_actor,
-    _require_source_command,
-    _require_transaction,
-    _required_patched,
-    _result,
-    _save_transaction_catalogue_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
-    _upsert_transaction,
-    _verify_evidence_references,
-    _verify_usage_ratio_reference,
+    EventSpec,
     blocking_modelo_references,
+    build_ledger_bucket_event,
+    build_manual_ledger_result,
+    command_matches_current,
+    decimal_to_string,
+    derive_evidence_event_ids,
+    display_decimal,
+    is_evidence_only_command,
+    merge_identifier_tuple,
+    mutation_signature,
+    normalise_attachment_patch_ids,
+    normalise_timestamp,
+    optional_decimal,
+    optional_patched,
+    primary_lineage_event_id,
     purchase_invoice_evidence_records,
+    raise_finalized_modelo_blocked,
+    replace_transaction,
+    require_actor,
+    require_source_command,
+    require_transaction,
+    required_patched,
     resolve_attachment_store,
+    resolve_bucket_event_repository,
+    resolve_invoice_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+    transaction_modelo_source_ids,
+    upsert_transaction,
+    verify_evidence_references,
+    verify_usage_ratio_reference,
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
 from .models import (
@@ -138,9 +138,9 @@ def create_manual_transaction(
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     with the created transaction and associated bucket event.
     """
-    now = _normalise_timestamp(occurred_at)
-    repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     if command.idempotency_key is not None:
         # The idempotency key is authoritative for row identity: a keyed row
@@ -155,12 +155,12 @@ def create_manual_transaction(
             None,
         )
         if existing is not None:
-            if _command_matches_current(command, existing):
+            if command_matches_current(command, existing):
                 # Guarded idempotent retry: same idempotency key, identical content.
                 # Return the stored row unchanged with no new event (an empty
                 # bucket_event_ids tuple is the structural no-op signal), mirroring
                 # the create_work_unit existing-record contract.
-                return _result(command.bucket_id, existing, ())
+                return build_manual_ledger_result(command.bucket_id, existing, ())
             raise TransactionValidationError(
                 f"ledger add idempotency-key {command.idempotency_key!r} already names a stored "
                 "transaction with different content; use a new idempotency key for a different "
@@ -168,14 +168,14 @@ def create_manual_transaction(
                 translated_message="application.ledger.errors.idempotency_key_conflict",
             )
     transaction_base = _transaction_from_command(command, occurred_at=now, currency_normalizer=currency_normalizer)
-    _verify_evidence_references(
+    verify_evidence_references(
         command,
         transaction_id=transaction_base.transaction_id,
         invoice_repository=invoice_repository,
         attachment_store=attachment_store,
     )
-    _verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
-    event = _build_bucket_event(
+    verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
+    event = build_ledger_bucket_event(
         bucket_id=command.bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
         occurred_at=now,
@@ -189,14 +189,14 @@ def create_manual_transaction(
         bucket_event_id=event.event_id,
         currency_normalizer=currency_normalizer,
     )
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
-        catalogue=_upsert_transaction(catalogue, transaction),
+        catalogue=upsert_transaction(catalogue, transaction),
         events=(event,),
     )
     _record_attachment_back_references(transaction, attachment_store=attachment_store)
-    return _result(command.bucket_id, transaction, (event.event_id,))
+    return build_manual_ledger_result(command.bucket_id, transaction, (event.event_id,))
 
 
 def attach_manual_transaction_evidence(
@@ -220,13 +220,13 @@ def attach_manual_transaction_evidence(
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
-    trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    trimmed_actor = require_actor(actor, operation="ledger evidence attachment")
+    trimmed_source_command = require_source_command(source_command, operation="ledger evidence attachment")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
+    current = require_transaction(catalogue, transaction_id)
     normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
-    normalized_attachment_ids = _normalise_attachment_patch_ids(attachment_ids)
+    normalized_attachment_ids = normalise_attachment_patch_ids(attachment_ids)
     if normalized_purchase_evidence_id is None and not normalized_attachment_ids:
         raise TransactionValidationError(
             "ledger evidence attachment requires purchase evidence or attachment ids",
@@ -247,7 +247,7 @@ def attach_manual_transaction_evidence(
     if normalized_purchase_evidence_id is not None:
         patch_values["purchase_invoice_evidence_id"] = normalized_purchase_evidence_id
     if normalized_attachment_ids:
-        patch_values["attachment_ids"] = _merge_identifier_tuple(current.attachment_ids, normalized_attachment_ids)
+        patch_values["attachment_ids"] = merge_identifier_tuple(current.attachment_ids, normalized_attachment_ids)
     return update_manual_transaction_fields(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -310,12 +310,12 @@ def detach_manual_transaction_attachments(
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
-    trimmed_actor = _require_actor(actor, operation="ledger evidence detachment")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger evidence detachment")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    trimmed_actor = require_actor(actor, operation="ledger evidence detachment")
+    trimmed_source_command = require_source_command(source_command, operation="ledger evidence detachment")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
-    requested = _normalise_attachment_patch_ids(attachment_ids)
+    current = require_transaction(catalogue, transaction_id)
+    requested = normalise_attachment_patch_ids(attachment_ids)
     if not requested:
         raise TransactionValidationError(
             "ledger evidence detachment requires at least one attachment id",
@@ -382,11 +382,11 @@ def link_manual_transaction_invoice(
     """
     from ..invoices import link_invoice_transaction_repositories
 
-    trimmed_actor = _require_actor(actor, operation="ledger invoice linkage")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger invoice linkage")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    current = _require_transaction(repository.load(), transaction_id)
-    invoices_repo = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    trimmed_actor = require_actor(actor, operation="ledger invoice linkage")
+    trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    current = require_transaction(repository.load(), transaction_id)
+    invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:
         raise InvoiceLinkError(
@@ -402,11 +402,11 @@ def link_manual_transaction_invoice(
                 "invoice_bucket_id": invoice_record.bucket_id or "",
             },
         )
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    event = _build_bucket_event(
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
-        occurred_at=_normalise_timestamp(occurred_at),
+        occurred_at=normalise_timestamp(occurred_at),
         actor=trimmed_actor,
         object_id=current.transaction_id,
         # Identifiers and the operator's verb only: invoice content (counterparty,
@@ -436,9 +436,9 @@ def get_manual_transaction(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
     """Return one :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` from a bucket catalogue."""
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transaction = _require_transaction(repository.load(), transaction_id)
-    return _result(bucket_id, transaction, ())
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = require_transaction(repository.load(), transaction_id)
+    return build_manual_ledger_result(bucket_id, transaction, ())
 
 
 def list_manual_transactions(
@@ -452,7 +452,7 @@ def list_manual_transactions(
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` for one
     stored transaction.
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = sorted(
         repository.load().values(),
         key=lambda transaction: (
@@ -460,7 +460,7 @@ def list_manual_transactions(
             transaction.transaction_id,
         ),
     )
-    return tuple(_result(bucket_id, transaction, ()) for transaction in transactions)
+    return tuple(build_manual_ledger_result(bucket_id, transaction, ()) for transaction in transactions)
 
 
 def query_ledger_review_rows(
@@ -473,7 +473,7 @@ def query_ledger_review_rows(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
     """
-    repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
     return project_ledger_review_query(
         query=query,
@@ -491,17 +491,17 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         date=(raw.value_date or raw.booked_date).isoformat(),
         booked_date=raw.booked_date.isoformat(),
         value_date=raw.value_date.isoformat() if raw.value_date else None,
-        amount=_display_decimal(raw.amount),
+        amount=display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
         business_classification=transaction.business_classification.value,
-        business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
+        business_pct=display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
         category_id=transaction.category_id,
-        taxable_base=_display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
-        iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
-        iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
+        taxable_base=display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
+        iva_rate=display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
+        iva_amount=display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
         iva_category=transaction.iva_category.value if transaction.iva_category is not None else None,
         counterparty_country=transaction.counterparty_country,
         counterparty_identification_state=(
@@ -521,13 +521,13 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         classified_at=transaction.classified_at.isoformat() if transaction.classified_at is not None else None,
         classification_reason=transaction.classification_reason,
         classification_confidence=(
-            _display_decimal(transaction.classification_confidence)
+            display_decimal(transaction.classification_confidence)
             if transaction.classification_confidence is not None
             else None
         ),
         source_jurisdiction=transaction.source_jurisdiction,
-        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
-        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
+        value_in_eur=display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
+        fx_rate=display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
         created_at=transaction.created_at.isoformat(),
         modified_at=transaction.modified_at.isoformat(),
     )
@@ -583,7 +583,7 @@ def summarize_manual_transactions(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only :class:`~cadrumo.application.ledger.models.LedgerStatusReport` for one bucket."""
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
         LedgerReviewStatus.PENDING: 0,
@@ -626,9 +626,9 @@ def summarize_manual_transactions(
             expense_total += eur
     return LedgerStatusReport(
         bucket_id=bucket_id,
-        business_income_total=_display_decimal(income_total),
-        business_expense_total=_display_decimal(expense_total),
-        business_net_total=_display_decimal(income_total - expense_total),
+        business_income_total=display_decimal(income_total),
+        business_expense_total=display_decimal(expense_total),
+        business_net_total=display_decimal(income_total - expense_total),
         total_count=len(transactions),
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
@@ -673,11 +673,11 @@ def update_manual_transaction(
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
-    now = _normalise_timestamp(occurred_at)
-    repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
+    current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
@@ -697,7 +697,7 @@ def update_manual_transaction(
         )
     blockers = blocking_modelo_references(
         bucket_id=command.bucket_id,
-        transaction_ids=_transaction_modelo_source_ids(current),
+        transaction_ids=transaction_modelo_source_ids(current),
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
@@ -707,11 +707,11 @@ def update_manual_transaction(
     # export evidence refusal would itself be blocked by the calculation that
     # raised it. The cited revisions are reported back as stale so the operator
     # is told to recalculate; the exemption never widens past evidence fields.
-    evidence_only = _is_evidence_only_command(command, current)
+    evidence_only = is_evidence_only_command(command, current)
     if blockers and not evidence_only:
-        _raise_finalized_modelo_blocked(
+        raise_finalized_modelo_blocked(
             operation="ledger transaction update",
-            transaction_ids=_transaction_modelo_source_ids(current),
+            transaction_ids=transaction_modelo_source_ids(current),
             blockers=blockers,
         )
     prepared = _prepare_manual_transaction_update(
@@ -729,17 +729,17 @@ def update_manual_transaction(
             context={"transaction_id": transaction_id},
         )
     replacement, events = prepared
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
-        catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
+        catalogue=replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
         events=events,
     )
     _record_attachment_back_references(
         replacement,
         attachment_store=attachment_store,
     )
-    return _result(
+    return build_manual_ledger_result(
         command.bucket_id,
         replacement,
         tuple(event.event_id for event in events),
@@ -815,15 +815,15 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
     )
-    if _mutation_signature(current) == _mutation_signature(replacement):
+    if mutation_signature(current) == mutation_signature(replacement):
         return None
-    _verify_evidence_references(
+    verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
         invoice_repository=invoice_repository,
         attachment_store=attachment_store,
     )
-    _verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
+    verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
     event_specs = _update_event_specs(
         current=current,
         replacement=replacement,
@@ -831,7 +831,7 @@ def _prepare_manual_transaction_update(
         previous_transaction_id=previous_transaction_id,
     )
     events = tuple(
-        _build_bucket_event(
+        build_ledger_bucket_event(
             bucket_id=command.bucket_id,
             event_type=event_type,
             occurred_at=now,
@@ -842,8 +842,8 @@ def _prepare_manual_transaction_update(
         )
         for event_type, object_type, object_id, payload in event_specs
     )
-    primary_event_id = _primary_lineage_event_id(events)
-    evidence_event_ids = _evidence_event_ids(events)
+    primary_event_id = primary_lineage_event_id(events)
+    evidence_event_ids = derive_evidence_event_ids(events)
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
@@ -924,9 +924,9 @@ def update_manual_transaction_fields(
                 "evidence_fields": ",".join(sorted(patch.model_fields_set & _EVIDENCE_PATCH_FIELDS)),
             },
         )
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
-    current = _require_transaction(catalogue, transaction_id)
+    current = require_transaction(catalogue, transaction_id)
     command = _command_from_patch(
         bucket_id=bucket_id,
         current=current,
@@ -944,9 +944,9 @@ def update_manual_transaction_fields(
     if (
         not reaffirm
         and "business_classification" in patch.model_fields_set
-        and _command_matches_current(command, current)
+        and command_matches_current(command, current)
     ):
-        return _result(bucket_id, current, ())
+        return build_manual_ledger_result(bucket_id, current, ())
     return update_manual_transaction(
         transaction_id=transaction_id,
         command=command,
@@ -973,32 +973,32 @@ def _command_from_patch(
 ) -> ManualLedgerTransactionCommand:
     raw = current.raw
     patch_fields = patch.model_fields_set
-    booked_date = _required_patched(patch, patch_fields, "booked_date", raw.booked_date)
-    amount = _required_patched(patch, patch_fields, "amount", raw.amount)
-    currency = _required_patched(patch, patch_fields, "currency", raw.currency)
-    direction = _required_patched(patch, patch_fields, "direction", current.direction)
-    description = _required_patched(patch, patch_fields, "description", raw.description)
-    business_classification = _required_patched(
+    booked_date = required_patched(patch, patch_fields, "booked_date", raw.booked_date)
+    amount = required_patched(patch, patch_fields, "amount", raw.amount)
+    currency = required_patched(patch, patch_fields, "currency", raw.currency)
+    direction = required_patched(patch, patch_fields, "direction", current.direction)
+    description = required_patched(patch, patch_fields, "description", raw.description)
+    business_classification = required_patched(
         patch,
         patch_fields,
         "business_classification",
         current.business_classification,
     )
-    business_pct = _optional_patched(patch, patch_fields, "business_pct", current.business_pct)
-    category_id = _optional_patched(patch, patch_fields, "category_id", current.category_id)
-    taxable_base = _optional_patched(patch, patch_fields, "taxable_base", current.taxable_base)
-    iva_rate = _optional_patched(patch, patch_fields, "iva_rate", current.iva_rate)
-    iva_amount = _optional_patched(patch, patch_fields, "iva_amount", current.iva_amount)
-    recargo_amount = _optional_patched(patch, patch_fields, "recargo_amount", current.recargo_amount)
-    irpf_category = _optional_patched(patch, patch_fields, "irpf_category", current.irpf_category)
-    m210_income_classification = _optional_patched(
+    business_pct = optional_patched(patch, patch_fields, "business_pct", current.business_pct)
+    category_id = optional_patched(patch, patch_fields, "category_id", current.category_id)
+    taxable_base = optional_patched(patch, patch_fields, "taxable_base", current.taxable_base)
+    iva_rate = optional_patched(patch, patch_fields, "iva_rate", current.iva_rate)
+    iva_amount = optional_patched(patch, patch_fields, "iva_amount", current.iva_amount)
+    recargo_amount = optional_patched(patch, patch_fields, "recargo_amount", current.recargo_amount)
+    irpf_category = optional_patched(patch, patch_fields, "irpf_category", current.irpf_category)
+    m210_income_classification = optional_patched(
         patch,
         patch_fields,
         "m210_income_classification",
         current.m210_income_classification,
     )
-    usage_ratio_id = _optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
-    prorrata_reference = _optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
+    usage_ratio_id = optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
+    prorrata_reference = optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
     if "business_classification" in patch_fields and business_classification is not BusinessClassification.MIXED:
         business_pct = None
         usage_ratio_id = None
@@ -1014,28 +1014,28 @@ def _command_from_patch(
         irpf_category = None
         m210_income_classification = None
         prorrata_reference = None
-    notes = _required_patched(patch, patch_fields, "notes", current.notes)
-    attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
-    iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
-    deduction_fact_kind = _optional_patched(
+    notes = required_patched(patch, patch_fields, "notes", current.notes)
+    attachment_ids = required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
+    iva_category = optional_patched(patch, patch_fields, "iva_category", current.iva_category)
+    deduction_fact_kind = optional_patched(
         patch,
         patch_fields,
         "deduction_fact_kind",
         current.deduction_fact_kind,
     )
-    counterparty_country = _optional_patched(
+    counterparty_country = optional_patched(
         patch,
         patch_fields,
         "counterparty_country",
         current.counterparty_country,
     )
-    counterparty_identification_state = _optional_patched(
+    counterparty_identification_state = optional_patched(
         patch,
         patch_fields,
         "counterparty_identification_state",
         current.counterparty_identification_state,
     )
-    group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
+    group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -1081,11 +1081,11 @@ def _event_payload(command: ManualLedgerTransactionCommand) -> dict[str, str]:
     payload = {
         "source_command": command.source_command,
         "direction": command.direction.value,
-        "amount": _decimal_to_string(command.amount),
+        "amount": decimal_to_string(command.amount),
         "currency": command.currency,
     }
     if command.business_pct is not None:
-        payload["business_pct"] = _decimal_to_string(command.business_pct)
+        payload["business_pct"] = decimal_to_string(command.business_pct)
     if command.usage_ratio_id is not None:
         payload["usage_ratio_id"] = command.usage_ratio_id
     return payload
@@ -1097,12 +1097,12 @@ def _update_event_specs(
     replacement: Transaction,
     command: ManualLedgerTransactionCommand,
     previous_transaction_id: str,
-) -> tuple[_EventSpec, ...]:
+) -> tuple[EventSpec, ...]:
     common_payload = {
         **_event_payload(command),
         "previous_transaction_id": previous_transaction_id,
     }
-    specs: list[_EventSpec] = []
+    specs: list[EventSpec] = []
     if _core_edit_changed(current, replacement):
         specs.append(
             (
@@ -1134,7 +1134,7 @@ def _update_event_specs(
                 replacement.transaction_id,
                 {
                     **common_payload,
-                    "business_pct": _optional_decimal(replacement.business_pct),
+                    "business_pct": optional_decimal(replacement.business_pct),
                     "usage_ratio_id": replacement.usage_ratio_id or "",
                     "prorrata_reference": replacement.prorrata_reference or "",
                     "mutation_kind": "allocation",
@@ -1183,8 +1183,8 @@ def _evidence_event_specs(
     current: Transaction,
     replacement: Transaction,
     common_payload: Mapping[str, str],
-) -> tuple[_EventSpec, ...]:
-    specs: list[_EventSpec] = []
+) -> tuple[EventSpec, ...]:
+    specs: list[EventSpec] = []
     if current.purchase_invoice_evidence_id != replacement.purchase_invoice_evidence_id:
         if current.purchase_invoice_evidence_id is not None:
             specs.append(
@@ -1481,10 +1481,10 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "actor": command.actor,
         "business_classification": command.business_classification.value,
         "direction": command.direction.value,
-        "taxable_base": _optional_decimal(command.taxable_base),
-        "iva_rate": _optional_decimal(command.iva_rate),
-        "iva_amount": _optional_decimal(command.iva_amount),
-        "recargo_amount": _optional_decimal(command.recargo_amount),
+        "taxable_base": optional_decimal(command.taxable_base),
+        "iva_rate": optional_decimal(command.iva_rate),
+        "iva_amount": optional_decimal(command.iva_amount),
+        "recargo_amount": optional_decimal(command.recargo_amount),
         "irpf_category": command.irpf_category or "",
         "usage_ratio_id": command.usage_ratio_id or "",
         "prorrata_reference": command.prorrata_reference or "",
@@ -1495,7 +1495,7 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "attachment_ids": ",".join(command.attachment_ids),
     }
     if command.business_pct is not None:
-        values["business_pct"] = _decimal_to_string(command.business_pct)
+        values["business_pct"] = decimal_to_string(command.business_pct)
     if command.category_id is not None:
         values["category_id"] = command.category_id
     if command.idempotency_key is not None:

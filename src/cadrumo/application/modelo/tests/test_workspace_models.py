@@ -544,14 +544,18 @@ def test_workspace_revision_assertion_axes_are_required_independent_and_current_
 
     assert ModeloWorkspaceResolvedTargetV1.model_validate_json(target.model_dump_json()) == target
     with pytest.raises(ValidationError, match="asserted_revision_id"):
-        ModeloWorkspaceRevisionAssertionV1(
-            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
-            disposition=ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+        ModeloWorkspaceRevisionAssertionV1.model_validate(
+            {
+                "source": ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+                "disposition": ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+            }
         )
     with pytest.raises(ValidationError, match="asserted_revision_id"):
-        ModeloWorkspaceRevisionAssertionV1(
-            source=ModeloWorkspaceRevisionAssertionSource.STORED,
-            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+        ModeloWorkspaceRevisionAssertionV1.model_validate(
+            {
+                "source": ModeloWorkspaceRevisionAssertionSource.STORED,
+                "disposition": ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            }
         )
     with pytest.raises(ValidationError, match="requested source"):
         ModeloWorkspaceResolvedTargetV1.model_validate(
@@ -687,8 +691,8 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
         if getattr(altered_cursor, field) != getattr(cursor, field)
     } == {coordinate}
     with pytest.raises(ValidationError, match=error):
-        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-            **{
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {
                 **available.model_dump(),
                 "next_cursor": altered_cursor,
             }

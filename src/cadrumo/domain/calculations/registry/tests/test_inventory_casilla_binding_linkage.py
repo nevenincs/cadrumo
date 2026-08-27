@@ -6,17 +6,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import (
-    bound_casilla_binding_ids,
-    casillas_by_binding,
-    resolve_bound_casilla_binding_value,
-)
-from cadrumo.domain.calculations.registry.inventory_bindings import InventorySelector
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from ..authority import bundled_authority
+from ..bindings import bound_casilla_binding_ids, casillas_by_binding, resolve_bound_casilla_binding_value
+from ..inventory_bindings import InventorySelector
+from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -21,13 +21,12 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
-
 from .....core.resources import bundled_path
 from .._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ..errors import RegistryValidationError
+from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema_references import LegalReference
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

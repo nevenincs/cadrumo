@@ -17,12 +17,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.ids import FormulaId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
-
 from ....core import CasillaId, Period, TaxDomain, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import FormulaId
+from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ....domain.filing import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,

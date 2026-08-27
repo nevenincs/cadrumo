@@ -10,8 +10,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
@@ -21,6 +19,7 @@ from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ...tests import wait_for_process_exit
+from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject

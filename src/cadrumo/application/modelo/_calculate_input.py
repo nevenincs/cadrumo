@@ -34,9 +34,6 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -51,7 +48,6 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
-from ...core.json_contract import Notice
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
@@ -70,10 +66,12 @@ from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
     validate_registry_text_scalar,
 )
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
@@ -104,6 +102,7 @@ from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
+from ._work_plazo import M210PlazoResolution
 from .profile_binding import MaternidadMesesResolution
 from .work_addressing import (
     ModeloWorkSelectorRequest,
@@ -310,7 +309,7 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -356,25 +355,25 @@ def calculate_modelo_work_revision(
         catalogue=catalogue,
         bucket_id=bucket_id,
     )
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo.M210:
         from ._m303_regimen_simplificado_scope import active_taxpayer_profile
-        from ._work_plazo import calculated_m210_plazo_notice
+        from ._work_plazo import calculated_m210_plazo_resolution
 
-        notice = calculated_m210_plazo_notice(
+        resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=active_taxpayer_profile(work_unit),
         )
-        if notice is not None:
-            plazo_notices = (notice,)
+        if resolution is not None:
+            plazo_resolutions = (resolution,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
-        plazo_notices=plazo_notices,
+        plazo_resolutions=plazo_resolutions,
     )
 
 
@@ -1095,10 +1094,9 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-
+    from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
+    from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

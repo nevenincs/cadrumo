@@ -41,7 +41,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
 from ...core.directory_scan import scan_directory
@@ -85,12 +85,17 @@ of the document and carries no per-item refusal, because every paused item in a
 run shares one cause; that cause is stated once on the run.
 """
 
+_BATCH_ITEM_STATUS_ADAPTER: TypeAdapter[BatchItemStatus] = TypeAdapter(BatchItemStatus)
+
 #: Every status a batch item can end in. Derived from the type rather than
 #: restated, so a status added to the alias cannot go unreported in the summary.
 #: Typed as the alias rather than as bare ``str`` so iterating it yields the
-#: literal the consumers expect; the wider annotation is what forced a
-#: suppression onto the summary comprehension.
-BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(get_args(BatchItemStatus))
+#: literal the consumers expect; each raw ``get_args`` member is revalidated
+#: through the alias's own adapter rather than trusted as already-narrowed,
+#: since ``get_args`` itself only returns ``tuple[Any, ...]``.
+BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(
+    _BATCH_ITEM_STATUS_ADAPTER.validate_python(status) for status in get_args(BatchItemStatus)
+)
 
 #: The statuses that make a run "any item failed". Deliberately narrow: an item
 #: awaiting review has not failed, and a no-op is the idempotent success.

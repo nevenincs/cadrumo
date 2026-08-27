@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import OperationCancellation, OperationDurability, OperationEffect
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevisionAmendmentKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,
@@ -56,6 +57,10 @@ from ..operation_definitions import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _test_profile_resolver() -> TaxpayerProfile:
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+
+
 def _definition():
     return build_modelo_work_rename_definition()
 
@@ -88,9 +93,9 @@ def test_the_request_is_credential_free_and_journalable() -> None:
 def test_the_request_refuses_an_empty_unit_or_name() -> None:
     """A rename with no subject or no label is refused at the boundary."""
     with pytest.raises(ValidationError):
-        ModeloWorkRenameRequest(work_unit_id="", new_name="Q1")
+        ModeloWorkRenameRequest(work_unit_id="", new_name="Q1", actor="operator")
     with pytest.raises(ValidationError):
-        ModeloWorkRenameRequest(work_unit_id="unit-1", new_name="")
+        ModeloWorkRenameRequest(work_unit_id="unit-1", new_name="", actor="operator")
 
 
 def test_the_public_result_is_a_projection_not_the_stored_record() -> None:
@@ -192,7 +197,7 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
 
 def _verify_definition():
-    return build_modelo_work_verify_definition(profile_resolver=lambda: None)
+    return build_modelo_work_verify_definition(profile_resolver=_test_profile_resolver)
 
 
 def test_verify_declares_its_progress_phases_and_claims_no_interaction() -> None:
@@ -257,7 +262,7 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
 
 
 def _file_definition():
-    return build_modelo_work_file_definition(profile_resolver=lambda: None)
+    return build_modelo_work_file_definition(profile_resolver=_test_profile_resolver)
 
 
 def test_filing_approval_names_the_verification_that_justified_it() -> None:
@@ -319,10 +324,7 @@ def test_the_filing_request_carries_elections_the_operator_declared() -> None:
 
 
 def _export_definition():
-    return build_modelo_export_definition(
-        profile_resolver=lambda: None,
-        command_builder=lambda revision, path: None,
-    )
+    return build_modelo_export_definition(profile_resolver=_test_profile_resolver)
 
 
 def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
@@ -388,6 +390,7 @@ def test_an_amendment_cannot_be_filed_without_a_stated_reason() -> None:
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             overrides=(ModeloWorkAmendOverride(casilla_id="03", value="10.00"),),
             reason="",
+            actor="operator",
         )
 
 
@@ -399,6 +402,7 @@ def test_an_amendment_must_correct_at_least_one_casilla() -> None:
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             overrides=(),
             reason="corrected base",
+            actor="operator",
         )
 
 

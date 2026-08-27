@@ -27,9 +27,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...core import CasillaId, Period, RegistryAuthorityGrade
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -38,6 +35,8 @@ from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
 )
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos import (
     CalculationRevision,
     WorkUnit,

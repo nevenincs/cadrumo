@@ -23,21 +23,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import (
+from ....core import BindingSourceKind
+from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import missing_refs
+from .bindings_previous_filing import previous_filing_source_reference
+from .ids import BindingId
+from .schema import (
     ConstructDefinition,
     DataBindingDefinition,
     DependencyClassificationDefinition,
     ModeloRevision,
     filing_schedule_period_kind_mismatches,
 )
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
-from ....core import BindingSourceKind
-from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import missing_refs
-from .bindings_previous_filing import previous_filing_source_reference
-from .ids import BindingId
+from .schema_references import LegalReference, SourceReference
+from .schema_surfaces import RelationDefinition
 from .validate_revision_identity import duplicates
 
 

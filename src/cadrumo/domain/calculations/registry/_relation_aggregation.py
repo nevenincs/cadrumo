@@ -28,9 +28,8 @@ See Also:
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ....core.aggregation import RelationAggregationOp
+from .schema_surfaces import RelationDefinition
 
 
 def relation_aggregation_op(relation: RelationDefinition) -> RelationAggregationOp:

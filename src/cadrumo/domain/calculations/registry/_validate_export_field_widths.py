@@ -22,9 +22,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ..export_field_kind import CasillaFieldKind
+from .export_semantics import ExportDraftAttribute
+from .schema_exports import ExportFieldDefinition
 
 #: Canonical character width of every export ``draft_attribute`` whose value is
 #: supplied by a typed, fixed-width domain source, keyed by the attribute token

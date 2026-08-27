@@ -63,9 +63,8 @@ def _hint_via_label(name: str) -> str | None:
     unwrapping the bucket's DEK, so this does not depend on the target
     bucket's DEK being intact.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-
     from ....application.user_profile.language_resolver import resolve_profile_output_language_hint
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(name)
     if pointer is None:

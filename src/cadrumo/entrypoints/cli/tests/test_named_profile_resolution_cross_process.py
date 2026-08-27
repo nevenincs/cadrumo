@@ -38,6 +38,7 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import TypeAdapter
 
 from .test_cold_start_wizard_registration import _register_profile_for_cold_run, _run_cli_cold
 
@@ -56,12 +57,13 @@ _FACTS = {
 }
 
 
+_DOCUMENT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+
+
 def _envelope_result(stdout: str) -> dict[str, object]:
     """Return the success envelope's result payload from a cold-run stdout."""
-    document = json.loads(stdout)
-    result = document["result"]
-    assert isinstance(result, dict)
-    return result
+    document = _DOCUMENT_ADAPTER.validate_python(json.loads(stdout))
+    return _DOCUMENT_ADAPTER.validate_python(document["result"])
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt

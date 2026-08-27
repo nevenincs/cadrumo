@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.export import ExportSerializationFormat
-
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -75,6 +73,7 @@ from ....tests.secure_sql import (
     isolated_runtime_profile,
     reset_secure_object_store,
 )
+from ...export import ExportSerializationFormat
 from ..actions_manual import create_manual_transaction
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 

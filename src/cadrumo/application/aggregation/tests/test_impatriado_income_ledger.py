@@ -43,17 +43,16 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.ledger_impatriado_bindings import (
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....core import Period
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import Period
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

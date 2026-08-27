@@ -1,7 +1,4 @@
 [revisions."2025"]
-# Applicability grade: the donativos declaration is filed by the entity RECEIVING the
-# donation, not by the donor claiming the deduction, so this application's taxpayer is
-# the subject of the declaration rather than its filer.
 authority_grade = "applicability"
 valid_from = 2025-01-01
 valid_to = 2025-12-31

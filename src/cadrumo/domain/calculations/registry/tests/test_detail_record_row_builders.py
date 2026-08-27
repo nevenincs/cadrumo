@@ -17,7 +17,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from .....core import M720AssetClassCode
+from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
@@ -26,8 +27,6 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
 )
-
-from .....core import M720AssetClassCode
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -29,8 +29,6 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors import AeatLoginAssertionError, CadrumoError
@@ -44,6 +42,7 @@ from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
+from ..workflow.persistence import workflow_state_repository
 from .acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,

@@ -38,7 +38,7 @@ from ..capsule_record import (
 )
 from ..custody_ports import ProfileCustodyRecoveryEnvelopePort
 from ..custody_repository import profile_custody_transaction_lock
-from ..custody_transactions import ProfileCustodyTransactionConflictError
+from ..custody_transactions import ProfileCustodyTransactionConflictError, ProfileCustodyTransactionRefusalError
 from ..lifecycle import ProfileCapsuleLifecycle
 from ..profile_record_repository import (
     ProfileRecordRepository,
@@ -165,7 +165,7 @@ def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) 
     record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     try:
         with pytest.raises(TypeError, match="recovery_envelope"):
-            ProfileCapsuleLifecycle(root=tmp_path).create(
+            ProfileCapsuleLifecycle(root=tmp_path).create(  # ty: ignore[missing-argument]  # reason: omitting recovery_envelope IS the refusal under test
                 label="Recovery invariant operator",
                 profile_id=_PROFILE_ID,
                 password_envelope=envelope,
@@ -185,14 +185,14 @@ def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path
     envelope, sentinel, data_files, dek = _current_capsule_input()
     record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     try:
-        with pytest.raises(ValueError, match="requires creation recovery material"):
+        with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
             ProfileCapsuleLifecycle(root=tmp_path).create(
                 label="Explicit None recovery",
                 profile_id=_PROFILE_ID,
                 password_envelope=envelope,
                 sentinel=sentinel,
                 data_files=data_files,
-                recovery_envelope=None,  # type: ignore[arg-type] - runtime bypass probe
+                recovery_envelope=None,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: runtime bypass probe
                 initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
                 record_session=record_session,
             )

@@ -29,12 +29,15 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
     lines = ["transaction_id,classification,category_id"]
     targeted: dict[str, str] = {}
     for row in rows:
+        tx_id = row["transaction_id"]
+        assert isinstance(tx_id, str)
         rule = _match(row["description"], rules)
         if rule is None or rule["classification"] != "BUSINESS":
             continue
-        cat = rule.get("category_id") or ""
-        lines.append(f"{row['transaction_id']},BUSINESS,{cat}")
-        targeted[row["transaction_id"]] = cat
+        cat_raw = rule.get("category_id")
+        cat = cat_raw if isinstance(cat_raw, str) else ""
+        lines.append(f"{tx_id},BUSINESS,{cat}")
+        targeted[tx_id] = cat
     assert len(targeted) >= 100, f"corpus must yield a hundreds-scale batch, got {len(targeted)}"
 
     recat_csv = tmp_path / "recategorize.csv"

@@ -18,12 +18,11 @@ tooling does not depend on free-form ``model_dump(mode="json")`` output.
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.ids import LegalRefId
-
 from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.time import UtcInstant
+from ...domain.calculations.registry.ids import LegalRefId
 
 
 class ReviewQueueRowPayload(OutputSchema):

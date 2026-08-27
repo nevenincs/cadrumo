@@ -14,20 +14,6 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import (
-    DependencyClassificationDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import (
-    RelationDefinition,
-    RelationPeriodAlignment,
-    RelationRevisionSelector,
-)
-
 from ....core import (
     STRICT_FROZEN_CONFIG,
     CasillaId,
@@ -45,6 +31,15 @@ from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, Source
 from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
+from .schema import (
+    DependencyClassificationDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
+from .schema_references import PeriodSelector
+from .schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 
 __all__ = [
     "HandoffPathClassification",

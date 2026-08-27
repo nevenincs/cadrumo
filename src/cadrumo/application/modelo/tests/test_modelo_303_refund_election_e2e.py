@@ -39,8 +39,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.domain.calculations.registry.ids import RelationId
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -48,6 +46,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import AuthProviderKind, CasillaId, Period, RefundElection, ResultDisposition, validated_casilla_id
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import RelationId
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,

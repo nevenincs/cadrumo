@@ -37,7 +37,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from cadrumo.core import exclusive_file_lock, fsync_parent_dir
+from cadrumo.core import exclusive_file_lock, fsync_parent_dir, is_link_like
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -263,7 +263,7 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
 
 
 def _require_narrow_root(path: Path, *, subject: str) -> Path:
-    if path.is_symlink() or path.is_junction() or not path.is_dir():
+    if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be an existing non-linked directory: {path}")
     resolved = path.resolve()
     workspace_root = Path.cwd().resolve()
@@ -303,13 +303,13 @@ def _require_target_export_root(
     _require_existing_link_free_path(resolved.parent, root=target_root, subject="generated target revision root")
     if not resolved.parent.is_dir():
         raise RegistryValidationError(f"generated target revision root must be a directory: {resolved.parent}")
-    if resolved.exists() and (resolved.is_symlink() or resolved.is_junction() or not resolved.is_dir()):
+    if resolved.exists() and (is_link_like(resolved) or not resolved.is_dir()):
         raise RegistryValidationError(f"generated target export root must be a non-linked directory: {resolved}")
     return resolved
 
 
 def _require_descendant(path: Path, *, root: Path, subject: str) -> Path:
-    if path.is_symlink() or path.is_junction():
+    if is_link_like(path):
         raise RegistryValidationError(f"{subject} must not be a symbolic link or junction: {path}")
     resolved = path.resolve()
     try:
@@ -327,20 +327,20 @@ def _require_existing_link_free_path(path: Path, *, root: Path, subject: str) ->
         cursor = cursor / part
         if not cursor.exists():
             raise RegistryValidationError(f"{subject} is missing: {cursor}")
-        if cursor.is_symlink() or cursor.is_junction():
+        if is_link_like(cursor):
             raise RegistryValidationError(f"{subject} contains a symbolic link or junction: {cursor}")
 
 
 def _require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
     stale = revision_root / _LEGACY_SIBLING_MANIFEST
-    if stale.exists() or stale.is_symlink() or stale.is_junction():
+    if stale.exists() or is_link_like(stale):
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")
 
 
 def _verify_generated_export_package(export_root: Path) -> ExportFragmentProvenanceManifest:
     _require_complete_regular_tree(export_root, subject="generated export package")
     manifest_path = export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    if manifest_path.is_symlink() or manifest_path.is_junction() or not manifest_path.is_file():
+    if is_link_like(manifest_path) or not manifest_path.is_file():
         raise RegistryValidationError(
             f"generated export package lacks its internal provenance manifest: {manifest_path}",
         )
@@ -562,7 +562,7 @@ def _rollback_sibling(
     revision_id: str,
 ) -> Path:
     backup = target_root / (f".generated-export-backup-{modelo}-{revision_id}-{secrets.token_hex(16)}")
-    if backup.exists() or backup.is_symlink() or backup.is_junction():
+    if backup.exists() or is_link_like(backup):
         raise RegistryValidationError(f"generated export rollback sibling unexpectedly exists: {backup}")
     return backup
 
@@ -631,13 +631,13 @@ def _move_failed_candidate_aside(target_export_root: Path) -> None:
 
 
 def _require_complete_regular_tree(path: Path, *, subject: str) -> None:
-    if path.is_symlink() or path.is_junction() or not path.is_dir():
+    if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a non-linked directory: {path}")
     children = scan_directory(path)
     if not children:
         raise RegistryValidationError(f"{subject} must not be empty: {path}")
     for child in children:
-        if child.is_symlink() or child.is_junction():
+        if is_link_like(child):
             raise RegistryValidationError(f"{subject} contains a symbolic link or junction: {child}")
         if child.is_dir():
             _require_complete_regular_tree(child, subject=subject)
@@ -664,7 +664,7 @@ def _write_journal(path: Path, journal: _PublicationJournal) -> None:
 
 
 def _load_journal(path: Path) -> _PublicationJournal:
-    if path.is_symlink() or path.is_junction() or not path.is_file():
+    if is_link_like(path) or not path.is_file():
         raise RegistryValidationError(f"generated publication journal must be a regular file: {path}")
     raw = path.read_bytes()
     try:
@@ -683,7 +683,7 @@ def _delete_journal(path: Path) -> None:
 
 
 def _sha256(path: Path) -> str:
-    if path.is_symlink() or path.is_junction() or not path.is_file():
+    if is_link_like(path) or not path.is_file():
         raise RegistryValidationError(f"generated export provenance path must be a regular file: {path}")
     digest, _byte_count = hash_file(path)
     return digest

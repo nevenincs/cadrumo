@@ -1,0 +1,22 @@
+[[revisions."2022".parameters]]
+id = "renta-2022-rental-rehab-lookback-years"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+# LIRPF art. 23.2.c counts 'los dos anos anteriores a la fecha de la
+# celebracion del contrato' DE FECHA A FECHA, not in days. This parameter
+# declared 730 days, which is one day short whenever the two-year span
+# contains a 29 de febrero, and denied tier c) to a rehabilitation finished
+# exactly two calendar years before the contract. The figure was never the
+# defect; the unit was.
+[[revisions."2022".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31

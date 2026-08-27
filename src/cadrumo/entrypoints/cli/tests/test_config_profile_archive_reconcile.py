@@ -18,13 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.user_profile.bundle_export_contracts import (
+from ....application.user_profile.bundle_export import prepare_profile_export
+from ....application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportTransport,
 )
-
-from ....application.user_profile.bundle_export import prepare_profile_export
 from ....application.user_profile.bundle_export_operation import (
     PROFILE_EXPORT_STAGED_TEMP_SUFFIX,
     ProfileBundleExportJournalRepository,

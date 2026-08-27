@@ -24,6 +24,8 @@ coverage where it does not.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ._registry_schema_support import _committed_registry_tree
@@ -53,8 +55,8 @@ def _registered_designs(catalogues) -> dict[str, str]:
     }
 
 
-def _paths_by_name() -> dict[str, object]:
-    found: dict[str, object] = {}
+def _paths_by_name() -> dict[str, Path]:
+    found: dict[str, Path] = {}
     for modelo_id in ("036", "210"):
         for path in _design_sources(modelo_id):
             found[path.name] = path

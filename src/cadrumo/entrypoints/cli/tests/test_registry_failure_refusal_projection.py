@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import (
+from ....domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
     RegistryValidationError,
 )
-
 from .._common import cli_policy_refusal_projection
 from ..errors import _project_cadrumo_error
 

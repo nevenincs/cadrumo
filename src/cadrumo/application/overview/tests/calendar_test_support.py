@@ -10,8 +10,6 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
@@ -19,6 +17,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     DeadlineEngine,
     EntityType,

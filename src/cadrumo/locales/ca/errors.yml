@@ -737,6 +737,9 @@ errors:
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
+    locked_storage_profile_custody_capsule_generation: La càpsula de custòdia del
+      perfil ha canviat mentre es llegia. Un altre procés l'està publicant o eliminant.
+      Torneu a provar l'operació.
   prefix:
     auth: Autenticació.
     error: Error.

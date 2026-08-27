@@ -59,7 +59,7 @@ def _production_files() -> list[Path]:
     return sorted(p for p in production_python_files() if _is_production_module(p))
 
 
-_PENDING_RETIREMENT_ALLOWLIST: frozenset[Path] = frozenset()
+_PENDING_RETIREMENT_ALLOWLIST: frozenset[Path] = frozenset[Path]()
 """Allow-list of files allowed to declare a ``_DEFAULT_*_ROOT`` constant.
 
 The allow-list is empty: every production module under
@@ -124,7 +124,7 @@ _FILE_WALK_RE = re.compile(
     r"Path\(__file__\)\.resolve\(\)((?:\.parent)+)|Path\(__file__\)\.resolve\(\)\.parents\[(\d+)\]",
 )
 
-_SANCTIONED_CHECKOUT_ROOT_OWNERS: frozenset[str] = frozenset()
+_SANCTIONED_CHECKOUT_ROOT_OWNERS: frozenset[str] = frozenset[str]()
 """Deliberately empty: NO production module may reconstruct a repository root.
 
 This once exempted ``core/_config_state_root.py``, which classified the run as

@@ -304,7 +304,7 @@ def test_public_persistence_modules_serialize_expired_takeover_races_without_res
 
     context = multiprocessing.get_context("spawn")
     start = context.Event()
-    results: Queue[str] = context.Queue()
+    results: Queue[str] = Queue(ctx=context.get_context())
     processes = tuple(
         context.Process(
             target=_take_over_in_process,
@@ -360,7 +360,7 @@ def test_public_persistence_modules_serialize_snapshot_cas_and_refuse_linked_roo
 
     context = multiprocessing.get_context("spawn")
     start = context.Event()
-    results: Queue[str] = context.Queue()
+    results: Queue[str] = Queue(ctx=context.get_context())
     processes = tuple(
         context.Process(
             target=_commit_in_process,

@@ -60,9 +60,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...core.decimal import try_parse_canonical_decimal
@@ -93,6 +90,8 @@ from ...domain.calculations.registry.relations import (
     relation_requirement_index,
     relation_source_requirements,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -210,7 +209,7 @@ def _relation_value_grounding(
         ),
         # Carried from the requirement, which already holds the registry's declared
         # treatment. Empty when no requirement resolved it, which is not a treatment.
-        "dependency_treatment": requirement.dependency_treatment if requirement is not None else "",
+        "dependency_treatment": (requirement.dependency_treatment or "") if requirement is not None else "",
         "legal_refs": tuple(relation.legal_refs),
         "source_refs": tuple(relation.source_refs),
     }
@@ -384,7 +383,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     202 relation stays unresolved and the gate keeps blocking, never a silent
     under-declaration.
     """
-    from cadrumo.domain.calculations.registry.applicability_modelo202 import (
+    from ...domain.calculations.registry.applicability_modelo202 import (
         Modelo202Modality,
         modelo_202_modality_from_inputs,
     )
@@ -573,7 +572,9 @@ def resolve_relations_from_local_store(
 
         active_bucket_id = resolve_active_bucket_id()
         m111_no_retenciones_periods = (
-            m111_no_retenciones_periods_for_bucket(active_bucket_id) if active_bucket_id is not None else frozenset()
+            m111_no_retenciones_periods_for_bucket(active_bucket_id)
+            if active_bucket_id is not None
+            else frozenset[tuple[int, str]]()
         )
     if not_applicable_source_modelos is None:
         from ...core.bucket_pointer import resolve_active_bucket_id
@@ -582,7 +583,7 @@ def resolve_relations_from_local_store(
         not_applicable_source_modelos = (
             _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
             if active_bucket_id is not None
-            else frozenset()
+            else frozenset[str]()
         )
     observations = _gather_observations_for_snapshot(
         snapshot,

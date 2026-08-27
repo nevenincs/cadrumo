@@ -2,8 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
+from ...calculations.registry.errors import RegistryValidationError
 from .. import M232_MAX_RELATED_PARTY_ROWS, Modelo232VinculadaRow, m232_related_party_row_casilla_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

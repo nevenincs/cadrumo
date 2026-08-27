@@ -21,9 +21,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-
 from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
@@ -35,6 +32,8 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
+from ...workflow.abort import WorkflowAbortReason
+from ...workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .._action_errors import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

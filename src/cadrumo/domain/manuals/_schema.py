@@ -19,9 +19,8 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from cadrumo.domain.calculations.registry.ids import ModeloId
-
 from ...core import CasillaId, Hex64Str
+from ..calculations.registry.ids import ModeloId
 from ._ids import ManualId, ManualPart
 from .errors import ManualValidationError
 

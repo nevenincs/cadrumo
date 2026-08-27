@@ -3,7 +3,7 @@
 The acceptance anchor for "the operator backs up their local catalogue to an
 archive and restores it on a fresh machine without data loss": a real
 invocation writes a sealed, AEAD-encrypted archive, ``inspect`` reads its
-header without any key, and ``config profile restore`` republishes it into a
+header without any key, and ``config profile archive import`` republishes it into a
 storage root that has never seen the profile, with the ledger intact.
 
 Three contract facts this module encodes, each a deliberate decision rather
@@ -96,10 +96,10 @@ def _archive_inspect(source: Path, *, json_format: bool = True) -> Result:
 
 def _restore_from(source: Path, *, label: str, json_format: bool = True) -> Result:
     """Restore an archive through the one restore door, which takes either shape."""
-    args = ["config", "profile", "restore", label, "--file", str(source), "--secrets-stdin"]
+    args = ["config", "profile", "archive", "import", label, "--file", str(source), "--secrets-stdin"]
     if json_format:
         args = ["--format", "json", *args]
-    return invoke_cached_cli(args, input=f'{{"password": "{_test_passphrase()}"}}')
+    return invoke_cached_cli(args, input=f'{{"passphrase": "{_test_passphrase()}"}}')
 
 
 def _seed_transaction(csv_path: Path) -> None:

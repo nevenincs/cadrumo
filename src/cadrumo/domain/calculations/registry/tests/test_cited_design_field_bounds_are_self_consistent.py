@@ -33,6 +33,8 @@ import pytest
 from .....core.resources import bundled_path
 from ..export import derive_export_layouts_from_bindings
 from ..record_design_coverage import _extract_record_design
+from ..record_design_schema import RecordDesignSheet
+from ..schema_references import SourceReference
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +84,7 @@ def _partial_overlaps(sheet) -> list[str]:
     return found
 
 
-def _sheets_for(source) -> tuple:
+def _sheets_for(source: SourceReference) -> tuple[RecordDesignSheet, ...]:
     path = Path(source.corpus_path)
     if not path.exists():
         path = bundled_path() / source.corpus_path

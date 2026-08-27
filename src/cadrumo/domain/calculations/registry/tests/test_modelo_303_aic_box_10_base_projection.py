@@ -31,11 +31,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
-
 from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....iva import (
     IvaCategory,
@@ -44,7 +39,7 @@ from ....iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..ledger_bindings import iva_ledger_selector
+from ..ledger_bindings import IvaLedgerObservation, iva_ledger_selector, resolve_ledger_iva_aggregation_binding_values
 from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 

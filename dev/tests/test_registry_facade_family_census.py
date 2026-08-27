@@ -9,8 +9,8 @@ import sys
 
 import pytest
 
-import dev.quality.registry_facade_family_census as census
-from dev.quality.registry_facade_family_census import (
+from ..quality import registry_facade_family_census as census
+from ..quality.registry_facade_family_census import (
     DISPOSITIONS,
     MATRIX_PATH,
     RelocatedFamily,

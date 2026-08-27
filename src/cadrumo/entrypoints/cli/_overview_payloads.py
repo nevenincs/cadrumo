@@ -30,13 +30,12 @@ from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...application.operator_actions import ActionReference
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedActionArgument, ResolvedNoticeAction
 from ...core.parsing import require_iso8601_date
+from ...domain.calculations.registry.ids import RevisionId
 from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 

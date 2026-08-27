@@ -42,7 +42,7 @@ _OTHER = "1b6da8e1-3c2f-4d5a-8e7b-9f0a1c2d3e4f"
 class _Owner:
     """The provider bookkeeping the teardown reads, in its real shape."""
 
-    _session: BucketSession | None = None
+    session: BucketSession | None = None
     _activation_cm: AbstractContextManager[None] | None = None
 
 
@@ -60,7 +60,7 @@ def _session(bucket_id: str) -> BucketSession:
 def test_the_owned_session_is_closed_when_it_is_the_active_one() -> None:
     """The ordinary unwind: the provider's own session is the bound one."""
     owned = _session(_OWNED)
-    owner = _Owner(_session=owned)
+    owner = _Owner(session=owned)
     bind_active_bucket_session(owned)
 
     exit_provider_session(owner, None, None, None)
@@ -79,7 +79,7 @@ def test_a_session_bound_by_someone_else_survives_the_unwind() -> None:
     """
     owned = _session(_OWNED)
     other = _session(_OTHER)
-    owner = _Owner(_session=owned)
+    owner = _Owner(session=owned)
 
     with activate_session(other):
         exit_provider_session(owner, None, None, None)
@@ -100,7 +100,7 @@ def test_a_second_exit_is_a_no_op() -> None:
     """
     owned = _session(_OWNED)
     other = _session(_OTHER)
-    owner = _Owner(_session=owned)
+    owner = _Owner(session=owned)
     bind_active_bucket_session(owned)
 
     exit_provider_session(owner, None, None, None)

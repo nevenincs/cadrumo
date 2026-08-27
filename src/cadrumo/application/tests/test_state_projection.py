@@ -30,9 +30,6 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ...adapters.persistence.storage import master_key
 from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
@@ -69,6 +66,8 @@ from ..user_profile.login_session_port import profile_bind_bucket_session
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.registration import register_profile_with_credentials
 from ..wizard.catalogue import WIZARD_FLOWS
+from ..workflow.persistence import workflow_state_repository
+from ..workflow.state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

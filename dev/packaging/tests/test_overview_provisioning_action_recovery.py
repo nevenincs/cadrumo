@@ -40,7 +40,14 @@ from .._smoke_common import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+# dev/packaging/tests -> parents[3] is the repository root. Stated because
+# the depth silently retargets on a move: these files carried the depth they
+# had under src/, which resolved ABOVE the repository and built a wheel from
+# a directory with no pyproject.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if not (_REPO_ROOT / "pyproject.toml").is_file():  # pragma: no cover - configuration guard
+    _message = f"packaging gate lost the repository root: {_REPO_ROOT}"
+    raise RuntimeError(_message)
 _PROVISIONING_MARKER = "S35_PROVISIONING_MATRIX:"
 
 

@@ -14,11 +14,10 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     CrossPeriodGroupMemberRoster,
     EntityType,

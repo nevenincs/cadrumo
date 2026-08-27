@@ -47,7 +47,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
-from ...domain.calculations.registry.authority import bundled_authority
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
 # The accepted-code set for every ``--modelo`` option and argument. It is derived
@@ -1586,14 +1585,19 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     writes or packages a declaration routes through here, so absence refuses
     once rather than at each call site.
     """
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
-
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
+    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
+    # The registry authority is reached only on this refusal path, so it is
+    # imported here rather than at module scope: `_common` is loaded by the
+    # CLI bootstrap, and a module-level edge made every command -- including
+    # every state-free one -- pay for the whole calculation registry.
+    from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
+
     verdict = inspect_filing_taxpayer_identity_precondition(
         declared_tax_id=_declared_tax_id(record),
         profile_name=record.profile_id if record is not None else None,
@@ -1607,7 +1611,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
                             schema=load_user_profile_schema(),
-                            grounding_index=build_profile_grounding_index(bundled_authority()),
+                            grounding_index=build_profile_grounding_index(_bundled_authority()),
                         ),
                     ),
                 },

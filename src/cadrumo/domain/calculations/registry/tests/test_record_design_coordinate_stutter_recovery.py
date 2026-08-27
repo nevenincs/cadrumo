@@ -27,10 +27,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
-from ..record_design import _recover_coordinate_stutter_rows
+from ..record_design import _recover_coordinate_stutter_rows, extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

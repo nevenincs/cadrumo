@@ -5,11 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from .....core import CasillaId, validated_casilla_id
 from ..errors import RegistryValidationError
 from ..relations import _derive_offset_source_anchor, derive_offset_source_period
+from ..schema_surfaces import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -106,6 +105,6 @@ def test_unknown_period_format_rejected_at_construction_and_at_resolution() -> N
         _relation(target_periods=("ANUAL",), source_period_offset_from_target=-1)
 
     valid = _relation(target_periods=("0A",), source_period_offset_from_target=-1)
-    unvalidated = valid.model_construct(**{**valid.__dict__, "target_periods": ("ANUAL",)})
+    unvalidated = valid.model_copy(update={"target_periods": ("ANUAL",)})
     with pytest.raises(RegistryValidationError, match="cannot interpret target period"):
         derive_offset_source_period(unvalidated, target_period="ANUAL")

@@ -46,11 +46,10 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core import Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

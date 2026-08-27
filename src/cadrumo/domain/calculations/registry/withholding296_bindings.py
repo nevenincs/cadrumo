@@ -30,6 +30,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "Withholding296Observation",
+    "_Withholding296Selector",
     "resolve_withholding296_binding_row_values",
     "validate_withholding296_binding_selector_shape",
 ]
@@ -92,7 +93,7 @@ class Withholding296Observation(BaseModel):
     clave: str = Field(default="01", pattern=r"^\d{2}$")
     subclave: str = Field(default="", pattern=r"^\d{2}$")
     base_retenciones: Decimal = Decimal("0")
-    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
     retencion_practicada: Decimal = Decimal("0")
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     codigo: str | None = Field(default=None, max_length=1)
@@ -248,7 +249,7 @@ def _build_withholding296_rows(
             previous = bucket[amount_field]
             assert isinstance(previous, Decimal)
             bucket[amount_field] = previous + getattr(observation, amount_field)
-    rows = []
+    rows: list[dict[str, Decimal | str]] = []
     for index, key in enumerate(sorted(accum.keys()), start=1):
         row = dict(accum[key])
         row["registro_orden"] = str(index)

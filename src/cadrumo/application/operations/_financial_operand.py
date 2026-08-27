@@ -96,7 +96,12 @@ class OperationTransientFinancialOperandDeclaration(_OperandModel):
 
     def admits(self, amount: Decimal) -> bool:
         """Report whether one amount is representable and within the declared range."""
-        if -amount.as_tuple().exponent > self.scale:  # type: ignore[operator]  # exponent is int for finite Decimals
+        exponent = amount.as_tuple().exponent
+        if not isinstance(exponent, int):
+            # NaN / infinite Decimals carry a sentinel string exponent and are
+            # never representable at a finite declared scale.
+            return False
+        if -exponent > self.scale:
             return False
         return self.minimum <= amount <= self.maximum
 

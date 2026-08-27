@@ -1272,9 +1272,8 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     itself the registration check: an unresolvable label falls through to the
     missing-flag refusal.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-
     from ...domain.user_profile.values import new_profile_id
+    from ..workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
         _require_profile_label_available(

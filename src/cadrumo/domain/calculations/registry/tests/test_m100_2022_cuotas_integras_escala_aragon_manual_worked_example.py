@@ -15,10 +15,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
+from ..authority import ValidatedRegistryAuthority
 from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from .._modelo_behavior_support import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

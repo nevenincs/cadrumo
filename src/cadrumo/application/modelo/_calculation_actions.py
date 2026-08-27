@@ -185,9 +185,8 @@ from .calculation_route import require_calculation_route_resolver as _require_ca
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
-
     from ...adapters.persistence.storage import SecureObjectWrite
+    from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
@@ -253,7 +252,7 @@ def calculate_modelo_revision(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
-    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -395,7 +394,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
-    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
@@ -511,7 +510,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             revision=snapshot.revision,
             binding_values=prepared.channels.bindings,
         ),
-        **dict(prepared.backend_casilla_inputs or {}),
+        **dict(prepared.backend_casilla_inputs or dict[CasillaId, Decimal]()),
     }
     channel_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
+from .schema import ModeloRevision
+from .schema_exports import ProjectionEndpointDeclaration
 from .schema_input_kind import InputKind
+from .schema_references import LegalReference, SourceReference
+from .schema_surfaces import CasillaDefinition
 
 
 def validate_projection_endpoint_declarations(

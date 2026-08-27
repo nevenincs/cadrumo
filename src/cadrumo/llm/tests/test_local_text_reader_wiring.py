@@ -42,7 +42,7 @@ def test_the_classify_path_reaches_the_local_text_reader() -> None:
     Before this wiring the same branch raised ``_TEXT_PATH_NEEDS_PROVIDER``,
     making a cloud provider mandatory for any text-layer document.
     """
-    import cadrumo.application.ledger.llm_classification as llm_classification
+    from ...application.ledger import llm_classification as llm_classification
 
     source = inspect.getsource(llm_classification.classify_with_evidence)
 

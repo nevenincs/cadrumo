@@ -17,9 +17,8 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ..profile_binding import inject_derived_anualidades_eligibility_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

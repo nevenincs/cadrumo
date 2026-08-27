@@ -40,8 +40,6 @@ from urllib.parse import SplitResult, urlsplit
 
 from pydantic import ValidationError
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from .....application.auth.protocols import (
     BrowserContextPort,
     BrowserPagePort,
@@ -63,6 +61,7 @@ from .....core.config import Settings as _Settings
 from .....core.errors import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time import now
+from . import session_store as session_store
 from .authenticator_persistence import (
     AEAT_STORAGE_STATE_SCHEMA_VERSION,
     PersistedSessionMetadata,

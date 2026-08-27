@@ -16,9 +16,8 @@ See Also:
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...core.json_contract import OutputSchema
+from ...domain.calculations.registry.ids import RevisionId
 
 
 class ModeloRenamePayload(OutputSchema):

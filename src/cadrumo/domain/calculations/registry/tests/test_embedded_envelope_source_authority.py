@@ -11,12 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core.resources import bundled_path
 from .._validate_exports import _validate_embedded_envelope_source_authority
+from ..errors import RegistryValidationError
+from ..schema import RegistryCatalogues
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -27,7 +26,12 @@ _ZERO_DIGEST = "0" * 64
 @pytest.fixture(params=(("303", 2025, "1T", "filing_envelope"), ("232", 2024, "0A", "auxiliary_envelope_header")))
 def embedded_envelope_case(request: pytest.FixtureRequest) -> tuple[str, int, str, str]:
     """Return one real filing-envelope and one real auxiliary-header case."""
-    return request.param
+    modelo_id, filing_year, period, declaration_name = request.param
+    assert isinstance(modelo_id, str)
+    assert isinstance(filing_year, int)
+    assert isinstance(period, str)
+    assert isinstance(declaration_name, str)
+    return modelo_id, filing_year, period, declaration_name
 
 
 def _embedded_declaration(layout, declaration_name: str):  # type: ignore[no-untyped-def]  # reason: the narrow test-only selector returns either of the two typed declarations, and spelling the union repeats the production protocol without improving assertions

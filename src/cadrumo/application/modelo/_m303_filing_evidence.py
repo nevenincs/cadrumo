@@ -124,7 +124,9 @@ def _validate_m303_simplified_filing_evidence(
                 {"scope_decision_matches_censo_profile": False},
             ),
         )
-    censo_iae_epigraphs: frozenset[str] = frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset()
+    censo_iae_epigraphs: frozenset[str] = (
+        frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset[str]()
+    )
     validate_regimen_simplificado_rows(
         regimen.rows,
         orden=regimen.regimen_snapshot.orden.activities,

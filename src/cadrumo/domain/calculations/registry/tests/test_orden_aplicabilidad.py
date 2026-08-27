@@ -22,14 +22,13 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core.resources import bundled_path
 from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
+from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_references import LegalReference, PeriodSelector
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

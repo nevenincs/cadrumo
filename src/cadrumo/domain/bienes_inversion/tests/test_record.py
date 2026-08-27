@@ -8,8 +8,6 @@ from decimal import Decimal
 import pydantic
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva import (
     IvaCategory,
@@ -18,6 +16,7 @@ from ....domain.iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ...calculations.registry.ledger_bindings import IvaLedgerObservation
 from .. import (
     BienesInversionIvaRegister,
     BienesInversionSectorContribution,

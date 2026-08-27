@@ -9,12 +9,11 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,

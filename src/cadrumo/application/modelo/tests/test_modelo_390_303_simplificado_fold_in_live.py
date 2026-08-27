@@ -17,10 +17,6 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -31,6 +27,9 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureO
 from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
 from ....core import BindingSourceKind, CasillaId, M303RegimenSimplificadoFact, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (

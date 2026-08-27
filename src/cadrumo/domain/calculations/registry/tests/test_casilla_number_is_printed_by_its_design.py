@@ -34,10 +34,9 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
+from ..authority import bundled_authority
+from ..record_design import extract_record_design
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

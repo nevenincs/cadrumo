@@ -5,12 +5,11 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....core import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.ids import BindingId
 
 _MODELO = "210"
 _YEAR = 2025

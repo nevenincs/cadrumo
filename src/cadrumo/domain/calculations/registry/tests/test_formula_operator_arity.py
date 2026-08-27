@@ -8,12 +8,11 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-
 from .._formula_operator_contracts import FORMULA_OPERATOR_ARITIES
 from ..errors import RegistryValidationError
 from ..formula_runtime_ops import evaluate_args_op
 from ..schema_base import FormulaOperator
+from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

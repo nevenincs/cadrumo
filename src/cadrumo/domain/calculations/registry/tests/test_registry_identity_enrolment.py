@@ -191,7 +191,7 @@ def test_the_walked_digest_moves_with_every_fingerprint_field() -> None:
     # A same-size, same-mtime content rewrite re-keys on the digest slot alone.
     assert key != compute_walked_tree_digest((("a.toml", 1, 2, "digest-b"),))
     # Field boundaries are separated, so concatenation cannot forge a match.
-    assert compute_walked_tree_digest((("a", 1, 2, "bc"),)) != compute_walked_tree_digest((("a", 1, 2, "b"), ("c",)))  # type: ignore[arg-type]  # reason: a deliberately ragged tuple proves the separator, and the annotation describes the production shape
+    assert compute_walked_tree_digest((("a", 1, 2, "bc"),)) != compute_walked_tree_digest((("a", 1, 2, "b"), ("c",)))
 
 
 def test_the_stamp_location_is_a_sibling_and_never_inside_the_tree(tmp_path: Path) -> None:

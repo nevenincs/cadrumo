@@ -63,8 +63,6 @@ from pathlib import Path
 
 import typer
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
@@ -138,6 +136,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
 )
+from ...application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr

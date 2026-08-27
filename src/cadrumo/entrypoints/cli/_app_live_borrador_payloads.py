@@ -10,13 +10,12 @@ from pydantic import (
     model_validator,
 )
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ...core.identity import (
     BucketId,
     SnapshotId,
 )
 from ...core.json_contract import OutputSchema
+from ...domain.calculations.registry.ids import BindingId
 from ._app_live_payloads_support import _canonical_borrador_period, _canonical_borrador_utc_timestamp
 
 

@@ -66,11 +66,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
-from ....core.external_constants import UTF_8_ENCODING
+from ._source_file_text import read_source_file_text
 from ._validate_evidence import EvidenceValidator
+from .schema import DeadlineWindowDefinition
+from .schema_references import SourceReference
 
 #: A suppression notice must itself say something was suppressed or repealed.
 #: Deliberately stem-based (not "suprimido"/"derogado" as exact forms) so it
@@ -94,24 +93,6 @@ def _carries_suppression_content(text: str) -> bool:
 
 def _carries_deadline_content(text: str) -> bool:
     return bool(_DEADLINE_VOCABULARY.search(text))
-
-
-def _read_source_text(source_root: Path, source: SourceReference) -> str | None:
-    """Return the bundled file's raw text, or ``None`` when it cannot be read here.
-
-    Mirrors :func:`cadrumo.domain.calculations.registry.validate_layout_authority_content._read_source_text`.
-    The suppression check runs at catalogue-build time, before any
-    :class:`EvidenceValidator` is necessarily in scope for the source, so it
-    reads the raw file directly rather than going through the evidence
-    validator's cached, PDF-sidecar-aware resolver -- correct today because
-    the only ``suppression_notice`` source is HTML, and the raw read matches
-    what :func:`validate_layout_authority_content` already does for the same
-    reason.
-    """
-    candidate = source_root / source.corpus_path
-    if candidate.is_file():
-        return candidate.read_text(encoding=UTF_8_ENCODING, errors="replace")
-    return None
 
 
 def validate_suppression_notice_content(
@@ -142,7 +123,7 @@ def validate_suppression_notice_content(
     for source_id, source in sorted(sources.items()):
         if source.kind != "suppression_notice" or source.evidence_tier != "official_source_guidance":
             continue
-        raw = _read_source_text(source_root, source)
+        raw = read_source_file_text(source_root, source)
         if raw is None or _carries_suppression_content(raw):
             continue
         failures.append(

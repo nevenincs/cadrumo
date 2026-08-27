@@ -38,18 +38,18 @@ from ...domain.transactions import (
     derive_split_group_id,
 )
 from .actions_common import (
-    _bucket_event_repository,
-    _build_bucket_event,
-    _invoice_repository,
-    _normalise_timestamp,
-    _raise_finalized_modelo_blocked,
-    _require_actor,
-    _require_source_command,
-    _require_transaction,
-    _save_transaction_catalogue_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
     blocking_modelo_references,
+    build_ledger_bucket_event,
+    normalise_timestamp,
+    raise_finalized_modelo_blocked,
+    require_actor,
+    require_source_command,
+    require_transaction,
+    resolve_bucket_event_repository,
+    resolve_invoice_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+    transaction_modelo_source_ids,
 )
 from .actions_manual import (
     command_from_patch as _command_from_patch,
@@ -112,16 +112,16 @@ def split_transaction(
 
     Returns a :class:`~cadrumo.application.ledger.models.SplitTransactionResult`.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger split")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger split")
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger split")
+    trimmed_source_command = require_source_command(source_command, operation="ledger split")
     if len(children) < 2:
         raise TransactionValidationError(
             "ledger split requires at least two children",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
         )
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     parent_after, final_children, event, split_group_id, child_ids = _build_split_state(
         catalogue=catalogue,
@@ -142,7 +142,7 @@ def split_transaction(
         updated_transactions[child_transaction.transaction_id] = child_transaction
     new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
 
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=new_catalogue,
@@ -256,7 +256,7 @@ def _build_split_state(
         for transaction in child_transactions_initial
     )
 
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
         occurred_at=now,
@@ -320,9 +320,9 @@ def split_transaction_with_classified_children(
     Returns a :class:`~cadrumo.application.ledger.models.SplitTransactionResult` whose
     ``child_transactions`` are the classified, evidence-bearing children.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger classified split")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger classified split")
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger classified split")
+    trimmed_source_command = require_source_command(source_command, operation="ledger classified split")
     if len(children) < 2:
         raise TransactionValidationError(
             "ledger split requires at least two children",
@@ -333,9 +333,9 @@ def split_transaction_with_classified_children(
             "each split child must carry exactly one classification patch",
             context={"children": len(children), "classifications": len(child_classifications)},
         )
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    invoices_repo = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
     catalogue = repository.load()
 
     parent_after, bare_children, split_event, split_group_id, child_ids = _build_split_state(
@@ -401,7 +401,7 @@ def split_transaction_with_classified_children(
         updated_transactions[classified_child.transaction_id] = classified_child
     new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
 
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=new_catalogue,
@@ -432,7 +432,7 @@ def _resolve_active_split_parent(
     refusal carries the actual lifecycle state in its context so an
     operator can diagnose why the split is blocked.
     """
-    parent = _require_transaction(catalogue, transaction_id)
+    parent = require_transaction(catalogue, transaction_id)
     if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be split",
@@ -460,7 +460,7 @@ def _reject_split_with_finalized_modelo_blockers(
     successor). A non-empty blocker list maps directly to the
     operator-facing "transaction frozen by filed modelo" error.
     """
-    transaction_ids = _transaction_modelo_source_ids(parent)
+    transaction_ids = transaction_modelo_source_ids(parent)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=transaction_ids,
@@ -468,7 +468,7 @@ def _reject_split_with_finalized_modelo_blockers(
         calculation_repository=calculation_repository,
     )
     if blockers:
-        _raise_finalized_modelo_blocked(
+        raise_finalized_modelo_blocked(
             operation="ledger split",
             transaction_ids=transaction_ids,
             blockers=blockers,
@@ -611,9 +611,9 @@ def merge_transactions(
       the entire split + merge chain in chronological order.
     - Catalogue + event are persisted atomically.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger merge")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger merge")
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger merge")
+    trimmed_source_command = require_source_command(source_command, operation="ledger merge")
     if len(child_transaction_ids) < 2:
         raise TransactionValidationError(
             "ledger merge requires at least two child transactions",
@@ -625,11 +625,11 @@ def merge_transactions(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
 
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
 
-    children = tuple(_require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
+    children = tuple(require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
     split_group_id = _resolve_merge_split_group(
         children=children,
         bucket_id=bucket_id,
@@ -694,7 +694,7 @@ def merge_transactions(
     updated_transactions[merged_transaction.transaction_id] = merged_transaction
     new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
 
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=new_catalogue,
@@ -725,8 +725,8 @@ def _reject_merge_with_finalized_modelo_blockers(
     transaction_ids_under_check = (parent.transaction_id, *child_transaction_ids)
     blocking_pool: list[str] = []
     for member_id in transaction_ids_under_check:
-        member = _require_transaction(catalogue, member_id)
-        blocking_pool.extend(_transaction_modelo_source_ids(member))
+        member = require_transaction(catalogue, member_id)
+        blocking_pool.extend(transaction_modelo_source_ids(member))
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=tuple(blocking_pool),
@@ -734,7 +734,7 @@ def _reject_merge_with_finalized_modelo_blockers(
         calculation_repository=calculation_repository,
     )
     if blockers:
-        _raise_finalized_modelo_blocked(
+        raise_finalized_modelo_blocked(
             operation="ledger merge",
             transaction_ids=tuple(blocking_pool),
             blockers=blockers,
@@ -861,7 +861,7 @@ def _build_merge_event(
     merged_transaction: Transaction,
     sorted_child_ids: tuple[str, ...],
 ) -> BucketEvent:
-    return _build_bucket_event(
+    return build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_MERGED,
         occurred_at=occurred_at,

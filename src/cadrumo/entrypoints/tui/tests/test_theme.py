@@ -347,7 +347,7 @@ def _stylesheets() -> list[tuple[Path, str]]:
             # collector that only matched bare assignment skipped the one file
             # that matters most and passed vacuously.
             target = _css_target(node)
-            if target is None:
+            if target is None or not isinstance(node, ast.AnnAssign | ast.Assign) or node.value is None:
                 continue
             for literal in ast.walk(node.value):
                 if isinstance(literal, ast.Constant) and isinstance(literal.value, str) and "{" in literal.value:
@@ -411,7 +411,7 @@ def test_every_token_bearing_stylesheet_is_wrapped_in_the_resolver() -> None:
         tree = ast.parse(source)
         for node in ast.walk(tree):
             target = _css_target(node)
-            if target is None:
+            if target is None or not isinstance(node, ast.AnnAssign | ast.Assign) or node.value is None:
                 continue
             segment = ast.get_source_segment(source, node.value) or ""
             if "$cadrumo-" in segment and "tokenised(" not in segment:

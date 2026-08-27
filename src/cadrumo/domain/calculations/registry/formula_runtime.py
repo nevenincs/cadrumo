@@ -32,9 +32,6 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
-
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
@@ -104,6 +101,8 @@ from .ids import (
     SourceRefId,
 )
 from .runtime_graph import formula_evaluation_order
+from .schema import RegistrySnapshot
+from .schema_formula import FormulaExpression, ParameterDefinition
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
@@ -425,7 +424,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
     resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
-    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
+    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
     resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
 
     _validate_external_value_ids(
@@ -647,9 +646,9 @@ def _evaluate_expression(
     Returns:
         The evaluated :class:`~decimal.Decimal` value of ``expression``.
     """
-    resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or {}
-    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
-    resolved_text_values: Mapping[CasillaId, str] = text_values or {}
+    resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or dict[BindingId, str]()
+    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
+    resolved_text_values: Mapping[CasillaId, str] = text_values or dict[CasillaId, str]()
     resolved_convenio: ConvenioAuthority = convenio if convenio is not None else ConvenioAuthority.empty()
     ctx = _EvalContext(
         values=values,

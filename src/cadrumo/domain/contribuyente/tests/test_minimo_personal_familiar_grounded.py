@@ -22,9 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
-
 from ....core import Modelo
+from ...calculations.registry.formula_runtime_ops import read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

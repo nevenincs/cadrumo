@@ -127,8 +127,8 @@ def years_covered_by_every_group(groups: Iterable[Iterable[ValidityWindow]]) -> 
         group_years = years_covered_by_any(group)
         covered = group_years if covered is None else (covered & group_years)
         if not covered:
-            return frozenset()
-    return covered if covered is not None else frozenset()
+            return frozenset[int]()
+    return covered if covered is not None else frozenset[int]()
 
 
 __all__ = [

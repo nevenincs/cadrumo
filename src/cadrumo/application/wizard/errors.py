@@ -13,7 +13,7 @@ from enum import StrEnum
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import CadrumoError, CoreValidationError, ProfileAnswerTypeError, TerminalPreconditionErrorMixin
-from ..operator_actions import no_action_precondition_verdict
+from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 
 class WizardPreconditionCondition(StrEnum):
@@ -44,7 +44,7 @@ def wizard_no_action_verdict(
     )
 
 
-class WizardError(TerminalPreconditionErrorMixin, CadrumoError):
+class WizardError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for every wizard error."""
 
 

@@ -10,10 +10,9 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, validated_casilla_id
 from ....core.config import override_settings
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.manuals import ManualPart
 from .. import (
     RegistryApplicationInputError,

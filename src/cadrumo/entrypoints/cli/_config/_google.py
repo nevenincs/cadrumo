@@ -1107,22 +1107,6 @@ def profile_archive_push(
 _ = (load_token, REQUIRED_SCOPES)
 
 
-_SYNC_CALC_EXPORTS = frozenset(
-    {"google_sync_calc_compute", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"}
-)
-
-
-def __getattr__(name: str) -> object:
-    """Resolve the retained calc command exports only when explicitly selected."""
-    if name in _SYNC_CALC_EXPORTS:
-        from . import _google_sync_calc
-
-        value = getattr(_google_sync_calc, name)
-        globals()[name] = value
-        return value
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
 __all__ = [
     "google_login",
     "google_logout",
@@ -1130,5 +1114,4 @@ __all__ = [
     "google_status",
     "google_sync_probe",
     "profile_archive_push",
-    *_SYNC_CALC_EXPORTS,
 ]

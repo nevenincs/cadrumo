@@ -135,7 +135,9 @@ def test_default_repository_refuses_bucket_route_mismatch() -> None:
     ):
         with pytest.raises(StorageValidationError) as raised:
             call()
-        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
+        context = raised.value.context
+        assert context is not None
+        assert context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
 
 
 def test_save_replaces_previous_payload(tmp_path: Path) -> None:

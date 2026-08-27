@@ -23,14 +23,13 @@ from collections.abc import Mapping
 from functools import lru_cache
 from types import MappingProxyType
 
-from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
-
 from ...core import Modelo as _Modelo
 from ...core import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
+from ...domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime

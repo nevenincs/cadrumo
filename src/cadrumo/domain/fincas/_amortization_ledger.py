@@ -50,7 +50,7 @@ def _resolve_amortizacion_inmueble_rate(period_year: int) -> Decimal:
     RD 439/2007 art. 14 (``rd-439-2007:art-14``), which fixes the 3 por ciento
     rate, and on Ley 35/2006 art. 23 as the substantive base.
     """
-    from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
+    from ..calculations.registry.formula_runtime_ops import read_parameter
 
     return read_parameter(
         Modelo.M100.value,

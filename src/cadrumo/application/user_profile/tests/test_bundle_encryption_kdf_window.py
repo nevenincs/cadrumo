@@ -28,15 +28,14 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.bundle_encryption import (
+from ....domain.user_profile.errors import UserProfileValidationError
+from ....domain.user_profile.portable_export import UserProfilePortableExport
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..bundle_encryption import (
     EncryptedProfileBundleExport,
     decrypt_profile_bundle_with_passphrase,
     encrypt_profile_bundle_for_passphrase,
 )
-
-from ....domain.user_profile.errors import UserProfileValidationError
-from ....domain.user_profile.portable_export import UserProfilePortableExport
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..custody_ports import default_profile_record_crypto_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -23,9 +23,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import Period
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
 from .. import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 

@@ -17,9 +17,6 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventorySelector
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRow
@@ -27,6 +24,8 @@ from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core import BindingSourceKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventorySelector
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.contribuyente.inventory import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,

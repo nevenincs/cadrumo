@@ -16,16 +16,6 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    REVISION_MANIFEST_ONLY_FIELDS,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    SupportedFilingYearsCatalogue,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
-
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
     FilingProducerKey,
@@ -68,6 +58,15 @@ from .modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
 )
+from .schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    REVISION_MANIFEST_ONLY_FIELDS,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    SupportedFilingYearsCatalogue,
+)
+from .schema_references import LegalParameter, LegalReference, SourceReference
 from .validate_revision_identity import revision_reference_identity_failures
 
 ModeloRevisionSource = _ModeloRevisionSource
@@ -76,13 +75,22 @@ _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
 _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
 _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
-_REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
-    field_name
-    for field_name, field in ModeloRevision.model_fields.items()
-    if field.default == ()
-    and get_origin(field.annotation) is tuple
-    and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
-)
+
+
+def _compute_revision_append_arrays() -> frozenset[str]:
+    names: set[str] = set()
+    for field_name, field in ModeloRevision.model_fields.items():
+        assert isinstance(field_name, str)
+        if (
+            field.default == ()
+            and get_origin(field.annotation) is tuple
+            and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
+        ):
+            names.add(field_name)
+    return frozenset(names)
+
+
+_REVISION_APPEND_ARRAYS: frozenset[str] = _compute_revision_append_arrays()
 
 
 def _compute_revision_section_fields() -> frozenset[str]:
@@ -1147,7 +1155,7 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     return toml_file_fingerprint(path)
 
 
-_collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncached = bind_tree_fingerprint_collectors(
+_TREE_FINGERPRINT_COLLECTORS = bind_tree_fingerprint_collectors(
     is_bundled_root=is_bundled_registry_root,
     bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     live_cached=_live_cached_fingerprints,
@@ -1155,3 +1163,32 @@ _collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncache
     collect_sources=_registry_source_fingerprints,
     store=_store_registry_fingerprints,
 )
+_collect_registry_tree_fingerprints = _TREE_FINGERPRINT_COLLECTORS[0]
+_collect_registry_tree_fingerprints_uncached = _TREE_FINGERPRINT_COLLECTORS[1]
+
+#: This module's docstring already states the boundary this enforces: a
+#: caller OUTSIDE the package cannot bind to a compilation step or cache this
+#: module does not promise. Within the package, :mod:`loader` is the one
+#: sanctioned consumer of the compilation internals below, so this lists every
+#: name it (and the module's own test suite) actually reaches across the
+#: module boundary -- never a wildcard, and never widened to symbols nothing
+#: outside this file uses.
+__all__ = [
+    "_REVISION_SECTION_FIELDS",
+    "_RegistryPathFingerprints",
+    "_collect_modelo_directory_fingerprints",
+    "_collect_registry_directory_fingerprints",
+    "_collect_registry_tree_fingerprints",
+    "_collect_registry_tree_fingerprints_uncached",
+    "_compile_export_semantic_field",
+    "_compile_projection_endpoint_declaration",
+    "_load_catalogue_file_cached",
+    "_load_modelo_directory_cached",
+    "_refresh_modelo_directory_fingerprints_after_load_error",
+    "_refresh_registry_tree_fingerprints_after_load_error",
+    "_revision_section_fragment_paths",
+    "_toml_fingerprint",
+    "_validate_legal_directory",
+    "_validate_legal_parameter_refs",
+    "load_modelo_file",
+]

@@ -21,12 +21,6 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.application.user_profile.bundle_export_contracts import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportTransport,
-)
-from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
-
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
@@ -38,6 +32,8 @@ from ...application.config_reset import (
     ConfigResetTargetPhase,
 )
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
+from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
+from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
@@ -90,29 +86,6 @@ class WorkflowFingerprintPayload(OutputSchema):
     byte_length: int | None = Field(default=None, ge=0)
     reason_class: str = Field(min_length=1, max_length=64)
     recovered_bucket_id: BucketId | None = None
-
-
-class ProfilePointerPayload(OutputSchema):
-    """One active-profile pointer row in the config profile listing.
-
-    Mirrors the :class:`ProfileBucketPointer`
-    projection that links an operator-facing profile name to the immutable
-    profile bucket id. The row deliberately carries no profile facts; detailed
-    facts stay under
-    :class:`ProfileFactPayload` in the
-    profile-show envelope.
-
-    The pointer is deliberately limited to the committed capsule's
-    operator-facing label and bucket identity. Setup readiness belongs to
-    the authenticated :class:`UserProfileRecord` projection, not to this
-    unauthenticated listing row. ``name`` and ``bucket_id`` carry the same
-    bounds :class:`ProfileBucketPointer` enforces, so a blank label or bucket
-    id is refused rather than listed.
-    """
-
-    name: str = Field(min_length=1, max_length=160)
-    bucket_id: BucketId
-    active: bool
 
 
 class ProfileIssuePayload(OutputSchema):
@@ -304,24 +277,6 @@ class RepairConnectivityResult(OutputSchema):
 # P06 — config and profile verb result schemas
 
 
-class ConfigListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile list``.
-
-    Note: ``config_list`` is declared for the ``profile list`` sub-command
-    which maps to the CLI path ``config.list`` (the profile sub-app carries
-    the list verb). Each
-    :class:`ProfilePointerPayload` row
-    identifies a
-    registered bucket, while ``active_profile`` names the current pointer's
-    operator-facing label -- bounded exactly as
-    :class:`ProfileBucketPointer` bounds ``label`` -- so an empty-but-present
-    active label is refused rather than silently listed as active.
-    """
-
-    active_profile: str | None = Field(default=None, min_length=1, max_length=160)
-    profiles: list[ProfilePointerPayload]
-
-
 class ConfigLoginResult(OutputSchema):
     """JSON envelope for ``aeat config login``.
 
@@ -396,7 +351,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
 
 
 class ConfigProfileArchiveImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile restore``.
+    """JSON envelope for ``aeat config profile archive import``.
 
     Reports one completed restore of a capsule the operator held on disk.
 

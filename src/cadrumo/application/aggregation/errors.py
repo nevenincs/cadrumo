@@ -26,7 +26,7 @@ class AggregationConfigError(CoreError, ValueError):
     """
 
 
-class AggregationError(TerminalPreconditionErrorMixin, CadrumoError):
+class AggregationError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for financial transaction aggregation failures.
 
     The ``translated_message`` field is a translation key resolved by

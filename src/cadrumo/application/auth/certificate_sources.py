@@ -43,7 +43,7 @@ from .models import AuthState, CertificateSourceRecord
 from .operator_results import CertificateSourceNotFoundError
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
+    from ..workflow.state_models import WorkflowState
 
 
 class CertificateSourceNoActiveBucketError(Exception):

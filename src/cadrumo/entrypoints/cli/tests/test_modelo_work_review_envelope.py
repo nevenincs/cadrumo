@@ -14,8 +14,6 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from typer.testing import CliRunner
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -29,6 +27,7 @@ from ....core.json_contract import (
     derive_status,
 )
 from ....domain.calculations import RowSourceIdentity
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

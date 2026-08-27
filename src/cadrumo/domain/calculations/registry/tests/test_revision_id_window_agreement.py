@@ -35,7 +35,9 @@ def _year_keyed_revision_id_tail(revision_id: str) -> str | None:
     match = _YEAR_KEYED_REVISION_ID.match(revision_id)
     if match is None or not match.group("tail"):
         return None
-    return match.group("tail")
+    tail = match.group("tail")
+    assert isinstance(tail, str)
+    return tail
 
 
 def _classify_year_keyed_tail(revision) -> str | None:

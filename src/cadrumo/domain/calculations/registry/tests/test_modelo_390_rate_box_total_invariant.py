@@ -56,11 +56,10 @@ from collections.abc import Iterator
 
 import pytest
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ..authority import bundled_authority
+from ..binding_selector_utils import selector_as_dict
+from ..runtime_graph import expression_casilla_refs
+from ..schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

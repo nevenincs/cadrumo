@@ -670,6 +670,9 @@ errors:
       Run `aeat config login NAME` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
+    locked_storage_profile_custody_capsule_generation: The profile custody capsule
+      changed while it was being read. Another process is publishing or deleting it.
+      Retry the operation.
   prefix:
     auth: Auth.
     error: Error.

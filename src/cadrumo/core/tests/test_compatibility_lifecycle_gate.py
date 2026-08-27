@@ -54,6 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DISTRIBUTION_NAME: Final[str] = "cadrumo"
 
+
 def _package_major_version() -> int:
     """Return the major component of this codebase's package version.
 

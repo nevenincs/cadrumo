@@ -9,10 +9,9 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
-
 from ....core import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import selector_model_for_source
 from ..workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,

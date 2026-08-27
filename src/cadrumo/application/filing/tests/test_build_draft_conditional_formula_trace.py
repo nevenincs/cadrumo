@@ -28,9 +28,8 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing import ModeloInputs
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission import ModeloDraftStatus

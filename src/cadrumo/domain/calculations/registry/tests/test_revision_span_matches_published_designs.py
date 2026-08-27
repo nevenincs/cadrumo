@@ -143,9 +143,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from .....core import PeriodKind, RegistryAuthorityGrade, registry_period_kind
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
@@ -162,6 +159,8 @@ from ..record_design import (
 )
 from ..record_design_coverage import _CASILLA_TAG_RE
 from ..record_design_schema import RecordDesignSheet
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

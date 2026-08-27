@@ -110,8 +110,13 @@ def fold_observed_requirement_values(
     :class:`~domain.calculations.registry.RegistryFoldRequirement`; the
     period match is :func:`gather_observed_requirement_values`.
     """
+    aggregation_op = requirement.aggregation_op
+    # Every relation-derived requirement declares its aggregation op; only the
+    # unrelated same-modelo previous_filing producer leaves it unset, and this
+    # fold is the one both RELATION paths apply, per the docstring above.
+    assert aggregation_op is not None
     return fold_sum_or_copy(
-        requirement.aggregation_op,
+        aggregation_op,
         values,
         subject=f"relation requirement {requirement.relation_ids!r}",
         copy_unit="observation",

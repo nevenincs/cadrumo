@@ -6,12 +6,11 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import CasillaId, validated_casilla_id
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
+from ..schema_surfaces import CasillaDefinition
 from ..validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label

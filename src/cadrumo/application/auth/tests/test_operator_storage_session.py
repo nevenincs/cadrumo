@@ -9,8 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....adapters.persistence.storage.bucket import (
@@ -28,6 +26,7 @@ from ....domain.contribuyente import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...workflow.persistence import workflow_state_repository
 from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 from ..certificate_source_operations import (
     register_operator_certificate_source,

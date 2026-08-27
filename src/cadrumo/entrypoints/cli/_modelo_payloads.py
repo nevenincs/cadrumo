@@ -25,18 +25,6 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.ids import (
-    BindingId,
-    FormulaId,
-    LegalRefId,
-    ParameterId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    VerificationExpectationId,
-)
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
-
 from ...application.aggregation import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
@@ -72,6 +60,17 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+    LegalRefId,
+    ParameterId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+    VerificationExpectationId,
+)
+from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidenceKind,

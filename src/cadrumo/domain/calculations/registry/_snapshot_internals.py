@@ -13,16 +13,6 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    filing_period_from_scope,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import (
     REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
@@ -37,7 +27,9 @@ from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
 from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
-from .schema_references import governed_period_span
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
+from .schema_references import LegalReference, governed_period_span
+from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_revision_identity import revision_reference_identity_failures
 
@@ -588,17 +580,6 @@ def _legal_window_failure(
     )
 
 
-def _source_applies_across(
-    source: SourceReference,
-    span_from: date,
-    span_to: date | None,
-) -> bool:
-    """Report whether ``source``'s applicability window overlaps one date span."""
-    if source.applies_to is not None and source.applies_to < span_from:
-        return False
-    return not (source.applies_from is not None and span_to is not None and source.applies_from > span_to)
-
-
 def _deadline_window_source_spans(
     revision: ModeloRevision,
 ) -> dict[str, tuple[tuple[date, date], ...]]:
@@ -681,10 +662,10 @@ def _check_revision_scoped_source_windows(
         source = catalogues.sources.get(source_id)
         if source is None:
             continue
-        if _source_applies_across(source, revision.valid_from, revision.valid_to):
+        if source.applies_across(revision.valid_from, revision.valid_to):
             continue
         if source_id not in elsewhere_source_ids and any(
-            _source_applies_across(source, opens_on, closes_on)
+            source.applies_across(opens_on, closes_on)
             for opens_on, closes_on in deadline_spans.get(source_id, ())
         ):
             continue
@@ -774,3 +755,23 @@ def collect_snapshot_ref_ids(
         include_deadline_windows=include_deadline_windows,
     )
     return legal_ids, source_ids
+
+
+#: This module's docstring already states the boundary this enforces: kept
+#: private so a caller OUTSIDE the package cannot bind to a validation step or
+#: cache the contract does not promise. Within the package, :mod:`snapshot`
+#: and :mod:`authority` are the sanctioned consumers of the construction
+#: internals below, so this lists every name they (and this module's own test
+#: suite) actually reach across the module boundary -- never a wildcard, and
+#: never widened to symbols nothing outside this file uses.
+__all__ = [
+    "_SNAPSHOT_CACHE",
+    "_SUBSTANTIVE_LAW_KINDS",
+    "_build_validated_snapshot",
+    "_check_revision_scoped_legal_windows",
+    "_check_snapshot_filing_capability",
+    "_validate_materialized_export_record_families",
+    "_validate_modelo_once",
+    "check_snapshot_filing_review_tier",
+    "collect_snapshot_ref_ids",
+]

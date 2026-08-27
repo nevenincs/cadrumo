@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from ....core import Period, sha256_hex
 from ....core.time import now
 from ....domain.filing import FilingExportValidationError
 from .. import (
+    DeclaracionExportResult,
     FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,
     FilingExportConsumedResult,
@@ -90,6 +92,21 @@ def test_canonical_writer_can_deliver_validated_bytes_without_plaintext_path() -
     assert "output_path" not in type(result).model_fields
 
 
+def _call_export_draft_unguarded(
+    fn: Callable[..., DeclaracionExportResult | FilingExportConsumedResult],
+    /,
+    **kwargs: object,
+) -> DeclaracionExportResult | FilingExportConsumedResult:
+    """Invoke ``export_draft`` through its erased implementation signature.
+
+    Deliberately bypasses the two-overload "exactly one destination" static
+    contract so this test can prove the SAME invariant is also enforced at
+    runtime -- a caller reaching the implementation any other way (e.g. via
+    dynamic dispatch) must still be refused, not merely discouraged statically.
+    """
+    return fn(**kwargs)
+
+
 def test_canonical_writer_refuses_zero_or_two_payload_destinations(tmp_path) -> None:
     consumer = _MemoryPayloadConsumer()
     kwargs = {
@@ -97,10 +114,11 @@ def test_canonical_writer_refuses_zero_or_two_payload_destinations(tmp_path) -> 
         "schema_provider": _schema_provider(modelos=("111",)),
     }
     with pytest.raises(FilingExportValidationError, match="exactly one payload destination"):
-        export_draft(_approved_modelo_111_registry_draft(), **kwargs)
+        _call_export_draft_unguarded(export_draft, draft=_approved_modelo_111_registry_draft(), **kwargs)
     with pytest.raises(FilingExportValidationError, match="exactly one payload destination"):
-        export_draft(
-            _approved_modelo_111_registry_draft(),
+        _call_export_draft_unguarded(
+            export_draft,
+            draft=_approved_modelo_111_registry_draft(),
             output_path=tmp_path / "must-not-exist.txt",
             payload_consumer=consumer,
             **kwargs,

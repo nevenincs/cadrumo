@@ -118,7 +118,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
 ) -> None:
     """probe_persisted_session raises AeatLoginAssertionError with session_expired key
     when the persisted metadata's idle_deadline is in the past."""
-    import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+    from .. import session_store as session_store
 
     settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
@@ -162,7 +162,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
 ) -> None:
     """_resume_locked raises AeatLoginAssertionError with storage_state_hash_mismatch key
     when the persisted sha256 does not match the metadata sha256."""
-    import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+    from .. import session_store as session_store
 
     settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)

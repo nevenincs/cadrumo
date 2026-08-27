@@ -38,6 +38,7 @@ from enum import StrEnum
 from typing import Final
 
 __all__ = [
+    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE",
     "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE",
     "ConceptoIngreso",
 ]
@@ -78,4 +79,28 @@ INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE: Final[frozenset[ConceptoIngreso]] = fr
 Listed rather than derived from a name prefix on purpose: ``SUBVENCION_CORRIENTE`` and
 ``SUBVENCION_CAPITAL`` share a prefix and land on opposite sides, so any rule keyed on
 the word "subvención" gets one of them wrong.
+"""
+
+INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE: Final[frozenset[ConceptoIngreso]] = frozenset(
+    {
+        ConceptoIngreso.SUBVENCION_CORRIENTE,
+        ConceptoIngreso.SUBVENCION_CAPITAL,
+        ConceptoIngreso.INDEMNIZACION,
+    },
+)
+"""The concepts art. 109.3 and 109.4 remove from the pago-fraccionado exemption base.
+
+A SUPERSET of :data:`INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE`, and the difference
+is the whole reason both exist. Art. 110.1.c) fixes a quarterly payment on a volume
+that KEEPS subvenciones corrientes in; art. 109.3 and 109.4 measure the 70 per cent
+retention coverage over *los ingresos procedentes de la explotación, con excepción
+de las subvenciones corrientes y de capital y de las indemnizaciones*, which takes
+them out.
+
+Sharing one set between the two provisions would therefore get exactly one of them
+wrong, and the direction is not symmetric. Reusing art. 110's narrower set here
+leaves subvenciones corrientes in the art. 109 denominator, where they never appear
+in the numerator because subsidies carry no retención -- so the ratio is depressed,
+the 70 per cent threshold is missed, and a filer the reglamento exempts is shown a
+Modelo 130 obligation and pays a pago fraccionado they do not owe.
 """

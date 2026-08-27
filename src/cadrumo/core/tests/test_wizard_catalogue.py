@@ -40,8 +40,7 @@ def test_setup_flow_round_trip_identity() -> None:
     """get_setup_flow() returns the exact SETUP_FLOW object from _catalogue."""
 
     # Import catalogue first — its module body calls register_wizard_catalogue.
-    import cadrumo.application.wizard.catalogue as catalogue
-
+    from ...application.wizard import catalogue as catalogue
     from ..wizard_catalogue import get_setup_flow
 
     assert get_setup_flow() is catalogue.SETUP_FLOW, (
@@ -53,8 +52,7 @@ def test_setup_flow_round_trip_identity() -> None:
 def test_wizard_flows_round_trip_identity() -> None:
     """get_wizard_flows() returns the exact WIZARD_FLOWS tuple from _catalogue."""
 
-    import cadrumo.application.wizard.catalogue as catalogue
-
+    from ...application.wizard import catalogue as catalogue
     from ..wizard_catalogue import get_wizard_flows
 
     assert get_wizard_flows() is catalogue.WIZARD_FLOWS, (

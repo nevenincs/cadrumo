@@ -2069,8 +2069,8 @@ cli:
           --to; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu.
-        help: Copia de seguretat d'un perfil en un fitxer segellat i xifrat AEAD,
-          o inspeccio d'un; restaura'l amb 'aeat config profile restore'.
+        help: Copia de seguretat d'un perfil en un arxiu segellat i xifrat AEAD, o
+          inspeccio d'un; restaura'l amb 'aeat config profile archive import'.
         import_artifact_help: Fitxer d'artefacte de recuperacio; utilitza'l quan s'hagi
           perdut la contrasenya del perfil.
         import_file_help: Cami al directori de la capsula sense publicar que es restaurara.
@@ -2342,6 +2342,10 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      list:
+        incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
+          de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
+          reviseu l''emmagatzematge de perfils.'
       manager_closed: Els canvis a '{profile}' estan desats.
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar

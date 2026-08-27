@@ -28,12 +28,11 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from .._schema import (
     ModeloBindingValue,
     ModeloDraft,

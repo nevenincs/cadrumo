@@ -7,13 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.user_profile.custody_ports import (
-    bind_profile_custody_port,
-    profile_custody_port,
-    profile_is_persistence_failure,
-)
-
 from ....adapters.persistence.storage import PersistenceError, build_profile_custody_port
+from ..custody_ports import bind_profile_custody_port, profile_custody_port, profile_is_persistence_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

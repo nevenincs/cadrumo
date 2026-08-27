@@ -79,8 +79,8 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
         BindingSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
         BindingSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
         "modelo_finding": frozenset({ReviewItemKind.FINDING}),
-        "live_notification": frozenset(),
-        "sync_divergence": frozenset(),
+        "live_notification": frozenset[ReviewItemKind](),
+        "sync_divergence": frozenset[ReviewItemKind](),
     },
 )
 

@@ -6,8 +6,7 @@ import hashlib
 
 import pytest
 
-from cadrumo.application.workflow.state_models import WorkflowState
-
+from ...workflow.state_models import WorkflowState
 from .. import LedgerReviewRecord, update_ledger_review
 from ..errors import ReviewError
 

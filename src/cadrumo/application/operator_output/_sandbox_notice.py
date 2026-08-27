@@ -26,15 +26,19 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     reads its committed label projection and checks it against the reserved
     sandbox label prefix
     (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). Returns
-    ``None`` when no profile is active, the active bucket's manifest is
-    absent, unreadable, or fails strict validation, or the active profile is
-    not a sandbox, so a real profile's output is never annotated. The
-    projection is deliberately re-read on every call (no caching) so a
-    mid-process ``switch`` is reflected on the very next command.
-    """
-    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+    ``None`` when no profile is active, the active bucket has no recognized
+    committed capsule, or the active profile is not a sandbox, so a real
+    profile's output is never annotated. The projection is deliberately re-read
+    on every call (no caching) so a mid-process ``switch`` is reflected on the
+    very next command.
 
-    from ...application.user_profile.profile_repository import CommittedProfileRepository
+    It reads the summary inventory rather than the authenticated aggregate.
+    The aggregate takes a per-profile custody lock and can publish a label head
+    as a side effect; paying that on every emitted line contradicted this
+    module's own cheapness contract, and neither the lock nor the publication
+    tells us anything a label check needs.
+    """
+    from ...application.user_profile.profile_summary import summary_inventory
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
@@ -45,8 +49,13 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
             return None
-        label = CommittedProfileRepository().load(bucket_id).label
-    except (FormerProductStateError, ProfileNotFoundError, ValueError):
+        label = next(
+            (item.label for item in summary_inventory().summaries if item.profile_id == bucket_id),
+            None,
+        )
+    except (FormerProductStateError, ValueError):
+        return None
+    if label is None:
         return None
     if not label.startswith(SANDBOX_LABEL_PREFIX):
         return None

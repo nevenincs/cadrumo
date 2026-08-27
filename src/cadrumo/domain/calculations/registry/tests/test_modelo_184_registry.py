@@ -13,6 +13,7 @@ from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ..record_design import extract_record_design
+from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..support_matrix import revision_capability_probe
 from ..temporal import select_revision
@@ -99,6 +100,7 @@ def test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mappe
     assert source.applies_to == date(year_to, 12, 31)
     assert hash_file(path) == (source.sha256, source.bytes)
     if revision_id != "2023-2024":
+        assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
         assert revision.export_layouts == ()
 
@@ -313,7 +315,7 @@ _ENTIDAD_POSITIONS: tuple[tuple[str, int, int, str], ...] = (
 _SOCIO_MARKER = "MIEMBRO A 31 DICIEMBRE"
 
 
-def _tipo2_sheets(design_ref: str) -> tuple[object, object]:
+def _tipo2_sheets(design_ref: str) -> tuple[RecordDesignSheet, RecordDesignSheet]:
     """Return the (entidad, socio) Tipo 2 sheets of a Modelo 184 design."""
     from pathlib import Path
 
@@ -380,11 +382,13 @@ def test_modelo_184_2023_entidad_offset_mutation_conflicts_with_the_source_geome
         for field in record.fields
         if field.id == "m184-2023.entidad.f009"
     )
+    assert field.offset is not None
     mutated = field.model_copy(update={"offset": field.offset - 1})
     entidad, _ = _tipo2_sheets("aeat-dr-184-2023-2024")
     by_offset = {candidate.offset: candidate for candidate in entidad.fields if candidate.offset is not None}
 
     assert field.offset == 77
+    assert mutated.offset is not None
     assert "CLAVE" in by_offset[field.offset].description
     assert by_offset[mutated.offset].description != by_offset[field.offset].description
 
@@ -398,6 +402,7 @@ def test_modelo_184_manifest_declares_the_entidad_positions_it_was_verified_agai
     """
     modelo, _ = _load_modelo_184()
     manifest = modelo.revisions[revision_id].completeness_manifest
+    assert manifest is not None
     declared = {entry.casilla_id: entry for entry in manifest.casillas}
 
     for casilla_id, offset, length, _description in _ENTIDAD_POSITIONS:

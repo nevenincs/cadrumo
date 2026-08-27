@@ -685,6 +685,9 @@ errors:
       Futtassa az `aeat config login NÉV` parancsot, és próbálja újra.
     locked_storage_lock_acquisition: A kizárólagos fájlzárat nem sikerült beszerezni
       az időkorláton belül. Egy másik folyamat tartja; várjon, és próbálja újra.
+    locked_storage_profile_custody_capsule_generation: A profil letéti kapszulája
+      megváltozott olvasás közben. Egy másik folyamat éppen közzéteszi vagy törli.
+      Próbálja meg újra a műveletet.
   prefix:
     auth: Hitelesítés.
     error: Hiba.

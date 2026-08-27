@@ -23,9 +23,6 @@ from typing import TYPE_CHECKING, Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, filing_period_from_scope
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
 from ._relation_aggregation import relation_aggregation_op
@@ -34,6 +31,8 @@ from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from .observation_fold import gather_observed_requirement_values
 from .period_offset_math import apply_period_offset
+from .schema import ModeloRevision, filing_period_from_scope
+from .schema_surfaces import RelationDefinition
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation
@@ -166,6 +165,30 @@ class _RelationRequirementBucket:
     source_refs: set[SourceRefId]
 
 
+#: Same closed vocabularies as :attr:`RegistryFoldRequirement.dependency_role`
+#: and :attr:`RegistryFoldRequirement.dependency_treatment` -- the grouping key
+#: below carries the exact values those fields are ultimately built from
+#: (:attr:`RelationDefinition.dependency_role`,
+#: :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`),
+#: so it is typed to match rather than widened to a bare ``str``.
+type _RelationRequirementDependencyRole = Literal[
+    "periodic_to_annual_summary",
+    "instalment_to_final_settlement",
+    "direct_calculation",
+    "factual_evidence",
+]
+type _RelationRequirementDependencyTreatment = Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+type _RelationRequirementKey = tuple[
+    str,
+    int,
+    tuple[str, ...],
+    CasillaId,
+    _RelationRequirementDependencyRole,
+    _RelationRequirementDependencyTreatment,
+    str,
+]
+
+
 def relation_requirement_index(
     requirements: Iterable[RegistryFoldRequirement],
 ) -> dict[RelationId, RegistryFoldRequirement]:
@@ -215,14 +238,11 @@ def _group_relation_requirements(
     *,
     filing_year: int,
     period: str,
-) -> dict[tuple[str, int, tuple[str, ...], CasillaId, str, str, str], _RelationRequirementBucket]:
+) -> dict[_RelationRequirementKey, _RelationRequirementBucket]:
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
-    grouped: dict[
-        tuple[str, int, tuple[str, ...], CasillaId, str, str, str],
-        _RelationRequirementBucket,
-    ] = {}
+    grouped: dict[_RelationRequirementKey, _RelationRequirementBucket] = {}
     for relation in revision.relations:
         if relation.target_periods and period not in relation.target_periods:
             continue
@@ -244,7 +264,7 @@ def _group_relation_requirements(
             tuple(source_periods),
             relation.source_casilla_id,
             relation.dependency_role,
-            str(classification.treatment),
+            classification.treatment,
             relation_aggregation_op(relation).value,
         )
         bucket = grouped.setdefault(
@@ -279,7 +299,7 @@ def _relation_requirement_source_scope(
 
 
 def _registry_fold_requirement(
-    key: tuple[str, int, tuple[str, ...], CasillaId, str, str, str],
+    key: _RelationRequirementKey,
     values: _RelationRequirementBucket,
 ) -> RegistryFoldRequirement:
     (

@@ -51,8 +51,6 @@ from uuid import uuid4
 import typer
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-
 from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
 from ...application.flows.engine import FlowState
@@ -80,6 +78,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,

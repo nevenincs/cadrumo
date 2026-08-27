@@ -26,10 +26,13 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
+from ....application.operator_actions import PreconditionVerdict
 from ....core.errors import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
 
-class OutboundStorageError(TerminalPreconditionErrorMixin, CadrumoError):
+class OutboundStorageError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for every outbound storage-provider failure."""
 
 
@@ -40,7 +43,14 @@ class OutboundStorageValidationError(OutboundStorageError, ValueError):
     validators while staying catchable as :class:`OutboundStorageError`.
     """
 
-    def __init__(self, message: str | None = None, *, context=None, translated_message=None, precondition_verdict=None):
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         """Initialize this public contract."""
         super().__init__(
             message,
@@ -95,7 +105,7 @@ class OutboundStorageUnavailableError(OutboundStorageError):
     """Raised when the backend is reachable but signals temporary unavailability."""
 
 
-class StorageCorruptionError(TerminalPreconditionErrorMixin, CoreError):
+class StorageCorruptionError(TerminalPreconditionErrorMixin[PreconditionVerdict], CoreError):
     """Raised when a sidecar file contains structurally invalid field types.
 
     As a :class:`core.errors.CoreError`, this indicates on-disk data
@@ -107,7 +117,14 @@ class StorageCorruptionError(TerminalPreconditionErrorMixin, CoreError):
     error surfaces schema-level violations in the sidecar metadata file itself.
     """
 
-    def __init__(self, message=None, *, context=None, translated_message=None, precondition_verdict=None):
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
         """Initialize this public contract."""
         super().__init__(
             message,

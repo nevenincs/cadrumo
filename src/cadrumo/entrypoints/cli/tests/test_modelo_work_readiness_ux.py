@@ -33,8 +33,7 @@ _REPRESENTANTE_PROFILE_PATHS = frozenset(
 
 
 def _remove_representante_fields_from_operator_profile() -> None:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
     from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     pointer = read_profile_bucket(_PROFILE_ID)

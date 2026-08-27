@@ -24,11 +24,10 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.registry.rate_box_partition import derive_rate_box_partitions
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from .....core.resources import bundled_path
 from ..authority import bundled_authority
+from ..rate_box_partition import derive_rate_box_partitions
+from ..schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

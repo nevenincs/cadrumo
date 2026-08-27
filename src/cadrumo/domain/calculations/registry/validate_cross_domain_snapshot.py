@@ -13,7 +13,7 @@ from ....core import CasillaId, Modelo
 from .ids import BindingId
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from .schema import RegistrySnapshot
 
 
 class CrossDomainSnapshotCheck(Protocol):
@@ -53,6 +53,7 @@ class CrossDomainSnapshotCheck(Protocol):
         revision_binding_ids: frozenset[BindingId] = ...,
     ) -> list[str]:
         """Return the snapshot-routing failures detected by this peer-domain check."""
+        ...
 
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []

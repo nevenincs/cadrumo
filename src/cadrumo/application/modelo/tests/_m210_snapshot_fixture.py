@@ -2,12 +2,11 @@
 
 import pytest
 
-from cadrumo.domain.calculations.registry.convenio import load_convenio_authority
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.convenio import load_convenio_authority
+from ....domain.calculations.registry.loader import load_registry_tree
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.snapshot import build_snapshot
 
 
 @pytest.fixture(scope="module")

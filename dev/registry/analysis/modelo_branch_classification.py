@@ -35,11 +35,12 @@ exempted.
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+
+from cadrumo.core import read_toml
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"
@@ -93,7 +94,7 @@ def _enclosing_symbols(tree: ast.Module) -> dict[int, str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             spans.append((node.lineno, node.end_lineno or node.lineno, node.name))
-    spans.sort(key=lambda item: (item[1] - item[0]))
+    spans.sort(key=lambda item: item[1] - item[0])
     mapping: dict[int, str] = {}
     for start, end, name in spans:
         for line in range(start, end + 1):
@@ -166,7 +167,7 @@ def load_ledger(path: Path | None = None) -> dict[str, BranchAdjudication]:
     target = path if path is not None else LEDGER_PATH
     if not target.exists():
         return {}
-    raw = tomllib.loads(target.read_text(encoding="utf-8"))
+    raw = read_toml(target, error_factory=BranchLedgerError)
     rows: dict[str, BranchAdjudication] = {}
     for entry in raw.get("branch", []):
         key = entry.get("key")

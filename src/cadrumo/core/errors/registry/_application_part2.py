@@ -654,6 +654,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.custody_ports.ProfileCustodyConcurrentChangeError",
+        ErrorCode(
+            code="LOCKED_PROFILE_CUSTODY_PORT_CAPSULE_GENERATION",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_profile_custody_capsule_generation",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.capsule_record.ProfileRecordConflictError",
         ErrorCode(
             code="FAIL_PROFILE_RECORD_CONFLICT",

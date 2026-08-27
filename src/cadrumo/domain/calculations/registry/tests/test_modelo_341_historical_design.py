@@ -71,6 +71,7 @@ def test_modelo_341_refuses_pre_design_years_and_selects_two_layout_eras() -> No
     current = select_revision(modelo, filing_year=2016, period="1T", on=date(2016, 1, 1))
 
     assert historical.id == historical_end.id == "2005-2015"
+    assert historical.authority_grade is not None
     assert historical.authority_grade.value == "applicability"
     assert historical.review_status.value == "agent_reviewed"
     assert [(layout.id, tuple(layout.source_refs)) for layout in historical.export_layouts] == [
@@ -164,7 +165,10 @@ def test_modelo_341_historical_layout_covers_every_source_position() -> None:
     (layout,) = revision.export_layouts
     (record,) = layout.records
     assert record.fields[0].offset == 1
-    assert record.fields[-1].offset + record.fields[-1].length - 1 == 619
+    last_field = record.fields[-1]
+    assert last_field.offset is not None
+    assert last_field.length is not None
+    assert last_field.offset + last_field.length - 1 == 619
 
 
 def test_modelo_341_selector_boundary_mutation_is_refused() -> None:

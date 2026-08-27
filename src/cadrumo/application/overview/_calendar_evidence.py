@@ -36,14 +36,13 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.applicability_routes import TaxRoute
-
 from ...application.operator_actions import next_action
 from ...core import Period as _Period
 from ...core import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.applicability_routes import TaxRoute
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from ._calendar_models import (

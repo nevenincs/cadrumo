@@ -18,12 +18,13 @@ on the returned :class:`RetentionFloorAssessment`.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date, datetime
+from datetime import datetime
 from typing import Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.calendar_shift import shift_by_calendar_years
 from ...core.identity import FilingRecordId
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
@@ -117,19 +118,6 @@ class RetentionFloorAssessment(BaseModel):
         return max(record.earliest_safe_erase_date for record in self.retained)
 
 
-def add_prescription_years[CalendarMoment: date](moment: CalendarMoment, years: int) -> CalendarMoment:
-    """Add whole calendar years to a legal prescription boundary.
-
-    A leap-day boundary whose target year is not a leap year clamps to 28
-    February. This keeps every legal period well-defined without each consumer
-    redeclaring date arithmetic.
-    """
-    try:
-        return moment.replace(year=moment.year + years)
-    except ValueError:
-        return moment.replace(year=moment.year + years, month=2, day=28)
-
-
 def earliest_safe_erase_date(
     filed_at: datetime,
     *,
@@ -142,7 +130,7 @@ def earliest_safe_erase_date(
     carries; anchoring on it is conservative for the common case (filing occurs
     at or near the deadline) and errs toward keeping late-filed records longer.
     """
-    return add_prescription_years(filed_at, floor_years)
+    return shift_by_calendar_years(filed_at, floor_years)
 
 
 def assess_retention_floor(

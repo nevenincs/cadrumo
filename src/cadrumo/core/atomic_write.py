@@ -130,13 +130,13 @@ def _hardened_staging_path(path: Path) -> Path:
 def _hardened_staging_flags() -> int:
     """Return the ``os.open`` flags shared by every hardened staging open."""
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
+    flags |= int(getattr(os, "O_NOINHERIT", 0))
+    flags |= int(getattr(os, "O_CLOEXEC", 0))
     # O_BINARY is required on Windows: an fd opened without it is in text mode,
     # so os.write() translates every 0x0A byte to CRLF and silently corrupts
     # binary payloads (ciphertext, keys, PDFs) that contain a newline byte. The
     # flag is absent on POSIX, where getattr resolves to 0 (a no-op).
-    flags |= getattr(os, "O_BINARY", 0)
+    flags |= int(getattr(os, "O_BINARY", 0))
     return flags
 
 

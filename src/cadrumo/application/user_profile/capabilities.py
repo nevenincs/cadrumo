@@ -199,7 +199,7 @@ def _active_profile_record() -> UserProfileRecord | None:
     try:
         if profile_current_bucket_session() is None:
             return None
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ..workflow.persistence import workflow_state_repository
 
         return workflow_state_repository().load().active_profile_record()
     except Exception as exc:

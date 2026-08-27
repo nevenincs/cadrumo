@@ -94,7 +94,7 @@ _CONTEXT_LINES = 3
 # genuinely needs re-opening, key it on something that survives an edit — the
 # qualified function name — never on a line number.
 # ---------------------------------------------------------------------------
-_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset()
+_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset[tuple[str, int]]()
 
 
 def _has_any_annotation(annotation: ast.expr | None) -> bool:

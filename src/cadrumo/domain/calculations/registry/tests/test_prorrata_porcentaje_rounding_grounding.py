@@ -44,11 +44,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.calculations.registry.schema_rounding import RegistryRoundingCode
-
 from .....core import CasillaId, validated_casilla_id
 from ....iva import (
     ProrrataInputs,
@@ -56,7 +51,11 @@ from ....iva import (
     compute_prorrata_general,
 )
 from ..authority import bundled_authority
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
+from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ..schema_rounding import RegistryRoundingCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

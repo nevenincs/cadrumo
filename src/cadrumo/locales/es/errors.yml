@@ -728,6 +728,9 @@ errors:
       desbloqueado. Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
+    locked_storage_profile_custody_capsule_generation: La cápsula de custodia del
+      perfil cambió mientras se leía. Otro proceso la está publicando o eliminando.
+      Reintente la operación.
   prefix:
     auth: Autenticación.
     error: Error.

@@ -18,8 +18,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage import SECRET_INDEX_FILENAME, SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
@@ -32,6 +30,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...state_projection import build_operator_state_projection
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
+from ...workflow.persistence import workflow_state_repository
 from ..actions import update_auth
 from ..certificate_source_operations import (
     check_operator_certificate_sources,

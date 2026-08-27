@@ -20,11 +20,10 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-
 from ......core import FilingProducerKey
+from ......domain.calculations.export_field_kind import CasillaFieldKind
+from ......domain.calculations.registry.export_value_policy import ExportValuePolicy
+from ......domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ......domain.modelos import ModeloExportError
 from .._registry_record_renderer import RegistryFixedWidthRecordRenderer
 

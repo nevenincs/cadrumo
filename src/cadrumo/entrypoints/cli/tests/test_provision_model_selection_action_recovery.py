@@ -103,7 +103,7 @@ def test_unsatisfied_model_selection_text_is_the_same_typed_projection_in_every_
             capsys=capsys,
         )
         cells = dict(line.split("\t", 1) for line in output.splitlines())
-        projection = {
+        projection: dict[str, object] = {
             key.removeprefix("precondition_action."): json.loads(value)
             for key, value in cells.items()
             if key.startswith("precondition_action.")

@@ -18,8 +18,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-
 from ..... import __version__
 from .....tests.attribute_scope import scoped_attribute
 from .. import loader_cache as loader_cache
@@ -34,6 +32,7 @@ from ..identity import (
     write_registry_identity_stamp,
 )
 from ..loader_cache import _bundled_registry_root, _bundled_root_match
+from ..loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

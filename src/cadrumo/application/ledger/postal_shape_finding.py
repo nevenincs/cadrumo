@@ -101,7 +101,8 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
 
     findings: list[DraftDiscrepancyFinding] = []
     for party in party_addresses():
-        printed: str | None = getattr(draft, party.postal_field, None)
+        raw_printed = getattr(draft, party.postal_field, None)
+        printed: str | None = raw_printed if isinstance(raw_printed, str) else None
         if printed is None or not printed.strip():
             continue
         if territorial_scope_for_spanish_postal_code(printed) is not None:

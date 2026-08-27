@@ -15,6 +15,7 @@ import sys
 import time
 
 import pytest
+from pydantic import TypeAdapter
 
 from .._call_runtime import (
     CallTier,
@@ -25,6 +26,8 @@ from .._call_runtime import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
 def _typed_error_envelope(envelope: dict[str, object]) -> dict[str, object]:
@@ -41,7 +44,7 @@ def _wire_action(error: dict[str, object]) -> dict[str, object]:
 
     action = ErrorEnvelope.model_validate(error).action
     assert action is not None
-    return action.model_dump(mode="json")
+    return _JSON_OBJECT_ADAPTER.validate_python(action.model_dump(mode="json"))
 
 
 def test_tier_is_derived_from_annotations() -> None:

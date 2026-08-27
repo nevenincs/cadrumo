@@ -7,8 +7,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.application.workflow.adapters import default_engine
-
+from ..adapters import default_engine
 from ..engine import WorkflowEngine
 from ..errors import WorkflowError
 from ..protocols import (

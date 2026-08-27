@@ -15,8 +15,6 @@ from typing import Final
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     Period,
@@ -24,6 +22,7 @@ from ...core import (
     ProrrataRegisterRegime,
     StandardPeriodCode,
 )
+from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.iva import IvaCashAccountingTreatment
 from ...domain.prorrata_register import (
     ProrrataRegister,

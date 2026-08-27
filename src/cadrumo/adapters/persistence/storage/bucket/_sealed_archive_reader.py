@@ -73,7 +73,7 @@ class SealedArchiveContents:
 #: A sealed archive is opened ``r:gz``, so the bytes on disk bound nothing: a
 #: small file can expand without limit, and an unbounded ``read()`` on a member
 #: turns an operator-supplied archive into a memory-exhaustion surface. The
-#: input reaches this function from ``config profile restore``, which takes a
+#: input reaches this function from ``config profile archive import``, which takes a
 #: path -- an archive can be corrupted, or supplied by someone other than the
 #: operator who wrote it.
 #:

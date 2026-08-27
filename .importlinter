@@ -326,15 +326,24 @@ forbidden_modules =
 
 [importlinter:contract:tui-feature-independence]
 name = TUI feature implementations share components rather than each other
-# Feature implementations may meet only in app.py.  Wildcard expressions keep
-# this pre-migration gate valid while the feature packages do not yet exist;
-# once implementation modules land, dependency chains in either direction fail.
+# Feature implementations may meet only in app.py.
+#
+# Named as packages, NOT as `.**` expressions. A `**` expression expands to every
+# descendant, so a package with a test subpackage yields both `<pkg>.tests` and
+# `<pkg>.tests.test_x` -- an ancestor and its own descendant inside ONE listed
+# expression. Import Linter rejects that with "Modules have shared descendants."
+# and aborts the WHOLE suite before evaluating any contract, so every other
+# contract in this file silently stopped enforcing. The package form covers
+# descendants already, which is what this contract wants.
+#
+# The wildcards were written while these feature packages did not yet exist.
+# They exist now, so the pre-migration form is retired.
 type = independence
 modules =
-    cadrumo.entrypoints.tui.operations.**
-    cadrumo.entrypoints.tui.profile.**
-    cadrumo.entrypoints.tui.secret.**
-    cadrumo.entrypoints.tui.flows.**
+    cadrumo.entrypoints.tui.operations
+    cadrumo.entrypoints.tui.profile
+    cadrumo.entrypoints.tui.secret
+    cadrumo.entrypoints.tui.flows
 
 [importlinter:contract:layered]
 name = AEAT layered architecture

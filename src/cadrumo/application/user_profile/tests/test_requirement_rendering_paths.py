@@ -12,14 +12,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.preflight import (
-    format_profile_path_requirements,
-    format_profile_selector_requirements,
-)
-from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ....domain.user_profile.loader import load_user_profile_schema
+from ..preflight import format_profile_path_requirements, format_profile_selector_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

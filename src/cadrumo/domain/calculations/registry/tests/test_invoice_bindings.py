@@ -15,16 +15,15 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.invoice_bindings import (
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ..binding_selector_utils import selector_as_dict
+from ..errors import RegistryValidationError
+from ..invoice_bindings import (
     InvoiceObservation,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 

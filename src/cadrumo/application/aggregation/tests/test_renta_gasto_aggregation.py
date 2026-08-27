@@ -26,16 +26,15 @@ from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-)
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
+from ....domain.calculations.registry.ledger_bindings import (
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
+)
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.transactions import (

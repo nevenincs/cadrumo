@@ -52,18 +52,17 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
 from ..authority import bundled_authority
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..loader import load_registry_tree
+from ..snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

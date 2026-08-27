@@ -25,7 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
 import tempfile
@@ -46,6 +45,7 @@ from ....core.directory_scan import (
     iter_directory,
     scan_directory,
 )
+from ....core.hashing import blake2b_hex
 from ....core.resources import bundled_path
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
@@ -550,7 +550,7 @@ def _toml_content_digest(path: Path) -> str:
                 facts={"path": str(path), "registry_tree_quiescent": False, "operation": "toml_read"},
             ),
         ) from exc
-    return hashlib.blake2b(data, digest_size=16).hexdigest()
+    return blake2b_hex(data)
 
 
 def _running_under_pytest() -> bool:

@@ -14,8 +14,11 @@ from __future__ import annotations
 
 from datetime import date
 
-from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.query_reports import (
+from ...core import Period, TaxDomain
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.query_reports import (
     ModeloBindingsReport,
     ModeloCasillaDetailReport,
     ModeloCasillasReport,
@@ -24,10 +27,6 @@ from cadrumo.domain.calculations.registry.query_reports import (
     ModeloListReport,
     ModeloSupportMatrixReport,
 )
-
-from ...core import Period, TaxDomain
-from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
 

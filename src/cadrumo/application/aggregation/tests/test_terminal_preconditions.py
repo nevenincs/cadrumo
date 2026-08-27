@@ -13,13 +13,12 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
     InvoiceKind,

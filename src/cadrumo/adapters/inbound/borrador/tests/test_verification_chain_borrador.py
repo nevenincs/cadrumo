@@ -68,11 +68,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-
 from .....core import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....tests import FIXTURES_DIR
 from .. import ArtefactKind, BorradorParseError, BorradorParseMode, parse_borrador
 

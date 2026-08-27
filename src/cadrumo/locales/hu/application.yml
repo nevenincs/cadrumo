@@ -391,6 +391,9 @@ application:
           megadott adattípusnak.
         text_casilla_not_string: A casilla szöveges bemenetének szöveges értéknek
           kell lennie.
+        unsupported_filing_year: 'A(z) {filing_year} adóév nincs támogatottként deklarálva.
+          A registry a következőket deklarálja: {supported_filing_years}. Vegye fel
+          az évet ide: {declaration}, miután megalapozta az előfeltételeit.'
     complementaria:
       errors:
         justificante_csv_absent: A complementaria a benyújtott eredeti bevallás justificante

@@ -1,9 +1,23 @@
-"""Typed registry selector contract for the 2025 Modelo 100 inventory projection.
+"""Typed registry selector contract for the Modelo 100 inventory projection.
 
 This module declares only the binding selector and its accumulating shape
 validator. Source resolution, readiness, valuation, provenance, and registry
 enrollment are owned by later integration steps; a selector declaration cannot
 make an inventory schedule authoritative or complete.
+
+The filing year is deliberately NOT pinned here. Which years carry an inventory
+projection is a revision-owned fact, declared by the bindings the authoring tree
+ships, so a later revision adding one must be an authoring change rather than an
+edit to this file. Today only the Modelo 100 2025 revision declares them.
+
+The operation-to-casilla identity below is retained as a structural invariant of
+the projection vocabulary rather than migrated: an operation names WHICH figure
+it produces, so its destination is what the operation means, not a value the law
+re-sets per year. Retiring it would leave nothing at all checking that a binding
+declaring ``complete_acquisition_cost`` targets the acquisition-cost box, and a
+guard with no replacement is worse than a duplicated declaration. The embed
+classification ledger records it as revision-owned data; that half needs
+re-adjudication before it moves.
 """
 
 from __future__ import annotations
@@ -52,7 +66,7 @@ class _InventorySelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M100]
-    filing_year: Literal[2025]
+    filing_year: int
     projection_grain: Literal["taxpayer_year_activity"]
     fact: Literal["row_field"]
     record: Literal["inventory_activity"]

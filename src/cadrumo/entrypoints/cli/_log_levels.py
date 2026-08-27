@@ -17,12 +17,13 @@ import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no lo
 from collections.abc import Mapping
 from enum import StrEnum
 
+from ...application.operator_actions import PreconditionVerdict
 from ...core import ActionEvidenceProvenance, FormerProductStateError, NoRecoveryOutcome
 from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import set_log_level
 
 
-class LogLevelResolutionError(TerminalPreconditionErrorMixin, CadrumoError):
+class LogLevelResolutionError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Raised when the requested CLI log-level inputs are contradictory.
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``

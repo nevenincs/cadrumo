@@ -8,11 +8,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.application.user_profile.login_session_port import (
-    ProfileLoginSessionPort,
-    bind_profile_login_session_port,
-    profile_login_session_port,
-)
+from ..login_session_port import ProfileLoginSessionPort, bind_profile_login_session_port, profile_login_session_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

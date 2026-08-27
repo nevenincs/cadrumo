@@ -171,7 +171,10 @@ from ._tipo_actividad_partitions import (
     load_tipo_actividad_selectors,
     tipo_actividad_code_set,
 )
-from ._volumen_ingresos import counts_toward_volumen_de_ingresos
+from ._volumen_ingresos import (
+    counts_toward_art_109_activity_income,
+    counts_toward_volumen_de_ingresos,
+)
 from .errors import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
@@ -279,6 +282,7 @@ __all__ = [
     "administrador_retencion_legal_refs",
     "build_split_prompt",
     "catalogue",
+    "counts_toward_art_109_activity_income",
     "counts_toward_volumen_de_ingresos",
     "default_classification_choices",
     "default_iva_category_choices",

@@ -21,11 +21,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-
 from ....core.errors import CadrumoError, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from .._calculate_input import (
     ModeloCalculateBindingInputError,
     _validated_binding_input_channel,

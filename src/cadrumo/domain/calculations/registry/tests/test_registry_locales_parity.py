@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-
 from ..authority import bundled_authority
+from ..schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

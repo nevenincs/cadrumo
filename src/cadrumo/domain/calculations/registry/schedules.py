@@ -12,10 +12,9 @@ from typing import Final
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, ModeloScheduleDefinition
-from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
-
 from .errors import RegistryValidationError
+from .schema import ModeloRevision, ModeloScheduleDefinition
+from .schema_verification import ProfilePredicateDefinition
 
 __all__ = [
     "applicable_filing_schedules",

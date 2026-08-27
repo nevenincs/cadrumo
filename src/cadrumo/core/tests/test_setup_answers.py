@@ -60,8 +60,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
-    import cadrumo.application.wizard.catalogue as catalogue
-
+    from ...application.wizard import catalogue as catalogue
     from ..setup_answers import SetupAnswers
     from ..wizard_catalogue import get_setup_flow
 

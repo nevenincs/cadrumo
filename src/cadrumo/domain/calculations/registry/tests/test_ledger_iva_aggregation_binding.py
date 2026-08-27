@@ -8,16 +8,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
-    validate_ledger_iva_aggregation_binding_definition,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....iva import (
@@ -28,7 +18,16 @@ from ....iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..ledger_bindings import _IvaLedgerSelector
+from ..errors import RegistryValidationError
+from ..ledger_bindings import (
+    IvaLedgerObservation,
+    _IvaLedgerSelector,
+    resolve_ledger_iva_aggregation_binding_values,
+    unsupported_ledger_iva_observations,
+    validate_ledger_iva_aggregation_binding_definition,
+)
+from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,

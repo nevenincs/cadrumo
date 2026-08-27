@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
 from ....core import ActionConditionality, NoRecoveryOutcome
@@ -24,13 +26,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
     ),
 )
 def test_contract_refusals_carry_terminal_typed_verdict(
-    call: object,
+    call: Callable[[], object],
     condition_id: str,
     fact_key: str,
     fact_value: str,
 ) -> None:
     with pytest.raises(OperatorSurfaceContractError) as raised:
-        call()  # type: ignore[operator]
+        call()
 
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None

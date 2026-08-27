@@ -24,7 +24,7 @@ from typing import Any
 import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....outbound.storage import OutboundStorageConflictError, OutboundStorageValidationError
+from ....outbound.storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from .._calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from .._drive_entries import (
     OWNERSHIP_KEY,
@@ -41,7 +41,7 @@ _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 
 def _assert_closed_operator_review(
-    error: BaseException,
+    error: OutboundStorageError,
     *,
     condition_id: str,
     facts: dict[str, str | int | bool],

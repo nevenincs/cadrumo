@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter
-
 from ...core import Period
 from ...core.errors import CoreValidationError
 from ...core.money import round_to_cents
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from ...domain.calculations.registry.schema import RegistryCatalogues
+from ...domain.calculations.registry.schema_references import LegalParameter
 from ...domain.iva import (
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,

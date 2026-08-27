@@ -21,10 +21,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-
 from .. import export_parse as export_parse_module
 from ..errors import RegistryValidationError
 from ..export_parse import (
@@ -35,7 +31,10 @@ from ..export_parse import (
     _parse_xml_dictionary_line,
     _parse_xml_dictionary_value,
     _read_dictionary_text,
+    xml_dictionary_entries,
 )
+from ..fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
+from ..schema_exports import ExportFieldDefinition
 from ..schema_references import SourceReference
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 
@@ -354,15 +353,14 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     that follow must still match their own literals, and a payload shorter than
     the declared prefix cannot satisfy them.
     """
-    from cadrumo.domain.calculations.registry.schema_exports import (
+    from ..export_parse import parse_export_payload
+    from ..schema_exports import (
         AuxiliaryEnvelopeHeaderDefinition,
         ExportLayoutDefinition,
         ExportRecordDefinition,
         FilingEnvelopePrefixFieldDeclaration,
         FilingEnvelopePrefixRole,
     )
-
-    from ..export_parse import parse_export_payload
 
     roles = tuple(
         role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG

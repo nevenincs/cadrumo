@@ -75,7 +75,7 @@ def _isolated_root(tmp_path: Path) -> Iterator[Path]:
 
 
 def _bucket_id_or_none(label: str = _LABEL) -> str | None:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(label)
     return pointer.bucket_id if pointer is not None else None

@@ -14,17 +14,16 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from .....core import CasillaId, validated_casilla_id
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
+from ..schema import RegistrySnapshot
 from ._cross_dependency_calculation_support import _observations_from_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

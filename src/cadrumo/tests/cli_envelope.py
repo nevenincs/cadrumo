@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from ..core.errors import ErrorEnvelope
 from ..core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, Notice, OutputSchema, SchemaEnvelope
@@ -98,6 +98,19 @@ def unwrap_cli_result(result: CliResultLike) -> dict[str, Any]:
     return require_schema_envelope(result.output)
 
 
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+
+
+def parse_json_object(text: str) -> dict[str, object]:
+    """Parse ``text`` as a JSON object, typed at the boundary rather than left ``Any``.
+
+    For callers that need a raw top-level JSON object outside the envelope
+    contract (a full response body, a non-envelope payload) rather than the
+    unwrapped ``result`` mapping the helpers above return.
+    """
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(text))
+
+
 class _ErrorDocument(BaseModel):
     """Stable outer envelope wrapping a failed command's error body.
 
@@ -145,6 +158,7 @@ def require_error_document(output: str) -> dict[str, Any]:
 
 
 __all__ = [
+    "parse_json_object",
     "require_error_document",
     "require_schema_envelope",
     "unwrap_cli_result",

@@ -25,7 +25,7 @@ class ProfileLoginAttempt:
 
 def profile_login_choices() -> tuple[ProfileLoginChoice, ...]:
     """Return committed profiles in the stable chooser order."""
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+    from ..workflow.profile_bucket_scan import list_profile_buckets
 
     return tuple(
         ProfileLoginChoice(profile_id=pointer.bucket_id, label=pointer.label)

@@ -405,6 +405,9 @@ application:
           de dato declarado en el registro.
         text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
           de texto.
+        unsupported_filing_year: El ejercicio {filing_year} no está declarado como
+          soportado. El registro declara {supported_filing_years}. Admita el ejercicio
+          en {declaration} tras fundamentar sus requisitos.
     complementaria:
       errors:
         justificante_csv_absent: La complementaria requiere el CSV del justificante

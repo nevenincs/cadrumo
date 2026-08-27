@@ -9,12 +9,11 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import ProfileSelector
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from ....core import BindingSourceKind
 from ....core.errors import BaseSeverity
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.bindings import ProfileSelector
+from ...calculations.registry.schema import DataBindingDefinition
 from ..loader import load_user_profile_schema
 from ..registry_contract import (
     UserProfileRegistryContractIssue,

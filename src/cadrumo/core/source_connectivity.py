@@ -230,7 +230,10 @@ class SourceConnectivityProofFailureCause(StrEnum):
     @classmethod
     def from_validation_error_type(cls, error_type: str) -> SourceConnectivityProofFailureCause:
         """Translate Pydantic's stable error type without inspecting prose."""
-        return cls._value2member_map_.get(error_type, cls.LIVE_PROOF_VALIDATION_FAILED)
+        try:
+            return cls(error_type)
+        except ValueError:
+            return cls.LIVE_PROOF_VALIDATION_FAILED
 
 
 class SourceConnectivityExecutableEvidence(BaseModel):
@@ -456,7 +459,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             authority = (info.context or {}).get("source_connectivity_proof_authority")
             if not isinstance(authority, SourceConnectivityProofAuthority):
                 raise ValueError("connected connectivity row requires live proof authority validation")
-            self.verify_connected_authority(authority)
+            self._verify_connected_authority(authority)
         elif self.connected_proof is not None:
             raise ValueError("only a connected connectivity row may carry connected_proof")
         if (

@@ -313,7 +313,10 @@ class ModeloApplicabilityRule(BaseModel):
             if not profile.irpf_income_categories:
                 return _incomplete_applicability(
                     self.modelo,
-                    entity_type_declared=profile.entity_type is not None,
+                    # Reached only once the caller's own `profile.entity_type is
+                    # None` guard has already returned, so entity_type is
+                    # always declared by this point.
+                    entity_type_declared=True,
                 )
             if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                 return self._not_applicable()

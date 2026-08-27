@@ -20,8 +20,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-
 from ....adapters.persistence.storage import Envelope, EnvelopeVersionError
 from ....core import (
     CasillaId,
@@ -29,6 +27,7 @@ from ....core import (
     SecureObjectWrite,
     validated_casilla_id,
 )
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,

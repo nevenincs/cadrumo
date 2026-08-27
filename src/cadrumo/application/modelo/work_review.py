@@ -14,13 +14,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import (
-    CasillaConstraints,
-    CasillaDefinition,
-    RelationDefinition,
-)
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
@@ -66,7 +59,9 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_relation_refs,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing import ModeloScalar, ModeloValueKind
 from ...domain.modelos import (

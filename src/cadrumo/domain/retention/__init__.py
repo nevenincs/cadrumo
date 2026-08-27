@@ -40,7 +40,6 @@ from ._floor import (
     RetainableFilingRecord,
     RetentionBlockingRecord,
     RetentionFloorAssessment,
-    add_prescription_years,
     assess_retention_floor,
     earliest_safe_erase_date,
 )
@@ -53,7 +52,6 @@ __all__ = [
     "RetentionError",
     "RetentionFloorAssessment",
     "RetentionFloorError",
-    "add_prescription_years",
     "assess_retention_floor",
     "earliest_safe_erase_date",
 ]

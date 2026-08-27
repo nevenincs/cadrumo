@@ -63,7 +63,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
 from .errors import AggregationValidationError, t
 
-RowBindingValue = str | Decimal
+RowBindingValue = str | Decimal | int | bool
 
 _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
 

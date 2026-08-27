@@ -19,7 +19,7 @@ from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind,
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 
     type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
@@ -134,10 +134,6 @@ def resolve_filing_window(
     """
     from ..calculations.registry.authority import bundled_authority
 
-    if resultado is not None and not isinstance(resultado, ResultDisposition):
-        raise DeadlineValidationError(
-            f"filing window resultado must be ResultDisposition, got {type(resultado).__name__}",
-        )
     if tipo_renta_code is not None and (
         modelo != Modelo.M210 or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
     ):
@@ -171,11 +167,11 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from cadrumo.domain.calculations.registry.deadline_coordinate import (
+    from ..calculations.registry.deadline_coordinate import (
         deadline_semantic_coordinate,
         deadline_window_semantic_coordinates,
     )
-    from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+    from ..calculations.registry.period_selector_match import selector_period_matches_request
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
     if requested.filing_year != filing_year:
@@ -214,7 +210,7 @@ def _resolve_projected_filing_window(
             f"filing window resolution is ambiguous for {requested!r}: "
             f"matched window ids {[window.id for window in matches]!r}",
         )
-    return matches[0]
+    return next(iter(matches))
 
 
 __all__ = ["resolve_filing_closes_on", "resolve_filing_window"]

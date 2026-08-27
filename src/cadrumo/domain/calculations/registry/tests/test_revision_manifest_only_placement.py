@@ -20,9 +20,8 @@ from typing import Annotated
 
 import pytest
 
-import cadrumo.domain.calculations.registry.loader as _loader
-
 from .....tests.registry_tree import bundled_registry_tree
+from .. import _loader_internals as _loader
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory
 from ..schema import (

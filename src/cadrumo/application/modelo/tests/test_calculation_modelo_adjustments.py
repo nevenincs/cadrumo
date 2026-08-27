@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
+from typing import Literal
+
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
-from ....core import Modelo
+from ....core import Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.modelos import Modelo349OperadorRow, ModeloCode, WorkUnit, derive_work_unit_id
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
@@ -51,16 +55,37 @@ def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_altern
     assert target[2] == (_TARGET_CASILLA,)
 
 
-class _FakeWorkUnit:
-    """The bare attribute :func:`detail_row_binding_values_for_calculation` reads."""
+def _work_unit(modelo: Modelo) -> WorkUnit:
+    bucket_id = "calculation-modelo-adjustments-bucket"
+    filing_year = 2025
+    period = Period.from_year_and_code(filing_year, "0A")
+    revision_id = "r" + "0" * 63
+    code = ModeloCode(modelo.value)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=code,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=bucket_id,
+        modelo=code,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{code}-{filing_year}",
+        created_at=datetime(2025, 1, 1, tzinfo=UTC),
+        updated_at=datetime(2025, 1, 1, tzinfo=UTC),
+    )
 
-    def __init__(self, modelo: Modelo) -> None:
-        self.modelo = modelo
 
-
-def _m349_operador(*, nif_comunitario: str, clave_operacion: str, importe) -> Modelo349OperadorRow:
-    from cadrumo.domain.modelos import Modelo349OperadorRow
-
+def _m349_operador(
+    *,
+    nif_comunitario: str,
+    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"],
+    importe: Decimal,
+) -> Modelo349OperadorRow:
     return Modelo349OperadorRow(
         codigo_pais="DE",
         nif_comunitario=nif_comunitario,
@@ -98,7 +123,7 @@ def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
 
     assert len(unioned) == 1
     values = detail_row_binding_values_for_calculation(
-        work_unit=_FakeWorkUnit(Modelo.M349),
+        work_unit=_work_unit(Modelo.M349),
         detail_rows=unioned,
     )
     assert values["iva-349-declarante-numero-operadores"] == Decimal("1")
@@ -116,6 +141,7 @@ def test_union_refuses_a_divergent_amount_for_the_same_identity_naming_the_field
         union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
     context = excinfo.value.context
+    assert context is not None
     assert context["reason"] == "detail_row_identity_conflict"
     assert context["identity"] == ["DE123456789", "E"]
     assert context["divergent_fields"] == ["importe"]
@@ -131,7 +157,7 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
     """
     from decimal import Decimal
 
-    from cadrumo.domain.modelos import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
+    from ....domain.modelos import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
 
     caller_rows = (
         Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D"),
@@ -151,8 +177,8 @@ def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
 
 def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> None:
     """Prove the gate is real: removing one real kind from the table is detected."""
-    import cadrumo.application.modelo._calculation_modelo_adjustments as adjustments_module
-    from cadrumo.domain.modelos import Modelo184MemberRow
+    from ....domain.modelos import Modelo184MemberRow
+    from .. import _calculation_modelo_adjustments as adjustments_module
 
     real_table = adjustments_module._ROW_IDENTITY_FIELDS
     incomplete_table = {kind: fields for kind, fields in real_table.items() if kind is not Modelo184MemberRow}
@@ -160,4 +186,3 @@ def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> 
     assert adjustments_module._uncovered_row_kinds(incomplete_table) == frozenset({Modelo184MemberRow})
     # The real table stays fully covered -- this test does not mutate it.
     assert adjustments_module._uncovered_row_kinds(real_table) == frozenset()
-

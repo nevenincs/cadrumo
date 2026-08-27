@@ -74,13 +74,20 @@ def _manager() -> App[Any]:
     from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
     from ....application.user_profile.overview import build_profile_overview
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ....application.user_profile.profile_repository import CommittedProfileRepository
+    from ....application.user_profile.profile_summary import summary_inventory
     from ....core.bucket_pointer import require_active_bucket_id
     from ....entrypoints.tui.profile.overview import ProfileManagerApp
 
     profile_id = require_active_bucket_id()
     profiles = ProfileRecordRepository.for_current_session(profile_id)
-    label = CommittedProfileRepository().load(profile_id).label
+    # The label comes from the summary projection, not the authenticated
+    # aggregate: `load` takes a per-profile custody lock and reads password
+    # material, the transaction journal and the label head to hand back a
+    # string this surface already has an unlocked session for.
+    label = next(
+        (item.label for item in summary_inventory().summaries if item.profile_id == profile_id),
+        "",
+    )
 
     def _overview():
         return build_profile_overview(profiles.load(profile_id), label=label)

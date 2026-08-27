@@ -19,18 +19,16 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from .....core import M720AssetClassCode
+from .....core.aggregation import RetencionClave
+from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
+    _build_related_party_rows,
 )
-from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-
-from .....core import M720AssetClassCode
-from .....core.aggregation import RetencionClave
-from ..detail_record_bindings import _build_related_party_rows
-from ..donativo_bindings import _build_donativo_rows
+from ..donativo_bindings import DonativoDonorObservation, _build_donativo_rows
 from ..errors import RegistryValidationError
 from ..withholding_bindings import (
     WithholdingObservation,
@@ -1084,6 +1082,7 @@ def test_atribucion_member_share_percentage_must_be_in_range() -> None:
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("150"),
             base_imponible_assigned=Decimal("0"),
+            clave="D",
         )
     with pytest.raises(ValidationError, match=r"share_percentage must be within \[0, 100\]"):
         AtributionMemberObservation(
@@ -1092,6 +1091,7 @@ def test_atribucion_member_share_percentage_must_be_in_range() -> None:
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("-1"),
             base_imponible_assigned=Decimal("0"),
+            clave="D",
         )
 
 
@@ -1104,6 +1104,7 @@ def test_atribucion_member_country_code_must_be_uppercase_alphabetic() -> None:
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("50"),
             base_imponible_assigned=Decimal("1000"),
+            clave="D",
         )
 
 

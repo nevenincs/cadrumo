@@ -11,8 +11,10 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-import cadrumo.domain.calculations.registry.censo_modelos as _censo_modelos
-from cadrumo.domain.calculations.registry.censo_modelos import (
+from .....core.errors import get_registered_error_code
+from .. import censo_modelos as _censo_modelos
+from ..authority import bundled_authority
+from ..censo_modelos import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
     CENSO_MODELO_SERVICE_OWNER,
@@ -28,12 +30,9 @@ from cadrumo.domain.calculations.registry.censo_modelos import (
     resolve_censo_modelo_foundation,
     resolve_censo_modelo_work_unit_foundation,
 )
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
-from .....core.errors import get_registered_error_code
-from ..authority import bundled_authority
+from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..schema_references import PeriodSelector
+from ..temporal import select_revision
 from ._referential_integrity_support import minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

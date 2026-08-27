@@ -22,6 +22,7 @@ from typing import Final, Literal
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
@@ -401,7 +402,7 @@ def measure_dp30302_field_matrix(authority: ValidatedRegistryAuthority) -> DP303
 
 def load_dp30302_field_matrix(path: Path) -> DP30302FieldMatrix:
     """Load the persisted reviewed DP30302 matrix without weakening its strict schema."""
-    if not path.is_file() or path.is_symlink() or path.is_junction():
+    if not path.is_file() or is_link_like(path):
         raise RegistryValidationError(f"DP30302 field matrix path must be a real file: {path}")
     try:
         payload = rtoml.load(path)

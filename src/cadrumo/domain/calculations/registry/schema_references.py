@@ -379,6 +379,19 @@ class SourceReference(RegistryModel):
     concept does not apply to.
     """
 
+    def applies_across(self, span_from: date, span_to: date | None) -> bool:
+        """Report whether this source's applicability window overlaps one date span.
+
+        The ONE definition of the overlap rule. Callers keep their own policy on
+        whether a missing bound is admissible -- a record-design binary must
+        declare ``applies_from``, an evidence-backed source cell must declare
+        both -- and apply it before asking this question. An open bound here
+        means the window is open in that direction, never that it is unknown.
+        """
+        if self.applies_to is not None and self.applies_to < span_from:
+            return False
+        return not (self.applies_from is not None and span_to is not None and self.applies_from > span_to)
+
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:

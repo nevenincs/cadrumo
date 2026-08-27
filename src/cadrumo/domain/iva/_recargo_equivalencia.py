@@ -98,8 +98,8 @@ def _load_rates() -> LivaArt161RecargoRates:
     # load_registry_tree path pulls in registry._bindings which imports
     # from cadrumo.domain.iva, triggering a circular import at this very
     # module's import time.
-    from cadrumo.domain.calculations.registry.errors import RegistryError
-    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
+    from ..calculations.registry.errors import RegistryError
+    from ..calculations.registry.loader import load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))

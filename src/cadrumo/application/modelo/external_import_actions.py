@@ -69,6 +69,7 @@ from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingInstanceEvidence,
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -147,6 +148,7 @@ def import_external_filing_source(
     source: ExternalFilingBaselineSource,
     *,
     bucket_id: str,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     actor: str = "aeat-import",
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -215,7 +217,7 @@ def import_external_filing_source(
             translated_message="application.modelo.errors.external_import_source_incomplete",
             context={"missing_casilla_ids": ",".join(sorted(missing_required))},
         )
-    if source.modelo == Modelo.M303.value:
+    if source.modelo == Modelo.M303.value and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
         )
@@ -359,6 +361,7 @@ def _prepare_external_import_revision(
     input_values_by_casilla_id: dict[CasillaId, str],
     outputs: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
+    filing_instance_evidence: FilingInstanceEvidence | None,
     actor: str,
     now: datetime,
 ) -> tuple[CalculationRevisionCatalogue, str, CalculationRevision]:
@@ -371,7 +374,7 @@ def _prepare_external_import_revision(
         binding_overrides=binding_overrides,
         relation_overrides=relation_overrides,
         casilla_values=outputs,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=None,
         source_provenance=(),
     )
@@ -396,7 +399,7 @@ def _prepare_external_import_revision(
         filed_at=now,
         filed_by=actor.strip(),
         observations=observations,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=None,
         source_provenance=(),
     )
@@ -432,6 +435,7 @@ def import_external_filing_evidence[CasillaKey](
     source_lexical_values_by_casilla_id: Mapping[CasillaKey, str] | None = None,
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     actor: str = "aeat-import",
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -482,7 +486,7 @@ def import_external_filing_evidence[CasillaKey](
     cr_repo = calculation_repository or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id)
     fr_repo = filing_repository or modelo_record_catalogue_repository(bucket_id=work_unit.bucket_id)
     bv_repo = bucket_event_repository or default_profile_bucket_event_history_repository()
-    if work_unit.modelo == Modelo.M303.value:
+    if work_unit.modelo == Modelo.M303.value and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
             context={"work_unit_id": work_unit.work_unit_id},
@@ -516,6 +520,7 @@ def import_external_filing_evidence[CasillaKey](
         input_values_by_casilla_id=input_values_by_casilla_id,
         outputs=outputs,
         observations=observations,
+        filing_instance_evidence=filing_instance_evidence,
         actor=actor,
         now=now,
     )

@@ -1,4 +1,4 @@
-"""The ``config profile restore`` verb: republish a capsule an operator holds.
+"""The ``config profile archive import`` verb: republish a capsule an operator holds.
 
 The restore door an operator reaches after a disk failure, after copying a
 ``buckets/<profile-id>/`` directory out of a backup, after restoring a sealed

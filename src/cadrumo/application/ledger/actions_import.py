@@ -54,12 +54,12 @@ from ...domain.transactions import (
 )
 from ..transactions import LedgerImportDiagnostic, classify_import_row, import_ledger_with_diagnostics
 from .actions_common import (
-    _append_bucket_events,
-    _bucket_event_repository,
-    _build_bucket_event,
-    _normalise_timestamp,
-    _save_transaction_catalogue_and_events,
-    _transaction_repository,
+    append_bucket_events,
+    build_ledger_bucket_event,
+    normalise_timestamp,
+    resolve_bucket_event_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
 )
 from .models import (
     LedgerImportDiagnosticReport,
@@ -250,9 +250,9 @@ def import_ledger_transactions(
     Returns a :class:`~cadrumo.application.ledger.models.LedgerImportOperationResult`
     summarising the imported, skipped, and likely-duplicate transactions.
     """
-    now = _normalise_timestamp(occurred_at)
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     rows = tuple(parsed_rows)
     plan = _evaluate_import_rows(
@@ -290,7 +290,7 @@ def import_ledger_transactions(
     if not imported_transactions:
         return LedgerImportOperationResult(summary=summary, import_batch_id=import_batch_id)
     events = tuple(
-        _build_bucket_event(
+        build_ledger_bucket_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.LEDGER_TRANSACTION_IMPORTED,
             occurred_at=now,
@@ -309,7 +309,7 @@ def import_ledger_transactions(
         )
         for transaction in imported_transactions
     )
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=TransactionCatalogue.model_validate({"transactions": updated_transactions}),
@@ -352,7 +352,7 @@ def import_ledger_source(
             context={"reason": resolve_error_message(exc)},
         ) from exc
     repository = (
-        _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
+        resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
         if command.bucket_id is not None
         else transaction_repository
     )
@@ -405,8 +405,8 @@ def import_ledger_source(
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_requires_bucket",
         )
-    repository = _transaction_repository(bucket_id=command.bucket_id, repository=repository)
-    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     result = import_ledger_transactions(
         bucket_id=command.bucket_id,
         parsed_rows=parsed_rows,
@@ -426,7 +426,7 @@ def import_ledger_source(
         source_command=command.source_command,
     )
     if diagnostic_events:
-        _append_bucket_events(repository=event_repository, events=diagnostic_events)
+        append_bucket_events(repository=event_repository, events=diagnostic_events)
     return LedgerSourceImportResult(
         rows=len(parsed_rows),
         imported=summary.imported,
@@ -567,7 +567,7 @@ def _diagnostic_events(
 ) -> tuple[BucketEvent, ...]:
     if import_batch_id is None:
         return ()
-    now = _normalise_timestamp(None)
+    now = normalise_timestamp(None)
     events: list[BucketEvent] = []
     for diagnostic in diagnostics:
         object_ids = diagnostic.affected_transaction_ids or transaction_ids or (import_batch_id,)
@@ -578,7 +578,7 @@ def _diagnostic_events(
                 else BucketEventObjectType.LEDGER_IMPORT_BATCH
             )
             events.append(
-                _build_bucket_event(
+                build_ledger_bucket_event(
                     bucket_id=bucket_id,
                     event_type=BucketEventType.LEDGER_IMPORT_DIAGNOSTIC_RECORDED,
                     occurred_at=now,

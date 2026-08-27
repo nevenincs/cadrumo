@@ -22,6 +22,8 @@ corpus, both directions, never sampled.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 
 from .....core.resources import bundled_path
@@ -375,10 +377,18 @@ def test_every_accepted_deadline_window_survives_stripping_only_when_re_asked_wi
     sources = catalogues.sources
     evidence = _evidence_validator(source_root=bundled_path())
 
-    class _StrippedEvidence:
+    class _StrippedEvidence(EvidenceValidator):
+        """Delegates entirely to ``inner``; deliberately skips the base ``__init__``.
+
+        ``deadline_window_content_failures`` calls only ``source_text`` on its
+        ``evidence`` argument, so this subclass exists solely to satisfy that
+        nominal type while stripping deadline vocabulary from the delegated text.
+        """
+
         def __init__(self, inner: EvidenceValidator) -> None:
             self._inner = inner
 
+        @override
         def source_text(self, source: SourceReference) -> str | None:
             text = self._inner.source_text(source)
             if text is None:
@@ -415,7 +425,7 @@ def test_every_accepted_deadline_window_survives_stripping_only_when_re_asked_wi
                     "x",
                     window,
                     source_refs=sources,
-                    evidence=stripped_evidence,  # type: ignore[arg-type]
+                    evidence=stripped_evidence,
                 )
                 if not stripped_failures:
                     survived.append((modelo.id, window.id))

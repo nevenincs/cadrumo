@@ -25,13 +25,12 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
+from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
+from ..export import resolve_export_layout
+from ..schema_exports import ExportFieldDefinition
 from ..snapshot import build_snapshot
 from ..support_matrix import build_support_matrix
 

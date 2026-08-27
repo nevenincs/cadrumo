@@ -23,9 +23,6 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
@@ -53,6 +50,8 @@ from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos import (
     CalculationRevision,

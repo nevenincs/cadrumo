@@ -10,12 +10,6 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
-
 from ....core import (
     RegistryAuthorityGrade,
 )
@@ -25,6 +19,7 @@ from ._snapshot_internals import (
     _validate_modelo_once,
 )
 from .ids import RevisionId
+from .schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 
 
 def build_snapshot(

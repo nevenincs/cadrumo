@@ -11,9 +11,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
-
-from ...core.identity import ProfileId, ProfileLabel
 from ...core.paths import effective_storage_root
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView, UnlockedProfileFactSummary
@@ -102,15 +99,6 @@ def _published_at(material: ProfileCustodyPasswordMaterialPort) -> datetime:
     return datetime.fromisoformat(material.commit.published_at.replace("Z", "+00:00")).astimezone(UTC)
 
 
-class ProfileSummary(BaseModel):
-    """Listing projection with no key, KDF, manifest, or recovery material."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
-
-    profile_id: ProfileId
-    label: ProfileLabel
-
-
 class CommittedProfileRepository:
     """Resolve labels and UUIDs only for validated committed capsules."""
 
@@ -152,10 +140,6 @@ class CommittedProfileRepository:
                 continue
         return tuple(sorted(result, key=lambda item: item.profile_id))
 
-    def summaries(self) -> tuple[ProfileSummary, ...]:
-        """Return the public identity and label projection for every capsule."""
-        return tuple(ProfileSummary(profile_id=item.profile_id, label=item.label) for item in self.list())
-
     def load_unlocked(self, profile_id: str | UUID) -> CommittedProfileView:
         """Project fact state and provenance only through the current authenticated session."""
         aggregate = self.load(profile_id)
@@ -194,4 +178,4 @@ class CommittedProfileRepository:
         )
 
 
-__all__ = ["CommittedProfileRepository", "ProfileSummary"]
+__all__ = ["CommittedProfileRepository"]

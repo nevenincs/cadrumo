@@ -15,7 +15,7 @@ validation could not reach the projection without importing its own consumer.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, computed_field, model_validator
 
 from ....core import (
     STRICT_FROZEN_CONFIG,
@@ -159,9 +159,12 @@ def build_revision_coverage_manifest(*, modelo: str, revision: ModeloRevision) -
     )
 
 
+_SCHEMA_FAMILY_MEMBERS_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
+
+
 def _schema_family_row(family: str, revision: ModeloRevision) -> SchemaFamilyCoverageRow:
     """Return one family's row, defaulting an unexplained empty family to blocked."""
-    members: tuple[object, ...] = getattr(revision, family)
+    members = _SCHEMA_FAMILY_MEMBERS_ADAPTER.validate_python(getattr(revision, family))
     if members:
         return SchemaFamilyCoverageRow(
             family=family,

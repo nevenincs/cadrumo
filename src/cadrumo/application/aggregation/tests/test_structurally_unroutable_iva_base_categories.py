@@ -30,16 +30,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories
+from ....domain.calculations.registry.loader import load_registry_tree
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -285,15 +284,14 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    bindings_path = (
-        scratch_root
-        / "modelos"
-        / "303"
-        / "revisions"
-        / _m303_revision().id
-        / "bindings"
-        / "0003-intracom-export-base.part-001.toml"
-    )
+    # Located by its NAME, not its ordinal. Fragment files carry a sequence
+    # prefix that registry sweeps renumber -- this one moved from 0003 to 0004
+    # and the pinned path stopped existing, so the mutation never ran and the
+    # negative control proved nothing about the assertion it guards.
+    bindings_dir = scratch_root / "modelos" / "303" / "revisions" / _m303_revision().id / "bindings"
+    candidates = sorted(bindings_dir.glob("*intracom-export-base*.toml"))
+    assert len(candidates) == 1, f"expected exactly one intracom-export-base fragment, found {candidates}"
+    bindings_path = candidates[0]
     original = bindings_path.read_text(encoding="utf-8")
     mutated = original.replace('categories = ["intra_community_supply"]', 'categories = ["domestic_general"]', 1)
     assert mutated != original, "the mutation target string was not found -- test is stale"

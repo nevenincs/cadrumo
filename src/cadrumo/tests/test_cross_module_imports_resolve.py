@@ -129,7 +129,7 @@ def _collect_import_pairs(source_tree_ast: Mapping[Path, ast.AST] | None = None)
 # silent fix can be acknowledged by trimming the baseline). Trim
 # entries as the underlying breakage is fixed; the gate is fully green
 # once this set is empty.
-_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(set())
+_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset[tuple[str, str, str]]()
 
 
 @pytest.fixture(scope="module")

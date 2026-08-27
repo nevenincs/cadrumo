@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import (
     M303_DECLARATION_TYPE_HEADER_KEY,
@@ -18,6 +16,7 @@ from ....application.calculations import (
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,
@@ -109,15 +108,16 @@ def _revision(
     # Built once and fed to BOTH the deriver and the revision: the id is content
     # addressed over the amendment identity, so deriving without it produces an id
     # the revision then rejects as not matching its own content.
-    amendment_identity = (
-        None
-        if amendment_kind is None
-        else CalculationRevisionAmendmentIdentity(
+    amendment_identity: CalculationRevisionAmendmentIdentity | None
+    if amendment_kind is None:
+        amendment_identity = None
+    else:
+        assert baseline_filing_record_id is not None
+        amendment_identity = CalculationRevisionAmendmentIdentity(
             kind=amendment_kind,
             amends_filing_record_id=baseline_filing_record_id,
             m303_rectificativa_motive=None,
         )
-    )
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,

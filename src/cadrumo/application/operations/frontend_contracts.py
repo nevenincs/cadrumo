@@ -9,11 +9,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.application.operations.persistence.replay import (
-    OperationReplayLimit,
-    OperationReplayStatus,
-)
-
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -37,6 +32,7 @@ from .models import (
     OperationRevision,
     validate_terminal_reference_meaning,
 )
+from .persistence.replay import OperationReplayLimit, OperationReplayStatus
 from .registry import (
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,

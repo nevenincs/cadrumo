@@ -4,12 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema_extraction import (
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-)
-
 from ....core.directory_scan import iter_directory
+from .schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 
 def validate_provisional_declaracion_pdf_evidence_state(

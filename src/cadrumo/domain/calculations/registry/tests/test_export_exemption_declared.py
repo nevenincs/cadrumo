@@ -264,7 +264,7 @@ def _revalidate(casilla: object, **updates: object) -> object:
     ``model_copy`` deliberately skips validation, so a contradiction test must
     round-trip through ``model_validate`` to exercise the model validator.
     """
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+    from ..schema_surfaces import CasillaDefinition
 
     payload = dict(casilla.__dict__)
     payload.update(updates)

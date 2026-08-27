@@ -7,10 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo._result_summary import calculation_result_summary
+from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....domain.modelos import (

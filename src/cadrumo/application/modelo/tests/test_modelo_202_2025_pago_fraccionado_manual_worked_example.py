@@ -78,9 +78,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -94,7 +91,8 @@ from ....application.filing import (
 )
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record

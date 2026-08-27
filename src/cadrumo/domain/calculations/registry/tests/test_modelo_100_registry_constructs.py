@@ -104,16 +104,21 @@ def _construct_members(construct: object) -> tuple[tuple[str, str], ...]:
     Driven from the registry validator's own kind-to-field mapping, so a new
     member kind reaches these assertions the moment production learns it.
     """
-    return tuple(
-        (kind, member_id)
-        for kind, attribute in _CONSTRUCT_MEMBER_ATTRS.items()
-        for member_id in getattr(construct, attribute, ())
-    )
+    members: list[tuple[str, str]] = []
+    for kind, attribute in _CONSTRUCT_MEMBER_ATTRS.items():
+        for member_id in getattr(construct, attribute, ()):
+            assert isinstance(member_id, str)
+            members.append((kind, member_id))
+    return tuple(members)
 
 
 def _members_of_kind(construct: object, kind: str) -> tuple[str, ...]:
     """Return the member ids a construct declares for one kind."""
-    return tuple(getattr(construct, _CONSTRUCT_MEMBER_ATTRS[kind], ()))
+    members: list[str] = []
+    for member_id in getattr(construct, _CONSTRUCT_MEMBER_ATTRS[kind], ()):
+        assert isinstance(member_id, str)
+        members.append(member_id)
+    return tuple(members)
 
 
 def test_real_registry_snapshots_accept_identifier_keyed_maps() -> None:

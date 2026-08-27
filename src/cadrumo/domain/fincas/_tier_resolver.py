@@ -37,6 +37,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.calendar_shift import shift_by_calendar_years
 from ...core.logging import get_logger
 from ..calculations.registry.ids import LegalRefId
 from ._enums import ReduccionTier, UseType
@@ -54,11 +55,20 @@ DEFAULT_EJERCICIO_AMENDMENT_YEAR: int = 2024
 """First ejercicio in which the new IRPF apartado 2 art. 23 wording
 applies (Ley 12/2023 disposición final novena segundo párrafo)."""
 
-REHAB_LOOKBACK_DAYS: int = 730
-"""``2 años anteriores`` interpreted as 730 calendar days (2 * 365).
-The BOE wording ("en los dos años anteriores a la fecha de la
-celebración del contrato") permits exact-day arithmetic; the
-project picks 730-day lookback as the deterministic boundary."""
+REHAB_LOOKBACK_YEARS: int = 2
+"""``los dos años anteriores`` counted as whole CALENDAR years.
+
+The BOE wording is "que hubiera finalizado en los dos años anteriores a la
+fecha de la celebración del contrato de arrendamiento", which counts *de
+fecha a fecha* and not in days. This shipped as a 730-day approximation,
+which is one day short whenever the two-year span contains a 29 February:
+a rehabilitation finished exactly two calendar years before a contract
+celebrated on 2024-03-01 is 731 days away and was denied tier c), dropping
+the reducción from 60 per cent to 50. Every figure in the rule was right;
+the unit was not.
+
+Counted through :func:`~core.calendar_shift.shift_by_calendar_years`, so the
+leap-day clamp is decided once for every legal period rather than here."""
 
 PRIOR_RENT_REBAJA_THRESHOLD: Decimal = Decimal("0.05")
 """Tier 90-a threshold: ``más de un 5 por ciento``. Strict ``>``
@@ -242,8 +252,8 @@ def resolve_reduccion(
             finca.id,
         )
         return _with_registry_rate(tier_70, period_year, "tier-70")
-    rehab_lookback_days = _resolve_rehab_lookback_days(period_year)
-    if _qualifies_for_tier_60_rehab(contract, rehab_lookback_days=rehab_lookback_days):
+    rehab_lookback_years = _resolve_rehab_lookback_years(period_year)
+    if _qualifies_for_tier_60_rehab(contract, rehab_lookback_years=rehab_lookback_years):
         _logger.debug("reduccion tier: TIER_60_REHAB for contract_id=%s", contract.id)
         return _with_registry_rate(_TIER_60_REHAB, period_year, "tier-60")
     _logger.debug("reduccion tier: TIER_50 (fallback) for contract_id=%s", contract.id)
@@ -390,17 +400,22 @@ def _resolve_tier_70_b_1(
 def _qualifies_for_tier_60_rehab(
     contract: Arrendamiento,
     *,
-    rehab_lookback_days: int,
+    rehab_lookback_years: int,
 ) -> bool:
     """Return True if the contract qualifies for tier c) reduccion.
 
-    Tier c) applies when a rehabilitation (actuación de rehabilitación) was
-    finished within ``rehab_lookback_days`` preceding the contract celebration date.
+    Tier c) applies when the actuación de rehabilitación finished within the
+    ``rehab_lookback_years`` CALENDAR years preceding the contract celebration
+    date. The window opens with the earlier boundary and closes on the contract
+    date itself; a rehabilitation finished after the contract was celebrated is
+    outside it in the other direction.
     """
     if contract.rehabilitation_finished_date is None:
         return False
-    delta_days = (contract.contract_celebration_date - contract.rehabilitation_finished_date).days
-    return 0 <= delta_days <= rehab_lookback_days
+    finished = contract.rehabilitation_finished_date
+    celebrated = contract.contract_celebration_date
+    earliest = shift_by_calendar_years(celebrated, -rehab_lookback_years)
+    return earliest <= finished <= celebrated
 
 
 def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
@@ -449,10 +464,10 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     return age_min, age_max
 
 
-def _resolve_rehab_lookback_days(period_year: int) -> int:
+def _resolve_rehab_lookback_years(period_year: int) -> int:
     """Read the rehab-lookback window from the registry parameter.
 
-    Reads ``renta-<period_year>-rental-rehab-lookback-days`` from
+    Reads ``renta-<period_year>-rental-rehab-lookback-years`` from
     Modelo 100. A missing registry revision or parameter is a grounding defect
     and raises :class:`RegistryValidationError`.
     """
@@ -461,7 +476,7 @@ def _resolve_rehab_lookback_days(period_year: int) -> int:
     value = read_parameter(
         Modelo.M100.value,
         str(period_year),
-        f"renta-{period_year}-rental-rehab-lookback-days",
+        f"renta-{period_year}-rental-rehab-lookback-years",
         date_context={"filing_period": date(period_year, 12, 31)},
     )
     return int(value)

@@ -12,7 +12,8 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import (
+from ....deadlines import CalendarCCAA
+from ..schema import (
     BicString,
     CalendarDate,
     CCAACode,
@@ -22,9 +23,7 @@ from cadrumo.domain.calculations.registry.schema import (
     PostalCode,
     ProvinceCode,
 )
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
-from ....deadlines import CalendarCCAA
+from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

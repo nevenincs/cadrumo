@@ -18,11 +18,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
-    from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
-
     from ...core import CasillaId, Period
     from ...core.identity import SubjectTaxId
+    from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
+    from ..calculations.registry.schema_surfaces import CasillaConstraints
 
 
 @runtime_checkable

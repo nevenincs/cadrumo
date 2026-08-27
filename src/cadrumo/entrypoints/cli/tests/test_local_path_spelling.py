@@ -40,6 +40,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .._command_spec import OptionSpec, ParameterSpec
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -58,9 +59,9 @@ _SPELLING_EXEMPTIONS: dict[tuple[str, str], str] = {
 }
 
 
-def _local_parameters() -> list[tuple[str, object]]:
+def _local_parameters() -> list[tuple[str, ParameterSpec]]:
     """Every declared-local parameter in the live graph, with its leaf path."""
-    found = []
+    found: list[tuple[str, ParameterSpec]] = []
     for node in COMMAND_GRAPH.nodes():
         if node.spec.kind != "leaf":
             continue
@@ -70,11 +71,13 @@ def _local_parameters() -> list[tuple[str, object]]:
     return found
 
 
-def _declarations(parameter: object) -> tuple[str, ...]:
-    return tuple(getattr(parameter, "declarations", ()) or ())
+def _declarations(parameter: ParameterSpec) -> tuple[str, ...]:
+    if isinstance(parameter, OptionSpec):
+        return parameter.declarations
+    return ()
 
 
-def _is_exempt(path: str, parameter: object) -> bool:
+def _is_exempt(path: str, parameter: ParameterSpec) -> bool:
     return (path, parameter.name) in _SPELLING_EXEMPTIONS
 
 

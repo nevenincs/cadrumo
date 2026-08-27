@@ -13,12 +13,21 @@ rather than each growing its own load-modify-save and drifting.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
+
+
+@runtime_checkable
+class _GuardedInvoiceCatalogueMutator(Protocol):
+    """The richer capability a concrete repository may offer beyond the narrow domain protocol."""
+
+    def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
+        """Apply ``mutation`` as one revision-guarded unit of work."""
+        ...
 
 
 def mutate_catalogue(
@@ -42,9 +51,8 @@ def mutate_catalogue(
     Returns:
         The catalogue as written.
     """
-    guarded = getattr(repository, "mutate", None)
-    if guarded is not None:
-        return guarded(mutation)
+    if isinstance(repository, _GuardedInvoiceCatalogueMutator):
+        return repository.mutate(mutation)
     return _unguarded_protocol_fallback(repository, mutation)
 
 

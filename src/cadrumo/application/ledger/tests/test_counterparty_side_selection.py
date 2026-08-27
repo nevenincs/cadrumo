@@ -165,9 +165,8 @@ def test_the_guards_this_gate_deliberately_excludes_are_inert_here(
     reason none of them names, and the selection could regress silently behind a
     guard that happened to catch it.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ...wizard.status import WizardStatusError, load_active_taxpayer_profile
+    from ...workflow.persistence import workflow_state_repository
 
     # The refusal both guards swallow. Raising it here is what makes them return
     # without refusing, which is precisely the state this module needs.

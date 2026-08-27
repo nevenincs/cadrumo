@@ -65,8 +65,8 @@ from .. import _load_registry_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ....domain.calculations.registry.schema import RegistrySnapshot
 
 _MODELO = "130"
 _PERIOD = Period(filing_year=2024, code="1T")

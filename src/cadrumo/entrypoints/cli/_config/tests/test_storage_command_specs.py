@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ..._command_spec import OptionSpec
 from .._storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -28,6 +29,7 @@ def test_storage_spec_surface_and_parameter_contract_are_exact() -> None:
         "output_language",
     )
     confirmed = by_token["reclaim"].parameters[1]
+    assert isinstance(confirmed, OptionSpec)
     assert confirmed.declarations == ("--yes",)
     assert confirmed.is_flag
     assert confirmed.flag_value is True

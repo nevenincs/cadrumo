@@ -48,9 +48,7 @@ def test_the_derivation_keys_on_the_core_modelo_enum() -> None:
     codes = modelo_codes()
     declared = {f"M{code}" for code in codes}
 
-    offenders = [
-        site.key for site in derive_branch_sites() if not set(site.modelo_codes).issubset(declared)
-    ]
+    offenders = [site.key for site in derive_branch_sites() if not set(site.modelo_codes).issubset(declared)]
 
     assert offenders == [], f"derived sites naming a non-enum modelo member: {offenders}"
 
@@ -139,8 +137,7 @@ def test_an_unknown_classification_refuses(tmp_path: Path) -> None:
     """Only the two adjudicated kinds are admissible."""
     ledger = tmp_path / "branches.toml"
     ledger.write_text(
-        '[[branch]]\nkey = "src/cadrumo/x.py::f::M303"\n'
-        'classification = "probably_fine"\njustification = "because"\n',
+        '[[branch]]\nkey = "src/cadrumo/x.py::f::M303"\nclassification = "probably_fine"\njustification = "because"\n',
         encoding="utf-8",
     )
 

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
+from ..errors import RegistryValidationError
 from ..schema_input_kind import InputKind
+from ..schema_surfaces import RelationDefinition
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

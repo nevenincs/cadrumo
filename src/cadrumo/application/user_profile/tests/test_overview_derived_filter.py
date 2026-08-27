@@ -28,8 +28,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.overview import build_profile_overview
-
 from ....core.classification import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (
@@ -43,6 +41,7 @@ from ....domain.user_profile.schema import (
     derived_selector_for_path,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..overview import build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

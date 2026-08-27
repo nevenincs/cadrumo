@@ -154,7 +154,7 @@ def normalize_parsed_export_policy_value(
         ExportValuePolicy.TWO_DIGIT_DAY,
     }:
         return int(raw)
-    if policy in _RETAINED_WIRE_POLICIES:
+    if policy is not None and policy in _RETAINED_WIRE_POLICIES:
         return ParsedExportPolicyWireValue(policy=policy, raw=raw)
     return parsed
 

@@ -161,7 +161,9 @@ def test_admission_surfaces_the_real_m347_contraparte_detail_row_kind() -> None:
     """Modelo 347's real registry revision admits 'contraparte' as a writable detail row."""
     work_unit = _work_unit()
     admitted = _admit(
-        work_unit, work_catalogue=WorkUnitCatalogue.from_work_units((work_unit,)), calculation_catalogue=CalculationRevisionCatalogue()
+        work_unit,
+        work_catalogue=WorkUnitCatalogue.from_work_units((work_unit,)),
+        calculation_catalogue=CalculationRevisionCatalogue(),
     )
     entries = [
         e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableDetailRowSurfaceEntryV1)
@@ -234,7 +236,9 @@ def test_add_then_update_then_delete_a_detail_row_reaches_the_persisted_revision
         # DELETE: the row's absence reaches the persisted revision.
         delete_result = _apply(
             detail_row_intents=(
-                ModeloDetailRowEditIntentV1(address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW),
+                ModeloDetailRowEditIntentV1(
+                    address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW
+                ),
             )
         )
         persisted = calculation_repository.load().get(delete_result.receipt.calculation_revision_id)

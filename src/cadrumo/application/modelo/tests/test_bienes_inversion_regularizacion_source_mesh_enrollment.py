@@ -98,6 +98,7 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
             transaction_repository=None,
             invoice_repository=None,
             foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
             casilla_inputs={
                 _VOLUMEN_CON_DERECHO_ID: Decimal("60000.00"),
                 _VOLUMEN_TOTAL_ID: Decimal("100000.00"),

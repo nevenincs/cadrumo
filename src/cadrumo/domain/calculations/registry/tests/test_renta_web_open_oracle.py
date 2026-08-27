@@ -9,8 +9,6 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
@@ -30,6 +28,7 @@ from ..renta_web_open_oracle import (
     serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
 )
+from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

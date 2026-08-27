@@ -66,7 +66,7 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
     replies: ClassVar[Sequence[ReaderReply]] = ()
-    fallback: ClassVar[Mapping[str, str]] = {}
+    fallback: ClassVar[Mapping[str, str]] = dict[str, str]()
 
     def _fields_for(self, prompt: str) -> Mapping[str, str]:
         for marker, fields in self.replies:

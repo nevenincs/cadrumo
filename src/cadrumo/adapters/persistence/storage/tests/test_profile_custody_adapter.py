@@ -13,7 +13,7 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordEncryptedBlob,
 )
 from .. import build_profile_custody_port
-from ..custody import ProfileCustodyCapsuleLabel, ProfileLabelHeadRepository
+from ..custody import ProfileCustodyCapsuleLabel, ProfileLabelHead, ProfileLabelHeadRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -93,6 +93,7 @@ def test_label_head_caller_explicitly_recovers_then_verifies_or_publishes(tmp_pa
         source_witness="sha256:" + "d" * 64,
         root=tmp_path,
     )
+    assert isinstance(initial_head, ProfileLabelHead)
     assert initial_head.label_revision == 1
     assert (
         port.verify_or_recover_initial_label_head(

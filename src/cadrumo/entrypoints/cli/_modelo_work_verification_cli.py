@@ -18,10 +18,6 @@ from typing import Any
 
 import typer
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -40,13 +36,16 @@ from ...application.modelo._profile_readiness_gate import require_profile_ready_
 from ...application.modelo._selectors import ModeloCalculationRevisionSelector
 from ...application.modelo._verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo._work_lifecycle import get_work_unit
-from ...application.modelo._work_plazo import calculated_m210_plazo_notice
+from ...application.modelo._work_plazo import calculated_m210_plazo_resolution
 from ...application.modelo.verify_selector import ModeloVerifySelector
+from ...application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionState
 from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
@@ -64,6 +63,7 @@ from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
     m184_socio_handoff_notices,
+    m210_plazo_notice,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
@@ -247,13 +247,13 @@ def work_verify(
         ),
     ]
     notices = verification_report_notices(report)
-    plazo_notice = calculated_m210_plazo_notice(
+    plazo_resolution = calculated_m210_plazo_resolution(
         work_unit=get_work_unit(selected_revision.work_unit_id),
         revision=selected_revision,
         workflow_profile=workflow_profile,
     )
-    if plazo_notice is not None:
-        notices.append(plazo_notice)
+    if plazo_resolution is not None:
+        notices.append(m210_plazo_notice(plazo_resolution))
     if already_verified:
         noop_message = tr(
             "cli.app.modelo.work.verify_idempotent_noop", calculation_revision_id=report.calculation_revision_id

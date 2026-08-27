@@ -50,7 +50,7 @@ def _coerce_casilla_field_kind(value: object) -> object:
     string matching one of the declared member values.  Rejects non-string
     and non-member inputs at the schema boundary.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError as ValidationError
+    from .registry.errors import RegistryValidationError as ValidationError
 
     if isinstance(value, CasillaFieldKind):
         return value

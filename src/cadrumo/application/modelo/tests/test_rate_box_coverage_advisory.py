@@ -26,12 +26,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId, Modelo, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...aggregation import CalculationSourceDiagnostic

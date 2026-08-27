@@ -163,7 +163,7 @@ class LLMRetryPolicy(BaseModel):
         Returns:
             Seconds to wait before the next attempt.
         """
-        exponential = self.initial_backoff_s * (2 ** (attempt - 1))
+        exponential = self.initial_backoff_s * float(2 ** (attempt - 1))
         capped = min(exponential, self.max_backoff_s)
         # Full-jitter in the upper half: still spreads a synchronised batch,
         # while never collapsing the backoff toward zero the way [0, capped)

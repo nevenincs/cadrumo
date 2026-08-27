@@ -132,9 +132,9 @@ def _calculation_owner_observation(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
 ) -> tuple[str, ...]:
     """Read the calculation catalogue limb backing one revision id."""
-    from .calculation_repository import calculation_revision_catalogue_repository
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 
-    repository = calculation_repository or calculation_revision_catalogue_repository()
+    repository = calculation_repository or CalculationRevisionCatalogueRepository()
     _catalogue, catalogue_revision = repository.load_revisioned()
     return (str(calculation_revision_id), catalogue_revision)
 

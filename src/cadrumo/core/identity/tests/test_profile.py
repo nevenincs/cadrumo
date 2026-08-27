@@ -18,7 +18,7 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
 from .. import ProfileId, canonical_profile_bucket_id
@@ -26,6 +26,7 @@ from .. import ProfileId, canonical_profile_bucket_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _Holder = single_field_holder("profile_id", ProfileId)
+_PROFILE_ID_ADAPTER: TypeAdapter[ProfileId] = TypeAdapter(ProfileId)
 _VALID_PROFILE_ID = str(uuid4())
 _UPPERCASE_PROFILE_ID = str(uuid4()).upper()
 _EXTRA_SUFFIX_PROFILE_ID = f"{uuid4()}-extra"
@@ -68,7 +69,7 @@ def test_canonical_profile_bucket_id_returns_the_canonical_spelling() -> None:
 def test_canonical_profile_bucket_id_agrees_with_the_pydantic_boundary() -> None:
     """The helper and the ProfileId alias cannot drift."""
     canonical = "00000000-0000-4000-8000-000000000000"
-    assert canonical_profile_bucket_id(canonical) == ProfileId(canonical)
+    assert canonical_profile_bucket_id(canonical) == _PROFILE_ID_ADAPTER.validate_python(canonical)
 
 
 def test_canonical_profile_bucket_id_refuses_non_v4_identities() -> None:

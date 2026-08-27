@@ -30,8 +30,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, RegistryExternalLink
-
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings, coerce_output_language_setting, load_settings
@@ -47,6 +45,7 @@ from ...domain.calculations.registry.authority import (
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.legal import verify_legal_catalogue
+from ...domain.calculations.registry.schema_references import LegalReference, RegistryExternalLink
 from ...domain.manuals import (
     ManualCasillaReference,
     ManualId,

@@ -9,13 +9,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.capsule_record import (
-    ProfileRecordIntegrityError,
-    ProfileRecordSession,
-    ProfileRecordStore,
-)
-from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -26,6 +19,8 @@ from ....adapters.persistence.storage.custody import (
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
+from ..capsule_record import ProfileRecordIntegrityError, ProfileRecordSession, ProfileRecordStore
+from ..lifecycle import ProfileCapsuleLifecycle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -11,9 +11,8 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ...core import IvaDeductionFactKind, Period
+from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.iva import (
     EUMemberState,
     InputClassification,

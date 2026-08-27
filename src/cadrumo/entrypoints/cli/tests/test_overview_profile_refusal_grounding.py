@@ -19,14 +19,13 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
-
 from ....application.user_profile.preflight import (
     build_profile_preflight_requirement,
     format_profile_preflight_requirement,
     format_profile_selector_requirements,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli
 from .._overview import (

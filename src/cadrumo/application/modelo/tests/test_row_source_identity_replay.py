@@ -8,10 +8,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import BindingSourceKind, Period
 from ....domain.calculations import RowSourceIdentity
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloBindingValue,
     ModeloDraft,

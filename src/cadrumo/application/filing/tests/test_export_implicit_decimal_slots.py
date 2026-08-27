@@ -42,11 +42,10 @@ from functools import cache
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.fixed_width_codec import parse_fixed_width_export_field
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-
 from ....core import Modelo
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.fixed_width_codec import parse_fixed_width_export_field
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .._export import _format_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

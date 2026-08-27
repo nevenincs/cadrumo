@@ -106,7 +106,7 @@ _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 #
 # DO NOT add new sites — add a rationale marker instead.
 # ---------------------------------------------------------------------------
-_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset()
+_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset[tuple[str, int]]()
 
 
 def _unmarked_type_ignore_linenos(lines: Sequence[str]) -> list[int]:

@@ -3,7 +3,7 @@
 The reader opens the archive ``r:gz``, so the bytes on disk bound nothing. An
 unbounded ``read()`` on a member turns an operator-supplied file into a
 memory-exhaustion surface: a highly compressible payload expands by orders of
-magnitude, and the path that reaches this reader is ``config profile restore``,
+magnitude, and the path that reaches this reader is ``config profile archive import``,
 which takes a path. An archive can be corrupted in place, or handed to an
 operator by someone else.
 

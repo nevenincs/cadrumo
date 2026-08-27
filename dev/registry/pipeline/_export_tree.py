@@ -18,6 +18,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -529,7 +530,7 @@ def _validate_transport_profile(joined: JoinedRecordDesign, profile: ExportTreeT
 def _prepare_target(target_export_dir: Path) -> None:
     if target_export_dir.name != "export":
         raise RegistryValidationError(f"generated export target must be named 'export', got {target_export_dir.name!r}")
-    if target_export_dir.is_symlink() or target_export_dir.is_junction():
+    if is_link_like(target_export_dir):
         raise RegistryValidationError(f"generated export target must not be a link: {target_export_dir}")
     if target_export_dir.exists():
         if not target_export_dir.is_dir():

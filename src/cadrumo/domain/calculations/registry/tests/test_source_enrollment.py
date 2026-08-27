@@ -43,9 +43,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.query_reports import RegistrySourceInventoryReport
-
 from .....application.aggregation import (
     DEFERRED_SOURCE_KINDS,
     RESERVED_SOURCE_KINDS,
@@ -54,6 +51,8 @@ from .....application.aggregation import (
 )
 from .....core import BindingSourceKind
 from ..authority import bundled_authority
+from ..queries import RegistryQueryService
+from ..query_reports import RegistrySourceInventoryReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

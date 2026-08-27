@@ -7,11 +7,10 @@ import json
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
 # startup does.
-import cadrumo.application.wizard.catalogue as _wizard_catalogue
-import cadrumo.application.wizard.persistence as _wizard_persistence
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
+from ....application.wizard import catalogue as _wizard_catalogue
+from ....application.wizard import persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
+from ....domain.calculations.registry.temporal import select_revision
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.registry_tree import bundled_registry_tree

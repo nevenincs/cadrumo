@@ -15,13 +15,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    unrouted_ledger_renta_income_quantities,
-    unsupported_ledger_renta_income_observations,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from .....core.aggregation import LedgerIncomeGrounding
+from ..ledger_bindings import unrouted_ledger_renta_income_quantities, unsupported_ledger_renta_income_observations
+from ..schema import ModeloRevision
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

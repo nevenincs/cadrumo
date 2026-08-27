@@ -51,7 +51,7 @@ class PortalFailureClassification:
     outcome: NoRecoveryOutcome
 
 
-class PortalRegistryError(TerminalPreconditionErrorMixin, CadrumoError):
+class PortalRegistryError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error carrying a domain classification and optional boundary verdict."""
 
     def __init__(

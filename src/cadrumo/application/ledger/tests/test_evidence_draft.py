@@ -421,6 +421,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         # The refusal is instructive through its TYPED payload, not prose: the
         # verdict builder deliberately keeps no message string, so the failed
         # condition and the capability fact are what tell the caller why.
+        assert raised.value.context is not None
         assert dict(raised.value.context)["llm_vision_enabled"] is False
         assert raised.value.terminal_precondition_verdict is not None
         assert raised.value.terminal_precondition_verdict.failed_condition_id == (

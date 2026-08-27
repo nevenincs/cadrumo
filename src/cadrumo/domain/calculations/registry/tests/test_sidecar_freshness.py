@@ -52,7 +52,12 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
     assert sidecars, "no manual corpus text sidecars found — the corpus text extraction must run first"
 
     first_sidecar = sidecars[0]
-    data: dict[str, object] = json.loads(first_sidecar.read_text(encoding="utf-8"))
+    raw_data = json.loads(first_sidecar.read_text(encoding="utf-8"))
+    assert isinstance(raw_data, dict)
+    data: dict[str, object] = {}
+    for key, value in raw_data.items():
+        assert isinstance(key, str)
+        data[key] = value
     corpus_path = data["corpus_path"]
     expected_text = data["normalised_text"]
     assert isinstance(corpus_path, str)
@@ -90,7 +95,12 @@ def _first_shipped_sidecar() -> tuple[str, dict[str, object]]:
     """Return the corpus path and decoded payload of one shipped sidecar."""
     sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
     assert sidecars, "no manual corpus text sidecars found"
-    payload: dict[str, object] = json.loads(sidecars[0].read_text(encoding="utf-8"))
+    raw_payload = json.loads(sidecars[0].read_text(encoding="utf-8"))
+    assert isinstance(raw_payload, dict)
+    payload: dict[str, object] = {}
+    for key, value in raw_payload.items():
+        assert isinstance(key, str)
+        payload[key] = value
     corpus_path = payload["corpus_path"]
     assert isinstance(corpus_path, str)
     return corpus_path, payload

@@ -15,7 +15,7 @@ from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from .schema import RegistrySnapshot
 
 
 class _IdentifiedRecord(Protocol):
@@ -82,8 +82,8 @@ class IdReferenceChecker:
         "legal_ids",
         "parameter_ids",
         "prefix",
-        "relation_ids",
         "provenance_only_source_ids",
+        "relation_ids",
         "source_ids",
         "verification_expectation_ids",
         "workbook_parity_ids",

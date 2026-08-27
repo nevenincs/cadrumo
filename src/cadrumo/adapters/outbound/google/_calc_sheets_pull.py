@@ -59,9 +59,6 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
     OperatorInput,
@@ -93,7 +90,9 @@ from ....domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.period import calculation_filing_date
 from ..storage import (
     OutboundStorageConflictError,

@@ -7,7 +7,7 @@ import inspect
 import pytest
 
 from ..._command_schema import command_registration_metadata
-from ..._command_spec import MachineSecretChannelKind, ProfileAuthenticationPosture
+from ..._command_spec import MachineSecretChannelKind, OptionSpec, ProfileAuthenticationPosture
 from ..._command_specs import COMMAND_GRAPH
 from .._passphrase import PassphraseChangeSecrets, passphrase_change
 from .._spec_policies import ENCRYPTED_DESTRUCTIVE, STATE_FREE
@@ -38,7 +38,7 @@ def test_passphrase_change_declares_exact_channels_payload_and_exemption() -> No
     assert tuple(
         parameter.machine_secret_channel
         for parameter in spec.parameters
-        if getattr(parameter, "machine_secret_channel", None) is not None
+        if isinstance(parameter, OptionSpec) and parameter.machine_secret_channel is not None
     ) == (MachineSecretChannelKind.STDIN, MachineSecretChannelKind.FILE_DESCRIPTOR)
     assert spec.machine_secret is not None
     assert (

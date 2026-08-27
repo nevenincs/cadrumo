@@ -13,12 +13,11 @@ from urllib.parse import quote
 
 import pytest
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession, ClaveMovilSessionDetail
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
+from .. import session_store as session_store
 from ..clave_movil import ClaveMovilAuthProvider
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]

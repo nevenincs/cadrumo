@@ -11,15 +11,14 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from ....application.modelo._data_inventory import profile_requirements_for_binding
 from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....core import Period, PeriodError
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ....domain.calculations.registry.ids import RevisionId
+from ....domain.calculations.registry.profile_grounding import binding_profile_keys
+from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._modelo_behavior_support import _date_binding_profile_requirements

@@ -24,8 +24,6 @@ from decimal import Decimal
 
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ..application.filing import (
     approve_draft,
     build_draft,
@@ -34,6 +32,7 @@ from ..application.filing import (
     empty_profile_activity_fingerprint,
 )
 from ..core import CasillaId, Period, validated_casilla_id
+from ..domain.calculations.registry.ids import BindingId
 from ..domain.filing import ModeloBuilderError, ModeloDraft, ModeloInputs
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus

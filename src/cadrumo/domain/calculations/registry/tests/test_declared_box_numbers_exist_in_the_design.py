@@ -37,10 +37,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ..authority import bundled_authority
 from ..record_design_coverage import _CASILLA_TAG_RE
+from ..schema import ModeloRevision
 from .test_revision_span_matches_published_designs import _designs_by_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -1,0 +1,87 @@
+# Type 2 declarado (contraparte) rows, unioning collectible (entregas,
+# clave B) and payable (adquisiciones, clave A) invoice observations into
+# ONE shared row sequence -- the diseño de registro's Tipo-2 declarado
+# record is a single physical stream for every clave, grounded in the
+# tui-architecture modelo 347 contraparte binding inventory reference.
+# `claves = []` (no filter) lets every classifiable clave through; only A
+# and B are currently classified from source_kind alone by
+# m347_operation_clave -- claves C-G each need a fact this binding family
+# does not read yet (see the same reference), so observations for those
+# operations simply carry operation_clave = None and are skipped by
+# _build_contraparte_clave_rows, not silently mis-declared.
+#
+# `source` is declared "collectible_invoice" on every binding here as a
+# formality the registry schema requires; _observations_for_binding_source
+# reads BOTH payable_invoice and collectible_invoice observations for any
+# binding whose selector grouping is contraparte_clave, regardless of which
+# one source value it names -- mirroring the collectible+payable union
+# 0001-counterpart-summary.toml's declarante-summary bindings already apply
+# at the scalar level.
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-nif"
+source = "collectible_invoice"
+selector = { fact = "row_field", row_field = "party_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+    "rd-1065-2007:art-34",
+    "ley-58-2003:art-93",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-nombre"
+source = "collectible_invoice"
+selector = { fact = "row_field", row_field = "party_legal_name", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+    "rd-1065-2007:art-34",
+    "ley-58-2003:art-93",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-clave"
+source = "collectible_invoice"
+selector = { fact = "row_field", row_field = "clave", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-33",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-importe"
+source = "collectible_invoice"
+selector = { fact = "row_field", row_field = "importe_total", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-34",
+]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]

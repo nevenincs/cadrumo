@@ -34,9 +34,8 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
 from .. import build_export_plan
 from .._engine import registry_sha

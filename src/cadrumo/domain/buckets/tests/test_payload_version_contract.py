@@ -96,7 +96,7 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
 
 def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
     """The workflow-reset audit event writes the workflow payload contract."""
-    from cadrumo.application.workflow.persistence import reset_workflow_state
+    from ....application.workflow.persistence import reset_workflow_state
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         reset_workflow_state(actor="operator", source="payload-version-probe")

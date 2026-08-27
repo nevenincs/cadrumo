@@ -10,20 +10,11 @@ without creating a second export authoring path or projecting secret payloads.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Protocol
 
 from pydantic import BaseModel, Field, computed_field, model_validator
-
-from cadrumo.application.filing import (
-    FilingExportProof,
-    FilingExportProofAssessment,
-    FilingExportProofAuthority,
-    FilingExportProofChannel,
-    FilingExportProofCoordinate,
-    FilingExportProofRefusalReason,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
 from ...core.time import UtcInstant, now
@@ -33,9 +24,18 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
+)
+from ..filing import (
+    FilingExportProof,
+    FilingExportProofAuthority,
+    FilingExportProofChannel,
+    FilingExportProofCoordinate,
+    FilingExportProofRefusalReason,
 )
 from .closure import (
     RegistryClosureEvidence,
@@ -271,10 +271,54 @@ def _layout_byte_evidence(
     return tuple(evidence), None
 
 
+class _FilingExportSnapshotLayout(Protocol):
+    """The one export-layout fact :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+
+class _FilingExportSnapshotRevision(Protocol):
+    """The revision facts :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def export_layouts(self) -> Iterable[_FilingExportSnapshotLayout]: ...
+
+
+class _FilingExportSnapshotModelo(Protocol):
+    """The modelo fact :func:`_filing_export_proof` reads."""
+
+    @property
+    def id(self) -> str: ...
+
+
+class _FilingExportSnapshotLike(Protocol):
+    """Narrow structural need :func:`_filing_export_proof` has of a registry snapshot.
+
+    Deliberately narrower than :class:`~domain.calculations.registry.RegistrySnapshot`:
+    this coordinate-derivation step reads only the modelo/revision identity and the
+    declared export layouts, and ``FilingExportProofCoordinate`` performs the real
+    typed validation of the values this function passes through. Read-only
+    ``@property`` accessors keep every attribute covariant, so a concrete
+    :class:`~domain.calculations.registry.RegistrySnapshot` (whose ids are
+    ``Annotated[str, ...]`` registry alias types) satisfies this Protocol
+    structurally.
+    """
+
+    @property
+    def modelo(self) -> _FilingExportSnapshotModelo: ...
+
+    @property
+    def revision(self) -> _FilingExportSnapshotRevision: ...
+
+
 def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
-    snapshot: RegistrySnapshot,
+    snapshot: _FilingExportSnapshotLike,
     assessment_at: UtcInstant,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
     """Require one exact two-channel assessment at the law-selected coordinate."""
@@ -293,7 +337,7 @@ def _filing_export_proof(
         assessment = proof_authority.assess_for(coordinate)
     except (OSError, RuntimeError, ValueError) as exc:
         return None, _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
-    if not isinstance(assessment, FilingExportProofAssessment) or assessment.coordinate != coordinate:
+    if assessment.coordinate != coordinate:
         return None, _LayoutEvidenceFailure(
             reason="conflicting_evidence",
             detail="filing export assessment identity does not match the law-selected registry snapshot",

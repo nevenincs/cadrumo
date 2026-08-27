@@ -38,9 +38,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
+from ..record_design import extract_record_design
+from ..record_design_schema import RecordDesignField
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -62,7 +62,9 @@ def _designs():
     }
 
 
-def _span(field) -> tuple[int, int]:
+def _span(field: RecordDesignField) -> tuple[int, int]:
+    assert field.offset is not None
+    assert field.length is not None
     return field.offset, field.offset + field.length - 1
 
 

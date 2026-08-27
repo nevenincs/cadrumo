@@ -6,13 +6,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode
 from .errors import RegistrySnapshotError
 from .ids import ModeloId
 from .period_selector_match import selector_period_matches_request
+from .schema import ModeloDefinition, SupportedFilingYearsCatalogue
+from .schema_references import SourceReference
 from .temporal import select_revision
 
 
@@ -89,9 +88,7 @@ def _source_backs_cell(
 ) -> bool:
     if source is None or source.applies_from is None or source.applies_to is None:
         return False
-    year_start = date(filing_year, 1, 1)
-    year_end = date(filing_year, 12, 31)
-    if source.applies_from > year_end or source.applies_to < year_start:
+    if not source.applies_across(date(filing_year, 1, 1), date(filing_year, 12, 31)):
         return False
     selector = source.period_selector
     return selector is None or (

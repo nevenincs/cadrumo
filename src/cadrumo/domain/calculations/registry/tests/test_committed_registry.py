@@ -8,13 +8,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.relations import resolve_relation_values
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..export import resolve_export_layout
+from ..export_parse import parse_export_payload
+from ..formula_runtime import calculate_registry_snapshot
+from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -213,7 +212,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     filing_period: date,
     source_ref: str,
     legal_ref: str,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("131", filing_year, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     result = calculate_registry_snapshot(
@@ -282,7 +281,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     relation_values = resolve_relation_values(

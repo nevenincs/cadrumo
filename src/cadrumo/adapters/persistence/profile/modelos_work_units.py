@@ -186,7 +186,7 @@ class WorkUnitCatalogueRepository:
         try:
             catalogue, revision_id = self._storage.load_revisioned()
         except (ClassificationError, EnvelopeVersionError) as exc:
-            context = dict(exc.context)
+            context = dict(exc.context) if exc.context is not None else {}
             if context.get("reason") in {"classification_mismatch", "unsupported_envelope_version"}:
                 message = (
                     "work-unit catalogue classification mismatch"

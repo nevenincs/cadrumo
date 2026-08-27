@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import AnyUrl, SecretStr
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-
 from ......core import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n import tr
+from ......domain.calculations.registry.errors import RegistryValidationError
+from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile

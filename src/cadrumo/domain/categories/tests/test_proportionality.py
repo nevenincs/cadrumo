@@ -36,6 +36,7 @@ def _citation() -> CategoryCitation:
         locator="art. 30",
         url=parse_http_url("https://www.boe.es/ley"),
         quote=tr("Texto de prueba."),
+        legal_ref="ley-35-2006:art-30",
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )

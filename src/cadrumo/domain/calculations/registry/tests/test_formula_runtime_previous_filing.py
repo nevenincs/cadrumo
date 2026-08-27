@@ -6,15 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+from .....core import RegistryAuthorityGrade
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....tests.registry_observations import registry_grounded_modelo_observation
+from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
-
-from .....core import RegistryAuthorityGrade
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....tests.registry_observations import registry_grounded_modelo_observation
 from ..errors import RegistryValidationError
 from ..relations import (
     RegistryFoldRequirement,

@@ -7,9 +7,6 @@ import inspect
 
 import pytest
 
-from cadrumo.application.user_profile.login_session import logout_active_profile
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-
 from ....domain.user_profile.errors import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..login_interaction import (
@@ -19,6 +16,8 @@ from ..login_interaction import (
     preselected_profile_login_id,
     profile_login_choices,
 )
+from ..login_session import logout_active_profile
+from ..registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

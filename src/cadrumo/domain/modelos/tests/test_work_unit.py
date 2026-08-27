@@ -22,8 +22,6 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
@@ -41,6 +39,7 @@ from ....core import Period
 from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry.ids import RevisionId
 from ...user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
 from .._repository import (

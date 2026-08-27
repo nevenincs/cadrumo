@@ -20,12 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.casilla_membership import (
-    casilla_noncanonical_reference_targets,
-    declared_casilla_ids,
-)
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -44,6 +38,11 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.casilla_membership import (
+    casilla_noncanonical_reference_targets,
+    declared_casilla_ids,
+)
+from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,

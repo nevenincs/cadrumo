@@ -74,7 +74,7 @@ def _names_bound_to_a_plain_load(scope: ast.AST) -> set[str]:
         # stop being repeated.
         if isinstance(node, ast.Assign) and _is_plain_load(node.value):
             targets: tuple[ast.expr, ...] = tuple(node.targets)
-        elif isinstance(node, ast.AnnAssign | ast.NamedExpr) and _is_plain_load(node.value):
+        elif isinstance(node, ast.AnnAssign | ast.NamedExpr) and node.value is not None and _is_plain_load(node.value):
             targets = (node.target,)
         else:
             continue

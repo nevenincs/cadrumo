@@ -8,12 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
+from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordStatus,

@@ -14,9 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, FormulaExpression, ParameterDefinition
-
 from ..errors import RegistryValidationError
+from ..schema_formula import BracketEntry, FormulaExpression, ParameterDefinition
 from ._formula_runtime_support import _evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

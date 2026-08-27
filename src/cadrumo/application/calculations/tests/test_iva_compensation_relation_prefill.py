@@ -10,11 +10,10 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
-
 from ....core import BindingSourceKind, CasillaId, ObservedHeaderFact, Period, ResultDisposition
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext

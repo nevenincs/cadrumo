@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from .....core.aggregation import BindingSourceKind
+from ..binding_selector_utils import selector_as_dict
+from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

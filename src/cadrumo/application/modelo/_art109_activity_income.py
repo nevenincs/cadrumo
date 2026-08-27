@@ -25,6 +25,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from typing import Final
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo, Period
@@ -43,10 +44,27 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
+    counts_toward_art_109_activity_income,
+    tipo_actividad_code_set,
 )
 
 _ZERO = Decimal("0")
 _ART_109_THRESHOLD_PARAMETER_ID = "irpf.art_109_retained_income_exemption_ratio"
+_ART_109_EXEMPT_ACTIVITIES_SELECTOR: Final[str] = (
+    "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado"
+)
+"""Activities Art. 109 exempts: profesionales (ap. 2), agricolas y ganaderas
+(ap. 3), forestales (ap. 4). An empresario is in none of them and gets no
+exemption, which is why this is a declared set rather than "any actividad".
+"""
+
+_ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR: Final[str] = (
+    "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones"
+)
+"""The apartado 3 and 4 activities whose base is measured *con excepcion de las
+subvenciones corrientes y de capital y de las indemnizaciones*. Apartado 2 carries
+no such exclusion, so a profesional's base keeps every receipt.
+"""
 _PROVEN_ACTIVITY_STATES = frozenset({BusinessClassification.BUSINESS, BusinessClassification.MIXED})
 _UNRESOLVED_ACTIVITY_STATES = frozenset(
     {
@@ -106,7 +124,6 @@ def derive_art109_activity_income_coverage_for_work_unit(
     return derive_art109_activity_income_coverage(repository.load(), period=period)
 
 
-
 def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> Decimal:
     """Return the Art. 109 retained-income ratio the registry grounds for this filing.
 
@@ -159,6 +176,10 @@ def derive_art109_activity_income_coverage(
         return _insufficient("period_without_date_span")
 
     threshold = art_109_retained_income_threshold(filing_year=period.filing_year, period=period)
+    exempt_activities = tipo_actividad_code_set(_ART_109_EXEMPT_ACTIVITIES_SELECTOR)
+    net_of_subvenciones_activities = tipo_actividad_code_set(
+        _ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR,
+    )
     numerator = _ZERO
     denominator = _ZERO
     for transaction in catalogue.values():
@@ -167,6 +188,25 @@ def derive_art109_activity_income_coverage(
             continue
         if row is _RowKind.INSUFFICIENT:
             return _insufficient("current_period_activity_income_unresolved")
+        activity = transaction.tipo_actividad
+        if activity is None:
+            # Art. 109 exempts an activity CLASS, so a row that does not say which
+            # activity it belongs to cannot be placed on either side of the rule.
+            # Guessing would either invent an exemption or deny a real one, and this
+            # module's contract is to fail closed rather than fabricate a ratio.
+            return _insufficient("current_period_activity_class_undeclared")
+        if activity not in exempt_activities:
+            # A different activity of the same taxpayer. The exemption is granted
+            # "en relacion con las mismas", so an empresarial row neither claims it
+            # nor dilutes the class that does.
+            continue
+        if activity in net_of_subvenciones_activities and not counts_toward_art_109_activity_income(
+            transaction.concepto_ingreso,
+        ):
+            # Apartados 3 and 4 measure the 70 per cent net of subvenciones and
+            # indemnizaciones. A subsidy carries no retencion, so leaving it in the
+            # base depresses the ratio and denies an exemption the reglamento grants.
+            continue
 
         computable_income = _proved_computable_income(transaction)
         if computable_income is None or computable_income <= _ZERO:

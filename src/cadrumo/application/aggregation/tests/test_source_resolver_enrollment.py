@@ -91,9 +91,7 @@ def _public_qualified_name(resolver_type: type[object]) -> str:
     a private module with no public publication satisfies neither and fails.
     """
     own_module = resolver_type.__module__
-    if not any(segment.startswith("_") for segment in own_module.split(".")) and _publishes(
-        own_module, resolver_type
-    ):
+    if not any(segment.startswith("_") for segment in own_module.split(".")) and _publishes(own_module, resolver_type):
         return f"{own_module}.{resolver_type.__name__}"
 
     for module_name in _RESOLVER_MODULES:

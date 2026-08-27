@@ -55,10 +55,9 @@ _ACTIVE_WIZARD: ContextVar[ModeloWorkWizardRun | None] = ContextVar("active_mode
 
 def _ensure_modelo_work_profile() -> str:
     """Return an unlocked harness profile with the full M130 readiness facts."""
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
-
     from ....application.user_profile.login_session import login_profile
     from ....application.user_profile.registration import register_profile_with_credentials
+    from ....application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = next(
         (pointer for pointer in list_profile_buckets().values() if pointer.label == _PROFILE_LABEL),

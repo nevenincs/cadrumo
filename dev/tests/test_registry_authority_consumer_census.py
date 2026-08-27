@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from dev.quality.registry_authority_consumer_census import (
+from ..quality.registry_authority_consumer_census import (
     CATEGORIES,
     OUTPUT_PATH,
     SCHEMA_VERSION,

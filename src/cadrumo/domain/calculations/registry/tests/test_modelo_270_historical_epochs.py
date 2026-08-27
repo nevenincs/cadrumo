@@ -128,7 +128,12 @@ def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -
         revision = modelo.revisions[revision_id]
         layout = next(layout for layout in revision.export_layouts if layout.id == "modelo-270-fichero-boe")
         record = next(record for record in layout.records if record.record_type == "declarante")
-        return {field.id: (field.offset, field.length) for field in record.fields}
+        offsets: dict[str, tuple[int, int]] = {}
+        for field in record.fields:
+            assert field.offset is not None
+            assert field.length is not None
+            offsets[field.id] = (field.offset, field.length)
+        return offsets
 
     historical_fields = declarante_offsets(historical.id)
     current_fields = declarante_offsets(current.id)

@@ -8,14 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection

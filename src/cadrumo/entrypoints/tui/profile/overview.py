@@ -149,7 +149,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         super().__init__()
         self._field = field
         self._prompt = prompt if prompt is not None else field.label
-        self._choice_labels = dict(choice_labels or {})
+        self._choice_labels: dict[str, str] = dict(choice_labels) if choice_labels is not None else {}
         self._validate = validate
 
     def _label_for(self, value: str) -> str:

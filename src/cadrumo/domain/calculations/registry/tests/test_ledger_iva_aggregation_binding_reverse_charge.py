@@ -7,11 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
-)
-
 from .....core import IvaDeductionFactKind, validated_casilla_id
 from ....iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
@@ -28,6 +23,7 @@ from ....iva import (
     classify_iva,
     derive_flow_for_classification,
 )
+from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values, unsupported_ledger_iva_observations
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,

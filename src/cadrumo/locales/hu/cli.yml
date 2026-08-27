@@ -2060,7 +2060,7 @@ cli:
         export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
         export_out_help: Az archívum célútvonala.
         help: 'Profil biztonsagi mentese lezart, AEAD-titkositott archivumba, vagy
-          egy archivum vizsgalata; visszaallitas: ''aeat config profile restore''.'
+          egy archivum vizsgalata; visszaallitas: ''aeat config profile archive import''.'
         import_artifact_help: Helyreallitasi elemfajl; akkor hasznalja, ha a profil
           jelszava elveszett.
         import_file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.
@@ -2340,6 +2340,10 @@ cli:
       import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
+      list:
+        incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
+          (állapot: {outcome}). Futtassa újra a parancsot; ha továbbra is fennáll,
+          ellenőrizze a profiltárolót.'
       manager_closed: A(z) '{profile}' módosításai mentve.
       manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett
         munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`

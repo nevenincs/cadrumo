@@ -37,9 +37,8 @@ from .sessions import (
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...adapters.outbound.aeat.auth.certificate import CertificateHealth
+    from ..workflow.state_models import WorkflowState
 
 
 def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
@@ -74,9 +73,8 @@ def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str,
     if state is None and not has_active_bucket_session():
         return {}
     try:
-        from cadrumo.application.workflow.persistence import workflow_state_repository
-
         from ..user_profile.projections import record_to_path_values
+        from ..workflow.persistence import workflow_state_repository
 
         resolved_state = state if state is not None else workflow_state_repository().load()
         record = resolved_state.active_profile_record()

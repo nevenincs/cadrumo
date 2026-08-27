@@ -9,13 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
-
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
+from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

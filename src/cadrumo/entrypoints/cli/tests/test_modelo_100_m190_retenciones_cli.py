@@ -9,10 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo._filed_revision_observation import APP_FILING_SOURCE_KIND
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

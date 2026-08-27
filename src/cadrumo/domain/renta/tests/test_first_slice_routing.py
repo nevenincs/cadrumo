@@ -19,10 +19,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas
-
 from ....core import CasillaId, Modelo
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas
 from ...categories import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,

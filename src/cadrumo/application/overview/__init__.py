@@ -127,9 +127,8 @@ from .errors import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ..state_projection import OperatorStateProjection
+    from ..workflow.state_models import WorkflowState
     from ._agenda import build_overview_agenda
     from ._backlog import build_overview_backlog
     from ._explain import build_overview_explain

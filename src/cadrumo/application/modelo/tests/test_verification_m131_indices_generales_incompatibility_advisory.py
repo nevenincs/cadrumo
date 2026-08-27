@@ -44,12 +44,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.loader import load_modelo_path
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.loader import load_modelo_path
+from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     ModeloVerificationFindingKind,

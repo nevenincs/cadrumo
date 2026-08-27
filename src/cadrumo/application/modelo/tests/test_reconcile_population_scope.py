@@ -16,12 +16,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ....core import BindingSourceKind, CasillaId
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

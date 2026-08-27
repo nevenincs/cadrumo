@@ -31,11 +31,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from ..formula_runtime import calculate_registry_snapshot
+from ..ids import BindingId, RelationId
+from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -333,7 +332,9 @@ def test_prior_year_1812_identity_copy_and_reaches_aggregator(
     formula ``renta-<yr>-ganancia-cripto-imputable`` propagates 1811 to 1812,
     and 1814 must then carry the same magnitude.
     """
-    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    raw_snapshot = request.getfixturevalue(snapshot_fixture)
+    assert isinstance(raw_snapshot, RegistrySnapshot)
+    snapshot: RegistrySnapshot = raw_snapshot
     result = _run_prior_year(snapshot, filing_year, Decimal("8500"))
 
     assert (
@@ -362,7 +363,9 @@ def test_prior_year_1812_anti_tautology_tracks_input(
     request: pytest.FixtureRequest,
 ) -> None:
     """2022/2023 anti-tautology: 1804 = 7000 must yield 1812 = 7000, not a constant."""
-    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    raw_snapshot = request.getfixturevalue(snapshot_fixture)
+    assert isinstance(raw_snapshot, RegistrySnapshot)
+    snapshot: RegistrySnapshot = raw_snapshot
     result = _run_prior_year(snapshot, filing_year, Decimal("7000"))
 
     assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("7000.00"), (
@@ -381,7 +384,9 @@ def test_prior_year_1812_zero_when_no_crypto_gain(
     request: pytest.FixtureRequest,
 ) -> None:
     """2022/2023: no spurious 1812 (or 1814) when 1804 = 0."""
-    snapshot: RegistrySnapshot = request.getfixturevalue(snapshot_fixture)
+    raw_snapshot = request.getfixturevalue(snapshot_fixture)
+    assert isinstance(raw_snapshot, RegistrySnapshot)
+    snapshot: RegistrySnapshot = raw_snapshot
     result = _run_prior_year(snapshot, filing_year, Decimal("0"))
 
     assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (

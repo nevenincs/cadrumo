@@ -26,8 +26,6 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.application.ledger.preflight as preflight_module
-
 from ....core import BindingSourceKind, OperatorActionAxis
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
@@ -46,6 +44,7 @@ from ...aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
+from .. import preflight as preflight_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

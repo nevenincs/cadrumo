@@ -18,17 +18,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from graphlib import CycleError
 
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs
 from .ids import BindingId, RelationId
 from .runtime_graph import formula_evaluation_order
+from .schema import FormulaDefinition, ModeloRevision
+from .schema_formula import FormulaExpression
 from .schema_input_kind import InputKind
+from .schema_references import LegalReference, SourceReference
+from .schema_surfaces import CasillaDefinition
 from .validate_revision_identity import duplicates
 
 

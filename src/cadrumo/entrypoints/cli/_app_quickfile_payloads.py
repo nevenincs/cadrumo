@@ -9,8 +9,6 @@ consumer can read exactly which stage the chain reached and where it halted.
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...application.modelo._export import ModeloExportResult
 from ...application.modelo._quickfile import (
     QuickfileResult,
@@ -21,6 +19,7 @@ from ...application.state_projection import ProjectionModeloReadiness
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...domain.calculations.registry.ids import RevisionId
 
 
 class QuickfileReadinessSummaryPayload(OutputSchema):

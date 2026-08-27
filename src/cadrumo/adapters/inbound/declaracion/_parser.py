@@ -28,14 +28,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_extraction import (
-    BboxAnchorSpec,
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-)
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import (
     CasillaId,
     Period,
@@ -52,6 +44,13 @@ from ....core.time import now
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.schema_extraction import (
+    BboxAnchorSpec,
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf import (
     PRESENTADOR_NIF_LABEL,
     SPANISH_AMOUNT_GROUP,

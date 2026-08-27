@@ -107,8 +107,20 @@ type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrec
 type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
 type _SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
 
+_EMPTY_HEADER_CORRECTIONS: Final[_HeaderCorrectionIndex] = dict[
+    tuple[str, int, str], RecordDesignHeaderCellCorrection
+]()
+
 _CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
 _CORRECTION_ADAPTER: Final[TypeAdapter[RecordDesignCorrection]] = TypeAdapter(RecordDesignCorrection)
+#: A parsed JSON object, typed at the boundary rather than left as the bare
+#: ``Any`` ``json.loads`` returns -- every sidecar loader below validates its
+#: top-level shape and each list entry through this one adapter.
+_JSON_OBJECT_ADAPTER: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[str, object])
+#: A parsed JSON array, typed the same way as :data:`_JSON_OBJECT_ADAPTER` for
+#: the same reason -- an ``isinstance(value, list)`` narrows a bare ``object``
+#: to a still-unparameterised ``list``, and this validates AND types it.
+_JSON_ARRAY_ADAPTER: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object])
 
 
 @dataclass(frozen=True)
@@ -125,7 +137,9 @@ class _CorrectionIndex:
 
     type_corrections: _TypeCorrectionIndex
     header_corrections: _HeaderCorrectionIndex
-    single_position_corrections: _SinglePositionCorrectionIndex = field(default_factory=dict)
+    single_position_corrections: _SinglePositionCorrectionIndex = field(
+        default_factory=dict[tuple[str, int], RecordDesignSinglePositionCorrection],
+    )
 
 
 _EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
@@ -152,10 +166,18 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
     sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
     if not sidecar_path.is_file():
         return _EMPTY_CORRECTIONS
-    payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
-    entries = payload.get("corrections") if isinstance(payload, dict) else None
-    if not isinstance(entries, list):
-        raise RegistryValidationError(f"{sidecar_path}: correction sidecar must declare a 'corrections' list")
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING)))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
+        ) from exc
+    try:
+        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("corrections"))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
+        ) from exc
     type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
     header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
     single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
@@ -197,6 +219,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
 
 
 _DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.json"
+_EMPTY_DECLARED_NON_RECORD_SHEET_REASONS: Final[Mapping[str, str]] = dict[str, str]()
 
 
 def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
@@ -215,28 +238,37 @@ def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, s
     modelo_root = source_path.parent.parent
     declaration_path = modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME
     if not declaration_path.is_file():
-        return {}
-    payload = json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING))
-    entries = payload.get("declared_non_record_sheets") if isinstance(payload, dict) else None
-    if not isinstance(entries, list):
+        return _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(
+            json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING)),
+        )
+    except ValidationError as exc:
         raise RegistryValidationError(
             f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
-        )
+        ) from exc
+    try:
+        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("declared_non_record_sheets"))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
+        ) from exc
     reasons: dict[str, str] = {}
     for entry in entries:
-        if (
-            not isinstance(entry, dict)
-            or not isinstance(entry.get("sheet"), str)
-            or not isinstance(
-                entry.get("reason"),
-                str,
-            )
-        ):
+        try:
+            entry_map = _JSON_OBJECT_ADAPTER.validate_python(entry)
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
+            ) from exc
+        sheet_value = entry_map.get("sheet")
+        reason_value = entry_map.get("reason")
+        if not isinstance(sheet_value, str) or not isinstance(reason_value, str):
             raise RegistryValidationError(
                 f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
             )
-        sheet = entry["sheet"].strip()
-        reason = entry["reason"].strip()
+        sheet = sheet_value.strip()
+        reason = reason_value.strip()
         if not sheet or not reason:
             raise RegistryValidationError(f"{declaration_path}: 'sheet' and 'reason' must be non-blank")
         if sheet in reasons:
@@ -1032,7 +1064,8 @@ def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if pair is None:
             continue
         damaged = parsed[index - 1]
-        if damaged is None or damaged.ordinal != pair.group("ordinal"):
+        damaged_ordinal = damaged.ordinal if damaged is not None else None
+        if damaged is None or damaged_ordinal is None or damaged_ordinal != pair.group("ordinal"):
             continue
         anchor = None
         for candidate in range(index - 2, -1, -1):
@@ -1046,7 +1079,7 @@ def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if stated != resumes or damaged.offset == resumes:
             continue
         rebuilt = re.sub(
-            rf"^(\s*{re.escape(damaged.ordinal)})\s+{damaged.offset}\s",
+            rf"^(\s*{re.escape(damaged_ordinal)})\s+{damaged.offset}\s",
             rf"\g<1> {stated} ",
             lines[index - 1],
             count=1,
@@ -1644,7 +1677,7 @@ def _unread_positions_over_lines(
     )
     for number, line in enumerate(lines, start=1):
         state.feed(line, number)
-    state._close_current_body()
+    state.close_current_body()
     total = 0
     for result in state.results:
         sheet = result.sheet
@@ -2056,7 +2089,7 @@ def _variable_body_marker(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    ordinal: int | None,
+    ordinal: int,
     offset: int,
 ) -> RecordDesignVariableBodyMarker:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
@@ -2504,7 +2537,7 @@ def _find_header(
             row_number,
             label=f"xlsx {worksheet.title}",
             sheet_name=sheet_name,
-            header_corrections=header_corrections or {},
+            header_corrections=header_corrections or _EMPTY_HEADER_CORRECTIONS,
         )
         if matched is not None:
             return matched
@@ -2516,7 +2549,7 @@ def _find_xls_header(
     header_corrections: _HeaderCorrectionIndex | None = None,
 ) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
     sheet_name = worksheet.name.strip()
-    header_corrections = header_corrections or {}
+    header_corrections = header_corrections or _EMPTY_HEADER_CORRECTIONS
     for rowx in range(min(10, worksheet.nrows)):
         matched = _probe_header_row(
             tuple(worksheet.row_values(rowx)),
@@ -3436,7 +3469,9 @@ def _pdf_declared_constant(field: RecordDesignField) -> str | None:
             continue
         match = _PDF_PAGE_CONSTANT_RE.search(str(text))
         if match is not None:
-            return match.group("page")
+            page = match.group("page")
+            assert isinstance(page, str)
+            return page
     return None
 
 
@@ -3499,7 +3534,7 @@ class _PdfParseState:
         :meth:`RecordDesignExtraction.require_complete` -- the guard that exists
         precisely to catch an incomplete read -- can finally see them.
         """
-        self._close_current_body()
+        self.close_current_body()
         self._recover_unidentified_bodies()
         read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
         if not read:
@@ -3645,7 +3680,7 @@ class _PdfParseState:
             return self.current.current
         return self.current.fields[-1] if self.current.fields else None
 
-    def _close_current_body(self) -> None:
+    def close_current_body(self) -> None:
         if self.current is None:
             return
         self.results.append(
@@ -3658,7 +3693,7 @@ class _PdfParseState:
         self.current = None
 
     def _open_body(self, name: str, *, identified: bool = True) -> None:
-        self._close_current_body()
+        self.close_current_body()
         self.current = _PdfSheetDraft(name, identified=identified)
         self.pending_record_name = None
 
@@ -3904,7 +3939,7 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
         return sheets
     recovered: list[RecordDesignSheet] = []
     for sheet in sheets:
-        fields = []
+        fields: list[RecordDesignField] = []
         for design_field in sheet.fields:
             match = _INLINE_CONSTANT_RE.search(design_field.description or "")
             if match is None:
@@ -4236,13 +4271,17 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     """
     tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
     if tag is not None:
-        return tag.group("tag")
+        tag_value = tag.group("tag")
+        assert isinstance(tag_value, str)
+        return tag_value
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
         return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
     bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
     if bare_anexo is not None:
-        return "Anexo " + bare_anexo.group("tag").upper()
+        bare_anexo_tag = bare_anexo.group("tag")
+        assert isinstance(bare_anexo_tag, str)
+        return "Anexo " + bare_anexo_tag.upper()
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
@@ -4613,6 +4652,8 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 __all__ = [
+    "_VISUAL_CHART_TYPE_CODE",
+    "_naturaleza_or_none",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

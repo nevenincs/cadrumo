@@ -9,9 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import (
     STR_KEYED_MAPPING_ADAPTER,
     FilingProducerKey,
@@ -33,6 +30,8 @@ from ....domain.bienes_inversion import (
     compute_registro_regularizacion,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,

@@ -53,8 +53,6 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from .....application.auth.protocols import (
     BrowserContextPort,
     BrowserPagePort,
@@ -78,6 +76,7 @@ from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
 from .....core.time import now
 from .._playwright import PlaywrightTimeoutError
+from . import session_store as session_store
 from ._clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,

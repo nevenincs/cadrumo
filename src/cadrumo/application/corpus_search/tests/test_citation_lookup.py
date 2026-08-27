@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-
+from ....domain.calculations.registry.authority import bundled_authority
 from .._citation_lookup import CitationLookup, bundled_citation_lookup
 from ..errors import CorpusSearchInputError
 

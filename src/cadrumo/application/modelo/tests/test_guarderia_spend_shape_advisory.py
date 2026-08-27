@@ -37,10 +37,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....core import CasillaId, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.contribuyente import (
     DescendantInfo,
     GuarderiaMonthSpend,

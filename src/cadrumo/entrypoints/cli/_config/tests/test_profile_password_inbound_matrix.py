@@ -9,13 +9,12 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
-
 from .....adapters.persistence.storage.custody import (
     ProfileCustodyPasswordError,
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
+from .....application.workflow.profile_bucket_scan import list_profile_buckets
 from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli

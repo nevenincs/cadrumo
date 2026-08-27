@@ -95,9 +95,8 @@ _MAX_PAYLOAD_VALUE_LENGTH = 500
 _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
     from ...core import Period
+    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
 
@@ -147,7 +146,7 @@ Tier-R and is tracked separately, blocked on #332-337.
 
 def _active_reconciliation_catalogue() -> tuple[WorkUnitCatalogue, str]:
     """Capture the active profile's work catalogue at the reconciliation boundary."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if bucket_id is None:

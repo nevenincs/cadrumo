@@ -1,7 +1,4 @@
 [revisions."2003-y-siguientes"]
-# Applicability grade: the IAE alta, baja and variacion communication is administered
-# municipally and is not a return this application emits; its sibling Modelo 848 already
-# sits at this rung.
 authority_grade = "applicability"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact

@@ -18,10 +18,9 @@ that genuinely has none.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
+from ....tests.cli_envelope import parse_json_object
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -31,7 +30,7 @@ def _envelope(*arguments: str) -> dict[str, object]:
     """Invoke the CLI in JSON mode and return the parsed error envelope."""
     result = invoke_cached_cli(["--format", "json", *arguments])
     document = (result.stdout or "").strip() or (result.output or "").strip()
-    return json.loads(document.splitlines()[-1])
+    return parse_json_object(document.splitlines()[-1])
 
 
 def test_an_unknown_option_names_the_command_it_was_given_to() -> None:

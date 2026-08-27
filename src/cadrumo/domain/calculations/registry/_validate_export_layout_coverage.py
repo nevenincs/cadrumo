@@ -579,12 +579,6 @@ def _record_literals(record: ExportRecordDefinition) -> dict[tuple[int, int], st
     }
 
 
-def _record_written_positions(record: ExportRecordDefinition) -> set[tuple[int, int]]:
-    return {
-        (field.offset, field.length) for field in record.fields if field.offset is not None and field.length is not None
-    }
-
-
 def _written_bytes(fields: Iterable[ExportFieldDefinition], *, data_only: bool) -> set[int]:
     """Return every byte ``fields`` writes, optionally counting only real data.
 
@@ -819,20 +813,10 @@ def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...
         )
 
 
-def _envelope_written_positions(envelope: FilingEnvelopeDefinition) -> set[tuple[int, int]]:
-    written: set[tuple[int, int]] = set()
-    offset = 1
-    for field in envelope.prefix_fields:
-        written.add((offset, field.length))
-        offset += field.length
-    return written
-
-
 def _envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
     """Return every byte the filing envelope's prefix fields write.
 
-    The byte-extent counterpart of :func:`_envelope_written_positions`. Every
-    prefix field carries a real declared value, so none is filler and the
+    Every prefix field carries a real declared value, so none is filler and the
     data-only distinction :func:`_written_bytes` draws does not arise here.
     """
     written: set[int] = set()
@@ -926,8 +910,8 @@ def _missing_report(
                 written = set(range(1, auxiliary_header.prefix_extent + 1))
                 emitted = written
             else:
-                written = set()
-                emitted = set()
+                written: set[int] = set()
+                emitted: set[int] = set()
         else:
             consulted = tuple(field for record in records for field in record.fields)
             written = layout_written

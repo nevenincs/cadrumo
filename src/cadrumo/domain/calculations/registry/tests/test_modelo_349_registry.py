@@ -20,6 +20,7 @@ from ..export import derive_export_layouts_from_bindings, resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..legal import verify_legal_catalogue
 from ..schema import RegistrySnapshot
+from ..schema_exports import ExportFieldDefinition
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
@@ -541,13 +542,17 @@ def test_committed_modelo_349_export_records_match_fixed_width_contract() -> Non
         "rectificacion": "2",
     }
 
+    def _offset_key(field: ExportFieldDefinition) -> int:
+        assert field.offset is not None, "a derived fixed-width field must carry a concrete offset"
+        return field.offset
+
     for record in layout.records:
         record_type = record.record_type
         # Ordered by offset: derivation appends the binding-derived fields after
         # the inline ones, so tuple order is not wire order. Sorting reads the
         # record as it is actually emitted, and hides nothing -- an overlap or a
         # hole still breaks the cursor walk below.
-        fields = sorted(record.fields, key=lambda field: field.offset)
+        fields = sorted(record.fields, key=_offset_key)
         first_field = fields[0]
         assert first_field.offset == 1, record_type
         assert first_field.length == 1, record_type

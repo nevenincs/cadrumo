@@ -442,7 +442,7 @@ class GoogleDriveProvider:
                             provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                         ),
                     )
-                self.verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
+                self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
                 self._vault_folder_id = str(entry["id"])
                 return self._vault_folder_id
             page_token = next_drive_page_token(
@@ -557,7 +557,7 @@ class GoogleDriveProvider:
             response = self._execute(service.files().list(**kwargs), action=action)
             files = response.get("files", []) if isinstance(response, dict) else []
             for entry in files:
-                self.verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+                self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
                 folder_id = str(entry["id"])
                 self._namespace_folder_ids[namespace] = folder_id
                 return folder_id

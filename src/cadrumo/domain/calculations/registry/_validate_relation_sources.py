@@ -19,9 +19,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ._validate_previous_filing_sources import (
     validate_previous_filing_binding_closure as validate_previous_filing_binding_closure,
@@ -44,6 +41,8 @@ from .iva_wallet_relation_targets import (
 )
 from .period_offset_math import apply_period_offset
 from .relations import derive_offset_source_period
+from .schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from .schema_surfaces import RelationDefinition
 
 #: Allowance key: ``(relation_id, source_modelo, source_period,
 #: missing_from_year, missing_through_year)``.

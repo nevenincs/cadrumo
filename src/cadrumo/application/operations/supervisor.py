@@ -147,8 +147,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             if declaration is not None and declaration.lifetime >= lease_duration:
                 raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
 
-    async def submit(
-        self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
+    async def submit[RequestPayloadT: BaseModel](
+        self, request: OperationRequest[RequestPayloadT], *, operation_id: OperationId | None = None
     ) -> OperationId:
         """Persist one validated operation request without starting execution."""
         definition = self.registry.lookup(request.definition_id)
@@ -230,7 +230,9 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         return created_operation_id
 
     @staticmethod
-    def _validate_request_payload(request: OperationRequest[BaseModel], request_type: type[BaseModel]) -> None:
+    def _validate_request_payload[RequestPayloadT: BaseModel](
+        request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
+    ) -> None:
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 

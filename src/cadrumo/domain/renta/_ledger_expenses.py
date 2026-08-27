@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -30,6 +30,7 @@ from ..categories import (
     SpendingCategory,
     SpendingCategoryFamily,
     StatutoryCapPeriod,
+    StatutoryCapVariant,
     family_for,
 )
 from ..contribuyente import CCAA
@@ -88,6 +89,16 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     statutory_cap_days: Decimal | None = Field(default=None, gt=Decimal("0"))
     statutory_cap_variant_id: str | None = Field(default=None, min_length=1, max_length=64)
     statutory_cap_person_count: int = Field(default=1, ge=1)
+    statutory_cap_variant_person_counts: Mapping[str, int] = Field(default_factory=dict)
+    """How many insured persons fall under each annual cap variant, keyed by variant id.
+
+    LIRPF art. 30.2.5.a caps the seguro de enfermedad premium at 500 euros per person
+    or 1.500 for a person with discapacidad, so the lawful cap is a SUM over two
+    populations rather than one amount times one count. A single
+    :attr:`statutory_cap_person_count` cannot express that, and using it alone applies
+    the lower limb to everybody -- which understates the allowance for exactly the
+    people the higher limb exists for.
+    """
     exclusive_use_confirmed: bool = False
     iva_deduction_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     """Fraction of the fact's input IVA the activity affords a right to deduct (LIVA arts. 94/104).
@@ -545,13 +556,66 @@ def _resolve_statutory_cap(
             return None
         return rule.statutory_cap_eur_per_day * context.statutory_cap_days
     if rule.statutory_cap_variants:
+        annual = [variant for variant in rule.statutory_cap_variants if not variant.is_per_day]
+        if annual:
+            return _resolve_annual_variant_cap(annual, context=context)
         if context.statutory_cap_variant_id is None or context.statutory_cap_days is None:
             return None
         for variant in rule.statutory_cap_variants:
             if variant.id == context.statutory_cap_variant_id:
-                return variant.statutory_cap_eur_per_day * context.statutory_cap_days
+                per_day = variant.statutory_cap_eur_per_day
+                if per_day is None:
+                    return None
+                return per_day * context.statutory_cap_days
         return None
     return None
+
+
+def _resolve_annual_variant_cap(
+    variants: Sequence[StatutoryCapVariant],
+    *,
+    context: RentaDeductibilityContext,
+) -> Decimal | None:
+    """Sum an annual per-person cap across the populations each variant governs.
+
+    Unlike a daily variant set, where one condition selects one amount, an annual
+    per-person set applies EVERY variant at once to its own share of the insured
+    persons: LIRPF art. 30.2.5.a allows 500 for each ordinary person AND 1.500 for
+    each person with discapacidad in the same return.
+
+    Returns:
+        The summed cap, or ``None`` when no population has been counted -- absence of
+        counts is unknown, not zero, and returning zero would cap the deduction at
+        nothing.
+    """
+    counts = context.statutory_cap_variant_person_counts
+    if not counts:
+        # Nothing is known about which persons meet the condition the higher limb
+        # requires. The ordinary limit is what the article grants absent that
+        # condition, so the conservative limb applies to the persons we do know
+        # about. This reproduces the behaviour that shipped before the second limb
+        # existed, so an uninformed caller is never worse off than it was, while a
+        # caller that supplies the counts gets the lawful sum.
+        lowest = min(
+            (variant.statutory_cap_eur for variant in variants if variant.statutory_cap_eur is not None),
+            default=None,
+        )
+        if lowest is None:
+            return None
+        return lowest * Decimal(context.statutory_cap_person_count)
+    declared = {variant.id for variant in variants}
+    unknown = sorted(set(counts) - declared)
+    if unknown:
+        raise RentaValidationError(
+            f"statutory cap variant person counts name variants the rule does not declare: {unknown}",
+        )
+    total = Decimal("0")
+    for variant in variants:
+        amount = variant.statutory_cap_eur
+        if amount is None:
+            return None
+        total += amount * Decimal(counts.get(variant.id, 0))
+    return total
 
 
 def _observation_id(fact: RentaDeductibleExpenseFact) -> str:

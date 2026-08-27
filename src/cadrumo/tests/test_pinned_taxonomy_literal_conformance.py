@@ -234,7 +234,7 @@ Every entry is checked below by :func:`test_every_embedded_literal_exception_is_
 """
 
 
-PENDING_UNDECLARED: Final[frozenset[tuple[str, str]]] = frozenset(
+PENDING_UNDECLARED: Final[frozenset[tuple[str, str]]] = frozenset[tuple[str, str]](
     {
         # This module gained its PINNED_TAXONOMY_LITERALS declaration
         # mid-edit, uncommitted, by a concurrent band of this same campaign

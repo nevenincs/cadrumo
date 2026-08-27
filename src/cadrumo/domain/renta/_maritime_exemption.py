@@ -47,11 +47,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
-
 from ...core import CasillaId, validated_casilla_id
 from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
+from ..calculations.registry.bindings import CasillaObservation
+from ..calculations.registry.ids import LegalRefId, SourceRefId
 from .errors import RentaError, RentaValidationError
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).

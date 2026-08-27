@@ -24,9 +24,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...domain import filing as filing_domain
@@ -41,7 +38,9 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos import (

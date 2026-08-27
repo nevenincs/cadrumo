@@ -6,13 +6,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import ParameterId
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from ..binding_selector_utils import selector_as_dict
+from ..ids import ParameterId
+from ..schema_formula import FormulaExpression
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

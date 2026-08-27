@@ -50,8 +50,7 @@ from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 if TYPE_CHECKING:
     from datetime import date
 
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
-
+    from ....application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
 
 
@@ -290,9 +289,8 @@ def descendiente_door(
 
 def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ....application.wizard.descendant_door import run_descendant_door
+    from ....application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()

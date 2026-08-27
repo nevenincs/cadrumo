@@ -136,8 +136,12 @@ def test_wizard_module_inventory_is_complete_and_namespace_is_inert() -> None:
         isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
         for node in initializer.body
     )
-    assert initializer.body[-1].target.id == "__all__"
-    assert ast.literal_eval(initializer.body[-1].value) == []
+    last_statement = initializer.body[-1]
+    assert isinstance(last_statement, ast.AnnAssign)
+    assert isinstance(last_statement.target, ast.Name)
+    assert last_statement.target.id == "__all__"
+    assert last_statement.value is not None
+    assert ast.literal_eval(last_statement.value) == []
 
 
 @pytest.mark.parametrize("module_name", _PUBLIC_MODULE_NAMES)

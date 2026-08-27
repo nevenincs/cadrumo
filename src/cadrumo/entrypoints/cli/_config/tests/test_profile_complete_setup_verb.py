@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from pydantic import TypeAdapter
 
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....domain.user_profile.values import ProfileSetupState
@@ -20,6 +21,8 @@ from .....tests.user_profile import register_cli_profile
 from ._isolated_storage_fixture import config_check_backend as config_check_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
 def _envelope(result) -> dict[str, object]:
@@ -30,9 +33,7 @@ def _envelope(result) -> dict[str, object]:
     pick up pretty-printed inner members instead.
     """
     assert result.stdout.strip(), f"expected a JSON envelope on stdout, got {result.stderr[:400]!r}"
-    parsed = json.loads(result.stdout)
-    assert isinstance(parsed, dict)
-    return parsed
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(result.stdout))
 
 
 def _stored_state(profile_id: str) -> tuple[ProfileSetupState, int]:

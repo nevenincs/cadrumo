@@ -27,9 +27,8 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
-from cadrumo.domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
-
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
 from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import _modelo_100_sign_branch_value
 
