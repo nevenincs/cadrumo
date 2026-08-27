@@ -1,14 +1,14 @@
 # Type 2 declarado (contraparte) rows, unioning collectible (entregas,
 # clave B) and payable (adquisiciones, clave A) invoice observations into
 # ONE shared row sequence -- the diseño de registro's Tipo-2 declarado
-# record is a single physical stream for every clave, grounded in the
-# tui-architecture modelo 347 contraparte binding inventory reference.
-# `claves = []` (no filter) lets every classifiable clave through; only A
-# and B are currently classified from source_kind alone by
-# m347_operation_clave -- claves C-G each need a fact this binding family
-# does not read yet (see the same reference), so observations for those
-# operations simply carry operation_clave = None and are skipped by
-# _build_contraparte_clave_rows, not silently mis-declared.
+# record is a single physical stream for every clave.
+# `claves = []` (no filter) lets every classifiable clave through: A/B from
+# invoice direction, F/G from the invoice's own RD 1619/2012 disposición
+# adicional cuarta travel-agency mediation fact. Claves C-E each need a fact
+# this binding family does not read yet (a professional-fees-collection
+# classification for C, the FILER's own entity type for D/E), so
+# observations for those operations simply carry operation_clave = None and
+# are skipped by _build_contraparte_clave_rows, not silently mis-declared.
 #
 # `source` is declared "m347_third_party_operation" -- the combined-direction
 # source RD 1065/2007 art. 33.1 already treats as one concept (see the enum
@@ -24,7 +24,7 @@
 # transmisiones-inmuebles pair (real-estate operations only) and from
 # importe-metalico/operacion-seguro/arrendamiento-local-negocio (each gated
 # by its own "Sólo..." exception in the diseño text) -- those stay
-# unbound/scalar by design, not by omission; see the reference doc.
+# unbound/scalar by design, not by omission.
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-contraparte-row-nif"

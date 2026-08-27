@@ -31,7 +31,14 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType, Modelo, Period
+from ...core import (
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+    IntracomOperationType,
+    Modelo,
+    Period,
+    TravelAgencyMediationType,
+)
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -39,6 +46,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
     is_m347_declarante_summary_invoice_binding,
+    m347_operation_clave,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
@@ -621,17 +629,44 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
         # (RD 1619/2012 art. 6.1.d). Without this the row reached the observation
         # constructor with None and raised there instead of being skipped.
         return None
+    source_kind = BindingSourceKind(_invoice_source_kind(invoice))
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
+        source_kind=source_kind,
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=_eur(invoice.base_total_eur, invoice),
         invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=None,
+        operation_clave=_m347_operation_clave(invoice, source_kind=source_kind),
         party_legal_name=invoice.counterparty_name,
     )
+
+
+def _m347_operation_clave(invoice: Invoice, *, source_kind: BindingSourceKind) -> str | None:
+    """Classify the M347 clave de operacion for one invoice, or ``None``.
+
+    Checks the RD 1619/2012 disposición adicional cuarta travel-agency
+    mediation fact first (claves F/G), then falls back to
+    :func:`m347_operation_clave`'s invoice-direction classification
+    (claves A/B). Claves C-G's remaining unclassifiable members (C, D, E)
+    still return ``None`` -- each needs a fact (a professional-fees-collection
+    classification, or the FILER's own entity type) this invoice does not
+    carry and no direction or mediation flag can substitute for.
+
+    F ("ventas agencia viaje") covers the disposition's FULL listed service
+    set for an ISSUED invoice; G ("compras agencia viaje") covers ONLY air
+    passenger transport for a RECEIVED invoice. A RECEIVED invoice for a
+    non-air mediated service is neither F nor G by the diseño's own text, and
+    falls through to the ordinary A/B classification below.
+    """
+    mediation = invoice.travel_agency_mediation
+    if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
+        return "F"
+    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
+        return "G"
+    return m347_operation_clave(source_kind)
 
 
 def _intracommunity_clave(invoice: Invoice) -> str | None:

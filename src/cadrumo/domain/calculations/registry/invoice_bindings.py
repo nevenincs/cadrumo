@@ -249,9 +249,7 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
 def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
     """Return the M347 clave de operacion determinable from ``source_kind`` alone.
 
-    Grounded against RD 1065/2007 arts. 31/33 and RD 1619/2012 disposicion
-    adicional cuarta (recorded in the tui-architecture modelo 347 contraparte
-    binding inventory reference). Only two of the seven claves are
+    Grounded against RD 1065/2007 art. 33.1. Only two of the seven claves are
     determinable from the invoice direction alone:
 
     * ``PAYABLE_INVOICE`` (an invoice the taxpayer must pay -- a purchase) is
@@ -261,16 +259,18 @@ def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
       sale) is clave ``B``, entregas de bienes y prestaciones de servicios
       superiores a 3.005,06 EUR.
 
-    The remaining five claves each key on a fact this function's single
-    ``source_kind`` argument cannot carry: ``C`` (cobros por cuenta de
-    terceros) needs a professional-fees-collection classification distinct
-    from ordinary purchase/sale direction; ``D``/``E`` key on the FILER's own
-    type (entidad pública, partido, sindicato, ...) rather than on any
-    transaction classification; ``F``/``G`` key on a mediación-de-agencia-de-
-    viajes fact under RD 1619/2012, unrelated to IVA direction. Returns
-    ``None`` for those and for any non-invoice source kind, rather than
-    guessing -- a caller distinguishing them needs a fact this function does
-    not have, not a default.
+    Claves F/G (mediación de agencia de viajes under RD 1619/2012 disposición
+    adicional cuarta) are classified by the resolver caller from a fact this
+    function's single ``source_kind`` argument cannot carry -- the invoice's
+    own travel-agency mediation flag, not its direction. The remaining three
+    claves each still need a fact neither this function nor the resolver
+    caller has: ``C`` (cobros por cuenta de terceros) needs a
+    professional-fees-collection classification distinct from ordinary
+    purchase/sale direction; ``D``/``E`` key on the FILER's own type (entidad
+    pública, partido, sindicato, ...) rather than on any transaction
+    classification. Returns ``None`` for those and for any non-invoice source
+    kind, rather than guessing -- a caller distinguishing them needs a fact
+    this function does not have, not a default.
 
     ``source_kind`` also accepts a bare ``str`` value-equal to a member: the
     registry's own TOML-to-enum hydration boundary can still hold the raw

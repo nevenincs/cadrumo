@@ -320,7 +320,6 @@ iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_luz.notes"
 
@@ -352,7 +351,6 @@ iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_agua.notes"
 
@@ -384,7 +382,6 @@ iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_gas.notes"
 
@@ -416,7 +413,6 @@ iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 statutory_multiplier = "0.30"
 notes = "categories.registry.suministros_home_office_internet.notes"
 
@@ -485,7 +481,6 @@ iva_hint = "general"
 # deductibility article and does not itself establish the 30 % carve-out.
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 statutory_multiplier = "0.30"
 notes = "categories.registry.telefonia_fija.notes"
 
