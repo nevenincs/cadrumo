@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
 modified: '2026-08-27'
-body_hash: 'sha256:125da22c2dfcac0b2aff137e13c9bc75cfa81822c871e63a58a0950becab67e5'
+body_hash: 'sha256:ad45180c65baf6ee333a7f0b882cfe1a6b939f0a62f2da7906cc9fe44ec10e57'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -140,7 +140,7 @@ Hold every enrolled node to calibrated class budgets.
 
 - [ ] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 - [ ] `W04.P10.S38` - Add empty, one-profile, and multi-profile scaling lanes using real subprocesses and persisted capsules; `src/cadrumo/entrypoints/cli/tests/test_cli_storage_scaling.py`.
-- [ ] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
+- [x] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
 - [ ] `W04.P10.S40` - Action generated outliers until no enrolled path exceeds budget or imports undeclared capabilities; `src/cadrumo/entrypoints/cli/`.
 
 ## Wave `W05` - Integrate, audit, and close

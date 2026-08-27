@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c2c21ebb6698b35a60ef11e928f0b44660792285b25624155d7d87c0e074e9b'
+body_hash: 'sha256:5857c6130e016b1f56a7dc182701de18e5141b0c67877fbccdb46d134e1ba3db'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -158,3 +158,26 @@ what it does.
   module-scope edge and is correct on layering grounds, but it did NOT move the
   152-module measurement, because the protocol chain above still pulls the
   registry. Recorded as a layering fix with no measured performance effect.
+
+- Three read-only commands create the encrypted database by opening the
+  cold-bootstrap secure-object store: `config auth apoderado check`,
+  `config auth certificate list`, `config repair integrity objects`. Traced to
+  `workflow_state_repository` -> `cold_bootstrap_store` -> `get_engine`.
+  Bootstrap-on-first-access is SANCTIONED by `no-legacy-compatibility` (it is
+  creation, not migration), so this is not plainly a defect. The open question
+  is whether a command that only READS should open the store in a mode that
+  declines to create it. That is a storage-engine decision, not a CLI one, and
+  needs an owner. Until then the side-effect gate carries a reasoned
+  per-command allowlist with a stale-entry case that deletes an entry the
+  moment it stops applying.
+- `CommandSideEffectClass` has no member meaning "writes a derived cache".
+  `local-state` is bound by the CommandSpec invariant to profile-scoped write
+  ROUTING, so declaring it on a command that writes the process-wide
+  `cache/registry-verdict` or `cache/corpus-text` tree would assert something
+  false about where its writes go. Nine leaves sit in that gap today. The gate
+  excuses the derived tree by a documented predicate rather than by widening a
+  declaration; closing the gap properly means a new taxonomy member.
+- A `.profile-custody-root.lock` survives a read on five leaves. Lock files are
+  coordination rather than content and are deliberately not unlinked (deleting
+  a lock races the next acquirer), so this is recorded as expected rather than
+  as a leak -- but it is the reason the predicate exempts `*.lock` at all.
