@@ -52,7 +52,7 @@ Coverage within the 12, as `independent_check_coverage`:
 | 100 | 8 | 4.7 % |
 | 303 | 1 | 3.6 % |
 | 100 | 5 | 3.3 % |
-| 100 | 1.9 % | 4 |
+| 100 | 4 | 1.9 % |
 
 The two modelos at 100 % reach it with three casillas each. Modelo 100, the
 IRPF flagship, peaks at 15.5 % and has a revision at 1.9 %.
