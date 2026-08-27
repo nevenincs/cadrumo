@@ -2,17 +2,6 @@
 schema_version = 3
 
 [[disposition]]
-path = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py"
-enclosing_symbol = "upgrade_bienes_inversion_v1_payload"
-candidate_role = "definition"
-alias = "remediation"
-action_identity = "[]"
-role = "excluded"
-reason = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py:90 upgrade_bienes_inversion_v1_payload: this 'remediation' value is an internal domain value, not a typed operator action; it is excluded from recovery ownership."
-symbol = "remediation"
-enclosing_function = "upgrade_bienes_inversion_v1_payload"
-
-[[disposition]]
 path = "src/cadrumo/application/ledger/_actions_classification.py"
 enclosing_symbol = "apply_classification_rules"
 candidate_role = "command_literal"
