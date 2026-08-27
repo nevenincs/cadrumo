@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:2c6057055dcb93497711dc3c98c5cf12e8dd4c4abd28a25afc1a9b90ec628867'
+body_hash: 'sha256:a47f60fa4d0c3ac07d69efb903f2cf54b825e2a66f09e429be061dac456a47f5'
 ---
 
 <!-- RETIRED: S01 -->
@@ -61,6 +61,7 @@ Turn the hunt's findings into product behaviour. Each fix reuses the mechanism t
 
 - [x] `P05.S17` - Measure the Art. 109 seventy per cent over the base the reglamento names: exclude subvenciones corrientes, subvenciones de capital and indemnizaciones for the agrarian apartados, gate the exemption to the activity classes art. 109 grants it to, and fail closed on a row that does not declare its activity class rather than guessing an exemption for it; `src/cadrumo/core/_concepto_ingreso.py, src/cadrumo/domain/transactions/, src/cadrumo/application/modelo/_art109_activity_income.py and src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml`.
 - [x] `P05.S18` - Carry both limits LIRPF art. 30.2.5.a states for the seguro de enfermedad by widening the statutory-cap variant to an annual per-person amount alongside its daily one, declaring the 500 and 1.500 limbs in the corpus, and summing each limb over its own population, with an uncounted caller falling back to the ordinary limb so widening the rule regresses nobody; `src/cadrumo/domain/categories/ and src/cadrumo/domain/renta/ and src/cadrumo/_data/registry/aeat/categories/profiles.toml`.
+- [x] `P05.S19` - Count the tier c) rehabilitation window in calendar years rather than in days, relocating the leap-clamping year shift out of the retention domain into a neutrally named core primitive both consumers read, and retiring the days-declared registry parameter across every revision that carried it so no declaration describes a unit the code no longer uses; `src/cadrumo/core/calendar_shift.py and src/cadrumo/domain/fincas/ and src/cadrumo/domain/retention/ and src/cadrumo/_data/registry/aeat/modelos/100/revisions/`.
 
 ## Parallelization
 

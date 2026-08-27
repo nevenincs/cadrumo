@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:46ef6a3bfc8a09c2ffca8d44a8cf53633d267110cc5b63c67b32c3f7fd996218'
+body_hash: 'sha256:073f26b760966631b7cac1df097713e2b4c13309f0dc6d581f99e1a3c9cf7d56'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -281,3 +281,28 @@ capability residue stays open.
   nothing. It is NOT valid where the expectation is non-empty -- a union proves
   a set contains a violation and never which member, which cost two false reads
   in this campaign before it was understood.
+
+- **S40 residue, root-caused to one placement.** Both remaining capability
+  groups fail for the same reason: `domain.calculations._row_source_identity`
+  takes `BindingId` from `domain.calculations.registry.ids`, so any consumer of
+  that value object pulls the registry package into its graph.
+
+  A lazy facade on `domain.calculations` was tried and REVERTED: it drops the
+  package import from 90 modules to 3, but `application.review._operator`
+  USES the names at import time, so `__getattr__` fires immediately and the
+  registry arrives anyway. A change that does not achieve its purpose was not
+  worth keeping in a shared tree.
+
+  The real fix is placement. `BindingId` is an identity alias and belongs in
+  `core.identity` beside `ContentDigest`, `BucketId` and `ProfileId` -- the
+  architecture rule says so directly. It has **173 consumers**, and the
+  relocation rule requires one atomic commit updating every one with clean
+  `pytest --collect-only` either side. That is a deliberate solo change, not
+  something to attempt in a worktree taking a peer commit every few minutes;
+  a re-export bridge to avoid the sweep is explicitly forbidden.
+
+  Until it lands, two groups -- `encrypted-facts` (5 registry modules, the
+  package root and the `ids` leaf) and `encrypted-facts,network` (153, which
+  additionally reaches `registry.bindings` through the `domain.modelos`
+  protocol chain) -- stay listed with stale-entry cases that will fail the day
+  the relocation clears them.
