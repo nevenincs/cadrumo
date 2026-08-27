@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#calc-engine-grounding-swarm'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:ee0cbb61052cc74e8da7091820f018778ed822664a2ff20795d1e58d6c562be4'
 related:
   - '[[2026-06-04-calc-engine-grounding-swarm-adr]]'

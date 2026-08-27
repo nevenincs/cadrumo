@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#calculation-aggregation-taxonomy'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:86473ab84d0f3fbe739cbf8d582be4a0835655db2fee5e85c242da594ed2c406'
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'

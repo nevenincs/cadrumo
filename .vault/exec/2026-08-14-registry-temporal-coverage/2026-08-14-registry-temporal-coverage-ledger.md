@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:4746c4f467827a3daf80bf9897b49ceed96f01af536ddaecc6a8d390875e8cc9'
+body_hash: 'sha256:f999957dfca55f0684bd7853d1c79f6a3350c72a14bc64c27b32511beb6636d6'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -759,7 +759,6 @@ Separately measured while here: the audit's other channel,
 advisory and fail nothing. The earlier note naming Modelos 714 and 200 as the
 blocker was reading a truncated output; the single blocking entry is Modelo 165.
 
-
 ### Modelo 308 ejercicio 2011 AD-HOC: adjudicated irreducible, not a defect
 
 The residue cell refusing `modelo 308, 2011, AD-HOC` between revisions
@@ -816,4 +815,3 @@ The residue cell stays refused. It is now a documented, grounded and tested
 fact rather than an unexplained entry -- the coverage matrix's `(year, period)`
 coordinate is coarser than the law it measures, for exactly one boundary AEAT
 published.
-
