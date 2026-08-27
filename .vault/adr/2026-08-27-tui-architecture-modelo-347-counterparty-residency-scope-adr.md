@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:162cdc8dee6806a24a270eb5c351c0018f3c9026f84d25ad43256e4dc50265cc'
+body_hash: 'sha256:247aa97691c1aaa6bcf45625cbcb8c41490bdf15d9d67ccc6516ab9051bca512'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-27-tui-architecture-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
@@ -60,8 +60,20 @@ mandatory field if the two changes are not decided and built together.
     intra-community recapitulativa already implements for this same
     resolver, keyed on `IvaCategory`/`IntracomOperationType`, not on bare
     country.
-  The list is CLOSED: a counterparty's non-residency, by itself, is not one
-  of the enumerated exclusions. That closure, not merely the absence of an
+  The list is CLOSED and item (i) is its last item: art. 33.2 reads
+  "quedan excluidas del deber de declaración las siguientes operaciones," then
+  enumerates (a) through (i) and stops -- the text that immediately follows
+  item (i) is paragraph 3, a DIFFERENT provision about additional inclusions
+  for a different filer category (obligados under art. 31.2), not a
+  continuation of the exclusion list. Item (i)'s own "en general" qualifies
+  ONLY the coincident-informativa exclusion it states (any operation already
+  reported elsewhere, regardless of which informativa), not a residual
+  catch-all admitting further, unenumerated exclusion grounds. Confirmed by
+  reading the full paragraph, not assumed: there is no trailing "y demás
+  operaciones que reglamentariamente se determinen" or equivalent open clause
+  anywhere in art. 33.2. A counterparty's non-residency, by itself, is not
+  one of the nine enumerated exclusions, and there is no tenth, open-ended
+  one it could fall under. That closure, not merely the absence of an
   explicit prohibition, is the argument.
 - The diseño de registro's own `CÓDIGO PROVINCIA/PAÍS` field (positions
   77-80) declares a "XX" alphabetic country-code slot specifically for a
