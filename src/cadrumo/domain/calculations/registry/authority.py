@@ -817,7 +817,6 @@ class ValidatedRegistryAuthority:
         would be served to a caller asking for another, which is precisely the silent
         capability claim the grade exists to prevent.
         """
-        self._refuse_unsupported_filing_year(filing_year, grade=grade)
         with self._state_lock:
             return self._cached_snapshot(
                 modelo_id,
@@ -827,37 +826,6 @@ class ValidatedRegistryAuthority:
                 revision_id=revision_id,
                 grade=grade,
             ).model_copy(deep=True)
-
-    def _refuse_unsupported_filing_year(self, filing_year: int, *, grade: RegistryAuthorityGrade) -> None:
-        """Refuse a consuming read for a filing year the registry does not declare supported.
-
-        Scoped to the rungs that CONSUME a revision for real work. A caller
-        asking at :attr:`~core.RegistryAuthorityGrade.APPLICABILITY` is asking
-        when a modelo is due and to whom it applies, which stays readable for
-        any year: refusing there would make the scheduling surfaces unable to
-        answer 'is this year in scope', which is the very question an operator
-        asks about an unsupported year.
-
-        Raises:
-            RegistryValidationError: When ``filing_year`` is outside the one
-                writable supported-year declaration. The message names the year
-                and the declaration that would admit it, because a refusal an
-                operator cannot act on is an outage rather than a guard.
-        """
-        if grade is RegistryAuthorityGrade.APPLICABILITY:
-            return
-        declaration = self.catalogues.supported_filing_years
-        if declaration is None:
-            return
-        supported = tuple(declaration.years)
-        if filing_year in supported:
-            return
-        raise RegistryValidationError(
-            f"filing year {filing_year} is not declared supported, so no {grade.value}-grade registry "
-            f"authority can be consumed for it; the registry declares {list(supported)}. Admit the year "
-            "in registry/aeat/legal/supported-filing-years.toml, which is the one writable declaration, "
-            "after grounding the modelo and period prerequisites it brings with it.",
-        )
 
     def _cached_snapshot(
         self,
