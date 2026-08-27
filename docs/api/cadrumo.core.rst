@@ -161,6 +161,7 @@ Submodules
    cadrumo.core.paths
    cadrumo.core.presentation
    cadrumo.core.product_identity
+   cadrumo.core.profile_discovery
    cadrumo.core.prose_elision
    cadrumo.core.remote_authority
    cadrumo.core.secure_object_write
