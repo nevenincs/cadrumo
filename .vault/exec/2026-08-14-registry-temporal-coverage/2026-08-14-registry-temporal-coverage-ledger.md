@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d5c342f12d70304328a3ba0231ea40f4adaac2c4138557aa7cb5b19b3bc40517'
+body_hash: 'sha256:b327a5b2e10a9cd9703b29433239b5a6d1bd6bfd58c854a3a3bd84ee3f62d2c7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -136,3 +136,20 @@ related:
 - `S34` `M` `src/cadrumo/domain/calculations/registry/tests/__init__.py`
 
 - `S55` `A` `src/cadrumo/application/registry/tests/test_exact_key_corpus_year_coverage.py`
+
+- `S54` `M` `src/cadrumo/application/filing/_review.py`
+- `S54` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S54` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S54` `M` `src/cadrumo/application/ledger/usage_ratio_repository.py`
+- `S54` `M` `src/cadrumo/application/ledger/llm_classification.py`
+- `S54` `M` `src/cadrumo/adapters/persistence/profile/usage_ratios.py`
+- `S54` `M` `src/cadrumo/domain/transactions/_llm.py`
+- `S54` `M` `src/cadrumo/domain/usage_ratios/_model.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/_ledger_support.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/_app_ledger_ratios_command_specs.py`
+- `S54` `M` `src/cadrumo/locales/en/cli.yml`
+- `S54` `M` `src/cadrumo/locales/es/cli.yml`
+- `S54` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S54` `M` `src/cadrumo/locales/hu/cli.yml`

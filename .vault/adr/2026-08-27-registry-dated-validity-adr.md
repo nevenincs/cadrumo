@@ -5,12 +5,12 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f40eda7c4e570b58954d6ea9a68e22a3e6ee4566746a7b4400061925cba46994'
+body_hash: 'sha256:f2b8506f9dc8ce786f4f517aaccd0ffbc92a7e2dfed1de23b48a7a446d98cc86'
 related:
   - "[[2026-08-27-registry-dated-validity-research]]"
 ---
 
-# `registry-dated-validity` adr: `dated citation windows replace whole-file-per-year copies, and a window is a grounding claim` | (**status:** `proposed`)
+# `registry-dated-validity` adr: `dated citation windows replace whole-file-per-year copies, and a window is a grounding claim` | (**status:** `accepted`)
 
 ## Problem Statement
 
