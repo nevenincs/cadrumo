@@ -11,8 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-26'
-body_hash: 'sha256:eee7f7e0c1c58c9813c90ab4aac7d05dece422f926bde173b4c092a93e89c2f6'
+modified: '2026-08-27'
+body_hash: 'sha256:2158ed7ac2c977bcf2d1f9995d44535bc559e32786dfe5831fc0501c5ba1f168'
 ---
 
 # `tui-architecture` plan
@@ -418,7 +418,7 @@ Enroll rename, discard, verify, local file, export, and amend one by one through
 
 Compose the independently green lanes in the TUI launcher and app, then expose the dedicated installed entrypoint.
 
-- [ ] `W06.P13.S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `W06.P13.S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W06.P13.S73` - Join profile, secret, flow, operation, and Modelo areas through navigation only after their exact receipts are green, composing the one closed Modelo route/action factory catalogue and keeping every non-green cohort unmounted; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W06.P13.S74` - Delegate module execution directly to the TUI launcher without importing the CLI; `src/cadrumo/entrypoints/tui/__main__.py`.
 - [ ] `W06.P13.S75` - Add the dedicated installed TUI console entry point targeting the launcher directly; `pyproject.toml`.
