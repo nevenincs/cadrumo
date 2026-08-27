@@ -5,16 +5,11 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2c34c02340a6468746452da4ffe695a9c4cd6a8f6ab39f3ce33811af6a00832'
+body_hash: 'sha256:25a745b6ba90311264e0c0cd5018a2d4bb10e3284484cead1406e657cf28d8ea'
 step_id: 'S72'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root
 
@@ -31,23 +26,6 @@ M src/cadrumo/entrypoints/_operation_composition.py
 M src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py
 M src/cadrumo/application/modelo/tests/test_work_rename_operation.py
 - `verify:` production registry composes 19 definitions across all six builder families
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 ## Notes
 

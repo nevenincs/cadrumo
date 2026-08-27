@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdfd565d4272a758f89d16a8c9f93377360f831d1b61034e64e3728d156bd4f2'
+body_hash: 'sha256:f6cdc6f9b144b96e0fa24bd425b55937b116f992baa1ba1e2617f2dda2abfa85'
 step_id: 'S157'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch
 
@@ -27,23 +22,6 @@ related:
 M src/cadrumo/entrypoints/cli/_config/_custody.py
 M src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_navigation.py
 - `verify:` `pytest test_profile_lifecycle_navigation.py -m integration -n0` -> `9 passed, 2 pre-existing`
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 ## Notes
 
