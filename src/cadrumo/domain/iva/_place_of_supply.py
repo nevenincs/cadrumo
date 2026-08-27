@@ -63,8 +63,8 @@ from .errors import IvaCatalogueError
 __all__ = [
     "IvaPlaceOfSupplyRule",
     "load_place_of_supply_table",
-    "place_of_supply_years",
     "place_of_supply_rule",
+    "place_of_supply_years",
     "required_supply_nature_for_rule",
 ]
 

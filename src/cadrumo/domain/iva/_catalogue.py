@@ -18,7 +18,6 @@ from collections.abc import Mapping
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from types import MappingProxyType
 
 from pydantic import ValidationError
 
@@ -132,9 +131,7 @@ def _resolve_catalogue_cached(year: int, grounded: tuple[int, ...]) -> IvaCatalo
     projected = {
         category: regulation.model_copy(
             update={
-                "citations": tuple(
-                    citation for citation in regulation.citations if citation.window.covers_year(year)
-                ),
+                "citations": tuple(citation for citation in regulation.citations if citation.window.covers_year(year)),
             },
         )
         for category, regulation in bundled_iva_catalogue().regulations.items()

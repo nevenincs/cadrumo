@@ -69,7 +69,9 @@ def _violation(
     if window.valid_from < permitted_start:
         return f"window opens {window.valid_from.isoformat()} before the provision took effect {permitted_start.isoformat()}"
     if permitted_end is not None and window.valid_to > permitted_end:
-        return f"window closes {window.valid_to.isoformat()} after the provision was repealed {permitted_end.isoformat()}"
+        return (
+            f"window closes {window.valid_to.isoformat()} after the provision was repealed {permitted_end.isoformat()}"
+        )
     return ""
 
 
@@ -160,7 +162,9 @@ def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     """Anchor: an unresolvable id would make the span check silently skip a row."""
     catalogue = _legal_catalogue()
     cited = {
-        reference for _label, references, _window in _catalogue_rows() + _place_of_supply_rows() for reference in references
+        reference
+        for _label, references, _window in _catalogue_rows() + _place_of_supply_rows()
+        for reference in references
     }
 
     assert cited, "no provisions were cited at all; the gate above would be vacuous"

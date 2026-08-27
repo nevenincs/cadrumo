@@ -10,7 +10,8 @@ committed registry files under ``registry/aeat/iva``.
 The facade exposes closed identifiers such as :class:`IvaCategory`,
 :class:`EUMemberState`, :class:`IvaRateKind`,
 :class:`IvaFlowDirection`, and :class:`IvaSettlementSide`; loaders and lookups
-such as :func:`load_iva_catalogues`, :func:`resolve_catalogue`,
+such as :func:`bundled_iva_catalogue`, :func:`iva_catalogue_years`,
+:func:`resolve_catalogue`,
 :func:`load_iva_rate_table`, :func:`lookup_rate`, :func:`load_recargo_rates`,
 and :func:`recargo_rate_for_applied_rate`; and the classification axis stack
 (:class:`IvaTerritorialScope`, :class:`CustomerTaxStatus`,
@@ -141,8 +142,8 @@ from ._oss import (
 from ._place_of_supply import (
     IvaPlaceOfSupplyRule,
     load_place_of_supply_table,
-    place_of_supply_years,
     place_of_supply_rule,
+    place_of_supply_years,
     required_supply_nature_for_rule,
 )
 from ._prorrata import (
@@ -370,6 +371,7 @@ __all__ = [
     "SupplyNatureDerivation",
     "SupplyNatureDerivationOutcome",
     "TransactionKind",
+    "bundled_iva_catalogue",
     "category_bears_taxable_base",
     "category_components",
     "category_cuota_is_zero_by_law",
@@ -401,12 +403,10 @@ __all__ = [
     "is_especial_mandatory",
     "is_last_filing_period_of_year",
     "is_m303_annual_settlement_period",
-    "bundled_iva_catalogue",
     "iva_catalogue_years",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
     "load_place_of_supply_table",
-    "place_of_supply_years",
     "load_recargo_rate_table",
     "load_recargo_rates",
     "lookup_rate",
@@ -416,6 +416,7 @@ __all__ = [
     "match_regime_legend",
     "match_statutory_citations",
     "place_of_supply_rule",
+    "place_of_supply_years",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "rate_table_covers",
