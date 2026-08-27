@@ -192,17 +192,11 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile\tcustody" in logged_out.stdout
 
-    # Login takes its passphrase over the bounded strict-JSON channel and
-    # nowhere else: the machine-secret boundary refuses to resolve a scalar
-    # secret from settings or the environment, so the storage settings this
-    # subprocess is handed do not unlock anything on their own.
-    switched = _run_cadrumo(
-        tmp_path,
-        ("config", "login", "custody", "--secrets-stdin"),
-        stdin_payload=json.dumps(
-            {"passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()},
-        ),
-    )
+    # Deliberately no passphrase channel: this is the os_keychain subject.
+    # The login must reopen the session by unwrapping its DEK under the
+    # keychain-custodied key, so handing it a passphrase here would prove
+    # only that a passphrase works and retire the resumption this covers.
+    switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
