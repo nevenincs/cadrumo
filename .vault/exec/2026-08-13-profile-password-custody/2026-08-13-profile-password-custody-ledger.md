@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:b87d2073438e7bf17870c0eaaf74f491739f6d67a8216cd829c0361993170039'
+body_hash: 'sha256:17160396a7f497850a75d3175dc459b7da670f7916c21fc07f52e2f4d197d30a'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -293,9 +293,6 @@ related:
 - `S230` `T` `docs/locales/es/LC_MESSAGES/`
 - `S231` `T` `docs/locales/ca/LC_MESSAGES/`
 - `S232` `T` `docs/locales/hu/LC_MESSAGES/`
-- `S233` `T` `dev/docs/tests/`
-- `S233` `T` `dev/tests/test_no_skip_xfail.py`
-- `S233` `T` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
 - `S234` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`
 - `S236` `T` `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`
 - `S237` `T` `src/cadrumo-harness/src/cadrumo_harness/`
