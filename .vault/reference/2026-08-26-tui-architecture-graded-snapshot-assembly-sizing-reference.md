@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:443e35f741bb067a6680a42a739567f69afaf210c1a1fba670645b36c0380cb3'
+body_hash: 'sha256:03d390ebbc8461a9f3ee5df83907a3b6b23a7c6ec716e00e8c29250e5c1df851'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -31,8 +31,10 @@ chain: `ModeloWorkspaceRegistryPortV1.capture_projection_with_epoch()` ->
 `ValidatedRegistryAuthority.capture_law_selected_projection(grade=...)`
 (`authority.py:867`) -> `self._cached_snapshot(..., grade=grade)`
 (`authority.py:832`) -> `_build_validated_snapshot(..., grade=grade)`
-(`snapshot.py:276`) -> `_check_snapshot_authority_grade(modelo, revision,
-requested_grade=grade)` (`snapshot.py:368`).
+(`_snapshot_internals.py:199`, re-verified 2026-08-27; this module was
+`snapshot.py` at the time of the first pass and has since been split/renamed)
+-> `_check_snapshot_authority_grade(modelo, revision, requested_grade=grade)`
+(`_snapshot_internals.py:291`).
 
 `_check_snapshot_authority_grade` RAISES `RegistryValidationError`
 (`registry/errors.py:92`) in two cases:
@@ -60,29 +62,38 @@ returns `self.authority_grade` when declared, else
 default. This is exactly the value `ModeloWorkspaceSnapshotScopeV1.declared_grade`
 should read from `snapshot.revision.effective_authority_grade`.
 
-### INFERRED, NOT YET CONFIRMED: `effective_grade`'s relationship to `required_grade`/`declared_grade`
+### RESOLVED (2026-08-27): `effective_grade` is reading (b), a genuine contract gap
 
-Since `_check_snapshot_authority_grade` only enforces `declared >= requested`
-and never truncates, a snapshot that is successfully returned always has
-`declared_grade >= required_grade`. My working assumption is `effective_grade
-= declared_grade` (the full authority the revision actually carries, not
-clamped down to what was asked) -- but I have not found anywhere in the
-codebase that actually computes or names an "effective grade" distinct from
-`declared_grade` for this purpose, so this is a guess to verify, not a traced
-fact, before wiring `ModeloWorkspaceSnapshotScopeV1` construction.
+Re-checked against HEAD before resuming (`_snapshot_internals.py` did not
+exist under that name at the time of the first pass -- `snapshot.py` was
+split/renamed since; the grade-insufficiency trace below still holds
+against the new location, only file paths moved).
 
-**This has two readings, and the next pass must establish which before
-touching this field, not guess.** Either (a) `effective_grade` is genuinely
-always equal to `declared_grade` and the field is a harmless, mildly
-misleading redundant restatement of it -- in which case the assembly simply
-mirrors `declared_grade` into both fields -- or (b) `effective_grade` is a
-designed-but-unimplemented axis: the model declares a three-way distinction
-(`required`/`declared`/`effective`) that no code anywhere actually computes,
-which would be a genuine contract gap of the same kind as the other thirteen
-found this session, not ordinary unexplored implementation surface. The
-answer changes whether the assembly computes anything for this field at all
-or simply copies `declared_grade`. Resolve this FIRST in the next pass,
-before starting `resolve_graded_snapshot_result`.
+`rg "effective_grade" src/cadrumo` returns exactly ONE hit in the entire
+tree: the field declaration itself
+(`workspace_models.py:938: effective_grade: RegistryAuthorityGrade`). No
+constructor, no test (`ModeloWorkspaceSnapshotScopeV1` and
+`ModeloWorkspaceGradedSnapshotScopeV1` are never constructed anywhere in
+`src/cadrumo/application/modelo/tests/`), and no computation anywhere reads
+or derives it. The governing ADR (`2026-08-24-tui-registry-api-gate-adr.md:212`)
+only restates the three-way name ("carries the requested, declared, and
+effective grade") without ever defining what distinguishes "effective" from
+"declared" -- no semantic rationale, no worked example, nothing a builder
+could implement against.
+
+This is reading (b): the model declares a three-way distinction the system
+does not make anywhere. It is a genuine contract gap of the same shape as
+the other thirteen found this session, not implementation surface to trace
+further -- there is nothing left to find by reading more code; the absence
+itself is the finding. **Do not resolve it by mirroring `declared_grade`
+into `effective_grade` at build time** -- that would silently manufacture a
+semantics nobody has decided, the same failure class S287's capability
+verdicts were built to avoid (a stamp, not an inference). This needs an ADR
+ruling (retire the field, define what narrows `effective_grade` below
+`declared_grade` and build that narrowing, or confirm it is deliberately
+always equal to `declared_grade` with the reason stated) before
+`resolve_graded_snapshot_result` can construct
+`ModeloWorkspaceSnapshotScopeV1` honestly.
 
 ### CONFIRMED: what still needs building, and why it cannot reuse the static functions as-is
 
