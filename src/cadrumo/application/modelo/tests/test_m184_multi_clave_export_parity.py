@@ -302,3 +302,46 @@ def test_clave_a_without_reduccion_is_still_accepted() -> None:
     )
 
     assert row.reduccion is None
+
+
+def test_an_ordinary_multi_member_attribution_emits_one_row_per_member_with_the_right_values() -> None:
+    """S289's own defect, reproduced with plain distinct members (no clave variation).
+
+    Four ordinary members, all under the same clave -- no exotic multi-clave
+    shape needed to trigger the truncation this Step names. Before the
+    binding_rows migration the export record rendered a single fixed
+    occurrence regardless of how many members the resolver produced, so
+    every member past the first silently vanished from the fichero. Proves
+    both that every member resolves its OWN row index and that the render
+    layer emits one occurrence per resolved index, each carrying that
+    member's own nif -- not a truncated or overwritten value.
+    """
+    revision = _revision()
+    record = _socio_record(revision)
+    members = (
+        ("11111111A", "Uno", "1500"),
+        ("22222222B", "Dos", "2500"),
+        ("33333333C", "Tres", "3500"),
+        ("44444444D", "Cuatro", "4500"),
+    )
+    observations = tuple(
+        _observation(source_id=f"m-{nif}", nif=nif, name=name, share="25", base=base, clave="D")
+        for nif, name, base in members
+    )
+
+    resolved = resolve_atribucion_binding_row_values(revision, observations)
+    nif_binding = next(binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-nif"))
+    base_binding = next(binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-base-assigned"))
+
+    # Every member resolves to its OWN row index, and none collide.
+    nifs_by_row = {row_index: value for (binding_id, row_index), value in resolved.items() if binding_id == nif_binding}
+    bases_by_row = {row_index: value for (binding_id, row_index), value in resolved.items() if binding_id == base_binding}
+
+    assert len(nifs_by_row) == 4, "every one of the four members must resolve its own row"
+    assert set(nifs_by_row.values()) == {nif for nif, _name, _base in members}
+    for row_index, nif in nifs_by_row.items():
+        expected_base = next(Decimal(base) for candidate_nif, _name, base in members if candidate_nif == nif)
+        assert bases_by_row[row_index] == expected_base, f"row {row_index} carries the wrong member's base_imponible_assigned"
+
+    rendered = _record_render_rows(record, resolved, {})
+    assert len({row.row_index for row in rendered}) == 4, "the render layer must emit one occurrence per member"
