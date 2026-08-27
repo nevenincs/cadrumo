@@ -704,7 +704,11 @@ def _every_declared_design_sheet(
     from .....core.resources import resolve_corpus_binary
 
     sheets: list[RecordDesignSheet] = []
-    for source in (source for source in catalogues.sources.values() if source.kind == "record_design"):
+    for source in (
+        source
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "authoritative"
+    ):
         path = resolve_corpus_binary(*source.corpus_path.split("/"))
         if path is None:
             continue

@@ -820,8 +820,21 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     # rename/removal trips this gate rather than silently shrinking the corpus.
     assert discovered >= _NON_FIELD_ROW_CORPUS_PDFS
 
+    # A design the catalogue declares `provenance_only` is corpus evidence, not a
+    # machine-readable authority, so it is discovered above but never parsed here.
+    # Read from the declaration rather than from a parse failure: a failure cannot
+    # tell provenance from a broken design.
+    _, catalogues = _committed_registry_tree()
+    provenance_only = {
+        Path(*source.corpus_path.split("/")[3:])
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "provenance_only"
+    }
     field_row_pdfs = tuple(
-        path for path in pdfs if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+        path
+        for path in pdfs
+        if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+        and path.relative_to(_RECORD_DESIGN_ROOT) not in provenance_only
     )
     parsed = {
         path.relative_to(_RECORD_DESIGN_ROOT): sheets
@@ -851,7 +864,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     sources = {
         source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
-        if source.kind == "record_design"
+        if source.kind == "record_design" and source.design_authority == "authoritative"
     }
 
     source_items = tuple(sorted(sources.items()))
