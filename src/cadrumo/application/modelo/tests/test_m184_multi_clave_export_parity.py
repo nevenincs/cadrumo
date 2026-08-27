@@ -1,0 +1,213 @@
+"""Modelo 184 socio export renders one occurrence per (member, clave, subclave).
+
+The record used to render a single fixed occurrence (S289's own finding), and
+its natural key was ``nif`` alone, so a member declaring income under two
+different claves -- an ordinary case, e.g. capital mobiliario alongside
+capital inmobiliario -- either truncated to one clave or collided the two
+rows into one during the two-source union. This module proves both defects
+are gone against the REAL bundled registry revision and the real production
+code paths: :func:`resolve_atribucion_binding_row_values`,
+:func:`_record_render_rows`, and :func:`union_detail_rows_by_identity`.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from ....domain.calculations.registry.detail_record_bindings import (
+    AtributionMemberObservation,
+    resolve_atribucion_binding_row_values,
+)
+from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ....domain.calculations.registry.loader import load_registry_tree
+from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.modelos import Modelo184MemberRow
+from ...filing._record_renderer import _record_render_rows
+from .._calculation_modelo_adjustments import union_detail_rows_by_identity
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_REVISION = "2025-y-siguientes"
+
+
+def _revision():
+    from ....core.resources import bundled_path
+
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(modelo for modelo in modelos if modelo.id == "184").revisions[_REVISION]
+
+
+def _socio_record(revision) -> ExportRecordDefinition:
+    return next(
+        candidate
+        for layout in derive_export_layouts_from_bindings(revision)
+        for candidate in layout.records
+        if candidate.id == "m184-socio"
+    )
+
+
+def _observation(
+    *,
+    source_id: str,
+    nif: str,
+    name: str,
+    share: str,
+    base: str,
+    clave: str,
+    subclave: str | None = None,
+    **extra: object,
+) -> AtributionMemberObservation:
+    from datetime import date
+
+    return AtributionMemberObservation(
+        source_id=source_id,
+        member_tax_id=nif,
+        member_legal_name=name,
+        transaction_date=date(2025, 1, 1),
+        share_percentage=Decimal(share),
+        base_imponible_assigned=Decimal(base),
+        clave=clave,
+        subclave=subclave,
+        **extra,
+    )
+
+
+def test_socio_record_is_wired_for_row_indexed_binding_rendering() -> None:
+    """Guard the premise: the record this module measures is the fixed shape.
+
+    Without this, every assertion below would pass vacuously against a record
+    that reverted to a single fixed occurrence.
+    """
+    record = _socio_record(_revision())
+
+    assert record.repeat == "binding_rows"
+    assert record.binding_record == "miembro"
+
+
+def test_two_members_each_declaring_one_clave_resolve_two_distinct_rows() -> None:
+    """The baseline shape: two members, one clave each, two row indices."""
+    revision = _revision()
+    observations = (
+        _observation(source_id="m1", nif="11111111A", name="Uno", share="60", base="6000", clave="D"),
+        _observation(source_id="m2", nif="22222222B", name="Dos", share="40", base="4000", clave="C"),
+    )
+
+    resolved = resolve_atribucion_binding_row_values(revision, observations)
+    row_indexes = {row_index for (_binding_id, row_index) in resolved}
+
+    assert row_indexes == {1, 2}
+
+
+def test_one_member_under_two_claves_resolves_two_rows_not_one() -> None:
+    """The S289 regression, reproduced and proven fixed.
+
+    The SAME member, same nif, declares income under two different claves --
+    capital mobiliario and capital inmobiliario, an ordinary real-world case.
+    Both must resolve as their OWN row rather than one clobbering the other.
+    """
+    revision = _revision()
+    observations = (
+        _observation(source_id="m1-a", nif="11111111A", name="Uno", share="100", base="6000", clave="C"),
+        _observation(source_id="m1-b", nif="11111111A", name="Uno", share="100", base="1500", clave="D"),
+    )
+
+    resolved = resolve_atribucion_binding_row_values(revision, observations)
+    row_indexes = {row_index for (_binding_id, row_index) in resolved}
+
+    assert len(row_indexes) == 2, "one member under two claves must resolve as two distinct rows, not one"
+
+    clave_binding = next(
+        binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-clave") and "declarado" not in binding_id
+    )
+    claves_by_row = {row_index: resolved[(clave_binding, row_index)] for row_index in row_indexes}
+    assert set(claves_by_row.values()) == {"C", "D"}
+
+
+def test_clave_conditional_fields_resolve_only_for_the_row_that_declares_them() -> None:
+    """A clave-D row's clave-C inmueble fields, and vice versa, are absent.
+
+    Proves the "legitimately absent, not a missing-value refusal" contract:
+    resolving must not raise for a row whose clave does not license a
+    clave-C-only or clave-D-only field, and must not fabricate a value for it
+    either.
+    """
+    revision = _revision()
+    observations = (
+        _observation(
+            source_id="m1",
+            nif="11111111A",
+            name="Uno",
+            share="100",
+            base="6000",
+            clave="C",
+            naturaleza_inmueble="1",
+            situacion_inmueble="1",
+        ),
+        _observation(
+            source_id="m2",
+            nif="22222222B",
+            name="Dos",
+            share="100",
+            base="2000",
+            clave="D",
+            subclave="03",
+            rendimiento_neto_previo_eo=Decimal("500"),
+        ),
+    )
+
+    resolved = resolve_atribucion_binding_row_values(revision, observations)
+
+    naturaleza_binding = next(binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-naturaleza-inmueble"))
+    rendimiento_binding = next(
+        binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-rendimiento-neto-previo-eo")
+    )
+    naturaleza_rows = {row_index for (binding_id, row_index) in resolved if binding_id == naturaleza_binding}
+    rendimiento_rows = {row_index for (binding_id, row_index) in resolved if binding_id == rendimiento_binding}
+
+    assert len(naturaleza_rows) == 1, "the clave-D row must not carry a naturaleza-inmueble value"
+    assert len(rendimiento_rows) == 1, "the clave-C row must not carry a rendimiento-neto-previo-eo value"
+    assert naturaleza_rows != rendimiento_rows
+
+
+def test_binding_rows_rendering_emits_one_occurrence_per_resolved_row() -> None:
+    """The renderer itself, not just the resolver, emits every distinct row."""
+    revision = _revision()
+    record = _socio_record(revision)
+    observations = (
+        _observation(source_id="m1-a", nif="11111111A", name="Uno", share="100", base="6000", clave="C"),
+        _observation(source_id="m1-b", nif="11111111A", name="Uno", share="100", base="1500", clave="D"),
+        _observation(source_id="m2", nif="22222222B", name="Dos", share="100", base="3000", clave="A"),
+    )
+
+    resolved = resolve_atribucion_binding_row_values(revision, observations)
+    rows = _record_render_rows(record, resolved, {})
+
+    assert len({row.row_index for row in rows}) == 3
+
+
+def test_two_rows_for_one_member_under_different_claves_survive_the_union() -> None:
+    """The exact S298 collision this Step's scope names.
+
+    ``_ROW_IDENTITY_FIELDS`` widened to ``(nif, clave, subclave)`` so the
+    two-source union treats these as two different real-world things, not a
+    resolver/caller duplicate of the same one.
+    """
+    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
+    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("1500"), clave="D")
+
+    unioned = union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
+
+    assert len(unioned) == 2
+    assert {row.clave for row in unioned if isinstance(row, Modelo184MemberRow)} == {"C", "D"}
+
+
+def test_two_supply_paths_naming_the_same_member_clave_subclave_still_union_to_one() -> None:
+    """The non-regression the widened key must not break: a genuine duplicate still unions."""
+    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
+    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
+
+    unioned = union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
+
+    assert len(unioned) == 1
