@@ -245,7 +245,8 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
     """
     warnings: list[CountryVocabularyWarning] = []
     for party in party_addresses():
-        stated: str | None = getattr(draft, party.stated_country_code_field, None)
+        raw_stated = getattr(draft, party.stated_country_code_field, None)
+        stated: str | None = raw_stated if isinstance(raw_stated, str) else None
         status = record_country_code_status(stated)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue

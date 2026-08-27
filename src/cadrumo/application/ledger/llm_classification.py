@@ -92,10 +92,10 @@ from ...llm.suggestions import (
     OperatorIvaDerivationResult,
 )
 from .actions_common import (
-    _build_bucket_event,
-    _result,
-    _save_transaction_catalogue_and_events,
-    _transaction_repository,
+    build_ledger_bucket_event,
+    build_manual_ledger_result,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
 )
 from .actions_manual import update_manual_transaction_fields
 from .actions_split_merge import split_transaction_with_classified_children
@@ -538,7 +538,7 @@ def suggest_llm_classification(
         LLMClassifierError: When the classifier fails (e.g. provider CLI
             unavailable, hallucinated out-of-allow-list value).
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -645,7 +645,7 @@ def apply_llm_classification(
             context={"transaction_id": suggestion.transaction_id},
         )
     occurred = coerce_utc_aware(occurred_at or now())
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     _event_repo_arg = bucket_event_repository or BucketEventHistoryRepository()
     assert isinstance(_event_repo_arg, BucketEventHistoryRepository), (
         "apply_llm_classification requires a concrete BucketEventHistoryRepository "
@@ -682,7 +682,7 @@ def apply_llm_classification(
     )
     updated_transaction = updated_catalogue.get(suggestion.transaction_id)
     assert updated_transaction is not None  # set_classification preserves the id
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
         occurred_at=occurred,
@@ -699,7 +699,7 @@ def apply_llm_classification(
             "mutation_kind": "llm_classification",
         },
     )
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=updated_catalogue,
@@ -711,7 +711,7 @@ def apply_llm_classification(
         suggestion.provenance,
         classification.value,
     )
-    return _result(bucket_id, updated_transaction, (event.event_id,))
+    return build_manual_ledger_result(bucket_id, updated_transaction, (event.event_id,))
 
 
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
@@ -789,7 +789,7 @@ def saturate_llm_classification(
         LLMClassifierError: When the classifier fails (provider CLI
             unavailable, hallucinated out-of-allow-list value).
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -997,7 +997,7 @@ def derive_operator_iva_substrate(
         TransactionValidationError: When the transaction is not classified
             BUSINESS or MIXED (IVA applies only to business activity).
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -1127,7 +1127,7 @@ def suggest_evidence_split(
         LLMClassifierError: When the proposer fails (provider CLI unavailable,
             hallucinated out-of-allow-list value, or a malformed split response).
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -1280,7 +1280,7 @@ def apply_evidence_split(
             "this proposal is a no-split verdict (one line); classify the transaction instead of splitting it",
             context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
         )
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
         raise TransactionNotFoundError(
@@ -1389,7 +1389,7 @@ def apply_evidence_classification(
             "this proposal recommends a split; apply it with apply_evidence_split, not in place",
             context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
         )
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
         raise TransactionNotFoundError(
@@ -1476,7 +1476,7 @@ def reject_llm_suggestion(
         TransactionNotFoundError: When the transaction id is unknown.
         TransactionValidationError: When the transaction is not active.
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = repository.load()
     transaction = catalogue.get(suggestion.transaction_id)
     if transaction is None:
@@ -1517,7 +1517,7 @@ def reject_llm_suggestion(
     payload["source_command"] = source_command
     payload["mutation_kind"] = "llm_suggestion_rejected"
 
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
         occurred_at=occurred,
@@ -1535,7 +1535,7 @@ def reject_llm_suggestion(
         "reject_llm_suggestion requires a concrete BucketEventHistoryRepository "
         "(to_secure_object_write is not on the protocol)"
     )
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=_event_repo_arg,
         catalogue=catalogue,

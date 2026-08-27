@@ -70,10 +70,13 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from typing import NamedTuple
+from functools import partial
+from importlib import import_module
+from types import ModuleType
+from typing import TYPE_CHECKING, NamedTuple
 
 from ...core import STR_KEYED_MAPPING_ADAPTER
 from ...core import BindingSourceKind as _BindingSourceKind
@@ -160,113 +163,247 @@ from ...domain.filing import (
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
-from ._calculate import (
-    DeclaracionCalculateSummary,
-    summarise_calculation,
-)
-from ._complementaria import build_complementaria, list_amendments, load_amendment
-from ._export import (
-    DeclaracionExportFormat,
-    DeclaracionExportResult,
-    DeclaracionVerifyResult,
-    DeclaracionVerifyVerdict,
-    FilingEnvelopeOccurrence,
-    FilingEnvelopeRenderRequest,
-    FilingEnvelopeRenderResult,
-    FilingExportConsumedResult,
-    FilingExportPayloadConsumer,
-    FilingExportValidatedPayload,
-    assert_export_artifact_matches_receipt,
-    export_draft,
-    export_layout_renderability_reason,
-    render_envelope_prefix_field,
-    render_filing_envelope,
-    verify_export,
-)
-from ._export_parity import did_page_required, required_applicable_casilla_ids
-from ._export_producer import m303_rectificativa_motive_producer_values
-from ._export_proof import (
-    FilingExportConformanceAuthority,
-    FilingExportConformanceReceipt,
-    FilingExportConformanceRenderInputs,
-    FilingExportConformanceRequest,
-    FilingExportConformanceVectorEvidence,
-    FilingExportDictionaryValue,
-    FilingExportGeneratedOutput,
-    FilingExportOfficialProbe,
-    FilingExportProof,
-    FilingExportProofAssessment,
-    FilingExportProofAuthority,
-    FilingExportProofChannel,
-    FilingExportProofCoordinate,
-    FilingExportProofRefusal,
-    FilingExportProofRefusalReason,
-    FilingExportPublicProvenance,
-    FilingExportSecureCustodyRecord,
-    FilingExportSecureReplayCustody,
-    FilingExportSecureReplayEvidence,
-    FilingExportSecureReplayReceipt,
-    FilingExportSecureReplayRequest,
-    FilingExportSecureReplaySourceAuthority,
-    FilingExportSourcePinnedProbeExpectation,
-    prove_export_conformance,
-    prove_secure_export_replay,
-)
-from ._history_models import ModeloHistory, ModeloHistoryEntry
-from ._history_repository import ModeloHistoryRepository
-from ._import import JustificanteImportResult, import_filing_from_justificante
-from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
-from ._m303_export_applicability import validate_m303_export_applicability
-from ._producer_snapshot import (
-    M202_UNSUPPORTED_PRODUCER_IDS,
-    AmendmentEvidence,
-    ChargeAccountSelection,
-    DeclarationContactFacts,
-    FilingElectionFacts,
-    FilingModelProfileFacts,
-    FilingProducerSnapshot,
-    FilingProducerSnapshotError,
-    GeneralFilingProfileFacts,
-    M202UnsupportedProducerId,
-    M303FilingFacts,
-    M303InsolvencyFilingFact,
-    M303InsolvencyFilingSubtype,
-    Modelo111ProfileFacts,
-    Modelo202ActivityFacts,
-    Modelo202ProducerProfile,
-    PresenterIdentity,
-    RefundAccountSelection,
-    SelectedFilingAccount,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-    resolve_m303_filing_facts,
-)
-from ._profile_filing_retention import (
-    FilingRetentionAuthority,
-    try_record_filing_retention_snapshot,
-)
-from ._projection import FilingProjectionValue, FilingRecordRenderContext
-from ._review import (
-    ModeloApprovalStaleReason,
-    approval_stale_reasons,
-    approve_draft,
-    compute_current_approval_basis,
-    compute_review_checksum,
-    describe_stale_reason,
-    empty_prior_filing_observations_fingerprint,
-    empty_profile_activity_fingerprint,
-    refresh_review_status,
-    unapprove_draft,
-)
-from ._runtime_repository import modelo_record_repository_for_application
 from .errors import ModeloApplicationError, ModeloCalculateError
 from .errors import ModeloApplicationError as _ModeloBuilderError
-from .runtime import (
-    ModeloOperatorProfile,
-    build_runtime_schema_provider,
-    filing_profile_from_taxpayer,
-    load_default_filing_profile,
-)
+
+if TYPE_CHECKING:
+    from ._calculate import (
+        DeclaracionCalculateSummary,
+        summarise_calculation,
+    )
+    from ._complementaria import build_complementaria, list_amendments, load_amendment
+    from ._export import (
+        DeclaracionExportFormat,
+        DeclaracionExportResult,
+        DeclaracionVerifyResult,
+        DeclaracionVerifyVerdict,
+        FilingEnvelopeOccurrence,
+        FilingEnvelopeRenderRequest,
+        FilingEnvelopeRenderResult,
+        FilingExportConsumedResult,
+        FilingExportPayloadConsumer,
+        FilingExportValidatedPayload,
+        assert_export_artifact_matches_receipt,
+        export_draft,
+        export_layout_renderability_reason,
+        render_envelope_prefix_field,
+        render_filing_envelope,
+        verify_export,
+    )
+    from ._export_parity import did_page_required, required_applicable_casilla_ids
+    from ._export_producer import m303_rectificativa_motive_producer_values
+    from ._export_proof import (
+        FilingExportConformanceAuthority,
+        FilingExportConformanceReceipt,
+        FilingExportConformanceRenderInputs,
+        FilingExportConformanceRequest,
+        FilingExportConformanceVectorEvidence,
+        FilingExportDictionaryValue,
+        FilingExportGeneratedOutput,
+        FilingExportOfficialProbe,
+        FilingExportProof,
+        FilingExportProofAssessment,
+        FilingExportProofAuthority,
+        FilingExportProofChannel,
+        FilingExportProofCoordinate,
+        FilingExportProofRefusal,
+        FilingExportProofRefusalReason,
+        FilingExportPublicProvenance,
+        FilingExportSecureCustodyRecord,
+        FilingExportSecureReplayCustody,
+        FilingExportSecureReplayEvidence,
+        FilingExportSecureReplayReceipt,
+        FilingExportSecureReplayRequest,
+        FilingExportSecureReplaySourceAuthority,
+        FilingExportSourcePinnedProbeExpectation,
+        prove_export_conformance,
+        prove_secure_export_replay,
+    )
+    from ._history_models import ModeloHistory, ModeloHistoryEntry
+    from ._history_repository import ModeloHistoryRepository
+    from ._import import JustificanteImportResult, import_filing_from_justificante
+    from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
+    from ._m303_export_applicability import validate_m303_export_applicability
+    from ._producer_snapshot import (
+        M202_UNSUPPORTED_PRODUCER_IDS,
+        AmendmentEvidence,
+        ChargeAccountSelection,
+        DeclarationContactFacts,
+        FilingElectionFacts,
+        FilingModelProfileFacts,
+        FilingProducerSnapshot,
+        FilingProducerSnapshotError,
+        GeneralFilingProfileFacts,
+        M202UnsupportedProducerId,
+        M303FilingFacts,
+        M303InsolvencyFilingFact,
+        M303InsolvencyFilingSubtype,
+        Modelo111ProfileFacts,
+        Modelo202ActivityFacts,
+        Modelo202ProducerProfile,
+        PresenterIdentity,
+        RefundAccountSelection,
+        SelectedFilingAccount,
+        TaxpayerIdentityFacts,
+        build_filing_producer_snapshot,
+        resolve_m303_filing_facts,
+    )
+    from ._profile_filing_retention import (
+        FilingRetentionAuthority,
+        try_record_filing_retention_snapshot,
+    )
+    from ._projection import FilingProjectionValue, FilingRecordRenderContext
+    from ._review import (
+        ModeloApprovalStaleReason,
+        approval_stale_reasons,
+        approve_draft,
+        compute_current_approval_basis,
+        compute_review_checksum,
+        describe_stale_reason,
+        empty_prior_filing_observations_fingerprint,
+        empty_profile_activity_fingerprint,
+        refresh_review_status,
+        unapprove_draft,
+    )
+    from ._runtime_repository import modelo_record_repository_for_application
+    from .runtime import (
+        ModeloOperatorProfile,
+        build_runtime_schema_provider,
+        filing_profile_from_taxpayer,
+        load_default_filing_profile,
+    )
+
+_LAZY_EXPORTS: dict[str, str] = {
+    "ModeloApprovalStaleReason": "._review",
+    "approval_stale_reasons": "._review",
+    "approve_draft": "._review",
+    "compute_current_approval_basis": "._review",
+    "compute_review_checksum": "._review",
+    "describe_stale_reason": "._review",
+    "empty_prior_filing_observations_fingerprint": "._review",
+    "empty_profile_activity_fingerprint": "._review",
+    "refresh_review_status": "._review",
+    "unapprove_draft": "._review",
+    "AmendmentEvidence": "._producer_snapshot",
+    "ChargeAccountSelection": "._producer_snapshot",
+    "DeclaracionCalculateSummary": "._calculate",
+    "DeclaracionExportFormat": "._export",
+    "DeclaracionExportResult": "._export",
+    "DeclaracionVerifyResult": "._export",
+    "DeclaracionVerifyVerdict": "._export",
+    "DeclarationContactFacts": "._producer_snapshot",
+    "FilingElectionFacts": "._producer_snapshot",
+    "FilingEnvelopeOccurrence": "._export",
+    "FilingEnvelopeRenderRequest": "._export",
+    "FilingEnvelopeRenderResult": "._export",
+    "FilingExportConformanceAuthority": "._export_proof",
+    "FilingExportConformanceReceipt": "._export_proof",
+    "FilingExportConformanceRenderInputs": "._export_proof",
+    "FilingExportConformanceRequest": "._export_proof",
+    "FilingExportConformanceVectorEvidence": "._export_proof",
+    "FilingExportConsumedResult": "._export",
+    "FilingExportDictionaryValue": "._export_proof",
+    "FilingExportGeneratedOutput": "._export_proof",
+    "FilingExportOfficialProbe": "._export_proof",
+    "FilingExportPayloadConsumer": "._export",
+    "FilingExportProof": "._export_proof",
+    "FilingExportProofAssessment": "._export_proof",
+    "FilingExportProofAuthority": "._export_proof",
+    "FilingExportProofChannel": "._export_proof",
+    "FilingExportProofCoordinate": "._export_proof",
+    "FilingExportProofRefusal": "._export_proof",
+    "FilingExportProofRefusalReason": "._export_proof",
+    "FilingExportPublicProvenance": "._export_proof",
+    "FilingExportSecureCustodyRecord": "._export_proof",
+    "FilingExportSecureReplayCustody": "._export_proof",
+    "FilingExportSecureReplayEvidence": "._export_proof",
+    "FilingExportSecureReplayReceipt": "._export_proof",
+    "FilingExportSecureReplayRequest": "._export_proof",
+    "FilingExportSecureReplaySourceAuthority": "._export_proof",
+    "FilingExportSourcePinnedProbeExpectation": "._export_proof",
+    "FilingExportValidatedPayload": "._export",
+    "FilingModelProfileFacts": "._producer_snapshot",
+    "FilingProducerSnapshot": "._producer_snapshot",
+    "FilingProducerSnapshotError": "._producer_snapshot",
+    "FilingProjectionValue": "._projection",
+    "FilingRecordRenderContext": "._projection",
+    "FilingRetentionAuthority": "._profile_filing_retention",
+    "GeneralFilingProfileFacts": "._producer_snapshot",
+    "JustificanteImportResult": "._import",
+    "M202UnsupportedProducerId": "._producer_snapshot",
+    "M202_UNSUPPORTED_PRODUCER_IDS": "._producer_snapshot",
+    "M303FilingFacts": "._producer_snapshot",
+    "M303InsolvencyFilingFact": "._producer_snapshot",
+    "M303InsolvencyFilingSubtype": "._producer_snapshot",
+    "Modelo111ProfileFacts": "._producer_snapshot",
+    "Modelo202ActivityFacts": "._producer_snapshot",
+    "Modelo202ProducerProfile": "._producer_snapshot",
+    "ModeloHistory": "._history_models",
+    "ModeloHistoryEntry": "._history_models",
+    "ModeloHistoryRepository": "._history_repository",
+    "ModeloOperatorProfile": ".runtime",
+    "PresenterIdentity": "._producer_snapshot",
+    "RefundAccountSelection": "._producer_snapshot",
+    "SelectedFilingAccount": "._producer_snapshot",
+    "TaxpayerIdentityFacts": "._producer_snapshot",
+    "assert_export_artifact_matches_receipt": "._export",
+    "build_complementaria": "._complementaria",
+    "build_filing_producer_snapshot": "._producer_snapshot",
+    "build_runtime_schema_provider": ".runtime",
+    "did_page_required": "._export_parity",
+    "export_draft": "._export",
+    "export_layout_renderability_reason": "._export",
+    "filing_profile_from_taxpayer": ".runtime",
+    "import_filing_from_justificante": "._import",
+    "list_amendments": "._complementaria",
+    "load_amendment": "._complementaria",
+    "load_default_filing_profile": ".runtime",
+    "m303_rectificativa_motive_producer_values": "._export_producer",
+    "modelo_record_repository_for_application": "._runtime_repository",
+    "project_m303_exonerado_390_value_arrival": "._m303_exonerado_390",
+    "prove_export_conformance": "._export_proof",
+    "prove_secure_export_replay": "._export_proof",
+    "render_envelope_prefix_field": "._export",
+    "render_filing_envelope": "._export",
+    "required_applicable_casilla_ids": "._export_parity",
+    "resolve_m303_filing_facts": "._producer_snapshot",
+    "summarise_calculation": "._calculate",
+    "try_record_filing_retention_snapshot": "._profile_filing_retention",
+    "validate_m303_export_applicability": "._m303_export_applicability",
+    "verify_export": "._export",
+}
+"""Names this package re-exports, resolved on first access.
+
+A HYBRID root: it defines real contracts of its own AND re-exports these from
+siblings. ``__getattr__`` runs only for names absent from module globals, so
+the module's own definitions stay eager; only the re-exports defer. The four
+names this module uses internally keep their eager imports above.
+
+Eager re-exports made the root expensive to touch. Other packages reach it for
+a single contract, and CommandSpec annotations resolve through those packages,
+so building an unrelated command's signature imported the whole filing graph
+and the persistence family behind it.
+"""
+
+_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
+    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
+}
+
+
+def __getattr__(name: str) -> object:
+    """Resolve one re-exported name by importing only the sibling that owns it."""
+    module_name = _LAZY_EXPORTS.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(_LAZY_MODULE_LOADERS[module_name](), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    """Report the full public surface, including names not yet resolved."""
+    return sorted(set(__all__) | set(globals()))
+
 
 
 def _refuse_unsupported_filing_year(period: _Period) -> None:

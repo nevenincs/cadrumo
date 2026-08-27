@@ -76,7 +76,7 @@ from .models import (
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
-_EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
+EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
 _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
     {
         CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -97,7 +97,7 @@ _REMOVAL_ADVISORY_REVISION_STATES = frozenset(
 )
 
 
-def _transaction_repository(
+def resolve_transaction_repository(
     *,
     bucket_id: str,
     repository: TransactionCatalogueRepository | TransactionCatalogueRepositoryProtocol | None,
@@ -113,7 +113,7 @@ def _transaction_repository(
     return repository
 
 
-def _invoice_repository(
+def resolve_invoice_repository(
     *,
     bucket_id: str,
     repository: InvoiceCatalogueRepositoryProtocol | None,
@@ -129,7 +129,7 @@ def _invoice_repository(
     return repository
 
 
-def _bucket_event_repository(
+def resolve_bucket_event_repository(
     *,
     bucket_id: str,
     repository: BucketEventHistoryRepositoryProtocol | None,
@@ -142,28 +142,28 @@ def _bucket_event_repository(
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
 
-def _require_actor(value: str, *, operation: str) -> str:
+def require_actor(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
         raise TransactionValidationError(f"{operation} actor must not be blank")
     return trimmed
 
 
-def _require_source_command(value: str, *, operation: str) -> str:
+def require_source_command(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
         raise TransactionValidationError(f"{operation} source_command must not be blank")
     return trimmed
 
 
-def _normalise_attachment_patch_ids(attachment_ids: tuple[str, ...]) -> tuple[str, ...]:
+def normalise_attachment_patch_ids(attachment_ids: tuple[str, ...]) -> tuple[str, ...]:
     normalized = tuple(item.strip() for item in attachment_ids if item.strip())
     if len(set(normalized)) != len(normalized):
         raise TransactionValidationError("ledger evidence attachment ids must not contain duplicates")
     return normalized
 
 
-def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]) -> tuple[str, ...]:
+def merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]) -> tuple[str, ...]:
     merged: list[str] = list(existing)
     for item in incoming:
         if item not in merged:
@@ -171,7 +171,7 @@ def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]
     return tuple(merged)
 
 
-def _required_patched[T](
+def required_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
@@ -193,7 +193,7 @@ def _required_patched[T](
     return _typed_patch_value(patch, field, value, fallback)
 
 
-def _optional_patched[T](
+def optional_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
@@ -201,7 +201,7 @@ def _optional_patched[T](
 ) -> T:
     """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback.
 
-    Generic in ``T`` for the same reason as :func:`_required_patched`.
+    Generic in ``T`` for the same reason as :func:`required_patched`.
     """
     if field not in patch_fields:
         return fallback
@@ -273,7 +273,7 @@ def blocking_modelo_references(
     )
 
 
-def _draft_revision_advisories(
+def draft_revision_advisories(
     *,
     bucket_id: str,
     transaction_ids: tuple[str, ...],
@@ -326,7 +326,7 @@ def _draft_revision_advisories(
     )
 
 
-def _blockers_by_source_transaction_id(
+def blockers_by_source_transaction_id(
     *,
     bucket_id: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
@@ -360,19 +360,19 @@ def _blockers_by_source_transaction_id(
     return {txid: tuple(found) for txid, found in out.items()}
 
 
-def _transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
+def transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
     return tuple(
         sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)}),
     )
 
 
-def _catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
+def catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
     return tuple(
         sorted(
             {
                 source_id
                 for transaction in catalogue.values()
-                for source_id in _transaction_modelo_source_ids(transaction)
+                for source_id in transaction_modelo_source_ids(transaction)
             },
         ),
     )
@@ -383,7 +383,7 @@ _EVIDENCE_MUTATION_FIELDS: frozenset[str] = frozenset(
 )
 
 
-def _is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
     """Return whether ``command`` adds evidence provenance and changes nothing else.
 
     An evidence-only mutation is exempt from the finalized-modelo write guard,
@@ -416,7 +416,7 @@ def _is_evidence_only_command(command: ManualLedgerTransactionCommand, current: 
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
 
 
-def _raise_finalized_modelo_blocked(
+def raise_finalized_modelo_blocked(
     *,
     operation: str,
     transaction_ids: tuple[str, ...],
@@ -441,7 +441,7 @@ def transaction_catalogue_object_id(bucket_id: str) -> str:
     return f"transaction-catalogue:{bucket_id.strip()}"
 
 
-def _verify_evidence_references(
+def verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
@@ -508,7 +508,7 @@ def _verify_purchase_invoice_evidence(
         evidence_id,
         bucket_id=command.bucket_id,
         evidence_records=purchase_invoice_evidence_records(command.bucket_id),
-        invoices=_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
+        invoices=resolve_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
     )
     if reference.is_acceptable:
         return
@@ -588,7 +588,7 @@ def _verify_single_attachment(
         )
 
 
-def _verify_usage_ratio_reference(
+def verify_usage_ratio_reference(
     command: ManualLedgerTransactionCommand,
     *,
     usage_ratio_profile: UsageRatioProfile | None,
@@ -614,30 +614,30 @@ def _verify_usage_ratio_reference(
         ) from exc
 
 
-def _optional_decimal(value: Decimal | None) -> str:
-    return "" if value is None else _decimal_to_string(value)
+def optional_decimal(value: Decimal | None) -> str:
+    return "" if value is None else decimal_to_string(value)
 
 
-def _display_decimal(value: Decimal) -> str:
+def display_decimal(value: Decimal) -> str:
     return format_decimal(value, normalize=True)
 
 
-def _decimal_to_string(value: Decimal) -> str:
+def decimal_to_string(value: Decimal) -> str:
     return format_decimal(value)
 
 
-def _normalise_timestamp(value: datetime | None) -> datetime:
+def normalise_timestamp(value: datetime | None) -> datetime:
     timestamp = value or now()
     return coerce_utc_aware(timestamp)
 
 
-def _upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
+def upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated[transaction.transaction_id] = transaction
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _replace_transaction(
+def replace_transaction(
     catalogue: TransactionCatalogue,
     *,
     old_transaction_id: str,
@@ -649,13 +649,13 @@ def _replace_transaction(
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
+def remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated.pop(transaction_id, None)
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
+def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
     transaction = catalogue.get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -665,7 +665,7 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     return transaction
 
 
-def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
+def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     raw = transaction.raw
     return (
         raw.booked_date,
@@ -725,7 +725,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
 
     The mapping is the single source for both consumers:
     :func:`_command_idempotency_projection` folds it to the positional tuple the
-    idempotency guard compares, and :func:`_is_evidence_only_command` reads it by
+    idempotency guard compares, and :func:`is_evidence_only_command` reads it by
     name to isolate which fields a command would actually change.
 
     Four command fields are deliberately excluded, because none of them is content a
@@ -837,7 +837,7 @@ def _transaction_idempotency_projection(current: Transaction) -> tuple[object, .
     return tuple(_transaction_idempotency_fields(current).values())
 
 
-def _command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+def command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
     """Return True when a command would produce no observable change against the stored transaction.
 
     Used to detect re-affirmation patches (operator supplies the same ``business_classification``
@@ -847,7 +847,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
     return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
 
 
-def _build_bucket_event(
+def build_ledger_bucket_event(
     *,
     bucket_id: str,
     event_type: BucketEventType,
@@ -879,20 +879,15 @@ def _build_bucket_event(
     return event
 
 
-def _append_bucket_event(*, repository: BucketEventHistoryRepositoryProtocol, event: BucketEvent) -> None:
-    """Append one event through the domain emitter rather than a local copy.
+def append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
+    """Append a batch of events through the domain emitter rather than a local copy.
 
-    These two helpers used to load, append and save the catalogue here. That is
-    exactly what the domain emitters do, and the copies drifted the moment those
-    gained a revision guard: the history is a singleton row, so a local
+    This used to load, append and save the catalogue here. That is exactly
+    what the domain emitter does, and the copy drifted the moment that gained
+    a revision guard: the history is a singleton row, so a local
     load-append-save discards an event a concurrent caller wrote, and the
     content-addressed survivors leave no gap to notice it happened.
     """
-    emit_bucket_events(repository=repository, events=(event,))
-
-
-def _append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
-    """Append a batch through the domain emitter, for the reason above."""
     emit_bucket_events(repository=repository, events=events)
 
 
@@ -953,7 +948,7 @@ def _commit_with_guarded_events(
     raise AssertionError("guarded event co-commit exhausted without a conflict")
 
 
-def _save_transaction_catalogue_and_events(
+def save_transaction_catalogue_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
     # rationale: calls to_secure_object_write(), an adapter-only escape
@@ -972,7 +967,7 @@ def _save_transaction_catalogue_and_events(
     )
 
 
-def _save_transaction_catalogue_invoices_and_events(
+def save_transaction_catalogue_invoices_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
@@ -996,14 +991,14 @@ def _save_transaction_catalogue_invoices_and_events(
     )
 
 
-def _primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
+def primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
     for event in events:
         if event.object_type is BucketEventObjectType.LEDGER_TRANSACTION:
             return event.event_id
     return events[0].event_id
 
 
-def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
+def derive_evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
     mapping: dict[tuple[str, str], str] = {}
     for event in events:
         if event.event_type in {
@@ -1016,7 +1011,7 @@ def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str]
     return mapping
 
 
-def _result(
+def build_manual_ledger_result(
     bucket_id: str,
     transaction: Transaction,
     bucket_event_ids: tuple[str, ...],
