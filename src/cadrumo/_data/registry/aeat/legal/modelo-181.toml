@@ -126,6 +126,14 @@ sha256 = "78820e54a2aa9303f53d187e37cb770c8c513f73dfcc9e7bf4ce8b4c786400b1"
 bytes = 366939
 retrieved_at = 2026-08-25
 applies_from = 2017-01-01
-applies_to = 2017-12-31
+# Successor-bounded on 2026-08-27, same basis as the 2009 design above. The original
+# applies_to = 2017-12-31 was an era-end stamp, leaving 2018-2021 uncovered. Negative
+# search: the bundled corpus holds no modelo 181 design between 2017 and 2022, and the
+# BOE consolidated text for BOE-A-2009-21165 lists exactly three amending norms --
+# HFP/1923/2016, HFP/1308/2017 and HFP/1192/2022 -- so NONE falls in 2018-2021. A
+# targeted search for a 2018-2021 modelo 181 orden returned none either. The 2017
+# design therefore governed through 2021, and HFP/1192/2022 takes over from 2022, where
+# aeat-dr-181-2022 applies_from begins.
+applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR181_2017.pdf"
 review_status = "reviewed"
