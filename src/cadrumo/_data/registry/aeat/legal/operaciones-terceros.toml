@@ -206,3 +206,61 @@ required_text = [
     "Criterios de imputación temporal",
     "se debe realizar la anotación registral de la factura",
 ]
+
+[legal."rd-1065-2007:art-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007.html#a33"
+document_id = "BOE-A-2007-15984"
+article = "33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a33"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-review"
+notes = """\
+RGAT art 33: contenido de la declaracion anual de operaciones con terceras personas. \
+Fija el umbral general de 3.005,06 EUR por contraparte y ano natural (parrafo 1), \
+excluye determinadas operaciones del deber de declarar (apartado 2), y establece un \
+umbral separado de 300,51 EUR para los cobros por cuenta de terceros de honorarios \
+profesionales o derechos de propiedad intelectual/industrial (apartado 4, remitiendo a \
+los obligados del art 31.3). Es la base reglamentaria de las claves A/B (umbral general) \
+y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. Texto \
+verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
+"""
+required_text = [
+    "hayan superado la cifra de 3.005,06 euros durante el año natural",
+    "haya superado la cifra de 300,51 euros",
+]
+
+[legal."rd-1065-2007:art-34"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007.html#a34"
+document_id = "BOE-A-2007-15984"
+article = "34"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a34"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-review"
+notes = """\
+RGAT art 34: cumplimentacion de la declaracion anual de operaciones con terceras \
+personas. Apartado 1 enumera los datos a consignar, incluido el NIF de cada \
+contraparte (letra b) y el importe total anual de las operaciones (letra c). Letra i) \
+exige declarar SEPARADAMENTE de otras operaciones las cantidades percibidas en \
+contraprestacion por transmisiones de inmuebles sujetas a IVA -- la base legal del \
+campo "IMPORTE PERCIBIDO POR TRANSMISIONES" del diseno de registro, pareado con cada \
+importe trimestral. Apartado 2.a) fija que el importe declarado es el total de la \
+contraprestacion, incluidas cuotas y recargos repercutidos o soportados. Texto \
+verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
+"""
+required_text = [
+    "el número de identificación fiscal de cada una de las personas o entidades",
+    "las cantidades que se perciban en contraprestación por transmisiones de inmuebles",
+    "se declarará el importe total de las contraprestaciones, incluidas las cuotas y recargos",
+]
