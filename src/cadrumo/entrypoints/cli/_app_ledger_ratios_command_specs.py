@@ -37,7 +37,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="year",
                 declarations=("--year",),
-                value=ValueContract(int),
+                value=ValueContract(DeferredTarget("builtins", "int")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.ratios.year_help"),
                 metavar="YEAR",
@@ -87,7 +87,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="year",
                 declarations=("--year",),
-                value=ValueContract(int),
+                value=ValueContract(DeferredTarget("builtins", "int")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.ratios.year_help"),
                 metavar="YEAR",
@@ -137,7 +137,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="year",
                 declarations=("--year",),
-                value=ValueContract(int),
+                value=ValueContract(DeferredTarget("builtins", "int")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.ratios.year_help"),
                 metavar="YEAR",
