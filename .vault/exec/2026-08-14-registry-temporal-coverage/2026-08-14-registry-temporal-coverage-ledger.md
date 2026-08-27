@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:da28b661f6edfa5f25fa793e998fb14ee2713da1db41c309f1feb79f9fc373f5'
+body_hash: 'sha256:d655a5c758ff21a0dae615148f06f62cf5570d9427f928ca0fcb64ed1c4a0bad'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -171,3 +171,12 @@ related:
 - `S42` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
 - `S42` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
 - `S42` `M` `src/cadrumo/domain/modelos/_dt12_reduccion.py`
+
+- `S42` `M` `src/cadrumo/core/external_constants.py`
+- `S42` `M` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S42` `M` `src/cadrumo/application/modelo/_dt12_antiquity_advisory.py`
+- `S42` `M` `src/cadrumo/core/_rescate_type.py`
+
+- `S39` `A` `dev/registry/analysis/modelo_branch_classification.py`
+- `S39` `A` `dev/registry/analysis/modelo_branch_classification.toml`
+- `S39` `A` `dev/registry/tests/test_modelo_branch_classification.py`

@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:c86ec71f8ac530290c2dcd318fc304859a062f1d4429168ed89c39fb81603dd4'
+body_hash: 'sha256:0f87b510abef5866001327babe211830534a53c2cbc8bddcddb93e27c4f61712'
 ---
 
 # `cli-root-verb-homes` plan
@@ -141,7 +141,7 @@ Verify every surface the conformance gates do not scan, and run the full suite s
 - [x] `W05.P14.S32` - Verify the gate-covered sequence contracts and their JSON goldens; `docs/_sequences/`.
 - [x] `W05.P14.S33` - Sweep the three non-gate-covered docs locale catalogues; `docs/locales/`.
 - [x] `W05.P14.S34` - Sweep the dev quality dispositions and CLI benchmark goldens; `dev/`.
-- [ ] `W05.P14.S35` - Run the suite in bounded per-package slices and triage each area's failures - a single full-tree run cannot complete on this contended share; `src/cadrumo/`.
+- [x] `W05.P14.S35` - Run the suite in bounded per-package slices and triage each area's failures - a single full-tree run cannot complete on this contended share; `src/cadrumo/`.
 - [x] `W05.P14.S36` - Rule on filing-record import versus observe-local: not a conflation, they sit on opposite sides of the official-AEAT-evidence boundary and both stay; `src/cadrumo/entrypoints/cli/`.
 - [x] `W05.P14.S37` - Tighten the two surviving duplicate-question pairs by help text: each verb states what it uniquely covers and points at its sibling; `src/cadrumo/locales/`.
 - [x] `W05.P14.S38` - Sweep every leaf against the D2 grammar and amend it with the missing CREATING verb category; `.vaultspec/rules/aeat-cli-contract.md`.

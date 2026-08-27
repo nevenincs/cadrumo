@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f79f708525e15891beb5ccee2aea65273b9f2a1bd1df5caf8e3a7c982f74a7f'
+body_hash: 'sha256:315249910d1f4abe4850c524e5902cfb8f610880724ae357cd5887de18aa05a3'
 step_id: 'S35'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
@@ -28,6 +28,8 @@ related:
 - `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py`
 - `M` `src/cadrumo/entrypoints/cli/_config/tests/test_google_command_specs.py`
 - `verify:` `pytest src/cadrumo/entrypoints/cli (sequential)` -> `1426 passed, 30 failed (all peer-owned)`
+- `verify:` `pytest <42-file evidence-linked slice> -m integration` -> `30 passed, 20 failed (all peer signature)`
+- `verify:` `pytest <42-file evidence-linked slice> (unit tier)` -> `320 passed, 54 failed, 37 errors (none campaign-owned)`
 
 ## Notes
 
@@ -66,3 +68,48 @@ traced to peer work.
 What the standing goal still asks for that this excludes: a single pass over the
 whole tree. It is not achievable here while six modules fail at collection from
 the peers' in-flight relocation, since one broken import aborts the entire run.
+
+**Completion.** The Step is now CLOSED. The paragraph above describes the state
+before the final slice ran; the bounded per-package slicing the row asks for is
+done, and every area's failures are triaged.
+
+**What was run, and on both marker tiers.** The earlier slices —
+`entrypoints/cli` 1426 passed / 28 failed, `core` 2234 passed / 19 failed, and
+the campaign-touched non-CLI files 10 passed / 2 failed — are joined by a
+42-file slice derived from evidence rather than intuition: every residue test
+importing this campaign's diff surface (`command_api`, `COMMAND_GRAPH`,
+`command_spec_*`, `entrypoints.cli`, `operator_surface`,
+`resolve_modelo_localization`, `lookup_translation_entry`, `cadrumo.locales`,
+`cli_argv_for`, `command_execution_policy`), plus the tree-WALKING gates an
+import scan structurally cannot see — the docstring gates,
+`test_qualified_docstring_references_resolve`,
+`test_locale_tr_positional_inventory`,
+`test_every_test_module_is_lane_reachable`, `test_acceptance_wall_catalogue` and
+`test_console_script_imports`, reachable because this campaign edited a module
+docstring.
+
+Running only `-m integration` deselected 411 tests, so the unit tier was run as
+well. Both are recorded above.
+
+**Triage: zero campaign-owned failures, three non-campaign causes.**
+First, the profile-custody KDF worker dies in this environment — 40
+`ProfileCustodyRefusedError`, 40 `EOFError: profile KDF worker closed its pipe`
+from `custody/_kdf_codec.py:86`, and 30 `FileNotFoundError`, concentrated in the
+review-package recipient modules and the acceptance-wall catalogue. That is a
+host condition, not a defect in anyone's code, and it pollutes neighbouring
+files. Second, a concurrent peer's in-flight `app ledger ratios` specs declare
+`value=ValueContract(int)`, which raises `AttributeError: type object 'int' has
+no attribute 'qualname'` in any test that materialises parameter annotations;
+all 20 integration-tier failures and 1 unit-tier failure are this. Third, four
+docstring gates cite exactly two files, `adapters/inbound/borrador/__init__.py`
+and `application/user_profile/bundle_encryption.py`, neither touched here.
+
+**Two negative checks support the attribution.** No failure output names any
+file this campaign changed, and no failure output contains any retired verb
+token from D5 — so no rename debris reached the results.
+
+**Scope stated plainly.** This is bounded per-package slicing, which is what the
+row asks for and what this worktree can complete; it is not a single full-tree
+pass. A full pass was measured at roughly 4.2 hours and the one attempt died at
+20 per cent when the backing share failed, at the same throughput, so the death
+was the share rather than a timeout.
