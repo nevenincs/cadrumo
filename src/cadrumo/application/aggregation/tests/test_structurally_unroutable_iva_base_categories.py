@@ -284,15 +284,14 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    bindings_path = (
-        scratch_root
-        / "modelos"
-        / "303"
-        / "revisions"
-        / _m303_revision().id
-        / "bindings"
-        / "0003-intracom-export-base.part-001.toml"
-    )
+    # Located by its NAME, not its ordinal. Fragment files carry a sequence
+    # prefix that registry sweeps renumber -- this one moved from 0003 to 0004
+    # and the pinned path stopped existing, so the mutation never ran and the
+    # negative control proved nothing about the assertion it guards.
+    bindings_dir = scratch_root / "modelos" / "303" / "revisions" / _m303_revision().id / "bindings"
+    candidates = sorted(bindings_dir.glob("*intracom-export-base*.toml"))
+    assert len(candidates) == 1, f"expected exactly one intracom-export-base fragment, found {candidates}"
+    bindings_path = candidates[0]
     original = bindings_path.read_text(encoding="utf-8")
     mutated = original.replace('categories = ["intra_community_supply"]', 'categories = ["domestic_general"]', 1)
     assert mutated != original, "the mutation target string was not found -- test is stale"
