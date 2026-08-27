@@ -277,7 +277,10 @@ def _materialize_storage_for(spec: CommandSpec) -> None:
     state it does not have.  The declaration is the same authority the census,
     write routing and help surfaces read, so the gate cannot drift from it.
     """
-    if spec.policy.side_effects == frozenset({"none"}) and spec.policy.write_route is None:
+    # The spec invariant already ties the two together: a non-"none" write
+    # route requires a "local-state" side effect, so a leaf declaring no side
+    # effect provably declares no write route either.
+    if spec.policy.side_effects == frozenset({"none"}):
         return
     from ...core import ensure_storage_tree
 
