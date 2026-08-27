@@ -183,6 +183,7 @@ Submodules
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
    cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
+   cadrumo.domain.calculations.registry.validate_temporal_coherence
    cadrumo.domain.calculations.registry.verification_tolerance
    cadrumo.domain.calculations.registry.withholding296_bindings
    cadrumo.domain.calculations.registry.withholding_bindings
