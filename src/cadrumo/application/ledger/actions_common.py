@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -215,6 +214,20 @@ def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value
     return adapter.validate_python(value)
 
 
+def _default_calculation_repository() -> CalculationRevisionCatalogueRepositoryProtocol:
+    """Build the concrete catalogue only when the caller injected none.
+
+    The adapter module reaches the calculation registry, so importing it at
+    module scope made every consumer of this action layer pay for the registry
+    graph -- including CLI paths that resolve a ledger verb and never touch a
+    calculation. Only the protocol is needed to type the parameter, and the
+    concrete repository only when it is actually constructed.
+    """
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+
+    return CalculationRevisionCatalogueRepository()
+
+
 def blocking_modelo_references(
     *,
     bucket_id: str,
@@ -227,7 +240,7 @@ def blocking_modelo_references(
         return ()
     wanted = set(transaction_ids)
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     blockers: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
         if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
@@ -280,7 +293,7 @@ def _draft_revision_advisories(
         return ()
     wanted = set(transaction_ids)
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     advisories: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
         if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
@@ -326,7 +339,7 @@ def _blockers_by_source_transaction_id(
     (the load-once half of the ``bulk_classify_from_csv`` batching contract).
     """
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     out: dict[str, list[LedgerRemovalBlocker]] = {}
     for revision in revisions.values():
         if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
