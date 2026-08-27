@@ -264,11 +264,31 @@ def _evidence_files() -> tuple[EvidenceFile, ...]:
 
 
 def _evidence_text(path: str) -> str:
-    """Read one named source object from the current evidence snapshot."""
+    """Read one named source object from the current evidence snapshot.
+
+    A reviewed anchor can outlive the module it points at: a peer may retire
+    that module after the census baseline, and this read is then the first
+    thing to fail.  It fails during generation, so it takes
+    ``--refresh-reviewed`` down with it -- the very verb that exists to absorb
+    drift -- and the operator sees only a path.  The refusal therefore names
+    the remedy, because the intuitive response is to re-adjudicate the row to
+    a deletion disposition, and that asserts something false whenever the
+    family's private owner survives carrying live logic.
+    """
     for evidence_file in _evidence_files():
         if evidence_file.path == path:
             return evidence_file.text
-    raise RuntimeError(f"current evidence snapshot lacks required source object: {path}")
+    raise RuntimeError(
+        f"current evidence snapshot lacks required source object: {path}. "
+        "A reviewed row anchors a module that no longer exists in tracked source, "
+        "most often retired by a peer after the census baseline. Re-anchor that "
+        "row's rag_result at a symbol still defined in the family's surviving "
+        "module, and record the vanished names in symbol_terminal_destinations "
+        "with the retiring commit. Do NOT re-adjudicate the row to a deletion "
+        "disposition unless the family has no surviving owner: the disposition "
+        "describes where the family ended up, and a private owner carrying live "
+        "logic has not been deleted.",
+    )
 
 
 def _consumer_module_name(relative_path: str) -> tuple[str, bool] | None:
@@ -1073,6 +1093,31 @@ def _collapsed_prose(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", value.lower())
 
 
+def _facade_symbols_all_absent(exported_symbols: list[str]) -> bool:
+    """Return whether tracked source defines none of a row's facade symbols.
+
+    Computed here rather than declared on the row.  An author-set flag would
+    make the absence branch below satisfiable by assertion, which is the shape
+    an allowlist takes when it stops meaning anything; a fact the checker
+    derives from the current tree cannot be loosely satisfied.
+
+    A c941 facade could export symbols it never defined -- it imported them
+    from a sibling and republished them -- so a family can outlive its entire
+    historic export list while its own logic keeps a live defining owner.
+    That is why absence of every exported symbol does not imply the family is
+    gone, and why the branch this feeds admits an anchor outside the export
+    list instead of demanding a deletion disposition.
+    """
+    if not exported_symbols:
+        return False
+    for evidence_file in _evidence_files():
+        if not evidence_file.path.endswith(".py"):
+            continue
+        if any(_definition_lines(evidence_file.path, symbol) for symbol in exported_symbols):
+            return False
+    return True
+
+
 def _top_level_symbol_locators(path: str) -> dict[str, str]:
     """Return exact current definitions for rows that had no facade exports."""
     tree = ast.parse(_evidence_text(path), filename=path)
@@ -1254,7 +1299,17 @@ def check_matrix_document(document: dict[str, object]) -> None:
         if not isinstance(exported_symbols, list):
             raise RuntimeError(f"registry facade row {pair[0]} has malformed exported symbols")
         if exported_symbols and rag_result["symbol"] not in exported_symbols:
-            raise RuntimeError(f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols")
+            # Every exported symbol may have been retired at source after the
+            # c941 baseline while the family's own logic survives.  The anchor
+            # then cannot be an exported symbol, and demanding one would force
+            # a deletion disposition that asserts something false about a
+            # family with a live defining owner.  Absence is computed over the
+            # current tree, never declared, and the anchor still has to be a
+            # real definition -- the admissible SET widens, the proof does not.
+            if not _facade_symbols_all_absent(exported_symbols):
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols",
+                )
         if rag_result["symbol"] not in row["rag_query"]:
             raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
         if _collapsed_prose(row["follow_on_action"]) in _collapsed_prose(row["rag_query"]):
