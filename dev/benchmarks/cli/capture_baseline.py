@@ -156,9 +156,19 @@ def _summarise_samples(
 
 
 def _policy_payload(node: LiveCommandNode) -> dict[str, Any]:
-    policy = node.execution_policy
-    if policy is None:
-        raise RuntimeError(f"unclassified live command: {' '.join(node.path)}")
+    """Read declared policy from the command graph, its one authority.
+
+    The Click census deliberately carries no policy. A cross-distribution
+    consumer reads it through the public entrypoint boundary instead, which
+    resolves one path against the immutable spec graph without materialising
+    the command tree.
+    """
+    from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+
+    try:
+        policy = command_execution_policy_for_cli_path(_command_tokens(node))
+    except LookupError as error:
+        raise RuntimeError(f"unclassified live command: {' '.join(node.path)}") from error
     classification = policy.classification
     return {
         "capabilities": sorted(classification.capabilities),
