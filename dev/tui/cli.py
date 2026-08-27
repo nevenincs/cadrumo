@@ -260,7 +260,6 @@ def render_command(
         list[str] | None,
         typer.Option("--theme", "-t", help="Render under this appearance; repeatable."),
     ] = None,
-    run: Annotated[str, typer.Option("--run", help="Name of the run directory to write.")] = DEFAULT_RUN,
     cell_height: Annotated[
         int,
         typer.Option("--cell-height", help="Pixel height of one terminal cell; raises the output resolution."),
@@ -281,7 +280,16 @@ def render_command(
         ),
     ] = True,
 ) -> None:
-    """Render surfaces to PNG and SVG under the run directory."""
+    """Render surfaces to PNG and SVG into the canonical review directory.
+
+    There is deliberately no `--run` here. The review path is a CONTRACT, not
+    a per-invocation choice: `runs/current` is where a render lands, always,
+    so the reviewer opens one path and never has to be told which of nine
+    directories the last session happened to name. To keep a run for later
+    comparison, take a `snapshot` of it under a name; that is an explicit act
+    with an explicit name, rather than a render quietly aimed somewhere else.
+    """
+    run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
     interfaces = _inventory.scan()
     _coverage.check(interfaces, tuple(item.name for item in available))
@@ -407,6 +415,34 @@ def render_command(
     if failures:
         _echo(f"{len(failures)} failed")
         raise typer.Exit(code=1)
+
+
+@app.command("snapshot")
+def snapshot_command(
+    name: Annotated[str, typer.Argument(help="Name to keep the current review under.")],
+) -> None:
+    """Copy the canonical review aside so a later render can be diffed against it.
+
+    The only sanctioned way to create a second run directory. Rendering itself
+    always targets `runs/current`, so a named run can only ever be a
+    deliberate snapshot of a review that actually happened.
+    """
+    import shutil
+
+    if name == DEFAULT_RUN_NAME:
+        _echo(f"{name!r} is the canonical review; choose another name for a snapshot")
+        raise typer.Exit(code=1)
+
+    source = run_directory(DEFAULT_RUN_NAME)
+    if not (source / "manifest.json").is_file():
+        _echo(f"nothing to snapshot: {source} holds no run")
+        raise typer.Exit(code=1)
+
+    destination = run_directory(name)
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source, destination)
+    _echo(f"snapshot: {destination}")
 
 
 @app.command("rasterise")
