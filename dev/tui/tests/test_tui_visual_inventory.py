@@ -670,3 +670,41 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path
     assert repainted.elapsed_ms == original.elapsed_ms
     assert repainted.geometry_findings == original.geometry_findings
     assert repainted.text_sha256 == original.text_sha256
+
+
+def test_render_has_no_free_form_run_target() -> None:
+    """The review path is a contract, not a per-invocation choice.
+
+    `render` must not accept a run name. Nine ad-hoc directories once sat side
+    by side because every session invented one, and the reviewer could never be
+    told a stable path. A named run is now only reachable through `snapshot`,
+    which can copy a review that happened but cannot aim a render elsewhere.
+    """
+    import inspect
+
+    from ..cli import render_command, snapshot_command
+
+    assert "run" not in inspect.signature(render_command).parameters
+    assert "name" in inspect.signature(snapshot_command).parameters
+
+
+def test_the_canonical_review_directory_is_stable_and_singular() -> None:
+    """One default name, and runs live nowhere but under `runs/`."""
+    from .._artifacts import DEFAULT_RUN_NAME, RUN_ROOT, RUNS_DIR, SCRATCH_DIR, run_directory
+
+    assert DEFAULT_RUN_NAME == "current"
+    assert run_directory(DEFAULT_RUN_NAME) == RUNS_DIR / "current"
+    assert RUNS_DIR.parent == RUN_ROOT
+    assert SCRATCH_DIR.parent == RUN_ROOT
+    assert RUNS_DIR != SCRATCH_DIR, "probe output must not share the review tree"
+
+
+def test_snapshot_refuses_to_overwrite_the_canonical_review() -> None:
+    """`snapshot current` would make the contract path a copy of itself."""
+    import typer
+
+    from ..cli import snapshot_command
+
+    with pytest.raises(typer.Exit) as refusal:
+        snapshot_command(name="current")
+    assert refusal.value.exit_code == 1
