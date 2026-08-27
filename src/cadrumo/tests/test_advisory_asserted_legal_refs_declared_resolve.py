@@ -63,7 +63,7 @@ _DECLARATION_KEYWORD = "asserted_legal_refs"
 #: which drifts on any edit above it. Each entry states its reason. Empty by
 #: construction: no production site declares the field yet, and the first one to
 #: do so should declare literals rather than earn an exemption.
-_UNRESOLVABLE_DECLARATION_EXEMPTIONS: Mapping[tuple[str, str], str] = {}
+_UNRESOLVABLE_DECLARATION_EXEMPTIONS: Mapping[tuple[str, str], str] = dict[tuple[str, str], str]()
 
 
 def _display_path(path: Path) -> str:

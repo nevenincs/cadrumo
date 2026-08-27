@@ -6,8 +6,9 @@
 :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
 into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
-:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
+:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
+:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
+:attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
 
 The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
@@ -61,6 +62,7 @@ from ..aggregation import (
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
@@ -594,7 +596,24 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
 
 
 def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
-    if invoice.counterparty_country != "ES":
+    """Build the M347 observation for one invoice, or ``None`` if excluded.
+
+    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
+    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    its nine enumerated items. The diseño de registro's own `pais-codigo`
+    field (a "XX" alphabetic slot for a non-established non-resident
+    declarado) is direct evidence AEAT expects some M347 counterparties to be
+    non-resident.
+
+    The one residency-shaped exclusion the article DOES state is art.
+    33.2.i): an operation already reported through a coincident periodic
+    informativa. For an invoice, that informativa is Modelo 349's
+    intracommunity recapitulativa, so an operation `_intracommunity_clave`
+    classifies as intracommunity is excluded here and routes to M349 instead
+    -- the same classification M349's own branch of this resolver uses, never
+    a bare country comparison.
+    """
+    if _intracommunity_clave(invoice) is not None:
         return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party

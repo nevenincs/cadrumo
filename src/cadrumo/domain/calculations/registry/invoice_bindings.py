@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from ._m347_threshold import m347_declarable_party_ids
@@ -41,6 +41,10 @@ _InvoiceRowField = Literal[
     "clave",
     "base_imponible",
     "importe_total",
+    "importe_q1",
+    "importe_q2",
+    "importe_q3",
+    "importe_q4",
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
@@ -568,16 +572,17 @@ def resolve_invoice_family_row_values(
     the cohort key (``cohort_by_source = True``) so a different counterpart
     source kind does not share rows; the invoice family does not.
 
-    M347's ``contraparte_clave`` grouping is the one exception to
-    ``cohort_by_source``, regardless of the flag's value: the diseño de
-    registro's Tipo-2 declarado record is ONE shared physical sequence for
-    every clave (grounded in the tui-architecture modelo 347 contraparte
-    binding inventory reference), so a purchase-sourced (payable_invoice)
-    clave-A row and a sale-sourced (collectible_invoice) clave-B row for
-    different counterparties must share one row-index sequence rather than
-    each restarting at 1 and colliding in the same physical record slot.
-    M349's own two groupings are unaffected -- this reads ``grouping``, not
-    the ``cohort_by_source`` flag every OTHER family still controls.
+    M347's ``contraparte_clave`` grouping needs every clave to share ONE row
+    sequence, because the diseño de registro's Tipo-2 declarado record is one
+    shared physical sequence regardless of clave (grounded in the
+    tui-architecture modelo 347 contraparte binding inventory reference).
+    That now falls out of ``cohort_by_source`` directly rather than needing a
+    grouping-keyed exception: every ``contraparte_clave`` binding declares the
+    combined-direction :attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
+    source (see that member's docstring), so ``binding.source`` is already
+    identical across claves and the cohort key naturally coincides. M349's own
+    two groupings, which still declare distinct ``payable_invoice`` /
+    ``collectible_invoice`` sources per binding, are unaffected.
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
@@ -591,8 +596,7 @@ def resolve_invoice_family_row_values(
         if selector.fact != "row_field":
             continue
         assert selector.grouping is not None  # guarded by validator
-        shares_one_sequence_across_sources = selector.grouping == "contraparte_clave"
-        cohort_source = binding.source if cohort_by_source and not shares_one_sequence_across_sources else None
+        cohort_source = binding.source if cohort_by_source else None
         cohort_key = (
             cohort_source,
             selector.grouping,
@@ -680,16 +684,15 @@ def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: DataBindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
-    if dict(binding.selector).get("grouping") == "contraparte_clave":
-        # M347's contraparte_clave family reads BOTH invoice directions
-        # regardless of which one binding.source names, mirroring
-        # _resolve_m347_declarante_summary_values's union of collectible and
-        # payable observations for the scalar declarante-summary bindings --
-        # the same union, now applied to the row-producer family so a
-        # purchase (clave A) and a sale (clave B) share one row sequence in
-        # the single Tipo-2 declarado record stream (grounded in the
-        # tui-architecture modelo 347 contraparte binding inventory
-        # reference).
+    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
+        # A binding declaring the combined-direction source reads BOTH
+        # underlying invoice directions: each InvoiceObservation still
+        # carries its own true PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction
+        # as its own source_kind (see M347_THIRD_PARTY_OPERATION's
+        # docstring), so this union is the resolver honouring what the
+        # binding's own declared source now truthfully claims to consume --
+        # the M347 declarante-summary totals and the per-counterparty
+        # contraparte_clave row family both declare this source.
         return tuple(
             observation
             for observation in observations
@@ -1043,6 +1046,33 @@ def _build_operator_clave_rows(
     return tuple(rows)
 
 
+_M347_QUARTER_TOKENS: tuple[Literal["1T", "2T", "3T", "4T"], ...] = ("1T", "2T", "3T", "4T")
+_M347_QUARTER_ROW_FIELDS: Mapping[Literal["1T", "2T", "3T", "4T"], str] = {
+    "1T": "importe_q1",
+    "2T": "importe_q2",
+    "3T": "importe_q3",
+    "4T": "importe_q4",
+}
+
+
+def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
+    """Return the calendar quarter token ``value`` falls in.
+
+    Routed through :meth:`~core.Period.contains`, the one canonical period
+    boundary authority (``aeat-registry-authority-flow``'s period-boundary
+    rule) -- no locally re-derived month-range arithmetic. Uses ``value``'s
+    OWN calendar year, not a filing-year argument this row-producer has no
+    access to: the diseño's Q1-Q4 fields are the ordinary calendar quarter an
+    operation falls in, independent of which filing year's declaration
+    reports it.
+    """
+    for token in _M347_QUARTER_TOKENS:
+        if Period.from_year_and_code(value.year, token).contains(value):
+            return token
+    msg = f"date {value!r} does not fall in any calendar quarter"  # pragma: no cover - contains() is exhaustive
+    raise RegistryValidationError(msg)
+
+
 class _ContraparteClaveAccumulator(BaseModel):
     """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
 
@@ -1053,6 +1083,10 @@ class _ContraparteClaveAccumulator(BaseModel):
     clave: str
     party_legal_name: str | None
     importe_total: Decimal
+    importe_q1: Decimal
+    importe_q2: Decimal
+    importe_q3: Decimal
+    importe_q4: Decimal
 
 
 def _build_contraparte_clave_rows(
@@ -1072,6 +1106,16 @@ def _build_contraparte_clave_rows(
     total contraprestacion including cuotas and recargos, not the taxable
     base alone (recorded in the tui-architecture modelo 347 contraparte
     binding inventory reference).
+
+    Also buckets that same amount into the calendar quarter of
+    ``transaction_date`` -- the diseño's mandatory, unconditional "IMPORTE DE
+    LAS OPERACIONES [Nth] TRIMESTRE" fields (RD 1065/2007 art. 33.1's "se
+    suministrará desglosada trimestralmente"), ungated by any "Sólo..."
+    exception the way ``importe-metalico`` / ``operacion-seguro`` /
+    ``arrendamiento-local-negocio`` / the transmisiones-inmuebles pair are.
+    The quarterly buckets accumulate in the SAME loop that sums
+    ``importe_total``, so the annual total is the sum of the four quarters by
+    construction, not by a separate reconciling step.
     """
     grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
     for observation in observations:
@@ -1095,9 +1139,15 @@ def _build_contraparte_clave_rows(
                 clave=observation.operation_clave,
                 party_legal_name=observation.party_legal_name,
                 importe_total=Decimal("0"),
+                importe_q1=Decimal("0"),
+                importe_q2=Decimal("0"),
+                importe_q3=Decimal("0"),
+                importe_q4=Decimal("0"),
             ),
         )
         bucket.importe_total += observation.invoice_total_amount
+        quarter_field = _M347_QUARTER_ROW_FIELDS[_m347_quarter_of(observation.transaction_date)]
+        setattr(bucket, quarter_field, getattr(bucket, quarter_field) + observation.invoice_total_amount)
         if bucket.party_legal_name is None and observation.party_legal_name is not None:
             bucket.party_legal_name = observation.party_legal_name
     rows: list[Mapping[str, Decimal | str]] = []
@@ -1108,6 +1158,10 @@ def _build_contraparte_clave_rows(
             "party_tax_id": bucket.party_tax_id,
             "clave": bucket.clave,
             "importe_total": bucket.importe_total,
+            "importe_q1": bucket.importe_q1,
+            "importe_q2": bucket.importe_q2,
+            "importe_q3": bucket.importe_q3,
+            "importe_q4": bucket.importe_q4,
         }
         if bucket.party_legal_name is not None:
             row["party_legal_name"] = bucket.party_legal_name

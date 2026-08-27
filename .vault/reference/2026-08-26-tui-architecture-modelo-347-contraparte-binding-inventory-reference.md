@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:24a5096adfaac1e32bf35b5317a52b3f2be9825bdf9cbcca012825cc121b0d5f'
+body_hash: 'sha256:762c5914ccaf3c16d3293bfe64c3b25e1f8003378a1714c3bd38b59e2ab67e15'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -217,7 +217,23 @@ H/I or for any clave added/removed across intervening orden years. No
 binding TOML has been written; no `_InvoiceGrouping` extension has been
 made to `invoice_bindings.py`.
 
-## Open taxonomy finding: M347's binding source declaration does not match what it consumes
+## Resolved: M347's binding source declaration now matches what it consumes
+
+Originally recorded below as an open taxonomy finding; resolved in the same
+Step in one atomic change once the two-bindings-per-field alternative was
+shown non-viable (each casilla binds to exactly one `BindingId` in the export
+layout). `BindingSourceKind.M347_THIRD_PARTY_OPERATION` was added, grounded
+in RD 1065/2007 art. 33.1's undifferentiated "operaciones" concept (see the
+member's docstring in `core/aggregation.py`), and both binding sets below
+were retargeted to it -- across BOTH the `2011-2024` and `2025-y-siguientes`
+revisions, since the pre-existing defect lived in both. Enrolled through the
+LOCK precedence tier, `_OWNED_SOURCES`, the bindings dispatch tables, the
+data-inventory live-observation classification, and the readiness
+locale-key/operator-action projections. A grep for the new source kind now
+finds all eight retargeted bindings. The original finding text follows for
+provenance.
+
+### Original finding: M347's binding source declaration does not match what it consumes
 
 Both `0001-counterpart-summary.toml`'s declarante-summary bindings
 (`modelo-347-declarante-numero-personas-entidades`,

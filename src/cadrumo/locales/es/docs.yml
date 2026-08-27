@@ -23,6 +23,7 @@ docs:
       ledger_transaction: desde sus movimientos registrados
       m303_regimen_simplificado_annual_summary: desde el resumen anual del régimen
         simplificado del modelo 303
+      m347_third_party_operation: desde sus operaciones con terceras personas
       manual_input: desde un valor que usted aporta
       payable_invoice: desde las facturas recibidas
       previous_filing: desde su declaración anterior

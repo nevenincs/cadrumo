@@ -2245,3 +2245,87 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
         third_result.projection.baseline.contributor_epoch_digest
         != first_result.projection.baseline.contributor_epoch_digest
     )
+
+
+def test_workspace_assembly_has_one_public_module_and_no_private_or_package_binding_remnant() -> None:
+    """S129: the assembly/dispatch module is the sole public home, with no package binding.
+
+    Mirrors ``test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant``
+    and ``test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant``
+    -- the same fixed point S171/S172 proved for the model and producer
+    families, applied to the assembly/dispatch family S128/S129 own.
+    ``workspace.py`` never had a private predecessor (unlike
+    ``_workspace_models.py``/``_workspace_producers.py``), so there is no
+    retired private module to assert against; what remains to prove is that
+    ``application.modelo`` stays inert with respect to every Workspace
+    assembly symbol, and that the two private paths S128's own module
+    docstring names as forbidden (``_workspace.py``, a private predecessor of
+    this module, and ``_workspace_projection.py``, an explicitly rejected
+    intermediate design) have not reappeared anywhere in the tracked tree.
+    """
+    import importlib
+
+    public_module = importlib.import_module("cadrumo.application.modelo.workspace")
+    package = importlib.import_module("cadrumo.application.modelo")
+
+    assert public_module.resolve_static_inspection_result is resolve_static_inspection_result
+    assert resolve_static_inspection_result.__module__ == public_module.__name__
+    assert package.__all__ == ()
+    assert not hasattr(package, "resolve_static_inspection_result")
+    assert not hasattr(package, "resolve_graded_snapshot_result")
+    assert not hasattr(package, "ModeloWorkspaceRevisionAxes")
+
+
+def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_tracked_tree() -> None:
+    """S129 zero-remnant fixed point: enumerate TRACKED files, never walk the filesystem.
+
+    A gitignored mirror or a peer's in-flight deletion can make a filesystem
+    walk report a phantom remnant or silently skip a real one; ``git
+    ls-files`` is the one census that answers "what does this tree actually
+    track" regardless of either. Scoped to ``src``, ``docs``, and ``dev`` --
+    the same scope the sibling model/producer fixed-point tests use.
+    """
+    import subprocess
+
+    repository = Path(__file__).resolve().parents[5]
+    forbidden_module_stems = ("_workspace_projection", "_workspace")
+    tracked = subprocess.run(
+        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),
+        capture_output=True,
+        check=True,
+        cwd=repository,
+        text=True,
+    ).stdout.split(chr(0))
+    modelo_package = "src/cadrumo/application/modelo/"
+    remnant_paths = tuple(
+        entry
+        for entry in tracked
+        if entry.startswith(modelo_package)
+        and entry[len(modelo_package) :] in ("_workspace_projection.py", "_workspace.py")
+    )
+    assert not remnant_paths, forbidden_module_stems
+
+    scanned_paths = tuple(
+        sorted(
+            path
+            for entry in tracked
+            if entry.endswith((".py", ".rst", ".toml"))
+            # A path git still tracks can be absent from the working tree
+            # while a peer's deletion is in flight. It carries no content to
+            # scan, and reading it would fail the gate on someone else's
+            # staging state rather than on a genuine remnant.
+            if (path := repository / entry).is_file()
+        ),
+    )
+    # workspace.py's own module docstring names "_workspace_projection.py" once,
+    # deliberately: it records the REJECTED intermediate design S128 chose
+    # against, the same way this test's own docstring names it too. Neither is
+    # a stale reference thinking that module exists; both are excluded from
+    # the scan for that reason, and nowhere else in the tracked tree may name it.
+    excluded_paths = {Path(__file__).resolve(), (repository / "src/cadrumo/application/modelo/workspace.py").resolve()}
+    prose_remnants = tuple(
+        path.relative_to(repository)
+        for path in scanned_paths
+        if path.resolve() not in excluded_paths and "_workspace_projection.py" in path.read_text(encoding="utf-8")
+    )
+    assert not prose_remnants

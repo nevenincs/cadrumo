@@ -36,6 +36,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Final, override
 
+from pydantic import TypeAdapter
+
 __all__ = [
     "SilentLoopbackHandler",
     "ollama_chat_reply",
@@ -51,6 +53,8 @@ __all__ = [
 #: it, bounded so a wedged handler thread surfaces as a failure rather than
 #: hanging the suite.
 _JOIN_TIMEOUT_S: Final[float] = 5.0
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
 class SilentLoopbackHandler(BaseHTTPRequestHandler):
@@ -107,8 +111,7 @@ def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
     Returns:
         The decoded JSON object.
     """
-    parsed: Mapping[str, object] = json.loads(read_text_body(handler))
-    return parsed
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(read_text_body(handler)))
 
 
 def write_json_response(

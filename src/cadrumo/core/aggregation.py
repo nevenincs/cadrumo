@@ -356,6 +356,26 @@ class BindingSourceKind(StrEnum):
     # Invoice / counterpart aggregation sources.
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
+    # Modelo 347 "operaciones con terceras personas" combined-direction source.
+    # RD 1065/2007 art. 33.1 defines the declared population as one
+    # undifferentiated concept before any direction split: "tendran la
+    # consideracion de operaciones tanto las entregas de bienes y
+    # prestaciones de servicios como las adquisiciones de los mismos" -- a
+    # sale and a purchase are the SAME "operacion" concept the annual
+    # declaration reports, not two. A binding that declares one direction
+    # (payable or collectible) while its resolver reads both is untruthful
+    # about what it consumes; this member names the combined population the
+    # law itself already treats as singular, for bindings whose selector
+    # spans both invoice directions (the M347 declarante-summary totals and
+    # the per-counterparty contraparte_clave row family). It is invoice-
+    # shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved by the
+    # same InvoiceCatalogueSourceResolver as PAYABLE_INVOICE/COLLECTIBLE_INVOICE;
+    # each underlying InvoiceObservation still carries its own true
+    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction as its own source_kind, so
+    # per-invoice direction (art. 33.1's quarterly separate accounting of
+    # entregas y adquisiciones) is never lost, only the BINDING's declared
+    # source is honest about spanning both.
+    M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
@@ -413,6 +433,7 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
     },
 )
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
