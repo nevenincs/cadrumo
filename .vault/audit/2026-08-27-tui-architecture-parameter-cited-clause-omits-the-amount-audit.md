@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9982a73eb00f0e07727cce8495b151622de550fa372e0e7427ec05d8d07e607b'
+body_hash: 'sha256:10a813e551c6f79cc636fd870f607bfd816070f840b6d549b0f69430efa5d90e'
 related: []
 ---
 
@@ -95,3 +95,80 @@ the same shape the LIRPF art. 66/76 redactions already use.
 Do not resolve any of these by weakening the `required_text` or by pointing at a
 closer-but-still-silent article: a citation that does not state the number is the
 defect, and a looser one hides it.
+
+## Correction: the counts above were measured with a brittle matcher
+
+The figures in "What was checked" (333 verified / 92 partial / 20 none) came from
+a STRING matcher that rendered Spanish number formats and searched for them. It
+carried a defect: its negative lookahead rejected a match followed by a comma, so
+an encoded `12450` never matched a corpus writing "12.450,00". Bracket bounds are
+routinely written with explicit centimos, so the partial bucket was inflated with
+false absences.
+
+Re-measured with a FORMAT-AGNOSTIC matcher that parses every numeric token in the
+corpus into a Decimal set and compares values:
+
+| bucket | count |
+|---|---|
+| every encoded number is stated in the cited corpus | 335 |
+| some legislated numbers absent | 86 |
+| only the derived `fixed_addition` absent (expected) | 12 |
+| no legislated number stated | 12 |
+
+The error was conservative -- it under-counted verified parameters -- and every
+finding above was hand-verified against the corpus text, so none of them changes.
+Probe: `numeric_match.py`. Prefer numeric comparison over string rendering for any
+future corpus check.
+
+## Checked and found SOUND this pass
+
+- **`renta-{2024,2025}-imputacion-inmobiliaria-year-days = 365`.** This looks like
+  a leap-year defect: 2024 had 366 days, the M210 IRNR path uses a leap-aware
+  `_m210_days_in_filing_year`, and dividing a part-year holding by 365 instead of
+  366 would over-impute. It is NOT a defect. The bundled *Manual práctico de Renta
+  2024* -- the leap year itself -- works both imputación examples with 365
+  ("1,1 por 100 s/(50% x 105.000) x 62 ÷ 365" and "(2% s/30.500) x (317 ÷ 365)"),
+  and every ÷366 in that manual belongs to the intereses de demora chapter, whose
+  formula is explicitly "(nº de días) ÷ 365 o 366". 365 is AEAT's own convention
+  for this computation and the cited `required_text` quotes the example verbatim.
+  Recorded because "correcting" it to 366 would introduce a real defect.
+- **`lirpf-art-85:catastral-revision-lookback-years = 10`** -- art. 85 states "diez
+  períodos impositivos anteriores", in words.
+- **`renta-2025-ric-materializacion-plazo-anos = 3`** and
+  **`renta-2025-ric-mantenimiento-plazo-anos = 5`** -- Ley 19/1994 art. 27.4 states
+  "tres años" and "cinco años", in words.
+- **`renta-2025-ric-reduccion-rate-maximo = 80`** -- art. 27.15 states "el ochenta
+  por ciento", in words. The figure is grounded.
+
+A numeric matcher cannot see a number spelled in words, so these four were
+absences of the probe, not of the grounding.
+
+## New, low severity: the RIC 80 % is unconsumed and misnamed for what it limits
+
+`renta-2025-ric-reduccion-rate-maximo` has NO formula consumer -- the only
+reference outside its own definition is a drift-detection test. Nothing computes
+with it today, so it cannot mis-calculate now.
+
+It is still worth an owner's attention, because the name and unit describe a
+different rule from the one the article states. The parameter reads as a maximum
+*reduction rate*, and its `required_text` names "rendimiento neto"; art. 27.15
+makes the eighty percent a **límite on the deducción en la cuota íntegra**
+proportionally corresponding to the Canarias rendimientos, not a reduction applied
+to the rendimiento neto. Whoever wires this parameter to a formula will read the
+name, and the name points at the wrong operation.
+
+This is also an instance of the unreachable-rung class: a rate parameter no
+formula reads.
+
+## Sharper statement of the autonomic-scale finding
+
+The 86 partial matches are almost entirely the autonomic scale tables recorded in
+`2026-08-26-tui-architecture-autonomic-scale-delegating-article-audit`. Their
+partial grounding is an artefact worth naming: their only `legal_ref` is
+`ley-35-2006:art-74`, whose `corpus_ref` is the whole consolidated LIRPF, which
+contains the STATE scale bounds (12.450, 20.200, 35.200). Those coincide with
+several regions' bounds and match by accident. The region-specific bounds and
+every autonomic marginal rate do not appear at all.
+
+So the tables are not partially grounded. They are ungrounded, with incidental
+overlap from a different scale in the same file.
