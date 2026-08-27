@@ -44,6 +44,7 @@ _C1_EXIT_RECEIPT = (
     _ROOT / ".vault" / "reference" / "2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt-reference.md"
 )
 _RECONCILIATION_AUDIT = _ROOT / ".vault" / "audit" / "2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md"
+_OWNER_SEAM_AUDIT = _ROOT / ".vault" / "audit" / "2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit.md"
 
 _WORKSPACE_MODULES = (workspace, workspace_models, workspace_producers, workspace_manifest)
 
@@ -155,6 +156,7 @@ class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     interface_adr_status_proof: ModeloWorkspaceC2ProofV1
     c1_exit_receipt_proof: ModeloWorkspaceC2ProofV1
     authority_grade_decision_proof: ModeloWorkspaceC2ProofV1
+    owner_seam_reconciliation_proof: ModeloWorkspaceC2ProofV1
     native_owner_surface_inventory_proof: ModeloWorkspaceC2ProofV1
     producer_inventory_proof: ModeloWorkspaceC2ProofV1
     field_denominator_proof: ModeloWorkspaceC2ProofV1
@@ -267,6 +269,20 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
         )
     )
 
+    # The owner-seam CRITICAL finding (S159 required domain -> application,
+    # an illegal dependency direction) is a SEPARATE audit from the
+    # authority-grade reconciliation above -- distinct document, distinct
+    # architecture question. Its own disposition must read RESOLVED, read
+    # directly rather than assumed from the ADR's acceptance alone.
+    assert _OWNER_SEAM_AUDIT.is_file(), _OWNER_SEAM_AUDIT
+    owner_seam_lines = _OWNER_SEAM_AUDIT.read_text(encoding="utf-8").splitlines()
+    disposition_index = next(i for i, line in enumerate(owner_seam_lines) if line.strip() == "## Disposition")
+    disposition_text = "\n".join(owner_seam_lines[disposition_index + 1 :]).strip()
+    assert disposition_text.startswith("RESOLVED."), disposition_text[:80]
+    owner_seam_reconciliation = ModeloWorkspaceC2PassedProofV1(
+        evidence=f"{_OWNER_SEAM_AUDIT.name} disposition: RESOLVED (S159 domain->application direction corrected)"
+    )
+
     kinds = {contract.contributor_kind for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts}
     assert kinds == set(ModeloWorkspaceContributorKindV1), kinds ^ set(ModeloWorkspaceContributorKindV1)
     native_owner_surface_inventory = ModeloWorkspaceC2PassedProofV1(
@@ -361,6 +377,7 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
         interface_adr_status_proof=interface_adr_status,
         c1_exit_receipt_proof=c1_exit_receipt,
         authority_grade_decision_proof=authority_grade_decision,
+        owner_seam_reconciliation_proof=owner_seam_reconciliation,
         native_owner_surface_inventory_proof=native_owner_surface_inventory,
         producer_inventory_proof=producer_inventory,
         field_denominator_proof=field_denominator,
@@ -382,6 +399,7 @@ def test_c2_receipt_validates_against_the_current_tree() -> None:
             receipt.interface_adr_status_proof,
             receipt.c1_exit_receipt_proof,
             receipt.authority_grade_decision_proof,
+            receipt.owner_seam_reconciliation_proof,
             receipt.native_owner_surface_inventory_proof,
             receipt.producer_inventory_proof,
             receipt.field_denominator_proof,
@@ -435,6 +453,21 @@ def test_c1_exit_receipt_predecessor_reads_a_real_passed_result() -> None:
     receipt = validate_modelo_workspace_c2_dependency_receipt()
     assert isinstance(receipt.c1_exit_receipt_proof, ModeloWorkspaceC2PassedProofV1)
     assert receipt.predecessors.c1_exit_receipt.validation_result == "PASSED"
+
+
+def test_owner_seam_reconciliation_audit_reads_a_real_resolved_disposition() -> None:
+    """S139: the S159 domain->application seam finding is genuinely RESOLVED, read from the audit itself.
+
+    Distinct from ``authority_grade_decision_proof``: that proof reads the
+    S287 capability-admission amendment; this one reads the SEPARATE
+    architecture-boundary audit (S159's illegal dependency direction), never
+    conflated into one proof for two different questions.
+    """
+    receipt = validate_modelo_workspace_c2_dependency_receipt()
+    assert isinstance(receipt.owner_seam_reconciliation_proof, ModeloWorkspaceC2PassedProofV1)
+    text = _OWNER_SEAM_AUDIT.read_text(encoding="utf-8")
+    disposition_index = text.index("## Disposition")
+    assert "RESOLVED." in text[disposition_index : disposition_index + 200]
 
 
 def test_no_legacy_marker_across_the_workspace_module_set() -> None:
