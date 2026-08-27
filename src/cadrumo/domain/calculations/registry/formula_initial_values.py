@@ -186,11 +186,7 @@ def _reject_unknown_inputs(
     """Reject supplied :class:`~cadrumo.core.CasillaId` keys."""
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
-        raise RegistryValidationError(
-            f"unknown registry input casilla ids: {unknown!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(unknown)},
-        )
+        raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
 
 
 def _reject_non_input_kind_inputs(
