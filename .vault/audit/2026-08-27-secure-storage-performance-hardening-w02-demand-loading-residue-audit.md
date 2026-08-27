@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b6584e563afa3272a185db7df64fd4539ce5d214f93a0fa5dab1a661399487d'
+body_hash: 'sha256:46ef6a3bfc8a09c2ffca8d44a8cf53633d267110cc5b63c67b32c3f7fd996218'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -255,3 +255,29 @@ capability residue stays open.
   those checks exist and enforce again, while six contracts report real
   violations outside this campaign's scope. S36 should close on "the checks
   enforce" only alongside this record, never as "the graph is clean".
+
+- **S36 closed with an explicit exclusion.** Both halves now exist: the executed
+  half (`test_deferred_cross_layer_imports`, maintained here) and the static
+  half (`.importlinter`, restored here from a total abort). What the standing
+  goal still asks for that this EXCLUDES: the static half reports **6 broken
+  contracts** -- the llm-to-persistence reach, four TUI contracts, and the
+  layered architecture contract itself. The checks enforce; the graph is not
+  clean. Read "S36 done" as "the checks run again", never as "the layering
+  holds".
+- **S35 closed with an explicit exclusion.** 351 of 365 nodes defer every
+  capability family until execution. The 14 that do not are enumerated in
+  `test_resolution_defers_capabilities` with their cause and a stale case each.
+  What this EXCLUDES from the standing goal: those 14 nodes still pay registry
+  and persistence cost at resolution, so an operator reaching a sibling or
+  running `--help` near them still pays it.
+- The 14 are one defect wearing fourteen faces. A CommandSpec parameter
+  ANNOTATION is a deferred target, so building a node's Typer signature imports
+  whatever module owns each annotated type. Several of those owners are package
+  ROOTS that import heavy siblings eagerly. Fixing the roots fixes the nodes;
+  chasing the nodes individually would not.
+- Method note worth keeping: the union formulation makes these sweeps cheap
+  wherever the expected result is "nothing". 351 nodes settle in ONE child
+  process because an empty union is exactly the claim that each member loaded
+  nothing. It is NOT valid where the expectation is non-empty -- a union proves
+  a set contains a violation and never which member, which cost two false reads
+  in this campaign before it was understood.

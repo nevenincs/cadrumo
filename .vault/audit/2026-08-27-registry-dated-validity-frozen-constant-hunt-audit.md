@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cc7a8f96b8d65f7b4e3f6900bd9a574e5f7368eceb416ad3470856f686d0918'
+body_hash: 'sha256:aa1131382028adf5dd8908ab0a74b9b962f2f459550e1dab74b91db870e0a3dc'
 related: []
 ---
 
@@ -343,6 +343,54 @@ subvenciones corrientes AND de capital AND indemnizaciones. The existing module'
 docstring already notes that "the distinction runs INSIDE subsidies" -- it got
 art. 110 right. Art. 109 needs the broader exclusion.
 
+### OUT OF CLASS -- core/external_constants carries no regulatory value
+
+`core/external_constants.toml` holds 140 declarations across twelve sections, and
+every one is an externally-defined IDENTIFIER rather than a regulatory quantity:
+AEAT hostnames, sede paths, clave endpoints, help-page URLs, oracle locations,
+portal paths and Google OAuth scopes. A scan for a non-string value returns
+exactly one hit in the whole file.
+
+That hit is `aeat.notifications_query.lookback_years = 10`, and it is not a
+regulatory value either. It sets how far back the AEAT notifications search sets
+its `fecha desde` filter, because the portal defaults to one month and was
+answering a narrower question than the reader intended. It computes no tax, gates
+no obligation and caps no deduction.
+
+Its own comment already performs this hunt's adjacency check and gets it right:
+"Four years is la LGT art-66 prescription period, so this deliberately reaches
+further: a notification older than prescription is still part of the record an
+operator needs to see". The constant is deliberately WIDER than the legal period.
+
+Direction: a lookback set too short would hide notifications from the operator.
+At ten years against a four-year prescription period it errs toward showing more
+of the record, so there is no taxpayer-detriment direction to report.
+
+### The class, restated now that every lead carries a verdict
+
+Seven leads produced four confirmed defects, and calling the class "a regulatory
+value frozen as a constant where the provision makes it move" turned out to
+describe only the first of them. The mutualidad cap was the only frozen value.
+The other three are:
+
+- a two-limb provision encoded as one limb (seguro de enfermedad, 500 without
+  1.500);
+- a calendar rule re-expressed in a different unit (the rehabilitation lookback,
+  two years as 730 days);
+- a provision whose ratio was copied and whose DENOMINATOR was not (Art. 109,
+  subvenciones and indemnizaciones left in the base).
+
+What unites all four is not staleness. **The numbers were always right and always
+available in the statute; what the code lost was WHO each number applies to, and
+OVER WHAT.** The mutualidad figure applied per ejercicio, the 1.500 applied to
+persons with discapacidad, the two years applied on a calendar, the 70 per cent
+applied to a base net of subsidies. Every defect is a lost qualifier, not a lost
+digit.
+
+That is the sharper statement of the class, and it changes where to look next: not
+at numbers that might be stale, but at provisions where the code implements one
+clause and the statute has two.
+
 ### NOTED -- the locomocion per-kilometre exencion is absent, not wrong
 
 The same Orden HFP/792/2023 raised the locomocion allowance to `0,26 euros` per
@@ -381,10 +429,13 @@ year carries two rates and the value is dated from birth.
   the subvencion-kind distinction in `domain/transactions/_volumen_ingresos.py`
   and `taxpayer_type` / `iae_epigraph` on the profile schema. Use a BROADER
   exclusion than art. 110's, which is deliberately narrower.
-- Continue the hunt through the last lead, `core/external_constants`.
-- Note the shape all three confirmed-but-unfixed findings share: none is blocked
-  on a figure. Each needs a SCOPING decision -- which population a rule applies
-  to, or which signal selects between two lawful values. The figures were always
-  in the statute.
+- None of the three open findings is blocked on a figure. Each needs a SCOPING
+  decision -- which population a rule applies to, or which signal selects between
+  two lawful values -- and every number involved is already in the statute or
+  already in this repository.
+- When the hunt resumes, aim it at the restated class rather than the original
+  one: look for provisions where the code implements ONE clause and the statute
+  has TWO. Reading past the figure the code already uses, to the rest of the
+  sentence it sits in, found three of the four defects.
 - When a value is cleared, quote the provision that clears it. A clearance
   without the text is the same unverified assertion the hunt exists to find.

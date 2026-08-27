@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
 modified: '2026-08-27'
-body_hash: 'sha256:3c109f6904f0fb9005e40de27fe1d9b42d7057e765def65f2e6e14145169442a'
+body_hash: 'sha256:399cc6ace80c67405f17f08c1ffdf7b0e2eb4929d630533bd73072eed8e3fbfc'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -131,8 +131,8 @@ Prove each live node resolution graph is a subset of its declared capabilities.
 
 - [x] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
 - [x] `W04.P09.S34` - Keep state-free nodes free of registry, calculation, filing, network, browser, Google, crypto, keyring, and storage materialization; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
-- [ ] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
-- [ ] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
+- [x] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
+- [x] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
 
 ### Phase `W04.P10` - Whole-tree latency, scaling, and side-effect gates
 
