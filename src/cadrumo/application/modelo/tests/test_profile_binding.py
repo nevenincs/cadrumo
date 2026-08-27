@@ -113,11 +113,6 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            # M100 2025 computes the art. 23.2 arrendamiento reduction and the
-            # art. 81 maternidad / guarderia reliefs, matching 2024. Their
-            # operator-input bindings need a value for the calculation to resolve.
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2025", value=Decimal("0")),
-            UserProfileFact(path="renta_rental.reduccion_art_23_2_tier_2025", value="tier-50"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

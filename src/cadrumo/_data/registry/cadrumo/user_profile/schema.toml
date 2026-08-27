@@ -16,7 +16,7 @@ remove_policy = "live_profile_tombstone_retain_snapshots"
 # `descendientes_minimos_aggregate_{filing_year}` cannot swallow the longer
 # `descendientes_minimos_aggregate_autonomico_{filing_year}` paths.
 #
-# `cotizaciones_ss_madre_{year}` and `renta_rental.reduccion_art_23_2_tier_{year}`
+# `cotizaciones_ss_madre_2024` and `renta_rental.reduccion_art_23_2_tier_2024`
 # are deliberately absent: they are genuine operator input, not derived.
 
 [[derived_selectors]]
@@ -1585,16 +1585,6 @@ enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
 model_selectors = ["renta_rental.reduccion_art_23_2_tier_2024", "modelo_100"]
 legal_refs = ["ley-35-2006:art-23"]
 
-[[sections.fields]]
-key = "reduccion_art_23_2_tier_2025"
-type = "enum"
-required = false
-sensitivity = "financial"
-description = "Modelo 100 de 2025, art. 23.2: porcentaje de reducción por alquiler de vivienda entre los tramos legales del 50, 60, 70 o 90 %. Sin este dato no puede calcularse la casilla 0150 únicamente a partir de la condición de elegibilidad."
-enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
-model_selectors = ["renta_rental.reduccion_art_23_2_tier_2025", "modelo_100"]
-legal_refs = ["ley-35-2006:art-23"]
-
 [[sections]]
 key = "renta_taxpayer"
 title = "Renta taxpayer"
@@ -1913,16 +1903,6 @@ sensitivity = "financial"
 effective_dated = true
 description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81.2 LIRPF cap term)."
 model_selectors = ["family.cotizaciones_ss_madre_2024", "modelo_100"]
-legal_refs = ["ley-35-2006:art-81"]
-
-[[sections.fields]]
-key = "cotizaciones_ss_madre_2025"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Mother's Social Security cotizaciones paid in 2025 (Art. 81.2 LIRPF cap term)."
-model_selectors = ["family.cotizaciones_ss_madre_2025", "modelo_100"]
 legal_refs = ["ley-35-2006:art-81"]
 
 [[sections.fields]]

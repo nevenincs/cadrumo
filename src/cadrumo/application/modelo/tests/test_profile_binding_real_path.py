@@ -478,14 +478,14 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
             )
 
 
-def test_binding_count_is_exactly_45() -> None:
-    """M100 2025 has exactly 45 ``source = 'profile'`` bindings.
+def test_binding_count_is_exactly_39() -> None:
+    """M100 2025 has exactly 39 ``source = 'profile'`` bindings.
 
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
 
-    Breakdown of the 45: 34 scalar bindings (single-value profile reads
+    Breakdown of the 39: 28 scalar bindings (single-value profile reads
     keyed by entity_type, ccaa, estimation_regime, income categories,
     address-cadastral references, plus the three matrimonio-sobrevenido
     derived scalars marriage_full_year / marriage_month_start /
@@ -499,21 +499,17 @@ def test_binding_count_is_exactly_45() -> None:
     including the Comunidad de Madrid autonómico-override, and the
     has_economic_activity predicate derived from irpf_income_categories
     that gates the Art. 27/30 LIRPF estimación-directa rendimiento chain)
-    plus the six art. 23.2 / art. 81 relief bindings that carry casillas
-    0150, 0611 and 0613: the arrendamiento reduction tier, the deducción por
-    maternidad and guardería increment derived scalars, the guardería
-    descendant count and real spend, and the mother's cotizaciones ceiling)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).
     The split matters when a new binding lands: a scalar/collection
-    rebalance still totals 45 but indicates a different schema shift
+    rebalance still totals 39 but indicates a different schema shift
     (operator-data field add vs family-collection contract change).
     Future drift in the sentinel meaning is prevented by this note
     plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 45, (
-        f"expected 45 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
+    assert len(profile_bindings) == 39, (
+        f"expected 39 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
         + ", ".join(str(b.id) for b in profile_bindings)
     )

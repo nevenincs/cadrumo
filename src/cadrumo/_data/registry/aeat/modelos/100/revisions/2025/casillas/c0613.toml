@@ -1,8 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0613"
 number = "0613"
-input_kind = "computed"
-formula = "renta-2025-incremento-guarderia-0613"
 section = ["resultado_declaracion"]
 semantic_role = "irpf_incremento_maternidad_guarderia"
 legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]

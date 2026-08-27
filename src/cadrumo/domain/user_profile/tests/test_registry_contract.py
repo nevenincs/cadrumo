@@ -172,18 +172,13 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 27 derived selectors and neither operator input.
+    """The patterns own the 23 derived selectors and neither operator input.
 
     ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
     genuine taxpayer input that keep their declarations, so a pattern
     reaching either would later refuse a write the operator must be able to
     make. The count is asserted alongside the exclusions because a pattern
     that silently stopped matching would otherwise leave every gate green.
-
-    The count rose from 23 when the 2025 revision gained the art. 81
-    maternidad and guardería bindings, which resolve against four more
-    derived selectors. Growth from a new consuming binding is the benign
-    direction; a fall is the one this guards.
     """
     schema = load_user_profile_schema()
     live_selectors = _live_profile_binding_selectors()
@@ -194,7 +189,7 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 27, sorted(covered)
+    assert len(covered) == 23, sorted(covered)
     assert "tax_residence.state_attribution_ratio" in covered
     assert not [selector for selector in covered if "cotizaciones_ss_madre" in selector]
     assert not [selector for selector in covered if "rental_reduccion_art_23_2_tier" in selector]
