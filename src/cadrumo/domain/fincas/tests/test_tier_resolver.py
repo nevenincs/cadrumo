@@ -333,16 +333,37 @@ class TestTier60Rehab:
         )
         assert result.tier is ReduccionTier.TIER_60_REHAB
 
-    def test_rehab_finished_731_days_before_falls_through(self) -> None:
+    def test_rehab_finished_exactly_two_calendar_years_before_still_qualifies(self) -> None:
+        """This test previously asserted the defect as the contract.
+
+        2023-06-01 is exactly two calendar years before 2025-06-01, which art. 23.2.c
+        admits -- but it is 731 days, because 2024 is a leap year, and the retired
+        730-day rule refused it and dropped the filer to letra d). The old assertion
+        was TIER_50, so the suite defended the day count against the article.
+        """
         celebration = date(2025, 6, 1)
-        rehab = date(2023, 6, 1)  # 731 days before celebration
-        delta = (celebration - rehab).days
-        assert delta == 731
+        rehab = date(2023, 6, 1)
+        assert (celebration - rehab).days == 731, "the leap span this case exists for has moved"
+
         result = resolve_reduccion(
             _contract(celebration=celebration, rehabilitation_finished_date=rehab),
             _finca(),
             period_year=2025,
         )
+
+        assert result.tier is ReduccionTier.TIER_60_REHAB
+
+    def test_rehab_finished_one_day_before_the_window_opens_falls_through(self) -> None:
+        """The window is still bounded; only its unit changed."""
+        celebration = date(2025, 6, 1)
+        rehab = date(2023, 5, 31)
+
+        result = resolve_reduccion(
+            _contract(celebration=celebration, rehabilitation_finished_date=rehab),
+            _finca(),
+            period_year=2025,
+        )
+
         assert result.tier is ReduccionTier.TIER_50
 
     def test_rehab_after_celebration_does_not_apply(self) -> None:
