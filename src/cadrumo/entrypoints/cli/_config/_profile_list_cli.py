@@ -100,7 +100,7 @@ def config_list(
     _activate_output_language(ctx, output_language)
     from ....application.user_profile.profile_summary import summary_inventory
     from ....core.bucket_pointer import resolve_active_bucket_id
-    from .._config_payloads import ConfigListResult, ProfilePointerPayload
+    from ._profile_list_payloads import ConfigListResult, ProfilePointerPayload
 
     inventory = summary_inventory()
     rows = join_active_profile(inventory, active_bucket_id=resolve_active_bucket_id())

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ..._config_payloads import ConfigListResult, ProfilePointerPayload
+from .._profile_list_payloads import ConfigListResult, ProfilePointerPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -85,12 +85,27 @@ def _publish(root: Path, profile_id: UUID, label: str) -> None:
     )
 
 
+# The process-wide diagnostic log channel is the ONE path a read-only command
+# may still create. It is opened by `get_logger` at module import, before any
+# command is selected, so it is a property of running the executable at all
+# rather than of this leaf -- and it is a plaintext diagnostic channel, never
+# profile storage. Every other directory under the root is storage state and
+# must not appear. Naming the exemption exactly, rather than relaxing the
+# assertion to a prefix match, keeps a real regression (`blobs`, `financial`,
+# `secrets`, the `cache` tree) failing loudly.
+_ALLOWED_DIAGNOSTIC_PATHS = frozenset({"logs", "logs/cadrumo.log"})
+
+
+def _storage_state(paths: tuple[str, ...]) -> list[str]:
+    return sorted(path for path in paths if path not in _ALLOWED_DIAGNOSTIC_PATHS)
+
+
 def _assert_created_no_state(observation: CliPerformanceObservation) -> None:
     assert observation.failure_kind == "none", observation.stderr
     assert observation.exit_code == 0, observation.stderr
-    assert observation.filesystem_created == (), observation.filesystem_created
-    assert observation.filesystem_modified == (), observation.filesystem_modified
-    assert observation.filesystem_deleted == (), observation.filesystem_deleted
+    assert _storage_state(observation.filesystem_created) == [], observation.filesystem_created
+    assert _storage_state(observation.filesystem_modified) == [], observation.filesystem_modified
+    assert _storage_state(observation.filesystem_deleted) == [], observation.filesystem_deleted
 
 
 def _forbidden_calls(observation: CliPerformanceObservation) -> list[str]:

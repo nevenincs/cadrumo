@@ -3,24 +3,30 @@
 Workflow sees only the non-authoritative UUID and label projection emitted by
 the custody capsule owner.  It does not inspect manifests, buckets, deleted
 directories, or record facts.
+
+That projection is exactly what the profile summary inventory observes, so this
+module reads it rather than building a second one.  It previously went through
+the authenticated aggregate, which took a per-profile custody lock and could
+publish a label head as a side effect of *resolving a name* -- work no consumer
+here needs, and a second definition of "which profiles exist" that could
+disagree with the first.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ...domain.user_profile.errors import ProfileNotFoundError
-from ..user_profile.profile_repository import CommittedProfileRepository
+from ..user_profile.profile_summary import ProfileSummary, summary_inventory
 from .errors import ProfileLabelAmbiguousError
 from .profile_bucket_models import ProfileBucketPointer
 
 
-def _repository(root: Path | None) -> CommittedProfileRepository:
-    return CommittedProfileRepository(root=root)
+def _summaries(root: Path | None) -> tuple[ProfileSummary, ...]:
+    return summary_inventory(root=root).summaries
 
 
-def _pointer(profile_id: str, label: str) -> ProfileBucketPointer:
-    return ProfileBucketPointer(bucket_id=profile_id, label=label)
+def _pointer(summary: ProfileSummary) -> ProfileBucketPointer:
+    return ProfileBucketPointer(bucket_id=summary.profile_id, label=summary.label)
 
 
 def read_profile_bucket(
@@ -31,7 +37,7 @@ def read_profile_bucket(
     """Resolve one exact label from committed-capsule label projections."""
     if not label or not label.strip():
         return None
-    matches = [item for item in _repository(root).list() if item.label.casefold() == label.strip().casefold()]
+    matches = [item for item in _summaries(root) if item.label.casefold() == label.strip().casefold()]
     if not matches:
         return None
     if len(matches) != 1:
@@ -39,19 +45,15 @@ def read_profile_bucket(
             translated_message="application.workflow.errors.profile_label_ambiguous",
             context={"label": label, "count": str(len(matches))},
         )
-    match = matches[0]
-    return _pointer(match.profile_id, match.label)
+    return _pointer(matches[0])
 
 
 def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> ProfileBucketPointer | None:
     """Resolve one UUID only when its current capsule is committed."""
     if not profile_id or not profile_id.strip():
         return None
-    try:
-        profile = _repository(root).load(profile_id)
-    except ProfileNotFoundError:
-        return None
-    return _pointer(profile.profile_id, profile.label)
+    identity = profile_id.strip()
+    return next((_pointer(item) for item in _summaries(root) if item.profile_id == identity), None)
 
 
 def resolve_profile_bucket(
@@ -70,7 +72,7 @@ def list_profile_buckets(
     root: Path | None = None,
 ) -> dict[str, ProfileBucketPointer]:
     """Return every committed capsule's non-authoritative label projection."""
-    return {item.profile_id: _pointer(item.profile_id, item.label) for item in _repository(root).list()}
+    return {item.profile_id: _pointer(item) for item in _summaries(root)}
 
 
 __all__ = [
