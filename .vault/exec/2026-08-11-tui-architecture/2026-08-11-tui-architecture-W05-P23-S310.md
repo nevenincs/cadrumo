@@ -5,12 +5,11 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3529961ff9fb7527bca6ce7c04971c49b49b69df5c8471e5cd1d74ab3f1ff1ed'
+body_hash: 'sha256:1d7097634713a2891ff2842b4aa332ba84049583826ff4856860c2966f1461e9'
 step_id: 'S310'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
 
 # Make the operations credential-free payload check type-aware so a content digest stops being refused for its name alone: the check matches forbidden tokens in a field name with no knowledge of the field's type, so an optimistic-concurrency content digest is refused while a hex-encoded secret under a benign name would pass, and the edit-contract request cannot be enrolled at all; admit a field only when it is BOTH typed as a content digest AND named with the digest token, keep every other name-matched field refused exactly as today, keep a field matching a second forbidden token refused even when digest-typed, and prove all three directions including a digest-typed field named for a secret
 
@@ -56,4 +55,3 @@ ever had; no prior test exercised its name-refusal directly.
 Unblocks `W05.P23.S144`.
 
 ## Changes
-
