@@ -22,7 +22,7 @@ sibling of the per-clave :class:`~core.aggregation.ForeignAssetClass`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
@@ -62,6 +62,56 @@ class ForeignAssetObligationGroup(StrEnum):
     VALORES_DERECHOS_SEGUROS = "valores_derechos_seguros"
     INMUEBLES = "inmuebles"
     MONEDAS_VIRTUALES = "monedas_virtuales"
+
+
+FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS: Final[
+    Mapping[ForeignAssetObligationGroup, frozenset[str]]
+] = MappingProxyType(
+    {
+        ForeignAssetObligationGroup.CUENTAS: frozenset({"cuentas"}),
+        ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: frozenset({"valores"}),
+        ForeignAssetObligationGroup.INMUEBLES: frozenset({"inmuebles"}),
+        ForeignAssetObligationGroup.MONEDAS_VIRTUALES: frozenset({"moneda", "monedas"}),
+    },
+)
+"""Registry ``section`` tokens whose presence declares a bloque is in scope.
+
+The bloque vocabulary and the registry's own casilla ``section`` vocabulary are
+not the same words -- the registry says ``valores`` where the RGAT bloque is
+``valores_derechos_seguros``, and ``moneda`` where the bloque is
+``monedas_virtuales``. Binding the two here, on the closed enum that owns the
+taxonomy, is what lets the SCOPE of a modelo's obligation -- which bloques it
+declares at all -- be read off the casillas the revision actually ships rather
+than hand-listed in a feature module, where it could disagree with the registry
+and nothing would notice.
+
+This is a vocabulary binding, not a scope declaration: it says what a section
+token means, never which modelo declares which bloque. That question is
+answered by :func:`obligation_groups_declared_by_sections` against real registry
+data, so a revision that adds or drops a bloque changes the answer without an
+edit here.
+"""
+
+
+def obligation_groups_declared_by_sections(
+    sections: Iterable[Sequence[str]],
+) -> frozenset[ForeignAssetObligationGroup]:
+    """Return the bloques the given casilla ``section`` paths put in scope.
+
+    Args:
+        sections: Each declared casilla's ``section`` path, as shipped by the
+            registry revision.
+
+    Returns:
+        Every :class:`ForeignAssetObligationGroup` whose registry section token
+        appears anywhere in those paths.
+    """
+    tokens = {str(part) for section in sections for part in section}
+    return frozenset(
+        group
+        for group, group_tokens in FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS.items()
+        if tokens & group_tokens
+    )
 
 
 FOREIGN_ASSET_CLASS_OBLIGATION_GROUP: Final[Mapping[ForeignAssetClass, ForeignAssetObligationGroup]] = MappingProxyType(
@@ -136,8 +186,10 @@ def foreign_asset_obligation_group(asset_class: ForeignAssetClass) -> ForeignAss
 
 __all__ = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
+    "FOREIGN_ASSET_OBLIGATION_GROUP_REGISTRY_SECTIONS",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "ForeignAssetObligationGroup",
     "M720AssetClassCode",
     "foreign_asset_obligation_group",
+    "obligation_groups_declared_by_sections",
 ]
