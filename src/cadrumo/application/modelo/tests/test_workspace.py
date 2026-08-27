@@ -1953,7 +1953,7 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
             ),
         )
 
-    monkeypatch.setattr(authority, "capture_law_selected_projection", _raise_unrelated_registry_failure)
+    monkeypatch.setattr(type(authority), "capture_law_selected_projection", _raise_unrelated_registry_failure)
 
     target = _visible_target_for(modelo, filing_year=filing_year, period="1T", bucket_id=bucket_id)
 
