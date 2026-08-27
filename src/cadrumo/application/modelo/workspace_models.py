@@ -931,11 +931,26 @@ class ModeloWorkspaceReadinessV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
-    """The explicitly requested, declared, and effective grade for a snapshot admission."""
+    """The explicitly requested and declared grade for one snapshot admission.
+
+    S128: a third ``effective_grade`` field was retired here. The registry's
+    own grade check (``_check_snapshot_authority_grade``) REFUSES a snapshot
+    whose declared grade is below the requested one; it never truncates and
+    never returns a snapshot built at some lesser grade. Under every path
+    that exists, an "effective" grade could therefore only ever equal
+    ``declared_grade`` -- a field that can only restate its neighbour asserts
+    a narrowing step the system never performs, and nothing in the codebase
+    ever constructed or read it. Retired outright rather than migrated
+    (``COMPATIBILITY_REGIME`` is ``PRE_RELEASE``; nothing persists this
+    class). Reintroduction condition: if a future revision-selection path
+    ever TRUNCATES instead of refusing -- admitting a snapshot at a grade
+    below the one requested, rather than raising -- then an effective grade
+    becomes a real, distinct fact and the field earns its place back with
+    that defined meaning.
+    """
 
     required_grade: RegistryAuthorityGrade
     declared_grade: RegistryAuthorityGrade
-    effective_grade: RegistryAuthorityGrade
     snapshot_scope_digest: ContentDigest
 
 

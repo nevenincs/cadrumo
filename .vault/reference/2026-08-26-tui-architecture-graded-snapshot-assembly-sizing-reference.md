@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:03d390ebbc8461a9f3ee5df83907a3b6b23a7c6ec716e00e8c29250e5c1df851'
+body_hash: 'sha256:7f7b16e649522c60dca78acb691f65dc226771354bc340c038d70c4f07519fe2'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -94,6 +94,14 @@ ruling (retire the field, define what narrows `effective_grade` below
 always equal to `declared_grade` with the reason stated) before
 `resolve_graded_snapshot_result` can construct
 `ModeloWorkspaceSnapshotScopeV1` honestly.
+
+**RULED (2026-08-27): retire the field.** `ModeloWorkspaceSnapshotScopeV1`
+now carries only `required_grade`, `declared_grade` and
+`snapshot_scope_digest`. See the S128 amendment in
+`2026-08-24-tui-registry-api-gate-adr.md` for the full reasoning and the
+stated reintroduction condition (a future truncating, non-refusing grade
+path). `ModeloWorkspaceSnapshotScopeV1` construction in
+`resolve_graded_snapshot_result` no longer has an open item here.
 
 ### CONFIRMED: what still needs building, and why it cannot reuse the static functions as-is
 

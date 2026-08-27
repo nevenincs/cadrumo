@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v1'
-body_hash: 'sha256:b783b74e7bc4b949b0566dedd2f8f25054de2b320d73e0897db4c14e9f0100ec'
+body_hash: 'sha256:932cc01ce41cdf69298ff0f2a831b52aa44429c32307e7af70f9673b05a131be'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -209,8 +209,9 @@ then discriminates:
 
 - `static_inspection` carries only the validated static registry projection and
   explicitly records that no snapshot was admitted;
-- `graded_snapshot` carries the requested, declared, and effective grade plus
-  the exact admitted snapshot scope; or
+- `graded_snapshot` carries the requested and declared grade plus the exact
+  admitted snapshot scope (a third "effective grade" was retired by S128 --
+  see the amendment below); or
 - `refused` carries the failed boundary without a partial snapshot disguised as
   success.
 
@@ -1129,3 +1130,29 @@ it goes, but "populated" currently means "presence flagged", not "value
 exposed". Widening `ModeloWorkspaceConstraintReferenceV1` to carry the real
 constraint values is a legitimate future Step; it is explicitly out of
 S296's scope.
+
+## Amendment (S128): `effective_grade` retired -- a distinction the system never makes
+
+`ModeloWorkspaceSnapshotScopeV1.effective_grade` is retired. `rg
+"effective_grade"` over tracked source found exactly one hit, the field
+declaration itself; `ModeloWorkspaceSnapshotScopeV1` was never constructed
+anywhere. `_check_snapshot_authority_grade` REFUSES a snapshot whose
+declared grade is below the requested one -- it never truncates and never
+returns a snapshot built at some lesser grade. Under every path that
+exists, an "effective" grade could therefore only ever equal
+`declared_grade`; a field that can only restate its neighbour asserts a
+narrowing step nothing performs, and a reader who trusts the model would
+believe such a step exists somewhere and go looking for code that has never
+existed. `required_grade` and `declared_grade` stay: one is what the
+caller asked for, the other what the revision's own
+`effective_authority_grade` declares (fail-closed default when undeclared),
+and that pair carries real information and a real refusal between them.
+
+Retired outright, not migrated: `COMPATIBILITY_REGIME` is `PRE_RELEASE`,
+nothing constructs the class, nothing persists it, and
+`no-legacy-compatibility` calls for deleting an unused surface rather than
+carrying a deprecation alias. Reintroduction condition, stated on the
+model's own docstring: if a future revision-selection path ever truncates
+instead of refusing -- admitting a snapshot at a grade below the one
+requested rather than raising -- an effective grade becomes a real, distinct
+fact and the field earns its place back with that defined meaning.
