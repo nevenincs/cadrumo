@@ -43,9 +43,24 @@ __all__ = [
 ]
 
 CREDENTIAL_PANEL_CSS: Final[str] = tokenised("""
-.field-label { text-style: bold; margin: $cadrumo-space-0; }
-.field-hint { color: $text-muted; margin: $cadrumo-space-0; }
-.credential-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+/* One field is one group: the label heads it, the hint belongs to the
+   label, the input closes it. So the separation goes ABOVE the label and
+   nowhere inside -- a uniform gap on all three would dissolve the grouping
+   the reader needs. */
+.field-label {
+    text-style: bold;
+    margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-tight $cadrumo-space-0;
+}
+.field-hint {
+    color: $text-muted;
+    margin: $cadrumo-tight $cadrumo-space-0;
+}
+/* The actions are a different kind of thing from the fields above them. */
+.credential-actions {
+    height: auto;
+    align-horizontal: right;
+    margin: $cadrumo-section $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
+}
 """)
 """Layout shared by the login and registration credential panels."""
 

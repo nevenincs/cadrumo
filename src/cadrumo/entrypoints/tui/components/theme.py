@@ -46,6 +46,18 @@ CADRUMO_LIGHT: Final[Theme] = Theme(
         "block-cursor-text-style": "none",
         "footer-key-foreground": "#c4553b",
         "input-selection-background": "#c4553b 25%",
+        # Declared, not inherited. Anything left undeclared is derived by
+        # Textual from its own defaults, which is how a near-black element
+        # appeared on the light page.
+        "input-cursor-background": "#c4553b",
+        "input-cursor-foreground": "#faf8f4",
+        "scrollbar": "#d8cec0",
+        "scrollbar-hover": "#c9bcaa",
+        "scrollbar-active": "#c4553b",
+        "scrollbar-background": "#f1eee7",
+        "scrollbar-corner-color": "#f1eee7",
+        "border": "#c4553b",
+        "border-blurred": "#d8cec0",
     },
 )
 
@@ -67,6 +79,17 @@ CADRUMO_DARK: Final[Theme] = Theme(
         "block-cursor-text-style": "none",
         "footer-key-foreground": "#e07d5f",
         "input-selection-background": "#d9694e 30%",
+        # Same declaration set as the light appearance; the two differ in
+        # colour only, never in which variables exist.
+        "input-cursor-background": "#d9694e",
+        "input-cursor-foreground": "#1a1815",
+        "scrollbar": "#3d382e",
+        "scrollbar-hover": "#4d4739",
+        "scrollbar-active": "#d9694e",
+        "scrollbar-background": "#232019",
+        "scrollbar-corner-color": "#232019",
+        "border": "#d9694e",
+        "border-blurred": "#3d382e",
     },
 )
 
@@ -137,7 +160,13 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # Horizontal breathing inside a control. Spent on `line-pad`, the
         # property Textual gives buttons for exactly this; `padding` insets
         # the content box instead and leaves a ring inside the border.
-        "cadrumo-control-pad-x": "2",
+        #
+        # Held at 1, which is Textual's own default, because `line-pad` is NOT
+        # counted in a button's auto-width: at 2 the widest label loses four
+        # cells, wraps to a second line, and that button alone grows a row --
+        # leaving a ragged action row. Short labels still get their breathing
+        # from `control-min-width`.
+        "cadrumo-control-pad-x": "1",
         # Textual's own default is 16. The previous 14 made buttons SMALLER
         # than the library intends, while the complaint was that they were
         # small.
@@ -254,13 +283,13 @@ BASE_CSS: Final[str] = tokenised("""
         border-title-color: $accent;
         border-title-style: bold;
         background: $surface;
-        padding: $cadrumo-space-0 $cadrumo-gutter;
-        /* The gap that was missing. Two panels with no margin butt their
-           borders together into one doubled line, so the eye reads a single
-           smeared container instead of two ideas. One row is the smallest
-           separation a terminal can show, and on a grid this dense it is
-           enough. */
-        margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-stack $cadrumo-space-0;
+        /* Both axes. Content used to sit directly on the border row, so a
+           panel read as a box crushed around its text. */
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        /* Panels are separate logical groups, so they get the SECTION gap,
+           not the sibling one: two panels a single row apart still read as
+           one smeared container. */
+        margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section $cadrumo-space-0;
         width: 100%;
         height: auto;
     }

@@ -151,7 +151,14 @@ class FlowTuiApp(App[None]):
     #live-validation { color: $error; margin: $cadrumo-space-0; }
     #answer-echo { color: $success; text-style: bold; margin: $cadrumo-space-0; }
     #commit-verdicts { color: $error; margin: $cadrumo-space-0; }
-    #nav-buttons { height: $cadrumo-band-height; align-horizontal: right; margin: $cadrumo-space-0; }
+    /* `auto`, never a pinned row: a button is three rows tall, so a
+       one-row container clipped every label away and left three bare
+       slabs on screen. Every sibling action row already sizes itself. */
+    #nav-buttons {
+        height: auto;
+        align-horizontal: right;
+        margin: $cadrumo-section $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
+    }
     #nav-buttons Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     #review-header {
         dock: top;
