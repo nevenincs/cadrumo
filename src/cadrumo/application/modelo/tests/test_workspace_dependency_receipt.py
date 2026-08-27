@@ -7,8 +7,9 @@ reads the current tree rather than a recorded claim: every proof below is
 derived from real production code and real behavior, never a caller-declared
 assertion. Minting the durable
 `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
-artifact is deferred to the C1 handoff phase; this module builds and proves
-the schema and validator only, per this Step's own scope.
+artifact was originally deferred to the C1 handoff phase (S131/S139); S140
+mints it for real, over the exact clean commit this module was proven
+against, once every predecessor and proof genuinely reads PASSED.
 
 Every denominator-shaped proof below (the native-owner surface inventory, the
 producer contract set) gates on a PROPERTY read from the live registration
@@ -27,7 +28,7 @@ from types import ModuleType
 from typing import Annotated, Literal
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from .. import workspace, workspace_manifest, workspace_models, workspace_producers
 from ..workspace_producers import (
@@ -139,6 +140,17 @@ class ModeloWorkspaceC2PredecessorTupleV1(BaseModel):
     native_owner_inventory: ModeloWorkspaceC2InventoryPredecessorV1
 
 
+class ModeloWorkspaceC2ProducerStampSummaryV1(BaseModel):
+    """One producer's contributor identity and contract digest, as minted evidence."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    contributor_kind: Annotated[str, Field(min_length=1, max_length=64)]
+    owner: Annotated[str, Field(min_length=1, max_length=128)]
+    producer: Annotated[str, Field(min_length=1, max_length=128)]
+    contract_digest: Annotated[str, Field(min_length=1, max_length=128)]
+
+
 class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     """The C2 complex-read dependency receipt named by the tui-registry-api-gate ADR.
 
@@ -152,6 +164,13 @@ class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     schema_version: Literal[1] = 1
     current_head_commit: Annotated[str, Field(min_length=40, max_length=40, pattern=r"^[0-9a-f]{40}$")]
     predecessors: ModeloWorkspaceC2PredecessorTupleV1
+    native_owner_surfaces: Annotated[tuple[str, ...], Field(min_length=1)]
+    producer_stamps: Annotated[tuple[ModeloWorkspaceC2ProducerStampSummaryV1, ...], Field(min_length=1)]
+    epoch_schema_digest: Annotated[str, Field(min_length=1, max_length=128)]
+    workspace_schema_fingerprint: Annotated[str, Field(min_length=1, max_length=128)]
+    field_manifest_digest: Annotated[str, Field(min_length=1, max_length=128)]
+    read_destinations: Annotated[tuple[str, ...], Field(min_length=1)]
+    clean_commit_proof: ModeloWorkspaceC2ProofV1
     adr_status_proof: ModeloWorkspaceC2ProofV1
     interface_adr_status_proof: ModeloWorkspaceC2ProofV1
     c1_exit_receipt_proof: ModeloWorkspaceC2ProofV1
@@ -164,6 +183,13 @@ class ModeloWorkspaceC2DependencyReceiptV1(BaseModel):
     conformance_proof: ModeloWorkspaceC2ProofV1
     no_legacy_proof: ModeloWorkspaceC2ProofV1
     redeclaration_proof: ModeloWorkspaceC2ProofV1
+
+    @model_validator(mode="after")
+    def _require_surfaces_and_stamps_agree(self) -> ModeloWorkspaceC2DependencyReceiptV1:
+        stamped_kinds = {stamp.contributor_kind for stamp in self.producer_stamps}
+        if stamped_kinds != set(self.native_owner_surfaces):
+            raise ValueError("producer_stamps must name exactly the declared native_owner_surfaces, no more, no fewer")
+        return self
 
 
 def _current_head_commit() -> str:
