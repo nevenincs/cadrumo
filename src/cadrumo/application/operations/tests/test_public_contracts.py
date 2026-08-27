@@ -48,6 +48,7 @@ from ..frontend_contracts import (
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlVersionHeader,
+    OperationResultProjectionSuccessV1,
     OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
@@ -581,10 +582,16 @@ def _frontend_contract_model_types() -> tuple[type[BaseModel], ...]:
             continue
         if candidate.__module__ != "cadrumo.application.operations.frontend_contracts":
             continue
+        # Each of these carries a caller-supplied projection behind a type
+        # parameter. Walked unparameterised, that parameter resolves to its
+        # BaseModel bound and every one of them reads as an open object, which
+        # says nothing about whether the envelope around it is closed.
         if candidate is OperationReviewProjectionSuccessV1:
             candidate = OperationReviewProjectionSuccessV1[SafeProjection]
         elif candidate is OperationWorkspaceRefreshTargetSuccessV1:
             candidate = OperationWorkspaceRefreshTargetSuccessV1[SafeProjection]
+        elif candidate is OperationResultProjectionSuccessV1:
+            candidate = OperationResultProjectionSuccessV1[SafeProjection]
         models.append(candidate)
     return tuple(models)
 
