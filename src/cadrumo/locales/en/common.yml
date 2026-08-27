@@ -368,6 +368,11 @@ categories:
     seguros_salud_autonomo:
       notes: Deductible up to a statutory cap of 500 EUR/year per taxpayer (Ley 35/2006
         art. 30.2.5.c rule 1, sickness-insurance premiums).
+      statutory_cap_variants:
+        discapacidad:
+          label: Limit per insured person with a disability
+        general:
+          label: General limit per insured person
     software_suscripcion:
       label: Software subscriptions
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).

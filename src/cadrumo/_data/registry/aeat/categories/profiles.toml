@@ -102,6 +102,7 @@ iva_hint = "exempt_or_non_subject"
 [profiles.proportionality]
 kind = "statutory_cap"
 statutory_cap_period = "year_per_person"
+notes = "categories.registry.mutualidad_alternativa.notes"
 
 # LIRPF art. 30.2.1a caps this premium at "la cuota maxima por contingencias
 # comunes que este establecida, EN CADA EJERCICIO ECONOMICO, en el citado
@@ -146,7 +147,6 @@ valid_to = 2025-12-31
 value = "17323.68"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
-notes = "categories.registry.mutualidad_alternativa.notes"
 
 [[profiles.proportionality.citations]]
 source = "aeat_help"

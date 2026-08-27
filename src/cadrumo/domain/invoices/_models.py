@@ -20,7 +20,12 @@ from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, IntracomOperationType
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    IntracomOperationType,
+    TravelAgencyMediationType,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
@@ -620,6 +625,11 @@ class Invoice(BaseModel):
     notes: str = ""
     iva_category: IvaCategory | None = None
     operation_type: IntracomOperationType | None = None
+    # RD 1619/2012 disposición adicional cuarta: set when this invoice
+    # documents a travel-agency mediation service (see
+    # :class:`~core.TravelAgencyMediationType`). Feeds Modelo 347 claves F/G
+    # -- never inferred from `iva_category`, which carries no mediation axis.
+    travel_agency_mediation: TravelAgencyMediationType | None = None
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None

@@ -20,8 +20,8 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal
 
@@ -78,11 +78,17 @@ from ._edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditApplyRequestV1,
     ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCompatibilityTupleV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
     ModeloEditPermittedSurfaceEntryV1,
+    ModeloEditRowAddressV1,
+    ModeloEditRowIntentKind,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
     ModeloEditSchemaIdentityV1,
     ModeloEditSubmissionV1,
     ModeloRowEditIntentV1,
@@ -961,13 +967,94 @@ class ModeloEditApplyBaselineV1(BaseModel):
         return ModeloEditBaselineV1.model_validate(data)
 
 
+#: Wire-safe mirror of ``ModeloScalar`` (``Decimal | int | str | bool | date | None``).
+#: ``Decimal`` validates from a JSON number OR a pattern-matched string but
+#: always SERIALIZES back to a string, so a field typed ``ModeloScalar``
+#: fails the operations payload-graph gate's validation/serialization
+#: schema-identity check. Dropping the raw ``Decimal`` input option and
+#: requiring a decimal amount to arrive as a string - exactly what
+#: serialization already produces, and what real fixtures already pass
+#: (``value="150.00"``) - removes the asymmetry with no loss of expressible
+#: values: the real type's own validator still parses a numeric string into
+#: ``Decimal`` when it is reconstructed in ``to_submission``.
+type _ModeloEditApplyScalarValue = int | str | bool | date | None
+
+
+class ModeloEditApplyScalarIntentV1(BaseModel):
+    """Wire mirror of ModeloScalarEditIntentV1 with a payload-safe value."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditScalarAddressV1
+    kind: ModeloEditScalarIntentKind
+    value: _ModeloEditApplyScalarValue = None
+
+    def to_intent(self) -> ModeloScalarEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloScalarEditIntentV1(address=self.address, kind=self.kind, value=self.value)
+
+
+class ModeloEditApplyBindingIntentV1(BaseModel):
+    """Wire mirror of ModeloBindingEditIntentV1 with a payload-safe value."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditBindingAddressV1
+    kind: ModeloEditBindingIntentKind
+    value: _ModeloEditApplyScalarValue = None
+
+    def to_intent(self) -> ModeloBindingEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloBindingEditIntentV1(address=self.address, kind=self.kind, value=self.value)
+
+
+class ModeloEditApplyRowIntentV1(BaseModel):
+    """Wire mirror of ModeloRowEditIntentV1 with payload-safe row values."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditRowAddressV1
+    kind: ModeloEditRowIntentKind
+    row: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=200)] | None = None
+    move_to_index: Annotated[int, Field(ge=1)] | None = None
+
+    def to_intent(self) -> ModeloRowEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloRowEditIntentV1(
+            address=self.address,
+            kind=self.kind,
+            row=None if self.row is None else tuple(entry.to_intent() for entry in self.row),
+            move_to_index=self.move_to_index,
+        )
+
+
+def _amount_within_declared_operand_bounds(value: _ModeloEditApplyScalarValue) -> bool:
+    """Report whether a wire scalar value that parses as a decimal amount stays in bounds.
+
+    A value that is not decimal-shaped (an integer, a plain non-numeric
+    string, a boolean, or a date) carries no financial-operand meaning and is
+    left to whatever business validation the domain reconstruction applies.
+    """
+    if not isinstance(value, str):
+        return True
+    try:
+        amount = Decimal(value)
+    except InvalidOperation:
+        return True
+    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(amount)
+
+
 class ModeloEditApplySubmissionV1(BaseModel):
     """Wire mirror of ModeloEditSubmissionV1 carrying a payload-safe baseline.
 
-    Scalar, binding and row intents are the real Edit Contract types
-    unchanged: none of them embeds ``ModeloCode`` or any other
-    custom-core-schema type, so only the baseline needed mirroring for those
-    three families - a total translation, every field converts.
+    Scalar, binding and row intents are mirrored only for their ``value``
+    field: ``ModeloScalar`` (``Decimal | int | str | bool | date | None``)
+    fails the operations payload-graph gate's validation/serialization
+    schema-identity check, because ``Decimal`` validates from a number or a
+    string but always serializes to a string. Every other field of these
+    three families - addresses, intent kinds, ``move_to_index`` - is already
+    payload-safe and carried through unchanged. This is a total translation:
+    every field of every mirrored intent converts, nothing is dropped.
 
     ``detail_row_intents`` is deliberately ABSENT from this wire type, not
     silently emptied: ``ModeloDetailRow`` (the per-modelo M184/M232/M349/
@@ -978,6 +1065,12 @@ class ModeloEditApplySubmissionV1(BaseModel):
     row types field-by-field is real, sizeable, per-modelo work belonging to
     its own Step. This operation cannot carry a detail-row edit yet; that is
     loud (the type cannot be constructed with one at all), not silent.
+
+    The mirrored payload is INPUT, not authority: ``apply_modelo_edit``
+    re-resolves and independently re-validates every coordinate at the
+    guarded commit point regardless of what this wire type carried, so a
+    stale or forged mirror cannot be believed - a mismatch surfaces as the
+    typed no-effect result, never a bad write.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -985,9 +1078,9 @@ class ModeloEditApplySubmissionV1(BaseModel):
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditApplyBaselineV1
     mutation_family: ModeloEditMutationFamily
-    scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=500)] = ()
-    binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=500)] = ()
-    row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=500)] = ()
+    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=500)] = ()
+    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
+    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
@@ -1002,7 +1095,7 @@ class ModeloEditApplySubmissionV1(BaseModel):
         unenforced. It should collapse into the broker once that wire lands.
         """
         for intent in self.scalar_intents:
-            if isinstance(intent.value, Decimal) and not _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(intent.value):
+            if not _amount_within_declared_operand_bounds(intent.value):
                 raise ValueError(
                     "scalar edit intent amount is outside the declared manual-override financial operand bounds"
                 )
@@ -1018,9 +1111,9 @@ class ModeloEditApplySubmissionV1(BaseModel):
         return ModeloEditSubmissionV1(
             baseline=self.baseline.to_baseline(),
             mutation_family=self.mutation_family,
-            scalar_intents=self.scalar_intents,
-            binding_intents=self.binding_intents,
-            row_intents=self.row_intents,
+            scalar_intents=tuple(intent.to_intent() for intent in self.scalar_intents),
+            binding_intents=tuple(intent.to_intent() for intent in self.binding_intents),
+            row_intents=tuple(intent.to_intent() for intent in self.row_intents),
         )
 
 

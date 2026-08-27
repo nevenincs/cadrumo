@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core.citation_grounding import CitationGrounding
 from ....core.i18n import Translatable as tr
 from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
 from .. import (
@@ -35,20 +36,63 @@ def _citation() -> CategoryCitation:
         reference="Manual práctico Renta 2025",
         locator="test",
         url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
-        quote=tr("Texto de prueba suficientemente concreto."),
+        quote="Texto de prueba suficientemente concreto.",
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )
 
 
 def test_category_citation_rejects_blank_quote_at_schema_boundary() -> None:
-    with pytest.raises(ValidationError, match="authoritative Spanish text"):
+    """A citation claiming VERIFIED must carry the text that verifies it.
+
+    The constraint is unchanged; what changed is that it can now fire. While
+    ``quote`` was a translation key the loader resolved it through a fallback
+    that never yields an empty string, so this check inspected the literal word
+    "Quote" for all eighty-three shipped citations and passed every time.
+    """
+    with pytest.raises(ValidationError, match="must carry its verbatim quotation"):
         CategoryCitation(
             source=CategoryCitationSource.MANUAL_RENTA,
             reference="Manual práctico Renta 2025",
             locator="test",
             url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
-            quote=tr("   "),
+            quote="   ",
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
+        )
+
+
+def test_category_citation_accepts_a_missing_quote_only_with_a_stated_reason() -> None:
+    """The other half: an absent quotation is legitimate when the record says why.
+
+    An AEAT Manual práctico edition is authoritative but is not among the
+    bundled consolidated texts, so no verbatim excerpt can be transcribed from
+    anything the repository holds. Refusing that citation outright would push an
+    author toward inventing text; accepting it silently would let the absence
+    pass as evidence. It is accepted only against a stated reason.
+    """
+    citation = CategoryCitation(
+        source=CategoryCitationSource.MANUAL_RENTA,
+        reference="Manual práctico Renta 2025",
+        locator="test",
+        url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
+        quote="",
+        grounding=CitationGrounding.SOURCE_NOT_BUNDLED,
+        grounding_reason="El Manual práctico no está en el corpus consolidado empaquetado.",
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+
+    assert citation.grounding is CitationGrounding.SOURCE_NOT_BUNDLED
+
+    with pytest.raises(ValidationError, match="must record WHY"):
+        CategoryCitation(
+            source=CategoryCitationSource.MANUAL_RENTA,
+            reference="Manual práctico Renta 2025",
+            locator="test",
+            url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
+            quote="",
+            grounding=CitationGrounding.SOURCE_NOT_BUNDLED,
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),
         )

@@ -31,9 +31,9 @@ from ....core.citation_grounding import CitationGrounding
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.legal import legal_reference_quotes_corpus
 from ....domain.calculations.registry.loader import load_catalogue_file
-from .. import SpendingCategory
 from .._proportionality import CategoryCitation
 from .._registry import load_category_profiles
+from .._spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -136,7 +136,7 @@ def test_the_seguro_de_enfermedad_citation_points_at_the_letter_that_grants_it()
     The locale key hid it, because a citation that renders as "Quote" cannot be
     read against the article it names.
     """
-    profile = load_category_profiles()["seguros_salud_autonomo"]
+    profile = load_category_profiles()[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
     assert profile.proportionality is not None
     citations = list(profile.proportionality.citations)
 

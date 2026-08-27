@@ -389,6 +389,11 @@ categories:
     seguros_salud_autonomo:
       notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
         35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
+      statutory_cap_variants:
+        discapacidad:
+          label: Límite por persona asegurada con discapacidad
+        general:
+          label: Límite general por persona asegurada
     software_suscripcion:
       label: Suscripción de software
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).

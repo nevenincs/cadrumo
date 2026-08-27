@@ -891,6 +891,33 @@ class IntracomOperationType(StrEnum):
     C = "C"
 
 
+class TravelAgencyMediationType(StrEnum):
+    """RD 1619/2012 disposición adicional cuarta mediation-service classification.
+
+    That disposition lets a travel agency, acting as intermediary "en nombre
+    y por cuenta ajena", invoice a listed set of services (passenger
+    transport and luggage; hostelería/acampamento/balneario; restauración y
+    catering; short-term transport-means rental; visits to museums/galleries/
+    monuments/gardens/parks; access to cultural/artistic/sporting/scientific/
+    educational/recreational events, fairs and exhibitions; travel insurance;
+    and services under the special travel-agency IVA regime) under the
+    agency's own invoice series rather than the actual supplier's. Modelo
+    347's claves F ("ventas agencia viaje", any listed service, ISSUED
+    direction) and G ("compras agencia viaje", air passenger transport only,
+    RECEIVED direction) key on this fact, not on invoice direction alone.
+
+    ``MEDIATED_SERVICE`` covers the full listed set and is the fact clave F
+    checks for. ``AIR_PASSENGER_TRANSPORT`` is the narrower subset clave G
+    checks for -- G names only "transportes de viajeros y sus equipajes por
+    vía aérea", not the disposition's full service list, so a RECEIVED
+    invoice for a non-air mediated service (e.g. mediated hostelería) is
+    neither F nor G and falls through to the ordinary A/B classification.
+    """
+
+    MEDIATED_SERVICE = "mediated_service"
+    AIR_PASSENGER_TRANSPORT = "air_passenger_transport"
+
+
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 

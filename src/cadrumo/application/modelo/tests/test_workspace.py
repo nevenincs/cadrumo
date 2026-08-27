@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path

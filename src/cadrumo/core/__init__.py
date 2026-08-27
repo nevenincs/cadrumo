@@ -396,6 +396,7 @@ if TYPE_CHECKING:
         BindingSourceKind,
         CalculationSourceLineageRole,
         IntracomOperationType,
+        TravelAgencyMediationType,
     )
     from .compatibility_lifecycle import (
         COMPATIBILITY_REGIME,
@@ -740,6 +741,7 @@ __all__: list[str] = [
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
     "TipoVinculacion",
+    "TravelAgencyMediationType",
     "accepted_filing_period_codes",
     "accepted_filing_period_patterns",
     "accepted_period_codes",
@@ -1106,6 +1108,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "TipoRentaGroundingTier": "._irnr",
     "TipoRentaIrnr": "._irnr",
     "TipoVinculacion": "._modelo_232_codigos",
+    "TravelAgencyMediationType": ".aggregation",
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE": "._authority_grade",
     "UNMODELED_OBLIGATIONS": "._modelo",
     "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": "._schema_family_disposition",
