@@ -619,7 +619,7 @@ convention = "google"
 # roots: what a command writes is a property of a cold start against an
 # empty root. argv is `sys.executable` plus a literal probe source and JSON
 # built from the shipped command graph; no operator input reaches it.
-"src/cadrumo/entrypoints/cli/tests/test_side_effect_contract.py" = ["S603"]
+"src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
