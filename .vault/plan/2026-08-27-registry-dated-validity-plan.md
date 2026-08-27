@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:8cdf4288661a1ed4020e55c036765d086ebbd73766dfd096402e5e40a310ca3c'
+body_hash: 'sha256:5de22b1ef3b13114753f5c1b1e23879c80cb0eb7263872f88f0466cb9fd68a6c'
 ---
 
 <!-- RETIRED: S01 -->
@@ -44,6 +44,16 @@ Prove every new gate bites by breaking the production data from outside the trac
 - [x] `P03.S09` - Prove every new gate bites by mutating the production data from outside the tracked tree, confirming each red and restoring, covering the omitted bound, the widened year-named citation and the widened provision window; `src/cadrumo/domain/ and src/cadrumo/core/`.
 - [x] `P03.S10` - Re-measure the coverage gates against the recorded pre-change baseline of three failing corpora, confirm the two IVA corpora resolve green on derived provision-checked coverage and that the categories red is a genuine grounding gap rather than a regression, and run the affected suites sequentially; `src/cadrumo/ and dev/`.
 - [x] `P03.S11` - Record in the vault what this migration deliberately did not fix, being the exact-year pinning defect reserved to its own brief, the category citation quote fields that carry locale keys absent from all four catalogues, and the three under-cited profiles whose 2024 coverage is withdrawn pending the bundled 2024 manual; `.vault/audit/`.
+
+### Phase `P04` - Ground the spending-category corpus to the supported window
+
+Close the coverage red the format migration correctly surfaced, by grounding what the corpus asserts rather than by widening what it claims. Driven after the format work because the defect it uncovered -- a year-variable statutory cap encoded as a wrong constant -- could only be seen once the mirror was gone.
+
+- [x] `P04.S12` - Obtain the official RETA cuota maxima por contingencias comunes for every supported filing year from AEAT and BOE primary sources, cross-checking each figure against a second official source and verifying that AEAT's own published method reproduces every published year before using it to derive the one year AEAT has not yet published; `external official sources, recorded in the feature audit`.
+- [x] `P04.S13` - Extend ProportionalityRule with dated statutory-cap rows so a cap the law re-fixes each ejercicio stops being a constant, make a cap either law-fixed or year-referenced but never both, refuse two amounts for one year, and intersect cap availability into the coverage derivation so the corpus cannot claim a year it can cite but not compute; `src/cadrumo/domain/categories/ and src/cadrumo/domain/categories/tests/`.
+- [x] `P04.S14` - Enrol RIRPF art. 9 and art. 22 in the legal catalogue from the already-bundled consolidated RD 439/2007, with required_text phrases read out of that file and verified present before writing, agent_reviewed provenance and an explicit operator-re-stamp note; `src/cadrumo/_data/registry/aeat/legal/irpf.toml`.
+- [x] `P04.S15` - Partition the citation sources so every citation is bounded on exactly one axis, require a provision id on statutory citations, derive each statutory window from its provision's effective span intersected with the supported filing window, and give the three statutorily-uncited profiles the article their rule rests on quoted verbatim from the bundled corpus; `src/cadrumo/domain/categories/ and src/cadrumo/_data/registry/aeat/categories/profiles.toml`.
+- [x] `P04.S16` - Prove every new gate bites by mutating the shipped corpus from outside the tracked tree, covering a stripped provision id, a window widened past its provision, a cap edited away from the AEAT figure and a cap schedule moved off a year the citations still cover, then re-run both coverage gates; `src/cadrumo/domain/categories/ and src/cadrumo/application/registry/tests/`.
 
 ## Parallelization
 

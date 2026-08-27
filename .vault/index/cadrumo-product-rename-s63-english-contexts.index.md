@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cadrumo-product-rename-s63-english-contexts'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:4b8de394db0560e468895d5053b3c72156c0be1098f2b2a89aafd23c21d05e8c'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s63-english-contexts-audit]]'

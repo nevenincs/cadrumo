@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:2611653f2deb6753622a4e2f5d99f329f98ba9cbb688f937b43b6e579dc614e8'
+body_hash: 'sha256:a5a62a7451f57917eb21d1d84d4a470675f0d5c3ef4bae4ac46f87dfd15b05c9'
 related: []
 ---
 
@@ -37,23 +37,78 @@ The one visible consequence is a better refusal message. Each resolver now names
 the years it does ground and tells the reader to ground the missing one rather
 than widen a window.
 
-### Spending-category profiles ground 2025 only, and that red is real
+### Spending-category profiles now ground the whole supported window, and the route there found a live defect
 
-The corpus previously reported 2024 and 2025. The 2024 file was a mirror of the
-reviewed 2025 one, and its 41 year-dated citations were rewritten by string
-substitution; they were dropped rather than re-windowed, per the accepted ADR.
+The corpus previously reported 2024 and 2025, of which 2024 was a mirror. It now
+grounds 2022 through 2026, and every year is derived rather than asserted.
 
-Thirty-nine of the 42 profiles keep statutory `ley_irpf` and `reglamento_irpf`
-grounding, which is the stronger authority and was never year-dated. Three carry
-no year-neutral citation at all -- `cuotas_colegiales`, `cuotas_autonomos_ss`
-and `mutualidad_alternativa` -- and at least one citation is a hard model
-invariant, so those three pin the corpus to 2025.
+The 41 mirrored 2024 citations were dropped rather than re-windowed. What
+replaced them is not a wider claim on the same evidence: each of the 42 statutory
+citations now names the provision it rests on, and its window is computed as the
+intersection of that provision's effective span in the registry legal catalogue
+with the declared supported filing window. LIRPF art. 28 (2007->), art. 29
+(2007->) and art. 30 (2018->) all cover the window, so the widening is a fact the
+catalogue can be asked to confirm, and a companion gate asks it on every run.
 
-`test_exact_key_corpus_year_coverage` therefore reds for this corpus, missing
-2022, 2023, 2024 and 2026. It was already red for 2022, 2023 and 2026 before this
-work; 2024 joined them. That is the designed outcome: the year is now visibly
-ungrounded instead of invisibly mirrored. Closing it means reading the manual for
-those years, never widening a window -- and the model now refuses the widening.
+The three profiles that carried no statutory citation at all -- `cuotas_colegiales`,
+`cuotas_autonomos_ss` and `mutualidad_alternativa` -- each gained one, quoted
+verbatim from the bundled consolidated LIRPF. Which article establishes each rule
+is an agent tax review, recorded as such in the TOML beside each citation, and it
+is the part of this change most in need of operator re-stamping.
+
+### The mutualidad cap was year-variable by law and encoded as a wrong constant
+
+`mutualidad_alternativa` shipped `statutory_cap_eur = "15000"`. LIRPF art. 30.2.1.a
+caps that premium at the cuota maxima por contingencias comunes established "en
+cada ejercicio economico" in the RETA -- a figure the cotizacion orden re-fixes
+every year. One constant cannot express it, and the constant chosen was not the
+figure for any ejercicio:
+
+| ejercicio | lawful cap | shipped | operator effect |
+|---|---|---|---|
+| 2022 | 14 057,40 | 15 000 | allowance overstated |
+| 2023 | 15 266,72 | 15 000 | allowance understated |
+| 2024 | 16 030,82 | 15 000 | allowance understated |
+| 2025 | 16 672,66 | 15 000 | allowance understated |
+| 2026 | 17 323,68 | 15 000 | allowance understated |
+
+Four of the five years understate the allowance, so the taxpayer deducts less
+than the law permits and OVER-pays. That direction produces a valid return, no
+refusal and no signal, and `no-silent-under-declaration` names it as the axis
+nothing in this repository watches -- which is why the defect survived a mirror,
+a review and a format migration untouched. The 2022 row runs the other way and
+would have overstated the deduction.
+
+2022 to 2025 are the figures AEAT prints in the Manual practico Renta for each
+ejercicio, each with its own arithmetic. 2026 has no Manual until 2027 and is
+derived from Orden PJC/297/2026 art. 18 by AEAT's own printed method, which
+reproduces all four published years to the cent; that reproduction is itself
+asserted in the test suite, so the derivation cannot silently drift.
+
+Carrying this required extending the format: windows were attached to citations
+only, so a year-variable VALUE had nowhere to live. `ProportionalityRule` now
+takes dated `statutory_cap_schedule` rows -- the brief's own
+`{value, valid_from, valid_to}` idiom, applied to the value. A cap is either
+law-fixed or year-referenced, never both, and coverage intersects cap
+availability with citation evidence so the corpus cannot claim a year it can cite
+but not compute.
+
+### Two RIRPF articles were enrolled from the bundled corpus, with no fetch needed
+
+Six profiles -- telefonia movil and the five vehiculo categories -- rest on RIRPF
+art. 22 alone, and the dietas profiles on art. 9. Neither was in the legal
+catalogue, and both looked like they would need fetching. They did not: RD
+439/2007 is already bundled consolidated, so both were enrolled pointing at that
+file with `required_text` phrases read out of it and verified present before the
+entries were written.
+
+Art. 9's dietas amounts (53,34 and 91,35 con pernocta; 26,67 and 48,08 sin
+pernocta) match the shipped `statutory_cap_variants` exactly, and its
+`effective_from` is recorded as 2008-01-01 rather than the 2007 publication
+because apartado A.3 was given that effect by RD 1804/2008 -- the conservative
+claim, and one that still spans every supported year. Both entries are
+`agent_reviewed` with an explicit operator-re-stamp note, following the pattern
+the sibling LIRPF entries already use.
 
 ### The category citation `quote` fields carry locale keys that do not exist
 
@@ -77,18 +132,18 @@ It was left alone here on purpose. It is a grounding defect, not a format one,
 and folding it into a format migration would have hidden a substantive change to
 what the corpus asserts inside a mechanical diff.
 
-### Category citations cannot be provision-checked, so their windows stay narrow
+### Every citation is now bounded on exactly one axis
 
-The IVA corpora's windows are bounded by the cited provision's own effective span
-in the registry legal catalogue, which makes a multi-year span a derived fact.
-Category citations carry free-text `reference`, `locator` and `url` rather than a
-registry legal-reference id, so nothing can check a wider span there.
+The corpus previously had a hole the first pass did not close: an edition-dated
+citation was bounded by the edition year it names, but a statutory citation was
+bounded by nothing a gate could read, so its window was pure author assertion.
 
-Every category window was therefore authored at 2025 only -- the year that was
-actually reviewed -- including the statutory citations that are almost certainly
-stable across neighbouring years. Converting those citations to legal-reference
-ids is what would let the provision-window gate widen them honestly, and is the
-single highest-value follow-up for this corpus.
+`CategoryCitationSource` is now partitioned. An annual-edition source is bounded
+by its edition and must NOT carry a provision id; a statutory source must carry
+one and is bounded by that provision's effective span. The partition is derived
+from the enum rather than listed, and a gate asserts the two sets union to the
+whole enum and do not intersect -- so a new source cannot arrive bounded by
+neither, which is the failure this closes.
 
 ### The IVA gates went green, and the reason matters
 
@@ -142,10 +197,14 @@ migration.
 
 ## Recommendations
 
-- Ground filing years 2022, 2023, 2024 and 2026 for the spending-category corpus
-  against the Manual práctico for each year, starting with the three profiles
-  that carry no statutory citation. Never widen an existing window to admit a
-  year; the model refuses it and the refusal is the point.
+- Operator re-stamp on the four agent-reviewed legal judgments this change
+  landed: the two RIRPF catalogue entries, and the article chosen as the basis
+  for each of the three previously uncited profiles. These are tax reviews an
+  agent performed against the bundled corpus, and they are marked as such rather
+  than passed off as operator-reviewed.
+- Re-derive the 2026 mutualidad cap against the Manual practico Renta 2026 when
+  AEAT publishes it in 2027. It is the one figure in the schedule that is derived
+  rather than published, and the test that pins it names that distinction.
 - Close the category citation `quote` defect the way the IVA catalogue closed it:
   inline verbatim Spanish, check it against the bundled corpus, and correct the
   locale-scanner comment that already describes the intended state.

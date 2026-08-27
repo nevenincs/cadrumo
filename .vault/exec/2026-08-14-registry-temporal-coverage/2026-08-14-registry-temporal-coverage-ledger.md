@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:005911bd34dcebbad6c24d8fbcf334d89d73958c33a8cba8dc3fff2bac5826a9'
+body_hash: 'sha256:9a8dceeaef40bb8353208c8f1cd0501ce1bfe255a73b822b88543d145c63689c'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -207,6 +207,11 @@ related:
 - `S16` `A` `dev/registry/tests/test_revision_temporal_bounds_applier.py`
 
 - `S23` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+
+- `S40` `A` `dev/registry/derive_result_dispositions.py`
+- `S40` `A` `dev/registry/tests/test_result_disposition_derivation.py`
+
+- `S40` `A` `dev/registry/generate_result_disposition_fragments.py`
 
 ## Notes
 
@@ -422,7 +427,6 @@ Recorded as a correction rather than an edit to the earlier note, so the
 overstatement and its refutation both stay visible. A blocker claim that turns
 out to be false is worth more to the next reader than a tidy one.
 
-
 MEASURED COST of the fragment family `S23` and `S40` both need, so the next
 attempt starts from the number rather than an estimate.
 
@@ -450,7 +454,6 @@ its own campaign row with that number in front of it rather than folded into
 The grounding remains available and quotable, as the correction above records.
 Nothing here is blocked on evidence; it is blocked on scope.
 
-
 FAILURE MODE of the family addition, measured rather than assumed, because it
 determines how the change must be sequenced.
 
@@ -474,3 +477,176 @@ other trees.
 
 So the blocker on `S23` and `S40` is neither evidence nor difficulty. It is that
 the change is corpus-wide and atomic, and it needs to be scheduled as such.
+
+SECOND CORRECTION, retracting the failure-mode note above. That note claimed a
+new schema family costs 128 authored disposition rows and is atomic-or-broken.
+Both halves are wrong.
+
+`build_revision_coverage_manifest` states it "reads the revision and nothing
+else" and builds `rows=tuple(_schema_family_row(family, revision) for family in
+sorted(REVISION_SCHEMA_FAMILY_FIELDS))`. The rows are DERIVED, not authored. A
+new family therefore costs zero authored rows: every revision gets its row
+automatically, and an empty family lands as `blocked_pending_evidence`, which
+the authorizing ADR names as the intended fail-closed default and a visible
+worklist entry rather than a defect.
+
+`_rows_cover_every_enrolled_family_once` does raise, but only if the rows fail
+to cover the families exactly once -- which the derivation guarantees by
+construction. It cannot fire from adding a family. And `fully_resolved` has no
+consumer in the grade machinery, so unresolved rows report rather than gate.
+
+What the family actually costs is ordinary engineering: the schema model and
+field, loader support, section validation, the roughly ten modelos of real
+disposition data with their diseno citations, and the core-to-application
+inversion. Hours of work, not a corpus-wide atomic commit.
+
+Recorded as a retraction rather than an edit because the overstatement is the
+more useful artefact: four separate blocker claims in this campaign turned out
+to be false on inspection, always in the direction of over-caution, and always
+discoverable in minutes by reading the code that was said to block. A reader who
+notices that pattern will trust the remaining blockers less and check them,
+which is the correct response.
+
+THIRD AND FINAL WORD on the `S23`/`S40` family cost, this time established by
+EXECUTION rather than by reading, which is why it differs from both notes above.
+
+The field was added to `ModeloRevision` and the registry was loaded. It loaded
+clean -- 58 modelos, 20 families -- and the coverage row derived itself as
+`blocked_pending_evidence` exactly as the second correction predicted. Zero
+authored rows. So the retraction above was right about the coverage manifest.
+
+But running the schema gates found the real gate, which neither note had:
+
+    modelo 130 revision 2019-y-siguientes claims 'filing' authority grade while
+    ['result_dispositions'] remain blocked pending evidence. The filing rung
+    asserts every enrolled family is resolved: populate each one, or declare it
+    not applicable with a reason and citations.
+
+The constraint is the AUTHORITY-GRADE check, not the coverage-manifest
+validator. Every filing-grade revision in the corpus -- 68 of the 128 -- fails
+the moment a twentieth family is enrolled, until each either populates it or
+declares it not applicable WITH a reason and citations. The not-applicable route
+is authoring, not generation: a reason and citations cannot be produced
+mechanically.
+
+So the original instinct was right in substance and wrong in mechanism, and the
+two corrections were right about the mechanism they examined and wrong about the
+consequence. The change was reverted; the registry is back to 19 families and
+loads clean.
+
+The honest cost for whoever schedules this: 68 filing-grade revisions each
+needing a populated declaration or an authored not-applicable reason, landing
+together with the schema, loader and validation in one commit, because the tree
+is unusable in between. That is a campaign row of its own, and it is why `S23`
+and `S40` cannot close inside another row.
+
+Why the `S23`/`S40` family cannot be attempted from a session sharing this
+worktree, stated from observed behaviour rather than policy.
+
+During this campaign's execution, uncommitted working-tree changes were swept
+into peer commits at least four times: the filing-year threading, the corpus
+year-coverage gate, the cross-revision advisory retirement, and the
+supported-year consumption guard. The last is the instructive one. It landed as
+`7829338af1` while its blast radius was still being measured, produced 36
+refusals across the registry suite and 8 more in the Modelo 100 suites, and
+needed `d287abbe0a` to revert it.
+
+The family addition must land as one commit -- schema, loader, validation, and
+all 68 filing-grade revisions carrying either a populated declaration or an
+authored not-applicable reason -- because the authority-grade gate fails every
+filing-grade revision in between. A sweep that commits half of it takes the
+registry down for every session, and registry validation is all-or-nothing.
+
+So the constraint is not the size of the work. It is that a multi-file atomic
+change cannot be staged safely in a tree where another process commits the
+working directory. Whoever schedules it should hold the tree, or work in an
+isolated worktree, and land it in a single commit.
+
+
+FINAL SIZING of the `S23`/`S40` family, derived from the corpus.
+
+Of the 128 revisions, 68 claim filing grade and so must resolve every enrolled
+family. They split cleanly on whether they declare formulas:
+
+- **14 informative revisions** declare no formulas and settle no figure --
+  Modelos 145, 165, 184 and their siblings. For these, "not applicable: an
+  informative declaration settles no cuota, so no Tipo de declaracion result
+  disposition exists" is an honest reason, and it is derivable rather than
+  templated.
+- **54 revisions declare formulas** and therefore settle a figure. Only about
+  ten of them appear in the `core` disposition table. The other 44 would be
+  demoted out of filing grade the moment the family enrols, because
+  `blocked_pending_evidence` is exactly what the filing rung refuses.
+
+So the authoring cost is not the ten entries the `core` table holds. It is 54
+result-disposition declarations, each needing its own modelo's "Tipo de
+declaracion" note read out of its own diseno de registro and cited, plus 14
+derivable not-applicable declarations.
+
+That is the honest size, and it is why this belongs in its own campaign with its
+own research pass rather than inside `S23` or `S40`. The grounding is available
+for every one of them -- the disenos are bundled and enrolled -- but availability
+is not the same as having been read.
+
+
+BREAKTHROUGH on the `S23`/`S40` family, which changes it from speculative to
+schedulable. The authoring cost was the blocker: 54 filing-grade revisions each
+needing a result-disposition mapping read out of its own diseno. That reading is
+now mechanical and proved.
+
+The diseno states the admissible "Tipo de declaracion" letters verbatim, and the
+letters ARE the disposition: `ResultDisposition` members carry the AEAT codes
+themselves (C compensacion, B resultado a deducir, D devolucion, N negativa).
+So the mapping is read, not transcribed, on the letters' own precedence -- C,
+else B, else D, else N.
+
+`dev/registry/derive_result_dispositions.py` implements it and reproduces ALL
+NINE mappings the hand-authored `core` table carries, independently, with zero
+divergence. That agreement is the whole evidence that it reads what the table's
+author read.
+
+Coverage over the 68 filing-grade revisions: 38 derive a mapping from their
+diseno's code list; the remaining 30 belong to fifteen modelos -- 145, 165, 180,
+184, 190, 193, 232, 296, 322, 347, 349, 360, 369, 390, 720 -- whose disenos
+never mention the field across 105 real corpus files between them. Those are the
+informative declarations, and the measured absence is what makes `not
+applicable` an honest declaration for them rather than a shrug.
+
+The loader needs no wiring: `_compute_revision_section_fields` is "derived from
+the schema so a new section field is section-classified automatically". The
+schema addition was tested live and loads clean at 20 families.
+
+What remains for whoever schedules the commit: the schema model and field, the
+generated declarations for all 68 revisions, and the core-to-application
+inversion, landing together. Every input is now derived and gated.
+
+
+The `S23`/`S40` family is blocked on `W03.P08.S19`, and therefore on the
+export-fragment campaign's `S84`. This dependency is not recorded on the plan,
+and it is the third such omission this campaign has surfaced.
+
+The chain is short and measured. The authority-grade gate requires EVERY
+filing-grade revision to resolve every enrolled family. There are 68 of them.
+Ten sit in campaign-owned trees: Modelo 303 carries six filing-grade revisions
+(2022, 2023, 2024-desde-09-y-3t, 2024-hasta-08-y-2t, 2025, 2026-y-siguientes)
+and Modelo 390 four (2022 through 2025). So enrolling the family requires
+writing declarations into trees the export-fragment campaign holds, which is
+precisely what `S19` exists to do and precisely what it is blocked on.
+
+The generator therefore renders 58 of the 68 -- 32 with a mapping derived from
+their diseno, 26 declared not applicable on measured absence -- and skips the
+ten owned ones rather than writing into a held tree. Nothing was applied; the
+registry tree is untouched.
+
+What this leaves ready for the day `S84` lands: the derivation, proved against
+all nine hand-authored mappings; the generator, covering 58 revisions now and
+the remaining ten the moment the trees are released; and the measured knowledge
+that the loader needs no wiring and the schema addition loads clean. The
+remaining work is the schema model and field, the generated declarations, and
+the core-to-application inversion, in one commit.
+
+One scope decision is recorded in the generator itself: the fragment declares
+the disposition SEMANTICS only, not which casilla holds the result. The casilla
+identification is not derivable -- the semantic roles disagree across modelos --
+and deriving it would reintroduce the modelo-to-role transcription this
+migration exists to remove.
