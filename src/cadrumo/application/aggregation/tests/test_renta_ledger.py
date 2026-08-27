@@ -1031,7 +1031,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
             citations=(
                 CategoryCitation(
                     source=CategoryCitationSource.MANUAL_RENTA,
-                    reference="Regla de prueba territorial",
+                    reference="Manual práctico Renta 2025, regla de prueba territorial",
                     locator="test",
                     url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
