@@ -10,13 +10,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition, RelationRevisionSelector
-
 from .errors import RegistryValidationError
 from .ids import ModeloId, RelationId
 from .period_offset_math import apply_period_offset
+from .schema import ModeloDefinition, ModeloRevision
+from .schema_references import PeriodSelector
+from .schema_surfaces import RelationDefinition, RelationRevisionSelector
 
 
 @dataclass(frozen=True, slots=True)
