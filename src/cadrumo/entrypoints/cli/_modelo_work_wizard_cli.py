@@ -47,8 +47,6 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo._action_errors import (
     CalculationRegistryUnavailableError,
@@ -56,9 +54,9 @@ from ...application.modelo._action_errors import (
     WorkUnitNotFoundError,
     modelo_work_wizard_retry_exhausted_precondition,
 )
-from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo._calculate_input import calculate_modelo_work_revision
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,
     ModeloWorkWizardStep,
@@ -69,6 +67,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (

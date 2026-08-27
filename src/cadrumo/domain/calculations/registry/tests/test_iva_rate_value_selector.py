@@ -14,13 +14,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....domain.iva import (
     IvaCashAccountingTreatment,
@@ -29,6 +22,9 @@ from .....domain.iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

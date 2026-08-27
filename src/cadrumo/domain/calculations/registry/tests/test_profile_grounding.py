@@ -9,16 +9,11 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.profile_grounding import (
-    ProfileKeyGrounding,
-    binding_profile_keys,
-    build_profile_grounding_index,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from .....core import BindingSourceKind, Modelo
 from ..authority import bundled_authority
+from ..errors import RegistryValidationError
+from ..profile_grounding import ProfileKeyGrounding, binding_profile_keys, build_profile_grounding_index
+from ..schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

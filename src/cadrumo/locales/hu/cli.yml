@@ -2340,6 +2340,10 @@ cli:
       import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
+      list:
+        incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
+          (állapot: {outcome}). Futtassa újra a parancsot; ha továbbra is fennáll,
+          ellenőrizze a profiltárolót.'
       manager_closed: A(z) '{profile}' módosításai mentve.
       manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett
         munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`

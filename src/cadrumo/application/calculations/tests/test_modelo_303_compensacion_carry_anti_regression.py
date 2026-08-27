@@ -36,16 +36,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import (
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
-
-from ....core import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store

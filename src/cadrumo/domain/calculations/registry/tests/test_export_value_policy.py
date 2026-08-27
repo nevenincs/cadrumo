@@ -10,20 +10,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.export_value_policy import (
-    ExportValuePolicy,
-    ParsedExportPolicyWireValue,
-    project_export_value,
-)
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-)
-
 from .....core.directory_scan import scan_directory
+from ..errors import RegistryValidationError
+from ..export_parse import parse_export_payload
+from ..export_value_policy import ExportValuePolicy, ParsedExportPolicyWireValue, project_export_value
+from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

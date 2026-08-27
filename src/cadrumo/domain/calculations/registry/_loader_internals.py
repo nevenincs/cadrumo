@@ -16,16 +16,6 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    REVISION_MANIFEST_ONLY_FIELDS,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    SupportedFilingYearsCatalogue,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
-
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
     FilingProducerKey,
@@ -68,6 +58,15 @@ from .modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
 )
+from .schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    REVISION_MANIFEST_ONLY_FIELDS,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    SupportedFilingYearsCatalogue,
+)
+from .schema_references import LegalParameter, LegalReference, SourceReference
 from .validate_revision_identity import revision_reference_identity_failures
 
 ModeloRevisionSource = _ModeloRevisionSource

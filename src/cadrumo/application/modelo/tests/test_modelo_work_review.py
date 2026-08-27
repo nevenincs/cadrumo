@@ -8,14 +8,13 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....core import BindingSourceKind, ModeloWorkProgressState, Period
 from ....domain.calculations import RowSourceIdentity
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.temporal import select_revision
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     CalculationRevision,

@@ -54,10 +54,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

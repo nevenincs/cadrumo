@@ -43,9 +43,6 @@ from typing import TypeGuard
 
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
@@ -59,6 +56,8 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_date_binding_refs,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_formula import ParameterDefinition
 from ...domain.contribuyente import (
     CCAA,
     MinimoDescendientesThresholds,

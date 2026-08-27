@@ -10,14 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-
 from .....core import CasillaId, Period, validated_casilla_id
 from .._loader_internals import _collect_registry_tree_fingerprints
+from ..authority import ValidatedRegistryAuthority
+from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
 from ..loader_cache import registry_disk_cache_dir
+from ..loader_fingerprints import clear_fingerprint_cache
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

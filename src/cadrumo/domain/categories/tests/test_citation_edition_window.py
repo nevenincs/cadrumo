@@ -23,10 +23,10 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.i18n import Translatable as tr
-
+from ....core.i18n import Translatable as tr
 from .._proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
+    STATUTORY_CITATION_SOURCES,
     CategoryCitation,
     CategoryCitationSource,
     parse_http_url,
@@ -44,12 +44,17 @@ def _citation(
     valid_from: date,
     valid_to: date,
 ) -> CategoryCitation:
+    # A statutory source is bounded by its provision and so must name one; an
+    # annual-edition source is bounded by its edition and must NOT. The fixture
+    # follows the same partition the model enforces rather than hard-coding one.
+    provision = "ley-35-2006:art-30" if source in STATUTORY_CITATION_SOURCES else None
     return CategoryCitation(
         source=source,
         reference=reference,
         locator="art. 30",
         url=parse_http_url(_BOE_URL),
         quote=tr("Texto autoritativo de prueba."),
+        legal_ref=provision,
         valid_from=valid_from,
         valid_to=valid_to,
     )

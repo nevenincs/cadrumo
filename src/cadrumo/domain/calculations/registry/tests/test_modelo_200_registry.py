@@ -10,10 +10,6 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import (
     CasillaId,
     FilingProjectionRef,
@@ -25,8 +21,11 @@ from .....core import (
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs
+from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

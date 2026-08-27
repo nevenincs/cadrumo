@@ -49,30 +49,28 @@ from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
-from cadrumo.core.aggregation import BindingAggregationOp
-from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from ...core import M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
+from ...core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
+from ...core.decimal import coerce_decimal
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.parsing import parse_iso8601_date
+from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
+from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
-from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-from cadrumo.domain.calculations.registry.gasto193_bindings import Gasto193Observation
-from cadrumo.domain.calculations.registry.withholding296_bindings import Withholding296Observation
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
-from ...core import M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
-from ...core.aggregation import RetencionClave, RowSetGroupingKind
-from ...core.decimal import coerce_decimal
-from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.parsing import parse_iso8601_date
-from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
+from ...domain.calculations.registry.donativo_bindings import DonativoDonorObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.gasto193_bindings import Gasto193Observation
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.withholding296_bindings import Withholding296Observation
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 __all__ = [
     "AssembledObservations",

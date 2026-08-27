@@ -42,10 +42,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.aggregation import INVOICE_BINDING_SOURCE_KINDS
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -56,6 +52,7 @@ from ....application.invoices import (
     create_catalogue_invoice,
 )
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
+from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS
 from ....domain.attachments import (
     AttachmentFileContent,
     AttachmentIngestionRequest,
@@ -63,6 +60,8 @@ from ....domain.attachments import (
     AttachmentSource,
     add_attachment,
 )
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import Invoice
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile

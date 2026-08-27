@@ -65,14 +65,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
-    resolve_available_bound_inputs_by_casilla_id,
-)
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -93,6 +85,13 @@ from ....core import (
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
 )

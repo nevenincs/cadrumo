@@ -17,19 +17,11 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from cadrumo.core.aggregation import BindingAggregationOp
-from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
-from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
-    FormulaDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import BindingSourceKind, CasillaId, Period
+from ....core.aggregation import BindingAggregationOp
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
+from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,
     binding_row_set_selector,
@@ -41,8 +33,15 @@ from ....domain.calculations.registry.relations import (
     relation_requirement_index,
     relation_source_requirements,
 )
+from ....domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+)
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.period import calculation_filing_date
 from ._layout import SheetLayout, plan_layout
 from ._records import (

@@ -22,11 +22,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period, PeriodError
 from ....core.identity import ContentDigest
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 
 

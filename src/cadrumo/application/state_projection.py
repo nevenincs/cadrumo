@@ -83,11 +83,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
-from cadrumo.application.workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
-from cadrumo.application.workflow.state_models import WorkflowState
-from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -96,6 +91,7 @@ from ..adapters.persistence.profile.transactions import TransactionCatalogueRepo
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
+from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
 from ..core.hashing import content_hash_hex
@@ -103,6 +99,7 @@ from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
 from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -121,9 +118,11 @@ from .auth_credentials import ActiveCertificateCredentials
 from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
+from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
+from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from ..domain.calculations.registry.schema import RegistrySnapshot
 
 _log = get_logger(__name__)
 
@@ -679,8 +678,6 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
     from ..core.i18n import tr
     from ..domain.user_profile.values import ProfileSetupState
     from .modelo._profile_readiness_gate import (
@@ -689,6 +686,7 @@ def _build_modelo_readiness(
         pre_activity_period_refusal,
     )
     from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
@@ -830,7 +828,7 @@ def _resolve_modelo_readiness_registry(
     callers can render ``registry_ready: false`` instead of losing the
     rest of the projection.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+    from ..domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
     period_token = period.registry_token
     try:
@@ -917,8 +915,7 @@ def _missing_calculation_bindings_for_readiness(
     so the readiness missing set and the calculate refusal set agree by
     construction (``aeat-calculation-aggregation``).
     """
-    from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-
+    from ..domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
     from .calculations import relation_prefill_period_zero_default_binding_ids
     from .modelo.profile_binding import (
         ProfileBindingResolutionError,
@@ -1260,10 +1257,9 @@ def _readiness_comparison_domain(
 
 def _readiness_owner_observation(active_profile_id: str) -> tuple[str, ...]:
     """Read the pointer, profile record and registry authority limbs."""
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
     from ..domain.calculations.registry.authority import bundled_authority
     from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:

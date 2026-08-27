@@ -6,13 +6,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode
 from .errors import RegistrySnapshotError
 from .ids import ModeloId
 from .period_selector_match import selector_period_matches_request
+from .schema import ModeloDefinition, SupportedFilingYearsCatalogue
+from .schema_references import SourceReference
 from .temporal import select_revision
 
 

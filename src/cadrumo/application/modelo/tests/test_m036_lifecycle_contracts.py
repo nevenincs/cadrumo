@@ -12,8 +12,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
-
+from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from .._m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

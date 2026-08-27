@@ -19,13 +19,12 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import Final, NamedTuple, cast
 
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import CasillaId, Modelo, Period, RegistryAuthorityGrade, normalise_aeat_csv
 from ...core.identity import CalculationRevisionId, same_tax_identifier
+from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,

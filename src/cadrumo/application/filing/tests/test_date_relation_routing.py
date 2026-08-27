@@ -29,11 +29,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     _bound_casilla_binding_ids,

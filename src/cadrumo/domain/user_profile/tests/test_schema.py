@@ -7,11 +7,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
-
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.legal import verify_legal_catalogue
 from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
 from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
 from ..schema import (
@@ -158,7 +157,7 @@ def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs(
     between two non-empty citation sets - not the "schema carries nothing"
     gap this test guards.
     """
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+    from ...calculations.registry.profile_grounding import build_profile_grounding_index
 
     authority = bundled_authority()
     index = build_profile_grounding_index(authority)

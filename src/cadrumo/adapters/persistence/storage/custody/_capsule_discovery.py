@@ -53,6 +53,13 @@ class AnchoredCurrentCapsuleCommit:
     capsule_path: Path
     commit: _CommitIdentity
     label_payload: bytes | None = None
+    label_requested: bool = False
+    """Whether the caller asked for label provenance at all.
+
+    Separating "not asked for" from "asked for and absent" is what lets a
+    summary reader tell a programming error from a capsule that changed
+    generation between the marker parse and the label read.
+    """
 
     @property
     def profile_id(self) -> UUID:
@@ -320,22 +327,18 @@ def _anchored_current_capsule_commits_posix(
                     label_payload = None
                     if label_filename is not None:
                         assert label_maximum_bytes is not None
-                        data_fd = posix_open_child_directory(candidate_fd, "data")
-                        try:
-                            label_payload = read_regular_file_fd(
-                                data_fd,
-                                label_filename,
-                                display_path=capsules_root / candidate_name / "data" / label_filename,
-                                maximum_bytes=label_maximum_bytes,
-                                trace=None,
-                            )
-                        finally:
-                            os.close(data_fd)
+                        label_payload = _posix_label_payload(
+                            candidate_fd,
+                            display_root=capsules_root / candidate_name,
+                            label_filename=label_filename,
+                            label_maximum_bytes=label_maximum_bytes,
+                        )
                     discovered.append(
                         AnchoredCurrentCapsuleCommit(
                             capsule_path=capsules_root / candidate_name,
                             commit=commit,
                             label_payload=label_payload,
+                            label_requested=label_filename is not None,
                         )
                     )
             except ProfileCustodyRecordError:
@@ -366,6 +369,39 @@ def _open_posix_candidate(root_fd: int, candidate_name: str) -> int | None:
         # A link/reparse candidate or a concurrent removal is not a current
         # capsule.  The caller must never inspect children of that path.
         return None
+
+
+def _posix_label_payload(
+    candidate_fd: int,
+    *,
+    display_root: Path,
+    label_filename: str,
+    label_maximum_bytes: int,
+) -> bytes | None:
+    """Read the anchored label beside a parsed marker, or report its absence.
+
+    The data directory and the label member are both probed for existence
+    before being read.  Either one missing means the capsule is mid-publication
+    or mid-deletion, not malformed, so the absence is reported as ``None``
+    rather than raised.
+    """
+    try:
+        data_fd = posix_open_child_directory(candidate_fd, "data")
+    except ProfileCustodyRecordError:
+        return None
+    try:
+        display_path = display_root / "data" / label_filename
+        if not posix_child_exists(data_fd, label_filename, trace=None, display_path=display_path):
+            return None
+        return read_regular_file_fd(
+            data_fd,
+            label_filename,
+            display_path=display_path,
+            maximum_bytes=label_maximum_bytes,
+            trace=None,
+        )
+    finally:
+        os.close(data_fd)
 
 
 def _anchored_current_capsule_commits_windows(
@@ -426,8 +462,13 @@ def _windows_candidate_commit(
         if profile_id is None:
             return None
         label_path = candidate / "data" / label_filename if label_filename is not None else None
+        label_anchored = False
         if label_path is not None:
-            anchor_directory(candidate_anchors, label_path.parent, final_access=0x80000000)
+            try:
+                anchor_directory(candidate_anchors, label_path.parent, final_access=0x80000000)
+                label_anchored = True
+            except ProfileCustodyRecordError:
+                label_anchored = False
         marker_path = candidate / commit_filename
         if not lexists(marker_path, trace=None):
             return None
@@ -435,13 +476,14 @@ def _windows_candidate_commit(
         if commit.profile_id != profile_id:
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
         label_payload = None
-        if label_path is not None:
+        if label_path is not None and label_anchored and lexists(label_path, trace=None):
             assert label_maximum_bytes is not None
             label_payload = read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
         return AnchoredCurrentCapsuleCommit(
             capsule_path=candidate,
             commit=commit,
             label_payload=label_payload,
+            label_requested=label_path is not None,
         )
 
 

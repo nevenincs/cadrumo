@@ -8,10 +8,9 @@ from typing import ClassVar, Protocol, get_args
 
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.inventory_bindings import InventorySelector
-
 from ...core import BindingSourceKind, Modelo
 from ...domain.calculations import RowSourceIdentity
+from ...domain.calculations.registry.inventory_bindings import InventorySelector
 from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.contribuyente.inventory import (
     InventoryLedgerDocument,

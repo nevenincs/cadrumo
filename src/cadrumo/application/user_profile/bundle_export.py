@@ -65,9 +65,8 @@ from .bundle_export_operation import (
 from .custody_ports import default_profile_bucket_event_history_repository
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
-
     from ...domain.user_profile.portable_export import UserProfilePortableExport
+    from ..workflow.profile_bucket_models import ProfileBucketPointer
 
 # The hardened writer stages through its own inner sibling before the rename;
 # see :func:`_orphan_staged_paths` for why recovery must reach it too.
@@ -461,9 +460,8 @@ def _reload_operation(
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
-
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ..workflow.profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 
     if profile_name is not None:
         pointer = read_profile_bucket(profile_name)

@@ -16,9 +16,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.bindings import CasillaObservation
 from .._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,

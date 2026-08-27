@@ -8,8 +8,6 @@ from datetime import timezone
 import pytest
 from pydantic import ValidationError
 
-import cadrumo.adapters.outbound.aeat.auth.authenticator as authenticator
-
 from ......application.auth.session_types import (
     ClaveMovilSessionDetail,
     ClavePermanenteSessionDetail,
@@ -17,6 +15,7 @@ from ......application.auth.session_types import (
 )
 from ......core.errors import AeatLoginAssertionError
 from ......core.i18n import tr
+from .. import authenticator as authenticator
 from ..authenticator import _require_exact_active_certificate_session
 from ..errors import AuthConfigurationError
 from ._authenticator_support import (

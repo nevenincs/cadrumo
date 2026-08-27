@@ -64,15 +64,15 @@ class ForeignAssetObligationGroup(StrEnum):
     MONEDAS_VIRTUALES = "monedas_virtuales"
 
 
-FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES: Final[
-    Mapping[ForeignAssetObligationGroup, str]
-] = MappingProxyType(
-    {
-        ForeignAssetObligationGroup.CUENTAS: "rd-1065-2007:art-42-bis",
-        ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "rd-1065-2007:art-42-ter",
-        ForeignAssetObligationGroup.INMUEBLES: "rd-1065-2007:art-54-bis",
-        ForeignAssetObligationGroup.MONEDAS_VIRTUALES: "rd-1065-2007:art-42-quater",
-    },
+FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES: Final[Mapping[ForeignAssetObligationGroup, str]] = (
+    MappingProxyType(
+        {
+            ForeignAssetObligationGroup.CUENTAS: "rd-1065-2007:art-42-bis",
+            ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "rd-1065-2007:art-42-ter",
+            ForeignAssetObligationGroup.INMUEBLES: "rd-1065-2007:art-54-bis",
+            ForeignAssetObligationGroup.MONEDAS_VIRTUALES: "rd-1065-2007:art-42-quater",
+        },
+    )
 )
 """The RGAT provision that ESTABLISHES each bloque's information obligation.
 
@@ -107,9 +107,7 @@ def obligation_groups_established_by_legal_refs(
     """
     cited = set(legal_refs)
     return frozenset(
-        group
-        for group, article in FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES.items()
-        if article in cited
+        group for group, article in FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES.items() if article in cited
     )
 
 

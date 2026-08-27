@@ -37,9 +37,8 @@ _log = _get_logger(__name__)
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
-
     from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
+    from ....application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ....domain.user_profile.values import UserProfileRecord as _UserProfileRecord
 
 

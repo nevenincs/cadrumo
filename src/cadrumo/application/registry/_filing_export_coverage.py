@@ -14,17 +14,6 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from cadrumo.application.filing import (
-    FilingExportProof,
-    FilingExportProofAssessment,
-    FilingExportProofAuthority,
-    FilingExportProofChannel,
-    FilingExportProofCoordinate,
-    FilingExportProofRefusalReason,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -33,9 +22,19 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
+)
+from ..filing import (
+    FilingExportProof,
+    FilingExportProofAssessment,
+    FilingExportProofAuthority,
+    FilingExportProofChannel,
+    FilingExportProofCoordinate,
+    FilingExportProofRefusalReason,
 )
 from .closure import (
     RegistryClosureEvidence,

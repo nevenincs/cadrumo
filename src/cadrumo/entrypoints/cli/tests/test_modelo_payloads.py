@@ -19,10 +19,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.ids import RelationId
-
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.ids import RelationId
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

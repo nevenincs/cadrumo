@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...pdf import ExtractedCasilla
 from .. import ExtractionWarning, InboundDeclaracionObservation, TemplateRevision
 

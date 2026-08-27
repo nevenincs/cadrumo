@@ -17,8 +17,6 @@ from typing import TYPE_CHECKING, cast
 import typer
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-
 from ...application.modelo._action_errors import WorkUnitNotFoundError
 from ...application.modelo._calculate_input import (
     WorkCalculateInputBundle,
@@ -52,6 +50,7 @@ from ...core.i18n import tr
 from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
+from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.modelos import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,

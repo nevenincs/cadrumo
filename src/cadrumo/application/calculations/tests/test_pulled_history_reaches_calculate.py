@@ -46,9 +46,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -62,6 +59,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, CasillaValueKind, Modelo, Period, validated_casilla_id
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

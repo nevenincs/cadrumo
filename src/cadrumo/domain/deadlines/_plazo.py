@@ -19,7 +19,7 @@ from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind,
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 
     type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
@@ -171,11 +171,11 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from cadrumo.domain.calculations.registry.deadline_coordinate import (
+    from ..calculations.registry.deadline_coordinate import (
         deadline_semantic_coordinate,
         deadline_window_semantic_coordinates,
     )
-    from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+    from ..calculations.registry.period_selector_match import selector_period_matches_request
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
     if requested.filing_year != filing_year:

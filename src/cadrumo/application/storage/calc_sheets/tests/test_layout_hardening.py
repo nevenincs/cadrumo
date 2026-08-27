@@ -6,11 +6,10 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
+from .....domain.calculations.registry.schema_formula import FormulaExpression
+from .....domain.calculations.registry.schema_input_kind import InputKind
 from .._layout import plan_layout
 from ..errors import CalcSheetsEngineError
 

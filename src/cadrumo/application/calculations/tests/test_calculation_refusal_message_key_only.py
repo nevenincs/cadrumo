@@ -221,8 +221,7 @@ def test_observation_key_refusal_renders_as_its_key() -> None:
 
 
 def test_row_set_grouping_refusal_renders_as_its_key() -> None:
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
+    from ....domain.calculations.registry.errors import RegistryValidationError
     from .._row_set_assembly import assemble_observations_for_grouping
 
     revision = bundled_authority().snapshot("190", filing_year=2025, period="0A").revision

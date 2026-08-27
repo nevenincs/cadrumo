@@ -29,8 +29,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
@@ -42,7 +40,7 @@ from ..bindings import (
     validate_binding_selector_shape,
 )
 from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

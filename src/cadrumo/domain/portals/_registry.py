@@ -13,11 +13,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from cadrumo.domain.calculations.registry.errors import RegistryError, RegistrySnapshotError
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...core.logging import get_logger
 from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.errors import RegistryError, RegistrySnapshotError
+from ..calculations.registry.ids import RevisionId
 from ..modelos import ModeloCode, ModeloValidationError
 from ._categories import PortalCategory
 from ._codes import Portal

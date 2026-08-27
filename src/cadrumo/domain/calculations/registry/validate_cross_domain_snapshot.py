@@ -13,7 +13,7 @@ from ....core import CasillaId, Modelo
 from .ids import BindingId
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from .schema import RegistrySnapshot
 
 
 class CrossDomainSnapshotCheck(Protocol):

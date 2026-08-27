@@ -2342,6 +2342,10 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      list:
+        incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
+          de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
+          reviseu l''emmagatzematge de perfils.'
       manager_closed: Els canvis a '{profile}' estan desats.
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar

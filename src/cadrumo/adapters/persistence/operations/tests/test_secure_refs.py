@@ -9,12 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from cadrumo.adapters.persistence.operations.secure_references import (
-    OPERATION_SECURE_REFERENCE_NAMESPACE,
-    OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
-)
-
 from .....core.classification import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
@@ -24,6 +18,11 @@ from ...storage import (
     StorageNamespaceScope,
 )
 from ...storage.errors import RepositoryError
+from ..secure_references import (
+    OPERATION_SECURE_REFERENCE_NAMESPACE,
+    OperationSecureReferenceRepository,
+    operation_secure_reference_repository,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

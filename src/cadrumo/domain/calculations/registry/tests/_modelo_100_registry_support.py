@@ -9,21 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....domain.contribuyente import compute_deduccion_maternidad_0611
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .._validate import RegistryValidator
+from ..errors import RegistryValidationError
+from ..loader import load_registry_tree
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from ..snapshot import build_snapshot
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(

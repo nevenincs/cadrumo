@@ -17,9 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
-
 from ....core import Period
+from ...calculations.registry.schema_verification import ProfilePredicateDefinition
 from .. import (
     DeadlineEngine,
     IVARegime,

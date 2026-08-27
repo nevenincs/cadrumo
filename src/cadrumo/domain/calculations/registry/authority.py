@@ -786,8 +786,7 @@ class ValidatedRegistryAuthority:
             if gap.modelo == modelo_id and gap.filing_year == filing_year and str(gap.period) == period
         )
         return tuple(
-            f"modelo {modelo_id} {filing_year} {period}: declared support is not fully backed -- "
-            f"missing {prerequisite}"
+            f"modelo {modelo_id} {filing_year} {period}: declared support is not fully backed -- missing {prerequisite}"
             for prerequisite in matching
         )
 

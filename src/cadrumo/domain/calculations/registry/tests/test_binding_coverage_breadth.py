@@ -27,10 +27,6 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from .....application.aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
@@ -47,6 +43,9 @@ from .....application.aggregation import (
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core import BindingSourceKind
 from ..authority import bundled_authority
+from ..errors import AmbiguousRevisionSelectionError
+from ..schema_input_kind import InputKind
+from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

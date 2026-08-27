@@ -16,7 +16,7 @@ from ._models import InvoiceReviewRecord, LedgerReviewRecord
 from .errors import ReviewError
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
+    from ..workflow.state_models import WorkflowState
 
 
 def update_ledger_review(

@@ -87,8 +87,7 @@ def test_new_field_label_resolves_in_every_shipped_language(
     # es, en, ca and hu are four genuinely distinct languages here, so a
     # translated label set has no duplicate strings across all four.
     assert len(set(rendered.values())) == len(rendered), (
-        f"{_SECTION_KEY}.{field_key} rendered the same label under two different "
-        f"languages: {rendered!r}"
+        f"{_SECTION_KEY}.{field_key} rendered the same label under two different languages: {rendered!r}"
     )
 
 

@@ -29,10 +29,9 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ....core import Period
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCategory,
     IvaExemptionArticle,

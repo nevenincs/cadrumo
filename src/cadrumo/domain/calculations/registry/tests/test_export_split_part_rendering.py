@@ -23,13 +23,12 @@ from itertools import pairwise
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_modelo_source
-from cadrumo.domain.calculations.registry.loader_cache import discover_modelo_sources
-
 from .....core.resources import bundled_path
+from ..errors import RegistryValidationError
 from ..export_value_policy import ExportValuePolicy
 from ..fixed_width_codec import render_fixed_width_export_field
+from ..loader import load_modelo_source
+from ..loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

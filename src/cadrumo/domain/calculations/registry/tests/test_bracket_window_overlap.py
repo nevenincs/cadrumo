@@ -21,9 +21,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
-
 from ..formula_runtime_ops import resolve_bracket
+from ..schema_formula import BracketEntry, ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

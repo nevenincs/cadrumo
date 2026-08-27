@@ -14,8 +14,7 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
-
+from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import (
     EntityType,
     IrpfIncomeCategory,
@@ -216,7 +215,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
     only for an APPLICABLE verdict. explain and the operational views
     cannot diverge because both derive from the same rule table."""
 
-    from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
+    from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _autonomo_profile()
     result = build_overview_explain(profile, modelo="303", year=2026)

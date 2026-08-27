@@ -18,10 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from cadrumo.core import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-
+from ....core import RegistryAuthorityGrade
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
@@ -58,6 +55,8 @@ from ._validate_surfaces import (
 )
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from .export import derive_export_layouts_from_bindings
+from .schema import ModeloDefinition, ModeloRevision
+from .schema_references import LegalReference, SourceReference
 from .validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )

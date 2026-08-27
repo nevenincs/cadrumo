@@ -24,9 +24,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from .....core import CasillaId, Period, validated_casilla_id
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing import (
     CasillaChange,
     ModeloComplementaria,

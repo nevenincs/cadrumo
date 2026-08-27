@@ -36,15 +36,11 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from ..authority import bundled_authority
+from ..binding_selector_utils import selector_as_dict
+from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from ..schema import DataBindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

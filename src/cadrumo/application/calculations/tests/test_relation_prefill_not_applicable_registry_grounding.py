@@ -45,7 +45,7 @@ from .._relation_prefill import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from ....domain.calculations.registry.schema import RegistrySnapshot
 
 #: Modelo 100 filing years whose revisions declare the pagos-fraccionados dependency pair.
 _M100_YEARS: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025)

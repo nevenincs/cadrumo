@@ -20,10 +20,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -43,6 +39,9 @@ from .bindings import (
 )
 from .ids import BindingId
 from .manual_input_selector import is_layout_binding_selector
+from .schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from .schema_references import LegalReference, SourceReference
+from .schema_surfaces import CasillaDefinition
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

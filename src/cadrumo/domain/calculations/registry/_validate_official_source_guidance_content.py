@@ -66,11 +66,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ....core.external_constants import UTF_8_ENCODING
 from ._validate_evidence import EvidenceValidator
+from .schema import DeadlineWindowDefinition
+from .schema_references import SourceReference
 
 #: A suppression notice must itself say something was suppressed or repealed.
 #: Deliberately stem-based (not "suprimido"/"derogado" as exact forms) so it

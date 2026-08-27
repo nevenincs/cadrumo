@@ -23,11 +23,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from cadrumo.domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    resolve_withholding_binding_values,
-)
-
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -36,6 +31,10 @@ from ...adapters.persistence.storage import (
 from ...core import CalculationSourceLineageRole
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
+)
 from ._percepciones_observations_repository import PercepcionObservationRepository
 from ._source_mesh import (
     CalculationSourceContext,

@@ -9,8 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthStatus
 from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -25,6 +23,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
     CalculationRevision,

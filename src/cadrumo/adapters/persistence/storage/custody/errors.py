@@ -32,6 +32,19 @@ class ProfileCustodyRecordError(ProfileCustodyError, ValueError):
     """Raised when a current-format custody record is malformed or altered."""
 
 
+class ProfileCustodyConcurrentCapsuleChangeError(ProfileCustodyRecordError):
+    """Raised when a capsule changed generation between two anchored reads.
+
+    A committed capsule always carries its label beside the commit marker that
+    proved it.  So an anchored observation that parses the marker and then
+    finds no label member did not observe a malformed capsule -- it observed a
+    capsule being published or deleted underneath it.  Separating that from
+    :class:`ProfileCustodyRecordError` keeps a caller from reporting a
+    transient race as on-disk corruption, which is the difference between
+    "retry the listing" and "this store is damaged".
+    """
+
+
 class ProfileCustodyPasswordError(ProfileCustodyError, ValueError):
     """Raised when profile-password representation or proof is refused."""
 
@@ -77,6 +90,7 @@ class WipeTypeError(StorageError, TypeError):
 
 
 __all__ = [
+    "ProfileCustodyConcurrentCapsuleChangeError",
     "ProfileCustodyError",
     "ProfileCustodyPasswordError",
     "ProfileCustodyRecordError",

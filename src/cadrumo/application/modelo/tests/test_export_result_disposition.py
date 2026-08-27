@@ -7,10 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....core import CasillaId, PaymentElection, Period, RefundElection
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,

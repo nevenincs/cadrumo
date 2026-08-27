@@ -56,7 +56,7 @@ _PROSE_ROOT: Final[str] = ".vault/"
 
 
 def _tracked_text_files() -> tuple[str, ...]:
-    listed = subprocess.run(  # noqa: S603  # fixed read-only git subcommand assembled only by this module
+    listed = subprocess.run(  # fixed read-only git subcommand assembled only by this module
         ("git", "ls-files", "-z"),  # noqa: S607  # repository tool is fixed
         cwd=REPO_ROOT,
         check=True,
@@ -64,9 +64,7 @@ def _tracked_text_files() -> tuple[str, ...]:
         text=True,
     ).stdout
     return tuple(
-        entry
-        for entry in listed.split(chr(0))
-        if entry and any(entry.endswith(suffix) for suffix in _TEXT_SUFFIXES)
+        entry for entry in listed.split(chr(0)) if entry and any(entry.endswith(suffix) for suffix in _TEXT_SUFFIXES)
     )
 
 
@@ -95,9 +93,7 @@ def test_every_declared_naming_site_still_names_a_transient_tree() -> None:
     stale = {
         entry
         for entry in DECLARED_NAMING_SITES
-        if not any(
-            segment in (REPO_ROOT / entry).read_text(encoding=UTF_8) for segment in TRANSIENT_TREE_SEGMENTS
-        )
+        if not any(segment in (REPO_ROOT / entry).read_text(encoding=UTF_8) for segment in TRANSIENT_TREE_SEGMENTS)
     }
     assert stale == set()
 

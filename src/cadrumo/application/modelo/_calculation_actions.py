@@ -185,9 +185,8 @@ from .calculation_route import require_calculation_route_resolver as _require_ca
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
-
     from ...adapters.persistence.storage import SecureObjectWrite
+    from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,

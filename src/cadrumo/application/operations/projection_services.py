@@ -12,13 +12,6 @@ from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from cadrumo.application.operations.persistence.journal import (
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
-)
-
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -82,6 +75,12 @@ from .interactions import (
     OperationResponseToken,
 )
 from .models import OperationId
+from .persistence.journal import (
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
 from .registry import OperationRegistry, operation_public_schema_reference
 from .secret_submission import zeroize_secret_buffer
 

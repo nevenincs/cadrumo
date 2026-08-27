@@ -11,8 +11,6 @@ from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -25,6 +23,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
+from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (
     ModeloReconciliationCommand,
     ReconciliationDeclaracionSourceUnsupportedError,

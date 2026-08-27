@@ -29,9 +29,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField
-
 from ..record_design import _split_glued_ordinal_position
+from ..record_design_schema import RecordDesignField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

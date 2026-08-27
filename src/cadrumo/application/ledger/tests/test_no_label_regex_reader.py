@@ -43,7 +43,7 @@ from typing import TypeIs
 
 import pytest
 
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+from .. import evidence_draft as evidence_draft_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

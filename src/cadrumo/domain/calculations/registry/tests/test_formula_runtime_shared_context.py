@@ -25,9 +25,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-
 from .....core import CasillaId
 from ..formula_runtime import (
     _SPECIALIZED_EXPRESSION_EVALUATORS,
@@ -36,6 +33,8 @@ from ..formula_runtime import (
     _evaluate_with_ctx,
 )
 from ..ids import BindingId, RelationId
+from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

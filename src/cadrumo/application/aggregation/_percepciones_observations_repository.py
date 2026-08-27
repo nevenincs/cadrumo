@@ -51,8 +51,6 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
 from ...adapters.persistence.storage import (
     WITHHOLDING_OBSERVATIONS_NAMESPACE,
     SecureBoundRepository,
@@ -61,6 +59,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._observation_window import hashed_tax_id_token, replace_observation_window
 from .errors import AggregationValidationError, t
 

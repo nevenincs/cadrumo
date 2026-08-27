@@ -35,14 +35,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue
+from ..schema_formula import ParameterDefinition
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

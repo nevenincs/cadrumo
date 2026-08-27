@@ -7,9 +7,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
@@ -22,12 +19,13 @@ from .._validate_relation_sources import (
 )
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
+from ..errors import RegistryValidationError
 from ..relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from ..schema import ModeloDefinition, ModeloRevision
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 from ._registry_schema_support import _committed_registry_tree
 

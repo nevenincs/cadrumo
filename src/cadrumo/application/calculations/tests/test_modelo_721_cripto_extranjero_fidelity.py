@@ -67,14 +67,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
     RegistryAuthorityGrade,
     validated_casilla_id,
 )
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile

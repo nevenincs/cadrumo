@@ -1233,8 +1233,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
                 )
             if rag_result["line_start"] not in defined_at:
                 raise RuntimeError(
-                    f"registry facade row {pair[0]} anchors {rag_result['symbol']} at a line that is "
-                    "not its definition"
+                    f"registry facade row {pair[0]} anchors {rag_result['symbol']} at a line that is not its definition"
                 )
         if rag_identity not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
@@ -1259,9 +1258,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
         if rag_result["symbol"] not in row["rag_query"]:
             raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
         if _collapsed_prose(row["follow_on_action"]) in _collapsed_prose(row["rag_query"]):
-            raise RuntimeError(
-                f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion"
-            )
+            raise RuntimeError(f"registry facade row {pair[0]} RAG query embeds its own follow-on conclusion")
         if not deleted_family and rag_result["path"] == row["new_path"]:
             symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
             if not exported_symbols:
@@ -1280,9 +1277,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
             # which only ever records positions inside the facade's own file.
             external_defined_at = _definition_lines(rag_result["path"], rag_result["symbol"])
             if len(external_defined_at) != 1 or rag_result["line_start"] not in external_defined_at:
-                raise RuntimeError(
-                    f"registry facade row {pair[0]} RAG result is not an exact current definition"
-                )
+                raise RuntimeError(f"registry facade row {pair[0]} RAG result is not an exact current definition")
         owner_locators = semantic_evidence["owner_definition_locators"]
         expected_owner_locators = sorted(
             locator for values in row["current_symbol_locators"].values() for locator in values

@@ -8,10 +8,9 @@ from importlib import import_module
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import ModeloError
 from .._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

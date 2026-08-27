@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import SourceRefId
-
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.ids import SourceRefId
 from ...calculations import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,

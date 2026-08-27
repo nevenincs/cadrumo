@@ -38,13 +38,12 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-import cadrumo.application.auth.certificate_secret_backend as _backend_module
-
 from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
+from .. import certificate_secret_backend as _backend_module
 from ..certificate_secret_backend import CertificateSecretBackend, SecureStorageCertificateSecretBackend
 from ..certificate_source_operations import (
     register_operator_certificate_source,

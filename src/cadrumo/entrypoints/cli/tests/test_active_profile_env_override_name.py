@@ -54,7 +54,7 @@ def _create_profile_and_resolve_uuid() -> str:
             "activities.description": "design",
         },
     )
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(_LABEL)
     assert pointer is not None, "the created profile must resolve by its label"

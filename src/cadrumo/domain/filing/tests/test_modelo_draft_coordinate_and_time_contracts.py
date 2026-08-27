@@ -27,10 +27,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....core import BindingSourceKind, Period
 from ....core.time import validate_utc_aware
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
 from .. import (
     ModeloBindingValue,

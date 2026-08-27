@@ -10,15 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -42,6 +40,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...workflow.persistence import workflow_state_repository
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False

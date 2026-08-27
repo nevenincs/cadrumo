@@ -14,10 +14,9 @@ from typing import Annotated
 
 import pytest
 
-import cadrumo.domain.calculations.registry.loader as _loader
-
 from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
+from .. import loader as _loader
 from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory

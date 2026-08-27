@@ -1187,10 +1187,9 @@ def _real_calculation_revision_with_row_materialization():
     """
     from decimal import Decimal
 
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
     from ....core import BindingSourceKind, validated_casilla_id
     from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
+    from ....domain.calculations.registry.bindings import CasillaObservation
     from ....domain.modelos import (
         CalculationRevision,
         CalculationRevisionState,

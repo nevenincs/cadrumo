@@ -18,7 +18,9 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyBucketEventHistoryPort,
     ProfileCustodyCapsuleLabelPort,
     ProfileCustodyCapsuleSourceMaterial,
+    ProfileCustodyCapsuleSummaryWitnessPort,
     ProfileCustodyCarryMaterial,
+    ProfileCustodyConcurrentChangeError,
     ProfileCustodyEnvelopePort,
     ProfileCustodyInventoryPort,
     ProfileCustodyLabelHeadPort,
@@ -81,12 +83,6 @@ from . import (
     secure_object_repository_for_staged_bucket,
 )
 from ._kdf_salt import KDF_SALT_BYTES
-from ._profile_custody_carry import (
-    collect_profile_custody_carry as _collect_profile_custody_carry,
-)
-from ._profile_custody_carry import (
-    restore_profile_custody_carry as _restore_profile_custody_carry,
-)
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -509,6 +505,18 @@ class _PersistenceProfileCustody:
     def list_committed_profile_ids(self, *, root: Path) -> tuple[UUID, ...]:
         return custody.list_current_profile_custody_capsule_ids(root=root)
 
+    def list_committed_capsule_summaries(
+        self,
+        *,
+        root: Path,
+    ) -> tuple[ProfileCustodyCapsuleSummaryWitnessPort, ...]:
+        try:
+            return custody.list_current_profile_custody_capsule_summary_witnesses(root=root)
+        except custody.ProfileCustodyConcurrentCapsuleChangeError as exc:
+            raise ProfileCustodyConcurrentChangeError(str(exc)) from exc
+        except custody.ProfileCustodyRecordError as exc:
+            raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
+
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
         return custody.load_committed_profile_custody_label_record(profile_id, root=root)
 
@@ -686,7 +694,13 @@ class _PersistenceProfileCustody:
         bucket_id: str,
         profile: StorageCustodyProfile,
     ) -> ProfileCustodyCarryMaterial:
-        return _collect_profile_custody_carry(bucket_id=bucket_id, profile=profile)
+        # Carry reaches the ledger, invoice and workflow graphs, which in turn
+        # reach the authenticated profile aggregate.  Importing it at module
+        # scope made every consumer of this adapter -- including a pure profile
+        # listing -- pay for all of it, so it is loaded only when carry runs.
+        from ._profile_custody_carry import collect_profile_custody_carry
+
+        return collect_profile_custody_carry(bucket_id=bucket_id, profile=profile)
 
     def restore_profile_custody_carry(
         self,
@@ -694,7 +708,9 @@ class _PersistenceProfileCustody:
         *,
         target_bucket_id: str,
     ) -> None:
-        _restore_profile_custody_carry(carried_objects, target_bucket_id=target_bucket_id)
+        from ._profile_custody_carry import restore_profile_custody_carry
+
+        restore_profile_custody_carry(carried_objects, target_bucket_id=target_bucket_id)
 
     def profile_snapshot_persistence(
         self,

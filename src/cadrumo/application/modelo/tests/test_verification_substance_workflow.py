@@ -9,17 +9,16 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import (
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    parse_verification_predicate_expression,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_verification import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    parse_verification_predicate_expression,
+)
 from ....domain.modelos import (
     CalculationRevision,
     ModeloValidationError,
@@ -473,8 +472,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
+    from ....domain.calculations.registry.bindings import CasillaObservation
     from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]

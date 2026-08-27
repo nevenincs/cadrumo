@@ -22,14 +22,13 @@ from textual.widgets import (
     Static,
 )
 
-from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ......application.modelo.work_review import ModeloWorkOriginAnomaly
 from ......core import EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ......domain.calculations.registry.handoffs import RelationConsumptionChannel
+from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......domain.filing import ModeloValueKind
 from ......domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ......tests.locales_root_fixture import locales_root_scope

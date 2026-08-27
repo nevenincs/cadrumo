@@ -137,8 +137,7 @@ def retire_markers(root: Path | None = None, *, apply: bool = False) -> tuple[st
         start = next(index for index, line in enumerate(lines) if MARKER_PATTERN.match(line))
         end = _marker_block_bounds([line.rstrip("\n") for line in lines], start)
         actions.append(
-            f"{marker.path}: retire prose marker lines {start + 1}-{end} "
-            f"(typed grade {marker.typed!r} kept)",
+            f"{marker.path}: retire prose marker lines {start + 1}-{end} (typed grade {marker.typed!r} kept)",
         )
         if apply:
             del lines[start:end]

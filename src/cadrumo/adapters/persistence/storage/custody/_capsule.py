@@ -167,7 +167,7 @@ from ._recovery import (
 )
 from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
 from ._sentinel_contract import ProfileCustodySentinelRecord
-from .errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyConcurrentCapsuleChangeError, ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -783,9 +783,13 @@ def list_current_profile_custody_capsule_summary_witnesses(
 def _summary_witness_from_anchored_commit(
     observation: AnchoredCurrentCapsuleCommit,
 ) -> ProfileCustodyCapsuleSummaryWitness:
-    """Build the S22 witness from bytes the discovery anchor already observed."""
-    if observation.label_payload is None:
+    """Build the summary witness from bytes the discovery anchor already observed."""
+    if not observation.label_requested:
         raise ProfileCustodyRecordError("summary discovery omitted the required label provenance")
+    if observation.label_payload is None:
+        raise ProfileCustodyConcurrentCapsuleChangeError(
+            "profile capsule label vanished between its marker parse and its label read"
+        )
     try:
         label = parse_profile_custody_capsule_label(observation.label_payload)
     except (ProfileCustodyRecordError, ValueError, TypeError) as exc:

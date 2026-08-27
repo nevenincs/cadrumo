@@ -17,8 +17,12 @@ from typing import Final, cast
 
 import pytest
 
-import cadrumo.domain.calculations.registry.authority as authority_module
-from cadrumo.domain.calculations.registry.authority import (
+from .....core import RegistryAuthorityGrade
+from .....core.directory_scan import scan_directory
+from .....core.identity import ContentDigest
+from .....tests import REPO_ROOT
+from .. import authority as authority_module
+from ..authority import (
     RegistryAuthorityCapture,
     RegistryAuthorityCurrentCoordinate,
     RegistryAuthorityProjection,
@@ -26,14 +30,9 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority,
     reset_registry_caches,
 )
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-
-from .....core import RegistryAuthorityGrade
-from .....core.directory_scan import scan_directory
-from .....core.identity import ContentDigest
-from .....tests import REPO_ROOT
+from ..errors import RegistrySnapshotError
+from ..schema import RegistrySnapshot
+from ..static_inspection import RegistryRevisionInspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

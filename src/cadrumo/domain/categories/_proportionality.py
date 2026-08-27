@@ -102,6 +102,16 @@ ANNUAL_EDITION_CITATION_SOURCES: frozenset[CategoryCitationSource] = frozenset(
     },
 )
 
+#: Citation sources that name a PROVISION rather than a dated publication. Their
+#: windows are bounded by the provision's own effective span in the registry
+#: legal catalogue, which makes a multi-year statutory citation a derived fact
+#: instead of an author's confidence. Complete by construction against the enum:
+#: a new source must land in one partition or the other, and the gate that reads
+#: these sets reds if it lands in neither.
+STATUTORY_CITATION_SOURCES: frozenset[CategoryCitationSource] = frozenset(
+    set(CategoryCitationSource) - ANNUAL_EDITION_CITATION_SOURCES,
+)
+
 #: Matches the four-digit edition year in an annual publication's reference.
 _EDITION_YEAR_PATTERN = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
 
@@ -119,6 +129,12 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
             to an official AEAT or BOE origin over ``https`` -- see
             :meth:`_validate_authoritative_url`.
         quote: Authoritative Spanish-language quote backing the rule.
+        legal_ref: The registry legal-catalogue id of the provision cited.
+            Required on a STATUTORY source and forbidden on an annual-edition
+            one, so that every citation is bounded on exactly one axis: an
+            edition-dated citation by the edition it names, a statutory one by
+            the provision's own effective span. Leaving it optional would let an
+            author widen a statutory window with nothing able to check it.
         valid_from: First date this citation is asserted to support the rule.
         valid_to: Last date, inclusive. Both bounds are required: the span is
             the claim, and a defaulted one would assert grounding nobody typed.
@@ -129,6 +145,11 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
     quote: tr = Field(description="Authoritative Spanish-language quote.")
+    legal_ref: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Registry legal-catalogue id of the cited provision; statutory sources only.",
+    )
     valid_from: date
     valid_to: date
 
@@ -173,7 +194,29 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         # no year at all downstream.
         _ = self.window
         self._validate_edition_year_bounds_the_window()
+        self._validate_legal_ref_matches_the_source_kind()
         return self
+
+    def _validate_legal_ref_matches_the_source_kind(self) -> None:
+        """Every citation must be checkable on exactly one axis, never neither.
+
+        A statutory citation carries no edition year to bound it, so without a
+        provision id nothing can judge how far its window may reach and an
+        author could widen it freely. An annual-edition citation is already
+        bounded by the edition it names; giving it a provision id too would
+        offer a second, looser axis to be judged on.
+        """
+        if self.source in STATUTORY_CITATION_SOURCES and self.legal_ref is None:
+            raise CategoryValidationError(
+                f"category citation from {self.source.value!r} cites a provision and must name it with "
+                "legal_ref, so its validity window can be bounded by that provision's effective span "
+                "rather than asserted",
+            )
+        if self.source in ANNUAL_EDITION_CITATION_SOURCES and self.legal_ref is not None:
+            raise CategoryValidationError(
+                f"category citation from {self.source.value!r} is bounded by the edition year it names; "
+                f"it must not also carry legal_ref={self.legal_ref!r}",
+            )
 
     def _validate_edition_year_bounds_the_window(self) -> None:
         """Refuse an annual-edition citation whose window reaches past its edition.
@@ -277,6 +320,47 @@ class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
         return self
 
 
+class StatutoryCapAmount(_ProportionalityStrictFrozenModel):
+    """One year-bounded value of a statutory cap whose amount the law varies.
+
+    Some statutory caps are fixed by the tax law and hold until it is amended --
+    the 500 euro seguro de enfermedad limit of LIRPF art. 30.2.5.a is one. Others
+    are fixed BY REFERENCE to a figure that moves every year: LIRPF art. 30.2.1
+    caps the deductible mutualidad alternativa premium at the cuota maxima por
+    contingencias comunes established "en cada ejercicio economico" in the RETA.
+
+    A single :attr:`ProportionalityRule.statutory_cap_eur` cannot express the
+    second kind. Encoding one year's figure -- or worse, a round number close to
+    none of them -- silently applies it to every filing year, and the error is
+    invisible because the value looks like a law-fixed constant. The registry
+    shipped exactly that: a flat 15000 that matched no ejercicio at all.
+
+    Attributes:
+        value: The cap amount in euros for this span.
+        valid_from: First date the amount applies.
+        valid_to: Last date, inclusive. Both bounds required and closed, for the
+            reasons :class:`~core.validity_window.ValidityWindow` documents.
+    """
+
+    value: Decimal = Field(ge=Decimal("0"))
+    valid_from: date
+    valid_to: date
+
+    @property
+    def window(self) -> ValidityWindow:
+        """Return the closed span this amount applies over.
+
+        Returns:
+            The :class:`~core.validity_window.ValidityWindow` the bounds describe.
+        """
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
+
+    @model_validator(mode="after")
+    def _span_is_coherent(self) -> StatutoryCapAmount:
+        _ = self.window
+        return self
+
+
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category.
 
@@ -308,6 +392,10 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             :attr:`statutory_cap_eur` is set.
         statutory_cap_variants: Daily statutory caps selected by a
             legally relevant condition.
+        statutory_cap_schedule: Dated amounts for a cap the law re-fixes each
+            ejercicio. Mutually exclusive with the fixed
+            :attr:`statutory_cap_eur`: a cap is either law-fixed or
+            year-referenced, never both.
         citations: At least one :class:`CategoryCitation` proving
             the rule.
         notes: Translation key for the notes describing the rule.
@@ -321,6 +409,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
     statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
+    statutory_cap_schedule: tuple[StatutoryCapAmount, ...] = Field(default_factory=tuple)
     citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
     notes: tr = Field(description="Translation key for the notes describing the rule.")
 
@@ -360,20 +449,58 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     def _validate_statutory_cap_invariants(self) -> None:
         """STATUTORY_CAP rules require exactly one cap mode and a coherent (eur, period) pair."""
         has_daily_cap = self.statutory_cap_eur_per_day is not None
-        has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
+        has_scheduled_cap = bool(self.statutory_cap_schedule)
+        has_generic_cap = self.statutory_cap_eur is not None or (
+            self.statutory_cap_period is not None and not has_scheduled_cap
+        )
         has_variant_caps = bool(self.statutory_cap_variants)
-        if not has_daily_cap and not has_generic_cap and not has_variant_caps:
+        if not (has_daily_cap or has_generic_cap or has_variant_caps or has_scheduled_cap):
             raise CategoryValidationError("statutory_cap rules require a cap amount")
-        mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
+        mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap))
         if mode_count > 1:
             raise CategoryValidationError("statutory cap rules must use one cap mode")
-        if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
-            raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
-        if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
-            raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
+        if has_scheduled_cap:
+            if self.statutory_cap_period is None:
+                raise CategoryValidationError("statutory_cap_schedule requires statutory_cap_period")
+            self._reject_contradictory_scheduled_caps()
+        else:
+            if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
+                raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
+            if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
+                raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
         variant_ids = [variant.id for variant in self.statutory_cap_variants]
         if len(set(variant_ids)) != len(variant_ids):
             raise CategoryValidationError("statutory cap variant ids must be unique")
+
+    def _reject_contradictory_scheduled_caps(self) -> None:
+        """Two different amounts covering one filing year is a contradiction.
+
+        Silently taking the first or the last would make the applied cap depend
+        on authoring order, which is the class of defect a dated schedule exists
+        to remove.
+        """
+        seen: dict[int, Decimal] = {}
+        for amount in self.statutory_cap_schedule:
+            for year in amount.window.years():
+                if year in seen and seen[year] != amount.value:
+                    raise CategoryValidationError(
+                        f"statutory_cap_schedule declares two different amounts for {year}: "
+                        f"{seen[year]} and {amount.value}",
+                    )
+                seen[year] = amount.value
+
+    def cap_amount_for_year(self, year: int) -> Decimal | None:
+        """Return the statutory cap amount in force for ``year``.
+
+        Returns:
+            The scheduled amount covering ``year`` when the cap is
+            year-referenced, the flat :attr:`statutory_cap_eur` when it is
+            law-fixed, and ``None`` when this rule carries neither.
+        """
+        for amount in self.statutory_cap_schedule:
+            if amount.window.covers_year(year):
+                return amount.value
+        return self.statutory_cap_eur if not self.statutory_cap_schedule else None
 
     def _reject_statutory_cap_fields_outside_cap_kind(self) -> None:
         """Every statutory-cap field is forbidden on non-STATUTORY_CAP kinds."""
@@ -385,6 +512,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             raise CategoryValidationError("statutory_cap_period is only valid for statutory_cap rules")
         if self.statutory_cap_variants:
             raise CategoryValidationError("statutory_cap_variants are only valid for statutory_cap rules")
+        if self.statutory_cap_schedule:
+            raise CategoryValidationError("statutory_cap_schedule is only valid for statutory_cap rules")
 
 
 def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> Decimal:

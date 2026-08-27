@@ -8,13 +8,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.relations import resolve_relation_values
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..export import resolve_export_layout
+from ..export_parse import parse_export_payload
+from ..formula_runtime import calculate_registry_snapshot
+from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

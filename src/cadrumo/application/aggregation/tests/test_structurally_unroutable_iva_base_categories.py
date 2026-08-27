@@ -30,16 +30,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories
+from ....domain.calculations.registry.loader import load_registry_tree
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

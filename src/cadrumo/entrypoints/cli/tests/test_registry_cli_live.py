@@ -13,8 +13,6 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 from typer.core import TyperGroup
 
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
@@ -52,6 +50,7 @@ from ....core import (
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.iva_compensation import IvaCompensationDecisionReason
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import _app_live

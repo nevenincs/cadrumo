@@ -90,7 +90,6 @@ def _emit_ratios_censo_override_warning(
     )
 
 
-
 def _resolved_ratio_year(year: int | None) -> int:
     """Return the filing year whose category profiles govern this invocation.
 

@@ -54,7 +54,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     enum must still raise from ``validate_modelo`` — adding a registry TOML for
     it (reviving active support) would break this test.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     authority = bundled_authority()
     assert NON_REGISTRY_MODELOS, "expected at least the retired M037 carve-out"

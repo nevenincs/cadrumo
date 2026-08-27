@@ -24,18 +24,17 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.classification_coherence import build_classification_coherence_audit
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
-from cadrumo.domain.calculations.registry.external_grounding import (
+from ....core import NON_REGISTRY_MODELOS, ExportLayoutFormat, Modelo, RevisionReviewStatus
+from ....core.access_gate import AuthorizationState
+from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ....domain.calculations.registry.classification_coherence import build_classification_coherence_audit
+from ....domain.calculations.registry.export_parse import xml_dictionary_entries
+from ....domain.calculations.registry.external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-
-from ....core import NON_REGISTRY_MODELOS, ExportLayoutFormat, Modelo, RevisionReviewStatus
-from ....core.access_gate import AuthorizationState
+from ....domain.calculations.registry.schema import ModeloDefinition
 from ....tests.registry_tree import bundled_registry_tree
 from .. import (
     RegistryApplicationInputError,

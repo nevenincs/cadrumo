@@ -8,18 +8,17 @@ from typing import Any, cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.invoice_bindings import (
+from .....core import BindingSourceKind, CasillaId, IntracomOperationType
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..invoice_bindings import (
     InvoiceObservation,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
-from .....core import BindingSourceKind, CasillaId, IntracomOperationType
-from ..binding_selector_utils import selector_as_dict
 from ..schema import DataBindingDefinition
+from ..schema_input_kind import InputKind
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,

@@ -59,9 +59,8 @@ def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
 
 def normalize_ambient_profile(ctx: typer.Context) -> None:
     """Normalize an ambient label pointer to the canonical live bucket UUID."""
-    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
-    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
-
+    from ...application.workflow.errors import ProfileLabelAmbiguousError
+    from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError

@@ -19,12 +19,11 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....application.calculations import CalculationObservationRepository
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import build_status_page_data
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.status import StatusApp
 

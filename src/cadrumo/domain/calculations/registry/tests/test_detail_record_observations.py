@@ -19,18 +19,16 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from .....core import M720AssetClassCode
+from .....core.aggregation import RetencionClave
+from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
+    _build_related_party_rows,
 )
-from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-
-from .....core import M720AssetClassCode
-from .....core.aggregation import RetencionClave
-from ..detail_record_bindings import _build_related_party_rows
-from ..donativo_bindings import _build_donativo_rows
+from ..donativo_bindings import DonativoDonorObservation, _build_donativo_rows
 from ..errors import RegistryValidationError
 from ..withholding_bindings import (
     WithholdingObservation,

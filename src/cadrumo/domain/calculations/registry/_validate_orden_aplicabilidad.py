@@ -28,10 +28,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
-
-from .schema_references import governed_period_span
+from .schema import ModeloRevision
+from .schema_references import LegalReference, governed_period_span
 
 
 @dataclass(frozen=True, slots=True)

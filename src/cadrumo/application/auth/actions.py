@@ -13,7 +13,7 @@ from ...core.time import now as utc_now
 from .models import AuthState
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
+    from ..workflow.state_models import WorkflowState
 
 
 def update_auth(

@@ -13,16 +13,6 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    filing_period_from_scope,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import (
     REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
@@ -37,7 +27,9 @@ from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
 from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
-from .schema_references import governed_period_span
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
+from .schema_references import LegalReference, SourceReference, governed_period_span
+from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_revision_identity import revision_reference_identity_failures
 

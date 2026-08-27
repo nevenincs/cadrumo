@@ -104,10 +104,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition as _ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference as _SourceReference
-
 from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
@@ -169,7 +165,10 @@ from ...domain.calculations.registry.loader import load_registry_tree as _load_r
 from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from ...domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
+from ...domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition as _ExportLayoutDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
+from ...domain.calculations.registry.schema_references import SourceReference as _SourceReference
 from ...domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
 from ...domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from ...domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe

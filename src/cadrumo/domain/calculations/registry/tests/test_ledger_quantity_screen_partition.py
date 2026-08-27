@@ -20,8 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
+from ..errors import RegistryValidationError
 from ..ledger_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,

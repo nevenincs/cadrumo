@@ -20,12 +20,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_revision_context import ConstructMemberObject
+from .schema import ModeloRevision
+from .schema_references import LegalReference, SourceReference
 
 _CONSTRUCT_MEMBER_ATTRS = {
     "casilla": "casilla_ids",

@@ -22,9 +22,6 @@ from pydantic import (
     model_validator,
 )
 
-from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
@@ -39,6 +36,8 @@ from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.time import UtcInstant
 from ..calculations import RowSourceIdentity
+from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..submission import ModeloDraftStatus
 from .errors import FilingValidationError
 

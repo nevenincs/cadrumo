@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.quality.modelo_workspace_action_denominator import (
+from ..quality.modelo_workspace_action_denominator import (
     MODELO_ACTION_CLASSIFICATIONS,
     SCHEMA_VERSION,
     ModeloWorkspaceActionClassificationV1,

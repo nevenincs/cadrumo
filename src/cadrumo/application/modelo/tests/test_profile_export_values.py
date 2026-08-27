@@ -18,10 +18,9 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from ....core import BindingSourceKind, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 

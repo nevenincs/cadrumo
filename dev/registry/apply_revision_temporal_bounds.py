@@ -25,8 +25,8 @@ manifests would collide with work in flight.
 from __future__ import annotations
 
 import re
-from datetime import date
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 REGISTRY_MODELOS_ROOT = (
@@ -155,8 +155,9 @@ def apply_bounds(root: Path | None = None, *, apply: bool = False) -> tuple[str,
         text = manifest.read_text(encoding="utf-8")
         if _VALID_TO.search(text):
             continue
+        terminus = repair.terminus
         text = _VALID_FROM.sub(
-            lambda match: f"{match.group(0)}\nvalid_to = {repair.terminus}",
+            lambda match, terminus=terminus: f"{match.group(0)}\nvalid_to = {terminus}",
             text,
             count=1,
         )

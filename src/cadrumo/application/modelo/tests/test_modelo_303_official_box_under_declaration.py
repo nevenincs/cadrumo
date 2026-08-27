@@ -39,8 +39,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -55,6 +53,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
@@ -586,8 +585,8 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     # paths call calculate_registry_snapshot, so the projection is transport-shared.
     from datetime import date as _date
 
-    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+    from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+    from ....domain.calculations.registry.schema_input_kind import InputKind
 
     snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision

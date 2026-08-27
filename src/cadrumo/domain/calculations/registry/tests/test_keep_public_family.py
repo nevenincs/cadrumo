@@ -222,8 +222,7 @@ def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str
 #: Census rows whose adjudicated terminal state the tree has not reached yet,
 #: each with the reason it is still outstanding. A row that finishes must leave
 #: this table, which the staleness test below enforces.
-_OUTSTANDING_ROWS: Final[dict[str, str]] = {
-}
+_OUTSTANDING_ROWS: Final[dict[str, str]] = {}
 
 
 def _terminal_state_owners(row: dict[str, object]) -> tuple[str, ...]:

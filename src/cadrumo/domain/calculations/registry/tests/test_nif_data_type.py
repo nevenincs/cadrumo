@@ -18,10 +18,9 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import NifString, _validate_nif_string
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ..errors import RegistryValidationError
+from ..schema import NifString, _validate_nif_string
+from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

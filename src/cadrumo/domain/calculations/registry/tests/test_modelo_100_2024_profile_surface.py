@@ -7,11 +7,10 @@ from functools import cache
 
 import pytest
 
-import cadrumo.domain.calculations.registry.bindings as _bindings
-
 from .....core.aggregation import BindingSourceKind
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
+from .. import bindings as _bindings
 from .._validate import RegistryValidator
 from ..bindings import ProfileSelector, selector_model_for_source
 from ..loader import load_catalogue_file, load_modelo_path

@@ -7,9 +7,8 @@ import inspect
 
 import pytest
 
-from cadrumo.application.workflow.profile_health import assess_active_profile_health
-
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...workflow.profile_health import assess_active_profile_health
 from .. import (
     active_profile_pointer_repair_verdict,
     corrupt_active_profile_pointer_verdict,

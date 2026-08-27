@@ -18,6 +18,7 @@ trace.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -31,13 +32,14 @@ from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
-from ...core.validity_window import years_covered_by_every_group
+from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
 from ._profile import CategoryProfile, IvaDeductibilityHint
 from ._proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
+    StatutoryCapAmount,
     StatutoryCapPeriod,
     StatutoryCapVariant,
     parse_http_url,
@@ -105,18 +107,35 @@ def _load_category_profiles_cached(
 def category_profile_years(path: Path | None = None) -> frozenset[int]:
     """Return every filing year the corpus can be resolved for.
 
-    A year counts only when EVERY profile has at least one citation asserted
-    over it. One profile whose evidence stops earlier stops the corpus, because
-    the loader refuses a partial registry anyway -- reporting the year as covered
-    and then failing to assemble it would be the same lie in two places.
+    A year counts only when EVERY profile can be grounded for it: at least one
+    citation asserted over the year AND, where the rule's cap is one the law
+    re-fixes each ejercicio, a scheduled amount for that year. One profile whose
+    evidence stops earlier stops the corpus, because the loader refuses a partial
+    registry anyway -- reporting the year as covered and then failing to assemble
+    it would be the same lie in two places.
 
     Returns:
         The derived set of resolvable filing years.
     """
     profiles = load_category_profiles(path)
-    return years_covered_by_every_group(
-        [citation.window for citation in profile.proportionality.citations] for profile in profiles.values()
-    )
+    return years_covered_by_every_group(_grounding_windows(profile) for profile in profiles.values())
+
+
+def _grounding_windows(profile: CategoryProfile) -> tuple[ValidityWindow, ...]:
+    """Return the spans over which ``profile`` is grounded end to end.
+
+    A citation window says the evidence covers a year. For a cap the law
+    re-fixes each ejercicio, the evidence is not enough on its own: without an
+    amount for that year the rule cannot be applied at all. Intersecting the two
+    keeps the corpus from claiming a year it can cite but cannot compute.
+    """
+    rule = profile.proportionality
+    citation_years = years_covered_by_any(citation.window for citation in rule.citations)
+    if not rule.statutory_cap_schedule:
+        return tuple(citation.window for citation in rule.citations)
+    scheduled_years = years_covered_by_any(amount.window for amount in rule.statutory_cap_schedule)
+    both = sorted(citation_years & scheduled_years)
+    return tuple(ValidityWindow(valid_from=date(year, 1, 1), valid_to=date(year, 12, 31)) for year in both)
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -151,9 +170,17 @@ def _resolve_category_profiles_cached(
     projected: dict[SpendingCategory, CategoryProfile] = {}
     for category, profile in load_category_profiles().items():
         rule = profile.proportionality
-        kept = tuple(citation for citation in rule.citations if citation.window.covers_year(year))
+        update: dict[str, object] = {
+            "citations": tuple(citation for citation in rule.citations if citation.window.covers_year(year)),
+        }
+        if rule.statutory_cap_schedule:
+            # The year's amount is materialised onto the flat field and the
+            # schedule dropped, so every consumer keeps reading one cap and
+            # cannot pick the wrong year's by reaching past the resolver.
+            update["statutory_cap_eur"] = rule.cap_amount_for_year(year)
+            update["statutory_cap_schedule"] = ()
         projected[category] = profile.model_copy(
-            update={"proportionality": rule.model_copy(update={"citations": kept})},
+            update={"proportionality": rule.model_copy(update=update)},
         )
     return MappingProxyType(projected)
 
@@ -192,6 +219,9 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
         raise CategoryValidationError("citations must be a list")
+    raw_schedule = data.get("statutory_cap_schedule", ())
+    if not isinstance(raw_schedule, list | tuple):
+        raise CategoryValidationError("statutory_cap_schedule must be a list")
     return ProportionalityRule.model_validate(
         {
             "kind": ProportionalityKind(str(data.get("kind"))),
@@ -204,10 +234,27 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "statutory_cap_variants": tuple(
                 _parse_cap_variant(raw_variant) for raw_variant in OBJECT_TUPLE_ADAPTER.validate_python(raw_variants)
             ),
+            "statutory_cap_schedule": tuple(
+                _parse_cap_amount(raw_amount) for raw_amount in OBJECT_TUPLE_ADAPTER.validate_python(raw_schedule)
+            ),
             "citations": tuple(
                 _parse_citation(raw_citation) for raw_citation in OBJECT_TUPLE_ADAPTER.validate_python(raw_citations)
             ),
             "notes": tr(str(data.get("notes"))),
+        },
+    )
+
+
+def _parse_cap_amount(raw_amount: object) -> StatutoryCapAmount:
+    """Hydrate one dated statutory-cap row."""
+    if not isinstance(raw_amount, dict):
+        raise CategoryValidationError("statutory_cap_schedule entries must be tables")
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_amount)
+    return StatutoryCapAmount.model_validate(
+        {
+            "value": _decimal_or_none(data.get("value")),
+            "valid_from": data.get("valid_from"),
+            "valid_to": data.get("valid_to"),
         },
     )
 
@@ -239,6 +286,7 @@ def _parse_citation(raw_citation: object) -> CategoryCitation:
             "locator": data.get("locator"),
             "url": parse_http_url(url),
             "quote": tr(str(data.get("quote"))),
+            "legal_ref": data.get("legal_ref"),
             "valid_from": data.get("valid_from"),
             "valid_to": data.get("valid_to"),
         },

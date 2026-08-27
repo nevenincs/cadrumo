@@ -23,8 +23,6 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
-
 from ....core import (
     LLM_EXTRA,
     LOCAL_TRANSPORT_LABEL,
@@ -36,6 +34,7 @@ from ....core import (
 from ....core.config import load_settings
 from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
+from .. import evidence_draft as evidence_draft_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import FieldProvenance, InvoiceDraft

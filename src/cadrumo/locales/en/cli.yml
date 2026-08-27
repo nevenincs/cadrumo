@@ -2193,6 +2193,10 @@ cli:
       import_requires_path: Provide the bundle PATH argument, or run in an interactive
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
+      list:
+        incoherent_observation_advisory: 'The profile listing could not be read coherently
+          (outcome: {outcome}). Run the command again; if it persists, inspect the
+          profile storage.'
       manager_closed: Changes to '{profile}' are saved.
       manager_closed_created: Profile '{profile}' created. Declare setup complete
         with `aeat config profile complete-setup` before working with modelos. Reopen

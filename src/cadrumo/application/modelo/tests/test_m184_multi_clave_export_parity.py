@@ -121,7 +121,9 @@ def test_one_member_under_two_claves_resolves_two_rows_not_one() -> None:
     assert len(row_indexes) == 2, "one member under two claves must resolve as two distinct rows, not one"
 
     clave_binding = next(
-        binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-clave") and "declarado" not in binding_id
+        binding_id
+        for (binding_id, _row_index) in resolved
+        if binding_id.endswith("-clave") and "declarado" not in binding_id
     )
     claves_by_row = {row_index: resolved[(clave_binding, row_index)] for row_index in row_indexes}
     assert set(claves_by_row.values()) == {"C", "D"}
@@ -161,7 +163,9 @@ def test_clave_conditional_fields_resolve_only_for_the_row_that_declares_them() 
 
     resolved = resolve_atribucion_binding_row_values(revision, observations)
 
-    naturaleza_binding = next(binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-naturaleza-inmueble"))
+    naturaleza_binding = next(
+        binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-naturaleza-inmueble")
+    )
     rendimiento_binding = next(
         binding_id for (binding_id, _row_index) in resolved if binding_id.endswith("-rendimiento-neto-previo-eo")
     )
@@ -196,8 +200,12 @@ def test_two_rows_for_one_member_under_different_claves_survive_the_union() -> N
     two-source union treats these as two different real-world things, not a
     resolver/caller duplicate of the same one.
     """
-    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
-    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("1500"), clave="D")
+    resolver_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C"
+    )
+    caller_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("1500"), clave="D"
+    )
 
     unioned = union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
@@ -207,8 +215,12 @@ def test_two_rows_for_one_member_under_different_claves_survive_the_union() -> N
 
 def test_two_supply_paths_naming_the_same_member_clave_subclave_still_union_to_one() -> None:
     """The non-regression the widened key must not break: a genuine duplicate still unions."""
-    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
-    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
+    resolver_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C"
+    )
+    caller_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C"
+    )
 
     unioned = union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
@@ -226,8 +238,12 @@ def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse
     the widening would have quietly turned a real conflict into
     invisible data loss.
     """
-    resolver_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C")
-    caller_row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("9999"), clave="C")
+    resolver_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="C"
+    )
+    caller_row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("9999"), clave="C"
+    )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:
         union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
@@ -281,6 +297,8 @@ def test_clave_c_and_clave_d_reduccion_still_populate() -> None:
 
 def test_clave_a_without_reduccion_is_still_accepted() -> None:
     """The block targets a POPULATED reducción, not the clave itself."""
-    row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="A")
+    row = Modelo184MemberRow(
+        nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="A"
+    )
 
     assert row.reduccion is None

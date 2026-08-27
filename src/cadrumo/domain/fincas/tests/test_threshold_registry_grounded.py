@@ -22,12 +22,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
-
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.formula_runtime_ops import read_parameter
+from ...calculations.registry.legal import verify_legal_catalogue
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,

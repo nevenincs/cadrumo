@@ -29,14 +29,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import RelationId
-
 from ....core import (
     CasillaId,
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.ids import RelationId
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

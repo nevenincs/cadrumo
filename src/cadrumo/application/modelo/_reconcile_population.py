@@ -65,9 +65,8 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-    from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-
+    from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+    from ...domain.calculations.registry.schema_formula import FormulaExpression
     from ...domain.modelos import CalculationRevision
 
 #: Binding sources whose value is read back from the filed-observation store.

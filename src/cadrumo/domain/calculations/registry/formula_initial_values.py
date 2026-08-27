@@ -24,10 +24,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import BindingSourceKind, CasillaId
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
@@ -36,6 +32,9 @@ from .bindings_previous_filing import PreviousModeloSelector
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .schema import DataBindingDefinition, ModeloRevision
+from .schema_input_kind import InputKind
+from .schema_surfaces import CasillaDefinition
 
 _ZERO = Decimal("0")
 

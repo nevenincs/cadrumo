@@ -33,10 +33,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from .._taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails
-
 from ....core import CasillaId
+from ...workflow.run_models import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -455,8 +454,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # BLOCKING_RULE path explicitly: the work unit was anchored at a
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
+    from ....domain.calculations.registry.bindings import CasillaObservation
     from ....domain.modelos import (
         CalculationRevision,
         derive_calculation_revision_id,

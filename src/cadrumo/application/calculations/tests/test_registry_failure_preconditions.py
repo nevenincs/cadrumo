@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
-
 from ....core import ActionConditionality, NoRecoveryOutcome
+from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
 from .._registry_preconditions import calculation_registry_failure_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -45,8 +45,6 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
-from cadrumo.application.operations.events import OperationLogSeverity
-
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
     DeclaracionesRegisterSession,
@@ -78,6 +76,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
+from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs import (
     SyncRunRecordReference,

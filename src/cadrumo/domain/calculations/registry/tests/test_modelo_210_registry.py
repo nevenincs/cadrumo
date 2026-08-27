@@ -7,17 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.convenio import load_convenio_authority
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
+from ..convenio import load_convenio_authority
 from ..errors import NoRevisionForPeriodError
 from ..legal import verify_legal_catalogue
+from ..loader import load_catalogue_file, load_modelo_directory
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

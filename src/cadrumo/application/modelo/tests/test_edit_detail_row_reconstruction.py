@@ -60,7 +60,9 @@ def _address(natural_key: str) -> ModeloEditDetailRowAddressV1:
 
 def test_add_row_appends_to_an_empty_set() -> None:
     row = _contraparte("11111111H", "5000")
-    intent = ModeloDetailRowEditIntentV1(address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row)
+    intent = ModeloDetailRowEditIntentV1(
+        address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row
+    )
 
     result = _reconstruct_detail_rows(current_detail_rows=(), detail_row_intents=(intent,))
 

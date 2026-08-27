@@ -13,11 +13,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.validity_window import (
-    ValidityWindow,
-    years_covered_by_any,
-    years_covered_by_every_group,
-)
+from ..validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

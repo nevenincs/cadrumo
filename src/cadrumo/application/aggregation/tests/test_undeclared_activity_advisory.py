@@ -27,10 +27,9 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....core import Modelo, Period, TipoActividad
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions import (
     BusinessClassification,
     Transaction,

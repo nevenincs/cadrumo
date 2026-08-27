@@ -15,14 +15,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.rate_box_partition import (
-    derive_rate_box_partitions,
-    rate_box_coverage_shortfalls,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....domain.iva import (
@@ -32,6 +24,10 @@ from .....domain.iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
+from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
+from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -41,6 +41,16 @@ quote = "categories.registry.cuotas_colegiales.citations.0.quote"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
+[[profiles.proportionality.citations]]
+# Cuota colegial obligatoria: gasto de la actividad por la remision del art. 28.1 a las normas del Impuesto sobre Sociedades. Clasificacion revisada por agente contra el corpus consolidado; el limite de 500 euros del art. 19.2.d es de rendimientos del TRABAJO y no alcanza a una actividad economica, que es por lo que esta categoria es full_deductible.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 [[profiles]]
 category = "cuotas_autonomos_ss"
 display_label = "categories.registry.cuotas_reta"
@@ -68,6 +78,16 @@ quote = "categories.registry.cuotas_autonomos_ss.citations.1.quote"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
+[[profiles.proportionality.citations]]
+# Cotizaciones del titular al RETA: gasto de la actividad por la remision del art. 28.1 a las normas del Impuesto sobre Sociedades. Clasificacion revisada por agente contra el corpus consolidado.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 [[profiles]]
 category = "mutualidad_alternativa"
 display_label = "categories.registry.mutualidad_alternativa.label"
@@ -75,8 +95,51 @@ iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
-statutory_cap_eur = "15000"
 statutory_cap_period = "year_per_person"
+
+# LIRPF art. 30.2.1a caps this premium at "la cuota maxima por contingencias
+# comunes que este establecida, EN CADA EJERCICIO ECONOMICO, en el citado
+# regimen especial" -- the figure is re-fixed every year by the cotizacion
+# orden, so it cannot be one constant. The registry previously carried a flat
+# 15000, which is not the figure for ANY ejercicio; every year below is higher,
+# so that constant under-stated the allowance and cost the taxpayer deduction.
+#
+# 2022-2025 are the amounts AEAT PRINTS in the Manual practico Renta for each
+# ejercicio, together with their arithmetic. 2026 has no Manual yet (it is
+# published in 2027) and is derived from Orden PJC/297/2026 art. 18.1 and
+# 18.2.a using AEAT's own method, which reproduces all four published years to
+# the cent.
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2022: "14.057,40 euros [0,283 x (4.139,40 x 12)]"
+value = "14057.40"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2023: "15.266,72 euros [0,283 x (4.495,50 x 12)]"
+value = "15266.72"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2024: "16.030,82 euros [0,283 x (4.720,50 x 12)]"
+value = "16030.82"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2025: 16.672,66; cross-checked against BOE Orden
+# PJC/178/2025 art. 18.1 (base 4.909,50) and art. 18.2.a (28,30 %).
+value = "16672.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Derived from BOE Orden PJC/297/2026 art. 18.1 (base 5.101,20) and art. 18.2.a
+# (28,30 %): 0,283 x (5.101,20 x 12) = 17.323,68. Not yet Manual-published.
+value = "17323.68"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
 notes = "categories.registry.mutualidad_alternativa.notes"
 
 [[profiles.proportionality.citations]]
@@ -97,6 +160,16 @@ quote = "categories.registry.mutualidad_alternativa.citations.1.quote"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
+[[profiles.proportionality.citations]]
+# Mutualidad alternativa al RETA: el art. 30.2.1.a es la provision que establece tanto la deducibilidad como su limite anual, y es la que obliga a que el limite se declare por ejercicio en statutory_cap_schedule en lugar de como una constante.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.1.a"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 [[profiles]]
 category = "arrendamiento_local"
 display_label = "categories.registry.arrendamiento_local.label"
@@ -121,8 +194,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.arrendamiento_local.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "arrendamiento_vivienda_afecto"
@@ -146,8 +220,9 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (afectación parcial de la vivienda arrendada)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.arrendamiento_vivienda_afecto.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -182,8 +257,9 @@ reference = "Ley 35/2006"
 locator = "art. 14 LIS por remisión"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_local_afecto.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "suministros_local_afecto"
@@ -207,8 +283,9 @@ reference = "Ley 35/2006"
 locator = "art. 29.1.a"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_local_afecto.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
@@ -216,8 +293,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_local_afecto.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "suministros_home_office_luz"
@@ -236,8 +314,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_luz.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -265,8 +344,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_agua.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -294,8 +374,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_gas.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -323,8 +404,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_home_office_internet.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -359,8 +441,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.telefonia_movil.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "telefonia_fija"
@@ -386,8 +469,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.telefonia_fija.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -422,8 +506,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.material_oficina.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "software_suscripcion"
@@ -449,8 +534,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.software_suscripcion.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "hardware_amortizable"
@@ -476,8 +562,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.hardware_amortizable.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "mobiliario_amortizable"
@@ -503,8 +590,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.mobiliario_amortizable.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "reparaciones_conservacion"
@@ -530,8 +618,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.reparaciones_conservacion.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "vehiculo_combustible"
@@ -548,8 +637,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_combustible.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -575,8 +665,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_mantenimiento.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -602,8 +693,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_seguro.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -629,8 +721,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_peaje.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -656,8 +749,9 @@ reference = "Reglamento IRPF"
 locator = "art. 22"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.vehiculo_parking.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -693,8 +787,9 @@ reference = "Ley 6/2017 / Ley IRPF"
 locator = "art. 30.2.5.c"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.manutencion_dietas_nacional.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "reglamento_irpf"
@@ -702,8 +797,9 @@ reference = "Reglamento IRPF"
 locator = "art. 9.A.3.a"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.manutencion_dietas_nacional.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-9"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "manutencion_dietas_extranjero"
@@ -730,8 +826,9 @@ reference = "Ley 6/2017 / Ley IRPF"
 locator = "art. 30.2.5.c"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.manutencion_dietas_extranjero.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "reglamento_irpf"
@@ -739,8 +836,9 @@ reference = "Reglamento IRPF"
 locator = "art. 9.A.3.a"
 url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
 quote = "categories.registry.manutencion_dietas_extranjero.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "rd-439-2007:art-9"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "asesoria_fiscal"
@@ -766,8 +864,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_fiscal.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "asesoria_juridica"
@@ -793,8 +892,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_juridica.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "asesoria_contable"
@@ -820,8 +920,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.asesoria_contable.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "publicidad_marketing"
@@ -847,8 +948,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.publicidad_marketing.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "formacion_profesional"
@@ -874,8 +976,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.formacion_profesional.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "viajes_transporte"
@@ -901,8 +1004,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.viajes_transporte.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "viajes_alojamiento"
@@ -928,8 +1032,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.viajes_alojamiento.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "seguros_responsabilidad_civil"
@@ -955,8 +1060,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.seguros_responsabilidad_civil.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "seguros_salud_autonomo"
@@ -975,8 +1081,9 @@ reference = "Ley 35/2006"
 locator = "art. 30.2.5.c regla 1.a"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.seguros_salud_autonomo.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -1011,8 +1118,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.gastos_bancarios.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "gastos_financieros"
@@ -1038,8 +1146,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.gastos_financieros.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "suministros_cliente_directos"
@@ -1065,8 +1174,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.suministros_cliente_directos.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "subcontratacion"
@@ -1092,8 +1202,9 @@ reference = "Ley 35/2006"
 locator = "art. 28.1"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.subcontratacion.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "tributos_fiscalmente_deducibles"
@@ -1119,8 +1230,9 @@ reference = "Ley 35/2006"
 locator = "art. 14 LIS por remisión"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.tributos_fiscalmente_deducibles.citations.1.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles]]
 category = "amortizacion_vivienda_afecto"
@@ -1137,8 +1249,9 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (amortización de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.amortizacion_vivienda_afecto.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -1164,8 +1277,9 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (tributos no estatales de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_vivienda_afecto.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"
@@ -1191,8 +1305,9 @@ reference = "Ley 35/2006"
 locator = "art. 29.2 y art. 28.1 (gastos de titularidad de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.comunidad_vivienda_afecto.citations.0.quote"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 
 [[profiles.proportionality.citations]]
 source = "manual_renta"

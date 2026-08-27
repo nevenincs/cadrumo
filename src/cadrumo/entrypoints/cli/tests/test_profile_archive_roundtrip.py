@@ -96,7 +96,7 @@ def _archive_inspect(source: Path, *, json_format: bool = True) -> Result:
 
 def _restore_from(source: Path, *, label: str, json_format: bool = True) -> Result:
     """Restore an archive through the one restore door, which takes either shape."""
-    args = ["config", "profile", "restore", label, "--file", str(source), "--secrets-stdin"]
+    args = ["config", "profile", "archive", "import", label, "--file", str(source), "--secrets-stdin"]
     if json_format:
         args = ["--format", "json", *args]
     return invoke_cached_cli(args, input=f'{{"password": "{_test_passphrase()}"}}')

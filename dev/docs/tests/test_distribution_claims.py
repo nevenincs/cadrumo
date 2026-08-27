@@ -67,12 +67,12 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
     (
         "/plugin install cadrumo (Claude plugin)",
         re.compile(r"/plugin\s+install\s+cadrumo\b", re.IGNORECASE),
-        ('claude-code-plugin', 'claude-cowork-plugin', 'claude-desktop-plugin'),
+        ("claude-code-plugin", "claude-cowork-plugin", "claude-desktop-plugin"),
     ),
     (
         "/plugin marketplace add (neve marketplace)",
         re.compile(r"/plugin\s+marketplace\s+add\s+nevenincs/\S+", re.IGNORECASE),
-        ('claude-code-plugin', 'claude-cowork-plugin', 'claude-desktop-plugin'),
+        ("claude-code-plugin", "claude-cowork-plugin", "claude-desktop-plugin"),
     ),
     (
         # The MCPB channel declares NO install command on purpose: the bundle is
@@ -274,7 +274,10 @@ _PATTERN_CONTROL: Final[tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]
     (
         "/plugin marketplace add (neve marketplace)",
         ("/plugin marketplace add nevenincs/neve-marketplace",),
-        ("do not /plugin marketplace add nevenincs/neve-marketplace yet", "/plugin marketplace add someone/else-market"),
+        (
+            "do not /plugin marketplace add nevenincs/neve-marketplace yet",
+            "/plugin marketplace add someone/else-market",
+        ),
     ),
     (
         ".mcpb bundle (Claude Desktop extension)",

@@ -2367,6 +2367,10 @@ cli:
         en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
+      list:
+        incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
+          perfiles (estado: {outcome}). Vuelva a ejecutar el comando; si persiste,
+          revise el almacenamiento de perfiles.'
       manager_closed: Los cambios en '{profile}' están guardados.
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con

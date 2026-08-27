@@ -23,12 +23,11 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,

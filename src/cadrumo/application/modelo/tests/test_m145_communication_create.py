@@ -19,9 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.casilla_membership import undeclared_casilla_ids
-
 from ....adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
+from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (
@@ -143,7 +142,7 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path
 
 
 def test_create_m145_communication_record_uses_real_registry_membership() -> None:
-    from cadrumo.domain.calculations.registry.temporal import select_revision
+    from ....domain.calculations.registry.temporal import select_revision
 
     modelos, _catalogues = bundled_registry_tree()
     modelo = next(m for m in modelos if m.id == "145")

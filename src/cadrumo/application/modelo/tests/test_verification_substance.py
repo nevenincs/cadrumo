@@ -6,15 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import (
+from ....core import CasillaId, Modelo, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_verification import (
     ParsedVerificationPredicate,
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
-
-from ....core import CasillaId, Modelo, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,

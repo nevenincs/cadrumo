@@ -39,8 +39,6 @@ from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]
 
-import cadrumo.application.ledger.establishment_ladder as ladder_module
-
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
 from ....adapters.persistence.storage import SecureObjectRowIdentityError
 from ....core import ClassifierInputSource
@@ -55,6 +53,7 @@ from ....domain.iva import (
     territorial_scope_for_spanish_postal_code,
 )
 from ....tests.attribute_scope import scoped_attribute
+from .. import establishment_ladder as ladder_module
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     ConfirmedCounterpartyResolution,

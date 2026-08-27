@@ -32,8 +32,8 @@ from ._schema import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from cadrumo.domain.calculations.registry.ids import LegalRefId
-    from cadrumo.domain.calculations.registry.schema_references import LegalReference
+    from ..calculations.registry.ids import LegalRefId
+    from ..calculations.registry.schema_references import LegalReference
 
 _logger = get_logger(__name__)
 
@@ -49,7 +49,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         finding.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from ..calculations.registry.authority import bundled_authority
 
     issues: list[IvaVerificationIssue] = []
     legal = bundled_authority().catalogues.legal
@@ -98,9 +98,8 @@ def _citation_issues(
     caused solely by the first.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from cadrumo.domain.calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
-
     from ...core.resources import bundled_path
+    from ..calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
 
     issues: list[IvaVerificationIssue] = []
     # An UNRESOLVED citation is empty by design: it was read against

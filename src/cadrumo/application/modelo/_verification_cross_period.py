@@ -22,11 +22,10 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.applicability import derive_not_applicable_source_modelos
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
-
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.decimal import coerce_decimal_strict
+from ...domain.calculations.registry.applicability import derive_not_applicable_source_modelos
+from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import (
     LegalRefId,

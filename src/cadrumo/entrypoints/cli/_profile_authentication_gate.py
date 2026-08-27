@@ -264,6 +264,21 @@ def preflight_parsed_leaf(
             command_path=node.path[1:],
             authenticate_root=authenticate,
         )
+    _materialize_storage_for(spec)
+
+
+def _materialize_storage_for(spec: CommandSpec) -> None:
+    """Materialize the storage tree only for a leaf that declares it writes.
+
+    The tree is twenty-odd directories.  Creating it unconditionally meant a
+    read-only command -- ``config profile list`` most visibly -- built the whole
+    topology just to report what already existed, which both contradicts its
+    declared ``side_effects`` of ``none`` and makes a first run appear to have
+    state it does not have.  The declaration is the same authority the census,
+    write routing and help surfaces read, so the gate cannot drift from it.
+    """
+    if spec.policy.side_effects == frozenset({"none"}) and spec.policy.write_route is None:
+        return
     from ...core import ensure_storage_tree
 
     ensure_storage_tree()

@@ -7,9 +7,8 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
-
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition
+from ...calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 from .._plazo import _resolve_projected_filing_window, resolve_filing_window
 from ..errors import DeadlineValidationError
 

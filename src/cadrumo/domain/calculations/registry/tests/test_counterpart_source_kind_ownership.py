@@ -1,6 +1,6 @@
 import pytest
 
-import cadrumo.domain.calculations.registry.bindings as bindings_mod
+from .. import bindings as bindings_mod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

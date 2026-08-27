@@ -11,13 +11,6 @@ from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistryCatalogues,
-    SupportedFilingYearsCatalogue,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
-
 from ....core.directory_scan import (
     scan_directory,
 )
@@ -49,6 +42,8 @@ from .loader_cache import (
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
+from .schema import ModeloDefinition, RegistryCatalogues, SupportedFilingYearsCatalogue
+from .schema_references import LegalParameter, LegalReference, SourceReference
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:

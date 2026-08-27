@@ -106,7 +106,6 @@ def derive_art109_activity_income_coverage_for_work_unit(
     return derive_art109_activity_income_coverage(repository.load(), period=period)
 
 
-
 def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> Decimal:
     """Return the Art. 109 retained-income ratio the registry grounds for this filing.
 

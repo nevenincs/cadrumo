@@ -8,7 +8,11 @@ from typing import TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.application.operations.persistence.events import (
+from ....core import OperationEffect, OperationEventKind, OperationTerminalCondition
+from ....tests.aeat_literal_fixtures import REDACTION_SESSION_QUERY_URL_CANARY
+from ..events import OperationLogSeverity
+from ..models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt
+from ..persistence.events import (
     OperationDiagnosticEvent,
     OperationEvent,
     OperationLogRecord,
@@ -16,11 +20,6 @@ from cadrumo.application.operations.persistence.events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
-
-from ....core import OperationEffect, OperationEventKind, OperationTerminalCondition
-from ....tests.aeat_literal_fixtures import REDACTION_SESSION_QUERY_URL_CANARY
-from ..events import OperationLogSeverity
-from ..models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

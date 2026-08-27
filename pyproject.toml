@@ -603,6 +603,12 @@ convention = "google"
 # process already imported. The command is built from `sys.executable` plus
 # repo-relative paths this module discovered itself, never operator input.
 "src/cadrumo/tests/test_every_test_module_is_collectable.py" = ["S603"]
+# Proves the profile-summary boundary imports none of the authenticated
+# aggregate. That is a property of a FRESH interpreter: this process has
+# already imported the aggregate via sibling tests, so an in-process check
+# would pass regardless. argv is `sys.executable` plus a literal probe
+# source defined in the module; no operator input reaches it.
+"src/cadrumo/application/user_profile/tests/test_profile_summary_inventory.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]

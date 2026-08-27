@@ -67,7 +67,7 @@ def test_repository_setup_error_enrolled() -> None:
 
 
 def test_profile_label_ambiguous_error_enrolled() -> None:
-    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+    from ..workflow.errors import ProfileLabelAmbiguousError
 
     envelope = _assert_enrolled(ProfileLabelAmbiguousError, "profile label 'test' is ambiguous: 2 buckets carry it")
     assert envelope.code == "REFUSED_PROFILE_LABEL_AMBIGUOUS"

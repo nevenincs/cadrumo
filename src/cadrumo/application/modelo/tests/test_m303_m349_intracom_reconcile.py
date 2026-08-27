@@ -24,8 +24,6 @@ from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -43,6 +41,7 @@ from ....domain.modelos import (
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
+from ...workflow.persistence import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

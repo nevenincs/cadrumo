@@ -29,9 +29,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....deadlines import (
     EntityType,
@@ -39,6 +36,8 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
+from ..applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
+from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -534,7 +533,7 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
     operators see a missing-binding error instead of a borrador with
     00599 = 0.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+    from ..errors import RegistryValidationError
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         calculate_registry_snapshot(

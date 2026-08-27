@@ -40,7 +40,7 @@ def _tracked_paths() -> frozenset[str]:
     checkout could reproduce.  Untracked peer scratch moving a shared
     census number is the same defect in a quieter form.
     """
-    listed = subprocess.run(  # noqa: S603  # fixed read-only git subcommand assembled only by this module
+    listed = subprocess.run(  # fixed read-only git subcommand assembled only by this module
         ("git", "ls-files", "-z", "--", "src", "dev", "docs"),  # noqa: S607  # repository tool is fixed
         cwd=ROOT,
         check=True,

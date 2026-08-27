@@ -8,14 +8,13 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDataType, OneBasedExportOffset
-
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputSelector
+from .schema import DataBindingDefinition, ModeloRevision
+from .schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 __all__ = [
     "BindingExportDataType",

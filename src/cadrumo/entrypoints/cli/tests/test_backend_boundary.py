@@ -20,11 +20,10 @@ import click
 import pytest
 import typer
 
-from cadrumo.domain.calculations.registry.loader_cache import discover_modelo_sources
-
 from ....application.review import LedgerReviewFilterKey
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.loader_cache import discover_modelo_sources
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_cli_profile

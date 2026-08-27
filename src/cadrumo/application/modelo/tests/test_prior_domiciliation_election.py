@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import (
     M303_DECLARATION_TYPE_HEADER_KEY,
@@ -18,6 +16,7 @@ from ....application.calculations import (
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

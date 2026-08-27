@@ -482,8 +482,7 @@ def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusa
         address=address,
         responsible_owner=_RESPONSIBLE_OWNER,
         reconsideration_condition=(
-            "address only a casilla, binding override, detail row, or row group the baseline's permitted"
-            " surface admits"
+            "address only a casilla, binding override, detail row, or row group the baseline's permitted surface admits"
         ),
     )
 

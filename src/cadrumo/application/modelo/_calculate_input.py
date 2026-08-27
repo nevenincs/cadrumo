@@ -34,9 +34,6 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -70,10 +67,12 @@ from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
     validate_registry_text_scalar,
 )
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
@@ -1095,10 +1094,9 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-
+    from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
+    from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

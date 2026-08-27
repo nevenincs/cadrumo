@@ -160,7 +160,9 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
     txn = Transaction.model_validate(
         {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
-    prompt = build_split_prompt(txn, spec=prompt_spec_with_saturation_fields(year=2025), evidence_text="line 1 ... line 2 ...")
+    prompt = build_split_prompt(
+        txn, spec=prompt_spec_with_saturation_fields(year=2025), evidence_text="line 1 ... line 2 ..."
+    )
     assert "begin evidence" in prompt
     assert "EXACTLY ONE child with proportion 1.0" in prompt
     assert "one child per line" in prompt

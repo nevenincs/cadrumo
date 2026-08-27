@@ -6,9 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-
 from ....core import CasillaId
+from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloError,
     ModeloVerificationFindingKind,

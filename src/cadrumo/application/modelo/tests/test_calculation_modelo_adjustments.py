@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
@@ -59,7 +58,7 @@ class _FakeWorkUnit:
 
 
 def _m349_operador(*, nif_comunitario: str, clave_operacion: str, importe) -> Modelo349OperadorRow:
-    from cadrumo.domain.modelos import Modelo349OperadorRow
+    from ....domain.modelos import Modelo349OperadorRow
 
     return Modelo349OperadorRow(
         codigo_pais="DE",
@@ -131,7 +130,7 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
     """
     from decimal import Decimal
 
-    from cadrumo.domain.modelos import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
+    from ....domain.modelos import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
 
     caller_rows = (
         Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D"),
@@ -151,8 +150,8 @@ def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
 
 def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> None:
     """Prove the gate is real: removing one real kind from the table is detected."""
-    import cadrumo.application.modelo._calculation_modelo_adjustments as adjustments_module
-    from cadrumo.domain.modelos import Modelo184MemberRow
+    from ....domain.modelos import Modelo184MemberRow
+    from .. import _calculation_modelo_adjustments as adjustments_module
 
     real_table = adjustments_module._ROW_IDENTITY_FIELDS
     incomplete_table = {kind: fields for kind, fields in real_table.items() if kind is not Modelo184MemberRow}
@@ -160,4 +159,3 @@ def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> 
     assert adjustments_module._uncovered_row_kinds(incomplete_table) == frozenset({Modelo184MemberRow})
     # The real table stays fully covered -- this test does not mutate it.
     assert adjustments_module._uncovered_row_kinds(real_table) == frozenset()
-

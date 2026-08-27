@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.inventory_bindings import InventorySelector
-
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from ..authority import bundled_authority
+from ..inventory_bindings import InventorySelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

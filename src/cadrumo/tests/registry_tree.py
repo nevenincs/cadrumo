@@ -5,12 +5,11 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-
 from ..core.resources import bundled_path
+from ..domain.calculations.registry.loader import load_registry_tree
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+    from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 
 @cache

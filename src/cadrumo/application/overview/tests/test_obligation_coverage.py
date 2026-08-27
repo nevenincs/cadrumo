@@ -24,13 +24,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import has_applicability_rule
-
 from ....core import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
     Modelo,
 )
+from ....domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

@@ -32,14 +32,13 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     projection is deliberately re-read on every call (no caching) so a
     mid-process ``switch`` is reflected on the very next command.
     """
-    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
-
     from ...application.user_profile.profile_repository import CommittedProfileRepository
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.i18n import tr
     from ...core.json_contract import NoticeSeverity
+    from ...domain.user_profile.errors import ProfileNotFoundError
 
     try:
         bucket_id = resolve_active_bucket_id()

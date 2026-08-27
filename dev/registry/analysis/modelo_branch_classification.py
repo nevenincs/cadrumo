@@ -93,7 +93,7 @@ def _enclosing_symbols(tree: ast.Module) -> dict[int, str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             spans.append((node.lineno, node.end_lineno or node.lineno, node.name))
-    spans.sort(key=lambda item: (item[1] - item[0]))
+    spans.sort(key=lambda item: item[1] - item[0])
     mapping: dict[int, str] = {}
     for start, end, name in spans:
         for line in range(start, end + 1):

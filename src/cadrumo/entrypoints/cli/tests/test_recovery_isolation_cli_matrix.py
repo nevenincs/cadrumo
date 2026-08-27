@@ -42,7 +42,7 @@ def _archive_export(label: str, target: Path) -> Result:
 
 
 def _restore_from(source: Path, *, label: str) -> Result:
-    args = ["config", "profile", "restore", label, "--file", str(source), "--secrets-stdin"]
+    args = ["config", "profile", "archive", "import", label, "--file", str(source), "--secrets-stdin"]
     return _invoke(args, input=f'{{"password": "{_test_passphrase()}"}}')
 
 

@@ -16,8 +16,12 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
+from .._validate import RegistryValidator
+from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
+from .._validate_evidence import EvidenceValidator
+from ..errors import RegistryValidationError
+from ..schema import ConstructDefinition
+from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     minimal_casilla,
@@ -25,11 +29,6 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
     minimal_modelo,
     minimal_revision,
 )
-
-from .._validate import RegistryValidator
-from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
-from .._validate_evidence import EvidenceValidator
-from ..schema import ConstructDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

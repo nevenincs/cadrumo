@@ -87,16 +87,14 @@ def test_a_cell_the_projection_does_not_name_stays_silent() -> None:
     costs more than the advisory is worth.
     """
     authority = _warm_authority()
-    named = {
-        (gap.modelo, gap.filing_year, str(gap.period)) for gap in authority.supported_filing_year_gaps
-    }
+    named = {(gap.modelo, gap.filing_year, str(gap.period)) for gap in authority.supported_filing_year_gaps}
     unbounded = [cell for cell in (("303", 2025, "1T"), ("100", 2025, "0A")) if cell not in named]
     assert unbounded, "the sample cells are all gapped; pick cells the corpus backs to prove silence"
 
     for modelo_id, filing_year, period in unbounded:
-        assert (
-            authority.filing_bound_advisories_for_cell(modelo_id, filing_year=filing_year, period=period) == ()
-        ), f"the advisory fired on {modelo_id} {filing_year} {period}, which the projection does not name"
+        assert authority.filing_bound_advisories_for_cell(modelo_id, filing_year=filing_year, period=period) == (), (
+            f"the advisory fired on {modelo_id} {filing_year} {period}, which the projection does not name"
+        )
 
 
 def test_the_advisory_never_raises_for_an_unknown_cell() -> None:

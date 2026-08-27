@@ -407,11 +407,6 @@ class TestCrossRevisionConsistency:
 
         assert _cross_revision_casilla_consistency_failures([m]) == ()
 
-
-
-
-
-
     def test_advisory_continuity_validation_does_not_fail_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old")
         b = _casilla(cid="0700", label="New")
@@ -806,8 +801,6 @@ def test_committed_corpus_continuity_semantic_linkage_is_complete(
     modelos, _catalogues = committed_registry
 
     assert declared_cross_revision_continuity_semantic_linkage_failures(modelos) == ()
-
-
 
 
 def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: ModeloDefinition) -> None:

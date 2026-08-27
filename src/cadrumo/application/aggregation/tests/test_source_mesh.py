@@ -8,12 +8,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....domain.calculations import DirectRowMaterializationProvenance
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import RevisionId
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from .. import (
     CalculationSourceDiagnostic,

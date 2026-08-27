@@ -52,15 +52,14 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.invoice_bindings import (
+from .....core.aggregation import BindingSourceKind
+from .....tests.registry_tree import bundled_registry_tree
+from ..invoice_bindings import (
     InvoiceObservation,
     Modelo349OperadorTotalsParity,
     compute_modelo_349_operador_totals_parity,
     resolve_invoice_binding_values,
 )
-
-from .....core.aggregation import BindingSourceKind
-from .....tests.registry_tree import bundled_registry_tree
 from ._modelo_349_registry_support import _modelo_349_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -211,9 +210,8 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     equality instead of merely being silent, and the default is pinned against a
     positive statement.
     """
-    from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
     from .....core.resources import bundled_path
+    from ..snapshot import build_snapshot
 
     # Scoped to M349 alone rather than through ``bundled_authority()``,
     # whose ``.load()`` validates every modelo in the bundled tree before

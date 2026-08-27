@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-import cadrumo.domain.calculations.registry.export as owner
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
-
 from .....core import EstadoCasillaOficial, validated_casilla_id
+from .. import export as owner
+from ..authority import bundled_authority
+from ..errors import RegistryValidationError
+from ..export import clasificar_casillas_oficiales
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

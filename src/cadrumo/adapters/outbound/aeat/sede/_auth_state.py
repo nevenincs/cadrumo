@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from .....core.i18n import tr
+from ..auth import session_store as session_store
 from .errors import SedeNavigationError
 
 if TYPE_CHECKING:

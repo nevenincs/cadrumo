@@ -60,9 +60,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...core.decimal import try_parse_canonical_decimal
@@ -93,6 +90,8 @@ from ...domain.calculations.registry.relations import (
     relation_requirement_index,
     relation_source_requirements,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -384,7 +383,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     202 relation stays unresolved and the gate keeps blocking, never a silent
     under-declaration.
     """
-    from cadrumo.domain.calculations.registry.applicability_modelo202 import (
+    from ...domain.calculations.registry.applicability_modelo202 import (
         Modelo202Modality,
         modelo_202_modality_from_inputs,
     )

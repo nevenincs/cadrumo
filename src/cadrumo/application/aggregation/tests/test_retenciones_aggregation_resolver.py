@@ -19,10 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-
 from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition

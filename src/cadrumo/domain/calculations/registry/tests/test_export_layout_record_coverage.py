@@ -32,15 +32,6 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_exports import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    ExportLayoutDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-)
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from .....core import ExportLayoutFormat
 from .._validate_export_layout_coverage import (
     _administration_reserved,
@@ -64,6 +55,14 @@ from ..record_design_schema import (
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportLayoutDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+)
+from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

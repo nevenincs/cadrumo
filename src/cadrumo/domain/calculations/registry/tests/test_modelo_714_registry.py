@@ -7,9 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import (
     CasillaId,
     validated_casilla_id,
@@ -19,7 +16,9 @@ from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue
 from ..relations import relation_source_requirements
+from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
+from ..schema_surfaces import CasillaDefinition
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 

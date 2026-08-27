@@ -27,15 +27,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    resolve_applicability_rule_from_authority,
-)
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-
 from .....core import Modelo
 from .....domain.deadlines import EntityType, FiscalResidency, IVARegime, TaxpayerProfile
-from ..applicability import ModeloApplicabilityRule
+from ..applicability import ApplicabilityVerdict, ModeloApplicabilityRule, resolve_applicability_rule_from_authority
+from ..authority import ValidatedRegistryAuthority
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

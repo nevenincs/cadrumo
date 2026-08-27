@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
-
 from .....core import RegistryAuthorityGrade
+from ..authority import bundled_authority
+from ..errors import RegistryFailureCondition, RegistryValidationError
 from .test_revision_span_matches_published_designs import _boundaries_for, _declared_revisions, _filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -43,8 +43,6 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
@@ -55,6 +53,7 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period, validated_casilla_id
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

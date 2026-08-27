@@ -16,7 +16,7 @@ from collections.abc import Mapping
 import pytest
 from pydantic import ValidationError
 
-from dev.quality.modelo_workspace_receipts import (
+from ..quality.modelo_workspace_receipts import (
     COHORT_CONSUMED_AXES,
     REQUIRED_CHECKLIST_ITEMS,
     REQUIRED_PREDECESSOR_SCHEMA_NAMES,

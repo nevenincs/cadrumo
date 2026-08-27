@@ -47,11 +47,7 @@ def test_every_residue_cell_appears_in_the_render() -> None:
     residue = collect_residue()
     rendered = render_worklist(residue)
 
-    missing = [
-        cell
-        for cell in residue
-        if f"`{cell.modelo}` {cell.filing_year} `{cell.period}`" not in rendered
-    ]
+    missing = [cell for cell in residue if f"`{cell.modelo}` {cell.filing_year} `{cell.period}`" not in rendered]
 
     assert missing == [], f"{len(missing)} residue cell(s) absent from the render, e.g. {missing[:3]}"
 

@@ -16,12 +16,11 @@ from typing import Annotated, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.application.operations.registry import (
+from ...application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
 )
-
 from ...core import content_hash_hex
 from ...tests.secure_sql import isolated_runtime_profile
 from .. import compose_operation_dependencies
