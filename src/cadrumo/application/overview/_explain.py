@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...core.calendar_shift import shift_by_calendar_years
 from ...core.time import now, today_madrid
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -47,7 +48,7 @@ from ...domain.deadlines import (
     TaxpayerProfile,
     twelve_month_anniversary,
 )
-from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
+from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
@@ -390,7 +391,7 @@ def _out_of_plazo_warning(
     if today < twelve_month_boundary:
         return None
     days_late = (today - closes_on).days
-    prescription_boundary = add_prescription_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
+    prescription_boundary = shift_by_calendar_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
     prescription_state = (
         "inside the ordinary four-year LGT arts. 66-67 prescription horizon"
         if today <= prescription_boundary

@@ -394,8 +394,8 @@ def test_inventory_validator_exemption_disappears_on_each_enrollment_ratchet(rat
     """Any declaration, validator, or end of deferral removes the exemption."""
     inventory = BindingSourceKind.INVENTORY
     deferred = frozenset({inventory})
-    declared: frozenset[BindingSourceKind] = frozenset()
-    implemented: frozenset[BindingSourceKind] = frozenset()
+    declared: frozenset[BindingSourceKind] = frozenset[BindingSourceKind]()
+    implemented: frozenset[BindingSourceKind] = frozenset[BindingSourceKind]()
     assert inventory in _deferred_validator_exemptions(
         deferred=deferred,
         declared=declared,

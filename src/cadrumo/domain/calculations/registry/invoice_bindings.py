@@ -16,6 +16,7 @@ from ._m347_threshold import m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     M347_OPERATION_CLAVES,
+    M349_OPERATION_CLAVES,
     BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -32,13 +33,14 @@ from .quantity_screen_enrolment import independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
+_InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
 _InvoiceRowField = Literal[
     "party_tax_id",
     "country_code",
     "party_legal_name",
     "clave",
     "base_imponible",
+    "importe_total",
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
@@ -192,9 +194,25 @@ class _InvoiceSelector(BaseModel):
         for clave in value:
             if clave != clave.upper():
                 raise RegistryValidationError("invoice selector clave must be uppercase")
-            if clave not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
         return value
+
+    @model_validator(mode="after")
+    def _claves_within_grouping_vocabulary(self) -> _InvoiceSelector:
+        """Check ``claves`` against the vocabulary its OWN grouping declares.
+
+        A field validator cannot see ``grouping`` (declared after ``claves``
+        in this model), so the closed-set membership check -- as opposed to
+        the shape checks above -- runs here, once both fields are available.
+        M347's ``contraparte_clave`` grouping and M349's two groupings share
+        the ``claves`` field but never its vocabulary; validating every
+        selector against M349's set alone would refuse every legitimate M347
+        binding.
+        """
+        claves_vocabulary = M347_OPERATION_CLAVES if self.grouping == "contraparte_clave" else M349_OPERATION_CLAVES
+        for clave in self.claves:
+            if clave not in claves_vocabulary:
+                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
+        return self
 
 
 def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
@@ -948,6 +966,8 @@ def _build_invoice_rows(
         return _build_operator_clave_rows(observations)
     if grouping == "operator_clave_period":
         return _build_operator_clave_period_rows(observations)
+    if grouping == "contraparte_clave":
+        return _build_contraparte_clave_rows(observations)
     raise RegistryValidationError(f"unsupported invoice row grouping {grouping!r}")
 
 
@@ -984,6 +1004,78 @@ def _build_operator_clave_rows(
             "party_tax_id": bucket.party_tax_id,
             "clave": bucket.clave,
             "base_imponible": bucket.base_total,
+        }
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
+
+
+class _ContraparteClaveAccumulator(BaseModel):
+    """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    country_code: str
+    party_tax_id: TaxIdIdentityToken
+    clave: str
+    party_legal_name: str | None
+    importe_total: Decimal
+
+
+def _build_contraparte_clave_rows(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group invoice observations into modelo 347 contraparte rows.
+
+    Mirrors :func:`_build_operator_clave_rows`'s (country, counterparty,
+    clave) grouping shape exactly, keyed on ``operation_clave`` -- M347's own
+    clave vocabulary -- rather than M349's ``intracommunity_clave``. The two
+    fields are disjoint by construction (:class:`InvoiceObservation`'s
+    validators enforce each against its own closed set), so an observation
+    can only ever be grouped by the one this function reads.
+
+    Aggregates ``invoice_total_amount`` rather than ``base_amount``: RD
+    1065/2007 art. 34.2.a) requires the declared IMPORTE ANUAL to be the
+    total contraprestacion including cuotas and recargos, not the taxable
+    base alone (recorded in the tui-architecture modelo 347 contraparte
+    binding inventory reference).
+    """
+    grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
+    for observation in observations:
+        if observation.operation_clave is None:
+            continue
+        if observation.invoice_total_amount is None:
+            raise RegistryValidationError(
+                f"invoice observation {observation.invoice_id!r} declares operation_clave "
+                f"{observation.operation_clave!r} but no invoice_total_amount",
+            )
+        key = (
+            observation.country_code,
+            observation.party_tax_id,
+            observation.operation_clave,
+        )
+        bucket = grouped.setdefault(
+            key,
+            _ContraparteClaveAccumulator(
+                country_code=observation.country_code,
+                party_tax_id=observation.party_tax_id,
+                clave=observation.operation_clave,
+                party_legal_name=observation.party_legal_name,
+                importe_total=Decimal("0"),
+            ),
+        )
+        bucket.importe_total += observation.invoice_total_amount
+        if bucket.party_legal_name is None and observation.party_legal_name is not None:
+            bucket.party_legal_name = observation.party_legal_name
+    rows: list[Mapping[str, Decimal | str]] = []
+    for key in sorted(grouped):
+        bucket = grouped[key]
+        row: dict[str, Decimal | str] = {
+            "country_code": bucket.country_code,
+            "party_tax_id": bucket.party_tax_id,
+            "clave": bucket.clave,
+            "importe_total": bucket.importe_total,
         }
         if bucket.party_legal_name is not None:
             row["party_legal_name"] = bucket.party_legal_name
@@ -1090,12 +1182,17 @@ def _filter_invoice_observations(
     selector: _InvoiceSelector,
 ) -> Iterable[InvoiceObservation]:
     clave_filter = set(selector.claves)
+    # M347's contraparte_clave grouping filters on operation_clave -- its OWN,
+    # disjoint clave vocabulary -- never on M349's intracommunity_clave. Every
+    # other grouping (including no grouping declared, e.g. scalar selectors)
+    # keeps the established intracommunity_clave filter.
+    clave_field = "operation_clave" if selector.grouping == "contraparte_clave" else "intracommunity_clave"
     for observation in observations:
         if selector.rectification_scope == "only_rectifications" and not observation.is_rectification:
             continue
         if selector.rectification_scope == "exclude_rectifications" and observation.is_rectification:
             continue
-        if clave_filter and observation.intracommunity_clave not in clave_filter:
+        if clave_filter and getattr(observation, clave_field) not in clave_filter:
             continue
         if selector.iva_regime is not None and observation.iva_regime != selector.iva_regime:
             continue

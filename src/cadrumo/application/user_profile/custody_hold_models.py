@@ -18,7 +18,7 @@ from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 #: reads its on-disk file back through the typed model, so no upgrader or
 #: durability floor applies -- naming the constant is the outstanding half of
 #: its classification.
-CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION: Final[int] = 1
+CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class ProfileCustodyRetentionOverride(BaseModel):

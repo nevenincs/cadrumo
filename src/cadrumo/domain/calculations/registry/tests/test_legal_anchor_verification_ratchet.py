@@ -112,7 +112,7 @@ population. A superset that cannot drift is worth more than an exact figure
 that can.
 """
 
-_KNOWN_ABSENT_AT_MEASUREMENT: Final[frozenset[str]] = frozenset()
+_KNOWN_ABSENT_AT_MEASUREMENT: Final[frozenset[str]] = frozenset[str]()
 """Reserved for naming individual entries once the population is small enough."""
 
 _STRICT_RESOLUTION_BLOCKERS: Final[frozenset[str]] = frozenset(

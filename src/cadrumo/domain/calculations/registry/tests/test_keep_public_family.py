@@ -18,6 +18,7 @@ import ast
 import importlib
 import json
 from pathlib import Path
+from types import ModuleType
 from typing import Final
 
 import pytest
@@ -48,17 +49,27 @@ def _borrowed_exports(path: Path) -> list[str]:
             and any(getattr(t, "id", "") == "__all__" for t in node.targets)
             and isinstance(node.value, ast.List | ast.Tuple)
         ):
-            return [e.value for e in node.value.elts if isinstance(e, ast.Constant) and e.value not in bound]
+            return [
+                e.value
+                for e in node.value.elts
+                if isinstance(e, ast.Constant) and isinstance(e.value, str) and e.value not in bound
+            ]
     return []
 
 
 def _rows(disposition: str) -> tuple[dict[str, object], ...]:
     """Return every reviewed matrix row carrying one disposition."""
     document = json.loads(_MATRIX.read_text(encoding="utf-8"))
-    rows = tuple(row for row in document["rows"] if row["disposition"] == disposition)
+    raw_rows = document["rows"]
+    assert isinstance(raw_rows, list)
+    rows: list[dict[str, object]] = []
+    for raw_row in raw_rows:
+        assert isinstance(raw_row, dict)
+        if raw_row["disposition"] == disposition:
+            rows.append(raw_row)
     if not rows:
         pytest.fail(f"the census matrix records no {disposition} rows to hold")
-    return rows
+    return tuple(rows)
 
 
 def _keep_public_paths() -> tuple[str, ...]:
@@ -77,7 +88,12 @@ def _hard_move_pairs() -> tuple[tuple[str, str], ...]:
     pairs: set[tuple[str, str]] = set()
     for row in _rows("hard_move_complete"):
         destinations = row["terminal_destinations"]
-        owners = [str(item["path"]) for item in destinations if not item["allowed_absence"]]
+        assert isinstance(destinations, list)
+        owners = []
+        for item in destinations:
+            assert isinstance(item, dict)
+            if not item["allowed_absence"]:
+                owners.append(str(item["path"]))
         owner = owners[0] if owners else str(row["new_path"])
         pairs.add((str(row["old_path"]), owner))
     return tuple(sorted(pairs))
@@ -116,7 +132,7 @@ def _locally_bound_names(path: Path) -> frozenset[str]:
     return frozenset(names)
 
 
-def _package_bound_names(package: object) -> frozenset[str]:
+def _package_bound_names(package: ModuleType) -> frozenset[str]:
     """Return every name the package ``__init__`` itself binds.
 
     Read from source rather than by attribute lookup, so a submodule attribute
@@ -227,7 +243,13 @@ _OUTSTANDING_ROWS: Final[dict[str, str]] = {}
 
 def _terminal_state_owners(row: dict[str, object]) -> tuple[str, ...]:
     destinations = row.get("terminal_destinations") or []
-    owners = tuple(str(item["path"]) for item in destinations if item.get("role") == "defining_owner")
+    assert isinstance(destinations, list)
+    owners_list: list[str] = []
+    for item in destinations:
+        assert isinstance(item, dict)
+        if item.get("role") == "defining_owner":
+            owners_list.append(str(item["path"]))
+    owners = tuple(owners_list)
     return owners or ((str(row["new_path"]),) if row.get("new_path") else ())
 
 

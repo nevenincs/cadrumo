@@ -18,6 +18,7 @@ from .schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 __all__ = [
     "M347_OPERATION_CLAVES",
+    "M349_OPERATION_CLAVES",
     "BindingExportDataType",
     "BindingExportSelector",
     "BindingFixedExportSelector",
@@ -613,7 +614,7 @@ def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | Non
     return _validate
 
 
-_AEAT_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
+M349_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
 #: Modelo 347's OWN clave de operacion vocabulary (RD 1065/2007 arts. 31/33,
 #: RD 1619/2012 disposicion adicional cuarta), disjoint from M349's
 #: intracommunity clave set above -- the letter A means a different thing in
@@ -630,7 +631,7 @@ def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]
     optional, must be uppercase, and must be one of the closed AEAT clave de
     operación set. The single factory replaces both copies.
     """
-    return operation_clave_validator(field_label="intracommunity_clave", claves=_AEAT_OPERATION_CLAVES)
+    return operation_clave_validator(field_label="intracommunity_clave", claves=M349_OPERATION_CLAVES)
 
 
 def operation_clave_validator(

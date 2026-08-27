@@ -14,6 +14,7 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError
 
+from ....core.calendar_shift import shift_by_calendar_years
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import (
     EntityType,
@@ -22,7 +23,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
     twelve_month_anniversary,
 )
-from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
+from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .._explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
 from ..errors import OverviewExplainError
 from .calendar_test_support import profile as _autonomo_profile
@@ -177,7 +178,7 @@ def test_explain_historical_warning_uses_the_recargo_anniversary_with_its_inclus
 
 def test_explain_historical_warning_uses_the_retention_prescription_boundary() -> None:
     closes_on = date(2023, 6, 30)
-    prescription_boundary = add_prescription_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
+    prescription_boundary = shift_by_calendar_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
 
     on_boundary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary)
     after_boundary = build_overview_explain(
@@ -249,7 +250,7 @@ def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
     Both retired local helpers AGREED with their canonical replacements on
     every date the suite exercises -- `_add_years(x, 1)` matches
     `twelve_month_anniversary` away from the leap edge, and `_add_years(x, 4)`
-    matches `add_prescription_years` at four years everywhere. Re-inlining the
+    matches `shift_by_calendar_years` at four years everywhere. Re-inlining the
     retired arithmetic therefore leaves every outcome assertion in this module
     green (measured: 14 passed with the duplicate restored), so no assertion on
     the warning's TEXT or its boundaries can defend this consolidation.
@@ -263,9 +264,9 @@ def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
         "the twelve-month boundary must come from domain.deadlines."
         f"twelve_month_anniversary; referenced names were {referenced}"
     )
-    assert "add_prescription_years" in referenced, (
-        "the prescription boundary must come from domain.retention."
-        f"add_prescription_years; referenced names were {referenced}"
+    assert "shift_by_calendar_years" in referenced, (
+        "the prescription boundary must come from core.calendar_shift."
+        f"shift_by_calendar_years; referenced names were {referenced}"
     )
     assert "TAX_RECORD_RETENTION_FLOOR_YEARS" in referenced, (
         "the four-year horizon must be read from the grounded retention "

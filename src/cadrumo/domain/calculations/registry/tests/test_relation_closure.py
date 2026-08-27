@@ -190,9 +190,9 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
     casilla_sums: dict[CasillaId, Decimal] = {}
     for obs in observations:
         for casilla_obs in obs.observations:
-            casilla_sums[casilla_obs.casilla_id] = (
-                casilla_sums.get(casilla_obs.casilla_id, Decimal("0")) + casilla_obs.value
-            )
+            value = casilla_obs.value
+            assert isinstance(value, Decimal)
+            casilla_sums[casilla_obs.casilla_id] = casilla_sums.get(casilla_obs.casilla_id, Decimal("0")) + value
 
     assert values["modelo-180-rel-115-base-anual"] == casilla_sums[_M115_BASE_CASILLA]
     assert values["modelo-180-rel-115-retenciones-anual"] == casilla_sums[_M115_RETENCIONES_CASILLA]

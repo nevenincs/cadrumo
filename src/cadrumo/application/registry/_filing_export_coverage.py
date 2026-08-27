@@ -30,7 +30,6 @@ from ...domain.calculations.registry.temporal import (
 )
 from ..filing import (
     FilingExportProof,
-    FilingExportProofAssessment,
     FilingExportProofAuthority,
     FilingExportProofChannel,
     FilingExportProofCoordinate,
@@ -292,7 +291,7 @@ def _filing_export_proof(
         assessment = proof_authority.assess_for(coordinate)
     except (OSError, RuntimeError, ValueError) as exc:
         return None, _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
-    if not isinstance(assessment, FilingExportProofAssessment) or assessment.coordinate != coordinate:
+    if assessment.coordinate != coordinate:
         return None, _LayoutEvidenceFailure(
             reason="conflicting_evidence",
             detail="filing export assessment identity does not match the law-selected registry snapshot",

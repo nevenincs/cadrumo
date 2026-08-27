@@ -624,6 +624,10 @@ convention = "google"
 # what a process imports is a property of a cold start. argv is `sys.executable`
 # plus a literal probe source and JSON built from the shipped command graph.
 "src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py" = ["S603"]
+# Resolves each live CLI node in a FRESH interpreter to count its imports:
+# module cost is a property of a cold start. argv is `sys.executable` plus a
+# literal probe source and JSON built from the shipped command graph.
+"src/cadrumo/entrypoints/cli/tests/test_cli_resolution_cost_budget.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]

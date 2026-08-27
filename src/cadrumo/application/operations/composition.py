@@ -28,13 +28,15 @@ from .projection_services import (
     OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
-    _read_snapshot,
-    _UnavailableOperationSecureResponseAuthority,
-    _UnavailableSnapshot,
+    UnavailableOperationSecureResponseAuthority,
+    UnavailableSnapshot,
+    read_snapshot,
 )
 from .registry import OperationRegistry
 from .secret_submission import OperationSecretRequirement
 from .supervisor import OperationSupervisor
+
+_ACTOR_REFERENCE_ADAPTER: TypeAdapter[OperationActorReference] = TypeAdapter(OperationActorReference)
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +63,7 @@ class OperationSubmissionService:
         operation_id: OperationId | None = None,
     ) -> OperationSubmission:
         """Durably submit one typed registered request without starting it."""
-        validated_actor = TypeAdapter(OperationActorReference).validate_python(actor_ref)
+        validated_actor = _ACTOR_REFERENCE_ADAPTER.validate_python(actor_ref)
         submitted_id = await self.supervisor.submit(request, operation_id=operation_id)
         snapshot = await self.supervisor.inspect(submitted_id)
         receipt = OperationSubmissionReceiptV1(
@@ -149,12 +151,12 @@ def compose_operation_services(
         request: OperationResponseControlRequestV1,
         capability: OperationResponseCapability,
     ) -> OperationResponseControlService:
-        snapshot = await _read_snapshot(reader, request.operation_id)
+        snapshot = await read_snapshot(reader, request.operation_id)
         pending = (
-            None if snapshot is None or isinstance(snapshot, _UnavailableSnapshot) else snapshot.pending_interaction
+            None if snapshot is None or isinstance(snapshot, UnavailableSnapshot) else snapshot.pending_interaction
         )
         authority = (
-            _UnavailableOperationSecureResponseAuthority()
+            UnavailableOperationSecureResponseAuthority()
             if pending is None
             else authority_broker.bind(request, pending, capability, clock=clock)
         )

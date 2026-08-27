@@ -134,10 +134,6 @@ def resolve_filing_window(
     """
     from ..calculations.registry.authority import bundled_authority
 
-    if resultado is not None and not isinstance(resultado, ResultDisposition):
-        raise DeadlineValidationError(
-            f"filing window resultado must be ResultDisposition, got {type(resultado).__name__}",
-        )
     if tipo_renta_code is not None and (
         modelo != Modelo.M210 or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
     ):
@@ -214,7 +210,7 @@ def _resolve_projected_filing_window(
             f"filing window resolution is ambiguous for {requested!r}: "
             f"matched window ids {[window.id for window in matches]!r}",
         )
-    return matches[0]
+    return next(iter(matches))
 
 
 __all__ = ["resolve_filing_closes_on", "resolve_filing_window"]

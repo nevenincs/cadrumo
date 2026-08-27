@@ -135,6 +135,25 @@ def _visible_target(bucket_id: str, *, revision_id: str | None = None) -> Modelo
     )
 
 
+def _visible_target_for(
+    modelo: str,
+    *,
+    filing_year: int,
+    period: str,
+    bucket_id: str,
+    revision_id: str | None = None,
+) -> ModeloWorkspaceVisibleFilingTargetV1:
+    return ModeloWorkspaceVisibleFilingTargetV1(
+        target=ModeloVisibleFilingTarget(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, period),
+            registry_revision_id=revision_id,
+            bucket_id=bucket_id,
+        ),
+    )
+
+
 def test_capture_resolves_registry_from_the_captured_work_coordinate_not_the_target(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
@@ -1638,6 +1657,440 @@ def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_
     assert len(evidence_horizon.source_refs) > 0
 
     contributors = graded_snapshot_contributors()
-    assert len(contributors) == 5
+    assert len(contributors) == 6
     contributors_again = graded_snapshot_contributors()
     assert contributors == contributors_again  # deterministic ordering
+
+
+def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculation(
+    repos,
+) -> None:
+    """S128: CALCULATION_UNAVAILABLE fires before REGISTRY grade admission, for a real never-calculated work unit."""
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
+
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("130")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="130-2026-1T",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    target = _visible_target(bucket_id)
+
+    result = resolve_graded_snapshot_result(
+        target,
+        required_grade=RegistryAuthorityGrade.CALCULATION,
+        bucket_id=bucket_id,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    assert isinstance(result, ModeloWorkspaceRefusedResultV1)
+    assert result.refusal.kind == "domain"
+    assert result.refusal.code is ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE
+
+
+def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_real_calculation(
+    repos,
+) -> None:
+    """S128: the full assembly over a real work unit, calculation, and verification report."""
+    from decimal import Decimal
+
+    from ....core import ModeloWorkProgressState, OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
+    from ._file_flow_support import (
+        DEFAULT_130_BASELINE_INPUTS,
+        DEFAULT_130_BINDING_VALUES,
+        calculate_modelo_revision,
+        verify_revision,
+    )
+
+    work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("130")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="130-2026-1T",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values={
+            **DEFAULT_130_BINDING_VALUES,
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("9000"),
+        },
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    )
+    verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_event_repo,
+        clock=revision.updated_at,
+    )
+
+    target = _visible_target(bucket_id)
+
+    result = resolve_graded_snapshot_result(
+        target,
+        required_grade=RegistryAuthorityGrade.CALCULATION,
+        bucket_id=bucket_id,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+    projection = result.projection
+    assert projection.target.modelo == modelo
+    assert projection.work_review.review is not None
+    assert projection.work_review.review.calculation_revision_id == revision.calculation_revision_id
+    assert projection.work_review.review.progress.state is ModeloWorkProgressState.COMPLETE
+    assert projection.materialization_facet is not None
+    assert projection.materialization_facet.records  # a real, non-empty materialization facet
+    assert projection.provenance_facet is not None
+    assert projection.schema_facet.records  # a real, non-empty graded schema facet
+    assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
+
+    # Round-trip through JSON must reproduce the identical result.
+    reloaded = ModeloWorkspaceGradedSnapshotResultV1.model_validate_json(result.model_dump_json())
+    assert reloaded == result
+
+
+def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
+    repos,
+) -> None:
+    """S128: a real revision whose declared grade cannot satisfy the requested one refuses honestly.
+
+    Modelo 117's ``2019-y-siguientes`` revision declares ``calculation``
+    authority (``revision.toml``); requesting ``filing`` cannot be satisfied.
+    The work unit's ``current_calculation_revision_id`` is set directly
+    (never through a real calculate run) because this refusal fires around
+    the REGISTRY capture, strictly before the CALCULATION port is ever
+    touched -- the work unit only has to carry a non-``None`` id to pass the
+    earlier ``CALCULATION_UNAVAILABLE`` gate.
+    """
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
+
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("117")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+    assert selected_revision.authority_grade == RegistryAuthorityGrade.CALCULATION
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="117-2026-1T",
+        current_calculation_revision_id="a" * 64,
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    target = _visible_target_for(modelo, filing_year=filing_year, period="1T", bucket_id=bucket_id)
+
+    result = resolve_graded_snapshot_result(
+        target,
+        required_grade=RegistryAuthorityGrade.FILING,
+        bucket_id=bucket_id,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    assert isinstance(result, ModeloWorkspaceRefusedResultV1)
+    assert result.refusal.kind == "domain"
+    assert result.refusal.code is ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE
+
+
+def test_resolve_graded_snapshot_result_reads_the_work_catalogue_exactly_once(
+    repos,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """S128: the complete GRADED_SNAPSHOT assembly must back onto a single WORK catalogue read."""
+    import logging
+    from decimal import Decimal
+
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
+    from ._file_flow_support import DEFAULT_130_BASELINE_INPUTS, DEFAULT_130_BINDING_VALUES
+    from ._file_flow_support import calculate_modelo_revision as _calc
+    from ._file_flow_support import verify_revision as _verify
+
+    work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("130")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="130-2026-1T",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    revision = _calc(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values={
+            **DEFAULT_130_BINDING_VALUES,
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("9000"),
+        },
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    )
+    _verify(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_event_repo,
+        clock=revision.updated_at,
+    )
+
+    target = _visible_target_for(modelo, filing_year=filing_year, period="1T", bucket_id=bucket_id)
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
+        result = resolve_graded_snapshot_result(
+            target,
+            required_grade=RegistryAuthorityGrade.CALCULATION,
+            bucket_id=bucket_id,
+            catalogue_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+        )
+
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
+    assert len(load_log_lines) == 1
+
+
+def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_change(
+    repos,
+) -> None:
+    """S128 epoch consistency: a real change to one contributor must change the pinned baseline.
+
+    Two identical calls over unchanged data must agree byte-for-byte
+    (deterministic assembly); a real second calculation on the SAME work
+    unit changes ``current_calculation_revision_id``, which the CALCULATION
+    contributor's own stamp/epoch must reflect -- and therefore the
+    assembled ``contributor_epoch_digest``/``baseline`` must differ, never
+    silently reuse the first call's pinned coordinate.
+    """
+    from decimal import Decimal
+
+    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ....domain.calculations.registry.temporal import select_revision
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ..workspace import resolve_graded_snapshot_result
+    from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
+    from ._file_flow_support import DEFAULT_130_BASELINE_INPUTS, DEFAULT_130_BINDING_VALUES
+    from ._file_flow_support import calculate_modelo_revision as _calc
+    from ._file_flow_support import verify_revision as _verify
+
+    work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    modelo = ModeloCode("130")
+    filing_year = 2026
+    period = Period.from_year_and_code(filing_year, "1T")
+    authority = bundled_authority()
+    selected_revision = select_revision(authority.validate_modelo(modelo), filing_year=filing_year, period="1T")
+
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision.id,
+        ),
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=selected_revision.id,
+        name="130-2026-1T",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
+
+    first_revision = _calc(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values={
+            **DEFAULT_130_BINDING_VALUES,
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("9000"),
+        },
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    )
+    _verify(
+        first_revision.calculation_revision_id,
+        revision=first_revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_event_repo,
+        clock=first_revision.updated_at,
+    )
+
+    target = _visible_target_for(modelo, filing_year=filing_year, period="1T", bucket_id=bucket_id)
+
+    def _resolve() -> ModeloWorkspaceGradedSnapshotResultV1:
+        result = resolve_graded_snapshot_result(
+            target,
+            required_grade=RegistryAuthorityGrade.CALCULATION,
+            bucket_id=bucket_id,
+            catalogue_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+        )
+        assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+        return result
+
+    first_result = _resolve()
+    second_result = _resolve()
+    assert first_result.projection.baseline == second_result.projection.baseline
+    assert (
+        first_result.projection.baseline.contributor_epoch_digest
+        == second_result.projection.baseline.contributor_epoch_digest
+    )
+
+    # A real second calculation on the same work unit is a genuine change to
+    # the CALCULATION contributor's own stamp/epoch -- proving the baseline
+    # is pinned from the captures, never re-derived after the fact.
+    second_revision = _calc(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values={
+            **DEFAULT_130_BINDING_VALUES,
+            "modelo-130-actividad-economica-ingresos-cumulative": Decimal("15000"),
+        },
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    )
+    assert second_revision.calculation_revision_id != first_revision.calculation_revision_id
+    updated_work_unit = work_repo.load().work_units[work_unit.work_unit_id]
+    assert updated_work_unit.current_calculation_revision_id == second_revision.calculation_revision_id
+
+    third_result = _resolve()
+    assert third_result.projection.baseline != first_result.projection.baseline
+    assert (
+        third_result.projection.baseline.contributor_epoch_digest
+        != first_result.projection.baseline.contributor_epoch_digest
+    )

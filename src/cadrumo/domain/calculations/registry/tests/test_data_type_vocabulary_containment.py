@@ -40,7 +40,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _declared_members(model: type[BaseModel]) -> frozenset[str]:
     """Return the closed ``data_type`` vocabulary a model declares."""
-    return frozenset(typing.get_args(model.model_fields["data_type"].annotation))
+    members: set[str] = set()
+    for arg in typing.get_args(model.model_fields["data_type"].annotation):
+        assert isinstance(arg, str)
+        members.add(arg)
+    return frozenset(members)
 
 
 #: The narrowings, each expected to stay inside the casilla vocabulary.

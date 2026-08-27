@@ -476,6 +476,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
+    assert isinstance(target_obs.value, Decimal)
     tampered_obs = CasillaObservation.model_construct(
         casilla_id=target_obs.casilla_id,
         value=target_obs.value + Decimal("9999"),

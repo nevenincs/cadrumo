@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import Period, validated_casilla_id
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.modelos import (
@@ -41,7 +42,9 @@ _MODELO = ModeloCode("130")
 _OUTPUT_CASILLA = validated_casilla_id("19", surface="test.calculation_capture")
 
 
-def _seed_calculation(repos: _Repos, *, output: Decimal = Decimal("125.00")) -> tuple[str, object]:
+def _seed_calculation(
+    repos: _Repos, *, output: Decimal = Decimal("125.00")
+) -> tuple[str, CalculationRevisionCatalogueRepository]:
     """Persist one real work unit and calculation revision through real storage."""
     work_repo, calculation_repo, _filing_repo, _verification_repo, _events = repos
     period = Period.from_year_and_code(2026, "1T")

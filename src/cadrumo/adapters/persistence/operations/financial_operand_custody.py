@@ -22,7 +22,7 @@ from ....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyConflictError,
     OperationFinancialOperandCustodyRepository,
 )
-from ....core import StorageCategory, exclusive_file_lock, storage_location
+from ....core import StorageCategory, exclusive_file_lock, storage_path
 from ..storage import RepositoryError
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ class OperationFinancialOperandCustodyFilesystemRepository(OperationFinancialOpe
 
     def __init__(self, *, root: Path | None = None) -> None:
         """Bind the directory this repository keeps its checkpoints in."""
-        self._root = root if root is not None else storage_location(StorageCategory.STATE) / _CUSTODY_DIRECTORY
+        self._root = root if root is not None else storage_path(StorageCategory.OPERATION_JOURNAL) / _CUSTODY_DIRECTORY
         self._root.mkdir(parents=True, exist_ok=True)
 
     @override

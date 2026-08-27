@@ -42,16 +42,20 @@ _SHEET_FOR_RECORD = {
 
 def _gap_runs(positions: list[int]) -> list[tuple[int, int]]:
     runs: list[tuple[int, int]] = []
-    start = previous = None
+    start: int | None = None
+    previous: int | None = None
     for position in positions:
         if start is None:
             start = previous = position
-        elif position == previous + 1:
+            continue
+        assert previous is not None
+        if position == previous + 1:
             previous = position
         else:
             runs.append((start, previous))
             start = previous = position
     if start is not None:
+        assert previous is not None
         runs.append((start, previous))
     return runs
 

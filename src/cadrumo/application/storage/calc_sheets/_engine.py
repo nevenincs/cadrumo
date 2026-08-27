@@ -748,7 +748,7 @@ def _relation_values_with_registry_grounding(
                 source_periods=source_periods,
                 source_casilla_ids=source_casilla_ids,
                 dependency_treatment=(
-                    requirement.dependency_treatment
+                    (requirement.dependency_treatment or "")
                     if requirement is not None
                     else supplied.dependency_treatment
                     if supplied is not None

@@ -20,12 +20,12 @@ from __future__ import annotations
 
 import pytest
 
-from ..authority import bundled_authority
+from ..authority import ValidatedRegistryAuthority, bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _warm_authority() -> object:
+def _warm_authority() -> ValidatedRegistryAuthority:
     """Return the process-wide authority after it has already served a read."""
     authority = bundled_authority()
     # Force the validated projection before measuring, so nothing below is cold.
