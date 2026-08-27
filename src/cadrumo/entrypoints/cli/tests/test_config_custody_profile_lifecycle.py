@@ -820,31 +820,35 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
     """CLI and wizard code delegate custody spans to application profile lifecycle operations."""
 
-    scanned = {
-        "src/cadrumo/entrypoints/cli/_config/__init__.py": (
-            "activate_master_key_provider",
-            "get_master_key_provider",
-            "_write_active_profile_pointer",
-            "_clear_active_profile_pointer",
-            "capture_active_profile_pointer",
-            "restore_active_profile_pointer",
-            "override_settings(cadrumo_active_profile",
-        ),
-        "src/cadrumo/application/wizard/_commands.py": (
-            "activate_master_key_provider",
-            "get_master_key_provider",
-            "_write_active_profile_pointer",
-            "_clear_active_profile_pointer",
-            "capture_active_profile_pointer",
-            "restore_active_profile_pointer",
-            "override_settings(cadrumo_active_profile",
-        ),
-    }
-    offenders: list[str] = []
-    for relative_path, forbidden_tokens in scanned.items():
-        text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        for token in forbidden_tokens:
-            if token in text:
-                offenders.append(f"{relative_path}: {token}")
+    forbidden_tokens = (
+        "activate_master_key_provider",
+        "get_master_key_provider",
+        "_write_active_profile_pointer",
+        "_clear_active_profile_pointer",
+        "capture_active_profile_pointer",
+        "restore_active_profile_pointer",
+        "override_settings(cadrumo_active_profile",
+    )
+    # Whole packages, not two named files. This gate used to pin one module in
+    # each; when the wizard's command module was promoted to a public name the
+    # pin pointed at a path that no longer existed, and a relocation that
+    # happened to land on another existing file would have made it pass while
+    # scanning the wrong thing. Deriving the set means a module moved, renamed
+    # or added is covered without anyone remembering to extend a list.
+    scanned = [
+        path
+        for package in ("entrypoints/cli/_config", "application/wizard")
+        for path in sorted((REPO_ROOT / "src" / "cadrumo" / package).rglob("*.py"))
+        if "tests" not in path.relative_to(REPO_ROOT).parts
+    ]
+
+    assert len(scanned) > 50, f"the custody-span scan collapsed to {len(scanned)} files; it would pass vacuously"
+
+    offenders = [
+        f"{path.relative_to(REPO_ROOT).as_posix()}: {token}"
+        for path in scanned
+        for token in forbidden_tokens
+        if token in path.read_text(encoding="utf-8")
+    ]
 
     assert offenders == []
