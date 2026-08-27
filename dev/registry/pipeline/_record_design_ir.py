@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
+    AUXILIARY_ENVELOPE_HEADER_OFFSETS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
@@ -133,7 +134,7 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
         if tuple(field.length for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
             msg = "Modelo 390 auxiliary header field widths must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.offset for field in source_fields) != (1, 3, 6, 7, 11, 13, 18, 23, 93, 97, 101, 110, 323):
+        if tuple(field.offset for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_OFFSETS:
             msg = "Modelo 390 auxiliary header offsets must retain official anchors"
             raise ValueError(msg)
         if tuple(field.source_row for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
