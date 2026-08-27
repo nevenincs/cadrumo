@@ -1,6 +1,6 @@
 import pytest
 
-from ....core import aggregation as aggregation_mod
+from .....core import aggregation as aggregation_mod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
