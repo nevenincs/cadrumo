@@ -70,6 +70,7 @@ _PENDING_ADJUDICATION: dict[frozenset[str], str] = {
         "belongs beside it. A placement fix, not a threshold"
     ),
     frozenset({"encrypted-facts", "network"}): (
+        "1 of the 21 nodes is heavy, `app/ledger/import`. It "
         "loads the registry through `ledger.actions_common` typing against "
         "`domain.modelos` protocols, which reach `CalculationRevision` and through it "
         "`registry.bindings`. That chain is semantically real: a module typed against "
@@ -77,9 +78,11 @@ _PENDING_ADJUDICATION: dict[frozenset[str], str] = {
         "declaring `calculation` on these nodes or splitting the protocol module"
     ),
     frozenset({"registry"}): (
-        "registry-inspection commands load the persistence and crypto families they "
-        "do not declare. Whether an inspection command legitimately reaches the "
-        "secure store, or is pulling it through a shared emit path, is unadjudicated"
+        "4 of the 17 nodes are heavy, all `app/registry/manuals/*`: their annotations "
+        "resolve through `application.registry`, whose package root reaches "
+        "`application.filing`, whose root imports persistence eagerly. The sede-adapter "
+        "edge on that path is already deferred (crypto 60 -> 30); clearing the rest "
+        "needs `application.filing` split into a defining module and an inert root"
     ),
 }
 
