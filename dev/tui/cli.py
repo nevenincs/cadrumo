@@ -23,6 +23,7 @@ import typer
 from .._paths import UTF_8
 from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
+    DEFAULT_RUN_NAME,
     FailedFrame,
     InterfaceRecord,
     Manifest,
@@ -30,6 +31,7 @@ from ._artifacts import (
     RenderedFrame,
     SkippedFrame,
     digest,
+    known_runs,
     now,
     read_manifest,
     run_directory,
@@ -45,7 +47,7 @@ app = typer.Typer(
 )
 
 THEMES = ("dark", "light")
-DEFAULT_RUN = "latest"
+DEFAULT_RUN = DEFAULT_RUN_NAME
 
 
 def _echo(text: str) -> None:
@@ -70,6 +72,34 @@ def viewports_command() -> None:
     for viewport in _viewports.VIEWPORTS.values():
         default = " (default)" if viewport.name in _viewports.DEFAULT_VIEWPORTS else ""
         _echo(f"{viewport.name:<10} {viewport.label:>8}  {viewport.orientation:<9} {viewport.summary}{default}")
+
+
+@app.command("runs")
+def runs_command() -> None:
+    """List every review run on disk, newest first.
+
+    A partial run is marked. Nine directories once sat side by side with no way
+    to tell a forty-frame review from a three-frame experiment, which is what
+    made the artefact tree untrustworthy to review from.
+    """
+    entries = known_runs()
+    if not entries:
+        _echo(f"no runs yet; render one with `python -m dev.tui render` -> runs/{DEFAULT_RUN_NAME}/")
+        return
+    rows = []
+    for directory in entries:
+        try:
+            manifest = read_manifest(directory)
+        except (ManifestVersionError, FileNotFoundError) as refusal:
+            rows.append((directory.name, "", f"unreadable: {refusal}"))
+            continue
+        state = "complete"
+        if manifest.failures or manifest.skipped:
+            state = f"PARTIAL ({len(manifest.failures)} failed, {len(manifest.skipped)} skipped)"
+        marker = "  <- default" if directory.name == DEFAULT_RUN_NAME else ""
+        rows.append((directory.name, manifest.generated_at, f"{len(manifest.frames):3} frames  {state}{marker}"))
+    for name, stamp, detail in sorted(rows, key=lambda row: row[1], reverse=True):
+        _echo(f"{name:<16} {stamp:<26} {detail}")
 
 
 @app.command("inventory")

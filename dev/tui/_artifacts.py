@@ -27,6 +27,27 @@ from .._paths import REPO_ROOT, UTF_8
 RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
 
+RUNS_DIR: Final[Path] = RUN_ROOT / "runs"
+"""Every run lives here, one directory each, and nothing else does.
+
+The root used to hold run directories, stray probe images and loose logs side
+by side, so a reviewer could not tell the current review from a three-frame
+experiment. Runs are now the only thing under `runs/`, throwaway output goes to
+`scratch/`, and a run's log lives inside the run it describes.
+"""
+
+SCRATCH_DIR: Final[Path] = RUN_ROOT / "scratch"
+"""Probe and experiment output. Never a review artefact."""
+
+DEFAULT_RUN_NAME: Final[str] = "current"
+"""The canonical review. `runs/current/` is always the one to open.
+
+A stable default is the contract: the reviewer opens one path, not whichever
+name the last session happened to invent.
+"""
+
+RENDER_LOG_NAME: Final[str] = "render.log"
+
 MANIFEST_NAME: Final[str] = "manifest.json"
 MANIFEST_SCHEMA_VERSION: Final[int] = 2
 """Bumped whenever the manifest shape changes. Older runs are refused rather
@@ -163,7 +184,14 @@ def now() -> str:
 
 def run_directory(name: str) -> Path:
     """The directory a run by this name occupies."""
-    return RUN_ROOT / name
+    return RUNS_DIR / name
+
+
+def known_runs() -> tuple[Path, ...]:
+    """Every run directory that currently holds a manifest."""
+    if not RUNS_DIR.is_dir():
+        return ()
+    return tuple(sorted(p for p in RUNS_DIR.iterdir() if (p / MANIFEST_NAME).is_file()))
 
 
 def write_manifest(directory: Path, manifest: Manifest) -> Path:
@@ -264,10 +292,14 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 
 
 __all__ = [
+    "DEFAULT_RUN_NAME",
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
+    "RENDER_LOG_NAME",
+    "RUNS_DIR",
     "RUN_ROOT",
+    "SCRATCH_DIR",
     "FailedFrame",
     "InterfaceRecord",
     "Manifest",
@@ -275,6 +307,7 @@ __all__ = [
     "RenderedFrame",
     "SkippedFrame",
     "digest",
+    "known_runs",
     "now",
     "read_manifest",
     "run_directory",
