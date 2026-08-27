@@ -56,7 +56,7 @@ def _output_language(language: str):
 class TestParseRowSpecValid:
     def test_parse_miembro_minimal(self) -> None:
         """Minimal miembro spec with required fields parses correctly."""
-        result = _parse_row_spec("miembro nif=12345678A porcentaje=40 importe=10000")
+        result = _parse_row_spec("miembro nif=12345678A porcentaje=40 importe=10000 clave=D")
         assert isinstance(result, Modelo184MemberRow)
         assert result.nif == "12345678A"
         assert result.porcentaje == Decimal("40")
@@ -64,7 +64,7 @@ class TestParseRowSpecValid:
 
     def test_parse_miembro_with_optional_fields(self) -> None:
         """miembro spec with nombre and pais round-trips."""
-        result = _parse_row_spec("miembro nif=11111111A nombre=Sòcia1 pais=ES porcentaje=60 importe=18000")
+        result = _parse_row_spec("miembro nif=11111111A nombre=Sòcia1 pais=ES porcentaje=60 importe=18000 clave=D")
         assert isinstance(result, Modelo184MemberRow)
         assert result.nombre == "Sòcia1"
         assert result.pais == "ES"
@@ -96,7 +96,7 @@ class TestParseRowSpecValid:
 
     def test_row_type_is_case_insensitive(self) -> None:
         """TYPE token is lowercased before dispatch."""
-        result = _parse_row_spec("MIEMBRO nif=12345678A porcentaje=50 importe=5000")
+        result = _parse_row_spec("MIEMBRO nif=12345678A porcentaje=50 importe=5000 clave=D")
         assert isinstance(result, Modelo184MemberRow)
 
 
@@ -156,22 +156,22 @@ class TestValidateM184ShareSum:
     def test_three_members_summing_100_passes(self) -> None:
         """3 sòcies with 40/35/25 share pass validation without error."""
         rows = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("12000")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("10500")),
-            Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("25"), importe=Decimal("7500")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("12000"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("10500"), clave="D"),
+            Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("25"), importe=Decimal("7500"), clave="D"),
         )
         validate_m184_member_share_sum(rows)  # Must not raise
 
     def test_single_member_100_passes(self) -> None:
         """Single member with 100% share passes."""
-        rows = (Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000")),)
+        rows = (Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000"), clave="D"),)
         validate_m184_member_share_sum(rows)  # Must not raise
 
     def test_members_not_summing_100_raises(self) -> None:
         """Shares summing to != 100 raise BadParameter."""
         rows = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("3500")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("35"), importe=Decimal("3500"), clave="D"),
         )
         with pytest.raises(Modelo184ShareSumError):
             validate_m184_member_share_sum(rows)
@@ -187,20 +187,20 @@ class TestValidateM184ShareSum:
         confirms the validator is checking the right field.
         """
         rows_pass = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("60000")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("60000"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000"), clave="D"),
         )
         validate_m184_member_share_sum(rows_pass)  # Passes
 
         rows_still_pass = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("99999")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("1")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("99999"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("1"), clave="D"),
         )
         validate_m184_member_share_sum(rows_still_pass)  # Still passes - different importe same share
 
         rows_fail = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("50"), importe=Decimal("60000")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("50"), importe=Decimal("60000"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("40000"), clave="D"),
         )
         with pytest.raises(Modelo184ShareSumError):
             validate_m184_member_share_sum(rows_fail)
