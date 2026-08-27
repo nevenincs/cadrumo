@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f00701256992a9c1912349e1aa496d08b1d9e28b04eba404bce02590cb84348c'
+body_hash: 'sha256:1c102b47d45bfd0ca96ea9355970bf0a2c5a5b718994f65f19add45b717c33f2'
 related: []
 ---
 
@@ -94,3 +94,73 @@ only. That asymmetry is what surfaced the regression.
 The general class -- a rate parameter no formula reads -- remains only partly
 swept, because a reliable sweep needs the Python resolution channel modelled
 properly rather than by stem matching.
+
+## The class, swept: three casillas, one revision transition
+
+The rental reduction is not isolated. Sweeping every modelo with two or more
+revisions -- 32 of them -- for casillas that were computed in the older revision
+and are neither computed nor formula-targeted in the newer one, read from the
+loaded snapshot:
+
+**Exactly three, all Modelo 100, all in the 2024 -> 2025 transition, all reliefs.**
+
+| casilla | concept | 2024 | 2025 |
+|---|---|---|---|
+| 0150 | art. 23.2 arrendamiento reduction | computed, tier binding, 4 rate parameters | manual; no formula, no binding; parameters left declared |
+| 0611 | art. 81.1 deducción por maternidad | computed from `renta-2024-profile-deduccion-maternidad` | manual; no formula, no bindings, no parameter |
+| 0613 | art. 81.2 incremento por gastos de guardería | computed from the guardería profile bindings | manual; no formula, no bindings, no parameter |
+
+Modelo 100 2024 declares four maternidad/guardería profile bindings; the 2025
+revision declares none of them, and none of the rental tier binding either.
+
+The healthy direction dominates elsewhere: 44 casillas STARTED being computed
+across the same comparisons, including a batch in 2023 -> 2024 that introduced
+all three of these. So 2025 is not broadly regressing -- these three reliefs were
+built in 2024 and not carried forward.
+
+### 0611 and 0613 contradict an instruction the 2024 registry writes down
+
+The 2024 formula for casilla 0611 carries this in its own comment:
+
+> This registry leaf only carries that one derived legal result into the official
+> casilla; it must not recreate or accept an operator-supplied 0611 total.
+
+In 2025 casilla 0611 is precisely an operator-supplied total.
+
+The 0613 comment records more that is lost. It describes a measured **833,33 EUR
+over-grant** on the AEAT manual's own worked case, caused by a ceiling with no
+month rule, and explains the art. 81.3 proration and per-child bound that fixed
+it. That reasoning and its fix exist only in the 2024 fold. The 2025 revision has
+no fold to carry it.
+
+### Direction
+
+All three reduce what the taxpayer pays. Left blank -- the natural state for a
+box the engine used to fill -- the relief is simply absent and the taxpayer
+over-pays. For 0611 and 0613 the amounts are material: art. 81.1 grants 100 EUR
+per qualifying month capped at 1.200 EUR annually per child, and the guardería
+increment adds up to a further per-child amount bounded by the mother's social
+security contributions.
+
+Nothing signals this. A blank optional relief is a legitimate zero for a taxpayer
+with no children and no qualifying tenancy, and the verify gate cannot tell that
+apart from a qualifying taxpayer whose relief was never computed.
+
+## A false positive, and the probe correction it forced
+
+The first sweep also reported Modelo 123 casilla 08 as a lost computation. It is
+not. The 2024 revision renumbered the form from 8 boxes to 14: the old c08 was
+`cuota_a_ingresar`, the new c08 is `retenciones_ingresos_a_cuenta`, and the
+resultado formula still exists targeting a different casilla. The 2024 revision
+has five formulas against the earlier two -- richer, not poorer.
+
+Joining on casilla id across filing years is the exact hazard
+`aeat-calculation-grounding` names: "never by casilla id across filing years --
+ids renumber". The sweep now requires the semantic role to agree before treating
+two ids as the same box, which drops the M123 row and leaves the three above.
+
+Direction classification by role keyword also proved unreliable in that case:
+`retenciones` reads as a relief on Modelo 100, where the taxpayer suffered them,
+and as a liability on Modelo 123, where the withholder owes them. The direction
+label is sound for the three M100 reliefs, which were each confirmed by reading
+the casilla, and should not be trusted mechanically elsewhere.
