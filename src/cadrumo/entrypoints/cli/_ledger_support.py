@@ -286,8 +286,14 @@ def _resolve_business_pct_with_censo(
     active_profile: str | None,
     category_id: str | None,
     operator_supplied: Decimal | None,
+    year: int,
 ) -> Decimal | None:
-    """Stamp the censo-derived business_pct when the operator omits one."""
+    """Stamp the censo-derived business_pct for ``year`` when the operator omits one.
+
+    ``year`` is the filing year whose category profiles supply the statutory
+    multiplier, taken from the transaction's own booked date rather than a
+    pinned literal: the multiplier is year-versioned regulatory data.
+    """
     from ...application.ledger.ratios import censo_business_pct_for
     from ...application.user_profile.censo_sync import CensoSyncService
 
@@ -303,7 +309,7 @@ def _resolve_business_pct_with_censo(
     raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
     if raw_afectacion is None:
         return operator_supplied
-    return censo_business_pct_for(category_enum, raw_afectacion)
+    return censo_business_pct_for(category_enum, raw_afectacion, year=year)
 
 
 def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:

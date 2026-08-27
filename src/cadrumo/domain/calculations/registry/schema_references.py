@@ -23,7 +23,15 @@ from ....core.external_constants import (
 from ....core.identity import ContentDigest
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
-from .schema_base import DateAxis, EvidenceTier, LegalRefs, LegalReviewStatusField, RegistryModel, ReviewStatus
+from .schema_base import (
+    DateAxis,
+    DesignAuthority,
+    EvidenceTier,
+    LegalRefs,
+    LegalReviewStatusField,
+    RegistryModel,
+    ReviewStatus,
+)
 
 __all__ = [
     "LegalParameter",
@@ -327,6 +335,7 @@ class SourceReference(RegistryModel):
     for the source itself.
     """
     record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
+    design_authority: DesignAuthority = "authoritative"
     source_url: RegistryExternalLink
     review_status: ReviewStatus
     period_selector: PeriodSelector | None = None

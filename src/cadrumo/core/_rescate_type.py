@@ -7,7 +7,7 @@ guidance and provenance signal, NOT an arithmetic fork: the 40% DT 12ª reducci�
 applies to the pre-2007 share of whatever amount is percibida regardless of type
 (the type does not change
 :func:`~domain.modelos.compute_dt12_reduccion_plan_pensiones`). It changes
-the advisory the app can phrase — a total rescate is a single apartado-4 window
+the advisory the app can phrase — a total rescate is a single apartado-3 window
 check, while a parcial rescate warns that every partial cobro of one contingency
 shares the single window (measured once from the contingencia year) and that a
 mixed capital/renta rescate may forfeit the régimen.
@@ -29,9 +29,9 @@ class RescateType(StrEnum):
 
     Attributes:
         TOTAL: The whole accumulated capital is rescued at once — a single
-            apartado-4 time-window eligibility check applies.
+            apartado-3 time-window eligibility check applies.
         PARCIAL: Staged partial withdrawals of the same contingency. Every
-            partial cobro shares the single apartado-4 window measured once from
+            partial cobro shares the single apartado-3 window measured once from
             the contingencia year (it does not restart per withdrawal), and a
             mixed capital/renta rescate may forfeit the transitional régimen.
     """

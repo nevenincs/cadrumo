@@ -65,19 +65,49 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base
+        clave:
+          label: Income line clave (Modelo 184)
+        clave_declarado:
+          label: Property ownership key
+        codigo_provincia:
+          label: Province code
         country_of_residence:
           label: Country of residence (non-resident without permanent establishment
             only)
+        dias_arrendamiento:
+          label: Days the property was leased
+        dias_miembro:
+          label: Number of days as member
+        domicilio_fiscal:
+          label: Member's tax domicile
+        miembro_a_31_diciembre:
+          label: Member at 31 December
         name:
           label: Member name
+        naturaleza_inmueble:
+          label: Property nature
         nif:
           label: Member NIF
         participe_clave:
           label: Type of member (Modelo 184 clave)
+        porcentaje_titularidad_inmueble:
+          label: Property ownership percentage
+        reduccion:
+          label: Reduction applicable to the income
+        referencia_catastral:
+          label: Cadastral reference
+        rendimiento_neto_minorado_agricola_eo:
+          label: Reduced agricultural net yield (estimación objetiva)
+        rendimiento_neto_previo_eo:
+          label: Prior net yield (estimación objetiva)
         role:
           label: Member role
         share_pct:
           label: Participation percentage
+        situacion_inmueble:
+          label: Property location status
+        subclave:
+          label: Subcode of the income line (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Attributed taxable base

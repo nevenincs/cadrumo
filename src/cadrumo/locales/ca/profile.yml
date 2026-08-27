@@ -66,18 +66,48 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci
+        clave:
+          label: Clau del rendiment (Model 184)
+        clave_declarado:
+          label: Clau de titularitat de l'immoble
+        codigo_provincia:
+          label: Codi de província
         country_of_residence:
           label: País de residència (només no resident sense establiment permanent)
+        dias_arrendamiento:
+          label: Dies d'arrendament de l'immoble
+        dias_miembro:
+          label: Nombre de dies com a membre
+        domicilio_fiscal:
+          label: Domicili fiscal del membre
+        miembro_a_31_diciembre:
+          label: Membre a 31 de desembre
         name:
           label: Nom del soci
+        naturaleza_inmueble:
+          label: Naturalesa de l'immoble
         nif:
           label: NIF del soci
         participe_clave:
           label: Clau tipus de partícip
+        porcentaje_titularidad_inmueble:
+          label: Percentatge de titularitat de l'immoble
+        reduccion:
+          label: Reducció aplicable al rendiment
+        referencia_catastral:
+          label: Referència cadastral
+        rendimiento_neto_minorado_agricola_eo:
+          label: Rendiment net minorat agrícola (estimació objectiva)
+        rendimiento_neto_previo_eo:
+          label: Rendiment net previ (estimació objectiva)
         role:
           label: Paper del membre
         share_pct:
           label: Percentatge de participació
+        situacion_inmueble:
+          label: Situació de l'immoble
+        subclave:
+          label: Subclau del rendiment (Model 184)
       attribution_received:
         base_imponible_attributed:
           label: Base imposable atribuïda al membre

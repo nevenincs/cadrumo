@@ -54,17 +54,17 @@ from typing import TypeGuard
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, read_toml
-from ...core.directory_scan import scan_directory
-from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
+from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from ._grounding import verify_table_legal_refs
 from ._supply_nature import SupplyNature
 from .errors import IvaCatalogueError
 
 __all__ = [
     "IvaPlaceOfSupplyRule",
-    "load_place_of_supply_rules",
+    "load_place_of_supply_table",
     "place_of_supply_rule",
+    "place_of_supply_years",
     "required_supply_nature_for_rule",
 ]
 
@@ -85,6 +85,14 @@ class IvaPlaceOfSupplyRule(BaseModel):
             which must also appear in :attr:`legal_references`. Citing the whole
             reading list leaves unanswered which article actually decides.
         notes: Reviewer prose in Spanish, matching the sibling catalogue.
+        valid_from: First date this grounding is asserted to hold. Required on a
+            grounded row, absent on a legal-basis-exempt one.
+        valid_to: Last date, inclusive. Same rule.
+
+    The window attaches to the RULE rather than to a citation because the rule is
+    the grounding-bearing row here: its provisions are bare reference ids with no
+    table of their own to carry a span. The bounds are closed and a gate holds
+    them inside the intersection of the cited provisions' effective spans.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -95,6 +103,21 @@ class IvaPlaceOfSupplyRule(BaseModel):
     establishing_reference: str = ""
     notes: str = ""
     legal_basis_exempt: bool = False
+    valid_from: date | None = None
+    valid_to: date | None = None
+
+    @property
+    def window(self) -> ValidityWindow | None:
+        """Return the span this grounding is asserted over, or ``None`` when exempt.
+
+        Returns:
+            The declared :class:`~core.validity_window.ValidityWindow`, or
+            ``None`` for a legal-basis-exempt row, which grounds nothing and so
+            is asserted over nothing.
+        """
+        if self.valid_from is None or self.valid_to is None:
+            return None
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
     def _each_row_carries_exactly_what_its_kind_claims(self) -> IvaPlaceOfSupplyRule:
@@ -122,7 +145,22 @@ class IvaPlaceOfSupplyRule(BaseModel):
                 raise IvaCatalogueError(
                     f"place-of-supply rule {self.rule_id!r}: a legal-basis-exempt row fixes no supply nature",
                 )
+            if self.valid_from is not None or self.valid_to is not None:
+                raise IvaCatalogueError(
+                    f"place-of-supply rule {self.rule_id!r}: a legal-basis-exempt row declares no validity "
+                    "window, because a row that grounds nothing is asserted over nothing",
+                )
             return self
+        if self.valid_from is None or self.valid_to is None:
+            raise IvaCatalogueError(
+                f"place-of-supply rule {self.rule_id!r}: a grounded row must declare both validity bounds; "
+                "an absent bound would read as effective from the beginning of time or until further "
+                "notice, and neither is a claim anybody made",
+            )
+        # Constructing the window is the validation: an inverted span covers no
+        # year and would make the rule vanish from every filing year instead of
+        # failing where it was written.
+        _ = self.window
         if not self.legal_references:
             raise IvaCatalogueError(
                 f"place-of-supply rule {self.rule_id!r}: must cite the provision that establishes its placement",
@@ -135,25 +173,43 @@ class IvaPlaceOfSupplyRule(BaseModel):
         return self
 
 
-def load_place_of_supply_rules(root: Path | None = None) -> dict[int, dict[str, IvaPlaceOfSupplyRule]]:
-    """Load every year-keyed place-of-supply grounding table under ``root``.
+def load_place_of_supply_table(path: Path | None = None) -> Mapping[str, IvaPlaceOfSupplyRule]:
+    """Load the undated place-of-supply grounding table.
 
     Args:
-        root: Directory of year-named TOML files. Defaults to the bundled tree,
-            resolved through the same boundary the sibling catalogues use.
+        path: The corpus file. Defaults to the bundled one, resolved through the
+            same boundary the sibling catalogue uses.
 
     Returns:
-        Rules keyed by filing year and then by rule id.
+        Rules keyed by rule id, each carrying the span it is asserted over.
 
     Raises:
-        IvaCatalogueError: When a file is unreadable, misnamed, or carries a
+        IvaCatalogueError: When the file is unreadable, malformed, or carries a
             duplicate rule id.
     """
-    target = root if root is not None else bundled_path("registry", "aeat", "iva", "place_of_supply")
+    target = path if path is not None else bundled_path("registry", "aeat", "iva", "place_of_supply.toml")
     resolved = target.resolve()
-    paths = scan_directory(resolved, pattern="*.toml")
-    fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
-    return _load_cached(str(resolved), fingerprint)
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise IvaCatalogueError(f"{resolved}: cannot stat place-of-supply table: {exc}") from exc
+    return _load_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+def place_of_supply_years(path: Path | None = None) -> frozenset[int]:
+    """Return every filing year the table can be resolved for.
+
+    A year counts only when EVERY grounded rule is asserted over it. A rule whose
+    provisions stop earlier stops the table, because a classification answered
+    from a rule that does not apply is worse than a refusal. Legal-basis-exempt
+    rows ground nothing and are excluded rather than treated as covering
+    everything or nothing.
+
+    Returns:
+        The derived set of resolvable filing years.
+    """
+    windows = [rule.window for rule in load_place_of_supply_table(path).values() if rule.window is not None]
+    return years_covered_by_every_group([window] for window in windows)
 
 
 def _is_object_list(value: object) -> TypeGuard[list[object]]:
@@ -168,14 +224,6 @@ def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
     produces string keys.
     """
     return isinstance(value, dict)
-
-
-def _year_a_table_filename_names(path: Path) -> int:
-    """Return the filing year a place-of-supply table's filename declares."""
-    try:
-        return int(path.stem)
-    except ValueError as exc:
-        raise IvaCatalogueError(f"{path}: place-of-supply filename must be a year") from exc
 
 
 def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSupplyRule:
@@ -208,8 +256,8 @@ def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSup
     )
 
 
-def _rules_in_one_year_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
-    """Read one year's place-of-supply TOML into its ``rule_id``-keyed table.
+def _rules_in_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
+    """Read the place-of-supply TOML into its ``rule_id``-keyed table.
 
     A duplicate id refuses rather than last-write-wins: two rows claiming one id
     is an authoring error, and silently keeping the later one would ground a
@@ -230,33 +278,22 @@ def _rules_in_one_year_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
 
 @lru_cache(maxsize=8)
 def _load_cached(
-    root: str,
-    fingerprint: tuple[tuple[str, int, int], ...],
-) -> dict[int, dict[str, IvaPlaceOfSupplyRule]]:
-    root_path = Path(root)
-    years: dict[int, dict[str, IvaPlaceOfSupplyRule]] = {}
-    for filename, _size, _modified_ns in fingerprint:
-        path = root_path / filename
-        # The filename is read BEFORE the file: a table named something other
-        # than a year has no year to file its rules under, and reporting the
-        # parse failure first would name the wrong defect.
-        year = _year_a_table_filename_names(path)
-        years[year] = _rules_in_one_year_table(path)
-    if not years:
-        raise IvaCatalogueError(f"{root_path}: no place-of-supply TOML files found")
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> Mapping[str, IvaPlaceOfSupplyRule]:
+    del byte_count, modified_ns
+    target = Path(path)
+    rules = _rules_in_table(target)
     # Only ``legal_references`` is verified. ``establishing_reference`` is
     # required by the model to be a member of it, so verifying both would
     # re-resolve the same provision under a second label and report one broken
     # citation twice.
     verify_table_legal_refs(
-        str(root_path),
-        [
-            (f"{year}/{rule.rule_id}", rule.legal_references)
-            for year, rules in sorted(years.items())
-            for rule in rules.values()
-        ],
+        str(target),
+        [(rule.rule_id, rule.legal_references) for rule in rules.values()],
     )
-    return dict(MappingProxyType(years))
+    return MappingProxyType(rules)
 
 
 def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
@@ -270,16 +307,22 @@ def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
         :class:`IvaPlaceOfSupplyRule`: The grounding row.
 
     Raises:
-        IvaCatalogueError: When no table exists for the year, or the year's table
-            carries no row for the rule. Raising is correct rather than returning
-            a permissive default: an ungrounded placement has no provision behind
-            it, and answering anyway would manufacture one.
+        IvaCatalogueError: When the table grounds no such year, or carries no row
+            for the rule, or the row is not asserted over that year. Raising is
+            correct rather than returning a permissive default: an ungrounded
+            placement has no provision behind it, and answering anyway would
+            manufacture one.
     """
-    year_rules = load_place_of_supply_rules().get(on.year)
-    if year_rules is None:
-        raise IvaCatalogueError(f"no place-of-supply table registered for year={on.year}")
-    rule = year_rules.get(rule_id)
-    if rule is None:
+    rules = load_place_of_supply_table()
+    grounded_years = place_of_supply_years()
+    if on.year not in grounded_years:
+        raise IvaCatalogueError(
+            f"no place-of-supply grounding for year={on.year}; the table grounds "
+            f"{sorted(grounded_years)}. Ground the year against BOE or AEAT -- never widen a rule's "
+            "window to admit it.",
+        )
+    rule = rules.get(rule_id)
+    if rule is None or (rule.window is not None and not rule.window.covers_year(on.year)):
         raise IvaCatalogueError(
             f"place-of-supply rule {rule_id!r} is not grounded for year={on.year}; "
             "every classification rule must cite the provision that establishes its placement",

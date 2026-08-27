@@ -785,9 +785,11 @@ sheets:
       base_retenciones: Base de retencions i ingressos a compte
       clave: Clau
       clave_codigo: Clau codi
+      clave_declarado: Clau de titularitat de l'immoble
       clave_mercado: Clau de mercat
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
+      codigo_provincia: Codi de província
       compensaciones: Compensacions
       complemento_infancia_clave: Complement d'ajuda a la infància
       contract_relation_clave: Contracte o relació
@@ -810,7 +812,10 @@ sheets:
       descendants_rest_whole: Descendents restants (sencers)
       descendants_under_3_total: Descendents < 3 anys (total)
       descendants_under_3_whole: Descendents < 3 anys (sencers)
+      dias_arrendamiento: Dies d'arrendament de l'immoble
+      dias_miembro: Nombre de dies com a membre
       disability_clave: Discapacitat
+      domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
@@ -842,8 +847,10 @@ sheets:
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
+      miembro_a_31_diciembre: Membre a 31 de desembre
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
+      naturaleza_inmueble: Naturalesa de l'immoble
       nif_pagador_anterior: NIF del pagador anterior
       numero_orden: Número d'ordre
       operation_date: Data de l'operació
@@ -867,17 +874,24 @@ sheets:
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
       porcentaje_retencion: '% Retenció'
+      porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       province_code: Província
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
+      reduccion: Reducció aplicable al rendiment
       reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
+      referencia_catastral: Referència cadastral
       refund_amount: Import a retornar
+      rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
+        objectiva)
+      rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
       representative_tax_id: NIF del representant legal
       retencion_practicada: Retenció practicada
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
+      situacion_inmueble: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
         convivència
       startup_fund_rendimientos_clave: Rendiments per la gestió de fons vinculats

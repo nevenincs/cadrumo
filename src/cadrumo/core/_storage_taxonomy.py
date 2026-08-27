@@ -260,7 +260,7 @@ EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
             ),
         ),
         ExternalPathDeclaration(
-            settings_field="cadrumo_iva_catalogue_root",
+            settings_field="cadrumo_iva_catalogue_file",
             role=ExternalPathRole.BUNDLED_RESOURCE,
             reason=(
                 "The hand-reviewed IVA taxonomy catalogue ships inside the package and is read "

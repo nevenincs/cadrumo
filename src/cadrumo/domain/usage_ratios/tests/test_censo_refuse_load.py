@@ -43,6 +43,7 @@ def test_load_returns_profile_when_no_home_office_overrides() -> None:
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=None,
+        year=2025,
     )
 
     assert profile.ratios == {SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}
@@ -58,6 +59,7 @@ def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
+            year=2025,
         )
 
     assert "suministros_home_office_luz" in str(exc.value)
@@ -81,6 +83,7 @@ def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted() -> Non
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
+            year=2025,
         )
 
     assert "telefonia_fija" in str(exc.value)
@@ -97,6 +100,7 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value() -> 
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
+        year=2025,
     )
 
     assert profile.ratios[SpendingCategory.TELEFONIA_FIJA] == Decimal("0.060")
@@ -120,6 +124,7 @@ def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_per
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
+            year=2025,
         )
 
     assert "arrendamiento_vivienda_afecto" in str(exc.value)
@@ -136,6 +141,7 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
+        year=2025,
     )
 
     assert profile.ratios[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO] == Decimal("0.20")
@@ -151,6 +157,7 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=Decimal("0.20"),
+            year=2025,
         )
 
     assert "amortizacion_vivienda_afecto" in str(exc.value)
@@ -173,6 +180,7 @@ def test_accepts_when_persisted_matches_censo_derived_value() -> None:
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
+        year=2025,
     )
 
     assert profile.ratios[SpendingCategory.IBI_VIVIENDA_AFECTO] == raw

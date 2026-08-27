@@ -1955,9 +1955,9 @@ REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry.load
 REGISTRY_LOADER_OWNER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 
 #: Raw-loader-and-unguarded-entry-point names demoted from the registry
-#: loader module's public contract (W01.P04.S10 for the four loader names,
-#: W01.P04.S34 for ``build_snapshot`` -- the plan's own text calls it "the
-#: same unguarded-entry-point class as the raw loader family"). Each had zero
+#: loader module's public contract: the four raw-loader names, plus
+#: ``build_snapshot``, which is the same unguarded-entry-point class as the
+#: raw loader family. Each had zero
 #: cross-package production OR test consumers at demotion time, EXCEPT
 #: ``build_snapshot``, whose only external caller at demotion time was a test
 #: fixture (confirmed by an AST scan over ``walk_module_imports``, not a text

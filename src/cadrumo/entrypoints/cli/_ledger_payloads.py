@@ -466,7 +466,7 @@ class LedgerDetachResult(_LedgerMutationResult):
 
 
 class LedgerEvidencePullAllFilePayload(OutputSchema):
-    """One Drive folder child's fetch outcome from ``ledger pull-folder``.
+    """One Drive folder child's fetch outcome from ``ledger evidence pull-all``.
 
     ``fetched`` is ``True`` when the file's bytes were fetched and encrypted
     into the attachment store (``attachment_id`` set); ``False`` when the
@@ -483,7 +483,7 @@ class LedgerEvidencePullAllFilePayload(OutputSchema):
 
 
 class LedgerEvidencePullAllResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger pull-folder``.
+    """JSON envelope for ``aeat app ledger evidence pull-all``.
 
     Bulk-fetches every PDF/image child of a ``drive.file``-reachable Drive
     folder into encrypted attachment evidence (never a link-only pointer),

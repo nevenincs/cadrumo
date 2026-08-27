@@ -138,7 +138,7 @@ def test_iva_choices_cover_every_grounded_category() -> None:
 
 
 def test_saturation_spec_allow_list_matches_every_category() -> None:
-    spec = prompt_spec_with_saturation_fields()
+    spec = prompt_spec_with_saturation_fields(year=2025)
     assert spec.allowed_iva_categories() == frozenset(IvaCategory)
     # The default spec asks for no IVA category at all.
     assert default_prompt_spec().allowed_iva_categories() == frozenset()
@@ -150,7 +150,7 @@ def test_saturation_spec_allow_list_matches_every_category() -> None:
 
 
 def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
-    prompt = prompt_spec_with_saturation_fields().render(_transaction())
+    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction())
     assert "iva_category" in prompt
     assert IvaCategory.DOMESTIC_GENERAL.value in prompt
     # Explicitly instructs the model not to compute a figure.
@@ -166,7 +166,7 @@ def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
 
 
 def test_parse_accepts_grounded_iva_category() -> None:
-    spec = prompt_spec_with_saturation_fields()
+    spec = prompt_spec_with_saturation_fields(year=2025)
     stdout = (
         '{"classification": "BUSINESS", "confidence": 0.9, "reason": "business meal", '
         '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced"}'
@@ -176,7 +176,7 @@ def test_parse_accepts_grounded_iva_category() -> None:
 
 
 def test_parse_rejects_hallucinated_iva_category() -> None:
-    spec = prompt_spec_with_saturation_fields()
+    spec = prompt_spec_with_saturation_fields(year=2025)
     stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "not_a_real_category"}'
     with pytest.raises(LLMClassifierError, match=r"no JSON candidate matched"):
         parse_response(stdout, spec=spec)

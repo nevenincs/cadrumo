@@ -58,7 +58,7 @@ def _work_unit(*, modelo: str) -> WorkUnit:
 
 
 def _m184_row() -> Modelo184MemberRow:
-    return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000"))
+    return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000"), clave="D")
 
 
 def _m232_row() -> Modelo232VinculadaRow:

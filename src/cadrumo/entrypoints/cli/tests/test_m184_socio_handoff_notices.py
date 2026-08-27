@@ -61,10 +61,10 @@ def test_handoff_emits_one_info_notice_per_socio() -> None:
     revision = _revision(
         Modelo184MemberRow(
             nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00")
-        ),
+        , clave="D"),
         Modelo184MemberRow(
             nif="87654321B", nombre="Beto Comunero", porcentaje=Decimal("40.00"), importe=Decimal("38700.00")
-        ),
+        , clave="D"),
     )
 
     notices = m184_socio_handoff_notices(revision)

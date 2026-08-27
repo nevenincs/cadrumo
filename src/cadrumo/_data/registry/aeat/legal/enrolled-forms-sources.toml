@@ -40,6 +40,17 @@ bytes = 288829
 retrieved_at = 2026-08-15
 # The AEAT historical-index title is retained verbatim despite the PDF filename
 # (DR194_2016.pdf); the document itself identifies its design as Ejercicio 2019.
+# UNRESOLVED, and it blocks bounding this design: that retained AEAT title says
+# "Orden de 18 de ENERO de 1999", while BOE consistently names modelo 194's
+# approving orden the "Orden de 18 de NOVIEMBRE de 1999" -- including Orden
+# HAC/1504/2024 (BOE-A-2024-27528), which modifies "la Orden de 18 de noviembre de
+# 1999, por la que se aprueba el modelo 194". Do NOT successor-bound this design
+# across the 2020-2022 gap until that is settled: the argument for extending rests
+# on knowing which orden governs, and the consolidated amendment list could not be
+# reached to confirm no intervening modification (the ELI consolidated URL 404s, and
+# the doc.php hit for an 18-November-1999 orden resolves to BOE-A-1999-22309, which
+# approves modelos 123 and 193 -- a different orden of the same date). Searched
+# 2026-08-27.
 applies_from = 2019-01-01
 applies_to = 2019-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR194_2016.pdf"

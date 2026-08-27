@@ -87,20 +87,19 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-)
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
 from ....core.aggregation import BindingSourceKind
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from .runtime_graph import expression_casilla_refs
+from .schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+)
 from .schema_references import SourceReference
+from .schema_surfaces import CasillaDefinition
 
 
 def _reaches_addressed_casilla(

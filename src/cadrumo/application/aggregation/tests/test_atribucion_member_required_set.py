@@ -63,6 +63,26 @@ _SAMPLE_ROW: Mapping[str, object] = {
     "participe_clave": "2",
     "country_of_residence": "US",
     "role": "comunero",
+    # clave D / subclave 03 is the one combination that exercises the
+    # estimación-objetiva rendimiento-neto-previo field alongside the
+    # shared clave-C/clave-D reducción field, without tripping the row
+    # model's clave/subclave pairing validator when any OTHER single field
+    # is dropped.
+    "clave": "D",
+    "subclave": "03",
+    "codigo_provincia": "28",
+    "miembro_a_31_diciembre": True,
+    "dias_miembro": 365,
+    "domicilio_fiscal": "Calle Mayor 1, Madrid",
+    "naturaleza_inmueble": "1",
+    "situacion_inmueble": "1",
+    "referencia_catastral": "1234567AB1234C0001XY",
+    "clave_declarado": "T",
+    "porcentaje_titularidad_inmueble": Decimal("50"),
+    "dias_arrendamiento": 200,
+    "reduccion": Decimal("500"),
+    "rendimiento_neto_previo_eo": Decimal("2000"),
+    "rendimiento_neto_minorado_agricola_eo": Decimal("-100"),
 }
 
 

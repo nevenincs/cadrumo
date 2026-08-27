@@ -134,7 +134,7 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
     from cadrumo.domain.modelos import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
 
     caller_rows = (
-        Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00")),
+        Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D"),
         Modelo232VinculadaRow(pais="ES", nif="87654321B", importe=Decimal("200.00")),
         Modelo347ContraparteRow(nif="11223344C", importe_Q1=Decimal("400.00")),
     )

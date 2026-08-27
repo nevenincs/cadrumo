@@ -272,6 +272,7 @@ def ledger_add(
         active_profile=resolve_active_bucket_id(),
         category_id=validated_category_id,
         operator_supplied=_validate_business_pct_range(_parse_decimal(business_pct, label="business-pct")),
+        year=_parse_iso_date(booked_date, label="date").year,
     )
     active_taxpayer = _profile_to_taxpayer(current_state)
     resolved_source_jurisdiction = _resolve_source_jurisdiction(

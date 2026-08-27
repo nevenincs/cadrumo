@@ -32,9 +32,6 @@ from ..modelo_localization import casilla_occurrence_locale_key
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaConstraints, CasillaDefinition
-from ..validate_cross_revision_advisory import (
-    summarize_non_overlapping_cross_revision_casilla_drift,
-)
 from ..validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
 from ._synthetic_locale_fixtures import (
@@ -410,66 +407,10 @@ class TestCrossRevisionConsistency:
 
         assert _cross_revision_casilla_consistency_failures([m]) == ()
 
-    def test_non_overlapping_period_selectors_are_reported_as_advisory_inventory(self) -> None:
-        a = _casilla(cid="0700", label="Old", legal_refs=("ley-58-2003:art-29",))
-        b = _casilla(cid="0700", label="New", legal_refs=("ley-58-2003:art-30",))
-        m = _annual_modelo(a, b)
 
-        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
 
-        assert {
-            (summary.modelo_id, summary.left_revision_id, summary.right_revision_id, summary.field)
-            for summary in summaries
-        } == {
-            ("100", "2024", "2025", "label"),
-            ("100", "2024", "2025", "legal_refs"),
-        }
-        assert all(summary.drift_count == 1 for summary in summaries)
-        assert all(summary.example_casilla_ids == ("0700",) for summary in summaries)
 
-    def test_non_overlapping_inventory_reports_covering_continuity_evolution(self) -> None:
-        a = _casilla(cid="0700", label="Old", continuidad_id="base")
-        b = _casilla(cid="0700", label="New", continuidad_id="base")
-        m = _annual_modelo(a, b, evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")))
 
-        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
-
-        assert len(summaries) == 1
-        summary = summaries[0]
-        assert summary.field == "label"
-        assert summary.continuidad_ids == ("base",)
-        assert summary.evolution_kinds == ("label_evolved",)
-        assert summary.covered_by_evolution_count == 1
-        assert summary.uncovered_count == 0
-
-    def test_non_overlapping_inventory_reports_uncovered_continuity_drift(self) -> None:
-        a = _casilla(cid="0700", legal_refs=("ley-58-2003:art-29",), continuidad_id="base")
-        b = _casilla(cid="0700", legal_refs=("ley-58-2003:art-30",), continuidad_id="base")
-        m = _annual_modelo(a, b, evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")))
-
-        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
-
-        assert len(summaries) == 1
-        summary = summaries[0]
-        assert summary.field == "legal_refs"
-        assert summary.continuidad_ids == ("base",)
-        assert summary.evolution_kinds == ("label_evolved",)
-        assert summary.covered_by_evolution_count == 0
-        assert summary.uncovered_count == 1
-
-    def test_non_overlapping_inventory_does_not_duplicate_hard_validator_scope(self) -> None:
-        selector = PeriodSelector(year_from=2024, periods=("0A",))
-        m = _modelo(
-            "100",
-            {"2024-a": [_casilla(cid="0700", label="Old")], "2024-b": [_casilla(cid="0700", label="New")]},
-            selectors={"2024-a": selector, "2024-b": selector},
-        )
-
-        assert summarize_non_overlapping_cross_revision_casilla_drift([m]) == ()
-
-    def test_non_overlapping_inventory_requires_positive_example_limit(self) -> None:
-        with pytest.raises(ValueError, match="example_limit"):
-            summarize_non_overlapping_cross_revision_casilla_drift([], example_limit=0)
 
     def test_advisory_continuity_validation_does_not_fail_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old")
@@ -827,19 +768,16 @@ class TestCrossRevisionConsistency:
 
         assert validate_registry_scope([m]) == ()
 
-    def test_directory_loaded_advisory_continuity_inventory_reports_evolution(self, tmp_path: Path) -> None:
+    def test_directory_loaded_advisory_continuity_modelo_passes_registry_scope(self, tmp_path: Path) -> None:
+        """A directory-loaded advisory-continuity modelo carrying evolution passes scope validation.
+
+        Covers the loader-plus-scope path for the non-strict continuity case,
+        the strict counterpart of the sibling test below.
+        """
         modelo = load_modelo_directory(
             _write_continuity_modelo_directory(tmp_path, strict=False, include_evolution=True),
         )
 
-        summaries = summarize_non_overlapping_cross_revision_casilla_drift([modelo])
-
-        assert len(summaries) == 1
-        summary = summaries[0]
-        assert summary.field == "label"
-        assert summary.continuidad_ids == ("base",)
-        assert summary.evolution_kinds == ("label_evolved",)
-        assert summary.covered_by_evolution_count == 1
         assert validate_registry_scope([modelo]) == ()
 
     def test_directory_loaded_strict_continuity_hard_fails_uncovered_drift(self, tmp_path: Path) -> None:
@@ -870,16 +808,6 @@ def test_committed_corpus_continuity_semantic_linkage_is_complete(
     assert declared_cross_revision_continuity_semantic_linkage_failures(modelos) == ()
 
 
-def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible(
-    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
-) -> None:
-    modelos, _catalogues = committed_registry
-    summaries = summarize_non_overlapping_cross_revision_casilla_drift(modelos)
-
-    m100_summaries = [summary for summary in summaries if summary.modelo_id == "100"]
-    assert m100_summaries
-    assert {summary.field for summary in m100_summaries}.issuperset({"label", "legal_refs"})
-    assert all(summary.example_casilla_ids for summary in m100_summaries)
 
 
 def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: ModeloDefinition) -> None:

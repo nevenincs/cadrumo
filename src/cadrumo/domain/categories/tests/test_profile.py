@@ -8,6 +8,7 @@ failure mode it covers.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -35,6 +36,8 @@ def _citation() -> CategoryCitation:
         locator="test",
         url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
         quote=tr("Texto de prueba suficientemente concreto."),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
     )
 
 
@@ -46,6 +49,8 @@ def test_category_citation_rejects_blank_quote_at_schema_boundary() -> None:
             locator="test",
             url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
             quote=tr("   "),
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
         )
 
 

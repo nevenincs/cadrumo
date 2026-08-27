@@ -4145,8 +4145,8 @@ notes = """\
 LIRPF disposición transitoria 12ª: régimen transitorio aplicable a prestaciones de planes de \
 pensiones, mutualidades de previsión social y planes de previsión asegurados, including the \
 reduction regime for pre-2007 contributions. Grounds the Modelo 100 DT12 reducción advisory. \
-Apartado 4 (added by Ley 26/2014 art. 1.86, BOE-A-2014-12327) restricts the régimen to prestaciones \
-percibidas within a time window measured from the contingencia year; the apartado-4 required_text \
+Apartado 3 (added by Ley 26/2014 art. 1.85, BOE-A-2014-12327) restricts the régimen to prestaciones \
+percibidas within a time window measured from the contingencia year; the apartado-3 required_text \
 phrases ground the calculate-shortcut window gate. Agent-prepared per aeat-calculation-grounding; \
 pending operator re-stamp."""
 required_text = [

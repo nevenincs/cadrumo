@@ -93,6 +93,7 @@ def test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mappe
 
     assert source_ref in revision.source_refs
     assert source.kind == "record_design"
+    assert source.design_authority == "provenance_only"
     assert source.record_design_epoch is None
     assert source.applies_from == date(year_from, 1, 1)
     assert source.applies_to == date(year_to, 12, 31)

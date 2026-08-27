@@ -56,6 +56,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -173,7 +174,12 @@ def modelo_has_codified_amendment_regime(modelo: str) -> bool:
     return modelo in _RECTIFICATIVA_EFFECTIVE_FROM
 
 
-def resolve_amendment_kind_regime(modelo: str, period: Period) -> AmendmentKindRegime:
+def resolve_amendment_kind_regime(
+    modelo: str,
+    period: Period,
+    *,
+    rectificativa_effective_from: Mapping[str, date] | None = None,
+) -> AmendmentKindRegime:
     """Resolve the codified amendment-kind regime for ``modelo`` at ``period``.
 
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
@@ -187,8 +193,26 @@ def resolve_amendment_kind_regime(modelo: str, period: Period) -> AmendmentKindR
     extended/ad-hoc form), the resolution falls back to
     ``filing_year >= <the modelo's boundary year>`` using the boundary
     date's year, since no calendar comparison is possible for those forms.
+
+    ``rectificativa_effective_from`` overrides the boundary table, so a caller
+    holding boundaries from a better authority can supply them without this
+    module reaching for one. ``core`` cannot read the registry itself: the
+    registry is built on ``core``, so the derivation would have to live outside
+    and be injected here.
+
+    That derivation does not exist yet, and the reason is a registry gap rather
+    than a layering one. The registry does not declare rectificativa adoption as
+    a first-class fact; it is only inferable from three unrelated incidental
+    spellings -- a ``rectificativa`` section token on Modelo 200, an
+    ``amendment_evidence.is_rectificativa`` export producer key on Modelo 303,
+    and the ``irpf_discrepancia_criterio_administrativo`` semantic role on
+    Modelo 100 casilla 0669. A detector spanning all three would encode that
+    mapping in Python, which is the transcription this table already is. Until a
+    revision can DECLARE its amendment regime, the table below stays, and its
+    per-entry comments are its grounding.
     """
-    boundary = _RECTIFICATIVA_EFFECTIVE_FROM.get(modelo)
+    table = _RECTIFICATIVA_EFFECTIVE_FROM if rectificativa_effective_from is None else rectificativa_effective_from
+    boundary = table.get(modelo)
     if boundary is None:
         return AmendmentKindRegime(permitted_kinds=_PRE_RECTIFICATIVA_KINDS, rectificativa_effective=False)
 

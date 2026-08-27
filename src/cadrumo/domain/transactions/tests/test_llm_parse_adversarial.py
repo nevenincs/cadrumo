@@ -17,7 +17,7 @@ from .._models import BusinessClassification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SPEC = prompt_spec_with_saturation_fields()
+_SPEC = prompt_spec_with_saturation_fields(year=2025)
 _VALID = (
     '{"classification": "BUSINESS", "confidence": 0.9, "reason": "office laptop", '
     '"category": "hardware_amortizable", "iva_category": "domestic_general", "business_pct": null}'

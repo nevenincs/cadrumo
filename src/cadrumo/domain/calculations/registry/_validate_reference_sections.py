@@ -80,6 +80,12 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
     for layout in revision.export_layouts:
         lyp = f"export_layout {layout.id}"
         checker.chk_legal_source_refs(lyp, layout.legal_refs, layout.source_refs)
+        for source_ref in layout.source_refs:
+            if source_ref in checker.provenance_only_source_ids:
+                checker.failures.append(
+                    f"{checker.prefix}: {lyp}.source_refs names {source_ref!r}, which the catalogue "
+                    "declares provenance_only -- corpus evidence, not a layout authority",
+                )
         if layout.dictionary_source_ref is not None:
             checker.chk(f"{lyp}.dictionary_source_ref", layout.dictionary_source_ref, checker.source_ids)
         for record in layout.records:

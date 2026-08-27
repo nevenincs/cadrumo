@@ -66,18 +66,48 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imponible atribuida al socio
+        clave:
+          label: Clave del rendimiento (Modelo 184)
+        clave_declarado:
+          label: Clave de titularidad del inmueble
+        codigo_provincia:
+          label: Código de provincia
         country_of_residence:
           label: País de residencia (sólo no residente sin establecimiento permanente)
+        dias_arrendamiento:
+          label: Días de arrendamiento del inmueble
+        dias_miembro:
+          label: Número de días como miembro
+        domicilio_fiscal:
+          label: Domicilio fiscal del miembro
+        miembro_a_31_diciembre:
+          label: Miembro a 31 de diciembre
         name:
           label: Nombre del socio
+        naturaleza_inmueble:
+          label: Naturaleza del inmueble
         nif:
           label: NIF del socio
         participe_clave:
           label: Clave tipo de partícipe
+        porcentaje_titularidad_inmueble:
+          label: Porcentaje de titularidad del inmueble
+        reduccion:
+          label: Reducción aplicable al rendimiento
+        referencia_catastral:
+          label: Referencia catastral
+        rendimiento_neto_minorado_agricola_eo:
+          label: Rendimiento neto minorado agrícola (estimación objetiva)
+        rendimiento_neto_previo_eo:
+          label: Rendimiento neto previo (estimación objetiva)
         role:
           label: Papel del miembro
         share_pct:
           label: Porcentaje de participación
+        situacion_inmueble:
+          label: Situación del inmueble
+        subclave:
+          label: Subclave del rendimiento (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Base imponible atribuida al miembro

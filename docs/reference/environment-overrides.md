@@ -90,7 +90,7 @@ value already present in your shell always wins.
 | `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | int | `300` | Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens |
 | `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
-| `CADRUMO_IVA_CATALOGUE_ROOT` | Path | (derived) | Root directory for the hand-reviewed IVA taxonomy catalogue |
+| `CADRUMO_IVA_CATALOGUE_FILE` | Path | (derived) | The hand-reviewed IVA taxonomy catalogue file |
 | `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_IVA_READ_EVIDENCE_DIR` | Path | (derived) | Directory for IVA remote-state read-evidence reports. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_JUSTIFICANTE_PARSER_BACKEND` | JustificanteParserBackendSetting | `pdfplumber` | Parser backend for `cadrumo.adapters.inbound.justificante` |

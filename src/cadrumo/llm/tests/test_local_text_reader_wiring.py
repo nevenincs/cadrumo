@@ -64,7 +64,7 @@ def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images
     """
     from ...domain.transactions import prompt_spec_with_every_spending_category
 
-    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category())
+    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category(year=2025))
     request = reader._request("classify this")
 
     assert request.provider_override is LLMProvider.LOCAL
@@ -87,7 +87,7 @@ def test_the_provenance_stamp_names_the_local_text_transport() -> None:
     from ...domain.transactions import prompt_spec_with_every_spending_category
 
     reader = LocalTextLLMClassifier(
-        spec=prompt_spec_with_every_spending_category(),
+        spec=prompt_spec_with_every_spending_category(year=2025),
         model="qwen2.5:3b",
     )
 

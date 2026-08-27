@@ -349,3 +349,33 @@ def test_logout_settles_through_the_supervised_operation_journal(_per_bucket_bac
         f"logout left no operation-platform record under {root}; "
         f"it wrote {sorted(path.relative_to(root).as_posix() for path in written)}"
     )
+
+
+def test_logout_clears_a_stale_selection_without_an_open_session(_per_bucket_backend: Path) -> None:
+    """A registered profile whose session is closed still logs out cleanly.
+
+    This is the ordinary state between two runs of the CLI: the durable active
+    pointer survives, the session does not. Supervision cannot help here -- its
+    journal lives in profile-bound encrypted storage that only an open session
+    unlocks -- so a logout that always supervised refused with a storage
+    readiness error in exactly the state an operator hits most often. The
+    sibling test pins the supervised branch; this one pins the branch that
+    reaches the revocation authority directly, and the two together are what
+    make the gate on the open session observable.
+    """
+    from ....tests.profile_capsule import open_test_profile_session
+    from ....tests.user_profile import register_minimal_profile
+
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    with open_test_profile_session(profile_id):
+        register_minimal_profile(profile_id=profile_id, display_name="operator")
+
+    logged_out = _invoke(("config", "logout"))
+
+    assert logged_out.exit_code == 0, logged_out.output
+    assert "logged_out_profile\toperator" in logged_out.output
+
+    # The selection is gone, so the next bare invocation is a login state.
+    landing = _invoke(())
+    assert landing.exit_code == 0, landing.output
+    assert "aeat config login NAME" in landing.output

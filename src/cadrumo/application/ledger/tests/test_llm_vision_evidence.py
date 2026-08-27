@@ -160,14 +160,14 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
             ),
         ),
     )
-    reader = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), settings=settings)
+    reader = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(year=2025), settings=settings)
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         classify_with_evidence(
             _transaction("reader-unavailable"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(),
+            spec=prompt_spec_with_saturation_fields(year=2025),
             vision_classifier=reader,
             vision_model=None,
             settings=settings,

@@ -17,5 +17,7 @@ def test_load_2025_returns_committed_catalogue() -> None:
 
 
 def test_load_missing_year_raises() -> None:
-    with pytest.raises(IvaCatalogueError, match="year=2024"):
-        load_iva_rules_from_manual(2024)
+    # Out-of-window witness year, for the reason recorded in
+    # ``test_catalogue_period_keyed.test_resolve_catalogue_requires_exact_year``.
+    with pytest.raises(IvaCatalogueError, match="year=1990"):
+        load_iva_rules_from_manual(1990)

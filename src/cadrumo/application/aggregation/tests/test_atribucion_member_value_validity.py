@@ -42,6 +42,7 @@ def _socio(share_pct: object, *, index: int = 0) -> _SocioFacts:
             "name": "Member Two",
             "share_pct": share_pct,
             "base_imponible_assigned": Decimal("4000"),
+            "clave": "D",
         },
     )
 

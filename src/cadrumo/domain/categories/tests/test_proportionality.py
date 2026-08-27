@@ -9,6 +9,7 @@ statutory-cap fields; and full-deductible rules reject
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -35,6 +36,8 @@ def _citation() -> CategoryCitation:
         locator="art. 30",
         url=parse_http_url("https://www.boe.es/ley"),
         quote=tr("Texto de prueba."),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
     )
 
 

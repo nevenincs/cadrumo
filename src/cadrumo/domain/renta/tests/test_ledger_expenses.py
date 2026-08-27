@@ -81,6 +81,8 @@ def _citation() -> CategoryCitation:
         locator="test",
         url=parse_http_url(RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
     )
 
 

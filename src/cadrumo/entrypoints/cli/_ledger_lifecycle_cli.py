@@ -253,7 +253,7 @@ def ledger_evidence_pull(
         transaction_id=resolved_id,
         attachment_ids=(attachment.attachment_id,),
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger doclink",
+        source_command="aeat app ledger evidence pull",
         transaction_repository=transaction_repository,
         attachment_store=store,
     )

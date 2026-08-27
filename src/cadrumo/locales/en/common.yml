@@ -759,9 +759,11 @@ sheets:
       base_retenciones: Withholding base
       clave: Clave
       clave_codigo: Code key
+      clave_declarado: Property ownership key
       clave_mercado: Market key
       codigo_cuenta: Securities account / loan operation no.
       codigo_emisor: Issuer code
+      codigo_provincia: Province code
       compensaciones: Compensations
       complemento_infancia_clave: Child support supplement
       contract_relation_clave: Contract or relation
@@ -784,7 +786,10 @@ sheets:
       descendants_rest_whole: Remaining descendants (whole)
       descendants_under_3_total: Descendants under 3 (total)
       descendants_under_3_whole: Descendants under 3 (whole)
+      dias_arrendamiento: Days the property was leased
+      dias_miembro: Number of days as member
       disability_clave: Disability
+      domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
       emerging_stock_excess_clave: Emerging-company stock excess
@@ -814,8 +819,10 @@ sheets:
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
+      miembro_a_31_diciembre: Member at 31 December
       naturaleza: Nature
       naturaleza_declarante: Declarant's nature
+      naturaleza_inmueble: Property nature
       nif_pagador_anterior: Previous payer NIF
       numero_orden: Order number
       operation_date: Operation date
@@ -839,17 +846,24 @@ sheets:
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
       porcentaje_retencion: Withholding %
+      porcentaje_titularidad_inmueble: Property ownership percentage
       province_code: Province
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
       rectified_year: Rectified year
+      reduccion: Reduction applicable to the income
       reducciones: Reductions
       reducciones_aplicables: Applicable reductions
+      referencia_catastral: Cadastral reference
       refund_amount: Refund amount
+      rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
+        objetiva)
+      rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
       representative_tax_id: Legal representative NIF
       retencion_practicada: Withholding applied
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
+      situacion_inmueble: Property location status
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
       startup_fund_rendimientos_clave: Fund-management income
       subclave: Subclave

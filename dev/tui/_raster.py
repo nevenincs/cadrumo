@@ -261,8 +261,16 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
     # need no origin subtraction. Rich pads a row's top edge and sits its
     # baseline inside the same row, so integer division by the line height
     # lands both on the row they belong to without a per-kind special case.
+    # ROUNDED, never floored. A cell origin is an exact multiple of the cell
+    # size in principle, but in IEEE floating point 536.8 / 12.2 is
+    # 43.99999999999999, so flooring drops it a whole column. The band then
+    # lands one column left, leaves the column it should have covered empty,
+    # and that empty cell shows the page colour through as a stray block --
+    # pale on the light appearance, dark on the dark one. Rounding to the
+    # nearest column is exact for every well-formed origin and tolerant of the
+    # representation error.
     def _column(x: str) -> int:
-        return int(float(x) // cell_width_units)
+        return round(float(x) / cell_width_units)
 
     def _row(y: str) -> int:
         return int(float(y) // cell_height_units)

@@ -38,7 +38,7 @@ from ._source_mesh import (
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.ATRIBUCION_MEMBER,)
 _SOCIO_FACT_RE = re.compile(r"^attribution_entity_socios\.(?P<index>[0-9]+)\.(?P<field>[a-z][a-z0-9_]*)$")
-_REQUIRED_FIELDS = frozenset({"nif", "name", "share_pct", "base_imponible_assigned"})
+_REQUIRED_FIELDS = frozenset({"nif", "name", "share_pct", "base_imponible_assigned", "clave"})
 _SOCIOS_SECTION_KEY = "attribution_entity_socios"
 
 
@@ -208,7 +208,29 @@ def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> Atributi
         transaction_date=date(filing_year, 1, 1),
         share_percentage=_decimal(socio.values["share_pct"]),
         base_imponible_assigned=_decimal(socio.values["base_imponible_assigned"]),
+        clave=str(socio.values["clave"]),
+        subclave=_optional_str(socio.values.get("subclave")),
+        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        miembro_a_31_diciembre=_x_flag(_optional_bool(socio.values.get("miembro_a_31_diciembre"))),
+        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
+        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        naturaleza_inmueble=_optional_str(socio.values.get("naturaleza_inmueble")),
+        situacion_inmueble=_optional_str(socio.values.get("situacion_inmueble")),
+        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
+        clave_declarado=_optional_str(socio.values.get("clave_declarado")),
+        porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
+        dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
+        reduccion=_optional_decimal(socio.values.get("reduccion")),
+        rendimiento_neto_previo_eo=_optional_decimal(socio.values.get("rendimiento_neto_previo_eo")),
+        rendimiento_neto_minorado_agricola_eo=_optional_decimal(
+            socio.values.get("rendimiento_neto_minorado_agricola_eo"),
+        ),
     )
+
+
+def _x_flag(value: bool | None) -> str | None:
+    """Render a boolean profile fact as the diseño's own "X"/blank text flag."""
+    return "X" if value else None
 
 
 def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
@@ -217,7 +239,61 @@ def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
         nombre=str(socio.values["name"]).strip(),
         porcentaje=_decimal(socio.values["share_pct"]),
         importe=_decimal(socio.values["base_imponible_assigned"]),
+        clave=str(socio.values["clave"]),
+        subclave=_optional_str(socio.values.get("subclave")),
+        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        miembro_a_31_diciembre=_optional_bool(socio.values.get("miembro_a_31_diciembre")),
+        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
+        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        naturaleza_inmueble=_optional_str(socio.values.get("naturaleza_inmueble")),
+        situacion_inmueble=_optional_str(socio.values.get("situacion_inmueble")),
+        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
+        clave_declarado=_optional_str(socio.values.get("clave_declarado")),
+        porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
+        dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
+        reduccion=_optional_decimal(socio.values.get("reduccion")),
+        rendimiento_neto_previo_eo=_optional_decimal(socio.values.get("rendimiento_neto_previo_eo")),
+        rendimiento_neto_minorado_agricola_eo=_optional_decimal(
+            socio.values.get("rendimiento_neto_minorado_agricola_eo"),
+        ),
     )
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    return str(value).strip() or None
+
+
+def _optional_bool(value: object) -> bool | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "x"}
+    raise ValueError(f"attribution member boolean profile fact must be bool-compatible; got {type(value).__name__}")
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("attribution member integer profile fact must not be a bool")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            raise ValueError(f"attribution member integer profile fact must be int-compatible; got {value!r}") from None
+    raise ValueError(f"attribution member integer profile fact must be int-compatible; got {type(value).__name__}")
+
+
+def _optional_decimal(value: object) -> Decimal | None:
+    if value is None:
+        return None
+    return _decimal(value)
 
 
 def _decimal(value: object) -> Decimal:

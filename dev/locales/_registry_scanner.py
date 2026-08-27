@@ -22,7 +22,7 @@ from functools import cache
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.categories import load_category_profile_registry
+from cadrumo.domain.categories import load_category_profiles
 from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 
@@ -34,15 +34,14 @@ def scan_registry_keys() -> set[str]:
     authored as Spanish text in the registry TOML, never translated.
 
     Returns:
-        The dotted translation keys declared across every year-keyed registry.
+        The dotted translation keys declared across the profile corpus.
     """
     keys: set[str] = set()
-    for profiles in load_category_profile_registry().values():
-        for profile in profiles.values():
-            keys.add(str(profile.display_label))
-            keys.add(str(profile.proportionality.notes))
-            for variant in profile.proportionality.statutory_cap_variants:
-                keys.add(str(variant.label))
+    for profile in load_category_profiles().values():
+        keys.add(str(profile.display_label))
+        keys.add(str(profile.proportionality.notes))
+        for variant in profile.proportionality.statutory_cap_variants:
+            keys.add(str(variant.label))
     return keys
 
 

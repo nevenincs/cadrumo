@@ -1,11 +1,11 @@
-"""DT 12ª apartado-4 window fact-gate on the calculate-shortcut path (LIVE).
+"""DT 12ª apartado-3 window fact-gate on the calculate-shortcut path (LIVE).
 
 Proves the fact-gated non-application posture end-to-end through the real
 :func:`build_work_calculate_input_bundle` shortcut path against a real Modelo 100
 work unit (real registry authority, real semantic-role resolution, real domain
 compute — no mocks, stubs, skips, or xfail):
 
-- Out-of-window (declared years prove the apartado-4 window CLOSED): the 40%
+- Out-of-window (declared years prove the apartado-3 window CLOSED): the 40%
   reducción is WITHHELD (the reducción casilla is not injected) and a
   ``dt12_regime_window_closed`` advisory surfaces — the legally correct result,
   since applying an out-of-window reducción would over-reduce the return
@@ -16,7 +16,7 @@ compute — no mocks, stubs, skips, or xfail):
   advisory prompting the operator to confirm the window.
 - Parcial rescate type: adds the ``dt12_parcial_rescate_guidance`` advisory.
 
-Expected verdicts derive from the LIRPF DT 12ª apartado-4 window rules and the
+Expected verdicts derive from the LIRPF DT 12ª apartado-3 window rules and the
 DT 12ª 40% formula, not from the code under test.
 """
 

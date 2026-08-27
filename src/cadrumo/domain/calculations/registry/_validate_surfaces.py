@@ -9,9 +9,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-
 from ....core import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
@@ -27,6 +24,8 @@ from ._validate_verification_predicates import (
     _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
 )
+from .schema import ModeloRevision
+from .schema_references import LegalReference, SourceReference
 from .schema_surfaces import CasillaDefinition
 from .schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,

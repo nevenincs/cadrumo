@@ -7,7 +7,7 @@ desde la primera aportación" (more than two years since the first contribution)
 EXCEPT for prestaciones por invalidez, which are exempt from the two-year antiquity
 requirement. The calculate-shortcut path
 (:func:`~application.modelo._calculate_input.apply_calculation_shortcut_inputs`)
-already gates the DT 12ª apartado-4 TIME WINDOW (the post-2014 contingencia-year
+already gates the DT 12ª apartado-3 TIME WINDOW (the post-2014 contingencia-year
 window in :mod:`~domain.modelos._dt12_reduccion`), but the engine does not model
 the antiquity condition: no casilla captures "years since the first aportación" or
 an invalidez flag, so a rescate whose contributions were made within two years of the
@@ -25,7 +25,7 @@ See Also:
         Sibling advisory for the OPPOSITE case: large trabajo income with a zero
         reducción, warning the reducción may be unapplied.
     :func:`~domain.modelos.dt12_regime_window_eligibility`
-        The apartado-4 time-window predicate this advisory does not duplicate; it
+        The apartado-3 time-window predicate this advisory does not duplicate; it
         covers the DISTINCT pre-2007 antiquity-since-first-aportación condition.
     :func:`~application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
         Structural revision semantic-role lookup used to find the reducción

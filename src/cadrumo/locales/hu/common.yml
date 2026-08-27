@@ -777,9 +777,11 @@ sheets:
       base_retenciones: Visszatartás alapja
       clave: Kulcs
       clave_codigo: Kódkulcs
+      clave_declarado: Az ingatlan tulajdonjogi kódja
       clave_mercado: Piackulcs
       codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
       codigo_emisor: Kibocsátó kódja
+      codigo_provincia: Tartomány kódja
       compensaciones: Kompenzációk
       complemento_infancia_clave: Gyermeknevelési kiegészítés
       contract_relation_clave: Szerződés vagy jogviszony
@@ -802,7 +804,10 @@ sheets:
       descendants_rest_whole: Többi leszármazott (egészben)
       descendants_under_3_total: Leszármazottak 3 alatt (összes)
       descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      dias_arrendamiento: Az ingatlan bérbeadási napjainak száma
+      dias_miembro: Tagsági napok száma
       disability_clave: Fogyatékosság
+      domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
@@ -832,8 +837,10 @@ sheets:
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
+      miembro_a_31_diciembre: Tag december 31-én
       naturaleza: Jelleg
       naturaleza_declarante: A bevalló jellege
+      naturaleza_inmueble: Az ingatlan jellege
       nif_pagador_anterior: Előző kifizető adóazonosítója
       numero_orden: Sorszám
       operation_date: Művelet dátuma
@@ -857,17 +864,24 @@ sheets:
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
       porcentaje_retencion: Visszatartás %
+      porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       province_code: Tartomány
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
+      reduccion: A jövedelemre alkalmazandó csökkentés
       reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
+      referencia_catastral: Ingatlan-nyilvántartási hivatkozás
       refund_amount: Visszatérítési összeg
+      rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
+        (objektív becslés)
+      rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
       representative_tax_id: Törvényes képviselő adóazonosítója
       retencion_practicada: Alkalmazott visszatartás
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      situacion_inmueble: Az ingatlan elhelyezkedési státusza
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
         adóazonosítója
       startup_fund_rendimientos_clave: Alapkezelési jövedelem

@@ -19,6 +19,8 @@ registry supplies the origins and the real shipped profiles are loaded.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
@@ -37,7 +39,7 @@ from .._proportionality import (
     CategoryCitationSource,
     _authoritative_citation_origins,
 )
-from .._registry import load_category_profile_registry
+from .._registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,6 +51,8 @@ def _citation(url: str) -> CategoryCitation:
         locator="art. 30",
         url=url,
         quote=tr("texto autoritativo"),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
     )
 
 
@@ -60,13 +64,13 @@ def test_shipped_profiles_still_load_under_the_constraint() -> None:
     keep: it fails the moment a future citation cites a non-official origin,
     which is exactly when an author needs to be told.
     """
-    registry = load_category_profile_registry()
-    citations = [c for profiles in registry.values() for p in profiles.values() for c in p.proportionality.citations]
+    profiles = load_category_profiles()
+    citations = [c for p in profiles.values() for c in p.proportionality.citations]
 
-    # Moves whenever a profile gains or loses a citation: +4 when
-    # suministros_local_afecto landed with its art. 29.1.a and art. 28.1
-    # citations across the 2024 and 2025 registries.
-    assert len(citations) == 166
+    # Gated on the property, never on a tally. A citation count encodes the
+    # moment it was written and then detects nothing, and it is the assertion
+    # that breaks every time a profile legitimately gains evidence.
+    assert citations, "the shipped corpus carries no citations at all; this gate would pass vacuously"
     assert {str(c.url).split("/")[2] for c in citations} <= {
         CITATION_SEDE_BARE_HOST_FIXTURE,
         "www.boe.es",

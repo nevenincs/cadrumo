@@ -908,6 +908,26 @@ def _symbol_terminal_destinations(
     }
 
 
+#: The row fields a human adjudicates. They are copied verbatim by a refresh
+#: and are the content the blank template does not carry, so their presence is
+#: what distinguishes a reviewed artefact from a freshly bootstrapped one.
+REVIEWED_ROW_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "semantic_owner",
+        "semantic_evidence",
+        "rag_query",
+        "rag_result",
+        "alternative_owner_evidence",
+        "disposition",
+        "terminal_state",
+        "follow_on_step_id",
+        "follow_on_action",
+        "follow_on_scope",
+        "follow_on_predecessors",
+    },
+)
+
+
 def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, object]:
     """Refresh only derived fields in a reviewed matrix, keyed by c941 pair.
 
@@ -933,19 +953,7 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         "current_symbol_locators",
         "consumers",
     }
-    reviewed_fields = {
-        "semantic_owner",
-        "semantic_evidence",
-        "rag_query",
-        "rag_result",
-        "alternative_owner_evidence",
-        "disposition",
-        "terminal_state",
-        "follow_on_step_id",
-        "follow_on_action",
-        "follow_on_scope",
-        "follow_on_predecessors",
-    }
+    reviewed_fields = REVIEWED_ROW_FIELDS
     for generated in expected:
         pair = (generated["old_path"], generated["new_path"])
         existing = existing_by_pair[pair]
@@ -1368,14 +1376,48 @@ def _write_matrix_text(text: str) -> None:
             return
 
 
+def _refuse_template_over_reviewed_matrix() -> None:
+    """Refuse to overwrite adjudicated rows with the blank template.
+
+    The template carries derived fields only. Writing it over a reviewed
+    matrix silently discards every adjudication the census exists to hold --
+    the semantic owner, the disposition, the terminal state and the plan
+    binding -- with no non-zero exit and no diff a reviewer reads as a loss.
+    ``--refresh-reviewed`` updates derived fields while copying the reviewed
+    ones verbatim, and is what a refresh of an existing matrix must use.
+
+    Bootstrapping stays possible: the refusal fires only when the artefact on
+    disk actually carries reviewed content.
+    """
+    if not MATRIX_PATH.is_file():
+        return
+    try:
+        existing = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    rows = existing.get("rows") if isinstance(existing, dict) else None
+    if not isinstance(rows, list):
+        return
+    adjudicated = sum(
+        1 for row in rows if isinstance(row, dict) and any(row.get(field) for field in REVIEWED_ROW_FIELDS)
+    )
+    if adjudicated:
+        raise RuntimeError(
+            f"refusing to overwrite {adjudicated} adjudicated row(s) with the blank template; "
+            "use --refresh-reviewed to update derived fields, or delete the artefact "
+            "deliberately to re-bootstrap it",
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the deterministic template or verify a fully reviewed matrix."""
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--write-template", action="store_true")
     parser.add_argument("--refresh-reviewed", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     if args.write_template:
+        _refuse_template_over_reviewed_matrix()
         _write_matrix_text(json.dumps(matrix_document(), indent=2, sort_keys=True) + "\n")
     if args.refresh_reviewed:
         reviewed = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))

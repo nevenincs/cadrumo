@@ -41,7 +41,6 @@ cli:
         note_help: En què es basa la resposta, amb les vostres paraules. Es registra,
           mai no es consulta.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
-        show_help: Mostra l'establiment confirmat per a una contrapart, si n'hi ha.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
@@ -283,8 +282,6 @@ cli:
           resolve_action: Accio de resolucio desconeguda.
           resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
             Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
-          show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
-            i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
@@ -436,6 +433,8 @@ cli:
         unset_category_help: Id de categoria la proporció de la qual vols netejar
         unset_help: Elimina la proporció específica d'una categoria
         validate_help: Valida les proporcions contra categories admeses i límits
+        year_help: Exercici els perfils de categoria del qual aporten les ràtios legals.
+          Per defecte, l'any en curs.
       rule:
         actor_help: Identificador de l'operador registrat en la procedència de la
           regla.
@@ -677,7 +676,6 @@ cli:
           el paquet és incomplet.
         group_help: Verbs d'auditoria del paquet d'evidència (show/check/export).
         output_help: Ruta de sortida per al ZIP del paquet.
-        show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -1001,10 +999,6 @@ cli:
           a nivell de casella, només models habilitats). Per defecte justificante.'
         file_path_help: Camí al PDF local de justificant o declaració amb el qual
           conciliar.
-        history_empty: Encara no hi ha conciliacions registrades.
-        history_help: Llista les conciliacions registrades per al perfil actiu.
-        history_work_unit_id_help: Id d'unitat de treball opcional per acotar l'historial
-          a una unitat.
         import_help: Concilia una unitat de treball contra un PDF de justificant o
           declaració local. Només local; mai contacta amb AEAT.
         pull_help: Descàrrega d'AEAT el justificant d'una unitat de treball i concilia-hi.
@@ -3352,7 +3346,6 @@ cli:
           una sola passada.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
-        modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
@@ -3401,7 +3394,6 @@ cli:
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
-        profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible de tots els perfils desats localment.
@@ -3417,7 +3409,6 @@ cli:
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
         storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
-        storage_show: Consulta una àrea d'emmagatzematge en detall
       root:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.

@@ -93,15 +93,23 @@ class RatiosValidationReport(BaseModel):
     findings: tuple[RatiosValidationFinding, ...] = Field(default_factory=tuple)
 
 
-def eligible_ratio_categories(profile: UsageRatioProfile) -> tuple[EligibleCategoryRow, ...]:
+def eligible_ratio_categories(profile: UsageRatioProfile, *, year: int) -> tuple[EligibleCategoryRow, ...]:
     """Return all eligible categories with their default ratio + override flag.
 
     The output is sorted by canonical category value so callers can
     diff snapshots without ordering noise. Each row is an :class:`EligibleCategoryRow`.
+
+    Args:
+        profile: The operator's persisted per-category overrides.
+        year: Filing year whose category profiles supply the statutory
+            default ratio. Required rather than defaulted: the default ratio
+            is year-versioned regulatory data, and a pinned year would apply
+            one year's law to every filing.
     """
     rows: list[EligibleCategoryRow] = []
+    year_profiles = resolve_category_profiles(year)
     for category in sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value):
-        category_profile = resolve_category_profiles(2025)[category]
+        category_profile = year_profiles[category]
         rule: ProportionalityRule = category_profile.proportionality
         rows.append(
             EligibleCategoryRow(
@@ -180,14 +188,19 @@ def validate_ratios_profile(
     )
 
 
-def list_eligible_ratios_for_bucket(*, bucket_id: str) -> tuple[EligibleCategoryRow, ...]:
+def list_eligible_ratios_for_bucket(*, bucket_id: str, year: int) -> tuple[EligibleCategoryRow, ...]:
     """Convenience: load the bucket's profile and project the eligibility report.
 
     Each element is an :class:`EligibleCategoryRow` describing one
     spending category's eligibility and configured ratio.
+
+    Args:
+        bucket_id: The bucket whose persisted profile is projected.
+        year: Filing year whose category profiles supply the statutory
+            default ratio.
     """
     profile = load_usage_ratio_profile(bucket_id=bucket_id)
-    return eligible_ratio_categories(profile)
+    return eligible_ratio_categories(profile, year=year)
 
 
 def validate_ratios_for_bucket(
@@ -269,7 +282,7 @@ def censo_business_pct_for(
     category: SpendingCategory,
     raw_afectacion_ratio: Decimal | None,
     *,
-    year: int = 2025,
+    year: int,
 ) -> Decimal | None:
     """Return the legally-effective business_pct for a category from censo.
 
@@ -297,7 +310,7 @@ def censo_override_warning(
     category: SpendingCategory,
     override_ratio: Decimal,
     raw_afectacion_ratio: Decimal,
-    year: int = 2025,
+    year: int,
 ) -> RatiosCensoOverrideWarning | None:
     """Return a typed warning when an override deviates from the censo.
 

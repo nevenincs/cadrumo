@@ -1,6 +1,6 @@
 """``config profile censo pull`` — surface, gating, and write-routing contracts.
 
-The pull is the live-transport sibling of ``censo file --file``. What is
+The pull is the live-transport sibling of ``censo import --file``. What is
 provable offline is proven here: the verb's name and door shape on the
 real Click surface, its refusal when no profile is active, and the two
 structural facts that keep the two transports reconciling identically —
@@ -60,7 +60,7 @@ def _censo_commands() -> dict[str, Any]:
     Reached through the command TREE rather than a module-level Typer object.
     ``_censo_transport.censo_app`` no longer exists: the command-spec kernel builds
     groups from specs, so a module attribute stopped being the surface. The
-    verbs themselves are unchanged -- ``config profile censo file`` and
+    verbs themselves are unchanged -- ``config profile censo import`` and
     ``censo pull`` both still resolve, profile-bound -- only the route to them.
 
     Walked with the Click API rather than ``.commands`` because the kernel's
@@ -104,7 +104,7 @@ def _stderr_document(result: Any) -> dict[str, Any]:
 
 
 def test_the_live_transport_is_named_pull() -> None:
-    """The censo group exposes ``pull`` and ``file``, and no forbidden fetch synonym.
+    """The censo group exposes ``pull`` and ``import``, and no forbidden fetch synonym.
 
     ``pull`` names the AEAT read and ``--file`` names the local artefact:
     the standard exists so an operator's knowledge transfers between
@@ -112,20 +112,20 @@ def test_the_live_transport_is_named_pull() -> None:
     """
     names = set(_censo_commands())
     assert "pull" in names
-    assert "file" in names
+    assert "import" in names
     assert names & _FORBIDDEN_FETCH_VERBS == set()
 
 
 def test_the_two_transports_share_the_apply_door_and_differ_only_in_input() -> None:
-    """Both doors gate their commit behind ``--apply``; only ``file`` takes a path."""
+    """Both doors gate their commit behind ``--apply``; only ``import`` takes a path."""
     commands = _censo_commands()
     pull_flags = _option_flags(commands["pull"])
-    file_flags = _option_flags(commands["file"])
+    import_flags = _option_flags(commands["import"])
     assert "--apply" in pull_flags
-    assert "--apply" in file_flags
-    assert "--file" in file_flags
+    assert "--apply" in import_flags
+    assert "--file" in import_flags
     # The live transport reads from AEAT; a path option on it would be a
-    # second way to do what the file sibling already owns.
+    # second way to do what the import sibling already owns.
     assert "--file" not in pull_flags
 
 

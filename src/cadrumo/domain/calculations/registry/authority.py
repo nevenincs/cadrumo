@@ -750,6 +750,47 @@ class ValidatedRegistryAuthority:
         """Return the complete advisory gap projection for declared years."""
         return self._supported_filing_year_gaps
 
+    def filing_bound_advisories_for_cell(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+    ) -> tuple[str, ...]:
+        """Return advisory lines for the exact cell being resolved, if it is bounded.
+
+        The whole-corpus projection carries every gapped cell, which is far too
+        many to surface on a resolution: an operator filing one period does not
+        need the other several hundred. This narrows it to the cell asked for,
+        so a caller can attach an advisory only when THIS filing is the one the
+        corpus cannot fully back.
+
+        Advisory, never a refusal. A bounded cell can still be calculated and
+        inspected; what the operator loses is the assurance that a bundled AEAT
+        or BOE artefact backs it, that its revision declares filing grade, or
+        that a revision resolves for it at all. Refusing here would take away
+        the surface that reports the problem.
+
+        Args:
+            modelo_id: The modelo being resolved.
+            filing_year: The filing year being resolved.
+            period: The registry period token being resolved.
+
+        Returns:
+            One line per missing prerequisite for this cell, sorted. Empty when
+            the cell carries every prerequisite declared support requires.
+        """
+        matching = sorted(
+            gap.missing_prerequisite
+            for gap in self._supported_filing_year_gaps
+            if gap.modelo == modelo_id and gap.filing_year == filing_year and str(gap.period) == period
+        )
+        return tuple(
+            f"modelo {modelo_id} {filing_year} {period}: declared support is not fully backed -- "
+            f"missing {prerequisite}"
+            for prerequisite in matching
+        )
+
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
 

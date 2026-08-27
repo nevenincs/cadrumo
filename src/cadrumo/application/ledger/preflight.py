@@ -187,6 +187,7 @@ def preflight_ledger_tax_readiness(
         censo_ratio_mismatch_detail = _censo_ratio_mismatch_detail(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion_ratio,
+            year=period.filing_year,
         )
     return preflight_transaction_catalogue(
         bucket_id=bucket_id,
@@ -294,7 +295,7 @@ def _bound_raw_afectacion_ratio(*, bucket_id: str) -> Decimal | None:
     return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
 
 
-def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decimal | None) -> str | None:
+def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decimal | None, year: int) -> str | None:
     resolved_raw = raw_afectacion_ratio
     if resolved_raw is None:
         resolved_raw = _bound_raw_afectacion_ratio(bucket_id=bucket_id)
@@ -302,6 +303,7 @@ def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decima
         usage_ratio_profile_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=resolved_raw,
+            year=year,
         )
     except CensoRatioMismatchError as exc:
         return str(exc)

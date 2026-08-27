@@ -43,7 +43,7 @@ _M347_INVALID_CASES = (
 
 
 def _member_row() -> Modelo184MemberRow:
-    return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("1000"))
+    return Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("1000"), clave="D")
 
 
 def _vinculada_row() -> Modelo232VinculadaRow:

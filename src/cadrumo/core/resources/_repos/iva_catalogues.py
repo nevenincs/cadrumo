@@ -1,12 +1,13 @@
-"""Year-keyed IVA regulation-catalogue repository.
+"""Year-resolved IVA regulation-catalogue repository.
 
 :class:`IvaCatalogueRepository` is the :class:`ResourceCacheRepository` adapter
-for bundled IVA catalogues and the resource factory's IVA-catalogue root
+for the bundled IVA catalogue and the resource factory's catalogue-file
 override.
 """
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import override
 
@@ -15,26 +16,28 @@ from ..errors import ResourceNotFoundError
 
 
 class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
-    """Year-keyed repository for the bundled IVA regulation catalogue.
+    """Year-resolved repository over the bundled IVA regulation catalogue.
 
-    Wraps :func:`cadrumo.domain.iva.load_iva_catalogues`. The
-    Settings env-override seam for ``CADRUMO_IVA_CATALOGUE_ROOT`` is
-    threaded through the constructor's ``root`` parameter; the
-    :func:`cadrumo.core.resources.resources` factory reads Settings and
-    passes the resolved root once at construction. Missing years raise
-    :class:`ResourceNotFoundError`.
+    The catalogue itself is undated; the year is a RESOLUTION key, projecting
+    the corpus onto the citations asserted over that filing year. The Settings
+    env-override seam for ``CADRUMO_IVA_CATALOGUE_FILE`` is threaded through the
+    constructor's ``path`` parameter; the
+    :func:`cadrumo.core.resources.resources` factory reads Settings and passes
+    the resolved path once at construction. A year the catalogue does not ground
+    raises :class:`ResourceNotFoundError`.
     """
 
-    def __init__(self, root: Path | None = None) -> None:
+    def __init__(self, path: Path | None = None) -> None:
         super().__init__()
-        self._root = root
+        self._path = path
 
     @override
     def _load(self, key: int) -> object:
-        from ....domain.iva import load_iva_catalogues
+        from ....domain.iva import IvaCatalogueError, iva_catalogue_years, resolve_catalogue
 
-        catalogues = load_iva_catalogues(self._root) if self._root is not None else load_iva_catalogues()
+        if self._path is not None and key not in iva_catalogue_years(self._path):
+            raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}")
         try:
-            return catalogues[key]
-        except KeyError as exc:
-            raise ResourceNotFoundError(f"no IVA catalogue registered for year {key}") from exc
+            return resolve_catalogue(on=date(key, 1, 1))
+        except IvaCatalogueError as exc:
+            raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}") from exc

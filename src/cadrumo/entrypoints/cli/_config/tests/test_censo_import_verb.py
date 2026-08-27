@@ -1,4 +1,4 @@
-"""``config profile censo file`` refusal contract while extraction is unpinned."""
+"""``config profile censo import`` refusal contract while extraction is unpinned."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _active_profile(tmp_path: Path) -> Iterator[None]:
     """Provide the active profile the censo verbs are bound to, and isolate storage.
 
-    ``config profile censo file`` declares a ``profile-bound`` write route, so
+    ``config profile censo import`` declares a ``profile-bound`` write route, so
     with no active profile the CLI root refuses at the boundary
     (``REFUSED_CLI_BOUNDARY``, failed condition ``profile.active``) and the
     artefact is never opened. These cases assert the PARSER's refusal, which

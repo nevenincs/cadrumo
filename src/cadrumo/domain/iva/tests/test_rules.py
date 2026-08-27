@@ -55,6 +55,8 @@ def test_iva_citation_rejects_a_verified_claim_with_no_quotation() -> None:
             {
                 "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": "   ",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 
@@ -68,6 +70,8 @@ def test_iva_citation_rejects_an_unresolved_claim_with_no_reason() -> None:
                 "quoted_text": "",
                 "grounding": IvaCitationGrounding.UNRESOLVED,
                 "unresolved_reason": "   ",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 
@@ -86,6 +90,8 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
                 "quoted_text": "El tipo impositivo sera el 21 por ciento",
                 "grounding": IvaCitationGrounding.UNRESOLVED,
                 "unresolved_reason": "candidate text that did not match the bundled corpus",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 

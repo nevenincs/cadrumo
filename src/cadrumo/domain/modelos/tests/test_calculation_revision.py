@@ -1319,7 +1319,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     )
 
     # Create one row of each type with distinct nif/nif_comunitario values.
-    m184_row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"))
+    m184_row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D")
     m232_row = Modelo232VinculadaRow(pais="ES", nif="87654321B", importe=Decimal("200.00"))
     m349_row = Modelo349OperadorRow(
         codigo_pais="DE",

@@ -388,6 +388,20 @@ subject.
 ReviewStatus = Literal["reviewed"]
 """Review token retained for official sources and legal parameters."""
 
+DesignAuthority = Literal["authoritative", "provenance_only"]
+"""Whether a bundled record design is a machine-readable authority or provenance.
+
+``authoritative`` is the default and the case for every design a revision may
+cite as an export-layout authority. ``provenance_only`` marks a design the
+corpus keeps as evidence but which the registry must never treat as a layout
+map: the raw BOE ordenes that carry a modelo's design as an annex and so refuse
+to parse from wire position 1, and a superseded draft AEAT published alongside a
+definitive edition. The distinction has to be declared rather than inferred --
+parse failure alone cannot tell "this is provenance" from "this design is
+broken", and neither can the absence of a record_design_epoch, which also covers
+designs whose selection window is merely not assigned yet.
+"""
+
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 EvidenceTier = Literal[
     "legal_authority",

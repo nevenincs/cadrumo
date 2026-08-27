@@ -112,6 +112,7 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("60"),
             base_imponible_assigned=Decimal("6000"),
+            clave="D",
         ),
         AtributionMemberObservation(
             source_id="m1",
@@ -121,6 +122,7 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("40"),
             base_imponible_assigned=Decimal("4000"),
+            clave="D",
         ),
     )
 

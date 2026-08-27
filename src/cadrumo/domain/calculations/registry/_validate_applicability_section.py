@@ -1,6 +1,6 @@
 """Applicability-rule fragment-family validation.
 
-Validates the ``applicability`` schema family (W01.P03.S08) declared on a
+Validates the ``applicability`` schema family declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
 resolve to grounded legal authority, at most one rule is declared per
 revision, and the rule hydrates into the runtime

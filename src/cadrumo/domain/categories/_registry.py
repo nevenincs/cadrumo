@@ -1,9 +1,18 @@
 """Read-only spending-category profile registry.
 
-:func:`load_category_profile_registry` reads committed TOML profile files into
-immutable mappings from :class:`SpendingCategory` to :class:`CategoryProfile`;
-:func:`resolve_category_profiles` selects the exact year registry used by
-classification and filing review surfaces.
+The corpus is ONE undated file. The proportionality rules do not vary by filing
+year; the evidence does, so each citation declares the closed span it is asserted
+over and the resolvable years are derived from those spans rather than from a
+filename.
+
+:func:`load_category_profiles` reads the committed TOML into an immutable mapping
+from :class:`SpendingCategory` to :class:`CategoryProfile` carrying every
+citation. :func:`resolve_category_profiles` projects that corpus onto one filing
+year, keeping only the citations asserted over it, and refuses a year the corpus
+cannot ground. The refusal is deliberate and unchanged from the year-named shape
+this replaced: there is no adjacent-year fallback and no widening, because a
+profile answered from another year's evidence is a rule the operator cannot
+trace.
 """
 
 from __future__ import annotations
@@ -19,10 +28,10 @@ from pydantic import ValidationError
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.decimal import coerce_decimal
-from ...core.directory_scan import scan_directory
 from ...core.i18n import Translatable as tr
-from ...core.paths import file_stat_fingerprint, path_stat_fingerprint
+from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
+from ...core.validity_window import years_covered_by_every_group
 from ._profile import CategoryProfile, IvaDeductibilityHint
 from ._proportionality import (
     CategoryCitation,
@@ -37,22 +46,32 @@ from ._spending_category import SpendingCategory
 from .errors import CategoryValidationError
 
 
-def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Load one year-keyed spending-category profile TOML file.
+def load_category_profiles(path: Path | None = None) -> Mapping[SpendingCategory, CategoryProfile]:
+    """Load the committed spending-category profile corpus.
+
+    Args:
+        path: The corpus file. Defaults to the bundled one, resolved through the
+            ``bundled_path`` boundary that is the single resolution surface.
 
     Returns:
-        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for the file's year.
+        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile`,
+        carrying every citation regardless of the span it is asserted over.
+
+    Raises:
+        CategoryValidationError: When the file is unreadable, malformed, carries
+            a duplicate category, or omits a declared spending category.
     """
-    resolved = path.resolve()
+    target = path if path is not None else bundled_path("registry", "aeat", "categories", "profiles.toml")
+    resolved = target.resolve()
     try:
         fingerprint = path_stat_fingerprint(resolved)
     except OSError as exc:
         raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
-    return _load_category_profile_file_cached(*fingerprint)
+    return _load_category_profiles_cached(*fingerprint)
 
 
-@lru_cache(maxsize=32)
-def _load_category_profile_file_cached(
+@lru_cache(maxsize=8)
+def _load_category_profiles_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
@@ -83,54 +102,60 @@ def _load_category_profile_file_cached(
     return MappingProxyType(profiles)
 
 
-def load_category_profile_registry(
-    root: Path | None = None,
-) -> Mapping[int, Mapping[SpendingCategory, CategoryProfile]]:
-    """Load every committed year-keyed spending-category profile registry.
+def category_profile_years(path: Path | None = None) -> frozenset[int]:
+    """Return every filing year the corpus can be resolved for.
 
-    Resolves the bundled categories root on every call when no
-    override is supplied; the ``bundled_path`` boundary is the
-    single resolution surface.
+    A year counts only when EVERY profile has at least one citation asserted
+    over it. One profile whose evidence stops earlier stops the corpus, because
+    the loader refuses a partial registry anyway -- reporting the year as covered
+    and then failing to assemble it would be the same lie in two places.
 
     Returns:
-        Mapping from year to a per-year mapping from :class:`SpendingCategory` to :class:`CategoryProfile`.
+        The derived set of resolvable filing years.
     """
-    target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
-    resolved = target.resolve()
-    paths = scan_directory(resolved, pattern="*.toml")
-    fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
-    return _load_category_profile_registry_cached(str(resolved), fingerprint)
-
-
-@lru_cache(maxsize=8)
-def _load_category_profile_registry_cached(
-    root: str,
-    fingerprint: tuple[tuple[str, int, int], ...],
-) -> Mapping[int, Mapping[SpendingCategory, CategoryProfile]]:
-    root_path = Path(root)
-    registries: dict[int, Mapping[SpendingCategory, CategoryProfile]] = {}
-    for filename, _byte_count, _modified_ns in fingerprint:
-        path = root_path / filename
-        try:
-            year = int(path.stem)
-        except ValueError as exc:
-            raise CategoryValidationError(f"{path}: category profile filename must be a year") from exc
-        registries[year] = load_category_profile_file(path)
-    if not registries:
-        raise CategoryValidationError(f"{root_path}: no category profile TOML files found")
-    return MappingProxyType(registries)
+    profiles = load_category_profiles(path)
+    return years_covered_by_every_group(
+        [citation.window for citation in profile.proportionality.citations] for profile in profiles.values()
+    )
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Return the exact category profile registry for ``year``.
+    """Return the category profile registry as grounded for ``year``.
+
+    Every profile is projected onto ``year``: citations asserted over another
+    span are dropped, so what the caller receives cites only evidence that
+    actually speaks to the year asked for.
 
     Returns:
-        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for ``year``.
+        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for
+        ``year``.
+
+    Raises:
+        CategoryValidationError: When the corpus grounds no such year. There is
+            no fallback to an adjacent year.
     """
-    profiles = load_category_profile_registry().get(year)
-    if profiles is None:
-        raise CategoryValidationError(f"no category profile registry registered for year={year}")
-    return profiles
+    return _resolve_category_profiles_cached(year, tuple(sorted(category_profile_years())))
+
+
+@lru_cache(maxsize=16)
+def _resolve_category_profiles_cached(
+    year: int,
+    covered: tuple[int, ...],
+) -> Mapping[SpendingCategory, CategoryProfile]:
+    if year not in covered:
+        raise CategoryValidationError(
+            f"no category profile registry grounded for year={year}; "
+            f"the corpus grounds {list(covered)}. Ground the year against BOE or AEAT and add its "
+            "citations -- never widen an existing citation's window to admit it.",
+        )
+    projected: dict[SpendingCategory, CategoryProfile] = {}
+    for category, profile in load_category_profiles().items():
+        rule = profile.proportionality
+        kept = tuple(citation for citation in rule.citations if citation.window.covers_year(year))
+        projected[category] = profile.model_copy(
+            update={"proportionality": rule.model_copy(update={"citations": kept})},
+        )
+    return MappingProxyType(projected)
 
 
 def _parse_profile(raw_profile: object) -> CategoryProfile:
@@ -214,6 +239,8 @@ def _parse_citation(raw_citation: object) -> CategoryCitation:
             "locator": data.get("locator"),
             "url": parse_http_url(url),
             "quote": tr(str(data.get("quote"))),
+            "valid_from": data.get("valid_from"),
+            "valid_to": data.get("valid_to"),
         },
     )
 
@@ -238,7 +265,7 @@ def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:
 
 
 __all__ = [
-    "load_category_profile_file",
-    "load_category_profile_registry",
+    "category_profile_years",
+    "load_category_profiles",
     "resolve_category_profiles",
 ]

@@ -68,19 +68,49 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
+        clave:
+          label: A jövedelemtétel kódja (184-es nyomtatvány)
+        clave_declarado:
+          label: Az ingatlan tulajdonjogi kódja
+        codigo_provincia:
+          label: Tartomány kódja
         country_of_residence:
           label: Illetőség szerinti ország (csak állandó telephely nélküli külföldi
             illetőségű esetén)
+        dias_arrendamiento:
+          label: Az ingatlan bérbeadási napjainak száma
+        dias_miembro:
+          label: Tagsági napok száma
+        domicilio_fiscal:
+          label: A tag adóügyi lakóhelye
+        miembro_a_31_diciembre:
+          label: Tag december 31-én
         name:
           label: Tag neve
+        naturaleza_inmueble:
+          label: Az ingatlan jellege
         nif:
           label: Tag NIF-je
         participe_clave:
           label: Tagsági típus kódja
+        porcentaje_titularidad_inmueble:
+          label: Ingatlantulajdoni hányad százaléka
+        reduccion:
+          label: A jövedelemre alkalmazandó csökkentés
+        referencia_catastral:
+          label: Ingatlan-nyilvántartási hivatkozás
+        rendimiento_neto_minorado_agricola_eo:
+          label: Csökkentett nettó mezőgazdasági jövedelem (objektív becslés)
+        rendimiento_neto_previo_eo:
+          label: Előzetes nettó jövedelem (objektív becslés)
         role:
           label: Tagi szerepkör
         share_pct:
           label: Részesedés aránya
+        situacion_inmueble:
+          label: Az ingatlan elhelyezkedési státusza
+        subclave:
+          label: A jövedelemtétel alkódja (184-es nyomtatvány)
       attribution_received:
         base_imponible_attributed:
           label: Tagra jutó hozzárendelt adóalap

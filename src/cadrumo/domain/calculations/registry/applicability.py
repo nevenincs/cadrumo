@@ -392,8 +392,8 @@ class ModeloApplicabilityRule(BaseModel):
 def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefinition) -> ModeloApplicabilityRule:
     """Hydrate a registry-authored applicability fragment into the runtime rule.
 
-    The loader boundary for the ``applicability`` schema family
-    (W01.P03.S08): every free-form TOML string on ``fragment`` is resolved
+    The loader boundary for the ``applicability`` schema family: every
+    free-form TOML string on ``fragment`` is resolved
     here to its ``domain.deadlines`` enum member (or :class:`PayerFact`),
     never left as a raw string for a downstream branch to compare against.
     An unknown token raises :class:`RegistryValidationError` naming the
@@ -917,7 +917,7 @@ def _resolve_registry_applicability_rule(
     resolution is not.
 
     No local cache sits in front of this call: :func:`~._authority.bundled_authority`
-    is itself fingerprint-bounded (W01.P02.S28), so calling it here costs one
+    is itself fingerprint-bounded, so calling it here costs one
     O(1) cache-key hash, not a re-parse, and a tree edit is seen on the very
     next call. Caching here would re-introduce the path-only registry cache
     the authority-flow rule forbids -- exactly the defect S28 removed.

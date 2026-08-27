@@ -12,7 +12,7 @@ It carries the bundled manual worked-example oracle reader from
 ``application.modelo.tests`` and ``application.calculations.tests`` oracle
 suites against the same bundled corpus, and ``build_snapshot`` -- the
 compile-only, non-filing-grade snapshot builder demoted from the production
-package's ``__all__`` (W01.P04.S34) -- for tests across
+package's ``__all__`` -- for tests across
 ``application.modelo.tests`` and ``application.filing.tests`` that need a
 snapshot without the filing-grade legal-review gate
 ``build_validated_snapshot`` hardcodes.
