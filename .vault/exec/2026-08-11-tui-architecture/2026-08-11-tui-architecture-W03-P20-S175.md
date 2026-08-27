@@ -39,3 +39,46 @@ related:
 The independent architecture review recorded in the census audit is derived
 from the current worktree, not from an immutable Git object; the audit's
 dirty-worktree-immunity wording is corrected in the same change.
+
+## Closure
+
+The independent architecture review is APPROVED. It ran four rounds and its
+verdict was verified against the code and the tree at a HEAD past the one under
+test, so it held across peer commits rather than only at the tested commit.
+
+Conditions and how each was discharged:
+
+- Gitignored evidence contamination -- the interrupted benchmark run's 795 MB
+  source mirror supplied 44 per cent of consumer entries; evidence now
+  enumerates tracked paths and the orphaned mirror was deleted.
+- Transitive closure excluded from the checked comparison, with its reason.
+- Import-as-definition conflation -- imported names are no longer locations.
+- Fabricated locator -- a start line below 1 is refused.
+- Templated review prose -- the normalizer now erases single-quoted spans, and
+  33 rows were re-authored from their definer modules across two fields.
+- Loosened path assertion -- replaced by a real `_definition_lines` constraint.
+- Re-export follow-on scope -- discharged by decomposition into the 17
+  per-definer Steps; both facades now carry zero re-exported `__all__` entries.
+- Review status returned to pending, and flipped to approved only on the
+  reviewer's verdict, in one commit with the constant the checker matches it
+  against.
+
+The two-successive-HEADs precondition was withdrawn by the reviewer: once the
+contamination was removed it measured tree activity rather than artefact
+quality. Its replacement is green at the reviewed HEAD plus a safe refresh that
+both RUNS and preserves every adjudication -- the second clause added after a
+peer deletion proved the refresh could be jammed by the drift it exists to
+absorb.
+
+Completion criteria beyond the review, verified rather than assumed: 78 unique
+follow-on disposition Step ids, every one canonical and present in the plan;
+and the final zero-project-binding, zero-re-export registry package gate
+`W03.P20.S254`, which is closed.
+
+## Changes
+
+- `M` `dev/quality/registry_facade_family_census.py`
+- `M` `dev/quality/registry_facade_family_census.v1.json`
+- `verify:` `python -m dev.quality.registry_facade_family_census --refresh-reviewed` -> `pass`
+- `verify:` `python -m dev.quality.registry_facade_family_census --check` -> `pass`
+- `verify:` `uv run --no-sync pytest dev/tests/test_registry_facade_family_census.py -n0` -> `pass`

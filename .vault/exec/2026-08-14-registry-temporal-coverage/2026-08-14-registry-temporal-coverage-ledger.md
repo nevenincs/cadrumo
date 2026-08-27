@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f607c1680e1ac8de00e5ced738721826bb1a712dd45e4acf45dc8f807fb80f5'
+body_hash: 'sha256:9db2ef7a348bf19db11455c13acb7f053793d672392c14a02f10151664b4923b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -212,6 +212,13 @@ related:
 - `S40` `A` `dev/registry/tests/test_result_disposition_derivation.py`
 
 - `S40` `A` `dev/registry/generate_result_disposition_fragments.py`
+
+- `S25` `M` `src/cadrumo/application/filing/__init__.py`
+- `S25` `A` `src/cadrumo/application/filing/tests/test_unsupported_filing_year_refusal.py`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
 
 ## Notes
 
@@ -648,7 +655,6 @@ identification is not derivable -- the semantic roles disagree across modelos --
 and deriving it would reintroduce the modelo-to-role transcription this
 migration exists to remove.
 
-
 `W02.P05.S51` is COMPLETE, and was completed by peer work during this campaign
 rather than being blocked on external acquisition as this ledger earlier
 recorded. Verified against all three of the row's own conditions.
@@ -683,3 +689,32 @@ blocker is the separate finding that 37 of the 58 bundled modelos ship revisions
 for years the supported-year declaration does not carry. `S51` constrained
 claimed-year LAYOUT coverage; it did not reconcile the declared support window
 with the shipped revision set.
+
+`W02.P05.S25` is COMPLETE, and the earlier note recording it as blocked on
+`S51` and on the year-set contradiction was wrong. Both claims are retracted.
+
+The first attempt placed the refusal on `ValidatedRegistryAuthority.snapshot`,
+which serves structural inspection as well as production consumption. It
+produced 36 refusals across the registry suite and 8 more in the Modelo 100
+suites, was reverted, and the conclusion drawn was that the corpus itself made
+the row impossible: 37 of the 58 bundled modelos ship revisions for years the
+declaration does not carry.
+
+That conclusion conflated the shared accessor with the boundary the row names.
+The row says production calculation and filing CONSUMPTION. Measured with an
+out-of-repo pytest plugin wrapping `build_draft` across the whole filing suite,
+every call used a declared year -- 2023 once, 2024 eleven times, 2025 five
+times, 2026 sixty-seven times. Nothing that inspects a historical revision
+passes through that boundary.
+
+So the guard went there instead. With it in place the filing suite reports 41
+failed and 495 passed, byte-identical to the same suite measured before the
+guard existed, and zero failures cite it. It is inert for every existing path
+and refuses only a filing built for an undeclared year.
+
+Five proofs cover it: every declared year admitted (so a guard refusing
+everything cannot pass), the year below and the year above the window both
+refused, the refusal naming the years it would accept, and -- the one that
+encodes the earlier mistake -- Modelo 100's 2020 and 2021 revisions still
+loading and inspecting with their casillas intact, proving the guard governs
+filing rather than reading.
