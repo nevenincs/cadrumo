@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cadrumo-product-rename-s49-contextual-tests'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:dc7e194d9e74b3b6aabc3bc68c8013186e5efb22a3ec6c3fd3d4104021982bdc'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s49-contextual-tests-audit]]'

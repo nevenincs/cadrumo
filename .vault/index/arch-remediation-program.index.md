@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#arch-remediation-program'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:f9ca16add8d1581b667ca778c817fe821b163522b899cd68e029ad76cdecef91'
 related:
   - '[[2026-07-02-arch-remediation-program-adr]]'

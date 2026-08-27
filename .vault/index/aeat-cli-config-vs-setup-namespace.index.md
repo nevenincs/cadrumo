@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#aeat-cli-config-vs-setup-namespace'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:7b0f25de61b957df6d36accddfea9d2b4e36da6740aa50c33e8c4e2ac48b4886'
 related:
   - '[[2026-06-04-aeat-cli-config-vs-setup-namespace-research]]'

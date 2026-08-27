@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#audits-resolution'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:85c22cbd20a3b2e52ce827fa085f136113f3946174f9d35e4b3f6ab4927a4a85'
 related:
   - '[[2026-05-15-audits-resolution-exec]]'

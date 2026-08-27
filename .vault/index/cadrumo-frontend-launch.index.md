@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cadrumo-frontend-launch'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:33c1be283b7538bd42de3fd566046f26fca507dd6860f838eda8a2cae5fff4b7'
 related:
   - '[[2026-07-12-cadrumo-frontend-launch-audit]]'

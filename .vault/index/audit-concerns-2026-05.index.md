@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#audit-concerns-2026-05'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:c734f0094366336b9f15b94360228dea515f0be62c5af84bdea7da07674e514c'
 related:
   - '[[2026-06-04-audit-concerns-2026-05-research]]'

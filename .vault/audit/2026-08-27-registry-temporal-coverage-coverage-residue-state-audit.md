@@ -5,30 +5,11 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:4622e65f547335403cc18ec05ed80a8882472dfeb7edd69a38a4760cc3d80726'
+body_hash: 'sha256:d0714947102a3d98df91c41b1a3c1abb2580c2450a38781ea7f12a65cc70db02'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-temporal-coverage with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-temporal-coverage` audit: `coverage residue state`
 

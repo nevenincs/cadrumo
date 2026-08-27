@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#adjacent-domain-deduplication'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:87caff8aa210e27c86bc1ca54b7595afa68a27e4825a5eeefbb6ca8d62ea48ae'
 related:
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'

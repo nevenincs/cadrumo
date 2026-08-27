@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#atomic-relocation-coordination'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:6e34fc2944f3adc459a900a935f2843855e03a94e3b3b6ae36685cdd565c29f6'
 related:
   - '[[2026-06-04-atomic-relocation-coordination-research]]'

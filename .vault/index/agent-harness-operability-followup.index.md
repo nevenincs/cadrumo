@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#agent-harness-operability-followup'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:cf8615257abaf61199135a99c7bb58b6623f51236538652f22fc834c3adad777'
 related:
   - '[[2026-07-02-agent-harness-operability-followup-research]]'

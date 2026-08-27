@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#bucket-sealed-archive'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:49096b10a7aa67d1e7d3d9d6675e0230e6cee6fedcda4786db828c5bd7ec8eda'
 related:
   - '[[2026-06-03-bucket-sealed-archive-adr]]'

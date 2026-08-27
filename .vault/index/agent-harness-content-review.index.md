@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#agent-harness-content-review'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:45b3e1a3c8eb801508edd58fb54d4a5f845cf85b5f3248dbe6c1ed3a5f12f542'
 related:
   - '[[2026-07-02-agent-harness-content-review-audit]]'

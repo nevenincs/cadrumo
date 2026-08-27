@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e064503e50b58be7fed1e104d5853d1bb94ecbec152006013ac3f9f3de40b9c4'
+body_hash: 'sha256:005911bd34dcebbad6c24d8fbcf334d89d73958c33a8cba8dc3fff2bac5826a9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -203,6 +203,11 @@ related:
 - `S15` `A` `dev/registry/tests/test_applicability_grade_marker_retirement.py`
 - `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/`
 
+- `S16` `A` `dev/registry/apply_revision_temporal_bounds.py`
+- `S16` `A` `dev/registry/tests/test_revision_temporal_bounds_applier.py`
+
+- `S23` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+
 ## Notes
 
 `W02.P05.S25` is NOT implemented, and the reason is a measured corpus fact
@@ -233,3 +238,239 @@ stay readable, because an operator asking whether an out-of-scope year is due
 is asking exactly the question the scheduling surface exists to answer. The
 placement is the open question, and it cannot be settled before the claimed-year
 contradiction is.
+
+`W01.P03.S23` is partially complete, and most of its remainder is queued rather
+than outstanding. Measured against the embed classification ledger: of the seven
+regulatory data embeds, four are campaign-owned and four of the remaining rows
+resolve as follows.
+
+The applicability table is DONE for unowned trees. Only Modelos 303 and 390
+still carry a Python `ModeloApplicabilityRule` literal, and both are held by the
+export-fragment campaign, so they belong to `W03.P08.S19` rather than here. The
+Lorca 2022 duplicate spellings the row names are likewise all in Modelo 303 and
+orden-annual modules, so that duplication queues with them.
+
+`inventory_bindings.py` is migrated in the half that was unambiguously an embed:
+the `filing_year` pin is gone, so a later revision declaring an inventory
+projection is an authoring change rather than a source edit. The Modelo 100 2025
+revision already declares all three bindings with their own year and target
+casilla, so the Python was duplicating the registry outright.
+
+Its operation-to-casilla map was deliberately NOT retired, against the ledger's
+classification. An operation names which figure it produces, so its destination
+is what the operation MEANS rather than a value the law re-sets per year, and
+retiring it would leave nothing checking that a binding declaring
+`complete_acquisition_cost` targets the acquisition-cost box. A guard with no
+replacement is worse than a duplicated declaration. That half needs
+re-adjudication in the embed ledger before it moves.
+
+`applicability_modelo202.py` remains outstanding: 146 lines whose migration
+needs applicability fragments grounded in LIS art. 40.2 and 40.3 plus the
+Spanish modality prose in all four locale catalogues. It is the one genuinely
+unblocked piece of `S23` left.
+
+`S23`'s last unblocked module, `applicability_modelo202.py`, turns out to need a
+registry schema decision rather than authoring, and the measurement is worth
+recording so nobody re-attempts it as a migration.
+
+`ModeloApplicabilityRule` carries set-membership predicates only:
+`applicable_entity_types`, `required_income_categories`,
+`required_estimation_regimes`, `applicable_fiscal_residencies`,
+`applicable_iva_regimes`, `required_payer_fact`, two prose reasons,
+`cuota_bearing` and `legal_refs`. It has no numeric threshold, no conditional
+branch and no multi-outcome vocabulary.
+
+The Modelo 202 rule needs all three: a comparison against the INCN of the prior
+twelve months, a branch, and three outcomes (art. 40.3 mandatory, art. 40.2
+optional, incomplete). Expressing it would mean extending the fragment family,
+which is a schema ruling of the same class as `W01.P03.S40`.
+
+Two further facts narrow what a migration would even move. The threshold itself
+is already grounded and correctly homed: `MODELO_202_ART_40_3_INCN_THRESHOLD_EUR`
+sits in `core.external_constants` citing Ley 27/2014 art. 40.3, which
+`aeat-registry-authority-flow` sanctions for a regulatory leaf constant. And the
+classification ledger's stated destination for the Spanish modality prose --
+the locale catalogues -- contradicts how the family actually works: the shipped
+Modelo 202 applicability fragment carries its `applicable_reason` and
+`not_applicable_reason` as Spanish prose inline. Whichever convention is right,
+the two disagree today, and that is part of the same ruling.
+
+`W01.P03.S42` closes on all four of its named items, two of them by a route the
+row did not anticipate.
+
+The art. 109 activity-income coefficient migrated as written: a grounded
+`irpf.art_109_retained_income_exemption_ratio` parameter on the Modelo 130
+revision, cross-checked in both the bundled BOE corpus and the AEAT
+instructions, with the literal deleted and the consumer refusing rather than
+defaulting when the parameter is absent.
+
+The five DT 12a boundary years moved to `core.external_constants` beside their
+sibling 40 per cent rate, each carrying the clause verified against the bundled
+consolidated LIRPF, rather than into the registry. They are fixed once by the
+2014 amendment and do not vary by filing year, so year-versioning them would
+duplicate invariant data across six Modelo 100 revisions -- the pattern the
+`registry-dated-validity` work retired for the category profiles.
+
+The DT 12a advisory threshold was NOT migrated, and should not be. DT 12a fixes
+no 20.000 euro figure; the only 20.000 euro amount in LIRPF is a vivienda
+deduction base cap. The number is an advisory heuristic, and giving it
+`legal_refs = ["ley-35-2006:dt-12"]` would manufacture a citation.
+
+The finca tier coefficients needed no migration: `_resolve_tier_reduccion_rate`
+already reads each tier rate from the Modelo 100 revision parameters and
+overrides the module templates, and `_resolve_prior_rent_rebaja_threshold`,
+`_resolve_ejercicio_amendment_year` and `_resolve_joven_tenant_age_range` do the
+same for their values. The surviving module constants are documented reference
+values that a shipped test pins against the registry, with unsupported
+ejercicios failing closed rather than falling back to them. Verified live: tiers
+50/60/70/90 resolve to 0.50/0.60/0.70/0.90 from the 2022, 2024 and 2025
+revisions.
+
+One correction landed alongside: every DT 12a site named the amending provision
+as apartado 4, art. 1.86 of Ley 26/2014. The bundled consolidated LIRPF states
+"Se anade el apartado 3 por el art. 1.85". Corrected across the legal catalogue
+and seven source and test modules.
+
+`W01.P03.S40` names three per-modelo tables resident in `core`. Measured, they
+resolve into one that needs no migration and two blocked on the same missing
+registry vocabulary.
+
+**Obligation-scope prose: nothing to migrate.** `UNMODELED_OBLIGATIONS` is
+empty -- every recognized AEAT obligation is now registry-modelled. The prose
+around it documents a live extensible mechanism, carries an explicit recorded
+decision that the emptiness is deliberate rather than an oversight, and warns
+against deleting the consuming branch as dead code. It describes machinery, not
+regulatory data, and it belongs where it is.
+
+**Result-disposition table: blocked.** The table pins each modelo's final result
+casilla as a design-record number (M303 71, M130 19, M131 15, M111 30, M115 05,
+M123 14, plus M200 and M202). The registry declares casillas by semantic role in
+a different id space, and the role naming is not consistent enough to derive
+from: Modelo 303 says `iva_resultado_autoliquidacion`, Modelo 130
+`irpf_pf_resultado_final`, Modelo 131 `irpf_pf_modulos_resultado_declaracion`,
+while Modelos 111, 115 and 123 carry only
+`resultado_anteriores_autoliquidaciones`, which names the PRIOR filing's result
+rather than this one's. The registry does not mark "this is the modelo's final
+result casilla" as a first-class fact, so any deriver would encode the
+modelo-to-role mapping in Python -- the transcription the row is trying to
+remove.
+
+**Rectificativa effective dates: blocked, same class.** Recorded earlier: the
+registry does not declare rectificativa adoption as a first-class fact either,
+and is inferable only from three unrelated incidental spellings.
+
+Both blocked items want the same thing: a registry vocabulary for declaring a
+per-revision fact about the modelo itself, rather than one inferable from how
+something happens to be spelled. That is one schema ruling, and it also settles
+the threshold-and-branch vocabulary `W01.P03.S23` needs for the Modelo 202
+modality rule.
+
+Refinement on the `S40` result-disposition finding, having read the table rather
+than its constant names: it is not a casilla-id map. Each entry carries the
+result casilla ids AND the disposition semantics -- what a negative result and a
+zero result MEAN for that modelo (Modelo 303 negative is `COMPENSACION` and zero
+is `NEGATIVA`, and the others differ). Several modelos declare more than one
+result casilla, Modelo 123 and Modelo 202 among them.
+
+That makes the migration a new revision-scoped fragment family in the shape of
+`applicability` -- schema model, loader support, section validation, authored
+TOML for roughly ten modelos each needing the legal basis for its own
+disposition mapping -- plus a core-to-application inversion, because `core`
+cannot read the registry that is built on it. It is the largest single piece of
+work left in this campaign, not a transcription.
+
+Sized here so the next attempt starts from the real shape. The same fragment
+family would carry the rectificativa adoption fact `S40` also needs, and the
+threshold-and-branch vocabulary `S23` needs for the Modelo 202 modality rule, so
+one design covers all three.
+
+Final confirmation on the `S40` result-disposition table: it declares ZERO
+`legal_refs`. Its grounding is a module comment saying the spec is "grounded in
+each bundled diseno's 'Tipo de declaracion' note" plus a short comment per
+entry. That is precisely the defect the row names for the rectificativa dates --
+grounding carried by a comment rather than a reference -- so it applies to two
+of the row's three items, not one.
+
+The consequence for whoever migrates it: under `aeat-calculation-grounding`
+every entry must declare the provision that establishes it, with a `corpus_ref`
+resolving to real AEAT text. That means verifying the "Tipo de declaracion" note
+in roughly ten bundled disenos and authoring a citation per modelo, on top of
+the fragment family itself. The values are believed correct and are exercised in
+production; what they lack is the citation the registry would require of them.
+
+CORRECTION to the note above, which overstated the `S40` result-disposition
+blocker. It claimed the migration needs per-modelo grounding research. It does
+not.
+
+Every modelo in the disposition table already has enrolled diseno sources in the
+legal catalogue -- between three and eighteen entries each for Modelos 303, 130,
+131, 111, 115, 123, 200, 202 and 210. And the bundled diseno corpus carries the
+grounding text directly: thirty files under `modelo_303` mention "Tipo de
+declaracion", and the note states the vocabulary verbatim -- "El tipo de
+declaracion puede ser: C (solicitud de compensacion) D (devolucion) G (cuenta
+corriente tributaria-ingreso) I (ingreso) N (sin actividad/resultado...)" --
+which is exactly what the core table encodes. Modelos 130 and 111 carry the same
+note in their own disenos.
+
+So the grounding is bundled, enrolled and quotable. What remains is engineering
+rather than research: a revision-scoped fragment family in the shape of
+`applicability` (schema model, loader support, section validation), authored TOML
+per modelo citing its own diseno source with the note as `required_text`, and a
+core-to-application inversion because `core` cannot read the registry.
+
+Recorded as a correction rather than an edit to the earlier note, so the
+overstatement and its refutation both stay visible. A blocker claim that turns
+out to be false is worth more to the next reader than a tidy one.
+
+
+MEASURED COST of the fragment family `S23` and `S40` both need, so the next
+attempt starts from the number rather than an estimate.
+
+Adding a collection field to `ModeloRevision` is not a local change. The schema
+derives its family set from the annotations themselves:
+`REVISION_COLLECTION_SHAPED_FIELDS` is computed from the type, and
+`REVISION_SCHEMA_FAMILY_FIELDS` from the `SCHEMA_FAMILY` markers, with the
+stated contract "one disposition row per member, always, so a family nobody has
+built is a row saying so rather than an absence". A contributor cannot opt out:
+appearing there is a consequence of the type they wrote.
+
+The corpus carries 19 schema families across 128 revisions. A twentieth family
+therefore costs **128 new per-revision disposition rows**, before any of its
+actual data is authored. On top of that: the schema model, loader support,
+section validation, the roughly ten modelos of real disposition data with their
+diseno citations, and the core-to-application inversion because `core` cannot
+read the registry built on it.
+
+This is by design and the design is right -- it is what stops a family being
+added and quietly left empty everywhere. But it means the migration is a
+corpus-wide change rather than a module-sized one, and it should be planned as
+its own campaign row with that number in front of it rather than folded into
+`S23` or `S40` as if it were a transcription.
+
+The grounding remains available and quotable, as the correction above records.
+Nothing here is blocked on evidence; it is blocked on scope.
+
+
+FAILURE MODE of the family addition, measured rather than assumed, because it
+determines how the change must be sequenced.
+
+`RevisionCoverageManifest._rows_cover_every_enrolled_family_once` RAISES
+`RegistryValidationError` when the manifest rows do not cover every enrolled
+family exactly once. Enrolment is automatic from the field's own type. So the
+moment a twentieth collection field lands on `ModeloRevision`, all 128 revisions
+fail their coverage manifest until each carries a disposition row for it.
+
+Registry validation is all-or-nothing: one revision's refusal takes the whole
+authority down, and with it every consumer. On a shared worktree with other
+campaigns in flight, a half-applied family addition therefore stops the registry
+loading for everyone, not just for the author.
+
+The change is consequently atomic-or-broken: the field, the loader support, the
+section validation and all 128 disposition rows must land in one commit. That is
+achievable -- the rows are mechanical and a one-shot in the shape of
+`retire_applicability_grade_markers` would generate them -- but it is not
+something to begin without the whole sequence prepared, and not while peers hold
+other trees.
+
+So the blocker on `S23` and `S40` is neither evidence nor difficulty. It is that
+the change is corpus-wide and atomic, and it needs to be scheduled as such.

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#aeat-sede-constants-centralization'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:46e1e5b9b24429da2e6897549e140fc642ae0138ecb14abe09da3ab68fbd2b45'
 related:
   - '[[2026-06-04-aeat-sede-constants-centralization-research]]'
