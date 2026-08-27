@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:78d4af5d41517eaa7b7500cec11c08021d1c33eae1ab940375b8de5930b238a8'
+body_hash: 'sha256:8cdf4288661a1ed4020e55c036765d086ebbd73766dfd096402e5e40a310ca3c'
 ---
 
 <!-- RETIRED: S01 -->
@@ -42,7 +42,7 @@ Collapse the two year-named IVA corpora, whose content is year-neutral throughou
 Prove every new gate bites by breaking the production data from outside the tracked tree, re-measure the coverage baseline against the recorded pre-change state, and record what the migration deliberately did not fix.
 
 - [x] `P03.S09` - Prove every new gate bites by mutating the production data from outside the tracked tree, confirming each red and restoring, covering the omitted bound, the widened year-named citation and the widened provision window; `src/cadrumo/domain/ and src/cadrumo/core/`.
-- [ ] `P03.S10` - Re-measure the coverage gates against the recorded pre-change baseline of three failing corpora, confirm the two IVA corpora resolve green on derived provision-checked coverage and that the categories red is a genuine grounding gap rather than a regression, and run the affected suites sequentially; `src/cadrumo/ and dev/`.
+- [x] `P03.S10` - Re-measure the coverage gates against the recorded pre-change baseline of three failing corpora, confirm the two IVA corpora resolve green on derived provision-checked coverage and that the categories red is a genuine grounding gap rather than a regression, and run the affected suites sequentially; `src/cadrumo/ and dev/`.
 - [x] `P03.S11` - Record in the vault what this migration deliberately did not fix, being the exact-year pinning defect reserved to its own brief, the category citation quote fields that carry locale keys absent from all four catalogues, and the three under-cited profiles whose 2024 coverage is withdrawn pending the bundled 2024 manual; `.vault/audit/`.
 
 ## Parallelization

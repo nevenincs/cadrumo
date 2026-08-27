@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:93c9bd14485777a88619d1527c219d51bcb7c6cd66403d901447c1acbac37a90'
+body_hash: 'sha256:da28b661f6edfa5f25fa793e998fb14ee2713da1db41c309f1feb79f9fc373f5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -162,3 +162,12 @@ related:
 - `S21` `M` `docs/api/cadrumo.domain.calculations.registry.rst`
 
 - `S30` `M` `.vault/adr/2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr.md`
+
+- `S41` `M` `src/cadrumo/application/_foreign_asset_thresholds.py`
+- `S41` `M` `src/cadrumo/core/_foreign_asset_obligation.py`
+- `S41` `M` `src/cadrumo/core/__init__.py`
+
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/parameters/0001-parameters.toml`
+- `S42` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S42` `M` `src/cadrumo/domain/modelos/_dt12_reduccion.py`
