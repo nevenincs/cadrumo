@@ -523,11 +523,14 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined_output
-    # The no-console refusal names both recovery paths a first-timer can
-    # act on: re-run from an interactive terminal, or supply the
-    # required details as flags in one step.
-    assert "aeat config profile create NAME" in combined_output
-    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in combined_output
+    # The no-console refusal names the paths a first-timer can act on for the
+    # blocker they actually hit: re-run from an interactive terminal, or hand
+    # the secret over one of the bounded channels. It previously asserted a
+    # `create NAME --quiet --tax-id ...` hint, which no message emits and which
+    # would not clear this blocker anyway -- the missing thing is a passphrase
+    # channel, not a fact.
+    assert "--secrets-stdin" in combined_output
+    assert "--secrets-fd" in combined_output
     # The refusal must not push corruption-recovery commands at an
     # operator whose only problem is the absence of an interactive
     # terminal; that wording wrongly implies the profile state is bad.
