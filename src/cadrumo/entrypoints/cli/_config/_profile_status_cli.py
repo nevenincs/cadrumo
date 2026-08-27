@@ -16,6 +16,18 @@ def config_status(
 ) -> None:
     """Show the readiness of the current configuration profile."""
     _activate_output_language(ctx, output_language)
+    from ....application.wizard.compiler import ensure_profile_keys_registered
+
+    # Status is deliberately reachable without a session, so it never passes the
+    # profile-session gate that seeds the domain profile-key registry for gated
+    # commands. The domain may not pull upward to seed itself, so the entrypoint
+    # seeds it here rather than reading an empty registry and refusing with an
+    # internal error. The call is idempotent, and it is also what keeps the
+    # import above from being read as unused: the import alone would seed the
+    # registry through the compiler's module scope, which is too quiet a
+    # dependency to leave standing on its own.
+    ensure_profile_keys_registered()
+
     from pydantic import ValidationError
 
     from ....application.user_profile.projections import record_to_path_values
