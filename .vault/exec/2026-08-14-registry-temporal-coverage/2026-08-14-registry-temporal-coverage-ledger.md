@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:b327a5b2e10a9cd9703b29433239b5a6d1bd6bfd58c854a3a3bd84ee3f62d2c7'
+body_hash: 'sha256:93c9bd14485777a88619d1527c219d51bcb7c6cd66403d901447c1acbac37a90'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -153,3 +153,12 @@ related:
 - `S54` `M` `src/cadrumo/locales/es/cli.yml`
 - `S54` `M` `src/cadrumo/locales/ca/cli.yml`
 - `S54` `M` `src/cadrumo/locales/hu/cli.yml`
+
+- `S21` `D` `src/cadrumo/domain/calculations/registry/validate_cross_revision_advisory.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py`
+- `S21` `M` `dev/registry/analysis/load_census_classification.py`
+- `S21` `D` `docs/api/cadrumo.domain.calculations.registry.validate_cross_revision_advisory.rst`
+- `S21` `M` `docs/api/cadrumo.domain.calculations.registry.rst`
+
+- `S30` `M` `.vault/adr/2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr.md`

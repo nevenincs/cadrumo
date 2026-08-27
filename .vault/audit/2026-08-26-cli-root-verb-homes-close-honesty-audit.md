@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1fb66b026e7a8ca4b49aba7224e30c6328852266acfcd3296e74b5180bca0bff'
+body_hash: 'sha256:277ae47a6d2806bdcd75a62c11974c7368a94ca93292f375ff278cd6853cdc04'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
   - "[[2026-08-26-cli-root-verb-homes-adr]]"
@@ -440,3 +440,52 @@ writes about itself decays exactly as an ADR does. Following this campaign's own
 written next-step, one tick after writing it, would have produced work the
 codebase had already rejected on stated grounds — and the only thing that caught
 it was reading the gate before implementing against it.
+
+## Eighth addendum: a repair-policy row outlived its verb, and the rename narrowed the gate that would have caught it
+
+`application/repair_integrity.py` registers a recovery surface for
+`config google sync calc export`, carrying
+`namespace_policies=(_secure_object_policy(SYNC_RUN_RECORDS_NAMESPACE),)`. D5
+renamed that verb to `app modelo spreadsheet push`. The live graph confirms the
+old path is absent and the new one is registered, and the file does not mention
+`spreadsheet` anywhere. So the catalog governs a path no operator can invoke, and
+does not govern the one they can — the failure `aeat-cli-contract` names when it
+warns that a rename "drops the verb out of the profile-bound write guard, which
+then fails open".
+
+The gate that exists for exactly this,
+`test_every_catalogued_command_path_resolves_in_the_live_cli`, cannot currently
+run: a peer's in-flight `app ledger ratios` specs declare `value=ValueContract(int)`,
+and every test that materialises parameter annotations across the tree dies on
+`AttributeError: type object 'int' has no attribute 'qualname'`. The row is
+therefore reported here rather than fixed, because fixing a security-relevant
+catalog without being able to verify it is the thing this campaign has repeatedly
+refused to do.
+
+**The intended fix was wrong, and reading the assertion is what showed it.** The
+obvious repair — point the row at `app modelo spreadsheet push` — fails.
+`_requires_policy_coverage` selects on `tokens[-1] in {"export", "import",
+"recover", "restore"}`, and the coverage test asserts `catalogued == discovered`,
+an equality rather than a subset. `push` is not in that set, so a renamed row
+becomes an unselected extra element and reds the gate. The only change satisfying
+both directions is to **delete** the row.
+
+**Deleting it, however, is not a neutral repair, and the campaign should say so.**
+D2 split the transport vocabulary: `export` and `import` are the local tokens,
+`push` and `pull` the remote ones. The predicate still enumerates only the
+pre-D2 words. A command that wrote `SYNC_RUN_RECORDS` was policy-relevant while
+it was called `export` and is not policy-relevant now it is called `push`, purely
+because this campaign renamed it. Fifteen live leaves end in `push`, `pull` or
+`pull-all` and not one is selected: both `app modelo spreadsheet` verbs,
+`config profile archive push`, `config profile censo pull`, `config provision
+pull`, `app modelo reconcile pull`, `app ledger evidence pull` and `pull-all`,
+and seven `app live` reads. `config profile archive import` is unaffected, since
+`import` remains in the set; only the `export -> push` direction regressed.
+
+Widening the predicate to the remote tokens would demand a policy row for all
+fifteen, most of them peer-owned, which is an ADR-sized decision and not one to
+take inside a closing campaign. Deleting the row alone is gate-green and quietly
+accepts the loss. Both are recorded rather than resolved, and the standing goal
+still asks for what the convenient option excludes: that every command writing a
+secure-object namespace carries a declared policy, whichever transport token now
+names it.
