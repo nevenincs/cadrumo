@@ -39,7 +39,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
-    derive_bucket_event_id,
+    build_bucket_event,
     emit_bucket_events,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
@@ -857,26 +857,23 @@ def build_ledger_bucket_event(
     payload: Mapping[str, str],
     object_type: BucketEventObjectType = BucketEventObjectType.LEDGER_TRANSACTION,
 ) -> BucketEvent:
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=object_type,
-            object_id=object_id,
-            payload=payload,
-        ),
+    """Derive one ledger :class:`BucketEvent` without persisting it.
+
+    Delegates to the domain builder rather than restating the envelope, so the
+    ledger cannot drift from the emitter the way this module's own
+    :func:`append_bucket_events` once did. Supplies the ledger's
+    :data:`_BUCKET_EVENT_PAYLOAD_VERSION` and its default object type.
+    """
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
         actor=actor,
         object_type=object_type,
         object_id=object_id,
+        payload=payload,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
-        payload=dict(payload),
     )
-    return event
 
 
 def append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
