@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4a88a1f536d67314f381f2af6e746ac5f5c330f55b8e3c23bb7e7483eccad76'
+body_hash: 'sha256:f5e5c24b0e1a8acc9a3e6f14e4beaf90ceef2b749541160197fafc219c6bf572'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-summary]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -49,6 +49,8 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s10-metadata-traversal-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s11-registration-metadata-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p04-s13-config-demand-loading-review-audit]]'
+  - '[[2026-08-27-secure-storage-performance-hardening-closure-honesty-review-audit]]'
+  - '[[2026-08-27-secure-storage-performance-hardening-measured-outcomes-reference]]'
   - '[[2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit]]'
 ---
 
@@ -99,7 +101,8 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s10-metadata-traversal-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S10 metadata traversal review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s11-registration-metadata-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S11 registration metadata review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p04-s13-config-demand-loading-review-audit` - `secure-storage-performance-hardening` audit: `w02 p04 s13 config demand loading review`
-- `2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit` - `secure-storage-performance-hardening` audit: `W02 demand-loading residue found by the W03 listing contract`
+- `2026-08-27-secure-storage-performance-hardening-closure-honesty-review-audit` - `secure-storage-performance-hardening` audit: `Fresh-context honesty review before closure`
+- `2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit` - `secure-storage-performance-hardening` audit: W02 demand-loading residue
 
 ### exec
 
@@ -113,6 +116,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 ### reference
 
 - `2026-08-22-secure-storage-performance-hardening-reference` - `secure-storage-performance-hardening` reference: `current profile listing and secure storage execution paths`
+- `2026-08-27-secure-storage-performance-hardening-measured-outcomes-reference` - `secure-storage-performance-hardening` reference: measured outcomes
 
 ### research
 
