@@ -108,19 +108,40 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # -- Semantic roles -------------------------------------------------
         # Call sites name the ROLE, never the number, so re-tuning density is
         # one edit here rather than a sweep of eighty literals.
-        # gutter: breathing between a panel border and its content.
-        # stack:  the vertical gap between sibling blocks.
+        # Spacing has to express GROUPING, not a single uniform gap. One
+        # value repeated everywhere gives every relationship equal weight,
+        # which is the same as having no grouping at all. So the scale is a
+        # rhythm, tight inside a group and generous between them:
+        #
+        #   tight   0  parts of one thought (a label and its own hint)
+        #   stack   1  sibling blocks inside one group
+        #   section 2  between logical groups, and between panels
+        #
+        # gutter/gutter-y: breathing between a panel border and its content.
+        #   gutter-y is the axis that did not exist before: panel content sat
+        #   directly on the border row, top and bottom.
         # indent: how far a dependent line sits under its parent.
-        "cadrumo-gutter": "2",
+        "cadrumo-tight": "0",
         "cadrumo-stack": "1",
+        "cadrumo-section": "2",
+        "cadrumo-gutter": "2",
+        "cadrumo-gutter-y": "1",
         "cadrumo-indent": "2",
         # -- Controls -------------------------------------------------------
-        # Three rows is Textual's own button height: one row of label between
-        # two rows of border. The previous single row with no border made a
-        # button indistinguishable from a line of text.
-        "cadrumo-control-height": "3",
-        "cadrumo-control-pad-x": "3",
-        "cadrumo-control-min-width": "14",
+        # A button is a filled slab, not a line box: `block` edges are drawn
+        # as half-blocks in the border colour and merge with the fill, which
+        # is how Textual builds one. Height is deliberately absent -- the
+        # widget sizes itself, and pinning a number is what pushed content
+        # out of its own box.
+        "cadrumo-control-edge": "block",
+        # Horizontal breathing inside a control. Spent on `line-pad`, the
+        # property Textual gives buttons for exactly this; `padding` insets
+        # the content box instead and leaves a ring inside the border.
+        "cadrumo-control-pad-x": "2",
+        # Textual's own default is 16. The previous 14 made buttons SMALLER
+        # than the library intends, while the complaint was that they were
+        # small.
+        "cadrumo-control-min-width": "16",
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a
@@ -247,43 +268,49 @@ BASE_CSS: Final[str] = tokenised("""
     .cadrumo-subtle { color: $text-muted; }
     .cadrumo-note { color: $text-muted; text-style: italic; }
 
+    /* Textual's own button model, rather than a box drawn over the top of
+       it. The widget sizes itself (`height: auto`), pads its label with
+       `line-pad`, and edges itself with a `block` border -- half-block
+       glyphs in the border colour, which merge with the fill into one solid
+       slab. Setting `padding` and a contrasting line border instead is what
+       produced an outline sitting inside a filled button: an inner border,
+       which is not a thing a button has. */
     Button {
-        /* Three rows, not one. A borderless single-row button is a run of
-           text that happens to be focusable; the border is what makes it
-           read as a thing you press. */
-        height: $cadrumo-control-height;
+        height: auto;
         min-width: $cadrumo-control-min-width;
-        border: $cadrumo-radius $secondary;
-        padding: $cadrumo-space-0 $cadrumo-control-pad-x;
+        line-pad: $cadrumo-control-pad-x;
+        border: $cadrumo-control-edge $panel;
         background: $panel;
         color: $foreground;
     }
-    Button:hover { background: $panel-lighten-1; }
-    /* A border drawn in its own fill colour is an invisible border, and the
-       control silently loses the one shape every other control has. So a
-       filled button always edges in a LIGHTER step of its fill, never in the
-       fill itself. */
+    Button:hover {
+        border: $cadrumo-control-edge $panel-lighten-1;
+        background: $panel-lighten-1;
+    }
+    /* The edge always matches its own fill, so the slab stays seamless and
+       state is carried by the fill colour, never by a second outline. */
     Button:focus {
+        border: $cadrumo-control-edge $primary;
         background: $primary;
         color: $text;
-        border: $cadrumo-radius $primary-lighten-2;
         text-style: bold;
     }
     Button.-primary {
+        border: $cadrumo-control-edge $primary;
         background: $primary;
         color: $text;
-        border: $cadrumo-radius $primary-lighten-2;
     }
     Button.-primary:focus {
-        border: $cadrumo-radius $accent-lighten-2;
+        border: $cadrumo-control-edge $accent;
+        background: $accent;
         text-style: bold;
     }
 
     Input {
         width: 100%;
-        height: $cadrumo-control-height;
-        /* Was `tall`, while panels were `round` and buttons had none: three
-           shapes claiming to be one system. */
+        height: auto;
+        /* A field is a line box, unlike a button: `round` is right here, and
+           matches the panels it sits inside. */
         border: $cadrumo-radius $accent;
         padding: $cadrumo-space-0 $cadrumo-space-1;
         background: $background;
