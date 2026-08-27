@@ -5,7 +5,7 @@
   "validation_result": "PASSED",
   "receipt": {
     "schema_version": 1,
-    "current_head_commit": "e4e3f1fbc486f10cf4e28cbbfb12f630693e42c7",
+    "current_head_commit": "bf72d25c16c04f95e64326e2e37c18f041a529b1",
     "predecessors": {
       "gate_adr": {
         "stem": "2026-08-24-tui-registry-api-gate-adr",
@@ -92,12 +92,35 @@
         "contract_digest": "b28b58df29456cfc2e7e9b841b2a267622feec22ca58212331ce972bdecd5544"
       }
     ],
-    "epoch_schema_digest": "1bbb9042f178e4c67106495f0ca7bef24e5cc01194455f77ef752da308dce762",
+    "epoch_tuple": {
+      "digest": "1bbb9042f178e4c67106495f0ca7bef24e5cc01194455f77ef752da308dce762",
+      "covered_surfaces": [
+        "locale_catalogue",
+        "field_manifest",
+        "readiness",
+        "closure"
+      ],
+      "excluded_surfaces": [
+        "work",
+        "registry",
+        "calculation",
+        "bounded_review"
+      ],
+      "exclusion_reason": "WORK, REGISTRY, CALCULATION, and BOUNDED_REVIEW each require a work-unit/modelo/period or registry-snapshot coordinate; the C2 gate authorizes the CAPABILITY, not one target's read, so it names no coordinate for these four rather than fabricate one"
+    },
     "workspace_schema_fingerprint": "8bace39ef8de432687951c1292ceec4a70af780efd71371d02040cfe4a630c75",
     "field_manifest_digest": "46fdefd980676d1656a047377bea71d174a46b79a7f84f214ffa3c5e5eadf22e",
     "read_destinations": [
-      "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
-      "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result"
+      {
+        "qualified_name": "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
+        "route_level": "function",
+        "route_level_rationale": "no frontend/interface consumer exists yet (S129 census); the function IS the route"
+      },
+      {
+        "qualified_name": "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result",
+        "route_level": "function",
+        "route_level_rationale": "no frontend/interface consumer exists yet (S129 census); the function IS the route"
+      }
     ],
     "clean_commit_proof": {
       "outcome": "passed",
