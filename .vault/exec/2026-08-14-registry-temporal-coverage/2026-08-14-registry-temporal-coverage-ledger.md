@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9db2ef7a348bf19db11455c13acb7f053793d672392c14a02f10151664b4923b'
+body_hash: 'sha256:3c27f6695ca125c792a40d940ced68af8710dbe1d376b54a7df5ddde1e3da9f7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -718,3 +718,43 @@ refused, the refusal naming the years it would accept, and -- the one that
 encodes the earlier mistake -- Modelo 100's 2020 and 2021 revisions still
 loading and inspecting with their casillas intact, proving the guard governs
 filing rather than reading.
+
+RETRACTION: `W02.P05.S51` was closed prematurely and has been REOPENED. The
+closure note above verified the row's stated gate condition and stopped there;
+the row's substance has a hole that a different gate catches.
+
+What the closure got right: the whole-tree claimed-year layout-design gate does
+pass, with its bite proof and no exemptions, and 35 record designs across the
+named modelos are sha256-pinned with real AEAT URLs. None of that is withdrawn.
+
+What it missed: `test_catalogue_verification.py::test_committed_registry_tree_has_required_model_law_coverage`
+fails on `modelo 165 revision 2023-2025: layout_authority coverage gap`, and
+Modelo 165 is named in `S51`'s own list. The modelo ships FOUR revisions --
+2013-2015, 2016-2022, 2023-2025, 2026-y-siguientes -- and only THREE record
+designs, whose windows run 2013-01-01..2015-12-31, 2016-01-01..2022-12-31 and
+2026-01-01 onward. Ejercicios 2023, 2024 and 2025 are uncovered.
+
+A false lead worth recording, because the next reader will hit it too. The
+bundled file `01-165-diseno-de-registro-actualizado-en-2023.pdf` looks like the
+missing artefact and is enrolled as `aeat-dr-165-2026` with
+`applies_from = 2026-01-01`, which reads like a three-year mis-dating. It is
+not: page 1 of the document states "Ejercicio 2026". The filename records when
+AEAT last updated the web page, not the ejercicio the design governs. The
+enrolment is correct and must not be re-dated.
+
+So the gap is real and the remedy is the row's own first branch: acquire and
+hash-pin the Modelo 165 design for ejercicios 2023-2025. Widening the
+2016-2022 window to reach 2025 is barred -- `aeat-calculation-grounding` names
+widening a window to admit a filing year as the exact act that fabricates a
+citation.
+
+The row's alternative branch, constraining the claimed years, is available and
+does not need AEAT: the 2023-2025 revision could be withdrawn or bounded until
+its design exists. That is an operator ruling about whether the product claims
+those ejercicios, not something to decide inside a cleanup pass.
+
+Separately measured while here: the audit's other channel,
+`executable_parity_gaps`, carries 764 entries across many modelos, but
+`RegistryCoverageAudit.ok` is `not self.required_gate_failures`, so those are
+advisory and fail nothing. The earlier note naming Modelos 714 and 200 as the
+blocker was reading a truncated output; the single blocking entry is Modelo 165.
