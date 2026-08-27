@@ -5,5 +5,5 @@ section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_ceuta_melilla_autonomica"
 input_kind = "computed"
 formula = "renta-2024-deduccion-ceuta-melilla-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2023", "ley-35-2006:art-67", "ley-35-2006:art-68.4", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68.4", "ley-35-2006:art-73", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]

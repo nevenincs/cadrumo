@@ -10,7 +10,7 @@ expression = { op = "if_then_else", args = [
     { literal = "0" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-66-2023"]
+legal_refs = ["ley-35-2006:art-66"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]

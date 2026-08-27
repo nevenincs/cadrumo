@@ -3,7 +3,7 @@ id = "renta-2024-escala-autonomica-base-ahorro"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-76-2023"]
+legal_refs = ["ley-35-2006:art-76"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".parameters.source_citations]]
