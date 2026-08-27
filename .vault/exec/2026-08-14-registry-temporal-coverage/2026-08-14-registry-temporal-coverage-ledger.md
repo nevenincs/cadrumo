@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b1e5d5f4f5195ba4f780663d4728c52a8f87fe1eefa81061da5a7eb4474fbf1'
+body_hash: 'sha256:38b921262c8f6ffd0b36cc454e68fcebe321c3d5954d1700f36be5ec0ce04be6'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -188,3 +188,40 @@ related:
 - `S25` `M` `src/cadrumo/domain/calculations/registry/authority.py`
 - `S25` `A` `src/cadrumo/domain/calculations/registry/tests/test_supported_filing_year_consumption_refusal.py`
 - `S40` `M` `src/cadrumo/core/_amendment_kind_regime.py`
+
+- `S12` `A` `src/cadrumo/domain/calculations/registry/validate_temporal_coherence.py`
+- `S12` `A` `src/cadrumo/domain/calculations/registry/tests/test_temporal_coherence_advisories.py`
+
+- `S11` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S11` `A` `src/cadrumo/domain/calculations/registry/tests/test_filing_bound_cell_advisories.py`
+
+## Notes
+
+`W02.P05.S25` is NOT implemented, and the reason is a measured corpus fact
+rather than a placement problem. The row asks the authority to refuse
+production consumption for any filing year outside the supported-year
+declaration. A guard was written at the authority snapshot boundary, landed,
+and withdrawn from the working tree after it produced 36 refusals across the
+registry suite and 8 in the Modelo 100 minimum-descendientes suites.
+
+The measurement that should have preceded it: **37 of the 58 bundled modelos
+ship revisions covering years the registry does not declare supported**, some
+reaching back to 2003 (M156), 2012 (M145) and 2013 (M165); Modelo 100 itself
+ships 2020 and 2021. The declaration carries 2022 to 2026. So a
+supported-year refusal on any shared consumption path contradicts roughly two
+thirds of the corpus, and the failures it produced were correct tests reading
+revisions the registry genuinely ships.
+
+That makes `S25` dependent on `W02.P05.S51`, which the plan does not record.
+`S51` is the row that constrains unsupported claimed years, and until the
+claimed-year set and the declared-year set agree, no refusal keyed on the
+declaration can land without fighting the corpus. `S51` is itself blocked on
+acquiring historical AEAT design artefacts, so the dependency is real and
+external.
+
+What survives for whoever picks `S25` up: the refusal shape is right (name the
+year, name the declaration that would admit it) and the applicability rung must
+stay readable, because an operator asking whether an out-of-scope year is due
+is asking exactly the question the scheduling surface exists to answer. The
+placement is the open question, and it cannot be settled before the claimed-year
+contradiction is.
