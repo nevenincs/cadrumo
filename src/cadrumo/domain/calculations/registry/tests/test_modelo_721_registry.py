@@ -10,7 +10,6 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
-from .._snapshot_internals import _source_applies_across
 from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue
@@ -136,7 +135,7 @@ def test_modelo_721_refuses_a_mutated_2024_selector_past_its_boe_package_window(
     source = catalogues.sources[source_ref]
 
     assert source.applies_to == date(2024, 12, 31)
-    assert not _source_applies_across(source, date(2025, 1, 1), date(2025, 12, 31))
+    assert not source.applies_across(date(2025, 1, 1), date(2025, 12, 31))
 
 
 def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:

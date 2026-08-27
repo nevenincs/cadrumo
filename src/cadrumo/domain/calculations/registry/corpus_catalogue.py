@@ -170,9 +170,7 @@ def resolve_record_design_binary(
     if source.applies_from is None:
         raise RegistryValidationError(f"record-design source {source_ref!r} does not declare applies_from")
 
-    year_start = date(filing_year, 1, 1)
-    year_end = date(filing_year, 12, 31)
-    if source.applies_from > year_end or (source.applies_to is not None and source.applies_to < year_start):
+    if not source.applies_across(date(filing_year, 1, 1), date(filing_year, 12, 31)):
         raise RegistryValidationError(
             f"record-design source {source_ref!r} does not apply to filing year {filing_year}",
         )

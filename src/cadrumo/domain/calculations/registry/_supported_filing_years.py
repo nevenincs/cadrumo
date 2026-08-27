@@ -88,9 +88,7 @@ def _source_backs_cell(
 ) -> bool:
     if source is None or source.applies_from is None or source.applies_to is None:
         return False
-    year_start = date(filing_year, 1, 1)
-    year_end = date(filing_year, 12, 31)
-    if source.applies_from > year_end or source.applies_to < year_start:
+    if not source.applies_across(date(filing_year, 1, 1), date(filing_year, 12, 31)):
         return False
     selector = source.period_selector
     return selector is None or (
