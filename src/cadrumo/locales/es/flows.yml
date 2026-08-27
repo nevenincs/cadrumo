@@ -129,6 +129,7 @@ flows:
           ledger_transaction: Movimiento del libro
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)
+          m347_third_party_operation: Operación con terceros
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior

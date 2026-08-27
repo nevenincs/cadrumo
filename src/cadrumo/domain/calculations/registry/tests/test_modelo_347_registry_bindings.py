@@ -89,8 +89,8 @@ def test_committed_modelo_347_declares_counterpart_source_summary_bindings() -> 
     count_binding = bindings[_M347_COUNT_BINDING]
     amount_binding = bindings[_M347_AMOUNT_BINDING]
 
-    assert count_binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
-    assert amount_binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
+    assert count_binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
+    assert amount_binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
     assert {
         count_binding.source,
         amount_binding.source,

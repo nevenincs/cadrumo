@@ -22,6 +22,7 @@ docs:
       ledger_transaction: a nyilvántartott tételeiből
       m303_regimen_simplificado_annual_summary: a 303-as modelo egyszerűsített rendszerének
         éves összesítéséből
+      m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből
       manual_input: az Ön által megadott értékből
       payable_invoice: a befogadott számláiból
       previous_filing: a korábbi bevallásából
