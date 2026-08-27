@@ -1,0 +1,111 @@
+##
+## Declared channel for parsers of official regulatory prose.
+##
+## The SET is derived mechanically by
+## ``dev.registry.analysis.regulatory_prose_parser_channel``; only the corpus and
+## the reason are authored here. A module the derivation yields and this ledger
+## does not name is a reconciliation failure, so a new grammar over AEAT or BOE
+## text cannot ship undeclared.
+##
+## RULING (registry-temporal-coverage W01.P03.S38): design-prose grammars are
+## RETAINED, not migrated into the authoring tree, and the channel is declared
+## here instead. Two facts settle it. First, the prose is the outside world's
+## and keeps changing: ``no-legacy-compatibility`` explicitly keeps resilience
+## for "AEAT portal variations, BOE corpus formats, PDF producer quirks", and a
+## one-shot import would delete the ability to onboard the next AEAT design at
+## all. Second, the grammar is not where the regulatory value lives: a value a
+## grammar derives still lands in the registry authoring tree with its
+## establishing provision, under ``aeat-calculation-grounding``. Enrolment here
+## authorises READING prose. It authorises no value.
+##
+## The measured inventory also corrected the row's premise. The objection named
+## one generator-side grammar in ``dev/``; the derivation found fifteen modules,
+## eleven of them shipped under ``src/`` -- including a 4,600-line record-design
+## parser that is the registry's own layout authority. Migrating "the" grammar
+## was never the smaller change.
+##
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/record_design.py"
+corpus = "AEAT diseños de registro (PDF and XLSX)"
+reason = """\
+The registry's own record-design authority. Turns published diseño tables into \
+typed position/width/nature facts, absorbing the PDF extraction damage those \
+documents arrive with -- reversed rows, stuttered rows, glued ordinals, orphan \
+measures. This is the canonical reader; a second one would fork the layout \
+authority."""
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/record_design_schema.py"
+corpus = "AEAT diseños de registro"
+reason = "Schema-side companion to the record-design authority; validates the shapes that reader produces."
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/export_parse.py"
+corpus = "AEAT diseños de registro"
+reason = "Parses the fixed-width export field grammar the record designs declare."
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py"
+corpus = "AEAT diseños de registro"
+reason = "Validates that a declared export layout covers every position its diseño states."
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/_validate_layout_authority_content.py"
+corpus = "AEAT diseños de registro"
+reason = "Checks a layout authority's cited content against the design text it claims to mirror."
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/_validate_semantic_role_required.py"
+corpus = "registry casilla declarations"
+reason = "Matches semantic-role identifiers; reads registry-authored ids rather than official prose, and is enrolled because the detector matches its casilla vocabulary."
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/legal.py"
+corpus = "BOE consolidated legal text"
+reason = "Resolves legal-reference ids and their corpus anchors against bundled BOE text."
+
+[[parser]]
+module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
+corpus = "AEAT Modelo 100 borrador PDF"
+reason = "Inbound adapter extracting declared casilla values from the operator's own AEAT borrador; the boundary where AEAT's document shape is absorbed."
+
+[[parser]]
+module = "src/cadrumo/adapters/inbound/declaracion/_detect.py"
+corpus = "AEAT declaración documents"
+reason = "Detects which modelo and ejercicio an imported AEAT document is, before any typed parse."
+
+[[parser]]
+module = "src/cadrumo/adapters/inbound/justificante/_extract.py"
+corpus = "AEAT justificante de presentación"
+reason = "Extracts the CSV and filing coordinates AEAT prints on a submission receipt."
+
+[[parser]]
+module = "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"
+corpus = "AEAT sede consulta pages"
+reason = "Reads the read-only consulta listing; the sede's own markup is external prose that changes without notice."
+
+[[parser]]
+module = "dev/registry/pipeline/_export_tree.py"
+corpus = "AEAT diseños de registro"
+reason = """\
+Generator-side grammar over design value clauses ("N enteros y M decimales", \
+quoted code enumerations, trailing Nota references). Feeds the export-tree \
+renderer, whose output is proved against the published tree by \
+``check_generated_export_tree`` before publication -- so what this grammar \
+derives is never trusted on the grammar's word alone."""
+
+[[parser]]
+module = "dev/audit/legal_excerpt_vintage_screen.py"
+corpus = "BOE consolidated legal text"
+reason = "Audit tool screening bundled legal excerpts for vintage drift; reads BOE text to compare, writes nothing."
+
+[[parser]]
+module = "dev/docs/terminology/_resolution.py"
+corpus = "Terminology Handbook fragments"
+reason = "Resolves glossary term references in authored documentation; enrolled because the detector matches its domain vocabulary, not because it reads official prose."
+
+[[parser]]
+module = "dev/docs/terminology/_sweep.py"
+corpus = "Terminology Handbook fragments"
+reason = "Sweeps documentation for enrolled terms; same disposition as its resolution sibling."
