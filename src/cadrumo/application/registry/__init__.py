@@ -52,12 +52,6 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.outbound.aeat.sede import (
-    FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
-)
-from ...adapters.outbound.aeat.sede import (
-    registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
-)
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
@@ -441,11 +435,18 @@ def verify_filed_state(
     Returns a :class:`FiledStateVerificationReport` with the per-casilla
     comparison results between the registry calculation and the filed values.
     """
+    # The sede adapter is reached only by this comparison and the loader below.
+    # At module scope it put an application-to-adapter edge on every consumer of
+    # this package, and because CommandSpec annotations resolve through here it
+    # dragged the auth session store -- and the whole persistence family -- into
+    # merely RESOLVING unrelated registry commands.
+    from ...adapters.outbound.aeat.sede import registry_observation_from_filed_declaration
+
     filed_observation = _load_filed_observation(observation_path)
-    registry_observation = _registry_observation_from_filed_declaration(filed_observation)
+    registry_observation = registry_observation_from_filed_declaration(filed_observation)
     source_observations = tuple(_load_filed_observation(path) for path in source_observation_paths)
     registry_source_observations = tuple(
-        _registry_observation_from_filed_declaration(observation) for observation in source_observations
+        registry_observation_from_filed_declaration(observation) for observation in source_observations
     )
     authority = _ValidatedRegistryAuthority.load(
         registry_root or _bundled_path("registry", "aeat"),
@@ -602,7 +603,9 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
 
 
 def _load_filed_observation(path: Path):
-    return _FiledDeclaracionObservationStore(path.parent).load_observation(path)
+    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+
+    return FiledDeclaracionObservationStore(path.parent).load_observation(path)
 
 
 __all__ = [
