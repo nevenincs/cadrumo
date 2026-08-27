@@ -155,3 +155,19 @@ source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
 required_text = ["operaciones con terceras personas"]
+
+[[revisions."2011-2024".bindings]]
+id = "modelo-347-contraparte-row-pais-codigo"
+source = "m347_third_party_operation"
+selector = { fact = "row_field", row_field = "country_code", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "rd-1065-2007:art-31",
+    "rd-1065-2007:art-33",
+]
+source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
+
+[[revisions."2011-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]

@@ -172,11 +172,11 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm347-2025.declarado.f009'
+id = 'm347-2025.declarado.f009a'
 offset = 77
-length = 4
+length = 2
 kind = 'casilla'
-casilla_id = 'contraparte.pais-codigo'
+casilla_id = 'contraparte.provincia-codigo'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -188,6 +188,27 @@ legal_refs = [
     'orden-eha-3012-2008:art-10',
     'orden-hac-1431-2025:art-1',
     'rd-1065-2007:art-31',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-347-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm347-2025.declarado.f009b'
+offset = 79
+length = 2
+kind = 'binding'
+binding = 'modelo-347-contraparte-row-pais-codigo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+    'rd-1065-2007:art-33',
     'ley-58-2003:art-93',
 ]
 source_refs = ['aeat-dr-347-2025']
@@ -683,3 +704,4 @@ importe_q1 = 'contraparte.importe-Q1'
 importe_q2 = 'contraparte.importe-Q2'
 importe_q3 = 'contraparte.importe-Q3'
 importe_q4 = 'contraparte.importe-Q4'
+country_code = 'contraparte.pais-codigo'

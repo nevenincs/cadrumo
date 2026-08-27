@@ -59,12 +59,13 @@ def _observation(
     total: str,
     operation_clave: str,
     source_kind: BindingSourceKind = BindingSourceKind.PAYABLE_INVOICE,
+    country_code: str = "ES",
 ) -> InvoiceObservation:
     return InvoiceObservation(
         invoice_id=invoice_id,
         source_kind=source_kind,
         party_tax_id=party_tax_id,
-        country_code="ES",
+        country_code=country_code,
         transaction_date=transaction_date,
         base_amount=Decimal(total),
         invoice_total_amount=Decimal(total),
@@ -291,6 +292,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
         record.row_field_casilla_ids["importe_q2"],
         record.row_field_casilla_ids["importe_q3"],
         record.row_field_casilla_ids["importe_q4"],
+        record.row_field_casilla_ids["country_code"],
     }
     conditional_casillas: set[CasillaId] = {
         field.casilla_id
@@ -302,3 +304,45 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
     assert "contraparte.importe-transmisiones-inmuebles" in conditional_casillas
     assert "contraparte.operacion-seguro" in conditional_casillas
     assert "contraparte.arrendamiento-local-negocio" in conditional_casillas
+    assert "contraparte.provincia-codigo" in conditional_casillas
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_id: str) -> None:
+    """`país-código` per row, not one value stamped across every occurrence.
+
+    `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`:
+    the residency filter is gone and `país-código` is now a real per-row
+    binding sourced from each observation's own `country_code`. Asserts the
+    VALUES, not merely the row count -- a record stamping one counterparty's
+    country onto every row would still pass a count-only assertion.
+    """
+    revision = _revision(revision_id)
+    observations = (
+        _observation(
+            invoice_id="inv-es",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Uno SL",
+            transaction_date=date(2025, 2, 10),
+            total="5000.00",
+            operation_clave="A",
+            country_code="ES",
+        ),
+        _observation(
+            invoice_id="inv-us",
+            party_tax_id="C22222229",
+            party_legal_name="Acme Imports Inc",
+            transaction_date=date(2025, 6, 15),
+            total="3200.00",
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            country_code="US",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+    pais_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-pais-codigo"))
+    countries_by_row = {row: resolved[(pais_binding_id, row)] for (bid, row) in resolved if bid == pais_binding_id}
+
+    assert set(countries_by_row.values()) == {"ES", "US"}
+    assert len(countries_by_row) == 2, "each counterparty must resolve its OWN pais-codigo row"

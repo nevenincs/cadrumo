@@ -1081,15 +1081,20 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     assert len(rows) == 2
 
 
-def test_capability_parity_m347_declares_only_the_domestic_party(
+def test_capability_parity_m347_excludes_the_intracommunity_operations(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """M347 counts the domestic party and excludes the intra-community ones.
+    """M347 excludes the intra-community operations, by CLASSIFICATION not country.
 
     The same bucket as the M349 proof, asserted from the other modelo, because
     the two projections share one resolver and a filter error would move a
     record between them rather than losing it -- a shape that a single-modelo
-    proof reads as correct.
+    proof reads as correct. The DE/IT invoices this fixture excludes from
+    M347 carry a genuine intra-community `IvaCategory`
+    (RD 1065/2007 art. 33.2.i), not merely a non-ES country; see
+    `test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty`
+    for the discrimination this test alone cannot prove -- a non-resident
+    counterparty under an ORDINARY operation still reaches the declaration.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
@@ -1097,6 +1102,48 @@ def test_capability_parity_m347_declares_only_the_domestic_party(
     resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
+            modelo="347",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision=_modelo_revision("347", "2011-2024"),
+        ),
+    )
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A non-resident counterparty under an ordinary operation REACHES M347.
+
+    `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`:
+    RD 1065/2007 art. 33.2 is a closed exclusion list whose only
+    residency-adjacent items are the filer's own foreign permanent
+    establishment and operations reported through a coincident informativa --
+    neither covers a genuinely non-resident, non-recapitulativa counterparty.
+    A US customer under an ordinary export sale (zero-rated, not intra-EU) is
+    exactly that case: it must count toward the M347 declarante summary, not
+    vanish silently the way it did before this ADR.
+    """
+    export_sale = _invoice(
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-US-2026-001",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="US000000001",
+        counterparty_name="Acme Imports Inc",
+        counterparty_country="US",
+        base_total=Decimal("4000.00"),
+        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    )
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((export_sale,)))
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
