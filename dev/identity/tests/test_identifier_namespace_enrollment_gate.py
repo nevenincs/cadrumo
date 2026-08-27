@@ -267,7 +267,7 @@ class _Adjudication:
 #: promoting it would refuse a value the site exists to handle.
 _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
     _Adjudication(
-        path="src/cadrumo/application/auth/_sessions.py",
+        path="src/cadrumo/application/auth/sessions.py",
         model="ClaveAuthFacts",
         field="tax_id",
         group="raw/prevalidation tax inputs",
@@ -278,7 +278,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_sessions.py",
+        path="src/cadrumo/application/auth/sessions.py",
         model="ClaveCredentials",
         field="profile_tax_id",
         group="raw/prevalidation tax inputs",
@@ -393,7 +393,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_diagnostics.py",
+        path="src/cadrumo/application/auth/diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_id",
         group="redacted diagnostic projections",
@@ -403,7 +403,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_diagnostics.py",
+        path="src/cadrumo/application/auth/diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_label",
         group="redacted diagnostic projections",
@@ -463,7 +463,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/calculations/registry/_invoice_bindings.py",
+        path="src/cadrumo/domain/calculations/registry/invoice_bindings.py",
         model="InvoiceObservation",
         field="invoice_id",
         group="open ledger-source references",
