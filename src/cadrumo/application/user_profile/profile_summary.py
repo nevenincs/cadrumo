@@ -94,6 +94,22 @@ def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
     return ProfileSummaryInventory(summaries=tuple(_summary_of(witness) for witness in witnesses))
 
 
+def require_summaries(*, root: Path | None = None) -> tuple[ProfileSummary, ...]:
+    """Return the summaries, refusing rather than reporting a degraded read.
+
+    :func:`summary_inventory` reports an unreadable store as a typed outcome
+    with no rows, which is right for a surface that can show the operator why.
+    A caller that only gets a sequence back cannot show anything, and an empty
+    sequence there would mean "you have no profiles" -- the opposite of the
+    truth, and the answer that makes someone think their data is gone. Such a
+    caller uses this instead and handles the refusal.
+    """
+    inventory = summary_inventory(root=root)
+    if not inventory.recognized:
+        raise ProfileCustodyRecordIntegrityError(inventory.detail or str(inventory.outcome))
+    return inventory.summaries
+
+
 def _summary_of(witness: ProfileCustodyCapsuleSummaryWitnessPort) -> ProfileSummary:
     """Project one already-coherent witness with no further storage access."""
     return ProfileSummary(
@@ -105,4 +121,4 @@ def _summary_of(witness: ProfileCustodyCapsuleSummaryWitnessPort) -> ProfileSumm
     )
 
 
-__all__ = ["ProfileSummary", "ProfileSummaryInventory", "summary_inventory"]
+__all__ = ["ProfileSummary", "ProfileSummaryInventory", "require_summaries", "summary_inventory"]

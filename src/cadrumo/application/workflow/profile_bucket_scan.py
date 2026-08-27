@@ -10,19 +10,25 @@ the authenticated aggregate, which took a per-profile custody lock and could
 publish a label head as a side effect of *resolving a name* -- work no consumer
 here needs, and a second definition of "which profiles exist" that could
 disagree with the first.
+
+It takes the REFUSING half of that boundary.  Callers here receive a pointer or
+``None``, with no channel to explain a store that could not be read, so an
+unreadable capsule must raise rather than resolve to "absent" -- health
+assessment distinguishes a dangling pointer from an unreadable capsule, and
+collapsing the two reports a damaged profile as a missing one.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ..user_profile.profile_summary import ProfileSummary, summary_inventory
+from ..user_profile.profile_summary import ProfileSummary, require_summaries
 from .errors import ProfileLabelAmbiguousError
 from .profile_bucket_models import ProfileBucketPointer
 
 
 def _summaries(root: Path | None) -> tuple[ProfileSummary, ...]:
-    return summary_inventory(root=root).summaries
+    return require_summaries(root=root)
 
 
 def _pointer(summary: ProfileSummary) -> ProfileBucketPointer:
