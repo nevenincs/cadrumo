@@ -15,6 +15,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
@@ -232,3 +233,54 @@ def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse
         union_detail_rows_by_identity(resolver_rows=(resolver_row,), caller_rows=(caller_row,))
 
     assert "importe" in excinfo.value.context["divergent_fields"]
+
+
+def test_clave_a_reduccion_is_refused_at_the_row_boundary() -> None:
+    """The ADR's clave-A block, enforced in code rather than only in prose.
+
+    Modelling reducción as ONE shared field (matching the diseño's own
+    physical layout for positions 109-119) makes it reachable under clave A
+    unless refused explicitly -- its governing provision is unconfirmed
+    (the diseño's own LIRPF art. 24.2 citation does not exist), so a
+    populated value there must refuse rather than silently file an
+    ungrounded amount.
+    """
+    with pytest.raises(ValidationError, match="clave A reducción is blocked"):
+        Modelo184MemberRow(
+            nif="11111111A",
+            nombre="Uno",
+            porcentaje=Decimal("100"),
+            importe=Decimal("6000"),
+            clave="A",
+            reduccion=Decimal("500"),
+        )
+
+
+def test_clave_c_and_clave_d_reduccion_still_populate() -> None:
+    """The non-regression the clave-A block must not break: C and D still work."""
+    clave_c_row = Modelo184MemberRow(
+        nif="11111111A",
+        nombre="Uno",
+        porcentaje=Decimal("100"),
+        importe=Decimal("6000"),
+        clave="C",
+        reduccion=Decimal("500"),
+    )
+    clave_d_row = Modelo184MemberRow(
+        nif="22222222B",
+        nombre="Dos",
+        porcentaje=Decimal("100"),
+        importe=Decimal("4000"),
+        clave="D",
+        reduccion=Decimal("300"),
+    )
+
+    assert clave_c_row.reduccion == Decimal("500")
+    assert clave_d_row.reduccion == Decimal("300")
+
+
+def test_clave_a_without_reduccion_is_still_accepted() -> None:
+    """The block targets a POPULATED reducción, not the clave itself."""
+    row = Modelo184MemberRow(nif="11111111A", nombre="Uno", porcentaje=Decimal("100"), importe=Decimal("6000"), clave="A")
+
+    assert row.reduccion is None

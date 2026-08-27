@@ -193,6 +193,27 @@ class Modelo184MemberRow(BaseModel):
             raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
         return self
 
+    @model_validator(mode="after")
+    def _clave_a_reduccion_stays_blocked(self) -> Modelo184MemberRow:
+        """Refuse a populated reducción on a clave-A row.
+
+        The shared diseño field (positions 109-119) also serves claves C and
+        D, whose reductions are grounded (LIRPF arts. 23 and 32.1). The
+        clave-A branch is explicitly BLOCKED by the accepted row-shape ADR:
+        the diseño's own citation (LIRPF art. 24.2) does not exist as such,
+        and art. 26.2 is only a strong, unconfirmed candidate. Modelling
+        reducción as one field (matching the diseño's own physical layout)
+        makes it reachable under clave A unless refused here explicitly, so
+        the block lives on the row rather than only in prose.
+        """
+        if self.clave == "A" and self.reduccion is not None:
+            raise ValueError(
+                "clave A reducción is blocked pending confirmation of its governing provision "
+                "(the diseño's own LIRPF art. 24.2 citation does not exist; see the accepted "
+                "row-shape ADR) -- leave reduccion unset for a clave-A row",
+            )
+        return self
+
 
 # ---------------------------------------------------------------------------
 # Modelo 232 - operacion vinculada row

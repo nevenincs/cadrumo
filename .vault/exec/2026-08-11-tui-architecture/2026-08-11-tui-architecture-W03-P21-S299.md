@@ -53,6 +53,7 @@ related:
 - `verify:` `pytest src/cadrumo/domain/modelos/tests/ src/cadrumo/application/aggregation/tests/ src/cadrumo/application/modelo/tests/test_m184_multi_clave_export_parity.py src/cadrumo/domain/calculations/registry/tests/test_modelo_184_registry.py` -> `pass`
 - `verify:` `pytest src/cadrumo/domain/calculations/registry/tests/` -> `pass, except pre-existing unrelated failures (see Notes)`
 - `verify:` `pytest -m integration src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py::TestParseRowSpecValid` -> `pass`
+- `verify:` `pytest src/cadrumo/application/modelo/tests/test_m184_multi_clave_export_parity.py` (clave-A refusal + C/D non-regression cases, follow-up commit) -> `pass`
 
 ## Notes
 
@@ -91,4 +92,22 @@ with "Recovery enrollment is mandatory" in this environment, and the wider
 modelos (194, 200, 220, 270, 308, 721, iva place-of-supply,
 counterpart-source-kind) tied to other agents' in-flight uncommitted work in
 this shared worktree, confirmed by their appearing under `git status` as
-modified by files this Step never touches.
+modified by files this Step never touches. A separate pre-existing
+regression, also confirmed unrelated to this Step via `git log`, was found
+during verification: `test_text_casilla_routing.py::test_build_draft_routes_and_validates_required_m184_member_nif`
+references a casilla id another peer's registry commit already removed
+(the tree carries its own comment noting the removal); left untouched,
+different family's cleanup.
+
+Follow-up commit closes a real gap the honest-pass review caught: the
+accepted row-shape ADR blocks the clave-A reducción pending its unresolved
+governing provision, but nothing in code enforced it -- the shared
+clave-C/clave-D `reduccion` field was reachable under clave A too, since it
+is modelled as one field matching the diseño's own physical layout. Added
+`Modelo184MemberRow._clave_a_reduccion_stays_blocked`, a model validator
+refusing a populated `reduccion` when `clave == "A"`, at the row boundary
+(rather than the resolver) so it blocks every supply path -- CLI manual
+entry and any future resolver wiring alike -- uniformly. Proved via three
+new cases in `test_m184_multi_clave_export_parity.py`: the refusal fires,
+claves C and D still populate `reduccion` unaffected, and a clave-A row
+with no `reduccion` still constructs cleanly.
