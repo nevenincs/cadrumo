@@ -859,6 +859,43 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(field_row_pdfs)
 
 
+def test_every_provenance_only_design_still_refuses_to_parse() -> None:
+    """The declaration's teeth: a provenance stamp must stay earned.
+
+    ``design_authority = "provenance_only"`` takes a design out of the
+    parseability sweeps, so on its own it is an exemption anyone could hand out.
+    This is the cross-check against physical evidence that keeps it honest: every
+    stamped design must ACTUALLY still refuse to parse. The day one parses
+    cleanly, this gate reds and forces the promotion reconsideration the modelo
+    184 regression already asks for -- "reconsider promotion only when strict
+    parsing produces complete records starting at position 1".
+
+    Mis-stamping a genuinely authoritative design would otherwise drop it from
+    parse coverage in silence, which is the one way this field can do harm.
+    """
+    _, catalogues = _committed_registry_tree()
+    stamped = sorted(
+        (source.id, bundled_path() / source.corpus_path)
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "provenance_only"
+    )
+
+    assert stamped, "no design is stamped provenance_only; this gate would pass vacuously"
+
+    parsed_anyway = []
+    for source_id, path in stamped:
+        try:
+            extract_record_design(path)
+        except RegistryValidationError:
+            continue
+        parsed_anyway.append(source_id)
+
+    assert not parsed_anyway, (
+        "these designs are stamped provenance_only but parse cleanly, so the stamp is no longer "
+        f"earned -- promote them or correct the stamp: {parsed_anyway}"
+    )
+
+
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
     _, catalogues = _committed_registry_tree()
     sources = {
