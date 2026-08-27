@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:27146d4f2d49dfc809fb267529fa6259860fb3bb4f5a417a1839e919f11cfa3c'
+body_hash: 'sha256:bf507681bab78b515014c06c5ccd4c7b6561ccefcf1895fb23a59985c65ff126'
 step_id: 'S150'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -42,3 +42,16 @@ The declared capabilities follow from the writer: RECORDED durability,
 INTERRUPT reconciliation (a rename cannot resume after owner loss), a
 credential-free journalable request, and a public result projection that
 carries no lifecycle state a consumer could depend on.
+
+### Carry-forward: the typed Workspace refresh target was not built
+
+This Step's own title claims a "typed Workspace refresh target." It was not
+delivered: no `ModeloWorkspaceRefreshTargetV1` type, adapter, or reference
+exists anywhere in `src/` after this Step's commit, and
+`OperationPublicDefinitionRegistrationV1.workspace_refresh_adapter` is left
+unset on the rename registration, exactly as on every other enrolled modelo
+lifecycle operation. The rest of this record's claims hold - lifecycle
+delegation, capability declaration, and the discard-planting gate proof are
+real and verified - so the Step's checkbox stays closed rather than reverted.
+The missing mechanism is now tracked as its own Step,
+`W05.P23.S306`, discovered and carved out while building `S144`.

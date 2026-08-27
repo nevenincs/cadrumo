@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:754e6a55e050efe865ce46a34cc6dc560cbf8233af5105396ab7e74aff746826'
+body_hash: 'sha256:8f8c0d53b775baf5107ff0f7c236d62fdc1361bd61ce54f8e185e335c807c03c'
 related: []
 ---
 
@@ -419,16 +419,28 @@ proven to bite by mutating the shipped data or code from outside the tracked tre
 | rehabilitation lookback as 730 days | over-payment | calendar-relative window, days parameter retired |
 | Art. 109 denominator not net of subvenciones | over-compliance | art. 109's own concept set and activity gate |
 
-**One of the four is not yet reachable in production, and saying otherwise would be the
-recorded-but-not-implemented failure this project names.** The seguro fix computes the
-lawful sum only when the per-variant person counts are supplied, and the sole production
-construction site of `RentaDeductibilityContext`, in
-`application/aggregation/_renta_ledger.py`, supplies none. Shipped behaviour is still a
-flat 500 for the contribuyente. The uncounted path deliberately falls back to the
-ordinary limb, so widening the rule regressed nobody, but wiring the family profile
-through to that context is open work. The signals exist -- `disability_grade` on
-taxpayer, spouse, descendants and ascendants, with RIRPF art. 72 fixing the 33 per cent
-threshold -- so this is plumbing, not evidence.
+**All four now reach production.** The seguro fix was the one that did not, and it was
+closed in Step P05.S21: `aggregate_renta_ledger_expenses` now populates
+`statutory_cap_variant_person_counts` from the bucket's profile record, so a married
+couple deducts the 1.000 euros the article grants instead of the 500 that shipped, and a
+declared grado at or above the RIRPF art. 72 threshold selects the 1.500 limb. Six
+real-path tests drive stored facts through the domain count, the context and the
+registry cap variants; three bite proofs confirm the gates fail when the wiring is
+removed, when the wiring names a variant the corpus does not declare, and when a count
+is inflated.
+
+Reaching production cost two relocations, both recorded in the Step. The count moved off
+the `RentaFamilyProfile` assembler onto a plain descendant sequence, because routing it
+through `application/modelo` hit the existing modelo-imports-aggregation cycle; and
+`profile_fact_index` moved from `application/modelo/profile_binding.py` to
+`application/user_profile/projections.py`, where both application packages can read it
+without either importing the other. Neither left an alias behind.
+
+The lesson worth carrying is that the distance between "expressible" and "reachable" was
+not evidence or law -- every figure and every signal was already present and correct. It
+was one unsupplied argument at one construction site, invisible to every test that
+called the resolver directly. A rule proved only at its own resolver is not proved to
+run.
 
 The Art. 109 fix has the same shape in reverse: it IS reachable, because the activity
 class and income concept are already carried on the ledger row itself.
@@ -451,10 +463,11 @@ provisions the code half-implements, not for values that look stale.
 
 ## Recommendations
 
-- Wire the insured-person counts through to `RentaDeductibilityContext` from the
-  family profile, so the seguro fix reaches a return. Until that lands the higher
-  limb is expressible and correct but never selected, and the shipped answer stays
-  the ordinary limb.
+- The insured-person counts are wired (Step P05.S21) and the higher limb is now
+  selected in production. The residual recommendation is narrower: any future rule
+  whose behaviour depends on a caller-supplied argument needs a test that reaches it
+  through the shipped entry point, because a resolver-level test cannot tell a
+  supplied argument from an omitted one.
 - The rehabilitation parameter question is settled: the days declaration was
   retired across all six revisions that carried it and re-declared in years, so no
   parameter describes a unit the code no longer uses. A gate reds if any revision
