@@ -9,7 +9,7 @@ related:
   - '[[2026-08-27-registry-dated-validity-research]]'
 modified: '2026-08-27'
 body_schema: body-v2
-body_hash: 'sha256:a47f60fa4d0c3ac07d69efb903f2cf54b825e2a66f09e429be061dac456a47f5'
+body_hash: 'sha256:742979fb41b060e46b3777ae5b2daa48dea05a14ef50e0f3eafc3902b757a6be'
 ---
 
 <!-- RETIRED: S01 -->
@@ -62,6 +62,7 @@ Turn the hunt's findings into product behaviour. Each fix reuses the mechanism t
 - [x] `P05.S17` - Measure the Art. 109 seventy per cent over the base the reglamento names: exclude subvenciones corrientes, subvenciones de capital and indemnizaciones for the agrarian apartados, gate the exemption to the activity classes art. 109 grants it to, and fail closed on a row that does not declare its activity class rather than guessing an exemption for it; `src/cadrumo/core/_concepto_ingreso.py, src/cadrumo/domain/transactions/, src/cadrumo/application/modelo/_art109_activity_income.py and src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml`.
 - [x] `P05.S18` - Carry both limits LIRPF art. 30.2.5.a states for the seguro de enfermedad by widening the statutory-cap variant to an annual per-person amount alongside its daily one, declaring the 500 and 1.500 limbs in the corpus, and summing each limb over its own population, with an uncounted caller falling back to the ordinary limb so widening the rule regresses nobody; `src/cadrumo/domain/categories/ and src/cadrumo/domain/renta/ and src/cadrumo/_data/registry/aeat/categories/profiles.toml`.
 - [x] `P05.S19` - Count the tier c) rehabilitation window in calendar years rather than in days, relocating the leap-clamping year shift out of the retention domain into a neutrally named core primitive both consumers read, and retiring the days-declared registry parameter across every revision that carried it so no declaration describes a unit the code no longer uses; `src/cadrumo/core/calendar_shift.py and src/cadrumo/domain/fincas/ and src/cadrumo/domain/retention/ and src/cadrumo/_data/registry/aeat/modelos/100/revisions/`.
+- [x] `P05.S20` - Derive the Art. 30.2.5.a insured population and its two limbs from the family profile, keeping membership and limb as separate questions and refusing the wider Art. 58.1 set that would admit a non-cohabiting dependent child and an over-25 child with discapacidad, and expose it beside the one canonical reconstruction of the family record from stored facts; `src/cadrumo/domain/contribuyente/ and src/cadrumo/application/modelo/profile_binding.py`.
 
 ## Parallelization
 
