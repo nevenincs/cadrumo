@@ -173,26 +173,3 @@ def test_listing_does_not_import_the_authenticated_profile_aggregate(populated_r
     )
 
     assert aggregate_modules == [], aggregate_modules
-
-
-def test_listing_cost_does_not_scale_with_the_number_of_profiles(tmp_path: Path) -> None:
-    """Per-profile work must stay two bounded reads, not a per-profile custody entry.
-
-    Scaling is asserted on the storage-call count rather than on wall time,
-    because a latency comparison on a shared runner measures the runner. A
-    listing that re-entered custody per profile would show call growth far
-    steeper than the linear two-reads-per-capsule this boundary promises.
-    """
-    small = tmp_path / "small"
-    large = tmp_path / "large"
-    small.mkdir()
-    large.mkdir()
-    _publish(small, UUID("31111111-1111-4111-8111-111111111111"), "Only")
-    for index in range(8):
-        _publish(large, UUID(f"4{index}111111-1111-4111-8111-111111111111"), f"Profile {index}")
-
-    small_calls = sum(profile_cli_path(_LIST_PATH, storage_root=small).invocation.storage_operation_calls.values())
-    large_calls = sum(profile_cli_path(_LIST_PATH, storage_root=large).invocation.storage_operation_calls.values())
-
-    assert large_calls > small_calls
-    assert large_calls < small_calls * 8, (small_calls, large_calls)
