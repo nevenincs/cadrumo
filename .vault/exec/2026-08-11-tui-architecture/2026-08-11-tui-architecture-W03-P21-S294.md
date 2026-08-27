@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:550158727e00d09a49c02dae41e73ff415e33b3d3e2022cc95cb74187a1e6f2e'
+body_hash: 'sha256:9f87a45365f6363222e127ad61370fc3219e01843b40da18a3e3d1e4d62d7074'
 step_id: 'S294'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -46,21 +46,28 @@ related:
 - `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/bindings/0002-contraparte-clave.toml` -- four new `importe-q{1..4}` row bindings, grounded `rd-1065-2007:art-33`
 - `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml` -- **the export repoint**: `repeat = 'binding_rows'`, `row_field_casilla_ids`, nif/nombre/clave/importe-anual/importe-Q1..Q4 converted to `kind = 'binding'`; every diseño-conditional field (importe-metalico, transmisiones-inmuebles pair, operacion-seguro, arrendamiento-local-negocio, criterio-caja, etc.) stays scalar/unbound by design
 - `A` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py` -- the multi-counterparty export parity proof: two/three-counterparty row resolution, renderer-level row emission, quarters summing exactly to the annual total for a real invoice in each quarter, a quarter-boundary date (Mar 31/Apr 1), and conditional fields confirmed off the binding path
+- `A` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0002-contraparte-clave.toml` -- the same per-row binding family for the 2011-2024 revision, same ids as 2025 (revision-scoped), omitting the 2025-only `orden-hac-1431-2025:art-1` grounding
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml` -- the same repoint (`repeat = 'binding_rows'`, `row_field_casilla_ids`, eight fields to `kind = 'binding'`) for this revision's own field layout
+- `M` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py` -- parametrized across both revisions (`2025-y-siguientes`, `2011-2024`) rather than duplicated
 - `verify:` `uv run --no-sync python -c "from cadrumo.domain.calculations.registry.authority import bundled_authority; bundled_authority()"` -> `pass` (registry loads clean)
-- `verify:` `uv run --no-sync pytest src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py src/cadrumo/domain/calculations/registry/tests -q -m unit -k "347 or invoice or binding_selector or counterpart or clave or contraparte or m349 or legal_grounding or source_kind or taxonomy"` -> `pass` (256 passed)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py src/cadrumo/domain/calculations/registry/tests -q -m unit -k "347 or invoice or binding_selector or counterpart or clave or contraparte or m349 or legal_grounding or source_kind or taxonomy"` -> `pass` (250 registry + 12 parity tests, both revisions)
 - `verify:` `grep -rn 'm347_third_party_operation' src/cadrumo/_data/registry` -> 8 bindings declare it (all six the finding named, plus the two pre-existing 2011-2024 declarante-summary bindings retargeted in the same sweep)
 
 ## Notes
 
-**Step is now substantively complete for the `2025-y-siguientes` revision**:
-the per-row binding family, the source-declaration honesty fix, the mandatory
-quarterly desagregación, and the export repoint (with its multi-counterparty
-parity proof) are all built and tested against the real bundled revision. The
-truncation the Step's own title names is stopped for claves A/B on that
-revision. Remaining scope, all explicitly deferred below, keeps the Step from
-being marked fully done at the Epic's original breadth.
+**Step is complete for BOTH `2025-y-siguientes` and `2011-2024`**, per S294's
+own action text naming no revision qualifier -- closing on one revision alone
+would have narrowed the Step's own completion criterion. The per-row binding
+family, the source-declaration honesty fix, the mandatory quarterly
+desagregación, and the export repoint (with its multi-counterparty parity
+proof, parametrized across both revisions against each revision's own
+committed bindings) are all built and tested against the real bundled
+revisions. The truncation the Step's own title names is stopped for claves
+A/B on both revisions.
 
-Explicitly deferred, stated rather than silently dropped:
+Explicitly deferred, stated rather than silently dropped, and carried forward
+as tracked Steps rather than absorbed into this closing note (per team-lead's
+disposition):
 - Claves C-G: each needs a fact `m347_operation_clave` cannot classify from
   `source_kind` alone (filer type, cobro-por-cuenta-de-terceros nature, or a
   mediación-de-agencia-de-viajes flag under RD 1619/2012, per the CLAVE
@@ -69,19 +76,18 @@ Explicitly deferred, stated rather than silently dropped:
   `2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit`),
   now grounded against RD 1065/2007 art. 34.1.i) but not resolved -- distinct
   from the ordinary Q1-Q4 desagregación this Step DID build.
-- The 2011-2024 revision (needs the same row-binding-family and export-repoint
-  buildout; only its declarant-summary placeholder and the source-declaration
-  fix landed there so far).
-- Every other conditional field on the declarado record left scalar by
+- `contraparte.representante-legal-nif` and `contraparte.pais-codigo`: per-
+  counterparty IDENTITY facts (not money), so outside this Step's
+  money-bearing condition, but a repeating record stamping one counterparty's
+  value onto every other counterparty's row is a real correctness defect, not
+  merely an unbuilt nicety -- does not block the repoint since the fields are
+  unbound rather than wrongly bound. Tracked as `W03.P21.S302`.
+- Every other conditional field on the declarado record stays scalar by
   design (importe-metalico, operacion-seguro, arrendamiento-local-negocio,
   criterio-caja/importe-criterio-caja, inversion-sujeto-pasivo,
-  bienes-vinculados, numero-convocatoria-bdns, nif-operador-comunitario,
-  representante-legal-nif, pais-codigo) -- each gated by its own "Sólo..."/
-  exception clause in the diseño text, per the conditional/mandatory
-  discrimination method recorded below, except `representante-legal-nif` and
-  `pais-codigo`, which are per-counterparty IDENTITY facts (not money) with
-  no per-row source yet; flagged here as a real but smaller, non-money gap
-  outside this Step's money-bearing scope, not resolved.
+  bienes-vinculados, numero-convocatoria-bdns, nif-operador-comunitario) --
+  each gated by its own "Sólo..."/exception clause in the diseño text, per
+  the conditional/mandatory discrimination method recorded below.
 - ~~A source-declaration auditability gap...~~ RESOLVED: both the
   pre-existing declarante-summary bindings (both revisions) and the new
   contraparte-clave bindings now declare the honest combined-direction
