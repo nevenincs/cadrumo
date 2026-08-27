@@ -1,3 +1,22 @@
+# IVA regulation catalogue.
+#
+# THE FILE CARRIES NO YEAR. Nothing in this catalogue is year-dated: every
+# citation names a LIVA article and quotes it verbatim, and the retrieval_date
+# records when the bundled corpus was read, not when the rule applies. The year
+# used to live in the filename alone, which meant admitting a filing year meant
+# copying the whole table -- and a copied table of provisions is a fabricated
+# citation wearing a legal reference.
+#
+# THE SPANS ARE DERIVED, NOT ASSERTED. Each citation's window is bounded by the
+# cited provision's own effective span in the registry legal catalogue, and a
+# gate re-derives that bound on every run. Every article cited here took effect
+# before the earliest supported filing year and none is repealed, so the spans
+# reach the whole supported window as a checkable consequence rather than as an
+# author's confidence.
+#
+# A legal-basis-exempt regulation carries no citations and therefore no window:
+# it codifies no treatment, so it grounds nothing and is asserted over nothing.
+
 [[regulations]]
 category = "domestic_general"
 requires_reverse_charge = false
@@ -6,11 +25,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-90"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 90. Tipo impositivo general. Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente. Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo. Tres."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-4"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 4. Hecho imponible. Uno. Estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios realizadas en el ámbito espacial del impuesto por empresarios o profesionales a título oneroso, con carácter habitual u ocasional, en el"
 retrieval_date = 2026-04-13
 
@@ -22,11 +45,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Se aplicará el tipo del 10 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Se aplicará el tipo del 10 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
@@ -38,11 +65,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Dos. Se aplicará el tipo del 4 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Dos. Se aplicará el tipo del 4 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
@@ -54,6 +85,8 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = ""
 grounding = "unresolved"
 unresolved_reason = """\
@@ -69,6 +102,8 @@ retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-24"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = ""
 grounding = "unresolved"
 unresolved_reason = """\
@@ -90,11 +125,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-20"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 20. Exenciones en operaciones interiores. Uno. Estarán exentas de este impuesto las siguientes operaciones: 1.º Las prestaciones de servicios y las entregas de bienes accesorias a ellas que constituyan el servicio postal universal siempre que sean realizadas por el operador u"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-20"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 20. Exenciones en operaciones interiores. Uno. Estarán exentas de este impuesto las siguientes operaciones: 1.º Las prestaciones de servicios y las entregas de bienes accesorias a ellas que constituyan el servicio postal universal siempre que sean realizadas por el operador u"
 retrieval_date = 2026-04-13
 
@@ -106,11 +145,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-7"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 7. Operaciones no sujetas al impuesto. No estarán sujetas al impuesto: 1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-7"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 7. Operaciones no sujetas al impuesto. No estarán sujetas al impuesto: 1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una"
 retrieval_date = 2026-04-13
 
@@ -122,11 +165,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-04-13
 
@@ -138,11 +185,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-25"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 25. Exenciones en las entregas de bienes destinados a otro Estado miembro. Estarán exentas del impuesto las siguientes operaciones: Uno."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-164"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Sin perjuicio de lo establecido en el título anterior, los sujetos pasivos del Impuesto estarán obligados, con los requisitos, límites y condiciones que se determinen reglamentariamente, a: 1.º) Presentar declaraciones relativas al comienzo, modificación y cese de las actividades que"
 retrieval_date = 2026-04-13
 
@@ -154,11 +205,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-13"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 13. Hecho imponible. Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto: 1.ª Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso por empresarios, profesionales o personas"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-85"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 85. Sujetos pasivos. En las adquisiciones intracomunitarias de bienes los sujetos pasivos del impuesto serán quienes las realicen, de conformidad con lo previsto en el artículo 71 de esta Ley."
 retrieval_date = 2026-08-06
 
@@ -170,11 +225,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-26"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 26. Exenciones en las adquisiciones intracomunitarias de bienes. Estarán exentas del impuesto: Uno. Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado, en todo caso, no sujeta o"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-15"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 15. Concepto de adquisición intracomunitaria de bienes. Uno. Se entenderá por adquisición intracomunitaria de bienes: a) La obtención del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación"
 retrieval_date = 2026-04-13
 
@@ -186,11 +245,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-21"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 21. Exenciones en las exportaciones de bienes. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: 1.º Las entregas de bienes expedidos o transportados fuera de la Comunidad por el transmitente o por"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-21"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 21. Exenciones en las exportaciones de bienes. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: 1.º Las entregas de bienes expedidos o transportados fuera de la Comunidad por el transmitente o por"
 retrieval_date = 2026-04-13
 
@@ -202,6 +265,8 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 22. Exenciones en las operaciones asimiladas a las exportaciones. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: Uno."
 retrieval_date = 2026-06-29
 
@@ -213,11 +278,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-17"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 17. Hecho imponible. Estarán sujetas al impuesto las importaciones de bienes, cualquiera que sea el fin a que se destinen y la condición del"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-18"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 18. Concepto de importación de bienes. Uno. Tendrá la consideración de importación de bienes: Primero."
 retrieval_date = 2026-04-13
 
@@ -229,11 +298,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-148"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 148. Régimen especial del recargo de equivalencia. Uno. El régimen especial del recargo de equivalencia se aplicará a los comerciantes minoristas que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-154"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 154. Contenido del régimen especial del recargo de equivalencia. Uno. La exacción del Impuesto sobre el Valor Añadido exigible a los comerciantes minoristas a quienes resulte aplicable este régimen especial se efectuará mediante la repercusión"
 retrieval_date = 2026-04-13
 
@@ -245,11 +318,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-122"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 122. Régimen simplificado. Uno. El régimen simplificado se aplicará a los sujetos pasivos del Impuesto sobre el Valor Añadido que reúnan los siguientes requisitos: 1.º Que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la Renta de las Personas Físicas, siempre que en este último caso todos sus socios, herederos, comuneros o partícipes sean personas físicas."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-123"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 123. Contenido del régimen simplificado. Uno. En las actividades acogidas al régimen simplificado la determinación de las cuotas tributarias se llevará a cabo mediante el método de índices, módulos u otros parámetros objetivos que se determinen reglamentariamente por cada actividad. Dos."
 retrieval_date = 2026-04-13
 
@@ -262,6 +339,8 @@ notes = "Compensacion a tanto alzado soportada por el adquirente de productos o 
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-130"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Dos. Los empresarios acogidos al régimen especial de la agricultura, ganadería y pesca tendrán derecho a percibir una compensación a tanto alzado por las cuotas del Impuesto sobre el Valor Añadido que hayan soportado o satisfecho por las adquisiciones o importaciones de bienes o en los servicios que les hayan sido prestados, en la medida en que utilicen dichos bienes y servicios en la realización de actividades a las que resulte aplicable dicho régimen especial."
 retrieval_date = 2026-08-11
 
@@ -273,11 +352,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-68"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 68. Lugar de realización de las entregas de bienes. El lugar de realización de las entregas de bienes se determinará según las reglas siguientes: Uno."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-04-13
 
@@ -289,11 +372,15 @@ manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-89"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 89. Rectificación de las cuotas impositivas repercutidas. Uno. Los sujetos pasivos deberán efectuar la rectificación de las cuotas impositivas repercutidas cuando el importe de las mismas se hubiese determinado incorrectamente o se produzcan las circunstancias que, según lo dispuesto"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-89"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 89. Rectificación de las cuotas impositivas repercutidas. Uno. Los sujetos pasivos deberán efectuar la rectificación de las cuotas impositivas repercutidas cuando el importe de las mismas se hubiese determinado incorrectamente o se produzcan las circunstancias que, según lo dispuesto"
 retrieval_date = 2026-04-13
 
@@ -321,11 +408,15 @@ notes = "Prestacion de servicios B2B a un empresario establecido en otro Estado 
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-08-06
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-70"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Artículo 70. Lugar de realización de las prestaciones de servicios. Reglas especiales. Uno. Se entenderán prestados en el territorio de aplicación del Impuesto los siguientes servicios: 1.º Los relacionados con bienes inmuebles que radiquen en el citado"
 retrieval_date = 2026-08-06
 
@@ -338,10 +429,14 @@ notes = "Adquisicion de servicios a un prestador establecido en otro Estado miem
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-08-06
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-08-06

@@ -49,7 +49,7 @@ from ....core.resources import bundled_path
 from ...calculations.registry.schema_references import LegalReference
 from .._establishment import _excluded_territories_by_prefix
 from .._grounding import registry_catalogues, verify_table_legal_refs
-from .._place_of_supply import load_place_of_supply_rules
+from .._place_of_supply import load_place_of_supply_table
 from .._rates import load_iva_rate_table
 from .._recargo_equivalencia import load_recargo_rate_table
 from ..errors import IvaCatalogueError
@@ -62,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ANCHOR_CITATIONS: dict[str, str] = {
     "rates.toml": "ley-37-1992:art-90",
     "recargo-rates.toml": "ley-37-1992:art-161",
-    "place_of_supply/2025.toml": "ley-37-1992:art-68",
+    "place_of_supply.toml": "ley-37-1992:art-68",
     "territories.toml": "ley-37-1992:art-3.dos",
 }
 
@@ -91,7 +91,7 @@ def test_every_shipped_iva_table_loads_through_its_grounding_verifier() -> None:
     """
     assert load_iva_rate_table(), "the rate table loaded no rows"
     assert load_recargo_rate_table(), "the recargo rate table loaded no rows"
-    assert load_place_of_supply_rules(), "the place-of-supply table loaded no rules"
+    assert load_place_of_supply_table(), "the place-of-supply table loaded no rules"
     assert _excluded_territories_by_prefix(), "the territory table loaded no excluded prefix"
 
 
@@ -246,12 +246,12 @@ def test_the_recargo_loader_refuses_a_row_citing_an_undefined_provision(tmp_path
 
 
 def test_the_place_of_supply_loader_refuses_a_rule_citing_an_undefined_provision(tmp_path: Path) -> None:
-    source = bundled_path("registry", "aeat", "iva", "place_of_supply", "2025.toml")
-    target = tmp_path / "2025.toml"
+    source = bundled_path("registry", "aeat", "iva", "place_of_supply.toml")
+    target = tmp_path / "place_of_supply.toml"
     target.write_text(
         source.read_text(encoding="utf-8").replace("ley-37-1992:art-84", "ley-37-1992:art-84-invented"),
         encoding="utf-8",
     )
 
     with pytest.raises(IvaCatalogueError, match="unknown legal_ref 'ley-37-1992:art-84-invented'"):
-        load_place_of_supply_rules(tmp_path)
+        load_place_of_supply_table(target)

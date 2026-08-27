@@ -1,11 +1,16 @@
-"""Every exact-year-keyed IVA corpus must cover the master filing window.
+"""Every exact-year-resolved IVA corpus must cover the master filing window.
 
-Two IVA corpora are resolved by EXACT year key and raise on a miss:
-:func:`~domain.iva.load_iva_catalogues` (rate and regulation catalogue) and
-:func:`~domain.iva._place_of_supply.load_place_of_supply_rules` (the provision
-establishing each classification rule's placement). Neither falls back to an
-adjacent year, and that refusal is deliberate -- an ungrounded placement has no
-provision behind it, so answering anyway would manufacture one.
+Two IVA corpora are resolved by EXACT filing year and raise on a miss:
+:func:`~domain.iva.iva_catalogue_years` (rate and regulation catalogue) and
+:func:`~domain.iva.place_of_supply_years` (the provision establishing each
+classification rule's placement). Neither falls back to an adjacent year, and
+that refusal is deliberate -- an ungrounded placement has no provision behind
+it, so answering anyway would manufacture one.
+
+Coverage is DERIVED from the validity window each grounded record declares, not
+read off a filename. These corpora were year-named files until the collapse onto
+dated grounding; the years they resolve for are now the years their cited
+provisions actually support, which is what the obligation was always about.
 
 The registry declares ONE supported filing window, in
 ``aeat/legal/supported-filing-years.toml``, reached here through
@@ -19,8 +24,12 @@ encode a moment and then detect nothing.
 
 **Closing a red here means GROUNDING the missing year against BOE or AEAT, or
 formally narrowing the supported window.** It never means copying an adjacent
-year's table: a mirrored provision is a fabricated citation wearing a legal
-reference, which is the failure the grounding rules exist to prevent.
+year's table, and -- now that spans are declared rather than implied by a
+filename -- it never means widening a window either. A mirrored provision and a
+widened window are the same fabricated citation wearing a legal reference, which
+is the failure the grounding rules exist to prevent. The companion
+provision-window gate holds every span inside the effective span of the article
+it cites, so a widening that would turn this gate green reds that one instead.
 """
 
 from __future__ import annotations
@@ -32,15 +41,15 @@ import pytest
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
 from ...calculations.registry.loader import load_catalogue_file
-from .. import load_iva_catalogues, load_place_of_supply_rules
+from .. import iva_catalogue_years, place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Each exact-year-keyed IVA corpus, named by the registry directory it loads,
 #: paired with the loader whose keys are its covered filing years.
 _YEAR_KEYED_IVA_CORPORA: tuple[tuple[str, Callable[[], Collection[int]]], ...] = (
-    ("aeat/iva/catalogues", load_iva_catalogues),
-    ("aeat/iva/place_of_supply", load_place_of_supply_rules),
+    ("aeat/iva/catalogues.toml", iva_catalogue_years),
+    ("aeat/iva/place_of_supply.toml", place_of_supply_years),
 )
 
 

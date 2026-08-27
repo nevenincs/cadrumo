@@ -1,9 +1,15 @@
 """Read-only IVA regulation catalogue registry.
 
-:func:`load_iva_catalogue` validates one committed TOML file into an
-:class:`IvaCatalogue` whose entries are keyed by :class:`IvaCategory` and
-stored as :class:`IvaRegulation`; :func:`resolve_catalogue` selects the year
-catalogue used by filing-date consumers.
+The catalogue is ONE undated file. Nothing in it is year-dated: every citation
+names a LIVA article and quotes it verbatim, so the year used to live in the
+filename alone and admitting a filing year meant copying the whole table.
+
+:func:`load_iva_catalogue` validates the committed TOML into an
+:class:`IvaCatalogue` whose entries are keyed by :class:`IvaCategory` and stored
+as :class:`IvaRegulation`. :func:`iva_catalogue_years` derives the resolvable
+filing years from the citation windows, and :func:`resolve_catalogue` projects
+the catalogue onto one of them, keeping only the citations asserted over it and
+refusing a year the catalogue cannot ground.
 """
 
 from __future__ import annotations
@@ -17,9 +23,8 @@ from types import MappingProxyType
 from pydantic import ValidationError
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
-from ...core.directory_scan import scan_directory
-from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
+from ...core.validity_window import years_covered_by_every_group
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
 from .errors import IvaCatalogueError
 
@@ -66,49 +71,75 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
     return IvaCatalogue(regulations=regulations)
 
 
-def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
-    """Load every year-keyed :class:`IvaCatalogue` under ``root``.
+def bundled_iva_catalogue(path: Path | None = None) -> IvaCatalogue:
+    """Load the committed IVA catalogue.
 
-    Resolves the bundled catalogues directory on every call when
-    no override is supplied; the ``bundled_path`` boundary is the
-    single resolution surface.
+    Args:
+        path: The catalogue file. Defaults to the bundled one, resolved through
+            the ``bundled_path`` boundary that is the single resolution surface.
+
+    Returns:
+        The validated :class:`IvaCatalogue`, carrying every citation regardless
+        of the span it is asserted over.
     """
-    target = root if root is not None else bundled_path("registry", "aeat", "iva", "catalogues")
-    resolved = target.resolve()
-    paths = scan_directory(resolved, pattern="*.toml")
-    fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
-    return _load_iva_catalogues_cached(str(resolved), fingerprint)
+    target = path if path is not None else bundled_path("registry", "aeat", "iva", "catalogues.toml")
+    return load_iva_catalogue(target)
 
 
-@lru_cache(maxsize=8)
-def _load_iva_catalogues_cached(
-    root: str,
-    fingerprint: tuple[tuple[str, int, int], ...],
-) -> Mapping[int, IvaCatalogue]:
-    root_path = Path(root)
-    catalogues: dict[int, IvaCatalogue] = {}
-    for filename, _byte_count, _modified_ns in fingerprint:
-        path = root_path / filename
-        try:
-            year = int(path.stem)
-        except ValueError as exc:
-            raise IvaCatalogueError(f"{path}: IVA catalogue filename must be a year") from exc
-        catalogues[year] = load_iva_catalogue(path)
-    if not catalogues:
-        raise IvaCatalogueError(f"{root_path}: no IVA catalogue TOML files found")
-    return MappingProxyType(catalogues)
+def iva_catalogue_years(path: Path | None = None) -> frozenset[int]:
+    """Return every filing year the catalogue can be resolved for.
+
+    A year counts only when EVERY grounded regulation has at least one citation
+    asserted over it. A legal-basis-exempt regulation codifies no treatment and
+    carries no citations, so it grounds nothing and is excluded rather than
+    emptying the result.
+
+    Returns:
+        The derived set of resolvable filing years.
+    """
+    return years_covered_by_every_group(
+        [citation.window for citation in regulation.citations]
+        for regulation in bundled_iva_catalogue(path)
+        if not regulation.legal_basis_exempt
+    )
 
 
 def resolve_catalogue(*, on: date) -> IvaCatalogue:
-    """Return the exact IVA catalogue for ``on``.
+    """Return the IVA catalogue as grounded for the filing year of ``on``.
+
+    Every regulation is projected onto the year: citations asserted over another
+    span are dropped, so what the caller receives cites only evidence that
+    speaks to the year asked for.
 
     Returns:
         The :class:`IvaCatalogue` for the year of ``on``.
+
+    Raises:
+        IvaCatalogueError: When the catalogue grounds no such year. There is no
+            fallback to an adjacent year.
     """
-    catalogue = load_iva_catalogues().get(on.year)
-    if catalogue is None:
-        raise IvaCatalogueError(f"no IVA catalogue registered for year={on.year}")
-    return catalogue
+    return _resolve_catalogue_cached(on.year, tuple(sorted(iva_catalogue_years())))
+
+
+@lru_cache(maxsize=16)
+def _resolve_catalogue_cached(year: int, grounded: tuple[int, ...]) -> IvaCatalogue:
+    if year not in grounded:
+        raise IvaCatalogueError(
+            f"no IVA catalogue grounded for year={year}; the catalogue grounds {list(grounded)}. "
+            "Ground the year against BOE or AEAT and add its citations -- never widen an existing "
+            "citation's window to admit it.",
+        )
+    projected = {
+        category: regulation.model_copy(
+            update={
+                "citations": tuple(
+                    citation for citation in regulation.citations if citation.window.covers_year(year)
+                ),
+            },
+        )
+        for category, regulation in bundled_iva_catalogue().regulations.items()
+    }
+    return IvaCatalogue(regulations=projected)
 
 
 def _parse_regulation(raw_regulation: object) -> IvaRegulation:
@@ -149,12 +180,15 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
             "quoted_text": str(data.get("quoted_text") or ""),
             "grounding": IvaCitationGrounding(str(data.get("grounding") or "verified")),
             "unresolved_reason": str(data.get("unresolved_reason") or ""),
+            "valid_from": data.get("valid_from"),
+            "valid_to": data.get("valid_to"),
         },
     )
 
 
 __all__ = [
+    "bundled_iva_catalogue",
+    "iva_catalogue_years",
     "load_iva_catalogue",
-    "load_iva_catalogues",
     "resolve_catalogue",
 ]

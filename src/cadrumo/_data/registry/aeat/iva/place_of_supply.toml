@@ -20,33 +20,51 @@
 # treatment ignores.
 
 # ── Domestic: located in the TAI, and indifferent to the nature ───────────────
+#
+# THE FILE CARRIES NO YEAR. Every rule here rests on LIVA articles and nothing
+# else; the only year token in the retired year-named file was 1992, the law's
+# own identifier. Each grounded rule now declares the closed span it is asserted
+# over, bounded by the intersection of its cited provisions' effective spans in
+# the registry legal catalogue and checked there. A legal-basis-exempt rule
+# declares no window, because a row that grounds nothing is asserted over
+# nothing.
 
 [[place_of_supply_rules]]
 rule_id = "R01_construction_reverse_charge"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-84"]
 establishing_reference = "ley-37-1992:art-84"
 notes = "Inversión del sujeto pasivo en ejecuciones de obra. Art. 84 designa al sujeto pasivo; no localiza la operación ni fija la naturaleza de la entrega o prestación."
 
 [[place_of_supply_rules]]
 rule_id = "R02_waste_reverse_charge"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-84"]
 establishing_reference = "ley-37-1992:art-84"
 notes = "Inversión del sujeto pasivo en entregas de desechos y materiales de recuperación. Art. 84 designa al sujeto pasivo y alcanza tanto entregas de bienes como prestaciones de servicios."
 
 [[place_of_supply_rules]]
 rule_id = "R03_electronics_reverse_charge"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-84"]
 establishing_reference = "ley-37-1992:art-84"
 notes = "Inversión del sujeto pasivo en entregas B2B de determinados productos electrónicos. Art. 84 no fija la naturaleza."
 
 [[place_of_supply_rules]]
 rule_id = "R04_immovable_property_exempt"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-68"]
 establishing_reference = "ley-37-1992:art-68"
 notes = "Operación interior sobre inmueble situado en el TAI. La regla de localización es la de entregas de bienes, pero la categoría se resuelve por la exención aplicable y no por la naturaleza."
 
 [[place_of_supply_rules]]
 rule_id = "R05_domestic_at_rate_tier"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-68", "ley-37-1992:art-69"]
 establishing_reference = "ley-37-1992:art-68"
 notes = "Operación interior entre partes establecidas en el TAI. Ambas reglas de localización sitúan la operación en el mismo territorio, de modo que el tratamiento no depende de la naturaleza: lo fija el tipo aplicable. Es la rama que nunca debe exigir el dato."
@@ -55,6 +73,8 @@ notes = "Operación interior entre partes establecidas en el TAI. Ambas reglas d
 
 [[place_of_supply_rules]]
 rule_id = "R10_intra_community_supply"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-68", "ley-37-1992:art-25"]
 establishing_reference = "ley-37-1992:art-25"
@@ -62,6 +82,8 @@ notes = "Entrega intracomunitaria de bienes. Localizada en el TAI por el art. 68
 
 [[place_of_supply_rules]]
 rule_id = "R11_intra_community_acquisition"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84"]
 establishing_reference = "ley-37-1992:art-15"
@@ -69,6 +91,8 @@ notes = "Adquisición intracomunitaria de bienes. El art. 15 define el concepto 
 
 [[place_of_supply_rules]]
 rule_id = "R15_distance_sales_b2c"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-68"]
 establishing_reference = "ley-37-1992:art-68"
@@ -76,6 +100,8 @@ notes = "Venta a distancia intracomunitaria de bienes a consumidor. El art. 68 e
 
 [[place_of_supply_rules]]
 rule_id = "R17_oss_union_goods_distance_sale"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-68", "ley-37-1992:art-163-unvicies"]
 establishing_reference = "ley-37-1992:art-68"
@@ -83,6 +109,8 @@ notes = "Venta a distancia intracomunitaria declarada por el Esquema Unión. La 
 
 [[place_of_supply_rules]]
 rule_id = "R18_oss_union_goods_interface_facilitated"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-68", "ley-37-1992:art-163-unvicies"]
 establishing_reference = "ley-37-1992:art-68"
@@ -90,6 +118,8 @@ notes = "Entrega interior facilitada por interfaz digital, declarada por el Esqu
 
 [[place_of_supply_rules]]
 rule_id = "R20_export_goods"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-68", "ley-37-1992:art-21"]
 establishing_reference = "ley-37-1992:art-21"
@@ -97,6 +127,8 @@ notes = "Exportación de bienes fuera de la Comunidad. Localizada por el art. 68
 
 [[place_of_supply_rules]]
 rule_id = "R21_import_goods"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-17"]
 establishing_reference = "ley-37-1992:art-17"
@@ -104,6 +136,8 @@ notes = "Importación de bienes. El art. 17 sujeta las importaciones de bienes y
 
 [[place_of_supply_rules]]
 rule_id = "R23_ioss_distance_sale_low_value"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "goods"
 legal_references = ["ley-37-1992:art-163-quinvicies"]
 establishing_reference = "ley-37-1992:art-163-quinvicies"
@@ -113,6 +147,8 @@ notes = "Venta a distancia de bienes importados de escaso valor, declarada por e
 
 [[place_of_supply_rules]]
 rule_id = "R12_services_b2b_eu_outbound"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
@@ -120,6 +156,8 @@ notes = "Prestación de servicios B2B a un empresario establecido en otro Estado
 
 [[place_of_supply_rules]]
 rule_id = "R13_services_b2b_eu_inbound"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84"]
 establishing_reference = "ley-37-1992:art-84"
@@ -127,6 +165,8 @@ notes = "Adquisición de servicios a un prestador establecido en otro Estado mie
 
 [[place_of_supply_rules]]
 rule_id = "R16_external_scheme_services"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-163-octiesdecies", "ley-37-1992:art-69"]
 establishing_reference = "ley-37-1992:art-163-octiesdecies"
@@ -134,6 +174,8 @@ notes = "Servicios prestados por un empresario no establecido en la Comunidad a 
 
 [[place_of_supply_rules]]
 rule_id = "R19_oss_union_services"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-163-unvicies"]
 establishing_reference = "ley-37-1992:art-69"
@@ -141,6 +183,8 @@ notes = "Servicios declarados por el Esquema Unión. La naturaleza la fija el ar
 
 [[place_of_supply_rules]]
 rule_id = "R22_services_outbound_b2b"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
@@ -148,6 +192,8 @@ notes = "Prestación de servicios a un empresario o profesional establecido fuer
 
 [[place_of_supply_rules]]
 rule_id = "R24_services_outbound_b2c_at_rate_tier"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
@@ -155,6 +201,8 @@ notes = "Prestación de servicios a quien no es empresario ni profesional, fuera
 
 [[place_of_supply_rules]]
 rule_id = "R25_services_outbound_b2c_art_69_dos"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
@@ -164,6 +212,8 @@ notes = "Servicios enumerados en el art. 69.Dos prestados a quien no es empresar
 
 [[place_of_supply_rules]]
 rule_id = "R30_canarias_ceuta_melilla"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
 legal_references = ["ley-37-1992:art-68"]
 establishing_reference = "ley-37-1992:art-68"
 notes = "Operación con Canarias, Ceuta o Melilla, fuera del territorio de aplicación del Impuesto. La regla es territorial y no depende de si se entregó un bien o se prestó un servicio, de modo que ninguna de las provisiones citadas fija la naturaleza."

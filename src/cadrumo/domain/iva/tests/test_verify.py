@@ -53,6 +53,8 @@ def test_a_plausible_quotation_absent_from_the_corpus_is_reported() -> None:
         {
             "legal_reference": original.citations[0].legal_reference,
             "quoted_text": "El Impuesto se exigira al tipo del 25 por ciento",
+            "valid_from": date(2022, 1, 1),
+            "valid_to": date(2026, 12, 31),
         },
     )
     report = verify_catalogue(
@@ -76,6 +78,8 @@ def test_unknown_registry_legal_reference_is_reported() -> None:
         {
             "legal_reference": "ley-37-1992:art-not-in-registry",
             "quoted_text": original.citations[0].quoted_text,
+            "valid_from": date(2022, 1, 1),
+            "valid_to": date(2026, 12, 31),
         },
     )
     invalid_regulation = IvaRegulation.model_validate(

@@ -84,6 +84,8 @@ def _catalogue_citing_an_unregistered_reference() -> IvaCatalogue:
                     IvaCitation(
                         legal_reference="ley-37-1992:art-90-uno-absent-from-registry",
                         quoted_text="El impuesto se exigirá al tipo del 21 por ciento.",
+                        valid_from=date(2022, 1, 1),
+                        valid_to=date(2026, 12, 31),
                     ),
                 ),
                 notes="",

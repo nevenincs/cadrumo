@@ -33,6 +33,7 @@ from pydantic import (
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
+from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
 
 
@@ -683,6 +684,14 @@ class IvaCitation(_IvaStrictFrozen):
         grounding: Whether the text was verified or the citation refused.
         unresolved_reason: Why the citation could not be grounded. Required
             when, and only when, :attr:`grounding` is ``UNRESOLVED``.
+        valid_from: First date this citation is asserted to support the rule.
+        valid_to: Last date, inclusive.
+
+    Both window bounds are required and closed. The span is a grounding claim,
+    not bookkeeping: it says the cited provision supports this rule across those
+    years, and a gate holds it inside the provision's own effective span in the
+    registry legal catalogue. A defaulted or open end would assert grounding
+    nobody typed and nothing could check.
     """
 
     legal_reference: _RegistryLegalRef = Field(
@@ -700,6 +709,22 @@ class IvaCitation(_IvaStrictFrozen):
         default="",
         description="Why the citation could not be grounded; required when grounding is unresolved.",
     )
+    valid_from: date = Field(
+        description="First date this citation is asserted to support the rule.",
+    )
+    valid_to: date = Field(
+        description="Last date, inclusive, this citation is asserted to support the rule.",
+    )
+
+    @property
+    def window(self) -> ValidityWindow:
+        """Return the closed span this citation is asserted over.
+
+        Returns:
+            The :class:`~core.validity_window.ValidityWindow` the declared
+            bounds describe.
+        """
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
     def _validate(self) -> IvaCitation:
@@ -712,6 +737,10 @@ class IvaCitation(_IvaStrictFrozen):
         every citation in the catalogue.
         """
         where = f"IvaCitation[{self.legal_reference}]"
+        # Constructing the window is the validation: an inverted span covers no
+        # year at all, and must refuse where it was written rather than make the
+        # citation silently vanish from every filing year downstream.
+        _ = self.window
         if self.grounding is IvaCitationGrounding.VERIFIED:
             if not self.quoted_text.strip():
                 raise IvaValidationError(f"{where}: a verified citation must carry its verbatim quotation")

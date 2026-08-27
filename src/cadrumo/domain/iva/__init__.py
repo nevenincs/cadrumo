@@ -48,7 +48,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._catalogue import load_iva_catalogues, resolve_catalogue
+from ._catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
 from ._classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -140,7 +140,8 @@ from ._oss import (
 )
 from ._place_of_supply import (
     IvaPlaceOfSupplyRule,
-    load_place_of_supply_rules,
+    load_place_of_supply_table,
+    place_of_supply_years,
     place_of_supply_rule,
     required_supply_nature_for_rule,
 )
@@ -400,10 +401,12 @@ __all__ = [
     "is_especial_mandatory",
     "is_last_filing_period_of_year",
     "is_m303_annual_settlement_period",
-    "load_iva_catalogues",
+    "bundled_iva_catalogue",
+    "iva_catalogue_years",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
-    "load_place_of_supply_rules",
+    "load_place_of_supply_table",
+    "place_of_supply_years",
     "load_recargo_rate_table",
     "load_recargo_rates",
     "lookup_rate",

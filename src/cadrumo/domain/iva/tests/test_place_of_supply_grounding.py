@@ -19,6 +19,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import re
 from datetime import date
 
@@ -29,7 +31,7 @@ from .. import SupplyNature
 from .._classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
 from .._place_of_supply import (
     IvaPlaceOfSupplyRule,
-    load_place_of_supply_rules,
+    load_place_of_supply_table,
     place_of_supply_rule,
     required_supply_nature_for_rule,
 )
@@ -61,8 +63,8 @@ _DOMESTIC_RULE_IDS = frozenset(
 )
 
 
-def _rules() -> dict[str, IvaPlaceOfSupplyRule]:
-    return load_place_of_supply_rules()[_YEAR]
+def _rules() -> Mapping[str, IvaPlaceOfSupplyRule]:
+    return load_place_of_supply_table()
 
 
 def _declared_rule_ids() -> frozenset[str]:
@@ -245,5 +247,5 @@ def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
     with pytest.raises(IvaCatalogueError, match="not grounded"):
         place_of_supply_rule("RZZ_no_such_rule", on=_ON)
 
-    with pytest.raises(IvaCatalogueError, match="no place-of-supply table"):
+    with pytest.raises(IvaCatalogueError, match="no place-of-supply grounding for year"):
         place_of_supply_rule("R05_domestic_at_rate_tier", on=date(1990, 1, 1))
