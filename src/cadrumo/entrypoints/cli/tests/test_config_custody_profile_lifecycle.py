@@ -523,7 +523,13 @@ def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> 
 
     output = _combined_output(result)
     assert result.returncode == 2, output
-    assert "inapplicable" in output.lower()
+    # The structured conditionality rather than the sentence: the prose that
+    # once carried the word "inapplicable" now says the same thing in other
+    # words, and it is localised, so pinning it pinned a translation.
+    assert '"not_applicable"' in output
+    # The subject of this case is that the payload is refused UNREAD, so the
+    # secret-shaped input must appear nowhere in what the command emitted.
+    assert "must-remain-unread" not in output
     assert "json" not in output.lower()
 
 
