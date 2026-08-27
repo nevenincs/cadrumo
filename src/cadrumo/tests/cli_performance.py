@@ -50,16 +50,26 @@ __all__ = [
 
 _CHILD_FLAG = "--cadrumo-cli-performance-child"
 _STORAGE_MODULE_PREFIX = "cadrumo.adapters.persistence.storage"
-_IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
+IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
     "registry": (
         "cadrumo.application.registry",
         "cadrumo.domain.calculations.registry",
     ),
-    "crypto": ("cryptography", "argon2", "cadrumo.core.crypto"),
+    "crypto": ("cryptography", "argon2"),
     "custody": (f"{_STORAGE_MODULE_PREFIX}.custody",),
     "keyring": ("keyring", "cadrumo.adapters.persistence.storage.secret_store"),
     "storage": ("cadrumo.adapters.persistence", "sqlalchemy", "sqlite3"),
 }
+"""Module prefixes that identify each expensive capability family.
+
+Public because the capability gates read the SAME table: a private copy in a
+consumer drifts silently, and a family whose prefixes match nothing reports a
+clean tree forever rather than failing. ``cadrumo.core.crypto`` was carried
+here and matched no module in the tree; the family is covered by the two
+third-party prefixes it also names.
+"""
+
+
 _ENV_PREFIXES = ("AEAT_", "PYTEST_", "CADRUMO_")
 _QUIET_CONTROL_PATH: tuple[str, ...] = ()
 _QUIET_CONTROL_INVOCATION_ARGS = ("--version",)
@@ -511,7 +521,7 @@ def _failed_observation(
         child_pid=-1,
         wall_seconds=wall_seconds,
         imported_modules=(),
-        import_families={family: () for family in _IMPORT_FAMILY_PREFIXES},
+        import_families={family: () for family in IMPORT_FAMILY_PREFIXES},
         pydantic_model_constructions=0,
         filesystem_created=(),
         filesystem_modified=(),
@@ -672,7 +682,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
         created, modified, deleted = _filesystem_delta(before_files, after_files)
         families = {
             family: tuple(name for name in imported_modules if name.startswith(prefixes))
-            for family, prefixes in _IMPORT_FAMILY_PREFIXES.items()
+            for family, prefixes in IMPORT_FAMILY_PREFIXES.items()
         }
         observation = {
             "phase": phase,
