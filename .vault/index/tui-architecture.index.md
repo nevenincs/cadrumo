@@ -6,10 +6,13 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4035180fdc0ca15b04a04716ca4585258a40de44369b64f2fb81cac6615d2b3'
+body_hash: 'sha256:445f542b6ad2f48df58ad0343f0aa623cf87e66b2e7d8edce1255aef41b5d346'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S129]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S130]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S131]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S160]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S161]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S162]]'
@@ -129,6 +132,8 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S291]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S293]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S296]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S300]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S301]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S132]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S133]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S134]]'
@@ -146,9 +151,15 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P21-S289]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S292]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S294]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S295]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S297]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S298]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S299]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S302]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S303]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S304]]'
+  - '[[2026-08-11-tui-architecture-W04-P22-S139]]'
+  - '[[2026-08-11-tui-architecture-W04-P22-S140]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S61]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S62]]'
@@ -166,7 +177,11 @@ related:
   - '[[2026-08-11-tui-architecture-W05-P23-S141]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S142]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S143]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S144]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S145]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S146]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S310]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S311]]'
   - '[[2026-08-11-tui-architecture-W06-P13-S72]]'
   - '[[2026-08-11-tui-architecture-W06-P14-S157]]'
   - '[[2026-08-11-tui-architecture-W06-P14-S76]]'
@@ -294,15 +309,24 @@ related:
   - '[[2026-08-27-tui-architecture-annual-quarterly-reconciliation-sweep-audit]]'
   - '[[2026-08-27-tui-architecture-autonomic-scale-grounding-audit]]'
   - '[[2026-08-27-tui-architecture-cli-action-census-behind-tree-audit]]'
+  - '[[2026-08-27-tui-architecture-credential-free-type-aware-gate-adr]]'
   - '[[2026-08-27-tui-architecture-facade-census-two-head-criterion-audit]]'
   - '[[2026-08-27-tui-architecture-headless-create-refusal-sequence-audit]]'
   - '[[2026-08-27-tui-architecture-identifier-gate-misrooted-audit]]'
   - '[[2026-08-27-tui-architecture-import-linter-suite-aborts-audit]]'
+  - '[[2026-08-27-tui-architecture-m100-2024-savings-scale-citation-window-audit]]'
+  - '[[2026-08-27-tui-architecture-m100-2025-arrendamiento-reduccion-regression-audit]]'
+  - '[[2026-08-27-tui-architecture-m303-m390-handoff-test-cluster-audit]]'
   - '[[2026-08-27-tui-architecture-mcp-server-composition-root-audit]]'
+  - '[[2026-08-27-tui-architecture-modelo-210-annual-grouped-renta-export-fidelity-determination-audit]]'
+  - '[[2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr]]'
+  - '[[2026-08-27-tui-architecture-modelo-347-nonresident-counterparty-silent-exclusion-audit]]'
   - '[[2026-08-27-tui-architecture-operation-stopping-coverage-audit]]'
+  - '[[2026-08-27-tui-architecture-parameter-cited-clause-omits-the-amount-audit]]'
   - '[[2026-08-27-tui-architecture-recargo-tabaco-rung-unreachable-audit]]'
   - '[[2026-08-27-tui-architecture-received-invoice-refusal-direction-audit]]'
   - '[[2026-08-27-tui-architecture-restrictive-default-sweep-audit]]'
+  - '[[2026-08-27-tui-architecture-verification-power-coverage-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -315,6 +339,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 
 - `2026-08-11-tui-architecture-adr` - `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 - `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` - `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `accepted`)
+- `2026-08-27-tui-architecture-credential-free-type-aware-gate-adr` - `tui-architecture` adr: `type-aware operation payload credential-free schema check` | (**status:** `accepted`)
+- `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr` - `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
 
 ### audit
 
@@ -420,11 +446,18 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-27-tui-architecture-headless-create-refusal-sequence-audit` - `tui-architecture` audit: `headless profile create refuses twice, naming one blocker at a time`
 - `2026-08-27-tui-architecture-identifier-gate-misrooted-audit` - `tui-architecture` audit: `the identifier ratchet scanned the tooling tree, hiding eighteen bare fields`
 - `2026-08-27-tui-architecture-import-linter-suite-aborts-audit` - `tui-architecture` audit: `the import-linter suite aborts, hiding five broken contracts`
+- `2026-08-27-tui-architecture-m100-2024-savings-scale-citation-window-audit` - `tui-architecture` audit: Modelo 100 2024 savings scale citation window
+- `2026-08-27-tui-architecture-m100-2025-arrendamiento-reduccion-regression-audit` - `tui-architecture` audit: the 2025 arrendamiento reduction is no longer computed
+- `2026-08-27-tui-architecture-m303-m390-handoff-test-cluster-audit` - `tui-architecture` audit: the M303-to-M390 handoff test cluster
 - `2026-08-27-tui-architecture-mcp-server-composition-root-audit` - `tui-architecture` audit: `the cadrumo-mcp server has no composition root`
+- `2026-08-27-tui-architecture-modelo-210-annual-grouped-renta-export-fidelity-determination-audit` - `tui-architecture` audit: `modelo 210 annual grouped renta export fidelity determination`
+- `2026-08-27-tui-architecture-modelo-347-nonresident-counterparty-silent-exclusion-audit` - `tui-architecture` audit: `modelo 347 nonresident counterparty silent exclusion`
 - `2026-08-27-tui-architecture-operation-stopping-coverage-audit` - `tui-architecture` audit: `What the operation platform's stopping clauses can actually prove`
+- `2026-08-27-tui-architecture-parameter-cited-clause-omits-the-amount-audit` - `tui-architecture` audit: parameters whose cited clause omits the amount
 - `2026-08-27-tui-architecture-recargo-tabaco-rung-unreachable-audit` - `tui-architecture` audit: `the recargo tabaco rung has a rate and boxes but no ledger path`
 - `2026-08-27-tui-architecture-received-invoice-refusal-direction-audit` - `tui-architecture` audit: `a purchase-invoice guard refuses citing under-declaration on the over-payment direction`
 - `2026-08-27-tui-architecture-restrictive-default-sweep-audit` - `tui-architecture` audit: `the restrictive-default class swept across the calculation path`
+- `2026-08-27-tui-architecture-verification-power-coverage-audit` - `tui-architecture` audit: verification power across the registry
 
 ### exec
 
@@ -597,10 +630,25 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W06-P24-S154` - Enroll canonical modelo.export through the existing export_modelo_revision authority with capability and identity preconditions, transient output custody, safe effect/result evidence, and no remote AEAT submission or duplicate export writer
 - `2026-08-11-tui-architecture-W06-P24-S155` - Enroll modelo.work.amend through the existing amend_modelo_revision authority as the sole C4 amendment mutation, with baseline evidence, amendment-kind REVIEW, atomic catalogue/event effects, safe result receipt, typed Workspace refresh target, and an explicit amend-wizard denominator disposition
 - `2026-08-11-tui-architecture-W06-P24-S156` - Prove the generated C4 action denominator and every enrolled lifecycle definition against canonical capability owners, exact interactions, single writers, effect receipts, refresh adapters, refusal behavior, non-retention, and semantic-plus-exact redeclaration census before any action becomes available
+- `2026-08-11-tui-architecture-W03-P20-S129` - Run the final current-HEAD residual Workspace V1 census and cut over only remaining assembly, dispatch, frontend, and receipt consumers not already owned by S171 or S172 to their exact public defining modules, then prove application.modelo namespace inertness plus the defining-module and zero-remnant fixed point, without deleting package bindings or moving, redefining, or deleting any model, producer, or assembly surface owned by S171, S172, or S128
+- `2026-08-11-tui-architecture-W03-P20-S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview/readiness/closure parity, admission-specific contributor sets, exact-one-native-capture behavior, immutable or snapshot-isolated captures including mutation-after-capture isolation, unchanged owner generations, epoch/ABA/cross-incarnation refusal, locale behavior, bounded non-retention, forbidden lower-layer ModeloWorkspace imports, and a Vaultspec-RAG-plus-exact census that fails duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authorities
+- `2026-08-11-tui-architecture-W03-P20-S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, native-owner surface inventory, native/S126 seam-conformance digest, producer inventory, field denominator, process-incarnation refusal, conformance, no-legacy, and semantic redeclaration evidence checks while leaving receipt minting to the C1 handoff phase
+- `2026-08-11-tui-architecture-W03-P20-S300` - Stop an absent work unit refusing with an instruction the operator cannot act on: the graded snapshot folds a missing work unit into the same CALCULATION_UNAVAILABLE refusal as a work unit that merely has no calculation, so the operator is told to calculate a work unit that does not exist, and the refusal contradicts the code's own documented meaning which names only the missing-calculation case; either route the absent target to TARGET_NOT_FOUND or widen the documented meaning and give the absent case its own actionable reconsideration text, then test that input, which no refusal test exercises today because both create their work unit first
+- `2026-08-11-tui-architecture-W03-P20-S301` - Lock the typed materialization-provenance error to its own gate: the facet now raises a named subclass instead of a bare ValueError, but the only assertion anywhere matches the base class and its message, so a regression back to a bare raise with the same text passes green and the typed error is defended by nothing; assert the named class in the gate that already exercises the path
 - `2026-08-11-tui-architecture-W03-P21-S289` - Stop the modelo 184 socio record truncating a multi-member attribution to a single member: its export record carries twenty-seven manual scalar casilla fields, no binding fields and no repeat marker, while the per-row member bindings already exist in the registry and a real per-row resolver already computes their values, so every member beyond the first is computed correctly and never reaches the fichero; repoint the record's fields onto the existing per-row binding ids, declare the record repeating, and prove a real multi-member attribution emits one socio occurrence per member with the right values
 - `2026-08-11-tui-architecture-W03-P21-S294` - Stop the modelo 347 contraparte record truncating a multi-counterparty declaration to a single counterparty, which needs a per-row binding family built rather than rewired: its export record carries manual scalar casilla fields with no repeat marker, and unlike modelo 184 no resolver produces row-indexed contraparte values at all, the row type being consumed only by threshold validation; build the per-row binding family and resolver on the pattern the 349 operador rows already establish, wire the export record onto it, and prove a real multi-counterparty declaration emits one occurrence per counterparty
+- `2026-08-11-tui-architecture-W03-P21-S295` - Establish whether modelo 210 annual grouped-renta rows are correctly represented in what is exported, given the module states the rows are accepted for legal evidence and validation only and are never summed into an input or computed casilla: confirm the scalar casillas the export record does carry represent the homogeneous group faithfully, or establish that the annual aggregate is under-computed, and record which
 - `2026-08-11-tui-architecture-W03-P21-S297` - Add the modelo 184 socio per-member profile facts the accepted row-shape ADR requires: clave, subclave, and every clave/subclave-conditional fact this Step's scope covers (codigo-provincia, miembro-a-31-diciembre, dias-miembro, domicilio-fiscal, the clave-C inmueble sub-block [naturaleza-inmueble, situacion-inmueble, referencia-catastral, clave-declarado, porcentaje-titularidad-inmueble, dias-arrendamiento], the clave-C and clave-D reduccion amounts, and the clave-D subclave-03/04 rendimiento-neto fields), each enumerated and grounded directly against the socio record's own diseño field text -- not inferred from a field name. Excludes the clave-A reduccion (blocked pending citation), provisiones-gastos-dificil-justificacion (computed, not collected) and any clave-E eligibility fact (out of scope, tracked gap). Obtain real es/en/ca/hu strings for every new field before scaffolding -- no self-referencing placeholder value, no untranslated-identical entry without a stated reason
 - `2026-08-11-tui-architecture-W03-P21-S299` - Widen Modelo184MemberRow's identity to (nif, clave, subclave) per the accepted row-shape ADR, add its clave-conditional fields, extend the S288 natural-key tuple for the miembro row kind to match, extend AtribucionMemberSourceResolver to read S297's new profile facts into per-row bindings mirroring the existing nif/name/share/base wiring, add the registry bindings and repoint the corresponding socio export fields from kind='casilla' to kind='binding', and extend _ROW_IDENTITY_FIELDS's Modelo184MemberRow entry to (nif, clave, subclave) in the same change so S298's two-source union does not collide two of one member's rows declared under different claves. Only once every money-bearing field in this scope has a real per-row source, declare the record repeat = 'binding_rows'. Excludes clave-A reduccion, provisiones-gastos and clave-E exactly as S297 excludes them. Prove a real multi-member, multi-clave attribution emits one occurrence per (member, clave, subclave) with the right values in every field this scope covers, not merely the right count, and prove two rows for one member under different claves survive S298's union as distinct rows rather than colliding
+- `2026-08-11-tui-architecture-W03-P21-S302` - Establish whether the modelo 347 declarado provincia and pais field is correctly modelled before giving it a per-row source: the diseño declares positions 77 to 80 as a compound field whose first half is a numeric Spanish province code and whose second half is a two-letter alphabetic country code for non-establishment non-residents, while the export field declares one four-character value with a digit-string policy that cannot render letters at all, so the alphabetic half is unrepresentable as declared; determine whether the field needs splitting or its policy widening, then source the country half from the counterparty country the observation already carries and record the province half as an absent domain fact, and prove a multi-counterparty declaration renders each counterparty's own value rather than the first one's
+- `2026-08-11-tui-architecture-W03-P21-S303` - Give modelo 347 claves F and G a real source: an invoice issued or received by a travel agency acting as intermediary in another's name and account, for the mediated services RD 1619/2012's fourth additional provision enumerates, is declarable under its own clave with the direction already available from the invoice kind, but no fact records that an invoice was issued under that regime; add the closed operation-type classification on the invoice mirroring the intracommunity mechanism the M349 side already uses, ground each clave against the provision's own service enumeration, and prove an agency-mediated invoice declares under F or G by direction while an ordinary invoice of the same amount does not
+- `2026-08-11-tui-architecture-W03-P21-S304` - Stop modelo 347 silently deleting every non-resident counterparty from the declaration: the invoice observation builder refuses any invoice whose counterparty country is not ES and returns nothing, with no comment or citation beside it while the adjacent tax-id skip carries its governing article, so a filer's above-threshold operation with a foreign counterparty is absent from the file with no refusal and no advisory; RD 1065/2007 art. 33.2's exhaustive exclusion list contains no counterparty-residency exclusion, excluding only the filer's own foreign permanent establishment and operations already reported through a coincident informativa, and the diseño's own country slot exists for exactly the non-established non-resident the gate deletes; remove the residency filter, keep only the exclusions the article actually names, and prove an ordinary non-recapitulativa operation with a non-resident counterparty reaches the declaration while an intra-community one still routes to its own informativa
+- `2026-08-11-tui-architecture-W04-P22-S139` - Run the sole Workspace dependency validator against the exact green ModeloWorkspaceC1ExitReceiptV1, accepted Workspace authorities, owner-seam reconciliation, closed Workspace implementation tuple, native-owner and S126 inventories, seam-conformance digest, generated field inventory, current source tree, no-legacy proof, and Vaultspec-RAG-plus-exact duplicate-authority census
+- `2026-08-11-tui-architecture-W04-P22-S140` - Produce and validate the exact clean-commit ModeloWorkspaceC2DependencyReceiptV1 binding the C1 predecessor digest, native-owner surface inventory, Workspace contract and producer fingerprints, captured epoch tuple, process-incarnation refusal proof, seam and projection conformance evidence, current HEAD, and the exact C2 read destinations it opens
+- `2026-08-11-tui-architecture-W05-P23-S144` - Enroll the calculate and recalculate edit family through ModeloEditContractV1 and the transient financial operand handoff, register the typed ModeloWorkspaceRefreshTargetV1 resolver, and ensure frontend entrypoints can submit only typed requests without custody or mutation access
+- `2026-08-11-tui-architecture-W05-P23-S145` - Prove strict protocol round trips, successful delivery, expiry and cancellation races, crash windows, restart classification, exactly-once release, sentinel non-retention, guarded edit compare-and-swap, effect-receipt narrowing, immutable production composition, and a semantic-plus-exact census that fails duplicate custody or edit authorities
+- `2026-08-11-tui-architecture-W05-P23-S310` - Make the operations credential-free payload check type-aware so a content digest stops being refused for its name alone: the check matches forbidden tokens in a field name with no knowledge of the field's type, so an optimistic-concurrency content digest is refused while a hex-encoded secret under a benign name would pass, and the edit-contract request cannot be enrolled at all; admit a field only when it is BOTH typed as a content digest AND named with the digest token, keep every other name-matched field refused exactly as today, keep a field matching a second forbidden token refused even when digest-typed, and prove all three directions including a digest-typed field named for a secret
+- `2026-08-11-tui-architecture-W05-P23-S311` - Build the OperationTransientFinancialOperandBroker composing three pieces that already exist rather than a new persistence-backed component: the S142 pure state-machine functions (open_custody, advance_custody, classify_interrupted_custody, reconcile_on_restart in _financial_operand_custody.py), the existing persistence layer (OperationFinancialOperandCustodyRepository protocol at persistence/financial_operand_custody.py:30, its filesystem implementation at adapters/persistence/operations/financial_operand_custody.py:41, already 8 tests deep against real tmp_path storage), and the S141 protocol surface (OperationTransientFinancialOperandProtocolV1) - mirroring EphemeralSecretBroker (secret_submission.py:85) exactly. Then add a financial_operand property to OperationExecutorContext (owner.py:175), thread one broker instance through the supervisor the same way self._ephemeral_secrets is threaded (supervisor.py:135, constructed per-operation into _SupervisorExecutorContext at supervisor.py:1251, mirroring BoundEphemeralSecretAccess at secret_submission.py:194), and prove one real executor calls declare_requirement and receives a granted access for an in-bounds amount and a refusal for one outside the declared bounds - a real executor exercising the broker, not a synthetic protocol-level test
 - `2026-08-11-tui-architecture-W06-P13-S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root
 
 ### plan
