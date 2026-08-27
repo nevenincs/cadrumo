@@ -5,9 +5,10 @@ Before this Step's export repoint, ``m347-declarado`` carried scalar
 a single fixed occurrence regardless of how many counterparties the resolver
 produced -- a multi-counterparty declaration would have truncated to one
 counterparty, the exact defect S294's own Step title names. This module
-proves the repoint against the REAL bundled ``2025-y-siguientes`` revision
-and the real production entry points: :func:`resolve_invoice_binding_row_values`
-and :func:`_record_render_rows`.
+proves the repoint against BOTH real bundled revisions
+(``2025-y-siguientes`` and ``2011-2024``, per S294's action text naming no
+revision qualifier) and the real production entry points:
+:func:`resolve_invoice_binding_row_values` and :func:`_record_render_rows`.
 
 It also proves the quarterly-desagregación property the repoint's own
 condition required before ``repeat`` could be declared: each row's four
@@ -32,12 +33,12 @@ from ....domain.calculations.registry.schema_exports import ExportRecordDefiniti
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REVISION = "2025-y-siguientes"
+_REPOINTED_REVISIONS = ("2025-y-siguientes", "2011-2024")
 
 
-def _revision():
+def _revision(revision_id: str):
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "347").revisions[_REVISION]
+    return next(modelo for modelo in modelos if modelo.id == "347").revisions[revision_id]
 
 
 def _declarado_record(revision) -> ExportRecordDefinition:
@@ -72,22 +73,27 @@ def _observation(
     )
 
 
-def test_declarado_record_is_wired_for_row_indexed_binding_rendering() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_declarado_record_is_wired_for_row_indexed_binding_rendering(revision_id: str) -> None:
     """Guard the premise: the record this module measures is the repointed shape.
 
     Without this, every assertion below would pass vacuously against a record
-    that reverted to a single fixed occurrence.
+    that reverted to a single fixed occurrence. Parametrized across both
+    revisions -- S294's action text names no revision qualifier, and both
+    were already known calc-grade before this Step, so closing on one alone
+    would narrow the Step's own completion criterion.
     """
-    record = _declarado_record(_revision())
+    record = _declarado_record(_revision(revision_id))
 
     assert record.repeat == "binding_rows"
     assert record.row_field_casilla_ids["party_tax_id"] == "contraparte.nif"
     assert record.row_field_casilla_ids["importe_q1"] == "contraparte.importe-Q1"
 
 
-def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_id: str) -> None:
     """The S294 defect, reproduced and proven fixed against the real bindings."""
-    revision = _revision()
+    revision = _revision(revision_id)
     observations = (
         _observation(
             invoice_id="inv-1",
@@ -114,11 +120,12 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation() -> None
     assert row_indexes == {1, 2}
 
 
-def test_binding_rows_rendering_emits_one_occurrence_per_counterparty() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_id: str) -> None:
     """The renderer itself, not just the resolver, emits every distinct counterparty row."""
     from .._record_renderer import _record_render_rows
 
-    revision = _revision()
+    revision = _revision(revision_id)
     record = _declarado_record(revision)
     observations = (
         _observation(
@@ -155,7 +162,8 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty() -> None:
     assert len({row.row_index for row in rendered}) == 3
 
 
-def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_counterparty() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_counterparty(revision_id: str) -> None:
     """The internal-consistency proof the repoint's own condition required.
 
     One real invoice in each of the four calendar quarters for the SAME
@@ -164,7 +172,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
     annual total is a defect AEAT will reject, and this is the assertion that
     would catch a bucketing off-by-one at a year or quarter boundary.
     """
-    revision = _revision()
+    revision = _revision(revision_id)
     observations = (
         _observation(
             invoice_id="q1",
@@ -219,14 +227,15 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
     assert annual == q1 + q2 + q3 + q4 == Decimal("10000.00")
 
 
-def test_a_quarter_boundary_date_classifies_into_the_correct_quarter() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id: str) -> None:
     """The off-by-one this assertion class exists to catch, at the Q1/Q2 boundary.
 
     One invoice dated the last day of Q1 and one dated the first day of Q2,
     for the same counterparty. A bucketing off-by-one would either merge both
     into one quarter or, worse, misfile the boundary date into the wrong one.
     """
-    revision = _revision()
+    revision = _revision(revision_id)
     observations = (
         _observation(
             invoice_id="boundary-q1",
@@ -262,7 +271,8 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter() -> None:
     assert _value("-importe") == Decimal("1200.00")
 
 
-def test_conditional_money_fields_stay_scalar_and_are_not_fabricated() -> None:
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id: str) -> None:
     """The conditional fields (importe-metalico, transmisiones, ...) stay off the binding path.
 
     Confirms the repointed scope is exactly the money fields this Step built
@@ -270,7 +280,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated() -> None:
     itself gates with an explicit "Sólo..."/exception clause were
     deliberately left unbound rather than silently dropped from the record.
     """
-    record = _declarado_record(_revision())
+    record = _declarado_record(_revision(revision_id))
 
     bound_casilla_ids = {
         record.row_field_casilla_ids["party_tax_id"],
