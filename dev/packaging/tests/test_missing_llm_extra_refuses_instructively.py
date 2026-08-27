@@ -57,6 +57,7 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
     ("LocalVisionLLMClassifier", "LocalVisionLLMClassifier(spec=None)"),
     ("SemanticColumnRoleMapper", "SemanticColumnRoleMapper()"),
+    ("SupplyNatureProposer", "SupplyNatureProposer()"),
 )
 
 
@@ -81,7 +82,15 @@ def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tupl
 
 def _guarded_definition_names() -> frozenset[str]:
     """Derive exported definitions that call the real LLM extra guard."""
-    package = Path(__file__).resolve().parents[1]
+    # Derived from the imported package, never from this file's own depth. The
+    # depth was right while this test lived inside the llm package; after the
+    # move to dev/packaging/tests the same arithmetic scanned the packaging
+    # tooling, where no guard exists, so the derivation was empty and the
+    # inventory below compared nothing against nothing.
+    if llm.__file__ is None:  # pragma: no cover - namespace package guard
+        message = "the llm package has no file location to scan"
+        raise RuntimeError(message)
+    package = Path(llm.__file__).resolve().parent
     exported = frozenset(llm.__all__)
     derived: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):
