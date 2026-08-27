@@ -196,6 +196,7 @@ class ProfilePreflightService:
     """
 
     def __init__(self, *, schema: ProfileSchemaDefinition) -> None:
+        """Bind the reporter to a loaded profile schema definition."""
         self._schema = schema
 
     def report(

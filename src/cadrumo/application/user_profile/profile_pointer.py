@@ -33,6 +33,7 @@ class ActiveProfilePointerTransaction:
     __slots__ = ("_owner_pid", "_owner_thread_id", "_root")
 
     def __init__(self, *, root: Path, owner_pid: int, owner_thread_id: int) -> None:
+        """Bind the transaction to the locked root and its owning pid and thread."""
         self._root = root
         self._owner_pid = owner_pid
         self._owner_thread_id = owner_thread_id

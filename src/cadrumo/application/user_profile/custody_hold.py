@@ -107,10 +107,12 @@ class ProfileCustodyHoldAuthority:
     """Join independently-owned legal and filing evidence for deletion preflight."""
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Bind the independently-owned legal and filing evidence owners."""
         self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner="legal")
         self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner="filing")
 
     def assess(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldAssessment:
+        """Return the joined deletion-preflight assessment for a profile at ``now``."""
         validate_utc_aware(now)
         return ProfileCustodyHoldAssessment.from_owner_evidence(
             legal=self._legal.refresh(profile_id, now=now),
