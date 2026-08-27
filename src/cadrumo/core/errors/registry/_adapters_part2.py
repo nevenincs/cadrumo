@@ -648,6 +648,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyConcurrentCapsuleChangeError",
+        ErrorCode(
+            code="LOCKED_STORAGE_PROFILE_CUSTODY_CAPSULE_GENERATION",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_profile_custody_capsule_generation",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyPasswordError",
         ErrorCode(
             code="REFUSED_STORAGE_PROFILE_CUSTODY_PASSWORD",
