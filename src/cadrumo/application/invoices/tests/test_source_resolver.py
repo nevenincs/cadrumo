@@ -1118,14 +1118,13 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
 ) -> None:
     """A non-resident counterparty under an ordinary operation REACHES M347.
 
-    `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`:
     RD 1065/2007 art. 33.2 is a closed exclusion list whose only
     residency-adjacent items are the filer's own foreign permanent
     establishment and operations reported through a coincident informativa --
     neither covers a genuinely non-resident, non-recapitulativa counterparty.
     A US customer under an ordinary export sale (zero-rated, not intra-EU) is
     exactly that case: it must count toward the M347 declarante summary, not
-    vanish silently the way it did before this ADR.
+    vanish silently.
     """
     export_sale = _invoice(
         bucket_id=secure_profile.bucket_id,

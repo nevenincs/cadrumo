@@ -600,10 +600,10 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
 
     Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
     a CLOSED exclusion list, and a counterparty's non-residency is not one of
-    its nine enumerated items (see `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`).
-    The diseño de registro's own `pais-codigo` field (a "XX" alphabetic slot
-    for a non-established non-resident declarado) is direct evidence AEAT
-    expects some M347 counterparties to be non-resident.
+    its nine enumerated items. The diseño de registro's own `pais-codigo`
+    field (a "XX" alphabetic slot for a non-established non-resident
+    declarado) is direct evidence AEAT expects some M347 counterparties to be
+    non-resident.
 
     The one residency-shaped exclusion the article DOES state is art.
     33.2.i): an operation already reported through a coincident periodic

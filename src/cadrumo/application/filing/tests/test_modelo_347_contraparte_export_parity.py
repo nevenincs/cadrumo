@@ -311,11 +311,10 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
 def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_id: str) -> None:
     """`país-código` per row, not one value stamped across every occurrence.
 
-    `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr`:
-    the residency filter is gone and `país-código` is now a real per-row
-    binding sourced from each observation's own `country_code`. Asserts the
-    VALUES, not merely the row count -- a record stamping one counterparty's
-    country onto every row would still pass a count-only assertion.
+    `país-código` is a real per-row binding sourced from each observation's
+    own `country_code`. Asserts the VALUES, not merely the row count -- a
+    record stamping one counterparty's country onto every row would still
+    pass a count-only assertion.
     """
     revision = _revision(revision_id)
     observations = (
