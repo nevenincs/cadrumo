@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f999957dfca55f0684bd7853d1c79f6a3350c72a14bc64c27b32511beb6636d6'
+body_hash: 'sha256:ac9219a3b7e95e27b8a9db224b00f526cc12ba7a0137e05a370bf37fb7084e27'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -815,3 +815,148 @@ The residue cell stays refused. It is now a documented, grounded and tested
 fact rather than an unexplained entry -- the coverage matrix's `(year, period)`
 coordinate is coarser than the law it measures, for exactly one boundary AEAT
 published.
+
+
+### Red-gate sweep of `dev/`: five reds, one mine
+
+Ran `dev/tests`, `dev/registry/tests` and `dev/quality` (430 passed, 5 failed).
+Every failure was re-run SEQUENTIALLY before triage, per `aeat-local-execution`
+-- and that step changed the verdict on one of them.
+
+`test_registry_conformance_cli.py::test_report_text_renders_provenance_counts_`
+`and_degraded_absence` is NOT a defect. Under xdist it failed asserting
+`construct_evidence_rows=425`; run with `-n0` it passes. Verified directly:
+the CLI renders 425 and the fixture computes 425, identical. The pytest output
+elided the middle of the row line, which made a matching value look absent. A
+parallel-run artefact, of exactly the class the rule anticipates.
+
+`test_test_inventory.py::test_central_harness_has_no_owner_specific_behavior_`
+`modules` was genuinely red and is FIXED.
+`src/cadrumo/tests/test_canonical_decimal_string_uniqueness.py` declared
+`hex_domain` but imported `adapters.inbound.financial` at runtime to assert the
+package does not alias `canonical_decimal`. Relabelling the marker would NOT
+have helped: the gate's else-branch flags any central-harness test exercising a
+production owner without assertion-local structural evidence, so a marker swap
+moves the violation rather than removing it.
+
+The invariant is live -- that `__init__.py` does re-export from `.providers` --
+so it was kept and made structural: the assertion now parses the package
+`__init__.py` and checks the name is not bound. That is the honest thing to
+inspect, since the claim is about what the namespace DECLARES, and an alias
+reintroduced behind a failing import would still be a reintroduced alias.
+
+Five anti-tautology proofs were added, one per route by which the name could
+come back -- plain import, aliased import, assignment, `__all__` entry, def --
+plus a discrimination proof that an unrelated namespace does not fire. Without
+them an AST walker blind to one form would pass vacuously. 9 passed; the gate
+is green.
+
+Not mine, left alone with their owners named:
+`test_export_tree.py::test_renderer_module_has_no_old_tree_or_approximate_`
+`admission_surface` and `test_generated_export_trees.py[m184-2023-2024]` belong
+to the export-fragment campaign. `test_import_hygiene_gate.py::test_production_`
+`family1_violations_do_not_exceed_baseline_count` (116 cross-package private
+imports against a hard-zero baseline) belongs to
+`2026-07-01-import-centralization-plan`.
+
+The `src/cadrumo` half of this sweep is NOT yet done -- only `dev/` was
+covered. A full `src/cadrumo` run is in flight; its failures still need the
+same sequential re-run before any of them is called a defect.
+
+
+### Modelo 165 2023-2025 re-verified by execution: blocked, and the tempting fix is wrong
+
+The earlier "blocked on an external artefact" claim was re-tested rather than
+accepted, per this campaign's own rule that six such claims were made and all
+six were false. It survives, and is now measured rather than asserted.
+
+First check -- is the artefact already present but unenrolled? No. Modelo 165
+ships exactly three corpus PDFs and exactly three enrolled record designs, and
+they map one-to-one: `02-...orden-hap-2455-2013` to `aeat-dr-165-2013-2015`,
+`03-...orden-hfp-1822-2016` to `aeat-dr-165-2016-2022`, and
+`01-...actualizado-en-2023` to `aeat-dr-165-2026` (its page 1 states
+"Ejercicio 2026"). Nothing is sitting unenrolled.
+
+Second check produced a real hypothesis and then destroyed it, which is the
+part worth recording. The `2023-2025` revision declares
+`authority_grade = "applicability"` while both neighbours declare `filing`, and
+all three cite the SAME orden (`orden-hap-2455-2013:art-1`) -- so the split is
+not orden-driven. That looks exactly like a gate defect:
+`_model_law_coverage_findings` in
+`domain/calculations/registry/coverage.py:496` iterates every
+`REQUIRED_COVERAGE_TIERS` entry regardless of `revision.authority_grade`, while
+the sibling `parity_gaps` line right beside it IS scoped (`and
+revision.formulas`). The code plainly knows how to scope a finding to what a
+revision claims, and the required-gate path does not.
+
+Measured before changing anything, and the measurement REFUTED it. Layout
+authority is not a filing-only concern in this corpus: applicability-grade
+coordinates are 730 satisfied against 3 gapped, and the 3 are all Modelo 165
+2023-2025. Calculation grade is 103 satisfied, 0 gapped; filing grade 884
+satisfied, 0 gapped. Fifty-three of the fifty-four applicability-grade
+revisions carry a record design.
+
+So exempting applicability grade would not correct an over-strict gate. It
+would silence one genuine missing artefact AND drop the check from 54 revisions
+that currently pass it, so a future applicability revision could ship with no
+design and nothing would say so. That is weakening a gate to clear a single
+cell -- the same trade refused for the Modelo 308 date probe, arrived at from
+the opposite direction. Do not make this gate grade-aware to close this row.
+
+Standing conclusion, unchanged but now evidenced twice: AEAT's Modelo 165
+record design for ejercicios 2023-2025 is genuinely absent from the corpus. The
+remedies remain acquiring and hash-pinning it, or an operator ruling to
+withdraw or bound the 2023-2025 revision. Widening the 2016-2022 window stays
+barred by `aeat-calculation-grounding`.
+
+
+### Import-time configuration guards converted to test-time fixtures
+
+`test_project_test_control_modules_do_not_execute_control_flow_at_import_time`
+was red on five modules -- `dev/corpus/tests/test_extraction_sidecar_freshness`,
+`dev/identity/tests/test_identifier_namespace_enrollment_gate`, and three under
+`dev/packaging/tests`. It had not been seen earlier because the tick-4 sweep ran
+with `-x` and stopped after five failures before reaching it.
+
+This was a genuine gate-versus-gate overlap, not sloppiness. Commit
+`9fadfdfda6 fix(dev): point three packaging gates back at the repository root`
+ADDED those guards to fix a real bug: after a relocation, `parents[N]` silently
+retargeted and the gates scanned `dev/` or a directory above the repository.
+Each guard raised at import if the computed root was not real.
+
+The tempting fix was to wrap the guard in a helper and call it from a
+module-level assignment. The gate walks only `tree.body` and permits `Assign`,
+so that passes the matcher while still running the control flow at import --
+which is precisely the "hide the construct from one gate's matcher" resolution
+`aeat-quality-gates` forbids. Rejected on that ground.
+
+Taken instead, following the gate's stated intent ("keep collection import
+side-effect free"): each guard became a module-scoped autouse fixture asserting
+the same condition. The protection is unchanged in strength but now fails a
+named test with its message instead of breaking collection, which is the more
+actionable failure -- a collection error reports a broken module rather than
+which gate lost its root.
+
+Checked before converting: none of the five resolves the root at COLLECTION
+time. No `parametrize` in any of them, so there is no path where a wrong root
+yields zero cases and the fixture never runs. Had one existed, the conversion
+would have silently weakened the guard.
+
+`dev/tests/test_test_inventory.py` now passes 47/47, up from 46 passed 1 failed.
+
+The five modules still carry PRE-EXISTING content failures, unrelated to this
+change and not caused by it: `parents[3]` plainly resolves to the repository
+root here, so the old import-time guard passed and those tests already ran and
+already failed the same way. None of the failures is the root assertion. They
+are 33 stale extraction sidecars whose declared xlsx sources are absent from the
+committed tree (the corpus tree is CLEAN in git, so this is long-standing
+acquisition debt rather than a peer's in-flight edit), corpus PDFs and
+record-design workbooks without sidecars, and unadjudicated identifier-named
+fields. The last belongs to `2026-08-07-canonical-identifiers-plan`; the sidecar
+set is corpus-acquisition work outside this queue.
+
+Peer sweep, again: tick 4's work was committed by a peer as `4cd0abf4c9 test:
+count every name a module binds when proving decimal string uniqueness`, taking
+both the canonical-decimal fix and the irreducible-refusal gate. Only the
+subsequent `pairwise`/format polish remains uncommitted.
+
