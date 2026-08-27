@@ -762,9 +762,14 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     ).stdout.split(chr(0))
     scanned_paths = tuple(
         sorted(
-            repository / entry
+            path
             for entry in tracked
             if entry.endswith((".py", ".rst", ".toml"))
+            # A path git still tracks can be absent from the working tree while
+            # a peer's deletion is in flight.  It carries no content to scan,
+            # and reading it would fail the gate on someone else's staging
+            # state rather than on a remnant.
+            if (path := repository / entry).is_file()
         ),
     )
     remnants = tuple(
