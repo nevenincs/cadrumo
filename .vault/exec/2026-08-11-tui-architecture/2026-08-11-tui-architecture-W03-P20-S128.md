@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:dea4e24c90054f13b21d220280d4429e0886fc59406a5d2c0c18e269f4af5318'
+body_hash: 'sha256:7e24851f7edb309222cbc3a5a6f0b2eb5f2e0bcc6afdf5ac33dd288abe136120'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -504,3 +504,28 @@ effective_grade retirement and the 6th-contributor correction) are closed
 or ruled, and the full GRADED_SNAPSHOT assembly mirrors
 `resolve_static_inspection_result`'s WORK-then-REGISTRY discipline exactly,
 over the wider 6-contributor set GRADED_SNAPSHOT actually reads.
+
+One more real finding while verifying: the epoch-consistency test suite
+added alongside the assembly included
+`test_resolve_graded_snapshot_result_reads_the_work_catalogue_exactly_once`,
+asserting exactly 1 work-unit-catalogue read occurs before the first write
+anywhere in the assembly. That assertion is false by design -- BOUNDED_REVIEW
+delegates to the real `build_modelo_work_review`/cross-period dependency
+machinery, which itself performs several legitimate reads (observed: 10)
+before its own first write, indistinguishable in the log from a
+hypothetical duplicate read. Renamed and narrowed to what is actually
+provable: the assembly's first work-unit-catalogue event is always a load,
+never a save (commit `1f7db497ef`). The WORK-then-REGISTRY core's own
+single-read property stays proven separately and correctly by
+`test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once`.
+
+Observed live concurrent work on this exact file while finishing: additional
+tests (`test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable`,
+`test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_change`,
+`test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation`,
+a `_visible_target_for` shared helper) appeared and were verified passing
+without my authorship. Did not touch or claim that work; left it for its
+author to land. S128's plan checkbox is left unchecked for now given that
+in-flight parallel activity on the same Step -- my own required deliverable
+(`resolve_graded_snapshot_result` plus its two originally-scoped tests) is
+complete, tested, and landed.
