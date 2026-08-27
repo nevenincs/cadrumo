@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:762c5914ccaf3c16d3293bfe64c3b25e1f8003378a1714c3bd38b59e2ab67e15'
+body_hash: 'sha256:76a8840c8c3ae2e8c0bb04a7ba9df77910b54ec9f643f84a706ccaa782154f59'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -277,3 +277,26 @@ piece of work, not something to fold into a future export-repoint or
 grouping change -- deliberately not fixed now, since nothing consumes
 either binding set into a live export today, so no filer is affected and
 there is no urgency forcing a rushed taxonomy decision.
+
+## Recorded gap, deferred: representante legal NIF (under-14 counterparty)
+
+Positions 27-35 of the declarado record, "NIF DEL REPRESENTANTE LEGAL", are
+gated by the diseño's own exception text: "Si el declarado es menor de 14
+años se consignará en este campo el número de identificación fiscal de su
+representante legal... En cualquier otro caso el contenido de este campo se
+rellenará a espacios." Populating it needs two facts neither `Invoice` nor
+`InvoiceObservation` carries anywhere: a minority/age fact for the
+counterparty, and the legal representative's own NIF.
+
+This is deferred, not built, and no Step is open for it yet. The real
+consequence of the deferral, stated rather than left as a cost judgement:
+the system today has no minority fact for a counterparty, so it cannot
+DETECT the under-14 case, cannot DECLARE it, and cannot REFUSE it either. A
+filer with a genuine under-fourteen counterparty above the declaration floor
+would emit a record silently missing a field the diseño requires for that
+population, with no signal anywhere that anything was omitted -- the same
+"structurally valid, nothing says what's absent" shape the residency gate
+had before it was fixed. "Rare" is the reason this is deferred rather than
+built now, not a reason to treat it as closed. When a Step for it opens,
+this consequence -- not merely the cost of the two new counterparty facts --
+is what it needs to weigh.
