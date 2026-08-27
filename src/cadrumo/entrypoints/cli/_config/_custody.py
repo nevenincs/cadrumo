@@ -274,8 +274,8 @@ async def _run_logout_operation(profile_id: UUID) -> None:
     door awaits the executor to completion, so the session is closed by the time
     this returns and the caller needs no observation pass to learn that.
     """
-    from ..._operation_composition import compose_operation_dependencies
     from ....application.user_profile.operations import build_profile_logout_operation_request
+    from ..._operation_composition import compose_operation_dependencies
 
     services = compose_operation_dependencies()
     try:
@@ -294,14 +294,24 @@ def config_logout(
 ) -> None:
     """Strong-close the profile session: seal, delete both halves, clear the pointer."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile.login_session import has_live_profile_session, logout_active_profile
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     signed_out_label = active_profile_label()
     active_bucket_id = resolve_active_bucket_id()
     signed_out = None
-    if active_bucket_id is not None:
+    if has_live_profile_session() and active_bucket_id is not None:
+        # Supervision journals into profile-bound encrypted storage, which only
+        # an open session can unlock. With a session there IS something to
+        # strong-close and the journal records the operator's verb.
         asyncio.run(_run_logout_operation(UUID(str(active_bucket_id))))
         signed_out = str(active_bucket_id)
+    else:
+        # No open session: nothing to strong-close, only a stale selection to
+        # clear. The same revocation authority the supervised executor calls
+        # does that under the root lock, and returns None when there was not
+        # even a selection, which keeps a repeated logout idempotent.
+        signed_out = logout_active_profile()
     logged_out_profile = signed_out_label or signed_out
 
     from .._config_payloads import ConfigLogoutResult
