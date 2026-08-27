@@ -15,6 +15,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from cadrumo.core import is_link_like
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
@@ -436,14 +437,14 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
     to data outside the candidate tree. This function only observes a supplied
     tree; it does not render, create, replace, or publish one.
     """
-    if export_root.is_symlink() or export_root.is_junction():
+    if is_link_like(export_root):
         raise RegistryValidationError(f"export provenance refuses linked export root: {export_root}")
     if not export_root.is_dir():
         raise FileNotFoundError(export_root)
     resolved_root = export_root.resolve()
     entries: list[ExportFragmentOutputDigest] = []
     for candidate in sorted(iter_directory(export_root, recursive=True), key=lambda path: path.as_posix()):
-        if candidate.is_symlink() or candidate.is_junction():
+        if is_link_like(candidate):
             raise RegistryValidationError(f"export provenance refuses linked output path: {candidate}")
         if not candidate.is_file():
             continue
@@ -542,7 +543,7 @@ def emit_export_fragment_provenance_manifest(
         render_profile_source_evidence=render_profile_source_evidence,
     )
     manifest_path = export_fragment_provenance_path(export_root)
-    if manifest_path.is_symlink() or manifest_path.is_junction():
+    if is_link_like(manifest_path):
         raise RegistryValidationError(f"export provenance refuses linked manifest target: {manifest_path}")
     if manifest_path.exists():
         raise RegistryValidationError(f"export provenance manifest already exists: {manifest_path}")
@@ -563,7 +564,7 @@ def verify_export_fragment_provenance_manifest(
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
     manifest_path = export_fragment_provenance_path(export_root)
-    if manifest_path.is_symlink() or manifest_path.is_junction():
+    if is_link_like(manifest_path):
         raise RegistryValidationError(f"export provenance refuses linked manifest: {manifest_path}")
     if not manifest_path.is_file():
         raise RegistryValidationError(f"export provenance manifest is missing: {manifest_path}")
