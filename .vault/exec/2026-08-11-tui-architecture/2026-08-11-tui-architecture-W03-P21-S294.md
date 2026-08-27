@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:a335177a0e74114d4cd9063c6d8f8bb7605085cd2f3f1ec9314151470ca1c944'
+body_hash: 'sha256:dafaacb1e116f7072b1a03b6cf6871e684b6e7b7c03a9c8c694e7c50715bb0cc'
 step_id: 'S294'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -202,3 +202,32 @@ per-counterparty identity fields still rendering as shared scalars on a
 repeating record; and S303, claves C through G, each of which needs an
 observable fact the invoice direction cannot supply. The quarterly transmisiones
 representation gap remains recorded in its own audit.
+
+## Correction (recorded after S303)
+
+The closure above is honest about what was built and proven, but one claim in
+it needs correcting: "twelve parity tests... run against each revision's own
+committed bindings through the production entry points" is true of the row
+builder and the export record, but not of the path a real invoice takes to
+reach either. The parity tests, and every test in this Step, constructed
+`InvoiceObservation` directly with `operation_clave` already set. The
+production observation builder (`_m347_invoice_observation`) hardcoded
+`operation_clave=None` for every invoice, and `_build_contraparte_clave_rows`
+skips any observation whose `operation_clave` is `None`. No real invoice could
+reach a contraparte row in production: the entire family this Step closed
+emitted nothing outside a test that supplied the classifying fact itself.
+
+This was found and fixed in `W03.P21.S303`, which wires the one call site
+(`_m347_invoice_observation`) that determines `operation_clave` for every
+invoice-sourced clave (A, B, F, G) and proves A and B reach a real declaration
+through the actual resolver, not a hand-built observation. Per standing
+instruction this Step stays closed rather than reopened, because the bindings,
+export repoint, quarterly split and export-parity proofs described above are
+all real and unaffected by the gap; only the closure's claim about production
+reachability needed correcting.
+
+The shape is not unique to this Step: a component built and proven by a test
+that constructs its own inputs, where production would have supplied them,
+passes cleanly while the seam connecting it to a real caller belongs to no
+Step. The tell is the same each time -- look for what supplies the fact under
+test, not merely whether the fact is asserted correctly once supplied.
