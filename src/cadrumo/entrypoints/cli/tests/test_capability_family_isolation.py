@@ -20,7 +20,7 @@ cost paid on the way *to* a command, by ancestors and siblings, before anything
 has been asked for -- which is the amplification this campaign exists to
 remove.
 
-Three groups do not satisfy their declaration yet. They are named below with
+Two groups do not satisfy their declaration yet. They are named below with
 what they load and why it is unresolved, and a stale case deletes an entry the
 moment it starts passing. Widening those declarations to make this file green
 was available and refused: the declaration is the claim, and weakening the
@@ -76,13 +76,6 @@ _PENDING_ADJUDICATION: dict[frozenset[str], str] = {
         "`registry.bindings`. That chain is semantically real: a module typed against "
         "calculation revisions needs registry types. Resolving it means either "
         "declaring `calculation` on these nodes or splitting the protocol module"
-    ),
-    frozenset({"registry"}): (
-        "4 of the 17 nodes are heavy, all `app/registry/manuals/*`: their annotations "
-        "resolve through `application.registry`, whose package root reaches "
-        "`application.filing`, whose root imports persistence eagerly. The sede-adapter "
-        "edge on that path is already deferred (crypto 60 -> 30); clearing the rest "
-        "needs `application.filing` split into a defining module and an inert root"
     ),
 }
 
