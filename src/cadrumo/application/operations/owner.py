@@ -18,6 +18,7 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
+from .financial_operand_submission import OperationFinancialOperandContextAccess
 from .models import (
     OperationDiagnosticReference,
     OperationIdentity,
@@ -208,6 +209,11 @@ class OperationExecutorContext(Protocol):
     @property
     def ephemeral_secret(self) -> OperationEphemeralSecretAccess:
         """One-shot scoped secret access declared for this operation."""
+        ...
+
+    @property
+    def financial_operand(self) -> OperationFinancialOperandContextAccess:
+        """Runtime-only transient financial operand surface for this operation."""
         ...
 
     @property

@@ -6,6 +6,7 @@ import asyncio
 import secrets
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import cast
 
 from pydantic import BaseModel
@@ -23,10 +24,18 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
 from ._execution_context import DefinitionBoundContext
+from ._financial_operand import (
+    OperationTransientFinancialOperandDelivery,
+    OperationTransientFinancialOperandRequirement,
+)
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .capabilities import OperationRequestStoragePolicy
 from .errors import OperationDeclarationError
 from .event_replay import OperationEventCursor
+from .financial_operand_submission import (
+    BoundTransientFinancialOperandAccess,
+    OperationTransientFinancialOperandBroker,
+)
 from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -51,6 +60,9 @@ from .persistence.events import (
     OperationPhaseEvent,
     OperationReconciliationEvent,
     OperationTerminalEvent,
+)
+from .persistence.financial_operand_custody import (
+    OperationFinancialOperandCustodyRepository,
 )
 from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (
@@ -108,6 +120,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _new_response_token,
+        financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
         self.registry = registry
@@ -133,6 +146,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
+        self._financial_operands = (
+            OperationTransientFinancialOperandBroker(custody=financial_operand_custody, clock=clock)
+            if financial_operand_custody is not None
+            else None
+        )
 
         if lease_duration <= timedelta():
             raise ValueError("operation lease duration must be positive")
@@ -146,6 +164,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             declaration = definition.ephemeral_secret
             if declaration is not None and declaration.lifetime >= lease_duration:
                 raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
+            if definition.transient_financial_operands and self._financial_operands is None:
+                raise ValueError("transient financial operand operations require a durable custody repository")
 
     async def submit[RequestPayloadT: BaseModel](
         self, request: OperationRequest[RequestPayloadT], *, operation_id: OperationId | None = None
@@ -297,6 +317,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 broker=self._ephemeral_secrets,
                 clock=self._clock,
             ),
+            financial_operand=self._bound_financial_operand(running.identity, definition),
             clock=self._clock,
             response_authority_issuer=self._response_authority_issuer,
             response_token_factory=self._response_token_factory,
@@ -313,7 +334,46 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
+        finally:
+            await self._settle_financial_operand_custody(operation_id)
         return await self._settle_returned_result(context.snapshot, result_ref)
+
+    def _bound_financial_operand(
+        self,
+        identity: OperationIdentity,
+        definition: OperationDefinition,
+    ) -> BoundTransientFinancialOperandAccess:
+        """Scope the operand broker to one invocation's own declarations."""
+        return BoundTransientFinancialOperandAccess(
+            declarations=definition.transient_financial_operands,
+            broker=self._financial_operands,
+            identity=identity,
+            revision=0,
+        )
+
+    async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
+        """Acknowledge and release every operand one finished invocation held."""
+        if self._financial_operands is None:
+            return
+        await self._financial_operands.settle_operation(operation_id, now=self._clock())
+
+    async def submit_transient_financial_operand(
+        self,
+        requirement: OperationTransientFinancialOperandRequirement,
+        amount: Decimal,
+    ) -> OperationTransientFinancialOperandDelivery:
+        """Answer one running invocation's declared operand wait with an amount.
+
+        The amount is a parameter and is never written to the journal: the
+        broker settles it against the declaration that opened the wait and
+        records only where custody stands.
+        """
+        if self._financial_operands is None:
+            raise ValueError("this supervisor has no transient financial operand custody")
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.RUNNING:
+            raise ValueError("a transient financial operand may only answer a running invocation")
+        return await self._financial_operands.deliver(requirement, amount, observed_at=self._clock())
 
     async def submit_ephemeral_secret(
         self,
@@ -380,6 +440,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def shutdown(self) -> None:
         """Wipe every runtime-only secret retained by this supervisor instance."""
         self._ephemeral_secrets.close()
+        if self._financial_operands is not None:
+            self._financial_operands.close()
 
     async def _settle_executor_failure(
         self,
@@ -1104,6 +1166,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 broker=self._ephemeral_secrets,
                 clock=self._clock,
             ),
+            financial_operand=self._bound_financial_operand(snapshot.identity, definition),
             clock=self._clock,
             response_authority_issuer=self._response_authority_issuer,
             response_token_factory=self._response_token_factory,
@@ -1257,6 +1320,7 @@ class _SupervisorExecutorContext:
         context: DefinitionBoundContext,
         operands: OperationSecureReferenceStore | None,
         ephemeral_secret: BoundEphemeralSecretAccess,
+        financial_operand: BoundTransientFinancialOperandAccess,
         clock: Callable[[], datetime],
         response_authority_issuer: OperationResponseAuthorityIssuer | None,
         response_token_factory: Callable[[], str],
@@ -1267,6 +1331,7 @@ class _SupervisorExecutorContext:
         self.events = context.events
         self._operands = operands
         self.ephemeral_secret = ephemeral_secret
+        self.financial_operand = financial_operand
         self.cleanup = context.cleanup
         self.interactions = _SupervisorInteractionAccess(
             request_pending=context.interactions.request,

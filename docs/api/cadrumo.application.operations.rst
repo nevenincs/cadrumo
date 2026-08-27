@@ -31,6 +31,7 @@ Submodules
    cadrumo.application.operations.errors
    cadrumo.application.operations.event_replay
    cadrumo.application.operations.events
+   cadrumo.application.operations.financial_operand_submission
    cadrumo.application.operations.frontend_contracts
    cadrumo.application.operations.interactions
    cadrumo.application.operations.models
