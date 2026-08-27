@@ -425,7 +425,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/modelo/_borrador_binding.py",
+        path="src/cadrumo/application/modelo/borrador_binding.py",
         model="Modelo100BorradorBindingCommand",
         field="borrador_snapshot_id",
         group="semantic tail collisions",

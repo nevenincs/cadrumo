@@ -35,7 +35,7 @@ from ...application.modelo._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo._calculate_input import calculate_modelo_work_revision
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...core import M210GrossIncomeSourceMode, RescateType

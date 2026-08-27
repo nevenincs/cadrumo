@@ -31,7 +31,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from ...live.snapshot_base import SnapshotLifecycleState
-from .._borrador_binding import (
+from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,

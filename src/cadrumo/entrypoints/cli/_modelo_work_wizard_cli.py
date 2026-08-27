@@ -56,7 +56,7 @@ from ...application.modelo._action_errors import (
     WorkUnitNotFoundError,
     modelo_work_wizard_retry_exhausted_precondition,
 )
-from ...application.modelo._borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo._calculate_input import calculate_modelo_work_revision
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.work_wizard import (

@@ -778,7 +778,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._borrador_binding.Modelo100BorradorBindingError",
+        "cadrumo.application.modelo.borrador_binding.Modelo100BorradorBindingError",
         ErrorCode(
             code="REFUSED_MODELO_100_BORRADOR_BINDING",
             category=ErrorCategory.REFUSED,

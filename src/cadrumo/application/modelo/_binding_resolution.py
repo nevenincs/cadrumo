@@ -20,7 +20,7 @@ See Also:
         Merges these tiers and builds the canonical engine input maps.
     :mod:`~cadrumo.application.modelo.profile_binding`:
         Resolves profile-sourced bindings into decimal, enum, and date channels.
-    :mod:`~cadrumo.application.modelo._borrador_binding`:
+    :mod:`~cadrumo.application.modelo.borrador_binding`:
         Resolves Modelo 100 borrador snapshots as a precedence tier.
 """
 
@@ -47,7 +47,7 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
-from ._borrador_binding import Modelo100BorradorSourceResolver
+from .borrador_binding import Modelo100BorradorSourceResolver
 from .calculation_route import require_calculation_route_resolver
 
 if TYPE_CHECKING:

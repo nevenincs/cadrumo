@@ -35,7 +35,7 @@ from ..calculations import (
     RelationPrefillSourceResolver,
 )
 from ..invoices import InvoiceCatalogueSourceResolver
-from ._borrador_binding import Modelo100BorradorSourceResolver
+from .borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]
 type CalculationRouteStage = CalculationRouteResolverStage | Literal["manual"]

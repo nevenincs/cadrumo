@@ -53,10 +53,51 @@ _PROTOCOL_QUALNAME = "cadrumo.application.aggregation.ModeloSourceResolver"
 # projects from the route declaration consumed by runtime composition, so it cannot
 # become a second hand-maintained census. The typed manual-input owner has no
 # resolver class and is therefore intentionally absent from reflective discovery.
+def _swept_modules() -> tuple[str, ...]:
+    """Return every module discovery reads, derived rather than hand-listed.
+
+    The package namespaces are swept because they still re-export; the public
+    defining module of each enrolled resolver is swept too, because that is
+    where a resolver lives once its package namespace has been made inert.
+    Deriving the second half means a resolver relocated to a public module of
+    its own stays discovered without anyone extending a list.
+    """
+    own = {
+        ownership.resolver_type.__module__
+        for ownership in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+        if ownership.resolver_type is not None
+        and not any(segment.startswith("_") for segment in ownership.resolver_type.__module__.split("."))
+    }
+    return (*_RESOLVER_MODULES, *sorted(own - set(_RESOLVER_MODULES)))
+
+
+def _publishes(module_name: str, resolver_type: type[object]) -> bool:
+    module = importlib.import_module(module_name)
+    if getattr(module, resolver_type.__name__, None) is not resolver_type:
+        return False
+    exported = getattr(module, "__all__", None)
+    return exported is None or resolver_type.__name__ in exported
+
+
 def _public_qualified_name(resolver_type: type[object]) -> str:
+    """Return the public name a consumer can import this resolver by.
+
+    Two routes are accepted because the tree holds two shapes at once. A
+    resolver may be published by its own canonical public defining module --
+    the target state, and the only route left once a package namespace has
+    been made inert -- or by one of the package namespaces that still
+    re-export. Either way the resolver is reachable by name from outside its
+    module, which is what this gate exists to establish; a resolver hidden in
+    a private module with no public publication satisfies neither and fails.
+    """
+    own_module = resolver_type.__module__
+    if not any(segment.startswith("_") for segment in own_module.split(".")) and _publishes(
+        own_module, resolver_type
+    ):
+        return f"{own_module}.{resolver_type.__name__}"
+
     for module_name in _RESOLVER_MODULES:
-        module = importlib.import_module(module_name)
-        if getattr(module, resolver_type.__name__, None) is resolver_type:
+        if _publishes(module_name, resolver_type):
             return f"{module_name}.{resolver_type.__name__}"
     raise AssertionError(f"Production resolver is not publicly exported: {resolver_type!r}")
 
@@ -84,7 +125,7 @@ def _discover_resolve_bearing_classes() -> dict[str, bool]:
     discovered.
     """
     discovered: dict[str, bool] = {}
-    for module_name in _RESOLVER_MODULES:
+    for module_name in _swept_modules():
         module = importlib.import_module(module_name)
         for name in getattr(module, "__all__", []):
             obj = getattr(module, name, None)
