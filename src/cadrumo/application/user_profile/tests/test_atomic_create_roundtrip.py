@@ -29,6 +29,7 @@ from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
+from ..custody_transactions import ProfileCustodyDuplicateLabelError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -181,3 +182,24 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     assert _json(show_alice)["display_name"] != _json(show_bob)["display_name"]
     assert _json(show_alice)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert _json(show_bob)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+
+
+def test_atomic_create_refuses_a_label_differing_only_in_case(_cli_storage: Path) -> None:
+    """Display-name uniqueness holds case-insensitively across live profiles.
+
+    The two registrations carry DISTINCT valid NIFs, so the duplicate-tax-id
+    refusal cannot stand in for the label refusal: what fails here can only be
+    the casefolded label collision. The refusal is raised under the custody
+    root lock before publication, so the first profile must survive it intact
+    -- a refusal that left a half-published capsule behind would be worse than
+    admitting the duplicate.
+    """
+
+    _create("Only One", tax_id="12345678Z")
+
+    with pytest.raises(ProfileCustodyDuplicateLabelError):
+        _create("only one", tax_id="87654321X")
+
+    listing = _invoke(["--format", "json", "config", "profile", "list"])
+    assert listing.exit_code == 0, listing.output
+    assert [row["name"] for row in _json(listing)["profiles"]] == ["Only One"]
