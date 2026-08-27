@@ -608,6 +608,39 @@ async def _run_offloop_with_progress[T](
     return holder["result"]
 
 
+_ADAPTER_COMPOSITION = contextlib.ExitStack()
+_ADAPTER_COMPOSITION_ENTERED = False
+
+
+def _ensure_adapter_composition() -> None:
+    """Bind the product's adapter ports once for this server process.
+
+    The server is a frontend like the CLI and owes the same adapter
+    composition. It is bound here, at the server's construction point, rather
+    than inside a lifespan or the stdio runner: the ports are held in
+    ContextVars, and a handler only sees a value bound in a context that is an
+    ANCESTOR of the task it runs in. A lifespan runs inside the server task and
+    is therefore invisible to the request handlers spawned beside it, which is
+    why every custody-touching tool still refused when the composition lived
+    there. Binding at construction puts it in the ambient context every later
+    task inherits, and every path that runs this server -- the stdio runner and
+    the in-process test transport alike -- builds the server through here.
+
+    Entering once per process is deliberate, and so is never unwinding it: the
+    ports are bound for as long as the process serves, and a ContextVar token
+    can only be reset in the context that created it -- an exit-time unbind
+    would run in a different one and raise. The stack is held at module level
+    so the binding cannot be collected while the server is alive.
+    """
+    global _ADAPTER_COMPOSITION_ENTERED
+    if _ADAPTER_COMPOSITION_ENTERED:
+        return
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+
+    _ADAPTER_COMPOSITION.enter_context(profile_adapter_composition())
+    _ADAPTER_COMPOSITION_ENTERED = True
+
+
 def build_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
@@ -638,6 +671,7 @@ def build_server(
         The configured :class:`mcp.server.Server`.
     """
     ensure_profile_keys_registered()
+    _ensure_adapter_composition()
 
     from mcp.server import Server
     from mcp.types import (
