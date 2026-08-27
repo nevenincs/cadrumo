@@ -27,10 +27,6 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -1186,10 +1182,6 @@ class ModeloEditApplyExecutor:
         )
         outcome = apply_modelo_edit(
             apply_request,
-            work_unit_repository=WorkUnitCatalogueRepository(),
-            calculation_repository=CalculationRevisionCatalogueRepository(),
-            bucket_event_repository=BucketEventHistoryRepository(),
-            receipt_repository=ModeloEditReceiptRepository(),
             now=datetime.now(UTC),
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
@@ -1214,7 +1206,7 @@ def build_modelo_edit_apply_definition() -> OperationDefinition:
             build=build,
         ),
         phase_codes=("modelo.edit.apply",),
-        interaction_kinds=frozenset[OperationInteractionKind](),
+        interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
