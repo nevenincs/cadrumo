@@ -65,8 +65,8 @@ from ._renta_income_aggregation_support import _period
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_Q1_2024 = _period(2024, "1T")
-_Q2_2024 = _period(2024, "2T")
+_Q1_2024 = _period(2025, "1T")
+_Q2_2024 = _period(2025, "2T")
 
 
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
@@ -93,7 +93,7 @@ def _raw_transaction(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -135,7 +135,7 @@ def _gasto_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -149,10 +149,10 @@ def _gasto_transaction(
 def test_q1_window_sums_jan_mar_expense_bases() -> None:
     """Q1 cumulative window [Jan 1 to Mar 31] sums the deductible bases into casilla 02."""
     jan_base, feb_base, mar_base = Decimal("100.00"), Decimal("200.00"), Decimal("50.00")
-    jan = _gasto_transaction("jan", value_date=date(2024, 1, 15), taxable_base=jan_base)
-    feb = _gasto_transaction("feb", value_date=date(2024, 2, 20), taxable_base=feb_base)
-    mar = _gasto_transaction("mar", value_date=date(2024, 3, 31), taxable_base=mar_base)
-    apr = _gasto_transaction("apr", value_date=date(2024, 4, 1), taxable_base=Decimal("999.00"))
+    jan = _gasto_transaction("jan", value_date=date(2025, 1, 15), taxable_base=jan_base)
+    feb = _gasto_transaction("feb", value_date=date(2025, 2, 20), taxable_base=feb_base)
+    mar = _gasto_transaction("mar", value_date=date(2025, 3, 31), taxable_base=mar_base)
+    apr = _gasto_transaction("apr", value_date=date(2025, 4, 1), taxable_base=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
     result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
@@ -173,9 +173,9 @@ def test_q1_window_sums_jan_mar_expense_bases() -> None:
 def test_q2_window_accumulates_jan_through_jun() -> None:
     """Q2 cumulative window [Jan 1 to Jun 30] includes Q1 rows too (YTD rule)."""
     jan_base, may_base = Decimal("100.00"), Decimal("250.00")
-    jan = _gasto_transaction("jan", value_date=date(2024, 1, 10), taxable_base=jan_base)
-    may = _gasto_transaction("may", value_date=date(2024, 5, 5), taxable_base=may_base)
-    jul = _gasto_transaction("jul", value_date=date(2024, 7, 1), taxable_base=Decimal("400.00"))
+    jan = _gasto_transaction("jan", value_date=date(2025, 1, 10), taxable_base=jan_base)
+    may = _gasto_transaction("may", value_date=date(2025, 5, 5), taxable_base=may_base)
+    jul = _gasto_transaction("jul", value_date=date(2025, 7, 1), taxable_base=Decimal("400.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
     result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
@@ -198,7 +198,7 @@ def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
     """
     tx = _gasto_transaction(
         "tagged",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
     )
@@ -218,7 +218,7 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
     the pago fraccionado). The row is surfaced as MISSING_TAXABLE_BASE so the
     operator tags it; it does not contribute an observation.
     """
-    tx = _gasto_transaction("untagged", value_date=date(2024, 2, 1), amount=Decimal("80.00"), taxable_base=None)
+    tx = _gasto_transaction("untagged", value_date=date(2025, 2, 1), amount=Decimal("80.00"), taxable_base=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
     result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
@@ -233,7 +233,7 @@ def test_mixed_classification_applies_business_pct() -> None:
     """A MIXED expense contributes only its business fraction of the base."""
     tx = _gasto_transaction(
         "mixed",
-        value_date=date(2024, 3, 1),
+        value_date=date(2025, 3, 1),
         taxable_base=Decimal("200.00"),
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.50"),
@@ -249,7 +249,7 @@ def test_personal_outgoing_is_skipped_silently() -> None:
     """A personal expense is not a deducible gasto and produces no observation or issue."""
     tx = _gasto_transaction(
         "personal",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         taxable_base=Decimal("75.00"),
         business_classification=BusinessClassification.PERSONAL,
     )
@@ -273,7 +273,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
     actividad_base = Decimal("180.00")
     tagged = _gasto_transaction(
         "actividad-tagged",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("217.80"),
         taxable_base=actividad_base,
         irpf_category="actividad_economica",
@@ -281,7 +281,7 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
     )
     untagged = _gasto_transaction(
         "actividad-untagged",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("217.80"),
         taxable_base=actividad_base,
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
@@ -300,7 +300,7 @@ def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
     """A final reviewed exclusion cannot re-enter through the actividad category."""
     tx = _gasto_transaction(
         "reviewed-excluded",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         taxable_base=Decimal("125.00"),
         irpf_category="actividad_economica",
         business_classification=BusinessClassification.REVIEWED_EXCLUDED,
@@ -318,7 +318,7 @@ def test_incoming_transaction_is_not_a_gasto() -> None:
     """An INCOMING receipt is the income pipeline's concern, never a gasto."""
     tx = _gasto_transaction(
         "income",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         taxable_base=Decimal("500.00"),
         direction=TransactionDirection.INCOMING,
     )
@@ -334,7 +334,7 @@ def test_inactive_transaction_skipped_silently() -> None:
     """An archived/tombstoned expense never reaches the aggregation."""
     tx = _gasto_transaction(
         "inactive",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         taxable_base=Decimal("100.00"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
@@ -349,7 +349,7 @@ def test_inactive_transaction_skipped_silently() -> None:
 def test_all_observations_target_casilla_02() -> None:
     """Every gasto observation targets casilla 02 — structural pin for the binding contract."""
     transactions = [
-        _gasto_transaction(f"tx-{i}", value_date=date(2024, 1, i + 1), taxable_base=Decimal("10.00")) for i in range(5)
+        _gasto_transaction(f"tx-{i}", value_date=date(2025, 1, i + 1), taxable_base=Decimal("10.00")) for i in range(5)
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
@@ -361,7 +361,7 @@ def test_all_observations_target_casilla_02() -> None:
 
 def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
     transactions = [
-        _gasto_transaction("tx-legacy-key", value_date=date(2024, 1, 1), taxable_base=Decimal("10.00")),
+        _gasto_transaction("tx-legacy-key", value_date=date(2025, 1, 1), taxable_base=Decimal("10.00")),
     ]
     result = aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions(transactions),
@@ -389,9 +389,9 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
 ) -> None:
     """Full path: persist -> load from repo -> aggregate -> correct casilla 02 value."""
     q1_a_base, q1_b_base, q2_base = Decimal("120.00"), Decimal("80.00"), Decimal("300.00")
-    q1_a = _gasto_transaction("q1-a", value_date=date(2024, 2, 1), taxable_base=q1_a_base)
-    q1_b = _gasto_transaction("q1-b", value_date=date(2024, 3, 15), taxable_base=q1_b_base)
-    q2_only = _gasto_transaction("q2-only", value_date=date(2024, 5, 10), taxable_base=q2_base)
+    q1_a = _gasto_transaction("q1-a", value_date=date(2025, 2, 1), taxable_base=q1_a_base)
+    q1_b = _gasto_transaction("q1-b", value_date=date(2025, 3, 15), taxable_base=q1_b_base)
+    q2_only = _gasto_transaction("q2-only", value_date=date(2025, 5, 10), taxable_base=q2_base)
 
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((q1_a, q1_b, q2_only)))
@@ -417,8 +417,8 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     assert result_q1.issues == ()
     assert result_q1.out_of_window_summary is not None
     assert result_q1.out_of_window_summary.count == 1
-    assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
-    assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
+    assert result_q1.out_of_window_summary.min_filing_date == date(2025, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(2025, 5, 10)
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -447,10 +447,10 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     partition reports its count and date span instead of dropping it before
     aggregation.
     """
-    in_window = _gasto_transaction("row-in-window", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
+    in_window = _gasto_transaction("row-in-window", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
     wrong_direction_out_of_window = _gasto_transaction(
         "row-wrong-direction-out-of-window",
-        value_date=date(2024, 5, 10),
+        value_date=date(2025, 5, 10),
         taxable_base=Decimal("90.00"),
         direction=TransactionDirection.INCOMING,
     )
@@ -472,8 +472,8 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(2024, 5, 10)
-    assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
+    assert result.out_of_window_summary.min_filing_date == date(2025, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2025, 5, 10)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
@@ -486,11 +486,11 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     In-window observations and casilla totals/provenance must match; only the
     out-of-window issue taxonomy can differ.
     """
-    q1_row = _gasto_transaction("row-q1", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
-    q3_row = _gasto_transaction("row-q3", value_date=date(2024, 8, 1), taxable_base=Decimal("70.00"))
+    q1_row = _gasto_transaction("row-q1", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = _gasto_transaction("row-q3", value_date=date(2025, 8, 1), taxable_base=Decimal("70.00"))
     wrong_direction_q3_row = _gasto_transaction(
         "row-q3-wrong-direction",
-        value_date=date(2024, 9, 1),
+        value_date=date(2025, 9, 1),
         taxable_base=Decimal("30.00"),
         direction=TransactionDirection.INCOMING,
     )
@@ -518,8 +518,8 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert partitioned.issues == ()
     assert partitioned.out_of_window_summary is not None
     assert partitioned.out_of_window_summary.count == 2
-    assert partitioned.out_of_window_summary.min_filing_date == date(2024, 8, 1)
-    assert partitioned.out_of_window_summary.max_filing_date == date(2024, 9, 1)
+    assert partitioned.out_of_window_summary.min_filing_date == date(2025, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2025, 9, 1)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {q3_row.transaction_id}
@@ -543,8 +543,8 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     assert str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
 
     feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
-    feb = _gasto_transaction("feb", value_date=date(2024, 2, 1), taxable_base=feb_base)
-    apr = _gasto_transaction("apr", value_date=date(2024, 4, 2), taxable_base=apr_base)
+    feb = _gasto_transaction("feb", value_date=date(2025, 2, 1), taxable_base=feb_base)
+    apr = _gasto_transaction("apr", value_date=date(2025, 4, 2), taxable_base=apr_base)
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
     aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
 
@@ -575,7 +575,7 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
     actividad_base = Decimal("100.00")
     transaction = _gasto_transaction(
         "actividad-pending-review",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
         taxable_base=actividad_base,
         irpf_category="actividad_economica",
@@ -588,8 +588,8 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2024, "0A"),
-        profile_year=2024,
+        period=_period(2025, "0A"),
+        profile_year=2025,
     )
 
     # The quarterly pago fraccionado accepts the row.
@@ -611,7 +611,7 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
     """
     transaction = _gasto_transaction(
         "actividad-reviewed",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         irpf_category="actividad_economica",
@@ -624,8 +624,8 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2024, "0A"),
-        profile_year=2024,
+        period=_period(2025, "0A"),
+        profile_year=2025,
     )
 
     assert {observation.transaction_id for observation in quarterly.observations} == {transaction.transaction_id}
@@ -640,7 +640,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
     """
     transaction = _gasto_transaction(
         "no-marker",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
@@ -651,8 +651,8 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2024, "0A"),
-        profile_year=2024,
+        period=_period(2025, "0A"),
+        profile_year=2025,
     )
 
     assert [issue.reason for issue in annual.issues] == [
@@ -684,7 +684,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
     """A wholly ``EXENTO`` taxpayer's non-deductible input IVA joins the M130 gasto, end to end.
 
     Same medico radiologo figures the M100 side proves against the AEAT Manual
-    practico de Renta 2024 (Parte 1, Capitulo 7): base 8.000,00 EUR, IVA
+    practico de Renta 2025 (Parte 1, Capitulo 7): base 8.000,00 EUR, IVA
     soportado 1.600,00 EUR. LIVA art. 20.Uno.3.º gives the activity NO right to
     deduct any of its input IVA (art. 94.Uno a contrario), and that legal fact is
     unchanged between the annual declaration and the quarterly pago fraccionado
@@ -695,7 +695,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
     """
     row = _gasto_transaction(
         "row-exento",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("9600.00"),
         taxable_base=Decimal("8000.00"),
         iva_amount=Decimal("1600.00"),
@@ -754,7 +754,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     """
     row = _gasto_transaction(
         "row-prorrata",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
@@ -764,7 +764,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     )
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2024,
+            ejercicio=2025,
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=None,
             provisional_percentage=Decimal("70"),
@@ -799,7 +799,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     """
     row = _gasto_transaction(
         "row-ninguna",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
@@ -808,7 +808,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         TransactionCatalogue.from_transactions((row,)),
     )
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
+        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
     )
 
     result = aggregate_renta_gasto_ledger_from_repositories(
@@ -840,7 +840,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     """
     row = _gasto_transaction(
         "row-shared",
-        value_date=date(2024, 2, 1),
+        value_date=date(2025, 2, 1),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
@@ -850,7 +850,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     )
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2024,
+            ejercicio=2025,
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=None,
             provisional_percentage=Decimal("70"),
@@ -873,12 +873,12 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
 
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_period(2024, "0A"),
+        period=_period(2025, "0A"),
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
-        profile_year=2024,
+        profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),

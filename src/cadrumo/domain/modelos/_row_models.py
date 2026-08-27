@@ -73,8 +73,21 @@ _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=T
 # ---------------------------------------------------------------------------
 
 
+_M184_CLAVE = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
+_M184_SUBCLAVE = Literal["01", "02", "03", "04", "05", "06"]
+_M184_NATURALEZA_INMUEBLE = Literal["1", "2"]
+_M184_SITUACION_INMUEBLE = Literal["1", "2", "3", "4", "5"]
+_M184_CLAVE_DECLARADO = Literal["N", "T", "U", "O"]
+
+
 class Modelo184MemberRow(BaseModel):
-    """One atribución member row for Modelo 184.
+    """One (member, clave, subclave) atribución row for Modelo 184.
+
+    The socio record's own diseño repeats per clave or subclave with an
+    importe declared, not per member alone (see the accepted row-shape ADR),
+    so this row's identity is ``(nif, clave, subclave)`` rather than ``nif``
+    alone -- the same shape 349's ``operador`` row already carries via its
+    ``clave_operacion`` axis.
 
     Fields mirror the per-record Tipo-2 layout declared in the M184
     ``bindings/0001-bindings.toml`` atribucion_member source block.
@@ -85,6 +98,16 @@ class Modelo184MemberRow(BaseModel):
     * ``porcentaje`` → ``share_percentage`` (binding: modelo-184-member-row-share)
     * ``importe`` → ``base_imponible_assigned`` (binding: modelo-184-member-row-base-assigned)
     * ``pais`` → ``country_code`` (required; never inferred)
+    * ``clave`` → ``clave`` (binding: modelo-184-member-row-clave)
+    * ``subclave`` → ``subclave`` (binding: modelo-184-member-row-subclave)
+    * every clave/subclave-conditional field below mirrors its own
+      ``modelo-184-member-row-<field>`` binding.
+
+    Deliberately excluded (see the accepted row-shape ADR): the clave-A
+    reducción (its governing article is unresolved), provisiones-gastos-
+    dificil-justificacion (computed from the entity's own régimen fact, not
+    an operator-declared value), and any clave-E eligibility fact (a tracked
+    gap, no representation in this tree yet).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -108,6 +131,34 @@ class Modelo184MemberRow(BaseModel):
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
 
+    # (member, clave, subclave) repetition axis. clave is required -- the
+    # socio record's own diseño has no row without one; subclave is optional
+    # because claves C and E carry no subclave table at all.
+    clave: _M184_CLAVE
+    subclave: _M184_SUBCLAVE | None = None
+
+    # Always-present-per-row facts, independent of clave.
+    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
+    miembro_a_31_diciembre: bool | None = None
+    dias_miembro: int | None = Field(default=None, ge=0, le=366)
+    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
+
+    # Clave-C inmueble sub-block.
+    naturaleza_inmueble: _M184_NATURALEZA_INMUEBLE | None = None
+    situacion_inmueble: _M184_SITUACION_INMUEBLE | None = None
+    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
+    clave_declarado: _M184_CLAVE_DECLARADO | None = None
+    porcentaje_titularidad_inmueble: Decimal | None = None
+    dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
+
+    # Shared clave-C/clave-D reducción field (diseño positions 109-119); the
+    # clave-A branch of this same physical field is deliberately excluded.
+    reduccion: Decimal | None = None
+
+    # Clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
+    rendimiento_neto_previo_eo: Decimal | None = None
+    rendimiento_neto_minorado_agricola_eo: Decimal | None = None
+
     @field_validator("pais")
     @classmethod
     def _pais_uppercase_alpha(cls, value: str) -> str:
@@ -122,12 +173,25 @@ class Modelo184MemberRow(BaseModel):
             raise ValueError(f"porcentaje must be within [0, 100]; got {value}")
         return value
 
+    @field_validator("porcentaje_titularidad_inmueble")
+    @classmethod
+    def _porcentaje_titularidad_within_bounds(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and (value < Decimal("0") or value > Decimal("100")):
+            raise ValueError(f"porcentaje_titularidad_inmueble must be within [0, 100]; got {value}")
+        return value
+
     @field_validator("nif")
     @classmethod
     def _nif_not_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("nif cannot be blank")
         return value.upper()
+
+    @model_validator(mode="after")
+    def _subclave_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
+        if self.subclave is not None and self.clave not in {"A", "D", "F", "G", "I", "J", "K"}:
+            raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
+        return self
 
 
 # ---------------------------------------------------------------------------

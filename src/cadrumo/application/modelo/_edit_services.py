@@ -458,7 +458,7 @@ def _writable_detail_row_entry(
 
 
 _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
-    "miembro": ("nif",),
+    "miembro": ("nif", "clave", "subclave"),
     "vinculada": ("nif",),
     "operador": ("nif_comunitario", "clave_operacion"),
     "rectificacion": ("nif_comunitario", "clave_operacion"),

@@ -46,3 +46,183 @@ source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
 source_ref = "aeat-modelo-184-procedure"
 required_text = ["atribución de rentas"]
 
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-clave"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "clave", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-subclave"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "subclave", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-codigo-provincia"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "codigo_provincia", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-miembro-a-31-diciembre"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "miembro_a_31_diciembre", grouping = "per_atribucion_member", record = "miembro", data_type = "boolean" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-dias-miembro"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "dias_miembro", grouping = "per_atribucion_member", record = "miembro", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-domicilio-fiscal"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "domicilio_fiscal", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-naturaleza-inmueble"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "naturaleza_inmueble", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-situacion-inmueble"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "situacion_inmueble", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-referencia-catastral"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "referencia_catastral", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-clave-declarado"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "clave_declarado", grouping = "per_atribucion_member", record = "miembro", data_type = "text" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-porcentaje-titularidad-inmueble"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "porcentaje_titularidad_inmueble", grouping = "per_atribucion_member", record = "miembro", data_type = "decimal" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-dias-arrendamiento"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "dias_arrendamiento", grouping = "per_atribucion_member", record = "miembro", data_type = "integer" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-reduccion"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "reduccion", grouping = "per_atribucion_member", record = "miembro", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-23", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-rendimiento-neto-previo-eo"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "rendimiento_neto_previo_eo", grouping = "per_atribucion_member", record = "miembro", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-184-member-row-rendimiento-neto-minorado-agricola-eo"
+source = "atribucion_member"
+selector = { fact = "row_field", row_field = "rendimiento_neto_minorado_agricola_eo", grouping = "per_atribucion_member", record = "miembro", data_type = "money" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]
