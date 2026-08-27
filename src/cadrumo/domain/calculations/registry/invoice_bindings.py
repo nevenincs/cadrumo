@@ -79,10 +79,7 @@ class InvoiceObservation(BaseModel):
     transaction. ``base_amount`` carries the taxable base; ``invoice_total_amount``
     carries the gross invoice total for modelos such as M347 whose declaration
     floor is not the taxable-base amount. ``intracommunity_clave`` follows the
-    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C) for M349.
-    ``operation_clave`` carries M347's OWN, unrelated clave-de-operacion
-    vocabulary (A-G; see :func:`m347_operation_clave`) -- the two claves share
-    no values in common and a row must never mix them.
+    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C).
     ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
     classification alongside.
     """
@@ -98,7 +95,6 @@ class InvoiceObservation(BaseModel):
     invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
-    operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
     rectified_period: str | None = Field(default=None, max_length=8)
@@ -107,7 +103,6 @@ class InvoiceObservation(BaseModel):
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
-    _operation_clave_uppercase = field_validator("operation_clave")(uppercase_alpha_code("operation_clave"))
 
     @field_validator("source_kind", mode="before")
     @classmethod
