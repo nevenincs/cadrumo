@@ -368,6 +368,9 @@ application:
         text_casilla_invalid: The casilla text value does not match its declared registry
           data type.
         text_casilla_not_string: The casilla text input must be a text value.
+        unsupported_filing_year: Filing year {filing_year} is not declared supported.
+          The registry declares {supported_filing_years}. Admit the year in {declaration}
+          after grounding its prerequisites.
     complementaria:
       errors:
         justificante_csv_absent: The complementaria requires the original filing's

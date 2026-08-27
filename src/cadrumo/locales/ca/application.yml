@@ -406,6 +406,9 @@ application:
           de dada declarat al registre.
         text_casilla_not_string: L'entrada de text de la casilla ha de ser un valor
           de text.
+        unsupported_filing_year: L'exercici {filing_year} no està declarat com a suportat.
+          El registre declara {supported_filing_years}. Admeteu l'exercici a {declaration}
+          després de fonamentar-ne els requisits.
     complementaria:
       errors:
         justificante_csv_absent: La complementària requereix el CSV del justificant

@@ -269,6 +269,42 @@ from .runtime import (
 )
 
 
+def _refuse_unsupported_filing_year(period: _Period) -> None:
+    """Refuse to build a filing draft for a year the registry does not declare supported.
+
+    Placed at the production consumption boundary rather than on the shared
+    snapshot accessor. The corpus deliberately ships historical revisions --
+    37 of the 58 bundled modelos carry years outside the declared window, some
+    reaching back to 2003 -- and structural inspection of those revisions is
+    legitimate. What is not legitimate is BUILDING A FILING for a year nobody
+    declared the product supports, which is what this guard refuses.
+
+    Raises:
+        ModeloApplicationError: When the period's filing year is outside the one
+            writable supported-year declaration. The message names the year and
+            that declaration, because a refusal an operator cannot act on is an
+            outage rather than a guard.
+    """
+    from ...core.resources import bundled_path
+    from ...domain.calculations.registry.loader import load_registry_tree
+
+    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    declaration = catalogues.supported_filing_years
+    if declaration is None:
+        return
+    supported = tuple(declaration.years)
+    if period.filing_year in supported:
+        return
+    raise ModeloApplicationError(
+        translated_message="application.filing.build_draft.errors.unsupported_filing_year",
+        context={
+            "filing_year": str(period.filing_year),
+            "supported_filing_years": ", ".join(str(year) for year in supported),
+            "declaration": "registry/aeat/legal/supported-filing-years.toml",
+        },
+    )
+
+
 def build_draft(
     *,
     modelo: str,
@@ -302,6 +338,7 @@ def build_draft(
         :class:`ModeloBuilderError`: If the registry has no
             matching snapshot, inputs are malformed, or strict validation fails.
     """
+    _refuse_unsupported_filing_year(period)
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
     snapshot_ref = _RegistrySnapshotRef(
