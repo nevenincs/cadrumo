@@ -2060,7 +2060,7 @@ cli:
         export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
         export_out_help: Az archívum célútvonala.
         help: 'Profil biztonsagi mentese lezart, AEAD-titkositott archivumba, vagy
-          egy archivum vizsgalata; visszaallitas: ''aeat config profile restore''.'
+          egy archivum vizsgalata; visszaallitas: ''aeat config profile archive import''.'
         import_artifact_help: Helyreallitasi elemfajl; akkor hasznalja, ha a profil
           jelszava elveszett.
         import_file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.

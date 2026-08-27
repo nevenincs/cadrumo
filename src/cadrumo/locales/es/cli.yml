@@ -2090,7 +2090,7 @@ cli:
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
-          o inspeccion de uno; restauralo con 'aeat config profile restore'.
+          o inspeccion de uno; restauralo con 'aeat config profile archive import'.
         import_artifact_help: Archivo de artefacto de recuperacion; uselo cuando se
           haya perdido la contrasena del perfil.
         import_file_help: Ruta al directorio de la capsula sin publicar que se va

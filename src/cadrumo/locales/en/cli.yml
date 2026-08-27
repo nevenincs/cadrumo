@@ -1927,7 +1927,7 @@ cli:
         export_name_help: Profile to back up; defaults to active.
         export_out_help: Destination path for the archive.
         help: Back up a profile to a sealed, AEAD-encrypted archive, or inspect one;
-          restore it with 'aeat config profile restore'.
+          restore it with 'aeat config profile archive import'.
         import_artifact_help: Recovery artifact file; use it when the profile password
           is lost.
         import_file_help: Path to the unpublished capsule directory to restore.

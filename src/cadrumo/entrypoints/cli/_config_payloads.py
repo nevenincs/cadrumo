@@ -392,7 +392,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
 
 
 class ConfigProfileArchiveImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile restore``.
+    """JSON envelope for ``aeat config profile archive import``.
 
     Reports one completed restore of a capsule the operator held on disk.
 

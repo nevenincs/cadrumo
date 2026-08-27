@@ -1,6 +1,6 @@
 """A restore source is read through the anchored primitive, not by name.
 
-``config profile restore`` accepts a capsule DIRECTORY, and that directory is
+``config profile archive import`` accepts a capsule DIRECTORY, and that directory is
 the least trusted input this domain takes: a published capsule sits inside the
 product's own storage root, while a restore source is a path an operator points
 at -- copied from a backup, handed over by someone else, or reconstructed by
