@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-27'
-body_hash: 'sha256:8073b69748e38d93478b1d0ba806925806e2fd0513273a49c7e4dc8140587c0c'
+body_hash: 'sha256:5435c538bdaa068d07ec66c34a0bb24bd18a48bd4e096b1faa96db6a03806e18'
 ---
 
 # `tui-architecture` plan
@@ -403,6 +403,7 @@ Add the distinct transient financial operand protocol, enroll the Modelo calcula
 - [ ] `W05.P23.S147` - Produce and validate the exact clean-commit TuiOperationFinancialOperandDependencyReceiptV1 with protocol and schema fingerprints, custody-state evidence, crash matrix, non-retention proof, production definition inventory, source ancestry, and the precise edit path it opens; `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`.
 - [ ] `W05.P23.S148` - Run the sole Edit Contract dependency validator against the exact green Workspace C2 and financial-operand receipts, accepted edit authority, closed EditContract implementation tuple, enrolled production definition, guarded result evidence, current source tree, no-legacy proof, and duplicate-authority census; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
 - [ ] `W05.P23.S149` - Produce and validate the exact clean-commit ModeloEditContractC3DependencyReceiptV1 binding the Workspace C2 and financial-operand predecessor digests, edit compatibility tuple, baseline and surface fingerprints, guarded persistence evidence, result schema, production definition, conformance, and exact C3 edit destinations it opens; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`.
+- [ ] `W05.P23.S306` - Build the typed Modelo Workspace refresh target and the per-operation resolver mechanism that produces it, which no operation has despite one Step already claiming to have delivered it: the type exists nowhere in the tree, OperationDefinition carries no resolver field or hook, and the rename enrolment that names the refresh target in its own title contains no reference to one, so every later enrolment inherits the same silent omission; define the typed target, add the registration point an operation definition uses to resolve into it, and prove a real enrolled operation resolves a genuine target rather than the generic operations-layer request envelope that exists today; `the operations registry OperationDefinition schema, the modelo operation definitions module, the typed refresh target, and a real per-operation resolution test`.
 
 ## Wave `W06` - Composition cutover and legacy deletion
 
