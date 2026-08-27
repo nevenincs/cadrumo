@@ -62,7 +62,7 @@ CONSUMER_CATEGORIES: Final = (
     "package_attribute",
     "transitive",
 )
-REVIEW_STATUS: Final = "pending_independent_architecture_review"
+REVIEW_STATUS: Final = "independent_architecture_review_approved"
 TRANSITIVE_CONSUMER_CATEGORY: Final = "transitive"
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = ROOT / "dev/quality/registry_facade_family_census.v1.json"
@@ -913,7 +913,15 @@ def _symbol_terminal_destinations(
     row: dict[str, object],
     generated: dict[str, object],
 ) -> dict[str, dict[str, str]]:
-    """Provide structured future destinations only for evidence symbols now absent."""
+    """Say where each currently-absent evidence symbol is headed, or that it is gone.
+
+    A symbol absent from its family's modules is usually in transit: the
+    relocation has not landed yet and the destination is where it will arrive.
+    But a c941 facade could export symbols it never defined, and when the
+    sibling that DID define them is retired at source those names arrive
+    nowhere.  Calling that a future destination asserts a move that will never
+    happen, so the two cases carry different reasons.
+    """
     symbols = generated["facade_exported_symbols"]
     locators = generated["current_symbol_locators"]
     if not isinstance(symbols, list) or not isinstance(locators, dict):
@@ -921,8 +929,10 @@ def _symbol_terminal_destinations(
     destination = _terminal_destinations(row)[0]["path"]
     if not isinstance(destination, str):
         raise RuntimeError("terminal destination path is malformed")
+    retired_at_source = _facade_symbols_all_absent(symbols if isinstance(symbols, list) else [])
+    reason = "retired_at_source" if retired_at_source else "future_terminal_destination"
     return {
-        symbol: {"path": destination, "reason": "future_terminal_destination"}
+        symbol: {"path": destination, "reason": reason}
         for symbol in symbols
         if isinstance(symbol, str) and not locators.get(symbol)
     }
