@@ -1093,29 +1093,52 @@ def _collapsed_prose(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", value.lower())
 
 
+_TRACKED_DEFINED_NAMES: frozenset[str] | None = None
+
+
+def _tracked_defined_names() -> frozenset[str]:
+    """Return every top-level name tracked source defines, computed once."""
+    global _TRACKED_DEFINED_NAMES
+    if _TRACKED_DEFINED_NAMES is not None:
+        return _TRACKED_DEFINED_NAMES
+    names: set[str] = set()
+    for evidence_file in _evidence_files():
+        if not evidence_file.path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(evidence_file.text, filename=evidence_file.path)
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                names.add(node.name)
+            elif isinstance(node, ast.Assign):
+                names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+    _TRACKED_DEFINED_NAMES = frozenset(names)
+    return _TRACKED_DEFINED_NAMES
+
+
 def _facade_symbols_all_absent(exported_symbols: list[str]) -> bool:
     """Return whether tracked source defines none of a row's facade symbols.
 
     Computed here rather than declared on the row.  An author-set flag would
-    make the absence branch below satisfiable by assertion, which is the shape
-    an allowlist takes when it stops meaning anything; a fact the checker
-    derives from the current tree cannot be loosely satisfied.
+    make the absence branch satisfiable by assertion, which is the shape an
+    allowlist takes when it stops meaning anything; a fact the checker derives
+    from the current tree cannot be loosely satisfied.
 
     A c941 facade could export symbols it never defined -- it imported them
     from a sibling and republished them -- so a family can outlive its entire
     historic export list while its own logic keeps a live defining owner.
-    That is why absence of every exported symbol does not imply the family is
-    gone, and why the branch this feeds admits an anchor outside the export
-    list instead of demanding a deletion disposition.
+    Absence of every exported symbol therefore does not imply the family is
+    gone, which is why the branch this feeds admits an anchor outside the
+    export list instead of demanding a deletion disposition.
     """
     if not exported_symbols:
         return False
-    for evidence_file in _evidence_files():
-        if not evidence_file.path.endswith(".py"):
-            continue
-        if any(_definition_lines(evidence_file.path, symbol) for symbol in exported_symbols):
-            return False
-    return True
+    defined = _tracked_defined_names()
+    return not any(symbol in defined for symbol in exported_symbols)
 
 
 def _top_level_symbol_locators(path: str) -> dict[str, str]:
