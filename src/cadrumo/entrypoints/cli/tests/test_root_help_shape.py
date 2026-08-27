@@ -554,8 +554,12 @@ class TestBareInvocationWithActiveProfile:
         missing = _invoke([])
         with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
             register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
+            # `overview status` reads profile-bound storage, so it needs the
+            # open session. The landing below deliberately does not: naming the
+            # selected profile is a pointer read, and that is the distinction
+            # this case exists to hold.
+            overview = _invoke(["app", "overview", "status"])
         active = _invoke([])
-        overview = _invoke(["app", "overview", "status"])
 
         assert missing.exit_code == 0, missing.output
         assert "aeat config profile create NAME" in missing.output
