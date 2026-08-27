@@ -104,24 +104,6 @@ def test_profile_rename_verb_is_not_registered(_per_bucket_backend: Path) -> Non
     assert read_profile_bucket("beta") is None
 
 
-def test_profile_create_refuses_case_insensitive_duplicate_label(
-    _per_bucket_backend: Path,
-) -> None:
-    """Display-name uniqueness is enforced case-insensitively across live profiles."""
-
-    first = _invoke(("config", "profile", "create", "Only One", "--quiet"))
-    assert first.exit_code == 0, first.output
-
-    second = _invoke(("config", "profile", "create", "only one", "--quiet"))
-    assert second.exit_code != 0, second.output
-    flat = second.output.lower()
-    assert "ya existe" in flat or "already exists" in flat
-
-    listed = _invoke(("config", "profile", "list"))
-    assert listed.exit_code == 0, listed.output
-    assert "Only One" in listed.output
-
-
 # --- profile-lifecycle navigation from a no-active-session state ---
 #
 # These tests drive the full root CLI so the CLI root callback (the

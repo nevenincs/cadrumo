@@ -30,6 +30,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from ..custody_transactions import ProfileCustodyDuplicateLabelError
+from ..registration import ProfileRegistrationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -197,8 +198,14 @@ def test_atomic_create_refuses_a_label_differing_only_in_case(_cli_storage: Path
 
     _create("Only One", tax_id="12345678Z")
 
-    with pytest.raises(ProfileCustodyDuplicateLabelError):
+    with pytest.raises(ProfileRegistrationError) as refusal:
         _create("only one", tax_id="87654321X")
+
+    # The outward contract is the operator-facing "already exists"; the chained
+    # cause pins WHICH conflict produced it, so a future refusal arriving from
+    # some other custody conflict cannot silently satisfy this test.
+    assert "profile_already_exists" in str(refusal.value)
+    assert isinstance(refusal.value.__cause__, ProfileCustodyDuplicateLabelError)
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
