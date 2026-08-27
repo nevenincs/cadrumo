@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d494ee2321e16d01181e50a93bee9463798922e7cf2e4353cdab71e5da60332c'
+body_hash: 'sha256:64c596389e3f60610b6780f368758fcd0147b07bc14f9de7b9424caf69b5a808'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
@@ -105,3 +105,24 @@ what it does.
   `test_command_loading_contract.py`, which the `S54`/`S55` cutover replaced
   with `test_command_spec_universal_gates.py`. The Step intent survives; the
   paths need rewriting before those Steps are worked.
+
+- `application/operator_output/tests/test_operator_output.py` fails at HEAD on
+  two cases that pin the retired `SCHEMA_REGISTRY` design.
+  `core/json_contract.validate_registered_result` no longer performs a registry
+  lookup: it asserts the result is a strict `OutputSchema` and revalidates it
+  against its own type. So an "unregistered command" no longer raises, and a
+  non-schema result raises "is not a strict output schema" rather than "does
+  not conform to the registered schema". Committed code against committed
+  tests, neither touched by this campaign. The tests need rewriting to the
+  current contract by the owner of that boundary.
+- `application/workflow/tests/test_profile_health.py` fails 6 cases when run as
+  a FILE in isolation, with `ProfileKeysRegistrationError`: the profile-key
+  reader depends on `cadrumo.application.wizard` having been imported by some
+  other test first. It passes in a directory run. Demand-loading makes this
+  class of accidental-import dependency more likely to surface, so the reader
+  should ensure registration rather than rely on an incidental import.
+- `read_profile_bucket*` needed the REFUSING half of the summary boundary
+  (`require_summaries`). The typed-outcome form is correct only where a surface
+  can explain itself to the operator; a function returning a pointer-or-`None`
+  cannot, and an empty result there reads as "you have no profiles". Any future
+  consumer of `summary_inventory` must make that same choice deliberately.
