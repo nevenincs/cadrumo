@@ -169,3 +169,20 @@ def test_no_executor_reaches_a_remote_surface(factory_name: str) -> None:
         assert not any(forbidden in name.lower() for name in reached), (
             f"{factory_name} reaches a remote surface: {forbidden}"
         )
+
+
+def test_every_exported_definition_reaches_the_production_registry() -> None:
+    """No enrolment ships as capacity nothing can reach.
+
+    These definitions sat exported and uncomposed: the registry knew none of
+    them, so no frontend could submit one and no journal could record one. A
+    definition that cannot be reached is indistinguishable from one that does
+    not exist, except that it still has to be maintained.
+    """
+    from ....entrypoints._operation_composition import build_production_operation_registry
+
+    exported = {definition.definition_id for definition in _definitions().values()}
+    composed = {definition.definition_id for definition in build_production_operation_registry().definitions}
+
+    assert exported, "no enrolment is exported; this assertion would be vacuous"
+    assert exported <= composed, f"exported but never composed: {sorted(exported - composed)}"

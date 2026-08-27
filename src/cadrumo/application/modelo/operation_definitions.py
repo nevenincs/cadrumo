@@ -271,6 +271,19 @@ def build_modelo_work_discard_registration(
 type ModeloWorkVerifyProfileResolver = Callable[[], TaxpayerProfile]
 
 
+def resolve_active_workflow_profile() -> TaxpayerProfile:
+    """Resolve the active taxpayer profile when an operation actually runs.
+
+    Injected as a strategy rather than a value: a definition composed into the
+    production registry must not close over whichever profile happened to be
+    active when the registry was built.
+    """
+    from ..wizard.status import load_active_taxpayer_profile
+    from ..workflow.persistence import workflow_state_repository
+
+    return load_active_taxpayer_profile(workflow_state_repository().load())
+
+
 class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
     """The calculation revision to verify.
 
@@ -350,7 +363,7 @@ class ModeloWorkVerifyExecutor:
 
 def build_modelo_work_verify_definition(
     *,
-    profile_resolver: ModeloWorkVerifyProfileResolver,
+    profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the verification authority to its registered operation contract."""
 
@@ -367,7 +380,11 @@ def build_modelo_work_verify_definition(
             build=build,
         ),
         phase_codes=("modelo.work.verify.gates", "modelo.work.verify.persist"),
-        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        # No REVIEW: the platform's review contract means the executor presents a
+        # reviewed operand and settles on the operator's verdict. These run
+        # straight through, so claiming REVIEW would declare an interaction that
+        # never happens.
+        interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.COOPERATIVE,
@@ -490,7 +507,7 @@ class ModeloWorkFileExecutor:
 
 def build_modelo_work_file_definition(
     *,
-    profile_resolver: ModeloWorkVerifyProfileResolver,
+    profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the local filing authority to its registered operation contract."""
 
@@ -507,7 +524,11 @@ def build_modelo_work_file_definition(
             build=build,
         ),
         phase_codes=("modelo.work.file.preconditions", "modelo.work.file.record"),
-        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        # No REVIEW: the platform's review contract means the executor presents a
+        # reviewed operand and settles on the operator's verdict. These run
+        # straight through, so claiming REVIEW would declare an interaction that
+        # never happens.
+        interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -545,9 +566,6 @@ def build_modelo_work_file_registration(
     )
 
 
-type ModeloExportCommandBuilder = Callable[[str, str], ModeloExportCommand]
-
-
 class ModeloExportRequest(CredentialFreeOperationRequest):
     """The revision to export and where the operator wants the artefact.
 
@@ -560,6 +578,10 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
 
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     output_path: Annotated[str, Field(min_length=1, max_length=4096)]
+
+    #: The operator this invocation acts as; stamped onto the exported
+    #: artefact through the command built from this request.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
 
 
 class ModeloExportPublicResultV1(BaseModel):
@@ -600,15 +622,9 @@ class ModeloExportExecutor:
     the tax authority only when a human carries it there.
     """
 
-    def __init__(
-        self,
-        *,
-        profile_resolver: ModeloWorkVerifyProfileResolver,
-        command_builder: ModeloExportCommandBuilder,
-    ) -> None:
-        """Bind the live profile and the identity-bearing command builder."""
+    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+        """Bind the live profile the export gates are judged against."""
         self._profile_resolver = profile_resolver
-        self._command_builder = command_builder
 
     async def execute(
         self,
@@ -617,25 +633,29 @@ class ModeloExportExecutor:
     ) -> str | None:
         """Delegate to the export authority and return the artefact digest.
 
-        Presenter, taxpayer and product identities come from the injected
-        builder rather than the request, so an operation replayed later cannot
-        stamp an artefact with an identity that has since changed.
+        The command is built from the journalled request, so the identity an
+        artefact is stamped with is the one this invocation recorded rather
+        than whatever a closure happened to hold when the definition was built.
         """
         del context
-        command = self._command_builder(request.payload.calculation_revision_id, request.payload.output_path)
+        payload = request.payload
+        command = ModeloExportCommand(
+            calculation_revision_id=payload.calculation_revision_id,
+            output_path=payload.output_path,
+            actor=payload.actor,
+        )
         result = export_modelo_revision(command, workflow_profile=self._profile_resolver())
         return str(result.file_sha256)
 
 
 def build_modelo_export_definition(
     *,
-    profile_resolver: ModeloWorkVerifyProfileResolver,
-    command_builder: ModeloExportCommandBuilder,
+    profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
     def build() -> ModeloExportExecutor:
-        return ModeloExportExecutor(profile_resolver=profile_resolver, command_builder=command_builder)
+        return ModeloExportExecutor(profile_resolver=profile_resolver)
 
     return OperationDefinition(
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -798,7 +818,11 @@ def build_modelo_work_amend_definition() -> OperationDefinition:
             build=build,
         ),
         phase_codes=("modelo.work.amend.baseline", "modelo.work.amend.record"),
-        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        # No REVIEW: the platform's review contract means the executor presents a
+        # reviewed operand and settles on the operator's verdict. These run
+        # straight through, so claiming REVIEW would declare an interaction that
+        # never happens.
+        interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -923,6 +947,8 @@ __all__ = [
     "ModeloWorkVerifyRequest",
     "build_modelo_export_definition",
     "build_modelo_export_registration",
+    "build_modelo_lifecycle_operation_definitions",
+    "build_modelo_lifecycle_operation_registrations",
     "build_modelo_work_amend_definition",
     "build_modelo_work_amend_registration",
     "build_modelo_work_discard_definition",
@@ -936,3 +962,35 @@ __all__ = [
     "project_modelo_export_result",
     "project_modelo_work_verify_result",
 ]
+
+
+def build_modelo_lifecycle_operation_definitions() -> tuple[OperationDefinition, ...]:
+    """Return the one canonical modelo lifecycle operation population.
+
+    Every definition this module exports belongs here. A definition that is
+    exported and never composed is capacity nothing can reach, which is the
+    shape this population exists to make impossible to ship.
+    """
+    return (
+        build_modelo_export_definition(),
+        build_modelo_work_amend_definition(),
+        build_modelo_work_discard_definition(),
+        build_modelo_work_file_definition(),
+        build_modelo_work_rename_definition(),
+        build_modelo_work_verify_definition(),
+    )
+
+
+def build_modelo_lifecycle_operation_registrations(
+    definitions: tuple[OperationDefinition, ...],
+) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
+    """Bind each lifecycle definition to its stable public schemas."""
+    builders = {
+        MODELO_EXPORT_OPERATION_DEFINITION_ID: build_modelo_export_registration,
+        MODELO_WORK_AMEND_OPERATION_DEFINITION_ID: build_modelo_work_amend_registration,
+        MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID: build_modelo_work_discard_registration,
+        MODELO_WORK_FILE_OPERATION_DEFINITION_ID: build_modelo_work_file_registration,
+        MODELO_WORK_RENAME_OPERATION_DEFINITION_ID: build_modelo_work_rename_registration,
+        MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID: build_modelo_work_verify_registration,
+    }
+    return tuple(builders[definition.definition_id](definition) for definition in definitions)
