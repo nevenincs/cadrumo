@@ -61,7 +61,9 @@ def _build(factory: Any) -> OperationDefinition:
     missing = [name for name in parameters if name not in _FACTORY_ARGUMENTS]
     if missing:
         pytest.fail(f"{factory.__name__} needs arguments this conformance suite cannot supply: {missing}")
-    return factory(**{name: _FACTORY_ARGUMENTS[name] for name in parameters})
+    built = factory(**{name: _FACTORY_ARGUMENTS[name] for name in parameters})
+    assert isinstance(built, OperationDefinition)
+    return built
 
 
 def _definitions() -> dict[str, OperationDefinition]:

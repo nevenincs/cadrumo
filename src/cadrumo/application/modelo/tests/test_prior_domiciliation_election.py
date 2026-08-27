@@ -108,15 +108,16 @@ def _revision(
     # Built once and fed to BOTH the deriver and the revision: the id is content
     # addressed over the amendment identity, so deriving without it produces an id
     # the revision then rejects as not matching its own content.
-    amendment_identity = (
-        None
-        if amendment_kind is None
-        else CalculationRevisionAmendmentIdentity(
+    amendment_identity: CalculationRevisionAmendmentIdentity | None
+    if amendment_kind is None:
+        amendment_identity = None
+    else:
+        assert baseline_filing_record_id is not None
+        amendment_identity = CalculationRevisionAmendmentIdentity(
             kind=amendment_kind,
             amends_filing_record_id=baseline_filing_record_id,
             m303_rectificativa_motive=None,
         )
-    )
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,

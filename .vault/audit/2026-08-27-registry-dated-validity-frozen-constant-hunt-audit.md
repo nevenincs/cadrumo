@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa1131382028adf5dd8908ab0a74b9b962f2f459550e1dab74b91db870e0a3dc'
+body_hash: 'sha256:754e6a55e050efe865ce46a34cc6dc560cbf8233af5105396ab7e74aff746826'
 related: []
 ---
 
@@ -58,7 +58,7 @@ less than the law allows and OVER-pay. That produces a valid return, no refusal
 and no signal. `no-silent-under-declaration` names this as the unwatched axis,
 and both defects found so far run that way.
 
-### CONFIRMED -- the seguro de enfermedad cap encodes one limb of a two-limb provision
+### FIXED -- the seguro de enfermedad cap encodes one limb of a two-limb provision
 
 LIRPF art. 30.2.5.a, verbatim from the bundled consolidated corpus:
 
@@ -124,7 +124,7 @@ a test.
 
 Direction: not applicable, the values match the statute.
 
-### CONFIRMED -- the rehabilitation lookback approximates a calendar rule and loses a day to leap years
+### FIXED -- the rehabilitation lookback approximates a calendar rule and loses a day to leap years
 
 Art. 23.2.c grants the 60 per cent tier when the rehabilitation `hubiera
 finalizado en los dos anos anteriores a la fecha de la celebracion del contrato`.
@@ -289,7 +289,7 @@ The ratio is a literal, repeated in all three apartados, with no deferral clause
 The registry carries `irpf.art_109_retained_income_exemption_ratio = 0.70` from
 2019-01-01, which matches. The ratio is not the defect.
 
-### CONFIRMED -- the Art. 109 denominator ignores an exclusion the statute states twice
+### FIXED -- the Art. 109 denominator ignores an exclusion the statute states twice
 
 Reading past the ratio to the rest of the provision is what this hunt is for, and
 apartados 3 and 4 do not measure the 70 per cent over the same base as apartado
@@ -407,28 +407,68 @@ here so a later reader does not re-derive the same negative.
 Worth noting for whoever models it: the 2023 change lands mid-ejercicio, so that
 year carries two rates and the value is dated from birth.
 
+## Disposition
+
+All four confirmed defects are fixed. Each landed with real-behaviour tests and a gate
+proven to bite by mutating the shipped data or code from outside the tracked tree.
+
+| defect | direction | what shipped |
+|---|---|---|
+| mutualidad cap frozen at 15000 | over-payment | five grounded dated rows, 2022-2026 |
+| seguro de enfermedad, 1.500 limb absent | over-payment | both limbs as annual per-person variants |
+| rehabilitation lookback as 730 days | over-payment | calendar-relative window, days parameter retired |
+| Art. 109 denominator not net of subvenciones | over-compliance | art. 109's own concept set and activity gate |
+
+**One of the four is not yet reachable in production, and saying otherwise would be the
+recorded-but-not-implemented failure this project names.** The seguro fix computes the
+lawful sum only when the per-variant person counts are supplied, and the sole production
+construction site of `RentaDeductibilityContext`, in
+`application/aggregation/_renta_ledger.py`, supplies none. Shipped behaviour is still a
+flat 500 for the contribuyente. The uncounted path deliberately falls back to the
+ordinary limb, so widening the rule regressed nobody, but wiring the family profile
+through to that context is open work. The signals exist -- `disability_grade` on
+taxpayer, spouse, descendants and ascendants, with RIRPF art. 72 fixing the 33 per cent
+threshold -- so this is plumbing, not evidence.
+
+The Art. 109 fix has the same shape in reverse: it IS reachable, because the activity
+class and income concept are already carried on the ledger row itself.
+
+### What the fixes changed about the class, beyond the four cases
+
+Two of the four were fixed by widening a concept the codebase already had rather than
+adding a second one. `StatutoryCapVariant` already meant "a cap selected by a legally
+relevant condition" and only its UNIT was daily; the seguro limbs are the same concept
+in annual per-person form. `add_prescription_years` already did calendar-year
+arithmetic with a leap clamp, and the rehabilitation window is the same arithmetic
+under a different provision -- so it moved to `core.calendar_shift.shift_by_calendar_years`
+and both domains now read one primitive with a name that says what it does rather than
+which law first needed it.
+
+That is the durable lesson under the four findings. In every case the codebase already
+held the distinction the statute draws; what was missing was the recognition that a
+second provision needed the same one. A hunt for this class should therefore look for
+provisions the code half-implements, not for values that look stale.
+
 ## Recommendations
 
-- Settle the seguro de enfermedad discapacidad limb. Two decisions are needed
-  before data: whether `StatutoryCapVariant` gains an annual amount alongside its
-  per-day one, and where the discapacidad signal for the insured person comes
-  from. Neither is a figure that has to be fetched -- both numbers are in the
-  statute -- so this is blocked on design, not on evidence.
-- Settle the rehabilitation lookback. Replace the 730-day count with
-  calendar-relative arithmetic and decide what becomes of the
-  `renta-<year>-rental-rehab-lookback-days` parameter it makes vacuous. Blocked on
-  that decision, not on evidence.
+- Wire the insured-person counts through to `RentaDeductibilityContext` from the
+  family profile, so the seguro fix reaches a return. Until that lands the higher
+  limb is expressible and correct but never selected, and the shipped answer stays
+  the ordinary limb.
+- The rehabilitation parameter question is settled: the days declaration was
+  retired across all six revisions that carried it and re-declared in years, so no
+  parameter describes a unit the code no longer uses. A gate reds if any revision
+  re-declares it in days.
 - Widen the hunt beyond values to UNIT and BOUNDARY approximations. The
   rehabilitation finding is not a wrong number -- every number involved is right.
   It is a calendar rule re-expressed in days, and the loss only appears at the
   boundary. Any constant whose docstring says the project "picks", "interprets"
   or "approximates" a statutory phrase is a candidate on the same footing as a
   frozen constant.
-- Fix the Art. 109 denominator for agricultural, livestock and forestry
-  activities, and add the activity-class gate. Both building blocks already ship:
-  the subvencion-kind distinction in `domain/transactions/_volumen_ingresos.py`
-  and `taxpayer_type` / `iae_epigraph` on the profile schema. Use a BROADER
-  exclusion than art. 110's, which is deliberately narrower.
+- Operator re-stamp on the one tax review these fixes rest on: the art. 109
+  profesional selector groups A04 (artisticas y deportivas) with A05, following the
+  art. 95 partition this registry already grounds. It is marked agent_reviewed in
+  the parameter's own reviewed_by field.
 - None of the three open findings is blocked on a figure. Each needs a SCOPING
   decision -- which population a rule applies to, or which signal selects between
   two lawful values -- and every number involved is already in the statute or

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e02373e0b7aacce41a6ab3bbe3855d8653d5cb540bf1c783b919e041517e7c58'
+body_hash: 'sha256:dea4e24c90054f13b21d220280d4429e0886fc59406a5d2c0c18e269f4af5318'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -70,6 +70,12 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `ce21551ec4`: S296, shared schema_facet builders + graded casilla builder)
 - `M` `.vault/plan/2026-08-11-tui-architecture-plan.md` (commit `4f276841bd`: S296 checked)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (115 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace_models.py`, `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md`, `.vault/reference/2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference.md` (commit `81b6c02e82`: `effective_grade` retired, 14th finding)
+- `M` `src/cadrumo/application/modelo/workspace.py` (commit `362848d606`: `resolve_graded_snapshot_baseline`)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py`, `workspace_models.py` (commit `2db7e387b8` -- captured a peer's unrelated in-flight `binding_selector_utils` refactor alongside it, verified harmless: `resolve_graded_snapshot_result`, `graded_snapshot_family_dispositions`, `_not_applicable_family_dispositions`, the two real end-to-end tests)
+- `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py::test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculation src/cadrumo/application/modelo/tests/test_workspace.py::test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_real_calculation -m "unit or integration" -q` -> `pass` (2 passed, re-run standalone against confirmed HEAD content)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m "unit or integration" -q` -> `pass` (118 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -452,3 +458,49 @@ still NOT built. `ModeloWorkspaceBoundedReviewPortV1` needs a
 `verification_repository` dependency `resolve_static_inspection_result`'s
 signature never carried, so the graded assembly's signature is wider than
 its static counterpart, not merely `grade` added. S128 stays unchecked.
+
+`resolve_graded_snapshot_result` built and landed. Also added
+`_not_applicable_family_dispositions` (extracted from
+`static_inspection_family_dispositions`'s existing body, confirmed
+identical semantics across admissions per S296) and
+`graded_snapshot_family_dispositions` -- a genuine 7th shared/graded
+building-block pair found while assembling, not previously sized.
+`paginate_static_inspection_schema_facet` turned out to already be
+admission-agnostic (takes generic records/metadata, not the inspection
+object), so it needed no graded sibling at all -- reused directly.
+
+Two real, end-to-end tests, no mocks: `test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculation`
+(a real persisted work unit with no calculation, proving `CALCULATION_UNAVAILABLE`
+fires) and `test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_real_calculation`
+(a real work unit + `calculate_modelo_revision` + `verify_revision` against
+modelo 130, reusing the exact fixture infrastructure `test_modelo_work_review.py`
+already established -- `_file_flow_support.py`'s `repos` fixture,
+`DEFAULT_130_BASELINE_INPUTS`/`DEFAULT_130_BINDING_VALUES`; proves the full
+projection assembles, `work_review.review` is the real captured
+`ModeloWorkReview` with `progress.state is COMPLETE` after verification,
+materialization/provenance/schema facets are all real and non-empty, and
+the whole result round-trips through JSON byte-for-byte). Both passed on
+the first real run.
+
+Disclosure: landed via two more shared-index captures into unrelated peer
+commits (`91a7b9b561`, `6babb35980`, then finally `2db7e387b8` for the
+complete function) -- each verified fully present and correct at HEAD via
+`ty check` and re-running the exact tests standalone before trusting it.
+One self-caught bug along the way: my first draft of the projection
+construction had leftover placeholder/dead-variable lines
+(`materialization_facet = ... if False else None`) from an incomplete edit;
+caught by `ty check` failing on undefined names before any test ran, fixed
+before landing.
+
+Full workspace-family regression: 118 passed, 1 pre-existing unrelated
+failure (`.baseline-source-snapshot` fixed-point / `dev/tests/test_tracked_content_excludes_transient_trees.py`
+remnant, reproduces independently of this change, confirmed both ways
+across this session). One transient import error during a suite run
+(`M349_OPERATION_CLAVES` momentarily unresolvable) confirmed as a
+concurrent peer write mid-import, not a real break -- re-ran clean.
+
+S128 is done: all sixteen findings this session (S277-S296 plus the
+effective_grade retirement and the 6th-contributor correction) are closed
+or ruled, and the full GRADED_SNAPSHOT assembly mirrors
+`resolve_static_inspection_result`'s WORK-then-REGISTRY discipline exactly,
+over the wider 6-contributor set GRADED_SNAPSHOT actually reads.

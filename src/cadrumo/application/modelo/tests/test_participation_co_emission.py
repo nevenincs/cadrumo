@@ -132,11 +132,13 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
 
         # --- VERIFY (co-emits VERIFICADO_COMPLETO participations) ---
         verified_at = _T0 + timedelta(hours=3)
+        revisions, revisions_revision_id = cr_repo.load_revisioned()
         _persist_verified_revision_evidence(
             target=revision,
             actor="aeat.cli.modelo.verify",
             now=verified_at,
-            revisions=cr_repo.load(),
+            revisions=revisions,
+            revisions_revision_id=revisions_revision_id,
             work_unit=work_unit,
             transaction_repository=None,
             calculation_repository=cr_repo,

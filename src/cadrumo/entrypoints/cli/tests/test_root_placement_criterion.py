@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import pytest
 
+from .._command_spec import CommandSpecNode, ExecutionPolicySpec
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -45,9 +46,9 @@ _APP = "app"
 _CONFIG = "config"
 
 
-def _subjects() -> dict[tuple[str, ...], list]:
+def _subjects() -> dict[tuple[str, ...], list[CommandSpecNode]]:
     """Group every leaf under its narrowest mountable subject."""
-    subjects: dict[tuple[str, ...], list] = {}
+    subjects: dict[tuple[str, ...], list[CommandSpecNode]] = {}
     for node in COMMAND_GRAPH.nodes():
         if node.spec.kind != "leaf":
             continue
@@ -55,14 +56,14 @@ def _subjects() -> dict[tuple[str, ...], list]:
     return subjects
 
 
-def _has_app_signal(policy: object) -> bool:
+def _has_app_signal(policy: ExecutionPolicySpec) -> bool:
     capabilities = policy.capabilities
     if "filing" in capabilities or "registry" in capabilities:
         return True
     return "calculation" in capabilities and policy.write_route != "none"
 
 
-def _has_config_signal(policy: object) -> bool:
+def _has_config_signal(policy: ExecutionPolicySpec) -> bool:
     capabilities = policy.capabilities
     if policy.write_route == "bootstrap-root":
         return True

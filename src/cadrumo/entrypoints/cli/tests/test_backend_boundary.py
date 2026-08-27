@@ -19,15 +19,15 @@ from typing import cast
 import click
 import pytest
 import typer
+from typer.core import TyperGroup
 
 from ....application.review import LedgerReviewFilterKey
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader_cache import discover_modelo_sources
 from ....tests import REPO_ROOT
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.user_profile import register_cli_profile
-from .. import _ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -133,33 +133,44 @@ def _invoke_help(*args: str) -> str:
     return result.output
 
 
+def _ledger_command_group() -> TyperGroup:
+    """Resolve the live ``app ledger`` Click command group from the real CLI tree.
+
+    The ledger commands no longer live behind a per-module Typer ``app``
+    (``_ledger.py`` was decomposed into the declarative ``CommandSpec`` graph
+    the root ``app`` is built from), so the group is reached the same way
+    :mod:`test_cli_workflow_verification` reaches any other mounted subject:
+    walk down from the materialised root command by name.
+    """
+    root = cadrumo_click_command()
+    assert isinstance(root, TyperGroup)
+    app_group = root.get_command(typer.Context(root), "app")
+    assert isinstance(app_group, TyperGroup)
+    ledger_group = app_group.get_command(typer.Context(app_group), "ledger")
+    assert isinstance(ledger_group, TyperGroup)
+    return ledger_group
+
+
 def _registered_ledger_command_names() -> set[str]:
-    return {command.name for command in _ledger.app.registered_commands if command.name is not None}
+    group = _ledger_command_group()
+    return set(group.list_commands(typer.Context(group)))
 
 
 def _ledger_help_by_command() -> dict[str, str]:
-    group = typer.main.get_command(_ledger.app)
-    # Typer vendors its own Click fork: ``typer.main.get_command`` returns a
-    # ``typer.core.TyperGroup`` whose MRO is ``TyperGroup -> typer._click.core
-    # .Command -> ABC -> object`` and never descends from the upstream
-    # ``click.Group``, so a bare ``isinstance(group, click.Group)`` is False.
-    # Derive the vendored ``Command`` base from the TyperGroup MRO so the
-    # command-group hierarchy is recognised without a brittle private-module
-    # import (mirrors the production fix in ``cli/errors.py``, which derives the
-    # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
-    vendored_command = next(base for base in type(group).__mro__ if base.__name__ == "Command")
-    assert isinstance(group, vendored_command)
-    assert hasattr(group, "commands")
-    # The runtime asserts above prove ``group`` is the vendored TyperGroup
-    # (command-group shaped). It is structurally identical to upstream
-    # click.Group; the casts bridge the static vendored/upstream duality so the
-    # help-rendering helpers and ``.commands`` map type-check against click.
-    click_group = cast(click.Group, group)
-    parent = click_group.make_context("ledger", [], resilient_parsing=True)
-    help_by_command = {"ledger": _render_click_help(click_group, parent)}
-    for name, command in click_group.commands.items():
+    group = _ledger_command_group()
+    parent = group.make_context("ledger", [], resilient_parsing=True)
+    # Typer vendors its own Click fork (`typer._click.core`), a distinct class
+    # family from upstream `click`, so the vendored group/command/context
+    # objects above are not nominally `click.Command`/`click.Context`. They are
+    # structurally identical -- `get_help`/`make_context` behave the same --
+    # so the casts bridge the static vendored/upstream duality without an
+    # import of typer's own private `_click` module.
+    help_by_command = {"ledger": _render_click_help(cast(click.Command, group), cast(click.Context, parent))}
+    for name in group.list_commands(typer.Context(group)):
+        command = group.get_command(typer.Context(group), name)
+        assert command is not None
         ctx = command.make_context(name, ["--help"], parent=parent, resilient_parsing=True)
-        help_by_command[name] = _render_click_help(command, ctx)
+        help_by_command[name] = _render_click_help(cast(click.Command, command), cast(click.Context, ctx))
     return help_by_command
 
 

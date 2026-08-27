@@ -73,7 +73,9 @@ BUNDLE_DURABILITY_FLOOR: Final[int] = 3
 #: validation — the raw mapping is the one sanctioned pre-validation
 #: boundary. Empty while the floor equals the current version; a version
 #: bump MUST land its hop here in the same change or the lineage gate fails.
-BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, object]]] = {}
+BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, object]]] = dict[
+    int, Callable[[dict[str, object]], dict[str, object]]
+]()
 
 #: Versions the import path accepts: the complete floor-to-current range.
 SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(

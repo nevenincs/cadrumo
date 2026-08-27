@@ -31,7 +31,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
@@ -72,6 +72,8 @@ CENSO_UNADOPTED_EVIDENCE_FIELDS: tuple[str, ...] = (
     "situacion_tributaria",
     "obligaciones_periodicas",
 )
+
+_UNADOPTED_EVIDENCE_FIELD_ADAPTER: TypeAdapter[tuple[str, ...]] = TypeAdapter(tuple[str, ...])
 
 #: Notice code for the open-divergence advisory a profile read surfaces.
 CENSO_DIVERGENCE_NOTICE_CODE = "profile.censo.divergences_open"
@@ -136,7 +138,7 @@ def censo_unadopted_evidence(
     """
     rows: list[CensoDivergence] = []
     for field in CENSO_UNADOPTED_EVIDENCE_FIELDS:
-        lines: tuple[str, ...] = getattr(certificado, field)
+        lines = _UNADOPTED_EVIDENCE_FIELD_ADAPTER.validate_python(getattr(certificado, field))
         for index, line in enumerate(lines):
             if not line.strip():
                 continue

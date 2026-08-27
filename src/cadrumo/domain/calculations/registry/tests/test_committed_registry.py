@@ -212,7 +212,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     filing_period: date,
     source_ref: str,
     legal_ref: str,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("131", filing_year, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     result = calculate_registry_snapshot(
@@ -281,7 +281,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     relation_values = resolve_relation_values(

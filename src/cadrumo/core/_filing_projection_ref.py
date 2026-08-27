@@ -1106,11 +1106,23 @@ _STRING_WIRE_FIELDS = frozenset(
 )
 
 
+def _validated_type_members(union_args: tuple[object, ...]) -> tuple[type, ...]:
+    """Return ``union_args`` re-typed as ``type``, refusing a non-class member."""
+    validated: list[type] = []
+    for member in union_args:
+        if not isinstance(member, type):
+            raise TypeError(f"expected a FilingProjectionRef union member to be a type, got {member!r}")
+        validated.append(member)
+    return tuple(validated)
+
+
 #: The typed members a compiled projection reference can be. Derived from the
 #: annotated union rather than restated, so a new member cannot be forgotten
 #: here: ``get_args`` on the Annotated alias yields the union first, whose own
 #: args are the member classes.
-_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = get_args(get_args(FilingProjectionRef)[0])
+_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _validated_type_members(
+    get_args(get_args(FilingProjectionRef)[0]),
+)
 
 
 def compile_filing_projection_ref(value: object) -> FilingProjectionRef:

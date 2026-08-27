@@ -219,7 +219,7 @@ def test_workspace_epoch_accepts_only_complete_current_schema_v2(
     epoch_values: dict[str, int | str],
 ) -> None:
     with pytest.raises(ValidationError):
-        ModeloWorkspaceEpochV1(owner="calculation.owner", generation=1, **epoch_values)
+        ModeloWorkspaceEpochV1.model_validate({"owner": "calculation.owner", "generation": 1, **epoch_values})
 
 
 @pytest.mark.parametrize("generation", (11, 10, 9))

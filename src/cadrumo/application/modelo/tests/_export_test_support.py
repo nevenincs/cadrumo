@@ -157,8 +157,8 @@ def _seed_revision(
     casilla_values: dict[CasillaId, Decimal] | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> tuple[str, str]:
-    input_values_by_casilla_id = dict(input_values_by_casilla_id or {})
-    binding_overrides = dict(binding_overrides or {})
+    input_values_by_casilla_id = dict(input_values_by_casilla_id or dict[CasillaId, str]())
+    binding_overrides = dict(binding_overrides or dict[BindingId, str]())
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
     snapshot = bundled_authority().snapshot(

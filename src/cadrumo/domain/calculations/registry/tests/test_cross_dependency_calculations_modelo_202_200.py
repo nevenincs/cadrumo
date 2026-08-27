@@ -159,7 +159,7 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
 
 
 def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
     # Asked at the filing year the rest of this test works in: its relation ids
     # are the 2024 revision's own and both resolver calls below pass 2024. The

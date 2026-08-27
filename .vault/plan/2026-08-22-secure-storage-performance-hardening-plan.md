@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
 modified: '2026-08-27'
-body_hash: 'sha256:399cc6ace80c67405f17f08c1ffdf7b0e2eb4929d630533bd73072eed8e3fbfc'
+body_hash: 'sha256:4b3d8b636a9f2ab714c19d82c922f5b11704a25f3d2b6351cdc44b2a02286c4e'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -138,7 +138,7 @@ Prove each live node resolution graph is a subset of its declared capabilities.
 
 Hold every enrolled node to calibrated class budgets.
 
-- [ ] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
+- [x] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 - [x] `W04.P10.S38` - Add empty, one-profile, and multi-profile scaling lanes using real subprocesses and persisted capsules; `src/cadrumo/entrypoints/cli/tests/test_cli_storage_scaling.py`.
 - [x] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
 - [ ] `W04.P10.S40` - Action generated outliers until no enrolled path exceeds budget or imports undeclared capabilities; `src/cadrumo/entrypoints/cli/`.
@@ -152,7 +152,7 @@ Validate the refactor against all behavior, security, architecture, and campaign
 Preserve CLI schemas, refusal semantics, custody guarantees, and storage roundtrips.
 
 - [ ] `W05.P11.S41` - Run CommandSpec authority, CLI contract, documented-command, help, completion, envelope, localization, profile lifecycle, clean-source, and installed-artifact suites; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
-- [ ] `W05.P11.S42` - Run custody, secure-storage, recovery, unlock, persistence-roundtrip, and adversarial filesystem suites; `src/cadrumo/adapters/persistence/storage/`.
+- [x] `W05.P11.S42` - Run custody, secure-storage, recovery, unlock, persistence-roundtrip, and adversarial filesystem suites; `src/cadrumo/adapters/persistence/storage/`.
 - [ ] `W05.P11.S43` - Run lint, architecture gates, full pytest, and Vaultspec checks and action every in-scope regression; `repository-wide quality gates`.
 
 ### Phase `W05.P12` - Independent closure
@@ -160,6 +160,6 @@ Preserve CLI schemas, refusal semantics, custody guarantees, and storage roundtr
 Prove the entire live CLI and secure-storage goal is satisfied.
 
 - [ ] `W05.P12.S44` - Run the mandated eight-axis structural audit and action every confirmed finding; `.vault/audit/`.
-- [ ] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
-- [ ] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
+- [x] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
+- [x] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
 - [ ] `W05.P12.S47` - Close only when every CommandSpec and projected live node is exactly classified and gated, both forbidden JSON names and development generators are absent from tracked and shipped runtime surfaces, every build and shipping lane is proven, and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.

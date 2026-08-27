@@ -65,7 +65,12 @@ def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> 
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
         text_inputs={},
     )
-    return {observation.casilla_id: observation.value for observation in result.observations}
+    values: dict[CasillaId, Decimal] = {}
+    for observation in result.observations:
+        value = observation.value
+        assert isinstance(value, Decimal)
+        values[observation.casilla_id] = value
+    return values
 
 
 def test_boolean_casilla_is_declared_boolean_and_operator_supplied() -> None:

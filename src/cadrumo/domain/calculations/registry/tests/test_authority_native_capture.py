@@ -391,6 +391,8 @@ def test_fork_rebuilds_active_reader_state_and_refuses_every_inherited_coordinat
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """A child neither waits on inherited locks nor accepts parent authority values."""
+    if sys.platform == "win32":
+        pytest.skip("requires POSIX fork semantics")
     capture = registry_authority.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,

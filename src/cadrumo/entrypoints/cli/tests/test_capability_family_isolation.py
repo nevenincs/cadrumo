@@ -35,14 +35,16 @@ import sys
 import textwrap
 
 import pytest
+from pydantic import TypeAdapter
 
 from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
 from .. import command_graph
-from .._command_schema import CommandCapabilityClass
+from .._command_schema import CommandCapability, CommandCapabilityClass
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _COMPLETED = "PROBE-COMPLETED"
+_LOADED_FAMILIES_ADAPTER: TypeAdapter[dict[str, int]] = TypeAdapter(dict[str, int])
 
 #: Which import families a declared capability entitles a node to load.
 #:
@@ -62,7 +64,7 @@ _CAPABILITY_FAMILIES: dict[str, frozenset[str]] = {
 #: Capability groups whose resolution graph exceeds their declaration today.
 #: Each states the families and the reason, because this is where the judgement
 #: sits; a bare list would record only that someone found them inconvenient.
-_PENDING_ADJUDICATION: dict[frozenset[str], str] = {
+_PENDING_ADJUDICATION: dict[frozenset[CommandCapability], str] = {
     frozenset({"encrypted-facts"}): (
         "loads the registry package root and its `ids` leaf, because "
         "`domain.calculations._row_source_identity` takes `BindingId` from there. "
@@ -102,23 +104,23 @@ _PROBE = textwrap.dedent(
 )
 
 
-def _groups() -> dict[frozenset[str], list[list[str]]]:
+def _groups() -> dict[frozenset[CommandCapability], list[list[str]]]:
     """Partition every live node by its exact capability declaration."""
-    groups: dict[frozenset[str], list[list[str]]] = {}
+    groups: dict[frozenset[CommandCapability], list[list[str]]] = {}
     for node in command_graph.nodes():
         groups.setdefault(frozenset(node.spec.policy.capabilities), []).append(list(node.path[1:]))
     return groups
 
 
-def _allowed_families(capabilities: frozenset[str]) -> frozenset[str]:
+def _allowed_families(capabilities: frozenset[CommandCapability]) -> frozenset[str]:
     expanded = CommandCapabilityClass(
         capabilities=capabilities,
         side_effects=frozenset({"none"}),
         performance="metadata",
     ).expanded_capabilities
-    allowed: frozenset[str] = frozenset()
+    allowed: frozenset[str] = frozenset[str]()
     for capability in expanded:
-        allowed |= _CAPABILITY_FAMILIES.get(capability, frozenset())
+        allowed |= _CAPABILITY_FAMILIES.get(capability, frozenset[str]())
     return allowed
 
 
@@ -139,7 +141,7 @@ def _loaded_families(paths: list[list[str]]) -> dict[str, int]:
     assert completed.returncode == 0, completed.stderr
     lines = [line for line in completed.stdout.splitlines() if line.strip()]
     assert _COMPLETED in lines, f"the probe did not reach its assertion: {completed.stdout}{completed.stderr}"
-    return json.loads(lines[0]) if lines[0] != _COMPLETED else {}
+    return _LOADED_FAMILIES_ADAPTER.validate_python(json.loads(lines[0])) if lines[0] != _COMPLETED else {}
 
 
 _GROUPS = _groups()
@@ -159,7 +161,7 @@ def test_the_declarations_still_partition_every_live_node() -> None:
 
 
 @pytest.mark.parametrize("capabilities", sorted(_GROUPS, key=sorted), ids=lambda caps: ",".join(sorted(caps)) or "none")
-def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[str]) -> None:
+def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[CommandCapability]) -> None:
     """DISCRIMINATING: resolution stays inside the declared capability set."""
     if capabilities in _PENDING_ADJUDICATION:
         pytest.skip(f"pending adjudication: {_PENDING_ADJUDICATION[capabilities]}")
@@ -179,7 +181,7 @@ def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[str
 @pytest.mark.parametrize(
     "capabilities", sorted(_PENDING_ADJUDICATION, key=sorted), ids=lambda caps: ",".join(sorted(caps))
 )
-def test_a_pending_group_that_now_passes_must_be_removed(capabilities: frozenset[str]) -> None:
+def test_a_pending_group_that_now_passes_must_be_removed(capabilities: frozenset[CommandCapability]) -> None:
     """STALE-ENTRY: a residue entry that stopped applying must be deleted.
 
     Without this the pending list would outlive the problem and quietly excuse

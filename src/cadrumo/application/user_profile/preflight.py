@@ -80,7 +80,7 @@ def build_profile_preflight_requirement(
         else:
             label = profile_field_label(section_key, field)
             legal_refs = field.legal_refs
-    grounding = (grounding_index or {}).get(reduced)
+    grounding = grounding_index.get(reduced) if grounding_index is not None else None
     if grounding:
         legal_refs = tuple(sorted({*legal_refs, *grounding.legal_refs}))
     modelos = tuple(sorted({m.value for m in grounding.modelos})) if grounding else ()
@@ -250,7 +250,7 @@ class ProfilePreflightService:
         """
         values = record_to_path_values(record)
         grounding_index: Mapping[str, ProfileKeyGrounding] = (
-            build_profile_grounding_index(authority) if authority is not None else {}
+            build_profile_grounding_index(authority) if authority is not None else dict[str, ProfileKeyGrounding]()
         )
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)

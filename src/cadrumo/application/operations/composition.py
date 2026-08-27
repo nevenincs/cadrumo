@@ -55,9 +55,9 @@ class OperationSubmissionService:
         self.supervisor = supervisor
         self._authority_broker = authority_broker
 
-    async def submit(
+    async def submit[RequestPayloadT: BaseModel](
         self,
-        request: OperationRequest[BaseModel],
+        request: OperationRequest[RequestPayloadT],
         *,
         actor_ref: str,
         operation_id: OperationId | None = None,

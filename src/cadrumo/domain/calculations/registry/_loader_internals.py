@@ -1155,7 +1155,7 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     return toml_file_fingerprint(path)
 
 
-_collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncached = bind_tree_fingerprint_collectors(
+_TREE_FINGERPRINT_COLLECTORS = bind_tree_fingerprint_collectors(
     is_bundled_root=is_bundled_registry_root,
     bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     live_cached=_live_cached_fingerprints,
@@ -1163,6 +1163,8 @@ _collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncache
     collect_sources=_registry_source_fingerprints,
     store=_store_registry_fingerprints,
 )
+_collect_registry_tree_fingerprints = _TREE_FINGERPRINT_COLLECTORS[0]
+_collect_registry_tree_fingerprints_uncached = _TREE_FINGERPRINT_COLLECTORS[1]
 
 #: This module's docstring already states the boundary this enforces: a
 #: caller OUTSIDE the package cannot bind to a compilation step or cache this
