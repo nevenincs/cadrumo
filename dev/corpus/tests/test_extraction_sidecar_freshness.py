@@ -23,8 +23,14 @@ from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+# dev/corpus/tests/test_extraction_sidecar_freshness.py -> parents[3] is repo root.
+# The depth is stated here because it silently retargets on a move: this file
+# was relocated out of src/cadrumo/_data/corpus/tests, where parents[5] was
+# right, and the arithmetic then named two directories ABOVE the repository.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if not (_REPO_ROOT / "src" / "cadrumo").is_dir():  # pragma: no cover - configuration guard
+    _message = f"corpus freshness gate lost the repository root: {_REPO_ROOT}"
+    raise RuntimeError(_message)
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
