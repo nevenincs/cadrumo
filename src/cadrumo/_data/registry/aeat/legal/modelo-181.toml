@@ -89,7 +89,16 @@ sha256 = "77979c8208c1125c26b1f39216b61ad0eaeeb0af676dddd1a327b119c5c5e0fd"
 bytes = 392260
 retrieved_at = 2026-08-25
 applies_from = 2009-01-01
-applies_to = 2009-12-31
+# Successor-bounded on 2026-08-27. The original applies_to was 2009-12-31, an era-end
+# stamp rather than an evidenced boundary, so filing years 2010-2015 resolved to no
+# revision at all. An orden stays in force until modified, and the negative search found
+# no intervening modification: the bundled corpus holds four modelo 181 design files
+# (2009, 2016, 2017, 2022) and none between 2009 and 2016, and the BOE consolidated text
+# for BOE-A-2009-21165 lists exactly three amending norms -- Orden HFP/1923/2016
+# (BOE-A-2016-12114), Orden HFP/1308/2017 (BOE-A-2017-15845) and Orden HFP/1192/2022
+# (BOE-A-2022-20274) -- none of them in 2010-2015. The bound now ends the day before
+# aeat-dr-181-2016 applies_from, which is where HFP/1923/2016 takes over.
+applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr181.pdf"
 review_status = "reviewed"
 
