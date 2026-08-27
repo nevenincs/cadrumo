@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-27'
-body_hash: 'sha256:359c61a11e664d4bc08e9aa13972bf8330ff0100dd33bb21c6537e8950b24ec2'
+body_hash: 'sha256:04147ef9b95a9a967bd507cf3698fd9025adcd2ba016ba2376a4ea58e1df1fa6'
 ---
 
 # `tui-architecture` plan
@@ -359,7 +359,7 @@ Mechanically relocate profile, secret, flow, test, and development surfaces with
 
 Consume the green C1 interface exit, revalidate Workspace V1 and its producer fixed points on the same current tree, and mint the exact C2 dependency receipt that alone opens complex read-only consumers.
 
-- [ ] `W04.P22.S139` - Run the sole Workspace dependency validator against the exact green ModeloWorkspaceC1ExitReceiptV1, accepted Workspace authorities, owner-seam reconciliation, closed Workspace implementation tuple, native-owner and S126 inventories, seam-conformance digest, generated field inventory, current source tree, no-legacy proof, and Vaultspec-RAG-plus-exact duplicate-authority census; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
+- [x] `W04.P22.S139` - Run the sole Workspace dependency validator against the exact green ModeloWorkspaceC1ExitReceiptV1, accepted Workspace authorities, owner-seam reconciliation, closed Workspace implementation tuple, native-owner and S126 inventories, seam-conformance digest, generated field inventory, current source tree, no-legacy proof, and Vaultspec-RAG-plus-exact duplicate-authority census; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
 - [ ] `W04.P22.S140` - Produce and validate the exact clean-commit ModeloWorkspaceC2DependencyReceiptV1 binding the C1 predecessor digest, native-owner surface inventory, Workspace contract and producer fingerprints, captured epoch tuple, process-incarnation refusal proof, seam and projection conformance evidence, current HEAD, and the exact C2 read destinations it opens; `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`.
 
 ## Wave `W05` - TUI operation projection and review
