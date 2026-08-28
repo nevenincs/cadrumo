@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:2edeb2f3ca42359f130a19a82d9000664eacb6c9ad66a8225b1c5f544e4382c1'
+body_hash: 'sha256:676d4671043ced21db73bd4871a311bdea1844df5ef8ae980a2b88ea051b5942'
 related: []
 ---
 
@@ -163,3 +163,48 @@ Step 1 is partly done: the two CLI `DeferredTarget`s were repointed at
 defines both enums. Neither `calculation_revision` module defines them — both
 import and re-export them — so repointing at the public module would have been a
 second re-export hop rather than a fix. The `CORE_STRUCTS` entry remains.
+
+## The deletion precondition is now fully mapped
+
+Exactly **two** references to `cadrumo.domain.modelos._calculation_revision`
+remain, both string-based, both outside `src/cadrumo/domain/modelos/`:
+
+| reference | kind | disposition |
+|---|---|---|
+| `src/cadrumo/tests/test_docstring_core_struct_links.py:44` — `CORE_STRUCTS["CalculationRevision"]` | names the defining module for the docstring-anchor gate | repoint to `cadrumo.domain.modelos.calculation_revision` |
+| `dev/registry/analysis/load_census_classification.py:530` | one row of a module inventory listing `cadrumo.domain.modelos.*` | remove with the module |
+
+**This corrects the earlier count in this audit**, which said three references and
+named only `src/`. The `dev/` occurrence was missed because that search was scoped
+to `src`. Two of the original three — the CLI `DeferredTarget`s — have since been
+repointed at `_calculation_revision_amendment`.
+
+The `dev/` row sits in a census that enumerates modules which exist. It is not a
+consumer to redirect but an inventory to update, and the campaign has already
+recorded that census rows are adjudications rather than derived data, so it should
+be edited as part of the deletion rather than ahead of it.
+
+### Neither reference is load-bearing today, which is why nothing failed
+
+`CORE_STRUCTS` is used for name matching, not import: the gate resolves symbols by
+dotted path against docstring anchors and never imports the mapped module. Running
+`test_docstring_core_struct_links.py` confirms it — three of its seven tests fail,
+but on unrelated counts (133 module uses lacking a cross-reference, 144 public
+functions, 1297 dotted references naming a symbol their cited module does not
+define). None mentions an unimportable module. Those three failures are
+pre-existing documentation debt across the tree and are not addressed here.
+
+### Why the two remaining edits are not being made in isolation
+
+`aeat-architecture-boundaries` requires a relocation to land the move, every
+consumer update and the old path's deletion in **one** commit, and explicitly
+forbids splitting the move from the consumer sweep. Repointing `CORE_STRUCTS` now
+and deleting the module later would be exactly that split. The two edits belong in
+the deletion commit, with `pytest --collect-only -q` clean immediately before and
+after.
+
+So the remaining work is a single, fully-specified change: repoint one map entry,
+drop one census row, delete `_calculation_revision.py`, verify collection either
+side, commit with an explicit pathspec. Everything needed to judge it is now
+recorded — the public module is a strict superset, and these are the only two
+references left.
