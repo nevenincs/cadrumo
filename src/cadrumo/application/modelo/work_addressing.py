@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -79,7 +79,6 @@ from ._selectors import (
 from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 from .registry_discovery import declared_modelo_period_tokens
 
-_BucketId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _OperatorWorkUnitLookupId = Annotated[
     str,
@@ -130,7 +129,7 @@ class ModeloWorkUnitCandidate(BaseModel):
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
-    bucket_id: _BucketId
+    bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: Period
@@ -196,7 +195,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
     period: Period | None = None
     revision_id: _RevisionId | None = None
-    bucket_id: _BucketId | None = None
+    bucket_id: BucketId | None = None
     work_unit_id: WorkUnitId | None = None
     operator_work_unit_id: _OperatorWorkUnitLookupId | None = None
 
@@ -231,7 +230,7 @@ class ModeloWorkResolution(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     state: ModeloWorkSelectorState
-    bucket_id: _BucketId
+    bucket_id: BucketId
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
     period: Period | None = None

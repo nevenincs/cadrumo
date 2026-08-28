@@ -21,8 +21,8 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.hashing import content_hash_hex
+from ...core.identity import BucketId
 from ...core.time import UtcInstant, validate_utc_aware
-from ..contribuyente import ProfileName as _ProfileName
 from .errors import BucketEventValidationError
 
 BucketEventId = Hex64Str
@@ -397,7 +397,7 @@ class BucketEvent(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     event_id: BucketEventId
-    bucket_id: _ProfileName
+    bucket_id: BucketId
     event_type: BucketEventType
     occurred_at: UtcInstant
     actor: BucketActorLabel
