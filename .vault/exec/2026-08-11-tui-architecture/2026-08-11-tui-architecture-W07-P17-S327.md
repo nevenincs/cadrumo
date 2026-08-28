@@ -11,7 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
 # Surface the operation phase, deadlines, diagnostic reference and terminal receipt references in the operation modal, which today renders none of them although the public projection already carries every one: the modal's view model carries only the projection, spinner visibility, three control-enablement flags, close policy, interaction affordance and terminal copy key, and the modal itself renders status copy, a review dump, log rows and button enablement -- while `phase_code`, `execution_deadline_at`, `cleanup_deadline_at`, `diagnostic_ref`, `result_ref` and `refusal_ref` all exist on the public projection contract. So four of the eight facts the modal is supposed to present are not merely unproven, they are unrendered. Extend the view model with derived fields for each, validated against the projection in the same shape as the existing derivation validator so a derived field cannot disagree with its source, and render them. This is production work and is a prerequisite for proving that rendered state follows supervisor revisions -- that proof cannot discharge its own row while half the facts it names never reach a widget
 
 ## Scope

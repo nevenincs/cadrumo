@@ -11,7 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
 # Prove spinner, phase, deadline, cancellation availability, live logs, diagnostic detail, review content, and terminal receipts follow supervisor revisions
 
 ## Scope
