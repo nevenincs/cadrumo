@@ -41,6 +41,7 @@ type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", 
 type CalculationRouteStage = CalculationRouteResolverStage | Literal["manual"]
 CALCULATION_ROUTE_ID = ModeloCalculationRouteId.MODELO_WORK_CALCULATION
 MANUAL_INPUT_RESOLVER_ID = "manual_input"
+DESIGN_CONSTANT_RESOLVER_ID = "design_constant"
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,7 +64,33 @@ class CalculationRouteManualOwnership:
     owned_sources: tuple[Literal[BindingSourceKind.MANUAL_INPUT]]
 
 
-type CalculationRouteOwnership = CalculationRouteResolverOwnership | CalculationRouteManualOwnership
+@dataclass(frozen=True, slots=True)
+class CalculationRouteDesignConstantOwnership:
+    """The sole design-constant pseudo-owner on the production route.
+
+    A SIBLING of the manual-input pseudo-owner rather than a widening of it, and
+    the distinction is the point: manual input arrives from the operator, while a
+    design constant is already carried on its own binding selector because AEAT's
+    diseño fixes it. Folding the second into the first would have meant relaxing
+    that row's ``Literal`` pins until they admitted a second member -- exactly the
+    widen-the-matcher move the governing decision refuses. Declaring a new owner
+    keeps every existing pin intact and makes the new route enumerable.
+
+    Neither pseudo-owner names a resolver class: there is no aggregation to run,
+    so there is nothing for a ``ModeloSourceResolver`` to do. Enrolment here is
+    what keeps the kind out of the novel-source refusal, which exists so a source
+    nobody routed cannot resolve to a silent blank.
+    """
+
+    stage: Literal["manual"]
+    resolver_type: Literal[None]
+    resolver_id: Literal["design_constant"]
+    owned_sources: tuple[Literal[BindingSourceKind.DESIGN_CONSTANT]]
+
+
+type CalculationRouteOwnership = (
+    CalculationRouteResolverOwnership | CalculationRouteManualOwnership | CalculationRouteDesignConstantOwnership
+)
 
 
 def _resolver_ownership(
@@ -111,9 +138,17 @@ _MANUAL_INPUT_OWNER = CalculationRouteManualOwnership(
     owned_sources=(BindingSourceKind.MANUAL_INPUT,),
 )
 
+_DESIGN_CONSTANT_OWNER = CalculationRouteDesignConstantOwnership(
+    stage="manual",
+    resolver_type=None,
+    resolver_id=DESIGN_CONSTANT_RESOLVER_ID,
+    owned_sources=(BindingSourceKind.DESIGN_CONSTANT,),
+)
+
 CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteOwnership, ...] = (
     *(_resolver_ownership(stage, resolver_type) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES),
     _MANUAL_INPUT_OWNER,
+    _DESIGN_CONSTANT_OWNER,
 )
 
 
@@ -132,6 +167,13 @@ def validate_calculation_route_resolver_ownership(
         if isinstance(row, CalculationRouteManualOwnership):
             if row != _MANUAL_INPUT_OWNER:
                 raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
+        elif isinstance(row, CalculationRouteDesignConstantOwnership):
+            # Pinned to the one canonical instance for the same reason the
+            # manual owner is: a pseudo-owner names no resolver class, so the
+            # drift checks below have nothing to compare against and equality
+            # with the declared row is the whole guard.
+            if row != _DESIGN_CONSTANT_OWNER:
+                raise RuntimeError("calculation route permits only the canonical design-constant pseudo-owner")
         else:
             expected_stage = canonical_stages.get(row.resolver_type)
             if expected_stage is None:
@@ -203,7 +245,9 @@ __all__ = [
     "CALCULATION_ROUTE_PRE_MESH_SOURCES",
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
+    "DESIGN_CONSTANT_RESOLVER_ID",
     "MANUAL_INPUT_RESOLVER_ID",
+    "CalculationRouteDesignConstantOwnership",
     "CalculationRouteManualOwnership",
     "CalculationRouteResolverOwnership",
     "CalculationRouteStage",

@@ -51,6 +51,7 @@ from .binding_selector_utils import selector_against_model, selector_as_dict
 from .bindings_previous_filing import PreviousModeloSelector, validate_previous_filing_binding
 from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference
 from .counterpart_bindings import validate_counterpart_binding
+from .design_constant_bindings import DesignConstantSelector, validate_design_constant_binding
 from .detail_record_bindings import (
     AtributionSelector as _AtributionSelector,
 )
@@ -1156,6 +1157,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.WITHHOLDING296: _Withholding296Selector,
     BindingSourceKind.INVENTORY: _InventorySelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
+    BindingSourceKind.DESIGN_CONSTANT: DesignConstantSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
 
@@ -1261,6 +1263,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.INVENTORY: validate_inventory_binding,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
+    BindingSourceKind.DESIGN_CONSTANT: validate_design_constant_binding,
     BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),
 }
 

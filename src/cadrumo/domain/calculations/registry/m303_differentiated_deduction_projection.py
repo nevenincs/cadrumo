@@ -15,6 +15,7 @@ from ....core import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
     ProrrataRegisterRegime,
+    regime_apportions_deduction,
 )
 from ...bienes_inversion import RegistroRegularizacionResult
 from ...prorrata_register import ProrrataRegister
@@ -206,7 +207,7 @@ def _project_sector_row(
     ],
 ) -> M303DifferentiatedDeductionRowProjection:
     entry = register.entry_for(ejercicio, sector_id=sector_id)
-    if entry is None or entry.interrupted or entry.regime is ProrrataRegisterRegime.NINGUNA:
+    if entry is None or entry.interrupted or not regime_apportions_deduction(entry.regime):
         raise RegistryValidationError(f"differentiated sector {sector_id!r} has no applicable regime for {ejercicio}")
     if entry.provisional_percentage is None:
         raise RegistryValidationError(f"differentiated sector {sector_id!r} has no resolved percentage for {ejercicio}")

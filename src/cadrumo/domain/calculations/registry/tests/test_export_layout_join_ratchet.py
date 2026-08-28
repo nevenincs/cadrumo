@@ -53,29 +53,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: comes from the weaker any-record fallback. Shrink this; never grow it.
 _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
     (
-        ('151', '2015-2022', 'M15100'),  # 9-record layout
-        ('151', '2025-y-siguientes', 'M15100'),  # 11-record layout
         ('184', '2023-2024', 'Tipo 2 - Registro De Rentas De La'),  # 3-record layout
         ('184', '2023-2024', 'Tipo 2 - Registro De Socio, Heredero,'),  # 3-record layout
         ('184', '2025-y-siguientes', 'Tipo 2 - Registro De Rentas De La'),  # 3-record layout
         ('184', '2025-y-siguientes', 'Tipo 2 - Registro De Socio, Heredero,'),  # 3-record layout
-        ('193', '2024', 'Tipo 2 - Registro De Perceptor'),  # 3-record layout
-        ('193', '2024', 'Tipo 2 - Registro De Perceptor  Relación De Gastos'),  # 3-record layout
-        ('193', '2025-y-siguientes', 'Tipo 2 - Registro De Perceptor'),  # 3-record layout
-        ('193', '2025-y-siguientes', 'Tipo 2 - Registro De Perceptor  Relación De Gastos'),  # 3-record layout
         ('296', '2024-y-siguientes', 'Tipo 2 - Registro De Perceptor'),  # 5-record layout
-        ('303', '2022', 'DP30300'),  # 5-record layout
-        ('303', '2023', 'DP30300'),  # 6-record layout
-        ('303', '2024-hasta-08-y-2t', 'DP30300'),  # 6-record layout
-        ('303', '2025', 'DP30300'),  # 6-record layout
-        ('303', '2026-y-siguientes', 'DP30300'),  # 6-record layout
-        ('322', '2008-2022', 'DR32200'),  # 4-record layout
-        ('322', '2023', 'DR32200'),  # 4-record layout
-        ('322', '2024-2025', 'DR32200'),  # 4-record layout
-        ('349', '2020-y-siguientes', 'Tipo 2 - Registro De Operador Intracomunitario'),  # 3-record layout
-        ('349', '2020-y-siguientes', 'Tipo 2 - Registro De Retificaciones'),  # 3-record layout
-        ('720', '2013-y-siguientes', 'Tipo 1 - Registro De Declarante'),  # 2-record layout
-        ('720', '2013-y-siguientes', 'Tipo 2 - Registro De Detalle'),  # 2-record layout
     )
 )
 
@@ -128,6 +110,10 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                 if (modelo.value, revision_id) in seen:
                     break
                 seen.add((modelo.value, revision_id))
+                # Read the SAME constant channels the coverage checker reads. A
+                # ratchet seeing fewer would pin sheets the checker joins fine
+                # and report debt that does not exist.
+                constants = coverage._design_constant_values(revision)
                 for layout in getattr(revision, "export_layouts", ()) or ():
                     for source in coverage._design_sources(layout, source_refs):
                         sheets = coverage._read_design_sheets(source)
@@ -136,7 +122,18 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                         for sheet in sheets:
                             if not coverage._belongs_to_layout(sheet, layout.records):
                                 continue
-                            if coverage._join_record(sheet, layout.records) is not None:
+                            if coverage._join_record(sheet, layout.records, constants) is not None:
+                                continue
+                            if layout.filing_envelope is not None and sheet.name == layout.filing_envelope.record_identity:
+                                # The layout's declared filing ENVELOPE never
+                                # reaches the fallback either: the coverage
+                                # check decides it BEFORE the join and answers
+                                # from the envelope contract. The join is
+                                # skipped there deliberately -- an envelope
+                                # opens with the same `<T` and modelo bytes its
+                                # page records do, so it agrees with every one
+                                # of them and would "join" a page whose fields
+                                # sit at unrelated offsets.
                                 continue
                             if sheet.auxiliary_envelope_header is not None:
                                 # An auxiliary envelope header never reaches the
