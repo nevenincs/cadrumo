@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:dabb6fbb4135938a31e4264b8a0d2b77ef35275856a1ea6a99eaed2f632c11b3'
+body_hash: 'sha256:aa1f8bb2d80fbd5a1e32c93989945395990c339df9dab1cb51eaf2aa1777f156'
 related: []
 ---
 
@@ -432,3 +432,48 @@ Both are stable and neither surfaces a new candidate:
   `recargo_amount or Decimal("0")`, legitimately zero where no recargo applies.
 
 Re-run both after any change that adds a relief or a guard.
+
+## Citation dilution: one measured outlier, and it compounds with a blind cross-check
+
+The grounding rule requires a value's `legal_refs` to name **the specific binding
+provision that establishes that value**. Omission defeats that; so does citing
+everything. The second failure mode has one instance, and it is measured rather
+than asserted.
+
+Across the 382 parameters under `modelos/*/revisions/*/parameters/` that carry
+`legal_refs`:
+
+| refs | parameters |
+|---|---|
+| 1 | 311 |
+| 2 | 53 |
+| 3 | 9 |
+| 4 | 7 |
+| 5 | 1 |
+| **18** | **1** — `is.modelo-200.tipo-gravamen-general` |
+
+One provision per parameter is the overwhelming norm, at 81 %. The four- and
+five-ref rows are legitimate multi-provision values — transitional IVA rates
+carrying an RD-Ley plus the base article, fractional-payment rates. The next
+highest after the outlier is 5, so the gap to it is 3.6×.
+
+`is.modelo-200.tipo-gravamen-general` cites LIS arts. 40, 29, 30, 39, 19, 36, 100,
+12, 15, 21, 22, 31, 32, 13, 16, 25, 26 and `rd-634-2015:art-3`. Exactly one — art.
+29 — establishes the rate, verbatim in the bundled corpus: *"El tipo general de
+gravamen para los contribuyentes de este Impuesto será el 25 por ciento…"*. The
+other seventeen are amortisation, provisions, exemptions, consolidation and CFC
+rules that have nothing to do with the rate.
+
+**The value is correct, so there is no error direction today.** The defect is
+auditability: a reviewer cannot tell which of eighteen provisions to check, the
+evidence gate is satisfied by any of them, and were art. 29 amended the other
+seventeen would remain, still plausible-looking. Its siblings are clean —
+`new-entity-first-2-years` and `cooperative-protected` cite art. 29 alone, and
+`non-profit-special-regime` cites art. 29 plus `ley-49-2002:art-10`, which is
+where its 10 % actually lives. The isolation and the distribution together suggest
+refs accumulated onto this row rather than being authored.
+
+This row is also the worked example of the two citation defects compounding: its
+`required_text` is the bare phrase `"tipo de gravamen"`, which pins no value. So
+nothing in the record identifies which provision governs, and nothing would fail
+if the 25 were wrong.
