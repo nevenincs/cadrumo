@@ -34,7 +34,7 @@ from textual.worker import Worker, WorkerState
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import toggle_appearance, tokenised
+from ....entrypoints.tui.components.theme import BASE_CSS, toggle_appearance, tokenised
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -215,6 +215,8 @@ class CredentialHostApp[OutcomeT](App[OutcomeT | None]):
     whole process, and it holds no behaviour of its own beyond handing the
     screen's dismissal back as the process result.
     """
+
+    CSS = tokenised(BASE_CSS)
 
     def __init__(self, screen: CredentialScreen[OutcomeT]) -> None:
         """Bind the one screen this host exists to run."""

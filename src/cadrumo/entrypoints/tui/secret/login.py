@@ -35,7 +35,8 @@ __all__ = ["LoginScreen", "run_login_tui"]
 class LoginScreen(CredentialScreen["ProfileLoginOutcome"]):
     """Full-screen credential entry that unlocks one existing profile."""
 
-    CSS = tokenised(
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """

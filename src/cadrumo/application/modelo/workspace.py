@@ -50,7 +50,8 @@ from ...domain.modelos import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
-from ..state_projection import ProjectionModeloReadiness
+from ..registry.closure import RegistryClosureLimb
+from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloVisibleFilingTarget,
@@ -133,19 +134,24 @@ from .workspace_producers import (
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceBoundedReviewPortV1,
     ModeloWorkspaceCalculationPortV1,
+    ModeloWorkspaceClosurePortV1,
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceProducerStampV1,
+    ModeloWorkspaceReadinessPortV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
     ModeloWorkspaceWorkPortV1,
 )
 
 if TYPE_CHECKING:
+    from datetime import date
+
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ..registry.source_connectivity import SourceConnectivityCensusManifest
 
 
 def modelo_work_selector_request_for_target(
@@ -648,6 +654,7 @@ __all__ = [
     "formula_operand_references_for_casilla",
     "formula_schema_records",
     "graded_snapshot_casilla_schema_records",
+    "graded_snapshot_closure_limbs",
     "graded_snapshot_contributors",
     "graded_snapshot_evidence_horizon",
     "graded_snapshot_family_dispositions",
@@ -895,15 +902,22 @@ def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorksp
 
 
 def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
-    """Return the six contributor identities GRADED_SNAPSHOT actually reads.
+    """Return the eight contributor identities GRADED_SNAPSHOT actually reads.
 
     The same four STATIC_INSPECTION reads (registry, work, locale_catalogue,
-    field_manifest) plus CALCULATION and BOUNDED_REVIEW -- the two
-    contributors this admission additionally materializes. ``work_review`` is
-    a required field on ``ModeloWorkspaceProjectionV1`` and GRADED_SNAPSHOT is
-    the ADR's one ELIGIBLE admission for the real ``ModeloWorkReview``
-    (STATIC_INSPECTION gets the fixed ``UNMEASURED`` constant instead), so
-    BOUNDED_REVIEW belongs in this denominator alongside CALCULATION.
+    field_manifest) plus CALCULATION, BOUNDED_REVIEW, READINESS and CLOSURE --
+    the complete registered contributor set. ``work_review`` is a required
+    field on ``ModeloWorkspaceProjectionV1`` and GRADED_SNAPSHOT is the one
+    ELIGIBLE admission for the real ``ModeloWorkReview`` (STATIC_INSPECTION
+    gets the fixed ``UNMEASURED`` constant instead), so BOUNDED_REVIEW belongs
+    in this denominator alongside CALCULATION; READINESS and CLOSURE populate
+    the projection's ``readiness`` and ``registry_closure_limbs``, which are
+    graded-only facts STATIC_INSPECTION never reads.
+
+    This denominator is what every facet revalidates against, so it must state
+    the reads that actually happen: a contributor omitted here is not merely an
+    unpopulated field, it is a contributor tuple and epoch digest that under-
+    report the assembly they pin.
     """
     return tuple(
         sorted(
@@ -914,6 +928,8 @@ def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1
                 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1.contributor,
             ),
             key=lambda contributor: (contributor.owner, contributor.producer),
         )
@@ -990,15 +1006,19 @@ def resolve_graded_snapshot_baseline(
     calculation_epoch: ModeloWorkspaceEpochV1,
     bounded_review_stamp: ModeloWorkspaceProducerStampV1,
     bounded_review_epoch: ModeloWorkspaceEpochV1,
+    readiness_stamp: ModeloWorkspaceProducerStampV1,
+    readiness_epoch: ModeloWorkspaceEpochV1,
+    closure_stamp: ModeloWorkspaceProducerStampV1,
+    closure_epoch: ModeloWorkspaceEpochV1,
 ) -> ModeloWorkspaceBaselineV1:
-    """Assemble the GRADED_SNAPSHOT baseline from the six contributors' own stamps and epochs.
+    """Assemble the GRADED_SNAPSHOT baseline from the eight contributors' own stamps and epochs.
 
     Mirrors ``resolve_static_inspection_baseline`` exactly, over the wider
-    GRADED_SNAPSHOT contributor set (the four static ones plus CALCULATION
-    and BOUNDED_REVIEW). It is a sibling function, not a parameterization of
-    the static one: that function's arity is fixed at exactly four named
-    pairs and cannot accept a fifth or sixth without a signature change
-    (confirmed in the S128 sizing reference). Every stamp/epoch pair passed
+    GRADED_SNAPSHOT contributor set (the four static ones plus CALCULATION,
+    BOUNDED_REVIEW, READINESS and CLOSURE). It is a sibling function, not a
+    parameterization of the static one: that function's arity is fixed at
+    exactly four named pairs and cannot accept further pairs without a
+    signature change. Every stamp/epoch pair passed
     in MUST come from the exact same captures that produced ``target``,
     ``schema_identity`` and ``locale`` -- this function performs no capture
     of its own, only digesting what the caller already atomically observed.
@@ -1014,6 +1034,8 @@ def resolve_graded_snapshot_baseline(
         field_manifest_stamp,
         calculation_stamp,
         bounded_review_stamp,
+        readiness_stamp,
+        closure_stamp,
     )
     epochs = (
         work_epoch,
@@ -1022,6 +1044,8 @@ def resolve_graded_snapshot_baseline(
         field_manifest_epoch,
         calculation_epoch,
         bounded_review_epoch,
+        readiness_epoch,
+        closure_epoch,
     )
     contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
     contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
@@ -1608,6 +1632,8 @@ def resolve_graded_snapshot_result(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     authority: ValidatedRegistryAuthority,
+    census: SourceConnectivityCensusManifest,
+    as_of: date,
     output_language: OutputLanguage,
     page_size: int = 200,
 ) -> ModeloWorkspaceResultV1:
@@ -1637,6 +1663,12 @@ def resolve_graded_snapshot_result(
     revision's declared grade cannot satisfy ``required_grade``, distinguished
     from any other :class:`RegistryValidationError` by its typed
     ``registry_failure`` condition rather than message text.
+
+    ``census`` and ``as_of`` are the CLOSURE contributor's own operands. They
+    are declared here rather than read inside the join because the assembly
+    protocol forbids a live owner read hidden in the assembler: every
+    contributor is captured through its port exactly once, from operands the
+    caller supplied or an earlier capture resolved.
 
     ``work_review`` is the exact frozen :class:`ModeloWorkReview` the
     BOUNDED_REVIEW port captures -- never independently re-derived or
@@ -1745,6 +1777,29 @@ def resolve_graded_snapshot_result(
         review=bounded_review_capture.projection,
     )
 
+    readiness_capture = ModeloWorkspaceReadinessPortV1(
+        requests=(
+            ModeloReadinessRequest(
+                modelo=resolved_target.modelo,
+                revision_id=resolved_target.law_selected_revision_id,
+                filing_year=resolved_target.filing_year,
+                period=resolved_target.period,
+            ),
+        ),
+        active_profile_id=resolved_target.bucket_id,
+    ).capture_projection_with_epoch()
+    readiness = graded_snapshot_readiness(readiness_capture.projection.reports[0])
+
+    closure_capture = ModeloWorkspaceClosurePortV1(
+        authority=authority,
+        census=census,
+        as_of=as_of,
+    ).capture_projection_with_epoch()
+    registry_closure_limbs = graded_snapshot_closure_limbs(
+        closure_capture.projection.limbs,
+        target=resolved_target,
+    )
+
     schema_identity = resolve_graded_snapshot_schema_identity(snapshot)
     locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)
     locale_key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
@@ -1771,6 +1826,10 @@ def resolve_graded_snapshot_result(
         calculation_epoch=calculation_capture.epoch,
         bounded_review_stamp=bounded_review_capture.stamp,
         bounded_review_epoch=bounded_review_capture.epoch,
+        readiness_stamp=readiness_capture.stamp,
+        readiness_epoch=readiness_capture.epoch,
+        closure_stamp=closure_capture.stamp,
+        closure_epoch=closure_capture.epoch,
     )
     contributors = graded_snapshot_contributors()
 
@@ -1853,6 +1912,8 @@ def resolve_graded_snapshot_result(
         materialization_facet=materialization_facet,
         provenance_facet=provenance_facet,
         work_review=work_review,
+        readiness=readiness,
+        registry_closure_limbs=registry_closure_limbs,
         capabilities=capabilities,
     )
     return ModeloWorkspaceGradedSnapshotResultV1(projection=projection)
@@ -1952,6 +2013,29 @@ def _graded_snapshot_ledger_issue(issue: LedgerPreflightIssue) -> ModeloWorkspac
     else:
         subject = ModeloWorkspaceLedgerTransactionSubjectV1(transaction_id=issue.transaction_id)
     return ModeloWorkspaceLedgerIssueV1(subject=subject, reason=issue.reason, detail=issue.detail)
+
+
+def graded_snapshot_closure_limbs(
+    limbs: tuple[RegistryClosureLimb, ...],
+    *,
+    target: ModeloWorkspaceResolvedTargetV1,
+) -> tuple[RegistryClosureLimb, ...]:
+    """Select this target's own closure limbs from the captured registry-wide set.
+
+    The closure capture republishes every validated revision's limbs, because
+    the release predicate it serves is a whole-registry question. A workspace
+    projection answers a single ``(modelo, revision)`` question, and
+    :class:`ModeloWorkspaceProjectionV1` refuses a limb carrying any other
+    coordinate, so the capture is narrowed here by that exact coordinate.
+
+    This is a selection, never a derivation: each retained limb is the frozen
+    record the composers built, passed through unmodified. A target the
+    closure report does not cover yields an empty tuple rather than a
+    fabricated limb -- absence of a measurement is not a satisfied limb.
+    """
+    return tuple(
+        limb for limb in limbs if limb.modelo == target.modelo and limb.revision == target.law_selected_revision_id
+    )
 
 
 def graded_snapshot_readiness(readiness: ProjectionModeloReadiness) -> ModeloWorkspaceReadinessV1:

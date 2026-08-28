@@ -5,15 +5,20 @@ from __future__ import annotations
 import ast
 import asyncio
 from dataclasses import fields
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.operations.journal import OperationJournalRepository
+from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage import current_active_bucket_session
 from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
     OperationSubmissionService,
+    compose_operation_services,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.observation import OperationObservationService
@@ -24,6 +29,7 @@ from ...application.operations.projection_services import (
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
+from ...core.time import now
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from .. import build_production_operation_registry
 from .._operation_composition import compose_operation_dependencies
@@ -147,3 +153,74 @@ def test_inbound_entrypoints_do_not_import_the_operation_owner_module() -> None:
                 owner_imports.append((source, node.module))
 
     assert owner_imports == []
+
+
+def test_production_composition_retains_the_operand_declaring_definition(tmp_path: Path) -> None:
+    """The seam constructs WITH the operand capability, not by dropping it."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        dependencies = compose_operation_dependencies()
+        registry = dependencies.observation.registry
+        declaring = tuple(
+            definition.definition_id for definition in registry.definitions if definition.transient_financial_operands
+        )
+
+        # Constructing while a declaring definition is enrolled is the whole
+        # point: satisfying the supervisor guard by deleting the declaration
+        # would turn this green while discarding the capability.
+        assert declaring
+        for definition_id in declaring:
+            assert registry.lookup(definition_id).transient_financial_operands
+
+        asyncio.run(dependencies.shutdown())
+
+
+def test_production_composition_submits_through_the_constructed_seam(tmp_path: Path) -> None:
+    """The seam is functional end to end, not merely constructible."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        dependencies = compose_operation_dependencies()
+        definition = dependencies.observation.registry.lookup("auth.session.logout")
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref="profile:active",
+            payload=definition.request_type(),
+        )
+
+        async def submit() -> OperationSubmission:
+            submitted = await dependencies.submission.submit(
+                request,
+                actor_ref="operator:custody-wire",
+                operation_id="c" * 64,
+            )
+            await dependencies.shutdown()
+            return submitted
+
+        submission = asyncio.run(submit())
+
+        assert submission.receipt.operation_id == "c" * 64
+
+
+def test_composing_a_declaring_registry_without_custody_is_still_refused(tmp_path: Path) -> None:
+    """The guard keeps biting; the wire satisfies it rather than disabling it."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal = OperationJournalRepository(storage_root=storage_root)
+        registry = build_production_operation_registry()
+
+        assert any(definition.transient_financial_operands for definition in registry.definitions)
+
+        with pytest.raises(ValueError, match="transient financial operand"):
+            compose_operation_services(
+                registry=registry,
+                journal=journal,
+                reader=journal,
+                event_stream=journal,
+                leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+                operands=operation_secure_reference_repository(),
+                owner_id="1" * 64,
+                lease_token_factory=lambda: "2" * 64,
+                clock=now,
+                lease_duration=timedelta(minutes=10),
+                execution_timeout=timedelta(hours=1),
+                cleanup_timeout=timedelta(minutes=2),
+                financial_operand_custody=None,
+            )

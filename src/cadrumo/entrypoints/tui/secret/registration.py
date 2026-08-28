@@ -136,7 +136,8 @@ def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
 class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
     """Full-screen credential entry that creates and unlocks one profile."""
 
-    CSS = tokenised(
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """

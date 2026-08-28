@@ -18,18 +18,18 @@ a forbidden-lower-layer-import architecture boundary, and a codified
 Vaultspec-RAG-plus-exact census against a duplicate or parallel Workspace
 authority.
 
-``registry_closure_limbs``/``readiness`` parity is NOT proven here: neither
-``resolve_static_inspection_result`` nor ``resolve_graded_snapshot_result``
-ever populates them (they stay at their model defaults, `()` and `None`),
-and no ``graded_snapshot_closure``-equivalent function exists anywhere in
-``workspace.py`` to compare against. There is nothing to prove parity with.
+``registry_closure_limbs``/``readiness`` parity IS proven here, against the
+canonical CLOSURE and READINESS producers the graded assembly captures. Static
+inspection reads neither contributor, so it holds them at their model defaults
+(``()`` and ``None``) and that admission-scope difference is asserted rather
+than assumed.
 """
 
 from __future__ import annotations
 
 import json
 import subprocess
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -46,9 +46,14 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ...registry.closure_capture import capture_registry_closure
+from ...registry.source_connectivity import load_source_connectivity_census
+from ...state_projection import ModeloReadinessRequest, capture_modelo_readiness
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace import (
+    graded_snapshot_closure_limbs,
     graded_snapshot_contributors,
+    graded_snapshot_readiness,
     resolve_graded_snapshot_result,
     resolve_static_inspection_result,
     static_inspection_contributors,
@@ -70,6 +75,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+#: Fixed observation instant for the closure capture, so a limb set does not
+#: shift under the suite because a census entry expired between runs.
+_CLOSURE_AS_OF = date(2026, 8, 24)
 _MODELO = ModeloCode("130")
 _FILING_YEAR = 2026
 
@@ -185,6 +193,8 @@ def test_graded_snapshot_result_strict_round_trip_and_anti_tautology(repos) -> N
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -205,25 +215,29 @@ def test_graded_snapshot_result_strict_round_trip_and_anti_tautology(repos) -> N
 # --- 2. Admission-specific contributor-set exactness ---
 
 
-def test_admission_specific_contributor_sets_are_exact_and_disjoint_by_two() -> None:
-    """S130: static (4) and graded (6) contributor sets differ by exactly CALCULATION and BOUNDED_REVIEW.
+def test_admission_specific_contributor_sets_are_exact_and_differ_by_four() -> None:
+    """Static (4) and graded (8) contributor sets differ by exactly the four graded-only producers.
 
     ``graded_snapshot_contributors`` is a strict superset of
-    ``static_inspection_contributors``: the ADR names the static admission's
-    four contributors as a subset of the graded admission's six, never an
-    independently derived set that could accidentally diverge on the shared
-    four.
+    ``static_inspection_contributors``: the static admission's four
+    contributors are a subset of the graded admission's complete eight, never
+    an independently derived set that could accidentally diverge on the shared
+    four. The four extra names are asserted individually, so a denominator
+    that silently drops one is a failure rather than a smaller number nobody
+    reads.
     """
     static = set(static_inspection_contributors())
     graded = set(graded_snapshot_contributors())
 
     assert len(static) == 4
-    assert len(graded) == 6
+    assert len(graded) == 8
     assert static < graded  # strict subset
     extra = graded - static
     assert {contributor.producer for contributor in extra} == {
         "calculation_materialization",
         "modelo_work_review",
+        "modelo_readiness",
+        "registry_closure",
     }
 
 
@@ -251,10 +265,127 @@ def test_assembled_results_each_carry_exactly_their_own_admissions_contributor_s
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(graded_result, ModeloWorkspaceGradedSnapshotResultV1)
     assert set(graded_result.projection.contributors) == set(graded_snapshot_contributors())
+
+
+# --- 2b. Closure and readiness parity against their canonical producers ---
+
+
+def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target(repos) -> None:
+    """The projection's closure limbs are the closure authority's own, selected by coordinate.
+
+    Proven the way the work review is proven against its sole public producer:
+    the canonical producer is invoked independently, over the same census and
+    the same observation instant, and the assembled facet must equal that
+    producer's output narrowed to this target's ``(modelo, revision)``. A
+    limb the projection carries that the authority did not publish, or one it
+    dropped that the authority did, fails here.
+    """
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    _work_unit, _revision = _seed_and_calculate(repos)
+    census = load_source_connectivity_census()
+
+    result = resolve_graded_snapshot_result(
+        _visible_target(),
+        required_grade=RegistryAuthorityGrade.CALCULATION,
+        bucket_id=_BUCKET_ID,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=bundled_authority(),
+        census=census,
+        as_of=_CLOSURE_AS_OF,
+        output_language=OutputLanguage.ES,
+    )
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+
+    canonical = capture_registry_closure(
+        authority=bundled_authority(),
+        census=census,
+        as_of=_CLOSURE_AS_OF,
+    )
+    expected = graded_snapshot_closure_limbs(canonical.limbs, target=result.projection.target)
+
+    assert result.projection.registry_closure_limbs == expected
+    # The selection is real: the authority publishes limbs for other revisions
+    # that this projection must not carry, so an unnarrowed pass-through would
+    # differ from the asserted value rather than coincide with it.
+    assert len(canonical.limbs) > len(expected)
+    assert all(
+        limb.modelo == result.projection.target.modelo
+        and limb.revision == result.projection.target.law_selected_revision_id
+        for limb in result.projection.registry_closure_limbs
+    )
+
+
+def test_graded_readiness_equals_the_canonical_readiness_producers_report(repos) -> None:
+    """The projection's readiness is the canonical producer's report, axis for axis.
+
+    ``graded_snapshot_readiness`` is a pass-through projection, so the
+    assembled facet must equal that projection applied to the report the
+    canonical producer independently returns for the same target. Every axis
+    is compared through model equality, not a spot-check of ``ready``.
+    """
+    work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
+    _work_unit, _revision = _seed_and_calculate(repos)
+
+    result = resolve_graded_snapshot_result(
+        _visible_target(),
+        required_grade=RegistryAuthorityGrade.CALCULATION,
+        bucket_id=_BUCKET_ID,
+        catalogue_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        authority=bundled_authority(),
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
+        output_language=OutputLanguage.ES,
+    )
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+    readiness = result.projection.readiness
+    assert readiness is not None
+
+    target = result.projection.target
+    canonical = capture_modelo_readiness(
+        (
+            ModeloReadinessRequest(
+                modelo=target.modelo,
+                revision_id=target.law_selected_revision_id,
+                filing_year=target.filing_year,
+                period=target.period,
+            ),
+        ),
+        active_profile_id=target.bucket_id,
+    )
+    assert readiness == graded_snapshot_readiness(canonical.reports[0])
+    assert readiness.revision_id == target.law_selected_revision_id
+
+
+def test_static_inspection_reads_neither_closure_nor_readiness(repos) -> None:
+    """Static inspection holds both graded-only facets at their defaults.
+
+    The admission scope is a real difference, not an accident of what happens
+    to be wired: static inspection never invokes the CLOSURE or READINESS
+    contributor, so absence here is the correct answer rather than an
+    unpopulated field.
+    """
+    work_repo, *_rest = repos
+    _seed_work_unit_only(repos)
+
+    result = resolve_static_inspection_result(
+        _visible_target(),
+        bucket_id=_BUCKET_ID,
+        catalogue_repository=work_repo,
+        authority=bundled_authority(),
+        output_language=OutputLanguage.ES,
+    )
+    assert result.projection.registry_closure_limbs == ()
+    assert result.projection.readiness is None
 
 
 # --- 3. Mutation-after-capture isolation ---
@@ -288,6 +419,8 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -370,6 +503,8 @@ def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 

@@ -26,6 +26,7 @@ from .....application.user_profile.passphrase_rotation import (
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
 from .....tests.secure_sql import isolated_profile_storage_root
+from ..credentials import CredentialHostApp
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -85,7 +86,7 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _enroll()
         app = _app(profile_id)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = "not-the-real-passphrase"
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -108,7 +109,7 @@ async def test_a_confirmation_mismatch_refuses_locally_before_any_attempt(tmp_pa
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _enroll()
         app = _app(profile_id)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -128,7 +129,7 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _enroll()
         app = _app(profile_id)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -159,7 +160,7 @@ async def test_a_second_change_click_while_one_is_in_flight_is_a_single_use_no_o
             return _rotate(profile_id, current, new, confirm)
 
         app = PassphraseScreen(assess=assess_profile_password, rotate=_counting_rotate)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -180,7 +181,7 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _enroll()
         app = _app(profile_id)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -211,7 +212,7 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
         profile_id = _enroll()
         current = "not-the-real-passphrase-canary"
         app = _app(profile_id)
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with CredentialHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = current
             app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
@@ -245,7 +246,7 @@ async def test_every_field_and_action_is_actually_on_screen_not_only_present(
         profile_id = _enroll()
         app = _app(profile_id)
         width, height = size
-        async with app.run_test(size=size) as pilot:
+        async with CredentialHostApp(app).run_test(size=size) as pilot:
             await pilot.pause()
             controls = [
                 app.query_one(selector, widget_type)

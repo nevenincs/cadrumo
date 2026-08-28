@@ -12,6 +12,7 @@ from .frontend_contracts import OperationResponseControlRequestV1, OperationSubm
 from .interactions import OperationActorReference
 from .models import OperationId, OperationRequest
 from .observation import OperationObservationService
+from .persistence.financial_operand_custody import OperationFinancialOperandCustodyRepository
 from .persistence.journal import (
     OperationEventStream,
     OperationJournal,
@@ -128,8 +129,16 @@ def compose_operation_services(
     lease_duration: timedelta,
     execution_timeout: timedelta,
     cleanup_timeout: timedelta,
+    financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
 ) -> OperationComposedServices:
-    """Bind one immutable registry to real runtime adapters and safe services."""
+    """Bind one immutable registry to real runtime adapters and safe services.
+
+    ``financial_operand_custody`` is optional because only a registry holding a
+    definition that declares transient financial operands needs it. The
+    supervisor refuses to construct when such a definition is present without
+    it, so omitting it stays a refusal rather than a silently operand-less
+    supervisor.
+    """
     authority_broker = OperationResponseAuthorityBroker()
     supervisor = OperationSupervisor(
         registry=registry,
@@ -144,6 +153,7 @@ def compose_operation_services(
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
         response_authority_issuer=authority_broker,
+        financial_operand_custody=financial_operand_custody,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 

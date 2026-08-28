@@ -89,7 +89,8 @@ class PassphraseChangeAttempt:
 class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
     """Full-screen credential entry that re-wraps one profile's password."""
 
-    CSS = tokenised(
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """

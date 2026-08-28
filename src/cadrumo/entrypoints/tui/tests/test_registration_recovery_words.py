@@ -121,7 +121,10 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
             words.query_one("#field-recovery-verification", Input).value = rendered
             await pilot.click("#btn-confirm-words")
             await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            for _ in range(100):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
 
         assert app.outcome is not None
         assert app.outcome.label == "Recovery Words Subject"
