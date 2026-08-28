@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6da766f1d73a983718d2929aabc1704b33003b99973f49b20a158bbd53265dfd'
+body_hash: 'sha256:8949d08e4c44f6c1677a0142646307a5afffe2eb37fc8ced24ce504c9850265e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1559,7 +1559,6 @@ broken tree. It was a peer mid-commit -- the package imports cleanly moments
 later and the tests pass. Worth remembering before attributing a failure to a
 shared worktree's momentary state.
 
-
 ### Systematic sweep for the vacuous-pass class: two bad ids were the whole of it
 
 The Modelo 190 and 390 fixtures had been pinned to revisions the registry never
@@ -1600,4 +1599,3 @@ classify a row as unowned and pass. Its one entry resolves: Modelo 130
 So the two fixtures already corrected were the whole of this defect class in the
 test tree, which is the useful result -- the sweep was worth running to learn
 that rather than to assume it.
-
