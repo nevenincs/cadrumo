@@ -86,6 +86,7 @@ from ...domain.iva import (
     StatedCountryCodeStatus,
     deductible_percentage_for,
     flow_direction_for_invoice_kind,
+    is_deducible_flow,
     rate_kinds_for_declared_rate,
     stated_country_code_status,
     territorial_scope_for_country,
@@ -396,11 +397,7 @@ class IvaLedgerCandidate(BaseModel):
                 },
             )
         if (
-            self.flow_direction
-            not in {
-                IvaFlowDirection.SOPORTADO,
-                IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            }
+            not is_deducible_flow(self.flow_direction)
             or self.category is IvaCategory.RECARGO_EQUIVALENCIA
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
