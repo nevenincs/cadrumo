@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:22756991559f69838df05da24f53544aa203e3d9a5aa9e92b6c521e3064668f0'
+body_hash: 'sha256:b585612f359dd0c4da568495b3c3c6241e241add70e09fb46b94ba6aa95f55b4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1202,4 +1202,54 @@ own 16 selected tests still pass.
 The constants are file-local: `entrypoints/cli/tests/`
 `test_ledger_evidence_extract_cli.py` defines its own same-named
 `_FULL_INVOICE_LINES`, which this change does not touch.
+
+
+### Modelo 111 colegio-concertado: an undeclarable fact the fixtures never stated
+
+Twelve tests across M100, M111, M184, M190 and M303 scenarios failed with
+`ModeloProfileReadinessError: application.modelo.errors.profile_readiness_missing`.
+Probing the refusal context with the out-of-repo plugin named the single missing
+requirement: **"Es un colegio concertado"**.
+
+The requirement is correct and must not be relaxed. Commit `60e81539e5
+filing(m111): give the colegio concertado declaration a source` gave the Modelo
+111 fichero a filer-data row for it, and
+`application/filing/_producer_snapshot.py:1548` refuses a `None`: "Modelo 111
+colegio_concertado must be explicitly declared". That is
+`no-silent-under-declaration` working -- a regulatory flag cannot carry a
+default, because defaulting it declares something on the operator's behalf.
+
+Scoping was checked rather than assumed. Even the test named for Modelo 100
+reports `modelo: '111'` in its refusal, because its scenario files an M111 whose
+retencion folds into the M100 trabajo boxes. So the requirement is M111-scoped
+and fires only where M111 work actually happens; it is not a baseline field
+gating every modelo.
+
+Fixed by declaring the fact where the fixtures build a COMPLETE profile:
+`withholding.colegio_concertado = False`, which is the truthful value for a
+natural-person filer, in `_file_flow_support`, `_import_flow_support`,
+`test_m111_retenciones_observation_live`,
+`test_modelo_100_2025_retenciones_credit_fold_in_live`,
+`test_renta_annual_reconciliations_fold_in_live` and
+`test_source_boundary_and_enrollment` (two lists) -- seven insertions.
+
+Checked before inserting: `test_source_boundary_and_enrollment` builds its
+`incomplete_facts` by REMOVING one path from the complete tuple and asserts the
+length is exactly one less, so adding a fact preserves that invariant rather
+than breaking the fixture that proves the refusal still fires.
+
+A systematic sweep was considered and rejected as over-broad: 67 files reference
+`censo.activity_start_date` without this fact, but five are production and most
+test scenarios never touch M111, so adding the declaration everywhere would be
+noise rather than correctness. The support modules the failing tests actually
+use were patched instead -- and the first pass missed `_import_flow_support`
+precisely because it was found by following the failing test's imports rather
+than by pattern-matching.
+
+Outcome: the M111 file is fully green, and
+`test_amend_locally_filed_still_refused_after_import_path_exists` passes. The
+remaining cases advanced PAST readiness into distinct defects -- Modelo 100 and
+the renta fold-ins now stop at `ModeloAggregationBindingError` over rejected
+`renta-2025-inventory-activity-*` bindings, which is the separate seven-count
+cluster, and the M303 wallet cases belong to the export-fragment campaign.
 
