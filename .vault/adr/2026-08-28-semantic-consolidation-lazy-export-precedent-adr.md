@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:156fec10e0410b715379a1337f6ffe174e42ef9684223fa5abe14db7e2a1bb73'
+body_hash: 'sha256:825ddaa102cfd1350c4ac600d4cf0b29004f801b3f8b39f57715418dfd3aabed'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -236,11 +236,38 @@ the 416 modules, about 75 per cent: `_action_argument_resolution` (+135),
 `_foreign_asset_obligation` (+130), `_config_state_root` (+46). Most of the other 97
 targets cost nought to two modules each.
 
-That decides the shape, and it is the shape this decision already sanctions rather than a
-new exception. `core` retires its WHOLE-NAMESPACE MAP like the other eight, and keeps a
-PEP 562 guard for the two or three named heavy symbols -- which is precisely "a named
-symbol whose deferral is justified by a recorded measurement of import weight" and
-nothing more. The measurement above is that record.
+That first reading argued for retiring the whole-namespace map while keeping a guard for the
+two or three named heavy symbols. RE-MEASURED AGAINST WHAT A CONSUMER ACTUALLY PAYS, that is
+wrong, and the correction matters because it simplifies the largest phase of this work:
+
+| | via the facade | direct from the owning submodule |
+|---|---|---|
+| `from cadrumo.core import Modelo` | 69 | 69 |
+| `from cadrumo.core import CasillaId` | 201 | 201 |
+| `from cadrumo.core import Period` | 237 | 237 |
+
+IDENTICAL. The `__getattr__` imports precisely the module a direct import would and nothing
+more, so the map saves a real consumer NOTHING. There is no heavy symbol to guard, because
+a consumer reaching that symbol directly pays exactly what the facade charges.
+
+The +416 module figure measures the cost of importing ALL 100 targets, which no consumer
+does. It is the same hypothetical eager state `domain/modelos` identified as the trap. And
+the one case where a facade genuinely defers -- importing the MODULE without touching an
+attribute, which is what earns `cadrumo/tests` its exemption -- does not arise here: there
+are ZERO plain `import cadrumo.core` statements in the tree.
+
+So `core` RETIRES IN FULL, no guard, on the same evidence as `domain/modelos` and
+`custody`. Its 357 symbols and 2278 importing files make it the largest slice, but not a
+structurally different one.
+
+One caveat on the per-target table above, recorded because it applies to every measurement
+in this decision taken the same way: a breakdown built by importing targets in sorted order
+MEASURES THE ORDER. The first target absorbs the shared dependency tree -- pydantic's above
+all -- and later targets show near-zero marginal cost that is an artefact of running second.
+The `custody` slice proved this directly: two targets showing +0 modules in such a sweep
+cost 179 modules when imported cold and alone. Per-target tables are therefore evidence of
+which target runs first, and only the facade-versus-direct comparison and the real-consumer
+figure are load-bearing.
 
 This is the outcome the Consequences section anticipated as a risk, and it arrived as the
 better case: `core` does not keep the mechanism the other eight lost, it keeps the
