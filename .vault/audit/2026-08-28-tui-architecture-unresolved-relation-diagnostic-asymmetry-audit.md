@@ -5,122 +5,95 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:746df21131afaee711c913e2982c440e9c68f5f6b6d1007e155a561b201b33d1'
+body_hash: 'sha256:29074813bfe5fb886bce251506f560bb869ec31cc478b6e96aab1dda1fa688a7'
 related: []
 ---
 
 # `tui-architecture` audit: `An unresolved relation drops its casilla with no diagnostic; the binding path has three`
 
-## Finding
+## Withdrawn
 
-When a registry **binding** cannot be satisfied, three separate mechanisms make
-that visible. When a **relation** cannot be satisfied, none of them fire: the
-dependent casilla is dropped from the engine result with no unresolved outcome,
-no source diagnostic, and no unresolved-casilla id.
+**This audit's central claim was false and is withdrawn in full.** It asserted
+that unresolved relations produce no diagnostic at any layer, in contrast to
+bindings. Relations are in fact covered by two dedicated diagnostic builders, and
+on the dimension this campaign cares about most — watching the over-payment
+direction — the relation path is *better* instrumented than the binding path.
 
-The value is never wrong — this is not a silent-zero defect, which was checked and
-excluded first (see "What is not wrong" below). The gap is in the signal.
+Nothing was changed in production code, registry data or tests at any point. The
+error was confined to this audit.
 
-## Proof
+## What is actually there
 
-Driven on Modelo 180 for filing year 2025 — the minimal fixture, 33 casillas and
-two formulas, both of which read a relation leaf:
-
-| case | result |
-|---|---|
-| `relation_values={base: 50000, retenciones: 9500}` | `decl.base-total=50000.00`, `decl.retenciones-total=9500.00` |
-| `unresolved_relation_ids=(both)` | `values={}`, **31 of 33 observations**, `unresolved_outcomes=()` |
-| neither supplied | raises `RegistryValidationError: relation '...' has no supplied value` |
-
-The middle row is the finding. Both computed totals vanish from `observations`,
-and `unresolved_outcomes` is empty.
-
-## The asymmetry
-
-**Bindings** are covered at three layers:
-
-- `expected_but_missing_binding_ids` (`application/modelo/_calculation_source_staging.py:421`)
-  finds present-source, no-value gaps.
-- `add_expected_missing_binding_diagnostics` wraps it, and its docstring states the
-  intent outright: *"Mark present-source, no-value binding gaps unresolved instead
-  of silent."* It emits `CalculationSourceDiagnostic` entries and extends
-  `unresolved_binding_ids`.
-- `application/modelo/_required_binding_gate.py` consumes that same function.
-
-**Relations** have no counterpart. There is no `expected_but_missing_relation_ids`,
-no relation-side diagnostic builder, and no relation branch in
-`_calculation_source_staging.py`. `unresolved_relation_ids` is accumulated by the
-mesh (`application/aggregation/_source_mesh.py:1328`, again at `:1490`) and handed
-to the engine, and there the trail ends.
-
-The one place the engine's own unresolved state is harvested is
-`_calculation_source_staging.py:352`:
+`application/calculations/_relation_prefill.py` partitions unresolved relations
+three ways (`_unresolved_relation_ids` → `.formula_fed`, `.orphaned`, `.bound`)
+and emits diagnostics for **all three** into
+`CalculationSourceResolution.diagnostics`:
 
 ```python
-unresolved_casilla_ids=tuple(sorted(outcome.casilla_id for outcome in engine_result.unresolved_outcomes)),
+diagnostics=_unresolved_relation_diagnostics(unresolved_relation_ids=unresolved_relation_ids, ...)
+         + _unresolved_relation_diagnostics(unresolved_relation_ids=unresolved_non_formula_relation_ids, ...)
+         + _absent_bound_carry_diagnostics(unresolved_relation_ids=unresolved_bound_relation_ids, ...)
 ```
 
-That derives from `unresolved_outcomes`, which the M180 run shows is empty in the
-unresolved-relation case. So this channel is empty too.
+The partition also corrects a factual claim carried in the earlier audit. The
+formula-fed path drops its casilla, as measured on M180. The **bound** path does
+not: an unresolved bound carry threads a **zero** into its target binding slot.
+Those are two different mechanisms, and the earlier audit generalised from the one
+it had tested.
 
-`collect_unhandled_source_diagnostics` — the `no-silent-blank` safety net named in
-`aeat-calculation-aggregation` — does not close the gap either, because it
-iterates `revision.bindings` and asks whether each declared `source` **kind** has
-an enrolled resolver. That is a static modelling question about the registry. It
-cannot see that *this taxpayer's* M115 quarters produced no value.
+### The bound-carry advisory is the over-payment watch
 
-## What is not wrong, checked first
+`_absent_bound_carry_diagnostics` exists precisely to watch the direction this
+campaign was opened to find. Its docstring:
 
-An unresolved relation does **not** resolve to zero. `formula_runtime.py:1328`
-raises `_UnresolvedFormulaDependencyError` when the relation is marked unresolved
-and `RegistryValidationError` when it is simply unsupplied. The casilla leaf at
-`:1290` has the same shape, so a dropped casilla **cascades as unresolved** rather
-than as zero.
+> An orphan reaches nothing; this one reaches a casilla, as a zero, and every
+> carry on this path reduces the amount owed — a prior instalment already paid, a
+> loss carried forward, an opening stock. So the zero does not look wrong. It
+> looks like a taxpayer who had no prior filing, and it declares more tax than is
+> owed.
 
-This matters for the relief case that prompted the check. M100 casilla 0604
-(`irpf_pago_fraccionado_actividades_economicas`) is
-`sum(relation rel-130-pagos-fraccionados, relation rel-131-pagos-fraccionados)`,
-feeding 0609 `irpf_total_pagos_cuenta`. If the M130/M131 folds go unresolved, 0604
-drops and 0609 drops with it. The taxpayer's pagos fraccionados are **not**
-silently credited as zero, which would have been the over-payment defect. That
-direction is safe.
+Its message states the fact and the over-declaration consequence outright, and it
+is non-blocking. It deliberately does not fire for a filer with no obligation:
+those source periods are scoped out upstream against the declared activity start.
+It also deliberately omits a "file the source period" instruction, on the reasoning
+that the declarations register does not serve every modelo and an instruction an
+agent-operator cannot satisfy is worse than none.
 
-## Direction
+That is a direct, documented answer to the organising question — for this channel,
+someone built the over-pay watch and wrote down why.
 
-The residual exposure is a missing *signal*, not a wrong figure, and it is
-therefore bounded by what the downstream gates do with an absent casilla. A
-computed casilla absent from the persisted revision should be refused by the
-export completeness gate, which requires every formula-declaring casilla to carry
-a real value. So the likely operator experience is a late, indirect refusal at
-export naming a blank box, rather than an early advisory naming the actual cause —
-that the source quarters did not resolve.
+### The orphan advisory is grouped by root cause
 
-`aeat-calculation-grounding` is relevant and, on its face, in tension with the
-observed behaviour: *"Emit every casilla in `engine_result.values`, not only
-computed entries... Never drop a casilla on the way to the persisted revision."*
-Whether the unresolved case is an intended exception to that rule is exactly what
-this audit does not decide.
+`_unresolved_relation_diagnostics` groups by `(source_modelo, filing_year,
+periods)` rather than emitting per relation, deliberately excluding
+`source_casilla_ids` because that is the axis that varies. Its docstring records
+the measurement behind the choice: on Modelo 190 for 2025 with an empty store, ten
+annual-summary relations each read a different fact off the **same** absent Modelo
+111 return, so the un-grouped form produced ten lines naming one root cause. A true
+orphan, having no source coordinate, stays one diagnostic per relation.
 
-## What this audit does not establish
+## Why the earlier audit missed it
 
-`unresolved_relation_ids` is live on `CalculationSourceResolution`, so a consumer
-this audit has not traced — verification findings, the CLI envelope's notice
-channel, the readiness projection — may already surface it to the operator. The
-claim here is narrow and checkable: **no diagnostic is produced on the calculate
-staging path, where the binding equivalent produces three.** Confirming or refuting
-downstream coverage is the first step of any remediation, and would move this from
-a gap to a division of labour.
+The search that produced the false negative required two terms on the **same
+line** — `unresolved` and one of `notice|advisory|diagnostic|finding`. In
+`_relation_prefill.py` the function name carries `diagnostics` (line 744) while
+`unresolved_relation_ids` sits on the parameter line below it (746). Neither line
+satisfies both terms, so a line-scoped conjunction returns nothing while the
+function it was looking for sits directly under the cursor.
 
-## Remediation — owner's decision, not taken here
+Two searched files, `_calculation_source_staging.py` and `_source_mesh.py`, did
+not contain the coverage; the earlier audit generalised "not here" to "nowhere".
+It did hedge — it recorded that an untraced consumer might already surface the
+state, and scoped its claim to the staging path — but the headline claim was still
+wrong, and the hedge is not a substitute for having looked.
 
-If downstream coverage is absent, the shape is already written: a relation-side
-`expected_but_missing_relation_ids` mirroring the binding helper, feeding
-`CalculationSourceDiagnostic` entries through the same advisory channel. The
-docstring of the binding version states the principle it would be extending.
+The durable lesson: **a line-scoped grep conjunction is a filter bug generator.**
+Grep the terms separately, or grep the file. An absent result from a two-term
+same-line filter is not evidence of absence.
 
-Per the standing rule that a gate is unproven until it bites, any implementation
-needs the M180 fixture above driven with `unresolved_relation_ids` and asserted to
-produce a diagnostic — the same three-case table, with the middle row no longer
-silent.
+## What survives
 
-No production code, registry data or test was changed by this audit.
+Nothing actionable. The staging-path observation is true but uninteresting once the
+resolver-path coverage is known: diagnostics are produced where the relation is
+resolved, which is the correct home for them, not at the staging layer that merely
+threads the ids onward. There is no asymmetry to remediate and no gate to add.
