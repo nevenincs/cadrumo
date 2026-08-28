@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b585612f359dd0c4da568495b3c3c6241e241add70e09fb46b94ba6aa95f55b4'
+body_hash: 'sha256:6f4aac243ae9123ace3e34999b530ef8cee0f73444ba2620590939d9f8e49756'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1252,4 +1252,48 @@ remaining cases advanced PAST readiness into distinct defects -- Modelo 100 and
 the renta fold-ins now stop at `ModeloAggregationBindingError` over rejected
 `renta-2025-inventory-activity-*` bindings, which is the separate seven-count
 cluster, and the M303 wallet cases belong to the export-fragment campaign.
+
+
+### A hand-listed locked-source set went stale the moment `inventory` enrolled
+
+The failures tick 13 uncovered were `ModeloAggregationBindingError` with
+`rejected_binding_ids` naming `renta-2025-inventory-activity-*`.
+
+The engine is right to refuse. `_reject_caller_overrides_of_source_bindings`
+rejects any caller-supplied binding a bucket source resolver owns, because a
+caller override would leave the persisted revision no longer reflecting the
+sources it claims to aggregate. `4b031370bb feat(inventory): enforce
+source-owned calculation inputs` enrolled `BindingSourceKind.INVENTORY` in the
+`LOCK` tier of the caller-override ladder, so inventory values must now come
+from bucket substrate.
+
+The defect was in the test helpers, and it is the exact failure mode
+`aeat-registry-bindings` names -- "a hand-listed string set for a family". Two
+files computed "bindings the caller must supply" by excluding a HARDCODED set of
+source tokens: `profile`, `relation_prefill` and six ledger/invoice kinds. That
+list was correct when written and silently wrong the moment a seventh locked
+kind was enrolled: every inventory binding was then offered to the engine as a
+caller value, and the lock rejected the whole calculate.
+
+Fixed by DERIVING the locked half from the ladder that declares it --
+`precedence_ladder_sources(CallerOverrideDisposition.LOCK)`, whose own docstring
+says it exists "so a source kind's lock-vs-carry disposition is declared once
+... rather than hand-listed per set". Only the two genuinely scenario-specific
+exclusions stay literal, and they now carry the reason they are there:
+`profile` comes from the seeded record, `relation_prefill` is left unset so the
+enrolled resolver folds from the store. A future `LOCK` enrolment is picked up
+without touching either file.
+
+`test_modelo_100_2025_retenciones_credit_fold_in_live` (2 tests) and
+`test_modelo_100_2025_expense_inspection_live` (1) now pass.
+
+The same hardcoded shape survives in four more files
+(`test_invoice_accumulative_cross_modelo_periods`,
+`test_derived_aggregate_override_real_path`,
+`test_e2e_ledger_m130_quarters_to_m100_annual`,
+`test_pulled_history_reaches_calculate`), three of them currently failing. They
+were left for their own tick rather than swept blind: each needs its scenario
+exclusions read before the literal set is replaced, and
+`test_pulled_history_reaches_calculate` is green today, so rewriting it would be
+churn with no failing gate to prove the change.
 
