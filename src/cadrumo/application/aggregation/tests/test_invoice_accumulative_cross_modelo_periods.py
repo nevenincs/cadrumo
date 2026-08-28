@@ -63,7 +63,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import CalculationRevision
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

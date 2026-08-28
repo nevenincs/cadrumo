@@ -22,7 +22,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.modelos import derive_calculation_revision_id
+from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.profile_capsule import seed_test_profile_record

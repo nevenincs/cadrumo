@@ -24,10 +24,7 @@ from ....core.errors import resolve_error_message
 from ....domain.buckets import BucketEventType
 from ....domain.iva import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
-from ....domain.modelos import (
-    CalculationRevision,
-    FilingInstanceEvidence,
-)
+from ....domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

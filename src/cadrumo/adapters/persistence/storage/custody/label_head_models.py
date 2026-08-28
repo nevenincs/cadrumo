@@ -121,6 +121,13 @@ class ProfileLabelHead(_CustodyDigestModel):
         label: ProfileCustodyCapsuleLabel,
         source_witness: str,
     ) -> ProfileLabelHead:
+        """Start a label-head chain from the label's own first revision.
+
+        Refuses any label that is not itself revision 1 with no predecessor —
+        the chain's root must anchor to a label the label-record layer already
+        proved is first, never to an arbitrary starting point a caller
+        supplies.
+        """
         if label.label_revision != 1 or label.previous_label_digest is not None:
             raise ProfileCustodyRecordError("initial label head requires the first label record")
         return cls._create_with_self_digest(
@@ -137,6 +144,14 @@ class ProfileLabelHead(_CustodyDigestModel):
 
     @classmethod
     def advance(cls, *, current: ProfileLabelHead, label: ProfileCustodyCapsuleLabel) -> ProfileLabelHead:
+        """Extend the trusted chain by exactly one label revision.
+
+        Refuses a label that does not continue ``current`` by revision number
+        AND content lineage (``previous_label_digest`` must equal the
+        current head's content digest) — a caller cannot skip a revision or
+        splice in a label from a different chain, only ever advance one step
+        from the head it already trusts.
+        """
         if (
             label.profile_id != current.profile_id
             or label.label_revision != current.label_revision + 1
@@ -156,6 +171,13 @@ class ProfileLabelHead(_CustodyDigestModel):
         )
 
     def verifies(self, label: ProfileCustodyCapsuleLabel) -> bool:
+        """Return whether this head is the trusted head for exactly ``label``.
+
+        The check every reader uses before trusting a label as current: a
+        label is only "the" current one if a head record independently
+        vouches for its identity AND digest, not merely because it happens
+        to be the most recently written one on disk.
+        """
         return (
             label.profile_id == self.profile_id
             and label.label_revision == self.label_revision
@@ -213,6 +235,15 @@ class ProfileLabelHeadPendingAdvance(_CustodyDigestModel):
         replacement_label: ProfileCustodyCapsuleLabel,
         replacement_head: ProfileLabelHead,
     ) -> ProfileLabelHeadPendingAdvance:
+        """Record intent to advance the label head, durably, before the advance is committed.
+
+        This is the crash-recovery witness the class docstring names: written
+        BEFORE the actual label-then-head write lands, so a process that dies
+        mid-advance leaves a record recovery can resume from, rather than an
+        untraceable partial write. Refuses to start unless ``expected_head``
+        already verifies ``expected_label`` — recovery can only resume from a
+        state that was itself trustworthy.
+        """
         if not expected_head.verifies(expected_label):
             raise ProfileCustodyRecordError("pending label advance does not start at its trusted head")
         return cls._create_with_self_digest(

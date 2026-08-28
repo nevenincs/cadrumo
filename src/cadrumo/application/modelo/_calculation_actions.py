@@ -89,20 +89,22 @@ from ...domain.calculations.registry.iva_wallet_relation_targets import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
-    FilingInstanceEvidence,
     LedgerFilingSnapshot,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
     Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
     upsert_calculation_revision,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceIssue,
+    CalculationSourceRef,
+    FilingInstanceEvidence,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol

@@ -44,7 +44,6 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos import (
-    CalculationRevision,
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
@@ -52,6 +51,7 @@ from ...domain.modelos import (
     m232_related_party_row_casilla_values,
     m349_nif_number_for_export,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {

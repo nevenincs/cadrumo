@@ -23,15 +23,11 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.workflow.persistence import workflow_state_repository
 from ....core import CasillaId, Period
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 
 

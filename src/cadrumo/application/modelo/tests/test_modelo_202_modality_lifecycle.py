@@ -34,13 +34,11 @@ from ....domain.deadlines import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.modelos import (
+from ....domain.modelos import ExternalEvidenceKind, WorkUnit, upsert_calculation_revision
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ExternalEvidenceKind,
-    WorkUnit,
     derive_calculation_revision_id,
-    upsert_calculation_revision,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings

@@ -35,13 +35,26 @@ class ProfileLabelHeadRepository:
     """Read, verify, CAS-advance, and deterministically recover label heads."""
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Bind the repository to the label-head storage category's canonical location.
+
+        ``root`` is accepted for test isolation; production callers rely on
+        :func:`effective_storage_root` resolving the real profile-custody root
+        so every repository instance agrees on where heads live.
+        """
         self._root = effective_storage_root(root)
         self._head_root = self._root / storage_location(StorageCategory.PROFILE_CUSTODY_LABEL_HEAD).relative_path()
 
     def head_path(self, profile_id: UUID) -> Path:
+        """Return the durable head file's path, without reading or asserting it exists."""
         return self._head_root / f"{profile_id}.json"
 
     def pending_path(self, profile_id: UUID) -> Path:
+        """Return the crash-recovery pending-advance file's path.
+
+        The leading dot matches the filesystem convention for a hidden,
+        in-progress artefact — a directory listing of head files should not
+        surface a pending advance as if it were a committed head.
+        """
         return self._head_root / f".{profile_id}.pending.json"
 
     def load_current(self, profile_id: UUID) -> ProfileLabelHead:
@@ -78,6 +91,14 @@ class ProfileLabelHeadRepository:
         current_label: ProfileCustodyCapsuleLabel,
         replacement_label: ProfileCustodyCapsuleLabel,
     ) -> ProfileLabelHeadPendingAdvance:
+        """Durably record intent to advance the head before writing the new head itself.
+
+        This is the write-ahead half of the crash-recovery protocol
+        :meth:`recover_pending` completes on the other side: the pending
+        record lands on disk FIRST, so a crash between here and the eventual
+        head write leaves a resumable trail instead of an ambiguous
+        half-advanced state.
+        """
         if not current_head.verifies(current_label):
             raise ProfileCustodyRecordError("profile label differs from its trusted head")
         replacement_head = ProfileLabelHead.advance(current=current_head, label=replacement_label)

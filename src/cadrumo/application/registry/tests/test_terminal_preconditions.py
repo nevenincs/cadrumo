@@ -14,18 +14,21 @@ from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, validated_casi
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.manuals import ManualPart
-from .. import (
-    RegistryApplicationInputError,
+from ..conformance import _AxisIndex
+from ..corpus import (
     RegistryCitationShowCommand,
     RegistryManualId,
     RegistryManualRulesCommand,
     RegistryManualShowCommand,
     RegistryManualsListCommand,
+    list_registry_manual_rules,
+    list_registry_manuals,
     registry_manual_id,
+    show_registry_citation,
+    show_registry_manual,
 )
-from .._conformance import _AxisIndex
-from ..corpus import list_registry_manual_rules, list_registry_manuals, show_registry_citation, show_registry_manual
 from ..diff import _revision_for_year, diff_registry_revisions
+from ..errors import RegistryApplicationInputError
 from ..filed_state import _verified_required_casilla_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -1238,7 +1238,8 @@ application:
         %{threshold} küszöböt.'
       oss_evidence_missing: Ez a revízió egyablakos tevékenységet jelent be, de nem
         őriz meg OSS bizonyítékot.
-      oss_source_unrouted: Egy egyablakos forrás nincs bevallható rovathoz irányítva.
+      oss_source_unrouted: 'Egyetlen aggregációs kötés sem használja fel ezeket az
+        egyablakos forrásokat (hivatkozások: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: A(z) %{period_code} %{filing_year} %{casilla_number}
         rovat számított értéke %{computed_value} a bevallott %{filed_value} ellenében
         (%{mismatch_kind}).
@@ -1260,9 +1261,10 @@ application:
         ingresos a cuenta); az adózó soha nem nyújtotta be a 111-es nyomtatványt,
         amely ezt bevallja, ezért ez az érték nem tölthető ki automatikusan.
       transaction_evidence_missing_deductible: 'Egy levonható tranzakcióhoz nincs
-        alátámasztó bizonyíték (forrás: %{source_kind_code}, ok: %{diagnostic_reason_code}).'
+        alátámasztó bizonyíték (kötés: %{binding_id}, forrás: %{source_kind_code},
+        ok: %{diagnostic_reason_code}).'
       transaction_evidence_missing_output: 'Egy fizetendő tranzakcióhoz nincs alátámasztó
-        bizonyíték (forrás: %{source_kind_code}, ok: %{diagnostic_reason_code}).'
+        bizonyíték (kötés: %{binding_id}, forrás: %{source_kind_code}, ok: %{diagnostic_reason_code}).'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás

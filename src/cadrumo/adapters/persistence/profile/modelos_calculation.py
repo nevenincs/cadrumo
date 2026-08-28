@@ -50,8 +50,10 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
-    CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevisionCatalogue,
     assert_revision_snapshot_evidence_coverage,
 )
 from ....domain.modelos.errors import raise_catalogue_integrity_error

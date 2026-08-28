@@ -31,7 +31,8 @@ from ._calculation_actions import get_calculation_revision
 
 if TYPE_CHECKING:
     from ...core.identity import CalculationRevisionId
-    from ...domain.modelos import CalculationRevision, CalculationRevisionCatalogueRepositoryProtocol
+    from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+    from ...domain.modelos.calculation_revision import CalculationRevision
 
 _CALCULATION_CAPTURE_MAX_ATTEMPTS = 8
 _calculation_capture_process_pid = os.getpid()

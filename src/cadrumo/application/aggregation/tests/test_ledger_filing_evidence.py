@@ -21,15 +21,12 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.iva import IvaCategory
-from ....domain.modelos import (
+from ....domain.modelos import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    LedgerEvidenceRow,
-    LedgerFilingEvidence,
-    ManualFactBasisEntry,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....domain.transactions import (
     BusinessClassification,

@@ -13,15 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.registry._conformance
-   cadrumo.application.registry._corpus
    cadrumo.application.registry._corpus_manual_helpers
-   cadrumo.application.registry._diff
-   cadrumo.application.registry._filing_export_authority
-   cadrumo.application.registry._filing_export_coverage
-   cadrumo.application.registry._source_connectivity_authority
-   cadrumo.application.registry._source_connectivity_coverage
-   cadrumo.application.registry._temporal_coverage
    cadrumo.application.registry.closure
    cadrumo.application.registry.closure_capture
    cadrumo.application.registry.conformance

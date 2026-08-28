@@ -63,13 +63,9 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
-    FilingInstanceEvidence,
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -77,12 +73,18 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     is_receipt_bound_external_evidence,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    derive_calculation_revision_id,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository, ObservationSourceKind

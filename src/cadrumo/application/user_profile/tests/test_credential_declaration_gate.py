@@ -179,6 +179,95 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "the keyword would drop the official term this codebase requires for AEAT concepts, "
         "so the exemption is the honest resolution rather than a workaround."
     ),
+    "attribution_entity_socios.clave": (
+        "Matches on 'clave' in its own NAME, in the code sense rather than the password "
+        "sense: it is the Modelo 184 record's 'clave' at position 93, a one-letter enum over "
+        "A capital mobiliario, C capital inmobiliario, D actividades economicas and the rest. "
+        "It classifies a declared row for AEAT and authenticates nothing; someone holding it "
+        "learns only how the declaration classifies that row, which the filing publishes to "
+        "AEAT by design. Renaming it would drop the official AEAT term this codebase requires "
+        "for domain concepts."
+    ),
+    "attribution_entity_socios.subclave": (
+        "Matches on 'clave' in its own NAME, in the code sense rather than the password "
+        "sense: it is the same record's numeric subclave at positions 94-95, whose meaning "
+        "depends on the clave declared beside it. It classifies a declared row for AEAT and "
+        "authenticates nothing; someone holding it learns only how the declaration classifies "
+        "that row, which the filing publishes to AEAT by design. Renaming it would drop the "
+        "official AEAT term this codebase requires for domain concepts."
+    ),
+    "attribution_entity_socios.clave_declarado": (
+        "Matches on 'clave' in its own NAME, in the code sense rather than the password "
+        "sense: it is the clave for the socio's TITULARIDAD of the inmueble, a declared "
+        "ownership class rather than a secret. It classifies a declared row for AEAT and "
+        "authenticates nothing; someone holding it learns only how the declaration classifies "
+        "that row, which the filing publishes to AEAT by design. Renaming it would drop the "
+        "official AEAT term this codebase requires for domain concepts."
+    ),
+    "taxpayer_type.declaration_roles": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: each ThirdPartyDeclarationRole feeds a specific Modelo "
+        "347 clave (C, D or E). The field itself is a closed set of institutional roles the "
+        "filer already declares to AEAT, not authentication material. Rewording the "
+        "description to dodge the keyword would remove exactly the sentence telling a reader "
+        "when the field is required."
+    ),
+    "attribution_entity_socios.naturaleza_inmueble": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it applies only when clave = C, capital inmobiliario. The "
+        "field itself is the nature of the property producing the income, not authentication "
+        "material. Rewording the description to dodge the keyword would remove exactly the "
+        "sentence telling a reader when the field is required."
+    ),
+    "attribution_entity_socios.situacion_inmueble": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it applies only when clave = C. The field itself is the "
+        "property's situation code, not authentication material. Rewording the description to "
+        "dodge the keyword would remove exactly the sentence telling a reader when the field "
+        "is required."
+    ),
+    "attribution_entity_socios.referencia_catastral": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it carries the catastral reference of the clave-C "
+        "inmueble. The field itself is a public cadastral identifier, not authentication "
+        "material. Rewording the description to dodge the keyword would remove exactly the "
+        "sentence telling a reader when the field is required."
+    ),
+    "attribution_entity_socios.porcentaje_titularidad_inmueble": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it qualifies the clave-C inmueble the socio holds. The "
+        "field itself is an ownership percentage, not authentication material. Rewording the "
+        "description to dodge the keyword would remove exactly the sentence telling a reader "
+        "when the field is required."
+    ),
+    "attribution_entity_socios.dias_arrendamiento": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it counts days for the clave-C inmueble. The field itself "
+        "is a day count within the ejercicio, not authentication material. Rewording the "
+        "description to dodge the keyword would remove exactly the sentence telling a reader "
+        "when the field is required."
+    ),
+    "attribution_entity_socios.reduccion": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it names the clave whose rendimiento the reduction "
+        "applies to. The field itself is a EUR amount, not authentication material. Rewording "
+        "the description to dodge the keyword would remove exactly the sentence telling a "
+        "reader when the field is required."
+    ),
+    "attribution_entity_socios.rendimiento_neto_previo_eo": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it belongs to clave D subclave 03/04, estimacion "
+        "objetiva. The field itself is a EUR rendimiento, not authentication material. "
+        "Rewording the description to dodge the keyword would remove exactly the sentence "
+        "telling a reader when the field is required."
+    ),
+    "attribution_entity_socios.rendimiento_neto_minorado_agricola_eo": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "whether the field applies: it belongs to the agricultural estimacion objetiva "
+        "subclave of clave D. The field itself is a EUR rendimiento, not authentication "
+        "material. Rewording the description to dodge the keyword would remove exactly the "
+        "sentence telling a reader when the field is required."
+    ),
     "attribution_entity_socios.country_of_residence": (
         "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
         "it -- the field itself is an ISO country code written at positions 79-80 of the same "

@@ -35,13 +35,11 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_tree import bundled_registry_tree

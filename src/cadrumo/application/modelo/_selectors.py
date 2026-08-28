@@ -20,12 +20,8 @@ from pydantic import BaseModel
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    WorkUnit,
-)
+from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol, WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError
 
 

@@ -45,7 +45,8 @@ from ...core.logging import get_logger
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
 

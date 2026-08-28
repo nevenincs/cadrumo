@@ -67,7 +67,7 @@ from ._modelo_rendering import short_id
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ...domain.modelos import FilingInstanceEvidence
+    from ...domain.modelos.calculation_revision import FilingInstanceEvidence
 
 _log = get_logger(__name__)
 

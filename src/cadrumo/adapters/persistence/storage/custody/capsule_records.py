@@ -104,6 +104,15 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @property
     def content_payload(self) -> dict[str, object]:
+        """Return the fields ``content_digest`` itself commits to.
+
+        This is the NARROWER of the label's two digest scopes: content only,
+        excluding both digest fields. It exists separately from
+        :attr:`self_payload` because the label carries two independently
+        checkable claims — "this content is what it says it is" and "this
+        whole record, digests included, has not been altered" — and each
+        needs its own excluded-field view to stay self-consistent.
+        """
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["content_digest"]
         del payload["self_digest"]
@@ -111,12 +120,20 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @property
     def self_payload(self) -> dict[str, object]:
+        """Return the fields ``self_digest`` itself commits to.
+
+        The WIDER of the two scopes: everything except ``self_digest``,
+        including ``content_digest``. Chaining self_digest over content_digest
+        is what lets a caller detect a content_digest swapped onto a label it
+        was never computed for, not just a tampered label field.
+        """
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["self_digest"]
         return payload
 
     @property
     def computed_content_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``content_digest``."""
         return canonical_json_digest(
             self.content_payload,
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
@@ -125,6 +142,7 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @property
     def computed_self_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``self_digest``."""
         return canonical_json_digest(
             self.self_payload,
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
@@ -132,6 +150,7 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialise to the exact canonical bytes this label's identity is pinned to."""
         return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
@@ -147,6 +166,14 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
         label_revision: int = 1,
         previous_label_digest: str | None = None,
     ) -> ProfileCustodyCapsuleLabel:
+        """Build the one valid construction path: content digest, then self digest, then re-validate.
+
+        The two digests are computed in sequence — ``content_digest`` first,
+        then ``self_digest`` over the payload WITH that content digest already
+        attached — so the chained relationship the validators check is the
+        same order construction actually performs, never assembled out of
+        order.
+        """
         try:
             payload = _ProfileCustodyCapsuleLabelPayload(
                 schema_version=1,
@@ -223,12 +250,20 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the fields ``self_digest`` itself commits to, excluding the digest itself."""
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["self_digest"]
         return payload
 
     @property
     def computed_self_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``self_digest``.
+
+        This commit is the SOLE discovery proof for a current-format capsule
+        (see the class docstring), so a caller re-verifies this on every
+        discovery pass, not just at construction — a mismatch here means the
+        commit marking a capsule as current has itself been altered.
+        """
         return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
@@ -236,6 +271,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialise to the exact canonical bytes this commit's identity is pinned to."""
         return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
@@ -251,6 +287,12 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
         publication_kind: Literal["enroll", "restore"],
         published_at: datetime | None = None,
     ) -> ProfileCustodyCommit:
+        """Build the one valid construction path, stamping the publication instant and digest together.
+
+        ``published_at`` defaults to now rather than being left for a caller
+        to supply separately, so the commit instant and the digest computed
+        over it can never be set by two different code paths that drift.
+        """
         instant = (published_at or _now()).astimezone(UTC)
         serialized_time = instant.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         payload = _ProfileCustodyCommitPayload(
@@ -298,6 +340,13 @@ class ProfileCustodyDeletionMarker(BaseModel):
 
     @property
     def computed_self_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``self_digest``.
+
+        The marker travels WITH a capsule during local deletion as its
+        ownership proof (see the class docstring); this is what a reader on
+        the receiving side re-derives to confirm the marker was not forged or
+        altered in transit.
+        """
         payload = self.model_dump(mode="json")
         del payload["self_digest"]
         return canonical_json_digest(
@@ -307,6 +356,7 @@ class ProfileCustodyDeletionMarker(BaseModel):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialise to the exact canonical bytes this marker's identity is pinned to."""
         return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
@@ -315,6 +365,13 @@ class ProfileCustodyDeletionMarker(BaseModel):
 
     @classmethod
     def create(cls, *, profile_id: UUID, transaction_id: UUID, inventory_digest: str) -> ProfileCustodyDeletionMarker:
+        """Build the one valid construction path for a deletion ownership proof.
+
+        ``inventory_digest`` is supplied by the caller rather than derived
+        here, because it commits to the capsule INVENTORY state at deletion
+        time — a fact this marker records, not one it can compute from its
+        own fields.
+        """
         payload: dict[str, object] = {
             "schema_version": 1,
             "owner": "application-local-custody",
@@ -403,6 +460,14 @@ class ProfileCustodyPasswordMaterial:
 
 
 def parse_profile_custody_deletion_marker(value: bytes) -> ProfileCustodyDeletionMarker:
+    """Parse a deletion marker and reject one whose stored bytes are not its own canonical form.
+
+    The byte-identity check (not just the digest check the model validator
+    already runs) catches a marker re-encoded differently from how
+    :meth:`ProfileCustodyDeletionMarker.create` would have produced it — the
+    same non-canonical-bytes hazard :func:`parse_profile_custody_commit`
+    guards against for commits.
+    """
     try:
         marker = ProfileCustodyDeletionMarker.model_validate_json(value)
         if marker.canonical_json_bytes() != value:

@@ -14,13 +14,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_work_unit_id,
-)
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile

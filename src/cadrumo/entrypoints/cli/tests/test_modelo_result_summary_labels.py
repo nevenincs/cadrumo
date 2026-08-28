@@ -12,14 +12,11 @@ from ....application.modelo._result_summary import calculation_result_summary
 from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_work_unit,
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations

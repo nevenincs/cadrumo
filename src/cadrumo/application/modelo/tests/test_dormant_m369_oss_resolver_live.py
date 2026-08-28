@@ -37,9 +37,7 @@ from ....domain.iva import (
     OssIossRegime,
     TransactionKind,
 )
-from ....domain.modelos import (
-    CalculationRevisionState,
-)
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...aggregation import (
     AggregationValidationError,

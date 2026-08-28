@@ -59,11 +59,8 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import now as _utc_now
-from ...domain.modelos import (
-    CURRENT_SEALED_REVISION_STATES,
-    CalculationRevision,
-    WorkUnit,
-)
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 
 #: Wire-format version of the review-package descriptor. Bumped when the
 #: package-info schema changes shape.

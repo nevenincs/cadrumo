@@ -99,12 +99,25 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the fields ``self_digest`` itself commits to.
+
+        Excludes ``self_digest`` deliberately, the same convention as
+        :class:`~cadrumo.adapters.persistence.storage.custody.recovery.ProfileCustodyRecoveryEnvelope`:
+        the digest is computed OVER this payload, so it cannot include itself
+        without becoming unverifiable.
+        """
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["self_digest"]
         return payload
 
     @property
     def computed_self_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``self_digest``.
+
+        Called at construction time by the validator above, and again by a
+        caller re-verifying an artifact read back from portable storage (a
+        recovery export a taxpayer holds outside the app's own custody).
+        """
         return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
@@ -112,6 +125,12 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialise to the exact canonical bytes this artifact's identity is pinned to.
+
+        The artifact is meant to be exported and later re-imported unchanged;
+        this is what an import path compares a re-parsed artifact's bytes
+        against to detect a record edited or re-encoded outside the app.
+        """
         return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
@@ -120,6 +139,14 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
 
     @classmethod
     def from_recovery_envelope(cls, envelope: ProfileCustodyRecoveryEnvelope) -> ProfileCustodyRecoveryArtifact:
+        """Derive a portable artifact from an already-current recovery envelope.
+
+        Unlike :meth:`~...recovery.ProfileCustodyRecoveryEnvelope.create`, this
+        does not accept raw KDF/wrap parameters — it projects them out of an
+        envelope that has ALREADY passed its own self-digest check, so the
+        artifact can only ever carry material the custody substrate itself
+        vouched for, never values assembled ad hoc for export.
+        """
         payload = _RecoveryArtifactPayload(
             artifact_schema=PROFILE_CUSTODY_RECOVERY_ARTIFACT_SCHEMA,
             profile_id=envelope.profile_id,

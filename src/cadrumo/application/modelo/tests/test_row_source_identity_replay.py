@@ -18,7 +18,7 @@ from ....domain.filing import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ....domain.modelos import CalculationRevision
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.submission import ModeloDraftStatus
 from .._row_source_identity_replay import (

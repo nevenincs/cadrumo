@@ -54,7 +54,8 @@ from typing import Final
 
 from ...core import IvaCompensationStateProvenance, Modelo, ResultDisposition
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,

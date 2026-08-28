@@ -24,14 +24,11 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.modelos import (
+from ....domain.modelos import Modelo349OperadorRow, ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    Modelo349OperadorRow,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....domain.submission import ModeloDraftStatus
 from ....entrypoints.cli import (

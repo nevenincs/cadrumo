@@ -34,9 +34,7 @@ from ...domain.calculations.registry.relations import (
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -48,6 +46,7 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     is_receipt_bound_external_evidence,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 from .cross_period_models import (

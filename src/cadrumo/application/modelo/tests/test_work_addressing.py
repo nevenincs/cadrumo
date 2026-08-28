@@ -23,14 +23,16 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record

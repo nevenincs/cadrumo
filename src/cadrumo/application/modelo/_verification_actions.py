@@ -51,7 +51,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -79,11 +79,7 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceIssue,
     ManualFactBasisEntry,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloVerificationFinding,
@@ -101,6 +97,12 @@ from ...domain.modelos import (
     upsert_transaction_participation,
     upsert_verification_report,
     upsert_work_unit,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -301,6 +303,15 @@ def _manual_fact_basis_entries(
     )
 
 
+#: Stands in a finding fact whose subject genuinely does not exist, so the fact
+#: can be supplied on EVERY branch. ``tr()`` leaves an unsupplied placeholder in
+#: the rendered string rather than raising, so a conditionally-supplied fact
+#: reaches the operator as a literal ``%{binding_id}``. The marker is the
+#: established spelling for this on adjacent findings (``_pulled_filing_reconcile``,
+#: ``_attribution_received_advisory``) and says which case it is: an absent
+#: subject reads differently from one whose id is blank.
+_ABSENT_FACT: Final[str] = "absent"
+
 #: Legal grounding for missing IVA evidence. Deducting input IVA requires the
 #: original factura (LIVA art. 97, RD 1619/2012 art. 2). Output-IVA evidence
 #: gaps stay advisory until the transaction model can distinguish every valid
@@ -433,9 +444,14 @@ def _missing_evidence_findings(
         message_facts: dict[str, str | int | bool | Decimal] = {
             "diagnostic_reason_code": str(diagnostic.reason),
             "source_kind_code": diagnostic.source_kind,
+            # Supplied on every diagnostic, not only the bound ones. The message
+            # names the binding, and a fact supplied conditionally renders as a
+            # literal placeholder rather than raising, so a diagnostic with no
+            # binding would print "%{binding_id}" to the operator. The marker
+            # also says which case this is: "there is no binding" reads
+            # differently from a binding whose id is blank.
+            "binding_id": str(diagnostic.binding_id) if diagnostic.binding_id is not None else _ABSENT_FACT,
         }
-        if diagnostic.binding_id is not None:
-            message_facts["binding_id"] = str(diagnostic.binding_id)
         if diagnostic.source_ref is not None:
             message_facts["source_ref"] = diagnostic.source_ref
         if is_deductible_gap:
@@ -1395,9 +1411,14 @@ def _unrouted_oss_source_finding(
     message_facts: dict[str, str | int | bool | Decimal] = {
         "source_ref_count": len(source_ref_ids),
         "unidentified_source_count": len(unrouted_issues) - len(source_ref_ids),
+        # Unconditional for the same reason as ``binding_id`` above: the message
+        # names the unrouted refs, and an issue set carrying none would
+        # otherwise render the placeholder itself. Every unrouted issue lacking
+        # a source_ref is already counted by ``unidentified_source_count``, so
+        # the marker is what distinguishes "none of them could be identified"
+        # from a blank id.
+        "source_ref_ids": "|".join(source_ref_ids) if source_ref_ids else _ABSENT_FACT,
     }
-    if source_ref_ids:
-        message_facts["source_ref_ids"] = "|".join(source_ref_ids)
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,

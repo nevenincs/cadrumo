@@ -18,7 +18,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ....domain.modelos import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     AmendmentEvidence,

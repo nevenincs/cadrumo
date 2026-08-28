@@ -42,24 +42,26 @@ from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificado
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-    CalculationRevision,
     CalculationRevisionAggregateContext,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
-    M303RectificativaMotive,
     ModeloRecord,
     ModeloRecordCatalogue,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    M303RectificativaMotive,
+    derive_calculation_revision_id,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli

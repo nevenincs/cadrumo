@@ -1298,8 +1298,8 @@ application:
         de %{threshold}.'
       oss_evidence_missing: Aquesta revisió declara activitat de finestreta única
         però no conserva evidència de l'OSS.
-      oss_source_unrouted: Una font de finestreta única no està encaminada a cap casella
-        declarable.
+      oss_source_unrouted: 'Cap vinculació d''agregació no consumeix aquestes fonts
+        de finestreta única (referències: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: La casella %{casilla_number} de %{period_code}
         %{filing_year} va calcular %{computed_value} davant el declarat %{filed_value}
         (%{mismatch_kind}).
@@ -1321,9 +1321,9 @@ application:
         contribuent mai va presentar el Model 111 que ho declara, de manera que aquest
         valor no es pot emplenar automàticament.
       transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
-        justificativa (origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
+        justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacció repercutida no té evidència
-        justificativa (origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
+        justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

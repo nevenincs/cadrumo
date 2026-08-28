@@ -54,8 +54,8 @@ import pytest
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import NoRevisionForPeriodError, RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
-from .. import RegistryApplicationInputError
 from ..diff import diff_registry_revisions
+from ..errors import RegistryApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -14,11 +14,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .._calculation_revision import derive_calculation_revision_id
 from .._row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
 )
+from ..calculation_revision import derive_calculation_revision_id
 from ._row_model_support import (
     _assert_validation_error,
     _BaseRevisionIdKwargs,

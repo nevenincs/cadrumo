@@ -8,14 +8,11 @@ import pytest
 
 from ....core import Period
 from ....core.config import override_settings
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from .._modelo_rendering import (
     calculation_observation_lines,

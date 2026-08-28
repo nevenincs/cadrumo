@@ -455,11 +455,8 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
     from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos import (
-        CalculationRevision,
-        derive_calculation_revision_id,
-        upsert_calculation_revision,
-    )
+    from ....domain.modelos import upsert_calculation_revision
+    from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 
     inputs: dict[CasillaId, str] = {M180_PERCEPTOR_BASE_CASILLA: "1"}
     overrides_map: dict[str, str] = {}

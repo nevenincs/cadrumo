@@ -54,14 +54,11 @@ from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_encryption import (

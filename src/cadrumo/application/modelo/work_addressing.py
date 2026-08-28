@@ -46,14 +46,11 @@ from ...domain.calculations.registry.authority import RegistryAuthorityCapture, 
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente import CCAA
-from ...domain.modelos import (
+from ...domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ...domain.modelos.calculation_revision import (
     CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    WorkUnitState,
 )
 from ...domain.modelos.errors import ModeloError, ModeloValidationError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol

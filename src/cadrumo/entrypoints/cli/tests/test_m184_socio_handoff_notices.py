@@ -16,12 +16,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from ....domain.modelos import (
+from ....domain.modelos import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    Modelo184MemberRow,
-    Modelo349OperadorRow,
-    ModeloDetailRow,
     derive_calculation_revision_id,
 )
 from .._modelo_rendering import m184_socio_handoff_notices

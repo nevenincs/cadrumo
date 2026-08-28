@@ -24,7 +24,8 @@ from ...application.modelo._calculate_input import modelo_202_modality_for_work_
 from ...application.modelo._calculation_actions import list_calculation_revisions
 from ...application.modelo._selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter

@@ -18,8 +18,7 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.resources import resources
 from ....core.topics import Topic, TopicCatalogue
 from ....domain.manuals import ManualId, ManualPart
-from .. import (
-    RegistryApplicationInputError,
+from ..corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
@@ -39,6 +38,7 @@ from .. import (
     verify_registry_citations,
     verify_registry_manual,
 )
+from ..errors import RegistryApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -158,7 +158,7 @@ def test_topic_projection_rejects_invalid_string_locale_with_application_error(
     caplog: pytest.LogCaptureFixture,
     locale: str,
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry.corpus")
 
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manuals(
@@ -183,7 +183,7 @@ def test_topic_projection_rejects_invalid_string_locale_with_application_error(
 
 
 def test_topic_projection_refuses_boolean_locale_with_application_error(caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry.corpus")
 
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manuals(
@@ -218,7 +218,7 @@ def test_registry_input_error_builds_central_error_envelope() -> None:
 
 
 def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry.corpus")
 
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manual_rules(
@@ -245,7 +245,7 @@ def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytes
 def test_citation_missing_article_uses_structured_registry_logging(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry.corpus")
 
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         show_registry_citation(

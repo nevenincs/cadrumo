@@ -188,6 +188,14 @@ class ProfileCustodyCapsuleSummaryWitness:
     label: ProfileCustodyCapsuleLabel
 
     def __post_init__(self) -> None:
+        """Refuse a witness pairing a commit and a label from different capsules.
+
+        This is the identity binding the class docstring promises: each
+        record already validated itself independently, so this is the ONE
+        place that confirms the two independently-valid records actually
+        describe the SAME capsule rather than two unrelated ones handed to
+        the constructor together by mistake.
+        """
         if self.commit.profile_id != self.label.profile_id:
             raise ProfileCustodyRecordError("profile capsule summary records name different UUIDs")
 

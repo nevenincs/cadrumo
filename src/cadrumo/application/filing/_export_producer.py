@@ -8,7 +8,7 @@ from ...core import FilingProducerKey, Period, PriorDomiciliationElection, Prorr
 from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing import FilingExportValidationError
 from ...domain.iva import is_last_filing_period_of_year
-from ...domain.modelos import M303RectificativaMotive
+from ...domain.modelos.calculation_revision import M303RectificativaMotive
 from ._producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,

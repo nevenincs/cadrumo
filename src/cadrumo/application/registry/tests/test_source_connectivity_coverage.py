@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 
 from ....core import SourceConnectivityDisposition
-from .. import compose_source_connectivity_coverage, load_source_connectivity_census
+from ..source_connectivity import load_source_connectivity_census
+from ..source_connectivity_coverage import compose_source_connectivity_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

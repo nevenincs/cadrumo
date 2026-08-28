@@ -17,11 +17,8 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos import (
-    CalculationRevisionState,
-    ExternalEvidenceKind,
-    VerificationCompletenessStatus,
-)
+from ...domain.modelos import ExternalEvidenceKind, VerificationCompletenessStatus
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from .observations_repository import ObservationSourceKind
 
 

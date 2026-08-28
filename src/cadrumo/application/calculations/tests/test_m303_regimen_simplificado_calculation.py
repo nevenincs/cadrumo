@@ -19,7 +19,7 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import M303DANA2024EligibilityEvidence
+from ....domain.modelos.calculation_revision import M303DANA2024EligibilityEvidence
 from .. import M303RegimenSimplificadoCalculationError, calculate_m303_regimen_simplificado_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

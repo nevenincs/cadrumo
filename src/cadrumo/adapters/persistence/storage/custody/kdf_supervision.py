@@ -92,6 +92,13 @@ class ProfileCustodyKdfResources:
     cpu_count: int
 
     def __post_init__(self) -> None:
+        """Refuse a resource reading of zero or negative memory or CPUs.
+
+        A zero or negative reading here would silently make every grid point
+        look unsafe (or, worse, divide-by-zero somewhere downstream) instead
+        of surfacing that the resource probe itself failed — this is the
+        boundary that turns a bad probe into a loud refusal.
+        """
         if self.available_memory_bytes < 1 or self.cpu_count < 1:
             raise ValueError("profile KDF resources must be positive")
 
@@ -393,6 +400,14 @@ def unlock_profile_custody_recovery_material(
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
 ) -> bytes:
+    """Unlock the DEK using the recovery secret, inside the same supervised KDF boundary.
+
+    The recovery-path sibling of the password unlock above it: same
+    supervised worker and lease, but authenticated against the recovery
+    secret rather than the login password, so a wrong recovery secret raises
+    :class:`ProfileCustodyRecoverySecretError` rather than the password
+    error a caller further up must distinguish.
+    """
     if timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
     secret_bytes = encode_recovery_secret(secret)
@@ -423,6 +438,13 @@ def wrap_profile_custody_recovery_material(
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
+    """Wrap the DEK under the recovery secret, inside the same supervised KDF boundary.
+
+    The recovery-path sibling of the password wrap above it — same
+    supervised worker and lease, but the resulting wrapper is unlocked later
+    by :func:`unlock_profile_custody_recovery_material` with the recovery
+    secret, never the login password.
+    """
     if timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
     if len(dek) != KEY_SIZE:

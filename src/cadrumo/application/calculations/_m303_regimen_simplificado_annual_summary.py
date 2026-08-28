@@ -23,17 +23,19 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva import ActividadAgricolaSimplificado
 from ...domain.modelos import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    WorkUnit,
+)
+from ...domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
-    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoCalculationResult,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloRecordStatus,
-    WorkUnit,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution

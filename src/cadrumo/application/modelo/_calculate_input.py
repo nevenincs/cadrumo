@@ -75,9 +75,7 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
-    CalculationRevision,
     Dt12WindowEligibility,
-    FilingInstanceEvidence,
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
@@ -91,6 +89,7 @@ from ...domain.modelos import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceDiagnostic
 

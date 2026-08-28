@@ -23,15 +23,11 @@ import pytest
 
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import (
+from ....domain.modelos import LedgerFilingEvidence, ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    LedgerFilingEvidence,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from .._review_package import (
     ReviewPackageError,

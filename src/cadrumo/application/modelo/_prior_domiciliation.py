@@ -16,14 +16,8 @@ would compute.
 from __future__ import annotations
 
 from ...core import Modelo, ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
-    ExternalEvidence,
-    ModeloRecord,
-    ModeloRecordCatalogueRepositoryProtocol,
-    WorkUnit,
-)
+from ...domain.modelos import ExternalEvidence, ModeloRecord, ModeloRecordCatalogueRepositoryProtocol, WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ..calculations import (
     M303_DECLARATION_TYPE_HEADER_KEY,
     CalculationObservationRepository,

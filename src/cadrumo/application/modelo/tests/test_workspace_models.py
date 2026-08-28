@@ -18,7 +18,7 @@ from ....core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
-from ....domain.modelos import CalculationSourceRef
+from ....domain.modelos.calculation_revision import CalculationSourceRef
 from ...registry.closure import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace_models import (

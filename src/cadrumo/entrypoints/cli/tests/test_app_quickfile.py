@@ -43,7 +43,7 @@ from ....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,

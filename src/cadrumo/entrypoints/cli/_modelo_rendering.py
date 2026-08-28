@@ -33,15 +33,8 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    Modelo184MemberRow,
-    ModeloRecord,
-    ModeloVerificationFinding,
-    VerificationReport,
-    WorkUnit,
-)
+from ...domain.modelos import Modelo184MemberRow, ModeloRecord, ModeloVerificationFinding, VerificationReport, WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
 from ._modelo_payloads import (

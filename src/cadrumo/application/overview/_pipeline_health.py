@@ -53,17 +53,15 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.i18n import tr
 from ...core.identity import BucketId, WorkUnitId
-from ...domain.modelos import (
-    CalculationRevisionState,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-)
+from ...domain.modelos import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ..ledger.models import LedgerStatusReport
 from ..operator_actions import DeclaredNextAction
 from ._next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.modelos import CalculationRevision, VerificationReport, WorkUnit
+    from ...domain.modelos import VerificationReport, WorkUnit
+    from ...domain.modelos.calculation_revision import CalculationRevision
 
 
 class ModeloReadinessState(StrEnum):

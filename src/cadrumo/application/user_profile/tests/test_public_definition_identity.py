@@ -66,6 +66,7 @@ _PUBLIC_MODULE_NAMES = (
     "repository",
     "section_rows",
     "status_projection",
+    "usage_ratio_resolution",
     "validation",
 )
 _PUBLIC_DEFINING_MODULES: tuple[ModuleType, ...] = tuple(

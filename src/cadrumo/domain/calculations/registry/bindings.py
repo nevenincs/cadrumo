@@ -914,7 +914,7 @@ def validate_m303_regimen_simplificado_annual_summary_revision(
     if requirement is None:
         return []
 
-    from ...modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+    from ...modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 
     expected_casilla_ids = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
     expected_set = set(expected_casilla_ids)

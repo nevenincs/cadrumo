@@ -9,7 +9,7 @@ from ...domain.calculations.registry.m303_exonerado_390_projection import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import SourceReference
-from ...domain.modelos import M303Exonerado390FilingEvidence
+from ...domain.modelos.calculation_revision import M303Exonerado390FilingEvidence
 from .errors import ModeloApplicationError as FilingExportError
 
 type _ExoneradoProjectionRef = M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef

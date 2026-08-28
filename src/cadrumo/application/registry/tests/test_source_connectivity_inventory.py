@@ -6,7 +6,7 @@ import pytest
 
 from ....core import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
-from ...registry import (
+from ...registry.source_connectivity import (
     derive_registry_binding_records,
     derive_registry_destination_records,
     derive_registry_formula_records,

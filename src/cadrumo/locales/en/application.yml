@@ -1184,8 +1184,8 @@ application:
         of %{threshold}.'
       oss_evidence_missing: This revision declares one-stop-shop activity but carries
         no persisted OSS evidence.
-      oss_source_unrouted: A one-stop-shop source is not routed to any declarable
-        casilla.
+      oss_source_unrouted: 'No aggregation binding consumes these one-stop-shop sources
+        (references: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: Casilla %{casilla_number} for %{period_code}
         %{filing_year} computed %{computed_value} against the filed %{filed_value}
         (%{mismatch_kind}).
@@ -1207,9 +1207,9 @@ application:
         never filed the Modelo 111 that declares it, so this value cannot be filled
         in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
-        evidence (source %{source_kind_code}, reason %{diagnostic_reason_code}).
+        evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting
-        evidence (source %{source_kind_code}, reason %{diagnostic_reason_code}).
+        evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing

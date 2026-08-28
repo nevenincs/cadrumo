@@ -1302,8 +1302,8 @@ application:
         de %{threshold}.'
       oss_evidence_missing: Esta revisión declara actividad de ventanilla única pero
         no conserva evidencia de la OSS.
-      oss_source_unrouted: Una fuente de ventanilla única no está enrutada a ninguna
-        casilla declarable.
+      oss_source_unrouted: 'Ninguna vinculación de agregación consume estas fuentes
+        de ventanilla única (referencias: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: La casilla %{casilla_number} de %{period_code}
         %{filing_year} calculó %{computed_value} frente a lo declarado %{filed_value}
         (%{mismatch_kind}).
@@ -1325,9 +1325,10 @@ application:
         pagador; el contribuyente nunca presentó el Modelo 111 que lo declara, por
         lo que este valor no puede rellenarse automáticamente.
       transaction_evidence_missing_deductible: Una transacción deducible no tiene
-        evidencia justificativa (origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
+        evidencia justificativa (vínculo %{binding_id}, origen %{source_kind_code},
+        motivo %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
-        justificativa (origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
+        justificativa (vínculo %{binding_id}, origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

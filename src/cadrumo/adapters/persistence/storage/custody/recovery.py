@@ -111,12 +111,25 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the fields ``self_digest`` itself commits to.
+
+        Excludes ``self_digest`` deliberately: the digest is computed OVER this
+        payload, so including it would make the digest self-referential and
+        unverifiable. Every self-digest computation and check goes through this
+        one exclusion so the committed field set can never drift between them.
+        """
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["self_digest"]
         return payload
 
     @property
     def computed_self_digest(self) -> str:
+        """Recompute the digest a tamper check compares against ``self_digest``.
+
+        The validator above calls this at construction time; callers verifying
+        an already-parsed envelope call it again to confirm the stored digest
+        still matches, catching a record edited after it was written.
+        """
         return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
@@ -124,6 +137,13 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Serialise to the exact canonical bytes this envelope's identity is pinned to.
+
+        A recovery envelope's on-disk form must be byte-for-byte reproducible so
+        :func:`parse_profile_custody_recovery_envelope` can reject a record whose
+        stored bytes differ from re-serialising the parsed value, catching
+        reordering or re-encoding tampering a value-only digest check would miss.
+        """
         return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
@@ -141,6 +161,14 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
         wrapped_dek: ProfileCustodyWrappedDek,
         previous_recovery_digest: str | None = None,
     ) -> ProfileCustodyRecoveryEnvelope:
+        """Build the one valid construction path for a current-format recovery envelope.
+
+        Pins ``schema_version`` to the current constant, computes ``self_digest``
+        from the assembled payload, then re-validates the whole record through
+        :meth:`model_validate_json` rather than constructing the model directly —
+        so a caller can never end up holding an envelope whose digest was never
+        actually checked against its own fields.
+        """
         try:
             payload = _RecoveryPayload(
                 schema_version=PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION,

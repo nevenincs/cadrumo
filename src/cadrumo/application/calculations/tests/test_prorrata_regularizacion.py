@@ -52,15 +52,11 @@ from ....domain.iva import (
     IvaRateKind,
     RegularizacionProrrataDireccion,
 )
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.prorrata_register import ProrrataProvisionalResolution
 from ....tests import general_m303_filing_evidence

@@ -16,7 +16,7 @@ This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
 :class:`~domain.transactions.TransactionCatalogue`, building a
 :class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
-:class:`~domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
+:class:`~domain.modelos.calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
@@ -43,8 +43,6 @@ from ...core import CasillaId
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos import (
-    SEALED_REVISION_STATES,
-    CalculationRevision,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
@@ -54,6 +52,7 @@ from ...domain.modelos import (
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.transactions import Transaction, TransactionCatalogue
 

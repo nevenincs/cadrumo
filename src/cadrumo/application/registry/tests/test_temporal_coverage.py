@@ -11,7 +11,7 @@ from ....core import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
-from .. import (
+from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
     TemporalRevisionCoverageSummary,

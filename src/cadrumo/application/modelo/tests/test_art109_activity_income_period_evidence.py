@@ -16,7 +16,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain.modelos import CalculationRevision, ModeloVerificationFinding, ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFinding, ModeloVerificationFindingKind
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

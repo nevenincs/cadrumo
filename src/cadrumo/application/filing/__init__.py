@@ -70,11 +70,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
-from functools import partial
-from importlib import import_module
-from types import ModuleType
-from typing import TYPE_CHECKING
+from collections.abc import Iterator
 
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...domain.filing import (
@@ -99,9 +95,55 @@ from ._calculate import (
     DeclaracionCalculateSummary,
     summarise_calculation,
 )
+from ._complementaria import build_complementaria, list_amendments, load_amendment
 from ._draft_construction import build_draft
+from ._export import (
+    DeclaracionExportFormat,
+    DeclaracionExportResult,
+    DeclaracionVerifyResult,
+    DeclaracionVerifyVerdict,
+    FilingEnvelopeOccurrence,
+    FilingEnvelopeRenderRequest,
+    FilingEnvelopeRenderResult,
+    FilingExportConsumedResult,
+    FilingExportPayloadConsumer,
+    FilingExportValidatedPayload,
+    assert_export_artifact_matches_receipt,
+    export_draft,
+    export_layout_renderability_reason,
+    render_envelope_prefix_field,
+    render_filing_envelope,
+    verify_export,
+)
 from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._export_producer import m303_rectificativa_motive_producer_values
+from ._export_proof import (
+    FilingExportConformanceAuthority,
+    FilingExportConformanceReceipt,
+    FilingExportConformanceRenderInputs,
+    FilingExportConformanceRequest,
+    FilingExportConformanceVectorEvidence,
+    FilingExportDictionaryValue,
+    FilingExportGeneratedOutput,
+    FilingExportOfficialProbe,
+    FilingExportProof,
+    FilingExportProofAssessment,
+    FilingExportProofAuthority,
+    FilingExportProofChannel,
+    FilingExportProofCoordinate,
+    FilingExportProofRefusal,
+    FilingExportProofRefusalReason,
+    FilingExportPublicProvenance,
+    FilingExportSecureCustodyRecord,
+    FilingExportSecureReplayCustody,
+    FilingExportSecureReplayEvidence,
+    FilingExportSecureReplayReceipt,
+    FilingExportSecureReplayRequest,
+    FilingExportSecureReplaySourceAuthority,
+    FilingExportSourcePinnedProbeExpectation,
+    prove_export_conformance,
+    prove_secure_export_replay,
+)
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
@@ -157,151 +199,6 @@ from .runtime import (
     filing_profile_from_taxpayer,
     load_default_filing_profile,
 )
-
-if TYPE_CHECKING:
-    from ._complementaria import build_complementaria, list_amendments, load_amendment
-    from ._export import (
-        DeclaracionExportFormat,
-        DeclaracionExportResult,
-        DeclaracionVerifyResult,
-        DeclaracionVerifyVerdict,
-        FilingEnvelopeOccurrence,
-        FilingEnvelopeRenderRequest,
-        FilingEnvelopeRenderResult,
-        FilingExportConsumedResult,
-        FilingExportPayloadConsumer,
-        FilingExportValidatedPayload,
-        assert_export_artifact_matches_receipt,
-        export_draft,
-        export_layout_renderability_reason,
-        render_envelope_prefix_field,
-        render_filing_envelope,
-        verify_export,
-    )
-    from ._export_proof import (
-        FilingExportConformanceAuthority,
-        FilingExportConformanceReceipt,
-        FilingExportConformanceRenderInputs,
-        FilingExportConformanceRequest,
-        FilingExportConformanceVectorEvidence,
-        FilingExportDictionaryValue,
-        FilingExportGeneratedOutput,
-        FilingExportOfficialProbe,
-        FilingExportProof,
-        FilingExportProofAssessment,
-        FilingExportProofAuthority,
-        FilingExportProofChannel,
-        FilingExportProofCoordinate,
-        FilingExportProofRefusal,
-        FilingExportProofRefusalReason,
-        FilingExportPublicProvenance,
-        FilingExportSecureCustodyRecord,
-        FilingExportSecureReplayCustody,
-        FilingExportSecureReplayEvidence,
-        FilingExportSecureReplayReceipt,
-        FilingExportSecureReplayRequest,
-        FilingExportSecureReplaySourceAuthority,
-        FilingExportSourcePinnedProbeExpectation,
-        prove_export_conformance,
-        prove_secure_export_replay,
-    )
-
-_LAZY_EXPORTS: dict[str, str] = {
-    "DeclaracionExportFormat": "._export",
-    "DeclaracionExportResult": "._export",
-    "DeclaracionVerifyResult": "._export",
-    "DeclaracionVerifyVerdict": "._export",
-    "FilingEnvelopeOccurrence": "._export",
-    "FilingEnvelopeRenderRequest": "._export",
-    "FilingEnvelopeRenderResult": "._export",
-    "FilingExportConformanceAuthority": "._export_proof",
-    "FilingExportConformanceReceipt": "._export_proof",
-    "FilingExportConformanceRenderInputs": "._export_proof",
-    "FilingExportConformanceRequest": "._export_proof",
-    "FilingExportConformanceVectorEvidence": "._export_proof",
-    "FilingExportConsumedResult": "._export",
-    "FilingExportDictionaryValue": "._export_proof",
-    "FilingExportGeneratedOutput": "._export_proof",
-    "FilingExportOfficialProbe": "._export_proof",
-    "FilingExportPayloadConsumer": "._export",
-    "FilingExportProof": "._export_proof",
-    "FilingExportProofAssessment": "._export_proof",
-    "FilingExportProofAuthority": "._export_proof",
-    "FilingExportProofChannel": "._export_proof",
-    "FilingExportProofCoordinate": "._export_proof",
-    "FilingExportProofRefusal": "._export_proof",
-    "FilingExportProofRefusalReason": "._export_proof",
-    "FilingExportPublicProvenance": "._export_proof",
-    "FilingExportSecureCustodyRecord": "._export_proof",
-    "FilingExportSecureReplayCustody": "._export_proof",
-    "FilingExportSecureReplayEvidence": "._export_proof",
-    "FilingExportSecureReplayReceipt": "._export_proof",
-    "FilingExportSecureReplayRequest": "._export_proof",
-    "FilingExportSecureReplaySourceAuthority": "._export_proof",
-    "FilingExportSourcePinnedProbeExpectation": "._export_proof",
-    "FilingExportValidatedPayload": "._export",
-    "assert_export_artifact_matches_receipt": "._export",
-    "build_complementaria": "._complementaria",
-    "export_draft": "._export",
-    "export_layout_renderability_reason": "._export",
-    "list_amendments": "._complementaria",
-    "load_amendment": "._complementaria",
-    "prove_export_conformance": "._export_proof",
-    "prove_secure_export_replay": "._export_proof",
-    "render_envelope_prefix_field": "._export",
-    "render_filing_envelope": "._export",
-    "verify_export": "._export",
-}
-"""Names this package re-exports, resolved on first access.
-
-Bounded exception, not a whole-namespace facade: only ``._complementaria``,
-``._export``, and ``._export_proof`` stay lazy. Measured 2026-08-28 with a
-fresh interpreter (``uv run --no-sync python``), eagerly importing every
-_LAZY_EXPORTS target in turn against a base ``import cadrumo.application.filing``
-of 749 modules / 1.745s:
-
-    ._complementaria   +259 modules, 0.569s
-    ._export           +152 modules, 0.913s
-
-``._export_proof`` measured only +1 module in that same run, which looked
-cheap enough to retire -- but that number was an artifact of measurement
-order: ``._export`` had already been imported by an earlier target in the
-same interpreter, so ``._export_proof``'s OWN cost (it imports ``._export`` at
-its own top level, `._export_proof.py:31`) was silently paid by ``._export``'s
-entry instead of its own. Retiring ``._export_proof`` to an eager import
-verified this the hard way: a fresh-interpreter run showed `._export` fully
-loaded as soon as the package was imported at all, even before ``export_draft``
-was ever touched -- the bounded exception for ``._export`` was structurally
-dead the moment ``._export_proof`` stopped deferring, because nothing can
-import ``._export_proof`` without also paying for ``._export``. So
-``._export_proof`` stays lazy alongside its dependency; every other prior
-lazy target has no such edge back into ``._complementaria`` or ``._export``
-(checked by grep against all fifteen retired submodules) and is imported
-eagerly above.
-
-``__getattr__`` runs only for names absent from module globals, so the
-module's own definitions -- and now every eagerly re-imported name -- stay
-untouched; only these three submodules' names still defer.
-"""
-
-_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
-    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
-}
-
-
-def __getattr__(name: str) -> object:
-    """Resolve one re-exported name by importing only the sibling that owns it."""
-    module_name = _LAZY_EXPORTS.get(name)
-    if module_name is None:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    value = getattr(_LAZY_MODULE_LOADERS[module_name](), name)
-    globals()[name] = value
-    return value
-
-
-def __dir__() -> list[str]:
-    """Report the full public surface, including names not yet resolved."""
-    return sorted(set(__all__) | set(globals()))
 
 
 def validate_draft(

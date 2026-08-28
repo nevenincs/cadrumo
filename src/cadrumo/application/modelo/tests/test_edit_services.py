@@ -10,13 +10,8 @@ import pytest
 from ....core import OutputLanguage, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_work_unit_id,
-)
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,

@@ -17,7 +17,7 @@ from ...core import CasillaId
 from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.modelos import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ._modelo_payloads import ModeloRecordPayload
 
 

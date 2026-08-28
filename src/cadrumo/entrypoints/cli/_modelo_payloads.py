@@ -75,9 +75,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos import (
-    CalculationRevisionState,
     ExternalEvidenceKind,
-    M303RectificativaMotive,
     ModeloCode,
     ModeloRecordStatus,
     ModeloVerificationFinding,
@@ -85,6 +83,7 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,

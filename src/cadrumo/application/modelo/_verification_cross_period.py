@@ -33,7 +33,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloVerificationFinding,
@@ -42,6 +41,7 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations import (
     M111_NO_RETENCIONES_PROFILE_PATH,
     CalculationObservationRepository,

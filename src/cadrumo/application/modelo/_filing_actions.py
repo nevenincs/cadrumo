@@ -60,9 +60,7 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -72,6 +70,7 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import (

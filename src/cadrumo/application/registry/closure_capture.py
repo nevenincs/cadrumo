@@ -20,8 +20,8 @@ content itself, so any of those independent axes moving is observed without
 this module re-deriving or duplicating what each composer already computed.
 
 See Also:
-    :func:`~cadrumo.application.registry._filing_export_coverage.compose_filing_export_coverage`
-    :func:`~cadrumo.application.registry._source_connectivity_coverage.compose_source_connectivity_coverage`
+    :func:`~cadrumo.application.registry.filing_export_coverage.compose_filing_export_coverage`
+    :func:`~cadrumo.application.registry.source_connectivity_coverage.compose_source_connectivity_coverage`
         The two sole authorities this module captures without reimplementation.
 """
 

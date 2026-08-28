@@ -42,17 +42,19 @@ from ....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordStatus,
     derive_calculation_revision_id,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
@@ -790,7 +792,7 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
     evidence = _non_agricultural_source_evidence()
     values = _source_values(evidence)
     source_result = evidence.m303.regimen_simplificado.calculation_result
-    from ....domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff
+    from ....domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
 
     handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
         source_bucket_id=_BUCKET_ID,

@@ -37,11 +37,8 @@ from ...domain.calculations.registry.formula_runtime import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos import (
-    CalculationRevision,
-    WorkUnit,
-    WorkUnitCatalogue,
-)
+from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,

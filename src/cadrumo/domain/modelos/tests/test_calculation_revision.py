@@ -33,7 +33,7 @@ from ...iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from .._calculation_revision import (
+from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
@@ -1130,7 +1130,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     from datetime import UTC, datetime
 
     from ...calculations.registry.bindings import CasillaObservation
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "d" * 64
     casilla_values = {
@@ -1184,7 +1184,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
     import pydantic
 
     from ...calculations.registry.bindings import CasillaObservation
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "e" * 64
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}
@@ -1227,7 +1227,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
 
     import pydantic
 
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "f" * 64
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}

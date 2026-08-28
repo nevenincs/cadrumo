@@ -25,7 +25,7 @@ from .....application.modelo.calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
-from .....application.registry import (
+from .....application.registry.source_connectivity import (
     SourceConnectivityCensusEntry,
     SourceConnectivityCensusManifest,
     load_source_connectivity_census,

@@ -19,8 +19,6 @@ from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.bindings import CasillaObservation
 from ..domain.calculations.registry.temporal import select_revision
 from ..domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -28,12 +26,16 @@ from ..domain.modelos import (
     VerificationCompletenessStatus,
     VerificationReport,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_verification_report,
     upsert_work_unit,
+)
+from ..domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from .secure_sql import isolated_runtime_profile
 

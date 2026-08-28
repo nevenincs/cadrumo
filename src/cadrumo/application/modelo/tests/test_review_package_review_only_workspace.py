@@ -41,14 +41,11 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from .._review_package import verify_review_package
 from .._review_package_recipient_encryption import (

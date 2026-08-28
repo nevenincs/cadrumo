@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from ...core import Modelo, StandardPeriodCode
 from ...domain.modelos import (
-    CalculationRevision,
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,
     ModeloDetailRow,
@@ -28,6 +27,7 @@ from ...domain.modelos import (
     WorkUnit,
     validate_m210_agrupacion_renta_rows,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 
 _M210_AGRUPACION_LEGAL_REF = "orden-eha-3316-2010:art-2"

@@ -85,13 +85,12 @@ from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
-    SEALED_REVISION_STATES,
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (

@@ -40,7 +40,7 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import M303RegimenSimplificadoFilingEvidence
+from ....domain.modelos.calculation_revision import M303RegimenSimplificadoFilingEvidence
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

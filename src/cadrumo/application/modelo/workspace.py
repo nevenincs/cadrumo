@@ -41,13 +41,11 @@ from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceRef,
     ModeloCode,
     VerificationReportCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
 from ..registry.closure import RegistryClosureLimb

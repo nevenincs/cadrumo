@@ -23,12 +23,11 @@ import pytest
 from ....core import CasillaId, Modelo, Period, ResultDisposition, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
-from ....domain.modelos import (
+from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaCompensationHistoryRepository
