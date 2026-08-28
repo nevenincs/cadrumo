@@ -255,6 +255,4 @@ def home_office_categories() -> frozenset[SpendingCategory]:
     Returns:
         The union of both home-office families' members.
     """
-    return frozenset(
-        category for family in HOME_OFFICE_FAMILIES for category in categories_for_family(family)
-    )
+    return frozenset(category for family in HOME_OFFICE_FAMILIES for category in categories_for_family(family))

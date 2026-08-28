@@ -14,15 +14,15 @@ the namespace, schema version, and sensitivity declared by the storage registry
 remain the persistence authority.
 
 This module uses
-:class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`
+:class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`
 and
-:class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`
+:class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualCrossCheck`
 for Modelo 303-to-Modelo 390 annual cross-checking.
 
 See Also:
     :mod:`domain.iva_compensation._carry_forward`
         Pure FIFO lot projection and four-year review policy.
-    :mod:`application.calculations._iva_wallet_balance`
+    :mod:`application.calculations.iva_wallet_balance`
         Offline balance query built from this repository.
     :mod:`application.calculations._iva_wallet_reconciliation`
         Wallet/local-history reconciliation consumer for Modelo 303 prior
@@ -87,9 +87,9 @@ from ._iva_compensation_casillas import (
 from ._iva_compensation_casillas import (
     M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
 )
-from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._ports import FiledDeclaracionObservationProtocol
 from .errors import IvaCompensationModeloError
+from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 _ZERO = Decimal("0")
 
@@ -300,7 +300,7 @@ def correct_iva_compensation_period(
     seeding refuses if a record already exists, correction is the deliberate
     re-write path for a wrong opening compensation balance whose period
     pre-dates local history. It writes through the same
-    :class:`~application.calculations._iva_compensation_history.IvaCompensationHistoryRepository`
+    :class:`~application.calculations.iva_compensation_history.IvaCompensationHistoryRepository`
     (no parallel write path), so the corrected state replaces the stored record
     at the same period key.
 
@@ -436,7 +436,7 @@ def persist_observation_envelope_and_iva_history(
 def iva_compensation_annual_summary_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationAnnualSummary:
-    """Build an :class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualSummary`.
+    """Build an :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`.
 
     The source is a filed Modelo 390
     :class:`~application.calculations._ports.FiledDeclaracionObservationProtocol`.
@@ -488,7 +488,7 @@ def cross_check_iva_compensation_annual_summary(
     """Compare projections with filed evidence.
 
     Returns an
-    :class:`~application.calculations._iva_compensation_history.IvaCompensationAnnualCrossCheck`.
+    :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualCrossCheck`.
 
     The expected ``iva.anual.compensacion-ultimo-periodo-97`` and
     ``iva.anual.compensacion-generada-ejercicio-no-97`` figures are derived

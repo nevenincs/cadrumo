@@ -29,7 +29,7 @@ One-way contract: this adapter is an export *mirror* only. Google
 Sheets is never an authority for tax data — the workbook is a
 human-readable projection of registry-grounded engine output, not
 an input of record. Operator edits made in the sheet are read back
-through :mod:`adapters.outbound.google._calc_sheets_pull`, which gates
+through :mod:`adapters.outbound.google.calc_sheets_pull`, which gates
 every pull on the Drive ownership marker and a registry-SHA metadata match
 before the caller may consume them; a workbook that fails either gate is
 refused, never silently trusted. No path in this package writes Sheets content

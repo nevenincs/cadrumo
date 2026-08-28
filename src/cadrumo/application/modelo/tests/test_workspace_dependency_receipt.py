@@ -44,8 +44,12 @@ _INTERFACE_ADR = _ROOT / ".vault" / "adr" / "2026-08-24-tui-modelo-workspace-int
 _C1_EXIT_RECEIPT = (
     _ROOT / ".vault" / "reference" / "2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt-reference.md"
 )
-_RECONCILIATION_AUDIT = _ROOT / ".vault" / "audit" / "2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md"
-_OWNER_SEAM_AUDIT = _ROOT / ".vault" / "audit" / "2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit.md"
+_RECONCILIATION_AUDIT = (
+    _ROOT / ".vault" / "audit" / "2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md"
+)
+_OWNER_SEAM_AUDIT = (
+    _ROOT / ".vault" / "audit" / "2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit.md"
+)
 
 _WORKSPACE_MODULES = (workspace, workspace_models, workspace_producers, workspace_manifest)
 
@@ -246,7 +250,11 @@ def _current_head_commit() -> str:
 
 
 def _status_heading(adr_path: Path) -> str:
-    headings = [line for line in adr_path.read_text(encoding="utf-8").splitlines() if line.startswith("# ") and "status:" in line]
+    headings = [
+        line
+        for line in adr_path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("# ") and "status:" in line
+    ]
     assert len(headings) == 1, headings
     return headings[0]
 
@@ -357,9 +365,7 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
     assert c1_data["receipt_schema"] == "ModeloWorkspaceC1ExitReceiptV1"
     assert c1_data["validation_result"] == "PASSED", c1_data["validation_result"]
     c1_digest = _content_digest(_C1_EXIT_RECEIPT)
-    c1_exit_receipt = ModeloWorkspaceC2PassedProofV1(
-        evidence=f"{_C1_EXIT_RECEIPT.name} reads validation_result=PASSED"
-    )
+    c1_exit_receipt = ModeloWorkspaceC2PassedProofV1(evidence=f"{_C1_EXIT_RECEIPT.name} reads validation_result=PASSED")
 
     # The authority-grade admission decision is reconciled INSIDE the same
     # accepted gate ADR (the "Amendment (S287)" section), not a separate
@@ -449,7 +455,12 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
                 "ModeloWorkspaceRegistryPortV1",
             ):
                 declaring.append(f"{node.name}@{path}")
-    canonical_names = {"resolve_static_inspection_result", "resolve_graded_snapshot_result", "ModeloWorkspaceProjectionV1", "ModeloWorkspaceRegistryPortV1"}
+    canonical_names = {
+        "resolve_static_inspection_result",
+        "resolve_graded_snapshot_result",
+        "ModeloWorkspaceProjectionV1",
+        "ModeloWorkspaceRegistryPortV1",
+    }
     found_names = {entry.split("@", 1)[0] for entry in declaring}
     assert found_names == canonical_names, (found_names, canonical_names)
     assert len(declaring) == len(canonical_names), declaring
@@ -624,7 +635,9 @@ def test_epoch_tuple_states_its_own_coverage_and_exclusion_as_data() -> None:
     assert receipt.epoch_tuple.exclusion_reason
 
 
-def test_clean_commit_proof_refuses_when_a_dependency_path_is_dirty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_clean_commit_proof_refuses_when_a_dependency_path_is_dirty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """S140: a receipt cannot be minted over an uncommitted change to something it depends on."""
     # Real git status against a real dirty file, never a fabricated refusal:
     # touch a tracked dependency path and prove _assert_clean_commit refuses.

@@ -48,8 +48,8 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._cross_period_clean_state import evaluate_cross_period_clean_state
-from .._observations_repository import CalculationObservationRepository
+from ..cross_period_clean_state import evaluate_cross_period_clean_state
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

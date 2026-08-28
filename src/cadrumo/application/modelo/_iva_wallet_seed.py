@@ -17,7 +17,7 @@ calculation revisions before changing an opening carry-forward basis, so
 Modelo 303 revision has consumed that basis.
 
 See Also:
-    :mod:`cadrumo.application.calculations._iva_compensation_history`
+    :mod:`cadrumo.application.calculations.iva_compensation_history`
     Single-writer seed and correction primitives for local IVA compensation
     history.
     :mod:`cadrumo.application.calculations._iva_wallet_reconciliation`

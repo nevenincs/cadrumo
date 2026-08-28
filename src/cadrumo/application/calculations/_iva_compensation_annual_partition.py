@@ -59,8 +59,8 @@ from ._m303_carry_ingress import (
     M303CarryIngressError,
     validate_normalized_m303_carry_observation_envelope,
 )
-from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._revision_carry_gate import revision_carry_outcome
+from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 _log = get_logger(__name__)
 

@@ -57,8 +57,6 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-
-
 class JoinedRecordDesignField(_StrictModel):
     """One parser-owned coordinate field paired with one reviewed map entry."""
 
@@ -241,9 +239,3 @@ def _require_semantic_entry(
             f"sheet={field.sheet!r}, ordinal={field.ordinal!r}, source_row={field.source_row!r}",
         )
     return entry
-
-
-
-
-
-

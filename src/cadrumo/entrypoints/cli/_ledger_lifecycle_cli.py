@@ -209,7 +209,8 @@ def ledger_evidence_pull(
     provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
     **refused** — a link is never stored as evidence.
     """
-    from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
+    from ...adapters.outbound.google.active_profile import resolve_active_profile
+    from ...adapters.outbound.google.document_link_resolver import resolve_document_link
     from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...application.ledger.actions_manual import attach_manual_transaction_evidence
@@ -279,7 +280,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     disambiguates the two on the Drive side. Refuses a reference with no
     recognisable Drive id rather than sending an unparsed string to the API.
     """
-    from ...adapters.outbound.google import parse_drive_file_id
+    from ...adapters.outbound.google.document_link_resolver import parse_drive_file_id
 
     folder_id = parse_drive_file_id(reference)
     if folder_id is None:
@@ -314,9 +315,9 @@ def ledger_evidence_pull_all(
     fetch is out of scope pending a separate ``gmail.readonly``
     scope-upgrade decision.
     """
-    from ...adapters.outbound.google import (
+    from ...adapters.outbound.google.active_profile import resolve_active_profile
+    from ...adapters.outbound.google.document_link_resolver import (
         list_drive_folder_documents,
-        resolve_active_profile,
         resolve_document_link,
     )
     from ...adapters.outbound.storage import build_google_credentials

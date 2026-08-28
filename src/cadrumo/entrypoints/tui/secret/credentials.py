@@ -1,11 +1,19 @@
 """The shared credential-attempt host and password-assessment presentation.
 
-``CredentialApp`` is the base every secret-entry screen mounts: it owns the
-bounded, thread-backed attempt lifecycle (start once, settle back on the UI
-task, refuse or leave) so :class:`~cadrumo.entrypoints.tui.secret.login
-.LoginApp` and :class:`~cadrumo.entrypoints.tui.secret.registration
-.RegistrationApp` differ only in their form and their injected door, never
-in how an attempt is run or reported.
+``CredentialScreen`` is the base every secret-entry surface builds on: it
+owns the bounded, thread-backed attempt lifecycle (start once, settle back
+on the UI task, refuse or leave) so
+:class:`~cadrumo.entrypoints.tui.secret.login.LoginScreen` and
+:class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
+differ only in their form and their injected door, never in how an attempt
+is run or reported.
+
+It is a screen rather than an application so a root shell can navigate to
+it: Textual does not nest applications, so an entry surface expressed as an
+application can only ever be the whole process. The outcome it used to
+return by exiting is now returned by dismissing, which is the same contract
+against a host that can be either the root shell or the standalone runner
+below.
 
 The assessment helpers below project a canonical
 :class:`~cadrumo.core.credentials.ProfilePasswordAssessment` into presentation
@@ -20,6 +28,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
 from textual.app import App
 from textual.binding import Binding
+from textual.screen import Screen
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
@@ -34,12 +43,13 @@ if TYPE_CHECKING:
 
 __all__ = [
     "CREDENTIAL_PANEL_CSS",
-    "CredentialApp",
     "CredentialAttempt",
+    "CredentialHostApp",
+    "CredentialScreen",
     "assessment_copy",
     "assessment_css_class",
     "assessment_refusal",
-    "run_credential_app",
+    "run_credential_screen",
 ]
 
 CREDENTIAL_PANEL_CSS: Final[str] = tokenised("""
@@ -79,7 +89,7 @@ class CredentialAttempt[OutcomeT](Protocol):
         ...  # pragma: no cover
 
 
-class CredentialApp[OutcomeT](App[OutcomeT | None]):
+class CredentialScreen[OutcomeT](Screen[OutcomeT | None]):
     """Host one bounded, thread-backed credential attempt at a time."""
 
     BINDINGS: ClassVar = [
@@ -154,11 +164,11 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         return f"{detail} {guidance}".strip()
 
     def output_locale(self) -> str | None:
-        """Return this app's explicit presentation locale, if it owns one."""
+        """Return this screen's explicit presentation locale, if it owns one."""
         return None
 
     def resolve_attempt_refusal(self, attempt: CredentialAttempt[OutcomeT]) -> str | None:
-        """Render one door refusal at this app's presentation boundary."""
+        """Render one door refusal at this screen's presentation boundary."""
         return attempt.refusal
 
     def default_refusal(self) -> str:
@@ -182,8 +192,8 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         raise NotImplementedError
 
     def leave(self, outcome: OutcomeT | None) -> None:
-        """Close the screen and return its optional outcome."""
-        self.exit(outcome)
+        """Close the screen and return its optional outcome to its host."""
+        self.dismiss(outcome)
 
     def action_abandon(self) -> None:
         """Leave without a result unless storage work is still in flight."""
@@ -194,13 +204,37 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
 
     def action_toggle_appearance(self) -> None:
         """Switch the rendered terminal appearance."""
-        toggle_appearance(self)
+        toggle_appearance(self.app)
 
 
-def run_credential_app[OutcomeT](app: CredentialApp[OutcomeT]) -> OutcomeT | None:
-    """Run one credential screen and return its optional outcome."""
-    app.run()
-    return app.outcome
+class CredentialHostApp[OutcomeT](App[OutcomeT | None]):
+    """Carry one credential screen for a standalone, non-navigated run.
+
+    The root shell mounts a credential screen alongside its other areas;
+    this host exists only for the callers that still open one surface as a
+    whole process, and it holds no behaviour of its own beyond handing the
+    screen's dismissal back as the process result.
+    """
+
+    def __init__(self, screen: CredentialScreen[OutcomeT]) -> None:
+        """Bind the one screen this host exists to run."""
+        super().__init__()
+        self._credential_screen = screen
+
+    async def on_mount(self) -> None:
+        """Mount the credential screen and exit when it dismisses.
+
+        Awaited rather than fired and forgotten: a caller that starts this
+        host and immediately addresses a field would otherwise race the
+        push and find only the host's own empty default screen.
+        """
+        await self.push_screen(self._credential_screen, self.exit)
+
+
+def run_credential_screen[OutcomeT](screen: CredentialScreen[OutcomeT]) -> OutcomeT | None:
+    """Run one credential screen standalone and return its optional outcome."""
+    CredentialHostApp(screen).run()
+    return screen.outcome
 
 
 _STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {

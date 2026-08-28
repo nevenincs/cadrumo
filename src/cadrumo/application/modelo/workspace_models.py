@@ -213,6 +213,25 @@ type ModeloWorkspaceTargetV1 = Annotated[
 ]
 
 
+class ModeloWorkspaceRefreshTargetV1(_WorkspaceModel):
+    """The exact workspace read one settled Modelo operation invalidates.
+
+    Names the resolved work-unit coordinates rather than wrapping a request
+    selector, so a frontend re-reads the affected unit without interpreting a
+    settled receipt it should not have to understand.
+
+    The coordinates are spelled as closed typed fields rather than reusing
+    :data:`ModeloWorkspaceTargetV1`: that union embeds a plain dataclass,
+    whose generated schema carries no closed-object marker, and a target
+    published through the operations public-schema registry must be closed
+    end to end.
+    """
+
+    contract_version: Literal[1] = 1
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId | None = None
+
+
 class ModeloWorkspaceRequestV1(_WorkspaceModel):
     """One V1 read request over a canonical visible or advanced exact target."""
 
@@ -1303,6 +1322,7 @@ __all__ = [
     "ModeloWorkspaceProvenanceRecordV1",
     "ModeloWorkspaceReadinessV1",
     "ModeloWorkspaceRecordLabelV1",
+    "ModeloWorkspaceRefreshTargetV1",
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",

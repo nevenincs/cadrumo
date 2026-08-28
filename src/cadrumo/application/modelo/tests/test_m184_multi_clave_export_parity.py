@@ -385,13 +385,17 @@ def test_an_ordinary_multi_member_attribution_emits_one_row_per_member_with_the_
 
     # Every member resolves to its OWN row index, and none collide.
     nifs_by_row = {row_index: value for (binding_id, row_index), value in resolved.items() if binding_id == nif_binding}
-    bases_by_row = {row_index: value for (binding_id, row_index), value in resolved.items() if binding_id == base_binding}
+    bases_by_row = {
+        row_index: value for (binding_id, row_index), value in resolved.items() if binding_id == base_binding
+    }
 
     assert len(nifs_by_row) == 4, "every one of the four members must resolve its own row"
     assert set(nifs_by_row.values()) == {nif for nif, _name, _base in members}
     for row_index, nif in nifs_by_row.items():
         expected_base = next(Decimal(base) for candidate_nif, _name, base in members if candidate_nif == nif)
-        assert bases_by_row[row_index] == expected_base, f"row {row_index} carries the wrong member's base_imponible_assigned"
+        assert bases_by_row[row_index] == expected_base, (
+            f"row {row_index} carries the wrong member's base_imponible_assigned"
+        )
 
     rendered = _render_rows(record, resolved, {})
     assert len({row.row_index for row in rendered}) == 4, "the render layer must emit one occurrence per member"

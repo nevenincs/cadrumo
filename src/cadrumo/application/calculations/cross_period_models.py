@@ -22,7 +22,7 @@ from ...domain.modelos import (
     ExternalEvidenceKind,
     VerificationCompletenessStatus,
 )
-from ._observations_repository import ObservationSourceKind
+from .observations_repository import ObservationSourceKind
 
 
 def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:
@@ -34,7 +34,7 @@ class _ObservationPayload(Protocol):
     """Structural interface for the observation envelope payload consumed here.
 
     Matches the public attribute surface of
-    :class:`~application.calculations._cross_period_models._ObservationPayload`
+    :class:`~application.calculations.cross_period_models._ObservationPayload`
     without importing its private name.
     """
 
@@ -239,6 +239,7 @@ ObservationPayload = _ObservationPayload
 
 
 def period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
+    """Report whether ``period`` closes before economic activity began."""
     return _period_strictly_before_activity_start(period, activity_start_date)
 
 
@@ -281,6 +282,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
 
     @property
     def key(self) -> tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]]:
+        """Return the identity tuple that distinguishes this dependency."""
         return (self.source_modelo, self.filing_year, self.period.registry_token, self.origin, self.origin_ids)
 
 
@@ -445,6 +447,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     @property
     def clean(self) -> bool:
+        """Report whether this dependency carries no blockers."""
         return not self.blockers
 
     @property
@@ -518,14 +521,17 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @property
     def requires_clean_state(self) -> bool:
+        """Report whether any dependency must reach a clean state."""
         return bool(self.dependencies)
 
     @property
     def clean(self) -> bool:
+        """Report whether every dependency is clean."""
         return all(item.clean for item in self.dependencies)
 
     @property
     def blockers(self) -> tuple[CrossPeriodCleanStateBlocker, ...]:
+        """Return the deduplicated blockers across every dependency."""
         return tuple(dict.fromkeys(blocker for item in self.dependencies for blocker in item.blockers))
 
     @property

@@ -24,7 +24,7 @@ from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report,
     build_iva_wallet_balance_report,
 )
-from ._iva_compensation_history import IvaCompensationHistoryRepository
+from .iva_compensation_history import IvaCompensationHistoryRepository
 
 
 def query_iva_wallet_balance(*, as_of_year: int) -> IvaWalletBalanceReport:

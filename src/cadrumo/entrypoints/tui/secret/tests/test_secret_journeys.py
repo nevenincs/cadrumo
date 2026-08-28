@@ -2,9 +2,9 @@
 
 Every assertion here drives a real registered profile through the real
 custody stack (real Argon2id, real AEAD) and the real Textual screens --
-no mocks, no stand-in storage. `PassphraseApp` (the newest surface) carries
+no mocks, no stand-in storage. `PassphraseScreen` (the newest surface) carries
 the fullest coverage since it has no prior test file; the cross-cutting
-`CredentialApp` guarantees -- single-use dispatch, exact refusal binding,
+`CredentialScreen` guarantees -- single-use dispatch, exact refusal binding,
 and that a rejected or superseded credential is never retained on the
 screen after the attempt settles -- are proven through it, since all three
 credential surfaces share that one base unchanged.
@@ -26,7 +26,7 @@ from .....application.user_profile.passphrase_rotation import (
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
 from .....tests.secure_sql import isolated_profile_storage_root
-from ..passphrase import PassphraseApp, PassphraseChangeAttempt, PassphraseChangeRefusal
+from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -72,8 +72,8 @@ def _rotate(profile_id: UUID, current: str, new: str, confirm: str) -> Passphras
     return PassphraseChangeAttempt(outcome=outcome)
 
 
-def _app(profile_id: UUID) -> PassphraseApp:
-    return PassphraseApp(
+def _app(profile_id: UUID) -> PassphraseScreen:
+    return PassphraseScreen(
         assess=assess_profile_password,
         rotate=lambda current, new, confirm: _rotate(profile_id, current, new, confirm),
     )
@@ -158,7 +158,7 @@ async def test_a_second_change_click_while_one_is_in_flight_is_a_single_use_no_o
             started.append(1)
             return _rotate(profile_id, current, new, confirm)
 
-        app = PassphraseApp(assess=assess_profile_password, rotate=_counting_rotate)
+        app = PassphraseScreen(assess=assess_profile_password, rotate=_counting_rotate)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE

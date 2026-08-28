@@ -30,7 +30,7 @@ identity-bearing tax substrate. They are stored encrypted at rest through an
 
 The store is value-centric. Clean-state proof still has to join these rows with
 filing records, verification reports, and justificante evidence through
-:func:`~._cross_period_clean_state.evaluate_cross_period_clean_state`.
+:func:`~.cross_period_clean_state.evaluate_cross_period_clean_state`.
 """
 
 from __future__ import annotations
@@ -481,7 +481,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
     Stores :class:`RegistryModeloObservation` rows for
     :func:`~._binding_prefill.resolve_bindings_from_local_store`,
     :func:`~._relation_prefill.resolve_relations_from_local_store`, and
-    :func:`~._cross_period_clean_state.evaluate_cross_period_clean_state`.
+    :func:`~.cross_period_clean_state.evaluate_cross_period_clean_state`.
     It owns encrypted value history only; filing-grade source proof is assembled
     by the clean-state service from this repository plus filing, verification,
     and justificante repositories.

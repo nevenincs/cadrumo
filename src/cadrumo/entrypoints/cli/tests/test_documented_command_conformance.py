@@ -1070,7 +1070,9 @@ def test_no_new_aeat_plain_fences_in_user_docs() -> None:
     baseline down as they land, and an empty baseline means the doctrine is fully
     applied.
     """
-    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8")))
+    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(
+        json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
+    )
     current = _current_aeat_fence_counts()
     docs = REPO_ROOT / "docs"
     problems: list[str] = []
@@ -1105,7 +1107,9 @@ def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
     baseline, the same discipline as the fence gate, so it never reds the tree
     during the parallel conversion.
     """
-    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8")))
+    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(
+        json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8"))
+    )
     current = _current_inline_aeat_span_counts()
     docs = REPO_ROOT / "docs"
     problems: list[str] = []

@@ -34,7 +34,6 @@ _IDENTITY_EXPORTS = frozenset(
 )
 
 
-
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
     """Every externally projected product name follows the accepted CADRUMO tuple."""
     expected = ProductIdentity(

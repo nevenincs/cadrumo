@@ -72,4 +72,3 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
     if raw is None:
         return None
     return _parse_iso_date_str(raw, label=label)
-

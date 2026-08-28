@@ -4,10 +4,10 @@
 :class:`RegistrySnapshot`, then joins filed
 :class:`ModeloRecord` rows, calculation revisions, verification reports, and
 justificante evidence into a
-:class:`~application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
+:class:`~application.calculations.cross_period_models.CrossPeriodCleanStateVerdict`.
 
 The same verdict feeds modelo verification, filing, and export gates. See also
-:class:`~application.calculations._cross_period_models.CrossPeriodDependencyEvidence`
+:class:`~application.calculations.cross_period_models.CrossPeriodDependencyEvidence`
 for per-dependency blocker/advisory rows
 and :class:`ValidatedRegistryAuthority` for
 the authority surface that produces the snapshots evaluated here.
@@ -48,7 +48,9 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     is_receipt_bound_external_evidence,
 )
-from ._cross_period_models import (
+from ._per_grupo_member_keys import per_grupo_member_requirement_keys
+from ._revision_carry_gate import revision_carry_outcome
+from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -62,21 +64,19 @@ from ._cross_period_models import (
     ObservationPayload,
     period_strictly_before_activity_start,
 )
-from ._m111_no_retenciones import is_m111_no_retenciones_period
-from ._observations_repository import (
+from .m111_no_retenciones import is_m111_no_retenciones_period
+from .observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
-from ._per_grupo_member_keys import per_grupo_member_requirement_keys
-from ._revision_carry_gate import revision_carry_outcome
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
     """Return the dependency records for ``snapshot``.
 
     Derives
-    :class:`~application.calculations._cross_period_models.CrossPeriodDependencyRequirement`
+    :class:`~application.calculations.cross_period_models.CrossPeriodDependencyRequirement`
     records from :class:`RegistrySnapshot` through
     :func:`~domain.calculations.registry.previous_filing_observation_requirements`
     and
@@ -154,7 +154,7 @@ def cross_period_dependency_inventory(
     """Return snapshots with cross-period dependencies.
 
     The
-    :class:`~application.calculations._cross_period_models.CrossPeriodDependencyInventory`
+    :class:`~application.calculations.cross_period_models.CrossPeriodDependencyInventory`
     is a backend coverage surface. It lets callers prove which modelos and
     periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
@@ -410,7 +410,7 @@ def evaluate_cross_period_clean_state(
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
     Returns a
-    :class:`~application.calculations._cross_period_models.CrossPeriodCleanStateVerdict`.
+    :class:`~application.calculations.cross_period_models.CrossPeriodCleanStateVerdict`.
 
     The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency

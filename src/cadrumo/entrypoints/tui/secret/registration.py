@@ -29,7 +29,7 @@ See Also:
         The canonical assessment behind validation and the live strength line.
     :class:`~cadrumo.entrypoints.tui.secret.login.LoginApp`
         The other credential surface; the two share their attempt
-        lifecycle and panel layout through ``CredentialApp``.
+        lifecycle and panel layout through ``CredentialScreen``.
 """
 
 from __future__ import annotations
@@ -53,11 +53,11 @@ from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_theme
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
-    CredentialApp,
     CredentialAttempt,
+    CredentialScreen,
     assessment_copy,
     assessment_css_class,
-    run_credential_app,
+    run_credential_screen,
 )
 
 if TYPE_CHECKING:
@@ -70,9 +70,9 @@ if TYPE_CHECKING:
 __all__ = [
     "RecoveryHandoverCancelledError",
     "RecoveryWordsScreen",
-    "RegistrationApp",
     "RegistrationAttempt",
     "RegistrationRefusal",
+    "RegistrationScreen",
     "run_registration_tui",
 ]
 
@@ -133,7 +133,7 @@ def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
     ]
 
 
-class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
+class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
     """Full-screen credential entry that creates and unlocks one profile."""
 
     CSS = tokenised(
@@ -247,7 +247,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 
     def on_mount(self) -> None:
         """Install the theme, render copy, and focus profile-name entry."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._render_localised_copy()
         self.query_one("#field-username", Input).focus()
 
@@ -454,7 +454,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             resolved.set()
 
         def _show() -> None:
-            self.push_screen(
+            self.app.push_screen(
                 RecoveryWordsScreen(
                     enrollment=enrollment,
                     locale=self._active_language,
@@ -464,7 +464,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             )
 
         try:
-            self.call_from_thread(_show)
+            self.app.call_from_thread(_show)
             # Shutdown explicitly releases this event in ``on_unmount``; the
             # bound is a final guard for a failed message-loop lifecycle.
             if not resolved.wait(timeout=30.0) or supplied_proof is None:
@@ -590,6 +590,6 @@ def run_registration_tui(
     not an error, so the caller decides what to do rather than catching an
     exception to find out.
     """
-    return run_credential_app(
-        RegistrationApp(assess=assess, register=register, suggested_name=suggested_name),
+    return run_credential_screen(
+        RegistrationScreen(assess=assess, register=register, suggested_name=suggested_name),
     )

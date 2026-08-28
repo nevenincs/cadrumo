@@ -17,12 +17,12 @@ from pydantic import ValidationError
 
 from ....core import Period, validated_casilla_id
 from ....domain.modelos import ExternalEvidenceKind
-from .._cross_period_models import (
+from ..cross_period_models import (
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from .._observations_repository import ObservationSourceKind
+from ..observations_repository import ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

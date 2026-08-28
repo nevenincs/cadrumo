@@ -144,6 +144,7 @@ def _withholding296_selector(binding: DataBindingDefinition) -> _Withholding296S
 
 
 def validate_withholding296_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``withholding296`` binding's selector shape and fact/aggregation invariants."""
     try:
         selector = _withholding296_selector(binding)
     except ValueError as exc:
@@ -288,6 +289,7 @@ def resolve_withholding296_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[Withholding296Observation],
 ) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve every ``withholding296`` ``row_field`` binding to its per-row perceptor value."""
     available = tuple(observations)
     rows = _build_withholding296_rows(available)
     resolved: dict[tuple[str, int], Decimal | str] = {}

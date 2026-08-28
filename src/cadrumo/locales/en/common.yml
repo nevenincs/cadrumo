@@ -958,3 +958,7 @@ transactions:
     message_829073: 'Potential gap: more than 35 days between transactions.'
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
+tui:
+  root:
+    no_areas: No area is available in this session yet.
+    title: Cadrumo terminal session

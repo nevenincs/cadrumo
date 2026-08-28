@@ -1,6 +1,6 @@
 """Pilot-driven proofs for the full-screen way back in.
 
-Every test drives the real :class:`LoginApp` through Textual's headless
+Every test drives the real :class:`LoginScreen` through Textual's headless
 Pilot, against a real storage root holding a profile created through the
 real registration path, and unlocks it through the real application login
 door — real Argon2id derivation, a real AEAD unwrap, a real minted
@@ -24,7 +24,8 @@ from ....application.user_profile.login_interaction import ProfileLoginChoice, a
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.login import LoginApp
+from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.secret.login import LoginScreen
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
@@ -65,14 +66,19 @@ def _register(label: str) -> str:
     return outcome.bucket_id
 
 
-def _screen(choices: list[ProfileLoginChoice], *, preselected: str | None = None) -> LoginApp:
+def _screen(choices: list[ProfileLoginChoice], *, preselected: str | None = None) -> LoginScreen:
     """The production composition, wired to the application interaction contract."""
-    return LoginApp(choices=choices, authenticate=attempt_profile_login, preselected=preselected)
+    return LoginScreen(choices=choices, authenticate=attempt_profile_login, preselected=preselected)
 
 
-async def _unlock_with(pilot, password: str) -> None:
-    """Type a password and press the button, as an operator does."""
-    pilot.app.query_one("#field-passphrase", Input).value = password
+async def _unlock_with(screen: LoginScreen, pilot, password: str) -> None:
+    """Type a password and press the button, as an operator does.
+
+    Addressed against the screen rather than the host, because the host's
+    own default screen is not the surface under test.
+    """
+    await pilot.pause()
+    screen.query_one("#field-passphrase", Input).value = password
     await pilot.pause()
     await pilot.click("#btn-unlock")
     await pilot.app.workers.wait_for_complete()
@@ -92,8 +98,8 @@ async def test_typing_the_password_and_pressing_log_in_opens_a_real_session(tmp_
         profile_id = _register("Login Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Login Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(pilot, _PASSWORD)
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _unlock_with(app, pilot, _PASSWORD)
 
         assert app.error is None
         assert app.outcome is not None, "the typed password must open the profile"
@@ -116,8 +122,8 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
         profile_id = _register("Refusal Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Refusal Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(pilot, _WRONG_PASSWORD)
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _unlock_with(app, pilot, _WRONG_PASSWORD)
 
             assert app.outcome is None, "a wrong password must not open anything"
             assert app.is_running, "the screen must stay open so the operator can retry"
@@ -135,13 +141,13 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
             # meets it HERE rather than as a traceback: the screen shows
             # the wait and stays open. Asserted because it is what the
             # operator actually experiences after a typo.
-            await _unlock_with(pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _PASSWORD)
             assert app.outcome is None, "the backoff must hold the immediate retry"
             assert app.is_running, "a throttled retry must refuse in place, not close the screen"
             assert status.tone == "error"
             assert status.message
 
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -157,12 +163,12 @@ async def test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears
         profile_id = _register("Retry Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Retry Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(pilot, _WRONG_PASSWORD)
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _unlock_with(app, pilot, _WRONG_PASSWORD)
             assert app.outcome is None
 
             await asyncio.sleep(_BACKOFF_WAIT_SECONDS)
-            await _unlock_with(pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _PASSWORD)
 
         assert app.error is None
         assert app.outcome is not None, "the retry on the same screen must succeed once the wait is served"
@@ -190,13 +196,13 @@ async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
             ],
             preselected=first,
         )
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.selected_profile_id() == first, "the preselection must be what the chooser opens on"
 
             app.query_one("#field-profile", Select).value = second
             await pilot.pause()
             assert app.selected_profile_id() == second, "the chooser must hold the operator's pick"
-            await _unlock_with(pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _PASSWORD)
 
         assert app.error is None
         assert app.outcome is not None
@@ -211,10 +217,10 @@ async def test_the_password_field_is_masked(tmp_path) -> None:
         profile_id = _register("Masked Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Masked Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.query_one("#field-passphrase", Input).password is True
             await pilot.pause()
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -224,7 +230,7 @@ async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> N
         profile_id = _register("Empty Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Empty Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.click("#btn-unlock")
             await pilot.pause()
 
@@ -233,7 +239,7 @@ async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> N
             status = app.query_one("#credential-status", PinnedStatusBar)
             assert status.tone == "error"
             assert status.message
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -248,7 +254,7 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
         profile_id = _register("Cancel Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Cancel Subject")])
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             app.query_one("#field-passphrase", Input).value = _PASSWORD
             await pilot.pause()
             await pilot.click("#btn-cancel")

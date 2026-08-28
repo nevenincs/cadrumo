@@ -772,8 +772,8 @@ nitpick_ignore_regex = [
     # convention; qualifying a bare anchor is barred by
     # aeat-documentation) whose short name the auto short-reference
     # resolver cannot uniquely map: ``CCAA`` (documented under more than one
-    # public package) and ``earliest_safe_erase_date``.
-    (r"py:.*", r"^(CCAA|earliest_safe_erase_date)$"),
+    # public package).
+    (r"py:.*", r"^CCAA$"),
     # Bare project-package ``:mod:`` short references (``:mod:`domain.iva```,
     # ``:mod:`application.ledger```, bare ``:mod:`application```, ...) used
     # project-wide in module docstrings per the docstring-anchor convention. The

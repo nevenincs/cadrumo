@@ -999,3 +999,7 @@ transactions:
     message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
+tui:
+  root:
+    no_areas: Ninguna área está disponible todavía en esta sesión.
+    title: 'Cadrumo: sesión de terminal'

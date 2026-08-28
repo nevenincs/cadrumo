@@ -90,13 +90,13 @@ from .._iva_compensation_annual_partition import (
     _period_state_from_303_envelope,
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .._iva_compensation_history import (
+from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,
     correct_iva_compensation_period,
     seed_iva_compensation_period,
 )
-from .._iva_wallet_balance import query_iva_wallet_balance
-from .._observations_repository import CalculationObservationRepository
+from ..iva_wallet_balance import query_iva_wallet_balance
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -370,7 +370,7 @@ def _wallet_balance_census() -> _PathCensus:
     report = query_iva_wallet_balance(as_of_year=_AS_OF_YEAR)
     return _PathCensus(
         path="wallet-balance projection",
-        entry_point="src/cadrumo/application/calculations/_iva_wallet_balance.py:30",
+        entry_point="src/cadrumo/application/calculations/iva_wallet_balance.py:30",
         rows=rows,
         live_evidence=(
             f"query_iva_wallet_balance(as_of_year={_AS_OF_YEAR}) -> "
@@ -464,7 +464,7 @@ def _carry_ingress_census() -> _PathCensus:
         )
     return _PathCensus(
         path="M303 carry-ingress path",
-        entry_point="src/cadrumo/application/calculations/_iva_compensation_history.py:392",
+        entry_point="src/cadrumo/application/calculations/iva_compensation_history.py:392",
         rows=tuple(rows),
         live_evidence=tuple(evidence),
     )

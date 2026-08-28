@@ -34,7 +34,7 @@ See Also:
     :func:`~adapters.outbound.google.compute_from_pull` maps a matching
     pull into
     :class:`~domain.calculations.registry.RegistryCalculationResult`, and
-    :func:`~adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`
     compares a pull against its source
     :class:`~application.storage.calc_sheets.SheetExportPlan` when the
     caller still has that plan.
@@ -167,7 +167,7 @@ class OperatorEdit(BaseModel):
     pull adapter from the workbook's column metadata. They are not part of
     the canonical
     :class:`~application.storage.calc_sheets.OperatorInput` contract; use
-    :meth:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.to_operator_input`
+    :meth:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.to_operator_input`
     to project this shape onto the canonical one.
 
     ``value`` mirrors the cell's raw shape from Google Sheets. The union
@@ -176,9 +176,9 @@ class OperatorEdit(BaseModel):
     them (pydantic serialises Decimal as a JSON string). The runtime
     path in :func:`~adapters.outbound.google.compute_from_pull` is what
     disambiguates via
-    :func:`~adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`
+    :func:`~adapters.outbound.google.calc_sheets_pull._coerce_edit_value_to_decimal`
     for numeric input casillas and
-    :func:`~adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    :func:`~adapters.outbound.google.calc_sheets_pull._enum_binding_text`
     for enum bindings.
     """
 
@@ -201,14 +201,14 @@ class BindingEdit(BaseModel):
     """One operator-edited binding cell value (numeric or enum).
 
     Same union-ambiguity reasoning as
-    :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+    :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value`
     — the wire JSON cannot statically distinguish a CCAA-shape ``"04"`` from a
     numeric ``Decimal("4")``. The runtime dispatch in
     :func:`~adapters.outbound.google.compute_from_pull` is what routes the
     value: enum bindings go through
-    :func:`~adapters.outbound.google._calc_sheets_pull._enum_binding_text`
+    :func:`~adapters.outbound.google.calc_sheets_pull._enum_binding_text`
     and numeric bindings go through
-    :func:`~adapters.outbound.google._calc_sheets_pull._coerce_edit_value_to_decimal`.
+    :func:`~adapters.outbound.google.calc_sheets_pull._coerce_edit_value_to_decimal`.
     """
 
     model_config = _STRICT_FROZEN
@@ -302,7 +302,7 @@ class PullMetadata(BaseModel):
     This is a loose parsing shape: ``exported_at`` is ``str | None`` because
     the developer-metadata round-trip may yield a raw ISO string or nothing.
     Use
-    :meth:`~adapters.outbound.google._calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
+    :meth:`~adapters.outbound.google.calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
     to project onto the strict canonical
     :class:`~application.storage.calc_sheets.SheetExportMetadata` shape
     when the workbook is known to carry a valid export stamp.
@@ -354,9 +354,9 @@ class PullResult(BaseModel):
     """Outcome of one Google Sheets pull cycle.
 
     Carries the typed edit families read from the workbook, the
-    :class:`~adapters.outbound.google._calc_sheets_pull.PullMetadata`
+    :class:`~adapters.outbound.google.calc_sheets_pull.PullMetadata`
     stamp recovered from developer metadata, the
-    :class:`~adapters.outbound.google._calc_sheets_pull.MetadataMatchState`
+    :class:`~adapters.outbound.google.calc_sheets_pull.MetadataMatchState`
     verdict against the caller's
     :class:`~domain.calculations.registry.RegistrySnapshot`, and the count
     of non-blank cells read.
@@ -894,7 +894,7 @@ def _decode_binding_edits(
     """Map the per-binding slice of the batchGet response into typed BindingEdits.
 
     Booleans are stringified because
-    :attr:`~adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
+    :attr:`~adapters.outbound.google.calc_sheets_pull.BindingEdit.value`
     (``Decimal | str | None``) does not carry a bool path — the runtime
     enum-binding semantics expect a textual representation here.
     """
@@ -1199,7 +1199,7 @@ class PullCoverageDiscrepancy(BaseModel):
     :class:`~adapters.outbound.google.PullResult` of operator-editable
     surfaces. A corrupted or hand-edited workbook could have structural cells
     stripped or row-set columns removed without surfacing as a load error.
-    :func:`~adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`
+    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`
     enumerates every coverage mismatch as one of these typed records so callers
     can choose to refuse the merge, log a warning, or surface a diagnostic to
     the operator.
@@ -1300,15 +1300,15 @@ def compute_from_pull(
 
     Maps each edit family back to the runtime contract:
 
-    - :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value`
       flows into runtime ``inputs``, with ``Decimal("0")`` substituted for
       ``None`` so the runtime's "every non-computed casilla has a value"
       precondition holds.
-    - :attr:`~adapters.outbound.google._calc_sheets_pull.BindingEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull.BindingEdit.value`
       is routed by the binding's ``typed_enum`` declaration: numeric bindings
       flow into ``binding_values`` as Decimals; enum bindings flow into
       ``enum_binding_values`` as plain strings.
-    - :attr:`~adapters.outbound.google._calc_sheets_pull.RelationEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull.RelationEdit.value`
       flows into ``relation_values`` as Decimals, with ``Decimal("0")``
       substituted for ``None``.
 
@@ -1367,7 +1367,7 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
 
 
 def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None, *, input_key: str) -> Decimal:
-    """Coerce an :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value` shape.
+    """Coerce an :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value` shape.
 
     An absent cell stays zero so the runtime can evaluate the complete input
     lattice. Any supplied malformed or non-finite numeric value is refused;

@@ -42,6 +42,7 @@ from ...core import (
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
+from ...core.identity import BucketId
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
@@ -539,11 +540,7 @@ def _m347_role_fact_advisories(
     clave_e_eligible = ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
     diagnostics: list[CalculationSourceDiagnostic] = []
     for invoice in invoices:
-        if (
-            clave_d_eligible
-            and invoice.kind is InvoiceKind.RECEIVED
-            and invoice.outside_economic_activity is None
-        ):
+        if clave_d_eligible and invoice.kind is InvoiceKind.RECEIVED and invoice.outside_economic_activity is None:
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="unclassified_declarant_role_fact",
@@ -679,7 +676,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
-def _m347_filer_declaration_roles(bucket_id: object) -> frozenset[ThirdPartyDeclarationRole]:
+def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDeclarationRole]:
     """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
 
     Mirrors the established bucket-scoped profile-fact loading pattern (see
@@ -696,7 +693,7 @@ def _m347_filer_declaration_roles(bucket_id: object) -> frozenset[ThirdPartyDecl
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
-        return frozenset()
+        return frozenset[ThirdPartyDeclarationRole]()
     return projection_for_taxpayer(record).declaration_roles
 
 
@@ -740,9 +737,7 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=declaration_roles)
     is_third_party_collection = clave == "C"
     party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
-    party_legal_name = (
-        invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
-    )
+    party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
     assert party_tax_id is not None  # clave "C" only returns when collected_on_behalf_of_tax_id is set
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,

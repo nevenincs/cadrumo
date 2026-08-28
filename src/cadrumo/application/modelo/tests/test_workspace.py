@@ -640,7 +640,7 @@ def test_static_inspection_baseline_pins_the_exact_target_and_revision(
     _seed_work_unit(repository, bucket_id=bucket_id)
     authority = bundled_authority()
 
-    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+    work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
@@ -706,13 +706,12 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
     from ..workspace_producers import ModeloWorkspaceFieldManifestPortV1, ModeloWorkspaceLocaleCataloguePortV1
 
     authority = bundled_authority()
-    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+    work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
     )
-    resolution = work_capture.projection
     registry_projection = registry_capture.projection
     inspection = registry_projection.inspection
     assert isinstance(inspection, RegistryRevisionInspection)
@@ -2333,7 +2332,7 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
     repository = Path(__file__).resolve().parents[5]
     forbidden_module_stems = ("_workspace_projection", "_workspace")
     tracked = subprocess.run(
-        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),
+        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),  # noqa: S607
         capture_output=True,
         check=True,
         cwd=repository,

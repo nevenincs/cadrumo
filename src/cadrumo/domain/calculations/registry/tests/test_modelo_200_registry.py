@@ -221,7 +221,7 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
     assert {type(reference) for reference in m200_references} == core_m200_types
     for model_type in core_m200_types:
         references = tuple(reference for reference in m200_references if type(reference) is model_type)
-        declared_slots = {reference.slot for reference in references}
+        declared_slots = {getattr(reference, "slot") for reference in references}  # noqa: B009
         slot_cap = max(declared_slots)
         upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
 

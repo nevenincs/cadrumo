@@ -5,7 +5,7 @@ creation, the 24 words render on the screen itself (the terminal-direct
 channel cannot render inside a full-screen app), and the wipeable
 container is zeroised at the operator's confirmation.
 
-No mocks. Real registration, real Argon2id, the real RegistrationApp
+No mocks. Real registration, real Argon2id, the real RegistrationScreen
 through Textual's headless Pilot, the real recovery enrollment.
 """
 
@@ -20,12 +20,13 @@ from ....application.user_profile.registration import ProfileRegistrationError, 
 from ....core.credentials import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
+from ....entrypoints.tui.secret.credentials import CredentialHostApp
 from ....entrypoints.tui.secret.registration import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
-    RegistrationApp,
     RegistrationAttempt,
     RegistrationRefusal,
+    RegistrationScreen,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -70,8 +71,8 @@ def _attempt_registration(
     return RegistrationAttempt(outcome=outcome)
 
 
-def _screen() -> RegistrationApp:
-    return RegistrationApp(
+def _screen() -> RegistrationScreen:
+    return RegistrationScreen(
         assess=assess_profile_password,
         register=_attempt_registration,
         suggested_name="",
@@ -79,9 +80,9 @@ def _screen() -> RegistrationApp:
 
 
 async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:
-    pilot.app.query_one("#field-username", Input).value = username
-    pilot.app.query_one("#field-password", Input).value = password
-    pilot.app.query_one("#field-confirm", Input).value = confirm
+    pilot.app.screen.query_one("#field-username", Input).value = username
+    pilot.app.screen.query_one("#field-password", Input).value = password
+    pilot.app.screen.query_one("#field-confirm", Input).value = confirm
     await pilot.pause()
 
 
@@ -100,7 +101,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
     """Creation at the full-screen door enrols recovery and displays it once."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Recovery Words Subject",
@@ -119,7 +120,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
             # Confirmation zeroises the container and releases the flow.
             words.query_one("#field-recovery-verification", Input).value = rendered
             await pilot.click("#btn-confirm-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is not None
@@ -131,7 +132,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
     """A displayed phrase is not enrollment until the operator confirms it."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Cancelled Recovery Subject",
@@ -142,7 +143,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
             await _wait_for_recovery_screen(pilot)
 
             await pilot.click("#btn-cancel-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is None
@@ -154,7 +155,7 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
     """The masked control proves the exact ordered phrase, not button intent."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Wrong Recovery Reentry",
@@ -165,7 +166,7 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
             words = await _wait_for_recovery_screen(pilot)
             words.query_one("#field-recovery-verification", Input).value = "not the displayed phrase"
             await pilot.click("#btn-confirm-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is None
@@ -177,7 +178,7 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
     """Stopping the message loop cannot strand the registration worker."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Shutdown Recovery Subject",
@@ -186,7 +187,7 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
             )
             await pilot.click("#btn-create")
             await _wait_for_recovery_screen(pilot)
-            app.exit(None)
+            pilot.app.exit(None)
             with pytest.raises(WorkerCancelled):
-                await app.workers.wait_for_complete()
+                await pilot.app.workers.wait_for_complete()
         assert not any(view.label == "Shutdown Recovery Subject" for view in CommittedProfileRepository().list())

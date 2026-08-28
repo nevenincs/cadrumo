@@ -30,7 +30,7 @@ from .. import (
     CrossPeriodDependencyRequirement,
     NoPriorObligationProvenanceKind,
 )
-from .._cross_period_clean_state import (
+from ..cross_period_clean_state import (
     _qualifies_for_first_year_fractional_suppression,
     _suppressed_first_year_fractional_evidence,
     _suppressed_pre_activity_evidence,

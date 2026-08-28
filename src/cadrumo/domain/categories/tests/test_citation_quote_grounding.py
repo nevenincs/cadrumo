@@ -144,8 +144,7 @@ def test_the_seguro_de_enfermedad_citation_points_at_the_letter_that_grants_it()
     assert statutory, "the seguro category no longer cites LIRPF art. 30"
     for citation in statutory:
         assert "30.2.5.a" in citation.locator, (
-            f"seguro de enfermedad is granted by LIRPF art. 30.2.5.a; this citation points at "
-            f"{citation.locator!r}"
+            f"seguro de enfermedad is granted by LIRPF art. 30.2.5.a; this citation points at {citation.locator!r}"
         )
         assert "primas de seguro de enfermedad" in citation.quote, (
             "the quotation does not carry the sentence that grants the deduction"

@@ -87,9 +87,7 @@ def test_registry_inspection_of_an_undeclared_year_is_untouched() -> None:
     modelo_100 = next(modelo for modelo in modelos if modelo.id == "100")
     declared = set(_declared_years())
 
-    historical = [
-        revision for revision in modelo_100.revisions.values() if revision.valid_from.year not in declared
-    ]
+    historical = [revision for revision in modelo_100.revisions.values() if revision.valid_from.year not in declared]
 
     assert historical, "Modelo 100 ships no revision outside the declared window; the case is unproven"
     for revision in historical:

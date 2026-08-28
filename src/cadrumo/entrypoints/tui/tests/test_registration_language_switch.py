@@ -27,7 +27,8 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.credentials import assess_profile_password
 from ....core.i18n import output_language, tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
+from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..devtools.fixture import registration_attempt
@@ -43,17 +44,17 @@ _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "hu"
 
 
-def _screen() -> RegistrationApp:
+def _screen() -> RegistrationScreen:
     """The production composition, wired to the doors the CLI gives it."""
-    return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+    return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
 
-def _text(app: RegistrationApp, selector: str) -> str:
+def _text(app: RegistrationScreen, selector: str) -> str:
     """What one zone of the page currently says."""
     return str(app.query_one(selector, Static).content)
 
 
-def _page_copy(app: RegistrationApp) -> list[str]:
+def _page_copy(app: RegistrationScreen) -> list[str]:
     """The page's words, in the order the operator reads them."""
     return [
         app.title,
@@ -83,7 +84,7 @@ def _expected_copy(locale: str) -> list[str]:
     ]
 
 
-def _chooser_rows(app: RegistrationApp) -> list[str]:
+def _chooser_rows(app: RegistrationScreen) -> list[str]:
     """The language chooser's own rows, as displayed.
 
     Read off the overlay the chooser opens rather than its internals,
@@ -95,7 +96,7 @@ def _chooser_rows(app: RegistrationApp) -> list[str]:
 
 async def _choose(pilot, language: str) -> None:
     """Take the language chooser, as an operator does."""
-    pilot.app.query_one("#field-output-language", Select).value = language
+    pilot.app.screen.query_one("#field-output-language", Select).value = language
     await pilot.pause()
     await pilot.pause()
 
@@ -111,7 +112,7 @@ async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             started = _expected_copy(_STARTING_LANGUAGE)
@@ -154,7 +155,7 @@ async def test_the_language_switch_keeps_what_has_already_been_typed(tmp_path) -
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _STARTING_LANGUAGE)
 
@@ -191,7 +192,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
 
@@ -212,8 +213,12 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             recovery.query_one("#field-recovery-verification", Input).value = str(
                 recovery.query_one("#words-value", Static).render()
             )
+            for _ in range(100):
+                if recovery.query("#btn-confirm-words"):
+                    break
+                await pilot.pause(0.05)
             await pilot.click("#btn-confirm-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.error is None
@@ -259,7 +264,7 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
         )
 
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (

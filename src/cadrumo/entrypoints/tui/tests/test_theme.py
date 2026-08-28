@@ -31,7 +31,7 @@ from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.registration import RegistrationApp
+from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ..components.theme import (
     BASE_CSS,
     CADRUMO_CSS_TOKENS,
@@ -199,7 +199,7 @@ rounding on a wide terminal and as a visibly shoved page on a narrow one.
 """
 
 
-def _registration_screen() -> RegistrationApp:
+def _registration_screen() -> RegistrationScreen:
     """The registration surface wired to its real doors.
 
     Geometry never calls them, but the screen takes them because it does
@@ -208,7 +208,7 @@ def _registration_screen() -> RegistrationApp:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
-    return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+    return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
 
 def _gutters(app: App[Any]) -> tuple[int, int]:

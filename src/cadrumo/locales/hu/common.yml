@@ -982,3 +982,7 @@ transactions:
       el.'
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
+tui:
+  root:
+    no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
+    title: Cadrumo terminálmunkamenet

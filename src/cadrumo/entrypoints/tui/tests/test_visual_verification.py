@@ -41,8 +41,8 @@ from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWi
 from ....core.presentation import FormField, FormPage
 from ....entrypoints.tui.profile.overview import ProfileManagerApp
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.login import LoginApp
-from ....entrypoints.tui.secret.registration import RegistrationApp
+from ....entrypoints.tui.secret.login import LoginScreen
+from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.form_screen import FormApp
@@ -88,12 +88,12 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
 @contextmanager
-def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
+def _registration(tmp_path: Path) -> Iterator[RegistrationScreen]:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
-    yield RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+    yield RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
 
 @contextmanager
@@ -167,7 +167,7 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
 
 
 @contextmanager
-def _login(tmp_path: Path) -> Iterator[LoginApp]:
+def _login(tmp_path: Path) -> Iterator[LoginScreen]:
     """The login screen, composed through the application interaction contract.
 
     Needs a real profile that exists but is LOCKED -- registration leaves it
@@ -194,7 +194,7 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
             passphrase=_VISUAL_PASSWORD,
         )
         logout_active_profile()
-        yield LoginApp(
+        yield LoginScreen(
             choices=profile_login_choices(),
             authenticate=attempt_profile_login,
             preselected=preselected_profile_login_id(None),

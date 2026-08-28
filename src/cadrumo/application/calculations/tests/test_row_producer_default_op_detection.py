@@ -23,7 +23,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import DataBindingDefinition
-from .._row_set_assembly import _row_field_lookup
+from ..row_set_assembly import _row_field_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -122,8 +122,8 @@ from ...modelo._binding_resolution import resolve_declaration_period_inputs
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo._work_lifecycle import create_work_unit
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
-from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -1,7 +1,7 @@
 """Login: full-screen credential entry that unlocks one existing profile.
 
 See Also:
-    :class:`~cadrumo.entrypoints.tui.secret.credentials.CredentialApp`
+    :class:`~cadrumo.entrypoints.tui.secret.credentials.CredentialScreen`
         The shared attempt lifecycle and panel layout this screen builds on.
     :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationApp`
         The other credential surface, sharing the same base.
@@ -21,7 +21,7 @@ from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from ....entrypoints.tui.components.widgets import ContentScroll
-from .credentials import CREDENTIAL_PANEL_CSS, CredentialApp, run_credential_app
+from .credentials import CREDENTIAL_PANEL_CSS, CredentialScreen, run_credential_screen
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -29,10 +29,10 @@ if TYPE_CHECKING:
     from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ....application.user_profile.login_session import ProfileLoginOutcome
 
-__all__ = ["LoginApp", "run_login_tui"]
+__all__ = ["LoginScreen", "run_login_tui"]
 
 
-class LoginApp(CredentialApp["ProfileLoginOutcome"]):
+class LoginScreen(CredentialScreen["ProfileLoginOutcome"]):
     """Full-screen credential entry that unlocks one existing profile."""
 
     CSS = tokenised(
@@ -95,7 +95,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
 
     def on_mount(self) -> None:
         """Install the theme, render copy, and focus password entry."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._render_localised_copy()
         self.query_one("#field-passphrase", Input).focus()
 
@@ -187,6 +187,6 @@ def run_login_tui(
     preselected: str | None = None,
 ) -> ProfileLoginOutcome | None:
     """Run the login screen and return the opened session, or ``None``."""
-    return run_credential_app(
-        LoginApp(choices=choices, authenticate=authenticate, preselected=preselected),
+    return run_credential_screen(
+        LoginScreen(choices=choices, authenticate=authenticate, preselected=preselected),
     )

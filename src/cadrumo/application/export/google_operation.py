@@ -227,6 +227,7 @@ class GoogleSheetsExportService:
         snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
         plan_builder: GoogleExportPlanBuilder = build_export_plan,
     ) -> None:
+        """Bind the ports and policies this export service resolves through."""
         self._export_port = export_port
         self._snapshot_resolver = snapshot_resolver
         self._plan_builder = plan_builder
@@ -304,6 +305,7 @@ class GoogleSheetsExportOperationExecutor:
         *,
         service: GoogleSheetsExportService,
     ) -> None:
+        """Bind the service and supervision this executor runs the export under."""
         self._service = service
 
     async def execute(

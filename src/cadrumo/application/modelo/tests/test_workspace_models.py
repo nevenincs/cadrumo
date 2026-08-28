@@ -758,7 +758,7 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     private_module = "_workspace" + "_models"
     public_module = "workspace_models"
     tracked = subprocess.run(
-        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),
+        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),  # noqa: S607
         capture_output=True,
         check=True,
         cwd=repository,

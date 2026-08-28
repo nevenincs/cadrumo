@@ -400,9 +400,7 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     if not paths:
         raise RegistryValidationError(f"render profile directory contains no TOML fragments: {profile_directory}")
     non_fragments = tuple(
-        path.name
-        for path in paths
-        if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
+        path.name for path in paths if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
     )
     if non_fragments:
         raise RegistryValidationError(

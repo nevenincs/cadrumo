@@ -34,11 +34,11 @@ from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_theme
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
-    CredentialApp,
     CredentialAttempt,
+    CredentialScreen,
     assessment_copy,
     assessment_css_class,
-    run_credential_app,
+    run_credential_screen,
 )
 
 if TYPE_CHECKING:
@@ -48,9 +48,9 @@ if TYPE_CHECKING:
     from ....core.credentials import ProfilePasswordAssessment
 
 __all__ = [
-    "PassphraseApp",
     "PassphraseChangeAttempt",
     "PassphraseChangeRefusal",
+    "PassphraseScreen",
     "run_passphrase_change_tui",
 ]
 
@@ -86,7 +86,7 @@ class PassphraseChangeAttempt:
         return self.expected_refusal.render() if self.expected_refusal is not None else None
 
 
-class PassphraseApp(CredentialApp["ProfilePassphraseRotationOutcome"]):
+class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
     """Full-screen credential entry that re-wraps one profile's password."""
 
     CSS = tokenised(
@@ -149,7 +149,7 @@ class PassphraseApp(CredentialApp["ProfilePassphraseRotationOutcome"]):
 
     def on_mount(self) -> None:
         """Install the theme, render copy, and focus the current-password field."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._render_localised_copy()
         self.query_one("#field-current", Input).focus()
 
@@ -285,4 +285,4 @@ def run_passphrase_change_tui(
     ``None`` means the operator abandoned the screen -- an ordinary outcome,
     not an error.
     """
-    return run_credential_app(PassphraseApp(assess=assess, rotate=rotate))
+    return run_credential_screen(PassphraseScreen(assess=assess, rotate=rotate))

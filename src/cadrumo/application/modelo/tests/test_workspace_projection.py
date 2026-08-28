@@ -90,7 +90,9 @@ def _seed_work_unit_only(repos) -> WorkUnit:
     """Seed a real work unit for modelo 130/1T, with no calculation revision."""
     work_repo, *_rest = repos
     period = Period.from_year_and_code(_FILING_YEAR, "1T")
-    selected_revision = select_revision(bundled_authority().validate_modelo(_MODELO), filing_year=_FILING_YEAR, period="1T")
+    selected_revision = select_revision(
+        bundled_authority().validate_modelo(_MODELO), filing_year=_FILING_YEAR, period="1T"
+    )
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
@@ -326,7 +328,9 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
 # --- 4. Exactly-one-native-capture for CALCULATION and BOUNDED_REVIEW ---
 
 
-def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(repos, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(
+    repos, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """S130: the assembly invokes each of the CALCULATION and BOUNDED_REVIEW ports exactly once.
 
     A thin spy wraps the REAL bound method on each port class -- every call
@@ -351,8 +355,12 @@ def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(rep
         bounded_review_calls += 1
         return real_bounded_review_capture(self)
 
-    monkeypatch.setattr(ModeloWorkspaceCalculationPortV1, "capture_projection_with_epoch", _counting_calculation_capture)
-    monkeypatch.setattr(ModeloWorkspaceBoundedReviewPortV1, "capture_projection_with_epoch", _counting_bounded_review_capture)
+    monkeypatch.setattr(
+        ModeloWorkspaceCalculationPortV1, "capture_projection_with_epoch", _counting_calculation_capture
+    )
+    monkeypatch.setattr(
+        ModeloWorkspaceBoundedReviewPortV1, "capture_projection_with_epoch", _counting_bounded_review_capture
+    )
 
     result = resolve_graded_snapshot_result(
         _visible_target(),
@@ -407,9 +415,14 @@ def test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol() -> No
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=entry)
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module and any(
-                node.module == f"cadrumo.application.modelo.{name}" or node.module.endswith(f".application.modelo.{name}")
-                for name in forbidden_modules
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module
+                and any(
+                    node.module == f"cadrumo.application.modelo.{name}"
+                    or node.module.endswith(f".application.modelo.{name}")
+                    for name in forbidden_modules
+                )
             ):
                 violations.append(f"{entry}: from {node.module} import ...")
             elif isinstance(node, ast.Import):
@@ -447,9 +460,7 @@ def test_exactly_one_module_defines_each_canonical_workspace_assembly_symbol() -
     production_modules = tuple(
         entry
         for entry in tracked
-        if entry.endswith(".py")
-        and "/tests/" not in entry
-        and (repository / entry).is_file()
+        if entry.endswith(".py") and "/tests/" not in entry and (repository / entry).is_file()
     )
 
     canonical_owner = {

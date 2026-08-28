@@ -131,7 +131,7 @@ class GoogleAuthKeychainLockedError(GoogleAuthError):
 class GoogleAuthProfileUnboundError(GoogleAuthError):
     """Raised when Google auth cannot resolve the active AEAT profile.
 
-    Emitted by :func:`adapters.outbound.google._active_profile.resolve_active_profile`
+    Emitted by :func:`adapters.outbound.google.active_profile.resolve_active_profile`
     and profile-loading guards in :mod:`adapters.outbound.google._oauth_flow`.
     """
 

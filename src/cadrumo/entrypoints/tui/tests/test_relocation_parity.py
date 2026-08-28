@@ -33,8 +33,8 @@ from ..devtools.fixture import registration_attempt
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerApp
-from ..secret.login import LoginApp
-from ..secret.registration import RecoveryWordsScreen, RegistrationApp
+from ..secret.login import LoginScreen
+from ..secret.registration import RecoveryWordsScreen, RegistrationScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,8 +45,8 @@ _PASSPHRASE = "relocation-parity-operator-secret"  # noqa: S105 - synthetic test
 _CANONICAL_DEFINITIONS = (
     ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerApp"),
     ("cadrumo.entrypoints.tui.profile.status", "StatusApp"),
-    ("cadrumo.entrypoints.tui.secret.login", "LoginApp"),
-    ("cadrumo.entrypoints.tui.secret.registration", "RegistrationApp"),
+    ("cadrumo.entrypoints.tui.secret.login", "LoginScreen"),
+    ("cadrumo.entrypoints.tui.secret.registration", "RegistrationScreen"),
     ("cadrumo.entrypoints.tui.secret.registration", "RecoveryWordsScreen"),
     ("cadrumo.entrypoints.tui.flows.app", "FlowTuiApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewApp"),
@@ -331,7 +331,7 @@ def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers
 async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: Path) -> None:
     """Register, unlock, and render an actual encrypted profile through relocated apps."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        registration = RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+        registration = RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
         async with registration.run_test(size=_TERMINAL_SIZE) as pilot:
             registration.query_one("#field-username", Input).value = _LABEL
             registration.query_one("#field-password", Input).value = _PASSPHRASE
@@ -357,7 +357,7 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         profile_id = str(registration.outcome.profile_id)
         logout_active_profile()
 
-        login = LoginApp(choices=profile_login_choices(), authenticate=attempt_profile_login)
+        login = LoginScreen(choices=profile_login_choices(), authenticate=attempt_profile_login)
         async with login.run_test(size=_TERMINAL_SIZE) as pilot:
             login.query_one("#field-passphrase", Input).value = _PASSPHRASE
             await pilot.click("#btn-unlock")

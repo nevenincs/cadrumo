@@ -13,7 +13,7 @@ import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.ids import BindingId, RelationId
-from .._calc_sheets_pull import (
+from ..calc_sheets_pull import (
     ValueRange,
     _batch_get_values,
     _decode_binding_edits,

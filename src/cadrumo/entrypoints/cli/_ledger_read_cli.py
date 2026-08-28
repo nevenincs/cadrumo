@@ -22,7 +22,7 @@ import typer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.export import ExportSerializationFormat
+from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_export import export_ledger_transactions
 from ...application.ledger.actions_manual import (
     get_manual_transaction,

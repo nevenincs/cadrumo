@@ -860,13 +860,13 @@ def _is_hex64_shaped_schema(value: object) -> bool:
     any_of = mapping.get("anyOf")
     if isinstance(any_of, list):
         return any(
-            _is_hex64_shaped_schema(item)
+            _is_hex64_shaped_schema(cast(dict[str, object], item))
             for item in cast(list[object], any_of)
             if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
         )
     items = mapping.get("items")
     if isinstance(items, dict):
-        return _is_hex64_shaped_schema(items)
+        return _is_hex64_shaped_schema(cast(dict[str, object], items))
     return False
 
 

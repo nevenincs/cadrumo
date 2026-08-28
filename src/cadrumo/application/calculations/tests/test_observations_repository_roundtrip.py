@@ -38,7 +38,8 @@ from ....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from .._observations_repository import (
+from ..errors import ObservationCasillaReferenceError
+from ..observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
@@ -47,7 +48,6 @@ from .._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
 )
-from ..errors import ObservationCasillaReferenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -156,7 +156,7 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
     from sqlalchemy import select
 
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from .._observations_repository import observation_key
+    from ..observations_repository import observation_key
 
     period = Period.from_year_and_code(2025, "1T")
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -492,7 +492,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     from sqlalchemy import select
 
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from .._observations_repository import observation_key
+    from ..observations_repository import observation_key
 
     observation_namespace = CalculationObservationRepository.namespace
 

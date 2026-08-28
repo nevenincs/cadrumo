@@ -97,9 +97,7 @@ def test_an_invalid_m349_clave_still_refuses_through_the_relocated_validator() -
     validation is what is under test.
     """
     revision = _modelo_349_revision()
-    real_binding = next(
-        item for item in revision.bindings if item.id == "iva-349-operador-row-codigo-pais-adquisicion"
-    )
+    real_binding = next(item for item in revision.bindings if item.id == "iva-349-operador-row-codigo-pais-adquisicion")
     binding = real_binding.model_copy()
     drifted_selector = dict(binding.selector)
     drifted_selector["claves"] = ("A", "I", "T", "Q")

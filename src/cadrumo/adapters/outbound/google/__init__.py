@@ -3,7 +3,7 @@
 This package boundary exposes OAuth records and scope constants from
 :mod:`adapters.outbound.google._records`, the Google auth error taxonomy from
 :mod:`adapters.outbound.google.errors`, and scoped document-link helpers from
-:mod:`adapters.outbound.google._document_link_resolver`. Google Sheets
+:mod:`adapters.outbound.google.document_link_resolver`. Google Sheets
 remains a one-way export mirror here, never an authority.
 
 The Drive document-link helper follows the integration's minimal-scope posture:
@@ -80,24 +80,8 @@ See Also:
       consume resolved Drive document bytes.
 """
 
-from ._active_profile import resolve_active_profile
 from ._api import GoogleApiResponseBody, GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet
 from ._calc_sheets_apply import CalcSheetsApplyResult, CalcSheetsExportPreview, apply_export_plan, preview_export_plan
-from ._calc_sheets_pull import (
-    PullResult,
-    RowSetCellEdit,
-    RowSetEdit,
-    compute_from_pull,
-    pull_operator_edits,
-    relation_edit_payload,
-)
-from ._document_link_resolver import (
-    DriveFolderDocument,
-    DriveFolderListing,
-    list_drive_folder_documents,
-    parse_drive_file_id,
-    resolve_document_link,
-)
 from ._impersonation import (
     GoogleAuthAdcStaleError,
     GoogleAuthAdcUnavailableError,
@@ -117,6 +101,22 @@ from ._records import (
     OAuthClient,
     OAuthMetadata,
     OAuthToken,
+)
+from .active_profile import resolve_active_profile
+from .calc_sheets_pull import (
+    PullResult,
+    RowSetCellEdit,
+    RowSetEdit,
+    compute_from_pull,
+    pull_operator_edits,
+    relation_edit_payload,
+)
+from .document_link_resolver import (
+    DriveFolderDocument,
+    DriveFolderListing,
+    list_drive_folder_documents,
+    parse_drive_file_id,
+    resolve_document_link,
 )
 from .errors import (
     GoogleAuthBrowserOpenError,

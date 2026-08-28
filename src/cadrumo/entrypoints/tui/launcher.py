@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
@@ -10,6 +11,8 @@ from typing import TYPE_CHECKING
 from ...domain.modelos import WorkUnitCatalogue
 
 if TYPE_CHECKING:
+    from textual.app import AutopilotCallbackType
+
     from ...application.operations.composition import OperationComposedServices
 
 
@@ -76,4 +79,30 @@ async def operation_services_scope() -> AsyncGenerator[OperationComposedServices
         await services.shutdown()
 
 
-__all__ = ["load_modelo_work_unit_catalogue", "operation_services_scope", "profile_storage_scope"]
+async def _run_root_session(*, headless: bool, auto_pilot: AutopilotCallbackType | None) -> None:
+    """Compose one session's services, run the root application, settle them.
+
+    The services are composed OUTSIDE the application and handed to it, so
+    the root never constructs its own graph and the scope still settles if
+    the application raises on the way up or down.
+    """
+    from .app import CadrumoTuiApp
+
+    async with operation_services_scope() as services:
+        await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
+
+
+def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = None) -> int:
+    """Start one dedicated TUI session and report its process exit status.
+
+    This is the sole entry point for module execution and for the installed
+    console script; neither reaches past it into the composition seams, and
+    neither imports the CLI. ``headless`` and ``auto_pilot`` are Textual's
+    own run parameters, carried so a caller can drive a real session to
+    completion without a terminal rather than assert against an import.
+    """
+    asyncio.run(_run_root_session(headless=headless, auto_pilot=auto_pilot))
+    return 0
+
+
+__all__ = ["load_modelo_work_unit_catalogue", "main", "operation_services_scope", "profile_storage_scope"]

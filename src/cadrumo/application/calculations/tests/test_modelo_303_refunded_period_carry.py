@@ -47,9 +47,9 @@ from ....tests import general_m303_filing_evidence
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._filed_revision_observation import persist_filed_revision_observation
-from .._iva_compensation_history import IvaCompensationHistoryRepository
-from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

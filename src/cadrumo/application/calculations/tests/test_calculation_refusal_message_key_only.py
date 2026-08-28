@@ -212,7 +212,7 @@ def test_calculation_refusal_renders_as_its_key_and_never_as_prose(key: str) -> 
 
 
 def test_observation_key_refusal_renders_as_its_key() -> None:
-    from .._observations_repository import observation_key_for_token
+    from ..observations_repository import observation_key_for_token
 
     with pytest.raises(ObservationKeyError) as excinfo:
         observation_key_for_token("303", 1999, "1T")
@@ -222,7 +222,7 @@ def test_observation_key_refusal_renders_as_its_key() -> None:
 
 def test_row_set_grouping_refusal_renders_as_its_key() -> None:
     from ....domain.calculations.registry.errors import RegistryValidationError
-    from .._row_set_assembly import assemble_observations_for_grouping
+    from ..row_set_assembly import assemble_observations_for_grouping
 
     revision = bundled_authority().snapshot("190", filing_year=2025, period="0A").revision
 

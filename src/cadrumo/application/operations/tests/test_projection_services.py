@@ -738,10 +738,16 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
         broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW),
         UnavailableOperationSecureResponseAuthority,
     )
-    assert isinstance(broker.bind(stale, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority)
-    assert isinstance(broker.bind(control, pending, forged, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority)
+    assert isinstance(
+        broker.bind(stale, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
+    assert isinstance(
+        broker.bind(control, pending, forged, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
     authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
-    assert isinstance(broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority)
+    assert isinstance(
+        broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
     supervisor = OperationSupervisor(
         registry=registry,
         journal=repository,

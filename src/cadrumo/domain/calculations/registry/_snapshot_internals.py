@@ -665,8 +665,7 @@ def _check_revision_scoped_source_windows(
         if source.applies_across(revision.valid_from, revision.valid_to):
             continue
         if source_id not in elsewhere_source_ids and any(
-            source.applies_across(opens_on, closes_on)
-            for opens_on, closes_on in deadline_spans.get(source_id, ())
+            source.applies_across(opens_on, closes_on) for opens_on, closes_on in deadline_spans.get(source_id, ())
         ):
             continue
         if source.applies_to is not None and source.applies_to < revision.valid_from:

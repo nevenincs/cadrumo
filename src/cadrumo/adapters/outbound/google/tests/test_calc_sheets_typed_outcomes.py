@@ -17,7 +17,7 @@ from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecovery
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from .._calc_sheets_apply import apply_export_plan, preview_export_plan
-from .._calc_sheets_pull import (
+from ..calc_sheets_pull import (
     MetadataMatchState,
     OperatorEdit,
     PullMetadata,
@@ -233,7 +233,7 @@ def test_pull_missing_google_api_client_is_a_closed_safety_outcome(
     service_version: str,
 ) -> None:
     outcome = _missing_google_client_outcome(
-        module="cadrumo.adapters.outbound.google._calc_sheets_pull",
+        module="cadrumo.adapters.outbound.google.calc_sheets_pull",
         call=service,
     )
 

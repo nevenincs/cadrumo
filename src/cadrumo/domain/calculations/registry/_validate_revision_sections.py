@@ -296,9 +296,7 @@ def validate_revision_definition(
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
     failures.extend(
-        evidence.require_any_source_tier(
-            prefix, "revision", revision.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS
-        ),
+        evidence.require_any_source_tier(prefix, "revision", revision.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS),
     )
     _validate_revision_reference_surfaces(
         failures,

@@ -5,14 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from ....tests.secure_sql import isolated_runtime_profile
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from datetime import datetime
     from pathlib import Path
 
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
-    from .._observations_repository import ObservationEnvelopePayload
+    from ..observations_repository import ObservationEnvelopePayload
 
 
 def _find_modelo_observation(

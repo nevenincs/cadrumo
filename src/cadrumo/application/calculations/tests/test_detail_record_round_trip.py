@@ -27,7 +27,7 @@ from ....domain.calculations.registry.detail_record_bindings import (
     resolve_related_party_binding_row_values,
 )
 from ....domain.calculations.registry.withholding_bindings import resolve_withholding_binding_row_values
-from .._row_set_assembly import (
+from ..row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
     assemble_refund_observations,

@@ -1,9 +1,9 @@
 """Reassemble pull-side row-set records into typed observations.
 
 The pull adapter captures
-:class:`~adapters.outbound.google._calc_sheets_pull.RowSetEdit` Detalle-tab
+:class:`~adapters.outbound.google.calc_sheets_pull.RowSetEdit` Detalle-tab
 detail rows as a flat tuple of
-:class:`~adapters.outbound.google._calc_sheets_pull.RowSetCellEdit`
+:class:`~adapters.outbound.google.calc_sheets_pull.RowSetCellEdit`
 records grouped by the row-set's grouping key. To consume those rows in the
 local-store ingest path the codebase needs typed observations of the matching
 domain shape (for example,
@@ -132,7 +132,7 @@ def assemble_observations_for_grouping(
 
     The dispatcher maps registry-authored grouping tokens onto the closed
     :class:`~core.aggregation.RowSetGroupingKind` axis, then returns an
-    :data:`~application.calculations._row_set_assembly.AssembledObservations`
+    :data:`~application.calculations.row_set_assembly.AssembledObservations`
     payload whose source-kind discriminator names the typed observation family
     produced.
 
@@ -235,7 +235,7 @@ class _RowCellShape(Protocol):
     """Structural protocol for pull-side row-set cells.
 
     This mirrors the pull adapter's
-    :class:`~adapters.outbound.google._calc_sheets_pull.RowSetCellEdit`
+    :class:`~adapters.outbound.google.calc_sheets_pull.RowSetCellEdit`
     shape without importing the adapter module.
 
     Kept here as a Protocol so the assembler module never imports the

@@ -32,7 +32,7 @@ The strict registry boundary remains
 and
 :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`;
 this module is the application reader that supplies local observations from
-:class:`~._observations_repository.CalculationObservationRepository` and returns
+:class:`~.observations_repository.CalculationObservationRepository` and returns
 :class:`BindingPrefillReport` coverage.
 """
 
@@ -91,11 +91,11 @@ from ._iva_compensation_casillas import (
 from ._iva_compensation_casillas import (
     M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
 )
-from ._iva_compensation_history import IvaCompensationHistoryRepository
-from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 from .errors import BindingPrefillTypeError
+from .iva_compensation_history import IvaCompensationHistoryRepository
+from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 _STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
 

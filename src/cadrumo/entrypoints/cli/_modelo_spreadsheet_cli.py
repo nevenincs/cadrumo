@@ -13,11 +13,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
 
-from ...adapters.outbound.google import (
-    GoogleAuthError,
-    relation_edit_payload,
-    resolve_active_profile,
-)
+from ...adapters.outbound.google.active_profile import resolve_active_profile
+from ...adapters.outbound.google.calc_sheets_pull import relation_edit_payload
+from ...adapters.outbound.google.errors import GoogleAuthError
 from ...adapters.outbound.storage import (
     OutboundStorageError,
     build_google_credentials,
@@ -45,11 +43,8 @@ from .errors import CliRefusedBoundaryError
 if TYPE_CHECKING:
     import typer
 
-    from ...adapters.outbound.google import (
-        PullResult,
-        RowSetEdit,
-    )
-    from ...application.export import GoogleSheetsExportOperationResult
+    from ...adapters.outbound.google.calc_sheets_pull import PullResult, RowSetEdit
+    from ...application.export.google_operation import GoogleSheetsExportOperationResult
     from ...domain.calculations.registry.schema import RegistrySnapshot
 
 
@@ -109,7 +104,7 @@ def _pull_operator_edits_for_command(
     same :class:`GoogleAuthError` / :class:`OutboundStorageError` boundaries with
     identical translated messages, so the resolution is one implementation.
     """
-    from ...adapters.outbound.google import pull_operator_edits
+    from ...adapters.outbound.google.calc_sheets_pull import pull_operator_edits
 
     try:
         active = resolve_active_profile()
@@ -210,7 +205,7 @@ def execute_google_sheets_export(
     """Adapt CLI input to the public application export contract once."""
     from uuid import UUID
 
-    from ...application.export import (
+    from ...application.export.google_operation import (
         GoogleSheetsExportCapabilityDisabledError,
         GoogleSheetsExportOperationRequest,
         GoogleSheetsExportRootFolderRequiredError,
@@ -252,10 +247,7 @@ def modelo_spreadsheet_verify(
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
     from decimal import Decimal
 
-    from ...application.storage.calc_sheets import (
-        OperatorInputScenario,
-        verify_modelo_parity,
-    )
+    from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, verify_modelo_parity
     from ...application.user_profile.capabilities import resolve_active_capability
     from ...core import ServiceCapability
 
@@ -504,7 +496,7 @@ def modelo_spreadsheet_calculate(
     spreadsheet_id: str,
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ...adapters.outbound.google import compute_from_pull
+    from ...adapters.outbound.google.calc_sheets_pull import compute_from_pull
 
     active, snapshot, result = _pull_operator_edits_for_command(
         modelo=modelo,
@@ -581,7 +573,7 @@ def _assemble_pull_observations(
     """Per-grouping assemble-observations fan-out for the pull command."""
     if not enabled:
         return [], 0
-    from ...application.calculations import assemble_observations_for_snapshot
+    from ...application.calculations.row_set_assembly import assemble_observations_for_snapshot
 
     groupings: list[dict[str, object]] = []
     total = 0

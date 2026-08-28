@@ -92,9 +92,7 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
             f"semantic-map directory contains no TOML fragments: {fragment_directory}",
         )
     invalid = tuple(
-        path.name
-        for path in paths
-        if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
+        path.name for path in paths if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
     )
     if invalid:
         raise RegistryValidationError(

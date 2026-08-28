@@ -21,15 +21,17 @@ import typer
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...application.calculations import (
-    CalculationObservationRepository,
+from ...application.calculations.cross_period_clean_state import (
+    cross_period_dependency_inventory,
+    evaluate_cross_period_clean_state,
+)
+from ...application.calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyInventoryItem,
     CrossPeriodExpectedMemberSet,
-    cross_period_dependency_inventory,
-    evaluate_cross_period_clean_state,
-    m111_no_retenciones_periods_for_bucket,
 )
+from ...application.calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
+from ...application.calculations.observations_repository import CalculationObservationRepository
 from ...application.modelo._calculation_actions import get_calculation_revision
 from ...application.modelo._filing_actions import file_modelo_revision
 from ...application.modelo._profile_readiness_gate import require_profile_ready_for_work_unit

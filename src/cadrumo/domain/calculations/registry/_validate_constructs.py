@@ -101,14 +101,14 @@ def validate_construct_closure(
                 # under-count the construct's required grounding. The no-default
                 # form (rather than ``member.legal_refs``) is what lets this
                 # accept ``member_objects`` typed generically at this boundary.
-                member_legal_refs = set(member.legal_refs)
+                member_legal_refs = set(getattr(member, "legal_refs"))  # noqa: B009
                 missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
                 if missing_legal:
                     failures.append(
                         f"{scope}: construct {construct.id!r} does not include legal refs "
                         f"{missing_legal!r} required by {kind} {member_id!r}",
                     )
-                member_source_refs = set(member.source_refs)
+                member_source_refs = set(getattr(member, "source_refs"))  # noqa: B009
                 missing_sources = sorted(member_source_refs.difference(construct_source_refs))
                 if missing_sources:
                     failures.append(

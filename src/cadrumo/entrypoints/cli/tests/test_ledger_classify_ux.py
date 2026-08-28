@@ -89,10 +89,13 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
 ) -> None:
     """`review <prefix>` resolves the prefix instead of refusing."""
     txn = _imported_transaction_id(tmp_path)
-    result = _invoke(["--format", "json", "app", "ledger", "review", txn[:8]])
+    result = _invoke(["--format", "json", "app", "ledger", "view", txn[:8]])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
-    assert payload["id"] == txn
+    # `view` emits the uniform single-transaction shape, whose subject key is
+    # `transaction_id`; the bare `id` this replaced was the row shape of the
+    # list surface these calls used to go through.
+    assert payload["transaction_id"] == txn
     assert "config repair" not in result.output
 
 
@@ -101,9 +104,9 @@ def test_review_by_full_id_still_resolves_the_transaction(
 ) -> None:
     """`review <full>` keeps working after the prefix-resolution fix."""
     txn = _imported_transaction_id(tmp_path)
-    result = _invoke(["--format", "json", "app", "ledger", "review", txn])
+    result = _invoke(["--format", "json", "app", "ledger", "view", txn])
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["result"]["id"] == txn
+    assert json.loads(result.output)["result"]["transaction_id"] == txn
 
 
 def test_classify_with_negative_taxable_base_names_the_real_cause(

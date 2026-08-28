@@ -287,13 +287,7 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 # symbol has stopped being unresolved fails. The second half is what closes the
 # ratchet -- promoting ``PeriodCode`` reds this gate until its entry is deleted,
 # instead of leaving a permanently-satisfied ceiling behind.
-_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE: dict[str, str] = {
-    "PeriodCode": (
-        "cited against the registry package facade, which publishes its sibling "
-        "PeriodSelector but not PeriodCode. The fix is promotion to that facade, not "
-        "a repoint at the private module that defines it."
-    ),
-}
+_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE: dict[str, str] = {}
 
 # Anchored to the exact report format built in _scan_dotted_references. A report the
 # pattern cannot read is counted as a VIOLATION rather than skipped: if the format

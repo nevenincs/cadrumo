@@ -43,7 +43,7 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ._observations_repository import CalculationObservationRepository
+from .observations_repository import CalculationObservationRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
@@ -78,7 +78,7 @@ class EnrollmentEvidenceError(CoreValidationError):
     persisted-observation count (at least one real
     :class:`~domain.calculations.registry.RegistryModeloObservation` was
     saved to the real
-    :class:`~._observations_repository.CalculationObservationRepository` for
+    :class:`~.observations_repository.CalculationObservationRepository` for
     that year). A recording that supplies a label alone — without a persisted
     observation count — is label-only and therefore fakeable; the recorder
     refuses it.
@@ -104,7 +104,7 @@ class EnrollmentYearObservation(BaseModel):
         persisted_observation_count: For non-calculation mode, the number of
             :class:`~domain.calculations.registry.RegistryModeloObservation`
             records the test actually persisted to the real
-            :class:`~._observations_repository.CalculationObservationRepository`
+            :class:`~.observations_repository.CalculationObservationRepository`
             for this year — must be strictly positive, the evidence a real
             repository interaction occurred. Zero for calculation mode. Mirrors the role of
             ``produced_value_count`` in calculation mode: a context-mode year
@@ -240,7 +240,7 @@ class EnrollmentRecorder:
         positive ``persisted_observation_count`` — the number of
         :class:`~domain.calculations.registry.RegistryModeloObservation`
         records actually saved to the real
-        :class:`~._observations_repository.CalculationObservationRepository` for
+        :class:`~.observations_repository.CalculationObservationRepository` for
         this year. A label alone is not sufficient evidence: any string can be
         passed without touching the real adapters. The observation count proves
         a real repository interaction happened; it mirrors the role of
@@ -253,7 +253,7 @@ class EnrollmentRecorder:
             persisted_observation_count: The number of
                 :class:`~domain.calculations.registry.RegistryModeloObservation`
                 records the test saved to the real
-                :class:`~._observations_repository.CalculationObservationRepository`
+                :class:`~.observations_repository.CalculationObservationRepository`
                 for this year. MUST be strictly positive — it is the evidence a
                 real adapter interaction occurred.
 
@@ -364,7 +364,7 @@ class PreviousFilingSourceResolver:
     When the calculation engine encounters a binding whose source is
     ``"previous_filing"``, this resolver reads the relevant prior-year
     :class:`~domain.calculations.registry.RegistryModeloObservation`
-    records from the local :class:`~._observations_repository.CalculationObservationRepository`
+    records from the local :class:`~.observations_repository.CalculationObservationRepository`
     through :func:`~._binding_prefill.resolve_bindings_from_local_store`, then
     maps them into the :class:`~application.aggregation.CalculationSourceResolution`
     binding channel. Storage-degradation errors (classification, decryption,

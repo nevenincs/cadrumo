@@ -36,7 +36,7 @@ from .....domain.calculations.registry.errors import NoRevisionForPeriodError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.period import calculation_filing_date
-from .._calc_sheets_pull import (
+from ..calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,
     OperatorEdit,

@@ -80,5 +80,7 @@ async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
         if write is None:
             await pilot.pause()
             return
-    message = f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
+    message = (
+        f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
+    )
     raise AssertionError(message)

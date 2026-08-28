@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from ..invoices import InvoiceTransactionLinkResult
 
 from ...core import BindingSourceKind, IvaDeductionEvidenceAuthority, Period
+from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.attachments import link_attachment_transaction
@@ -69,7 +70,6 @@ from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
     command_matches_current,
-    decimal_to_string,
     derive_evidence_event_ids,
     display_decimal,
     is_evidence_only_command,
@@ -1081,11 +1081,11 @@ def _event_payload(command: ManualLedgerTransactionCommand) -> dict[str, str]:
     payload = {
         "source_command": command.source_command,
         "direction": command.direction.value,
-        "amount": decimal_to_string(command.amount),
+        "amount": format_decimal(command.amount),
         "currency": command.currency,
     }
     if command.business_pct is not None:
-        payload["business_pct"] = decimal_to_string(command.business_pct)
+        payload["business_pct"] = format_decimal(command.business_pct)
     if command.usage_ratio_id is not None:
         payload["usage_ratio_id"] = command.usage_ratio_id
     return payload
@@ -1495,7 +1495,7 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "attachment_ids": ",".join(command.attachment_ids),
     }
     if command.business_pct is not None:
-        values["business_pct"] = decimal_to_string(command.business_pct)
+        values["business_pct"] = format_decimal(command.business_pct)
     if command.category_id is not None:
         values["category_id"] = command.category_id
     if command.idempotency_key is not None:

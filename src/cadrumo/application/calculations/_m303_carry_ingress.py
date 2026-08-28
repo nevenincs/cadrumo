@@ -37,14 +37,14 @@ if TYPE_CHECKING:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
-from ._observations_repository import (
-    ObservationEnvelopePayload,
-    ObservationSourceKind,
-    ResultDispositionProjection,
-)
 from .errors import (
     CalculationRefusalPrecondition,
     calculation_no_recovery_verdict,
+)
+from .observations_repository import (
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
+    ResultDispositionProjection,
 )
 
 M303_DECLARATION_TYPE_HEADER_KEY = "declaration_type"

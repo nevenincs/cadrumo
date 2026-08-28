@@ -405,7 +405,6 @@ def __dir__() -> list[str]:
     return sorted(set(__all__) | set(globals()))
 
 
-
 def _refuse_unsupported_filing_year(period: _Period) -> None:
     """Refuse to build a filing draft for a year the registry does not declare supported.
 

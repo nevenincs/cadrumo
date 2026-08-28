@@ -3,7 +3,7 @@
 The inventory is derived by reading the source tree, and the surface list is
 answered by the harness; neither knows about the other. This module is the
 join, and it is the one hand-written table in the package -- because the fact
-it records, "opening the registration surface paints RegistrationApp", is a
+it records, "opening the registration surface paints RegistrationScreen", is a
 statement about what the harness builds, and a development tool forbidden
 from importing the TUI cannot observe that from outside.
 
@@ -24,12 +24,12 @@ from ._inventory import Interface
 
 RENDERED_BY: Final[dict[str, tuple[str, ...]]] = {
     "registration": (
-        "cadrumo.entrypoints.tui.secret.registration.RegistrationApp",
-        "cadrumo.entrypoints.tui.secret.credentials.CredentialApp",
+        "cadrumo.entrypoints.tui.secret.registration.RegistrationScreen",
+        "cadrumo.entrypoints.tui.secret.credentials.CredentialScreen",
     ),
     "login": (
-        "cadrumo.entrypoints.tui.secret.login.LoginApp",
-        "cadrumo.entrypoints.tui.secret.credentials.CredentialApp",
+        "cadrumo.entrypoints.tui.secret.login.LoginScreen",
+        "cadrumo.entrypoints.tui.secret.credentials.CredentialScreen",
     ),
     "manager": ("cadrumo.entrypoints.tui.profile.overview.ProfileManagerApp",),
     "status": ("cadrumo.entrypoints.tui.profile.status.StatusApp",),
@@ -51,7 +51,7 @@ here would make the coverage report lie in the one direction that matters.
 """
 
 NOTES: Final[dict[str, str]] = {
-    "cadrumo.entrypoints.tui.secret.credentials.CredentialApp": (
+    "cadrumo.entrypoints.tui.secret.credentials.CredentialScreen": (
         "generic base; painted through its subclasses rather than on its own"
     ),
 }

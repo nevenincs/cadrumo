@@ -74,7 +74,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.financial_operand import OperationTransientFinancialOperandDeclaration
-from ..operations.models import CredentialFreeOperationRequest
+from ..operations.models import CredentialFreeOperationRequest, OperationTerminalReceipt
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -113,6 +113,7 @@ from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
 from ._work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
+from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
     from ...domain.deadlines import TaxpayerProfile
@@ -132,6 +133,43 @@ MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
 _WORK_UNIT_NAME = Annotated[str, Field(min_length=1, max_length=200)]
+
+MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID = "modelo.workspace.refresh_target"
+
+
+class _WorkUnitSubject(BaseModel):
+    """Validate an operation subject reference as a real work-unit identifier."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_id: WorkUnitId
+
+
+def resolve_modelo_work_unit_refresh_target(
+    terminal_receipt: OperationTerminalReceipt,
+    /,
+) -> ModeloWorkspaceRefreshTargetV1:
+    """Derive the workspace read one settled Modelo work operation invalidates.
+
+    Every definition below addresses one work unit, so the settled receipt's
+    ``subject_ref`` is that unit's identifier. It is validated here rather
+    than trusted: a subject that is not a well-formed
+    :data:`~cadrumo.core.identity.WorkUnitId` raises, and the resolving
+    service turns that into a typed refusal instead of handing a frontend a
+    target it cannot read.
+    """
+    return ModeloWorkspaceRefreshTargetV1(
+        work_unit_id=_WorkUnitSubject(work_unit_id=terminal_receipt.identity.subject_ref).work_unit_id,
+    )
+
+
+def _modelo_workspace_refresh_target_binding() -> OperationSchemaBindingV1:
+    """Bind the one shared refresh-target schema every Modelo enrolment uses."""
+    return OperationSchemaBindingV1.bind(
+        schema_id=MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID,
+        schema_version=1,
+        model_type=ModeloWorkspaceRefreshTargetV1,
+    )
 
 
 class ModeloWorkRenameRequest(CredentialFreeOperationRequest):
@@ -317,6 +355,8 @@ def build_modelo_work_discard_registration(
             schema_version=1,
             model_type=ModeloWorkDiscardPublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -471,6 +511,8 @@ def build_modelo_work_verify_registration(
             schema_version=1,
             model_type=ModeloWorkVerifyPublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -615,6 +657,8 @@ def build_modelo_work_file_registration(
             schema_version=1,
             model_type=ModeloWorkFilePublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -754,6 +798,8 @@ def build_modelo_export_registration(
             schema_version=1,
             model_type=ModeloExportPublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -909,6 +955,8 @@ def build_modelo_work_amend_registration(
             schema_version=1,
             model_type=ModeloWorkAmendPublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -919,9 +967,9 @@ _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND = "modelo.edit.manual_casilla_override
 #: ModeloEditSubmissionV1 (the Edit Contract admission phase already
 #: validated it), so nothing here asks the operator for it mid-flight today.
 #: The declaration documents the operand this family is defined over and lets
-#: a future mid-flight ask enroll under it; OperationExecutorContext has no
-#: accessor for OperationTransientFinancialOperandProtocolV1 yet, so no
-#: executor anywhere can exercise the broker side of this contract.
+#: a future mid-flight ask enroll under it. The broker side is reachable:
+#: OperationExecutorContext exposes a financial_operand accessor, so an
+#: executor that needs a mid-flight amount can ask for one under this kind.
 _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND = OperationTransientFinancialOperandDeclaration(
     operand_kind=_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND,
     currency="EUR",
@@ -1549,6 +1597,8 @@ def build_modelo_edit_apply_registration(
             schema_version=1,
             model_type=ModeloEditApplyPublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
@@ -1603,6 +1653,8 @@ def build_modelo_work_rename_registration(
             schema_version=1,
             model_type=ModeloWorkRenamePublicResultV1,
         ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
 
