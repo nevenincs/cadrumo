@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:696468bcdc7bc86e1689f6e7140bdd281096d14be3ce24d5fd4ad99c18c517fa'
+body_hash: 'sha256:281a80e4a40e26947850e6d0da596a0314abed8a18ad03c24d452f68f38e09da'
 related: []
 ---
 
@@ -72,3 +72,60 @@ Checked and sound, recorded so a later reader does not re-open them:
 
 Open. Modelling the tabaco population is the fix; until then the rung is
 operator-input with no prompt.
+
+## Re-verification, 2026-08-28
+
+Every claim above was re-checked against the loaded snapshot
+(`bundled_authority().snapshot(...)`) rather than the TOML tree. The finding
+**stands unchanged**. Three additions sharpen it.
+
+### The gap has a precise shape: bound siblings beside a manual rung
+
+The tabaco rung is not merely "not routed" — it sits beside siblings that *are*
+routed, on both returns. From the 2025 snapshots:
+
+| return | ordinary recargo rungs | tabaco rung |
+|---|---|---|
+| M303 | `[170]` `bound` | `[157]` / `[158]` `manual`, `required=False` |
+| M390 | `iva.anual.repercutido.recargo.general` `bound`, `...recargo.reducido` `bound` | `...recargo.tipo-1-75.base` `manual`, `...tipo-1-75.cuota` `manual` |
+
+`bound` is the shape the tabaco rung would take once the population is modelled.
+The contrast is the finding made concrete: for every other recargo tier the
+ledger feeds the box, and for this one the operator must know to fill it.
+
+This also refines the direction. The rung is **reachable by operator input** — it
+is not a dead box, and a filer who knows about it can declare the cuota by hand.
+What is absent is the automatic path, and with it any signal that a tabaco supply
+went unrouted. The under-declaration exposure is therefore conditional on
+operator knowledge rather than unconditional, which is a weaker claim than
+"unreachable" but still the unwatched direction: nothing tells an operator the
+box exists or that their ledger held supplies belonging in it.
+
+### A third registry file says the same, and it constrains the remedy
+
+Beyond the two files already quoted, `_data/registry/aeat/iva/recargo-rates.toml`
+excludes tabaco deliberately and explains why:
+
+> TABACO IS NOT HERE, DELIBERATELY. The 1,75 % rate of art. 161 4.o attaches to
+> a PRODUCT (labores del tabaco), not to the accompanying IVA rate, so it is not
+> expressible on this axis and stays a legal parameter read directly.
+
+That is a remediation constraint, not just corroboration. The operational recargo
+table is keyed on the accompanying IVA rate — deliberately, because the 2023-2024
+foodstuffs measures put two recargos on one tier. Art. 161.4 does not sit on that
+axis at all. So modelling the population needs a **product** discriminator; adding
+an `IvaCategory` member alone would not give the rate table a key to resolve, and
+the rate would still have to be read directly from
+`liva-art-161:recargo-rate-tabaco` (confirmed present in the legal catalogue at
+`0.0175`, alongside the reviewed `0.052` / `0.014` / `0.005` siblings).
+
+### Probe caveat: the ids do not say "tabaco"
+
+The registry ids for these boxes are `iva.anual.repercutido.recargo.tipo-1-75.*`
+and the M303 pair carries the positional roles `dr303_157` / `dr303_158`. None
+contains the string "tabaco"; the word appears only in comments and in the legal
+catalogue. A sweep filtering casilla `id` or `semantic_role` for "tabaco" returns
+an empty set on both returns and invites the false conclusion that the boxes do
+not exist. They do. Filter on the rate (`1-75`, `0.0175`) or read the comments.
+This is the thirteenth filter bug of this campaign and the standing rule applies:
+an implausibly empty derived set is a filter bug until proven otherwise.
