@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b1671b210e76ad4c162f0ce60ad9b1ede02e959216ab50258e786496855ff4d'
+body_hash: 'sha256:4bcc72a54430c63ddc13fea3c142ff09dc190323b077801b1e402ad911b68c14'
 related: []
 ---
 
@@ -102,3 +102,58 @@ available without fabricating a citation:
 
 Do not resolve it by relaxing either gate: each is load-bearing, and silencing
 one settles the question invisibly.
+
+## Re-verified at HEAD, with the exact figures and a sharper diagnosis
+
+The conflict persists, and the numbers make it precise. Ley 7/2024 raised the top
+state savings tranche **nine days before the IRPF devengo**, and the catalogue
+tiles the two redactions across that boundary:
+
+| entry | window | top tranche stated |
+|---|---|---|
+| `ley-35-2006:art-66-2023` | 2023-01-01 → **2024-12-21** | `300.000,00 35.940 En adelante **14**` |
+| `ley-35-2006:art-66` | **2024-12-22** → open | `300.000,00 35.940 En adelante **15**` |
+
+The registry's encoded values, read from the loaded snapshots, are right:
+
+| filing year | encoded top tranche |
+|---|---|
+| 2023 | 0.14 |
+| **2024** | **0.14** |
+| 2025 | 0.15 |
+
+So the authors treat the increase as applying **from 2025**, which is the correct
+treatment: the amendment is prospective, and filing year 2024's savings scale is
+the one that governed the period.
+
+### The diagnosis is sharper than "two gates conflict"
+
+`_check_revision_scoped_legal_windows` requires the cited provision to be in force
+at the **devengo date** — 31 December for IRPF. That rule is right in general and
+wrong here, because it asks *which redaction existed on one day* rather than
+*which redaction governed the period*. For a scale amended prospectively in the
+last days of a tax year, those differ: `art-66-2023` governed 356 days of 2024 and
+`art-66` governed nine, and it is the former that determines the 2024 liability.
+
+So the position is: the value is correct, the provision that states it is
+out-of-window by ten days, and the provision in window states a different number.
+No citation satisfies both gates because the gates encode two different and
+individually reasonable theories of which redaction applies.
+
+### The danger, and why this is worth keeping open rather than tidying
+
+The tempting repair is to repoint 2024 at `art-66`, which is in window. That
+citation states **15**. Nothing would then flag the mismatch, because the evidence
+gate only checks that the phrase appears in the source, never that it matches the
+encoded value — and the current `required_text`, `["base liquidable del ahorro",
+"tipos de gravamen"]`, states no number at all.
+
+The step after that is the real hazard: someone reconciling value to citation and
+changing 2024's top tranche from 14 to 15. That is a live liability error on the
+highest savings tranche, in the over-declaration direction, reached by two
+individually plausible tidying edits.
+
+**Do not repoint this citation to `art-66`.** If the window rule is to be relaxed,
+it should be relaxed deliberately — for a provision that governed the filing
+period rather than merely the devengo instant — and not by moving the citation to
+whichever entry passes.
