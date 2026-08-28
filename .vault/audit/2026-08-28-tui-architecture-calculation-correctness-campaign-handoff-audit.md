@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:75a96f69d7e3105e4be7cb5bb586c9e3d7564d7606f05611a71212a54cf986af'
+body_hash: 'sha256:d7daa034a5e8e2a2a7852ca5ec2d95255ccf80c32f1b46c6e5540dfd806bf924'
 related: []
 ---
 
@@ -568,3 +568,46 @@ rate families earn a chain in this file", which is a prioritisation the owner
 should make on liability exposure. `test_legal_basis_rate_grounding.py` is the
 reference shape for parameter enforcement, as
 `m303-modulos-iva-dificil-justificacion-forfait` is for a discriminating citation.
+
+#### Correction to the gap list above: the IS family is covered, and there are two tiers of coverage
+
+The section above lists "the IS tipo-gravamen family" among the families
+value-vs-corpus enforcement does not reach. **That is wrong**, and it was asserted
+from a search scoped to the wrong packages — the same error the section's own
+closing method note warns against, committed in the same change.
+
+`domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py`
+covers it:
+
+- `test_scalar_tipo_gravamen_parameters_carry_the_lis_art_29_rates` pins each
+  parameter to its rate — general 25, cooperative-protected 20,
+  non-profit-special-regime 10, new-entity 15.
+- `test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus` asserts the
+  reference's `corpus_ref` is `corpus/normatives/html/ley-49-2002-art-10.html#a10`
+  and checks its `required_text`.
+- Further tests pin the micro-empresa two-bracket scale, the ERD rate against Ley
+  31/2022, and that dispatch raises on an unsupplied or unrecognised legal-entity
+  form.
+
+The IRNR side likewise has `test_catalogue_verification_normatives.py`,
+"article-level normative corpus verification", which resolves `required_text`
+through `verify_source_file`.
+
+**What survives is a real distinction, and it is more useful than the gap list
+was.** There are two tiers of coverage:
+
+- **Corpus-text verified** — the IVA spine. The test reads the bundled BOE text
+  and asserts the operative percentage string is present, then follows the value
+  through registry, substrate and wrapper. This catches a *wrong reading of the
+  law*, because the authority is the text.
+- **Literal-pinned** — the IS family, mostly. The expected rate is a `Decimal`
+  written in the test. This catches *registry drift* — someone changing 25 to 24
+  reds immediately — but it cannot catch an error shared between the test author
+  and the registry author, because both encode the same belief.
+
+Neither tier is absent, and the second is not worthless; it is the difference
+between "the registry still says what we decided" and "what we decided matches the
+BOE". The prioritisation question for the owner is therefore narrower than stated
+above: **which literal-pinned families should be promoted to corpus-text
+verification**, given that the mechanism and its anti-tautology proof already
+exist in `test_legal_basis_rate_grounding.py`.
