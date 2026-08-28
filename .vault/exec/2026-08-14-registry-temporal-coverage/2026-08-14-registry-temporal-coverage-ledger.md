@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:368775f8c9a752d2013353c0dbd9e0688890980dc30c54fdc44c6fc7adae9ab4'
+body_hash: 'sha256:6ec45aab9fd578a7fa063a5a00c058b29fccd1994214a376882e577ea0ba8fe2'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1334,7 +1334,6 @@ already required.
 `test_e2e_ledger_m130_quarters_to_m100_annual` still has 2 failures on a
 separate cause, left for its own tick.
 
-
 ### Justificante CSV shape, a deeper key migration, and a fixture that rotted
 
 Three distinct defects closed two files.
@@ -1378,7 +1377,6 @@ The test now genuinely raises `StoredCalculationDriftError`.
 
 `test_e2e_ledger_m130_quarters_to_m100_annual` is fully green at 5 passed (4
 sweep failures), and `test_verificado_completo_regression` at 3 passed (2).
-
 
 ### Acceptance wall: a stale CLI verb fixed, and the mutation harness diagnosed
 
@@ -1429,7 +1427,6 @@ ASSERTED equal to the law-determined one, never injected. Choosing the pinned
 value to make the refusal stop would be choosing which year's law to compute
 under. Left for a tick that can ground it against the manual's ejercicio.
 
-
 ### Modelo 200 micro-empresa wall: the revision guard caught a real wrong-year computation
 
 The wall refused with `requested registry revision '2024' is not the
@@ -1477,7 +1474,6 @@ refusal's own code. The first guess at that code was wrong and the run said so
 decimal-shape refusal more precisely than the sentence did. All 7 tests in the
 file pass.
 
-
 ### Acceptance wall #260: a flattened payload and a blanket assertion that outlived its premise
 
 Wall #260's guarding test, `test_prepare_shows_import_step_pending_on_fresh_`
@@ -1512,4 +1508,55 @@ notice must carry the SAME action as its step row (not a second spelling of it),
 and every other notice must carry none, named in the failure message. Five tests
 in the file pass, and the wall catalogue is at 25 passing, up from 23 when this
 sweep of it started.
+
+
+### Two work units pinned to revisions the registry never shipped, and a wall that passed vacuously
+
+Wall #328 (Modelo 190 reconcile) failed, and the reconcile output named the
+reason: `... (snapshot_unavailable); verdict reflects receipt identity only`.
+
+The registry was not the problem -- `authority.snapshot('190', filing_year=2024,
+period='0A')` builds cleanly at both filing and calculation grade, and both M190
+revisions are filing grade. The work unit was: the fixture pinned
+`_M190_2024_0A_REVISION_ID = "2024-y-siguientes"`, and Modelo 190 ships `2024`
+and `2025-y-siguientes`. There is no `2024-y-siguientes`. Snapshot resolution
+failed on a revision id that never existed.
+
+The consequence is the part worth recording. When the snapshot cannot resolve,
+reconcile degrades to comparing receipt identity ALONE and reports a clean
+match. So the SIBLING test, `..._m190_matches_when_computed_agrees`, was passing
+-- and passing vacuously: it asserts a clean `matches` and got one without a
+single casilla being compared. A green test was standing guard over nothing,
+while its divergence twin was the only reason anyone noticed.
+
+Modelo 390 carried the identical defect: `_M390_2022_0A_REVISION_ID =
+"2010-y-siguientes"` against real revisions 2021 through 2025. Corrected to
+`2022`. This touches a CLI test constant, not
+`_data/registry/aeat/modelos/390/`, so it stays outside the tree the
+export-fragment campaign holds; the note is here because the ownership line is
+worth stating rather than assumed.
+
+Both constants now name revisions the registry actually carries. Four tests pass
+and the divergence cases assert real `diff` rows, so the comparison is genuinely
+running. Wall #261 was separately repointed: the catalogue cited
+`test_requires_classifies_m130_casillas_against_live_registry_no_active_profile`
+while the live test had been renamed to
+`test_requires_classifies_real_m130_sources_without_an_active_profile` -- a
+dangling reference of exactly the kind `firmware-reference-parity` describes,
+with the capability text and the test's own docstring confirming they are the
+same guard.
+
+Wall #423 was NOT repointed, deliberately. Its capability is "a late-night
+filing completes in one command via aeat quickfile, all the way to an exported
+fichero", and its cited test no longer exists. The surviving quickfile tests are
+`..._reaches_granted_verify_before_withdrawn_export`, which stop at a REFUSED
+export because no complete export layout is authored -- they prove strictly less
+than the wall claims. Pointing the catalogue at one would record a capability as
+walled when nothing guards it. The wall is genuinely reopened.
+
+One transient scare: a run failed with `ImportError: cannot import name
+'current_operator_surface_reconciliation' from ... _common`, which looked like a
+broken tree. It was a peer mid-commit -- the package imports cleanly moments
+later and the tests pass. Worth remembering before attributing a failure to a
+shared worktree's momentary state.
 
