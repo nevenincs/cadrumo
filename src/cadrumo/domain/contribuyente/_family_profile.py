@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
+from ._constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from ._descendant import DescendantInfo
 from ._family_types import (
     MAX_AGE_MENOR_TRES,
@@ -47,7 +48,7 @@ class RentaFamilyProfile(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_version: str = Field(default="1")
+    schema_version: ProfileSchemaVersion = Field(default=SUPPORTED_PROFILE_SCHEMA_VERSION)
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
@@ -88,13 +89,6 @@ class RentaFamilyProfile(BaseModel):
     cohabitation flag.  The ``descendants`` tuple above models the
     official Modelo 100 form rows; this tuple drives the mínimo engine.
     """
-
-    @field_validator("schema_version")
-    @classmethod
-    def _schema_version_is_supported(cls, value: str) -> str:
-        if value != "1":
-            raise ProfileValidationError("schema_version must be '1'")
-        return value
 
     @field_validator("descendants", "ascendants", mode="before")
     @classmethod
