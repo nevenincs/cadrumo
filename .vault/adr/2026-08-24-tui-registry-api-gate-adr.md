@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:932cc01ce41cdf69298ff0f2a831b52aa44429c32307e7af70f9673b05a131be'
+body_hash: 'sha256:f30d0855abd43114c8c76b296706714fb3fa16539abc7693fa55d644bc2dc777'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1156,3 +1156,52 @@ model's own docstring: if a future revision-selection path ever truncates
 instead of refusing -- admitting a snapshot at a grade below the one
 requested rather than raising -- an effective grade becomes a real, distinct
 fact and the field earns its place back with that defined meaning.
+
+## Amendment 2026-08-28: the C2 gate's dependency receipt is retired; conformance and attestation split
+
+**What this corrects.** The "C2 complex-read gate and external prerequisites"
+section required a minted
+`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
+artifact, schema `ModeloWorkspaceC2DependencyReceiptV1`, parsed by
+`validate_modelo_workspace_c2_dependency_receipt`, which cross-checked an
+ordered `ModeloWorkspaceC2PredecessorTupleV1` naming other ADRs' `accepted`
+status, commits and body hashes, plus the C1 exit receipt from the companion
+`2026-08-24-tui-modelo-workspace-interface-adr`. The V1 conformance suite
+additionally names this validator as something the suite itself proves is
+"live." Both make code parse `.vault/` frontmatter and cross-artifact
+governance state, inverting the one-way vault-to-code reference direction and
+coupling the product test suite to removable development scaffolding.
+
+**The decision.** Item 7 of the numbered gate list -- "the complete V1
+conformance suite above is green" -- and everything that suite already proves
+(inspection-versus-snapshot separation, schema/manifest fixed points,
+readiness/closure parity, the S126 native-owner one-to-one fixed point,
+forbidden imports, sensitive non-retention, and the rest enumerated above)
+remains a real, currently-passing test under the owning package's `tests/`
+directory, asserting source-tree shape only. The suite's own self-check that
+its dependency-receipt validator is "live" is deleted along with the
+validator: a conformance test proves conformance, not the existence of a
+governance artifact.
+
+Item 8 (the `ModeloWorkspaceC2DependencyReceiptV1` artifact and its validator)
+is retired outright. Whether C2 is actually open -- this ADR and the companion
+interface ADR both accepted with the cited commits and body hashes, the
+authority-grade decision accepted or reconciled, and every native-owner/
+producer-contract fixed point green -- is a vaultspec-governed execution
+record, authored through the owning CLI verb at the moment C2 opens, citing
+the implementing conformance tests and the commit they were proven against by
+`path:line`. No code parses or asserts against that record, and no code
+reconstructs the predecessor tuple's provenance chase (accepted commit ->
+body hash -> producing commit -> artifact digest) at runtime or test time.
+
+**Consequence for the C2 gate.** Items 1-6 of the numbered list are otherwise
+unchanged: they remain real prerequisites (public export, the companion ADR's
+accepted status and its own now-amended C1 attestation, the authority-grade
+reconciliation, public readiness/closure parity, the field-classification
+manifest, and the native-owner fixed point), each evidenced the same way -- a
+real conformance test plus the execution record naming the governing decision
+it depends on. No `.vault/` path, document stem, Step id, or campaign
+identifier may appear under `src/`, including in the conformance suite. C2
+still authorizes only complex read-only Workspace consumers and still does not
+create `modelo.edit`, authorize a command, or open verify/file/export/
+amendment/lifecycle/secret/recovery interactions by implication.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-edit-contract'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c774af69f765a94df5b743e7cc8148dac8a38d482c69538fea7f707aeacd4fe'
+body_hash: 'sha256:1bd28757f53b0e379a99e1ae0a15ceb047f3437a969560fbc53658c8cf06ead5'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -588,3 +588,55 @@ removes), then resupplies the reconstructed complete tuple to the calculate
 boundary -- no signature change to the calculate boundary's own
 `detail_rows` parameter was needed, since it already accepted a complete
 tuple.
+
+## Amendment 2026-08-28: D8's dependency receipt is retired; conformance and attestation split
+
+**What this corrects.** D8 built the C3 application prerequisite as a minted
+`.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`
+artifact, schema `ModeloEditContractC3DependencyReceiptV1`, parsed by
+`validate_modelo_edit_contract_c3_dependency_receipt`, which in turn
+cross-checked two further minted predecessor artifacts
+(`ModeloWorkspaceC2DependencyReceiptV1` and
+`TuiOperationFinancialOperandDependencyReceiptV1`) plus this ADR's own
+`accepted` status and body hash. That makes code -- the validator and its
+test caller -- parse `.vault/` paths, ADR frontmatter, and governance
+identifiers, inverting the project's one-way reference direction (vault
+documents cite code by locator, code never cites the vault) and binding the
+product test suite to removable development scaffolding. It also answers two
+separable questions with one artifact: whether `ModeloEditContractV1`'s
+implementation actually has the shape D8 lists (a source-tree fact), and
+whether the governing ADRs behind it are accepted with their blocking audits
+resolved (a governance fact only `.vault/` can answer).
+
+**The decision.** The two questions split. Every implementation-shape item D8
+lists -- public export and strict-schema digests; the compatibility tuple's
+manifest version, contract-set/definition digests, and
+observation/REVIEW/refresh-target/financial-operand axes and registered schema
+identities/fingerprints; schema and permitted-surface fingerprints; mutation
+capability and refusal inventories; real parse/preflight parity; real
+work/calculation/event/result-receipt atomicity and rollback under each stale
+coordinate; duplicate-result recovery; forbidden-import proof; and sensitive
+non-retention -- remains a real, currently-passing test under the owning
+package's `tests/` directory. These tests assert source-tree shape only; none
+names a `.vault/` path, an ADR stem, a Step id, or reads a governance status or
+body hash.
+
+Whether C3's application prerequisite is actually open -- this ADR accepted,
+its Workspace C2 and operation financial-operand predecessors each accepted
+and green -- is a vaultspec-governed execution record, authored through the
+owning CLI verb at the moment C3 opens, citing the implementing test modules
+and the commit they were proven against by `path:line`. No code parses or
+asserts against that record. `ModeloEditContractC3DependencyReceiptV1` and
+`validate_modelo_edit_contract_c3_dependency_receipt` are retired outright, not
+renamed or relocated.
+
+**Consequence for D8.** No `.vault/` path, document stem, Step id, or campaign
+identifier may appear under `src/`. Neither the operation-side prerequisite
+(amended in `2026-08-11-tui-architecture-adr`) nor this application-side one
+may be reintroduced as a code-resident cross-artifact proof: "both are green"
+is a fact the execution record states, evidenced by two green conformance
+suites and the commits each was proven against, never a fact code computes by
+reading another ADR's receipt. This does not relax any item in the list above,
+and the required-predecessor relationship itself -- C3 cannot be presented as
+open before its Workspace C2 and operation predecessors are each independently
+true -- is unchanged; only where that relationship is recorded moved.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:642a078076ae1823bcd5f3cc84a82542f17767fbf8f0fb865d96afc13ce16eeb'
+body_hash: 'sha256:688d34d71726e44ceadc6a0a6906fc9cfba3ff9b215aab979ec23a28ed14f8a9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1823,7 +1823,6 @@ flows into the fichero bytes their export e2e tests assert. Changing it edits
 the expected output of another campaign's suite. Correcting a dangling reference
 is safe; changing a value under someone else's assertions is not.
 
-
 ### One synthetic registry, four stacked defects, and a 553-site sweep declined
 
 `test_binding_readiness` builds a synthetic modelo-999 registry to make two
@@ -1870,3 +1869,79 @@ SELECTION lands on, so they now request
 
 5 tests in the file pass.
 
+### Inventory ownership: a selector shape left behind, and a branch that asserted its own opposite
+
+The `DataBindingDefinition` selector cluster is `test_inventory_source_ownership`,
+and it held two defects of different kinds.
+
+**The selector shape.** The fixture built inventory bindings with
+`actividad_id` + `operation`, a shape `_InventorySelector` no longer accepts: it
+now requires `fact`, `record`, `grouping` and `row_field`, and forbids
+`actividad_id` outright -- six validation errors per binding. Rather than infer
+the new envelope, it was copied from the shipped
+`renta-2025-inventory-activity-*` selectors, which state it exactly:
+`fact = "row_field"`, `record = "inventory_activity"`,
+`grouping = "per_inventory_activity"`. The fixture's own operation tokens
+(`complete_acquisition_cost`, `closing_minus_opening_positive`,
+`opening_minus_closing_positive`) already matched the registry's `row_field`
+values verbatim, so only the envelope moved and no value was invented.
+
+**The branch that asserted its own opposite.**
+`test_undeclared_inventory_leaves_manual_casilla_available_and_policy_is_replay_stable`
+then still failed, and not for a fixable-by-shape reason. `_revision(declared=False)`
+returned the bundled Modelo 100/2025 revision UNCHANGED -- and that revision now
+ships three real inventory bindings, casilla 0181 among them. So the
+"undeclared" branch handed the test a revision where inventory IS declared, 0181
+arrived `input_kind=bound` owned by
+`renta-2025-inventory-activity-acquisition-cost-0181`, and the caller-override
+lock refused it. The lock was right; the fixture's name was the lie.
+
+That branch was correct when written -- before `4b031370bb feat(inventory):
+enforce source-owned calculation inputs` put those bindings in the registry,
+"return the base revision" genuinely meant "no inventory declared". The registry
+moved underneath it and the phrase stopped being true.
+
+So the undeclared state is now BUILT rather than assumed: inventory-source
+bindings are stripped and their three casillas handed back to `InputKind.MANUAL`
+with no binding. That is the state the branch's name claims, and the tests about
+manual availability now exercise it. The declared branch is untouched.
+
+8 tests pass. Worth keeping in view: this is the third fixture this campaign has
+found whose premise silently inverted when the registry gained content --
+alongside the Modelo 190 reconcile that reported a clean match without comparing
+a casilla, and the quickfile export that asserted a refusal the product had
+stopped issuing.
+
+### M184 socios were missing a required clave, and two clusters resolved as another campaign's
+
+The remaining `ModeloExportError` (7) and `CalculationRevisionCatalogue` (4)
+clusters both read `Modelo 303 export requires an explicit prior-domiciliation
+election` and `rectificativa calculation revision requires context-bound
+aggregate validation` -- the export-fragment campaign's M303 rectificativa
+surface, already attributed in an earlier note. Left with their owner.
+
+The residual `ModeloProfileReadiness` failures were a DIFFERENT requirement from
+the colegio-concertado one fixed earlier, which is why they survived it. Probed
+the refusal: `Clave del rendimiento (Modelo 184)`, grounded in LIRPF arts. 86
+and 87 and Orden HAP/2250/2015 art. 3.
+
+`attribution_entity_socios.<n>.clave` is `required = true` in the profile schema
+with enum `A, C, D, E, F, G, I, J, K`, and the fixture's two socios carried nif,
+name, share, assigned base, participe_clave and role -- but no clave. So the
+readiness gate refused before any M184 row resolved.
+
+The value was chosen from what the fixture itself declares rather than picked
+for convenience: the entity is a `comunidad_bienes` with
+`activities.description` set and IVA regimen general, so its socios receive
+rendimientos de ACTIVIDADES ECONOMICAS -- clave `D` in the schema's own
+vocabulary. Clave `C` (capital inmobiliario) would have been the wrong claim and
+would additionally have dragged in the inmueble sub-block the row model gates on
+that branch.
+
+The tests assert nif and importe rather than clave, so any enum member would
+have turned them green; that is exactly why the choice had to be grounded in the
+profile rather than in what passes.
+
+11 tests in the file pass, up from 9 passed 2 failed. The one remaining
+readiness failure, `test_local_filed_303_compensation_updates_wallet_balance...`,
+is M303 wallet and stays with the export-fragment campaign.

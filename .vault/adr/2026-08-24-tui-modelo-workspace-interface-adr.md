@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:0394ec857bf50e11fc9015e7d28baf0dc7adf5c5e668a817359b0e2e87cfd29c'
+body_hash: 'sha256:6e831bf5d2cdb762220535c4087a83a488c53e1a785276afe9829219366a3558'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -667,3 +667,73 @@ operation, concurrency, custody, and accessibility receipts exist.
 - Implementation work is larger than a screen build, but it is partitioned into
   C0-C5 cohorts that can be planned and verified without a competing rollout
   plan or a global registry-completeness blockade.
+
+## Amendment 2026-08-28: D10's receipt chain moves from code to vault attestation
+
+**What this corrects.** D10 built C1 through C5 readiness entirely as code:
+for each cohort, a minted `.vault/reference/*-exit-receipt.md` artifact under
+a `ModeloWorkspaceC{1..5}ExitReceiptV1` schema, parsed by a
+`validate_modelo_workspace_c{1..5}_exit_receipt` validator that cross-checks
+predecessor receipts, ADR `accepted` status and body hashes, producing-commit
+ancestry, and artifact-digest equality, using the shared discriminated
+`ModeloWorkspaceReceiptProofV1` proof type. `validate_modelo_workspace_action_denominator`,
+invoked by every exit validator, additionally required that every
+`TuiCapability.AVAILABLE` route cite "its exact owning cohort exit proven
+green by the same validator invocation on current HEAD" -- folding a
+governance-acceptance question (has this cohort's chain of ADRs been accepted,
+with predecessor receipts green) into a source-tree conformance check. This
+inverts the one-way vault-to-code reference direction and binds the product
+test suite, and its production capability-availability logic, to removable
+development scaffolding.
+
+**The decision.** The two questions split, per cohort.
+
+Whether the source tree HAS the shape a cohort requires is a real,
+currently-passing test under the owning package's `tests/` directory: C1's
+canonical `modelo.work.review` relocation and four-locale/three-geometry/
+two-theme keyboard and non-colour proof; C2's route-replacement, destination/
+factory census, projection coverage, baseline facets, refusal states, and
+schema/row/provenance matrix; C3's compatibility tuple, edit/row state
+machine, parse/validation focus, review-only submit, stale refusal,
+atomic-result refresh, locale switch, operation-handoff consumption, and
+sensitive non-retention; C4's zero-unclassified-candidate proof and each
+lifecycle action's independent interaction/refresh proof; C5's aggregate
+locale/geometry/theme/keyboard/non-colour/large-schema/refusal/route-action
+matrix and installed-root proof. `validate_modelo_workspace_action_denominator`
+is retained as a real conformance test of exactly this kind: it still rejects
+a missing, duplicate, stale, or unclassified action candidate, and it still
+requires a typed exclusion to carry its owner/reason/evidence/reopening facts
+-- but it asserts source-tree shape only. It no longer names, cites, or
+requires a `.vault/reference/` artifact, an ADR stem, a Step id, or a
+governance status, and its own test module contains none of them.
+
+Whether a cohort is actually OPEN -- its governing ADR chain accepted, its
+predecessor cohorts' governance facts likewise recorded, and its conformance
+suite green -- is a vaultspec-governed execution record, authored through the
+owning CLI verb at the moment that cohort opens, citing the implementing tests
+and the commit they were proven against by `path:line`, and citing the prior
+cohort's execution record by wiki-link. No code parses, hashes, or asserts
+against any of these records. `ModeloWorkspaceC1ExitReceiptV1` through
+`ModeloWorkspaceC5ExitReceiptV1`, their five validators,
+`ModeloWorkspaceReceiptProofV1`, and the five minted
+`.vault/reference/*-exit-receipt.md` artifacts are retired outright, not
+renamed or relocated. The same split applies to every predecessor this record
+cites from sibling ADRs: `2026-08-24-tui-registry-api-gate-adr`'s C2
+dependency receipt and `2026-08-24-modelo-edit-contract-adr`'s D8 receipt
+(`ModeloEditContractC3DependencyReceiptV1`) are amended in their own records;
+a route or action gated on either predecessor now depends on that sibling
+ADR's execution record, not a receipt this record parses.
+
+**Consequence for D10 and elsewhere in this record.** Every remaining
+reference in this ADR to a cohort "receipt" -- the Cohort/Authorized-actions
+table's "receipted" (C4), D8's "applicable D8 receipt" and "cohort exit
+receipt is green on current HEAD," and the work-creation paragraph's citation
+of `ModeloEditContractC3DependencyReceiptV1` / `ModeloWorkspaceC3ExitReceiptV1`
+-- is read under this split: the underlying requirement (no mutating action
+becomes visible before its cohort's implementation-shape facts are proven AND
+its governance acceptance is recorded) is unchanged; only the mechanism
+recording the second half moved from a code-resident artifact to a vaultspec
+execution record. No `.vault/` path, document stem, Step id, or campaign
+identifier may appear under `src/`. A cohort's readiness is evidenced by its
+execution record plus a green conformance suite, never by a code-resident
+proof of governance state.

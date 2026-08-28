@@ -11,7 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
 # Re-run operation catalogue, recovery-action, migration-manifest, import-linter, AST, and Textual-location fixed-point gates
 
 ## Scope

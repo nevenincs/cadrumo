@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-26'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a3c209e34e108fa9eced71ba5b11506adc0c597939aed8f29b8b43197422dea'
+body_hash: 'sha256:b742d0cf67a1eb36f93137fba30276ad524d5228a86286977095f9dd1d944fc7'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1405,3 +1405,65 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
+
+## Amendment 2026-08-28: dependency receipts move from code to vault attestation
+
+**What this corrects.** D13 built C0 and financial-C3 readiness as code: a
+`TuiOperationObservationDependencyReceiptV1` / `TuiOperationFinancialOperandDependencyReceiptV1`
+pydantic schema, minted as a `.vault/reference/*.md` JSON artifact, parsed and
+cross-checked against `git show`, ADR `status:` frontmatter, and body hashes by
+a "sole live-tree validator" living in
+`src/cadrumo/application/operations/tests/`. That inverts the project's
+one-way reference direction -- vault documents cite code by locator, code never
+cites the vault -- and binds the product test suite to `.vault/` paths,
+document stems, and governance identifiers that are removable development
+scaffolding, not part of the shipped tree. It also answers two separable
+questions with one artifact: whether the source tree has the shape D13
+requires (an implementation fact, provable without reading any governing
+record) and whether the governing decisions authorizing that shape are
+accepted with their blocking audits resolved (a governance fact, answerable
+only from `.vault/`).
+
+**The decision.** The two questions split.
+
+Every implementation-shape assertion D13 lists for C0 and the financial-operand
+C3 prerequisite -- public-definition manifest and contract-set schema
+identities/digests; atomic observation fold; registered safe REVIEW resolution
+and its non-authority; the typed Workspace-refresh adapter; settlement,
+interaction, cancellation, effect, recovery, and production DI wiring; the
+`awaiting_submission -> bound -> delivery_started -> delivery_acknowledged ->
+released` transition and crash-injection matrix; the enrolled writer's
+compare-and-swap and effect-receipt co-commit; forbidden-import and
+sensitive-non-retention proof -- remains a real, currently-passing test under
+`src/cadrumo/application/operations/tests/`. Those tests assert source-tree
+shape and behavior only; none names a `.vault/` path, an ADR stem, a Step id,
+or reads a governance status or body hash.
+
+Whether C0, or the financial-operand C3 prerequisite, is actually OPEN -- the
+accompanying claim that the governing ADRs are `accepted` and their blocking
+audits resolved -- is recorded as a vaultspec-governed execution record,
+authored through the owning CLI verb at the moment the cohort opens. That
+record cites the implementing test module and the commit it was proven against
+by `path:line`; no production or test code parses it or asserts against it.
+`TuiOperationObservationDependencyReceiptV1`,
+`TuiOperationFinancialOperandDependencyReceiptV1`, the minted
+`.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`
+and
+`.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`
+artifacts, and the A/B two-commit git-ancestry/digest-equality contract
+described above are retired outright -- not replaced by an equivalent
+code-resident mechanism under another name.
+
+**Consequence for D13.** No `.vault/` path, document stem, Step id, or
+campaign identifier may appear anywhere under `src/`, including in the two
+named test modules. "C0 is open" and "the financial-operand C3 prerequisite is
+open" are governance facts a human or agent states by authoring the execution
+record, evidenced by a green conformance suite and the commit it was proven
+against -- never a code-resident proof of governance state. This amendment does
+not relax any implementation-shape requirement D13 lists above: every one of
+them stays a real, falsifiable test; it corrects only where the accepted-status
+and cross-artifact provenance checks live. The Consequences section's closing
+claim that "C0 and C3 remain independently gated by their exact dependency
+receipts" is unchanged in substance and is read under this split: "dependency
+receipt" there now means the execution record described above, never the
+retired code-resident artifacts.
