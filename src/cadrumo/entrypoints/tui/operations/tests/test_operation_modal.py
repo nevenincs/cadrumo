@@ -520,10 +520,11 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
             if isinstance(screen, OperationModal) and screen.is_mounted:
                 modal = screen
             _record()
-            apply_control = modal.query("#btn-operation-apply") if modal is not None else []
-            if not applied and apply_control and not apply_control.only_one(Button).disabled:
-                applied = True
-                await pilot.click("#btn-operation-apply")
+            if modal is not None:
+                apply_control = modal.query("#btn-operation-apply")
+                if not applied and apply_control and not apply_control.only_one(Button).disabled:
+                    applied = True
+                    await pilot.click("#btn-operation-apply")
             if host.outcome is not None:
                 break
             await pilot.pause()
