@@ -27,9 +27,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.categories import (
-    SpendingCategory,
-    SpendingCategoryFamily,
-    categories_for_family,
+    home_office_categories,
 )
 from ....domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
@@ -169,16 +167,6 @@ def save_usage_ratios(
     _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
 
 
-_HOME_OFFICE_FAMILIES = (
-    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
-    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-)
-
-
-def _home_office_categories() -> frozenset[SpendingCategory]:
-    return frozenset(category for family in _HOME_OFFICE_FAMILIES for category in categories_for_family(family))
-
-
 def load_usage_ratios_with_censo_guard(
     *,
     bucket_id: str,
@@ -226,7 +214,7 @@ def load_usage_ratios_with_censo_guard(
             unset.
     """
     profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
-    home_office = _home_office_categories()
+    home_office = home_office_categories()
     persisted_home_office = {category: ratio for category, ratio in profile.ratios.items() if category in home_office}
     if not persisted_home_office:
         return profile

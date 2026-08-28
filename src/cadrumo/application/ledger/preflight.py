@@ -34,7 +34,12 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId, TransactionId
-from ...domain.categories import SpendingCategory, SpendingCategoryFamily, family_for
+from ...domain.categories import (
+    HOME_OFFICE_FAMILIES,
+    SpendingCategory,
+    family_for,
+    home_office_categories,
+)
 from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
@@ -54,6 +59,7 @@ from ..aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
+from ..user_profile.censo_sync import bound_raw_afectacion_ratio_for_bucket
 from .transaction_repository import transaction_catalogue_repository
 from .usage_ratio_repository import usage_ratio_profile_with_censo_guard
 
@@ -227,6 +233,10 @@ def preflight_transaction_catalogue(
         censo_ratio_mismatch_detail: Optional censo mismatch detail previously
             resolved from the secure ratio profile. When supplied, active
             HOME_OFFICE ratio rows surface it as a preflight issue.
+        missing_home_office_afectacion_detail: Optional detail reporting that no
+            afectación proportion resolves at all. When supplied, active
+            HOME_OFFICE ratio rows surface it, so a row that will deduct nothing
+            says so instead of passing as though the expense were absent.
 
     Returns a :class:`LedgerPreflightReport`.
     """
@@ -296,20 +306,6 @@ def _period_transactions(*, period: Period, transactions: TransactionCatalogue) 
     )
 
 
-_HOME_OFFICE_FAMILIES = frozenset(
-    {
-        SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
-        SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-    },
-)
-
-
-def _bound_raw_afectacion_ratio(*, bucket_id: str) -> Decimal | None:
-    from ..user_profile.censo_sync import CensoSyncService
-
-    return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
-
-
 def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str | None:
     """Report the absence of any proportion a home-office row could deduct on.
 
@@ -325,7 +321,7 @@ def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str 
     from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 
     ratios = resolve_effective_usage_ratios(bucket_id=bucket_id, year=year)
-    if any(category in ratios for category in _home_office_categories()):
+    if any(category in ratios for category in home_office_categories()):
         return None
     return (
         "this period has home-office rows but no afectacion proportion to deduct them on: "
@@ -337,21 +333,10 @@ def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str 
     )
 
 
-def _home_office_categories() -> frozenset[SpendingCategory]:
-    """Return every category whose deduction needs a home-office proportion.
-
-    Derived from the module's own ``_HOME_OFFICE_FAMILIES`` rather than restating
-    the pair, so a third home-office family joins this set by construction.
-    """
-    return frozenset(
-        category for category in SpendingCategory if family_for(category) in _HOME_OFFICE_FAMILIES
-    )
-
-
 def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decimal | None, year: int) -> str | None:
     resolved_raw = raw_afectacion_ratio
     if resolved_raw is None:
-        resolved_raw = _bound_raw_afectacion_ratio(bucket_id=bucket_id)
+        resolved_raw = bound_raw_afectacion_ratio_for_bucket(bucket_id)
     try:
         usage_ratio_profile_with_censo_guard(
             bucket_id=bucket_id,
@@ -370,7 +355,7 @@ def _is_home_office_usage_ratio_id(value: str | None) -> bool:
         category = SpendingCategory(value.strip())
     except ValueError:
         return False
-    return family_for(category) in _HOME_OFFICE_FAMILIES
+    return family_for(category) in HOME_OFFICE_FAMILIES
 
 
 def _transaction_takes_home_office_ratio(transaction: Transaction) -> bool:

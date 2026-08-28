@@ -69,14 +69,17 @@ from ._registry import (
 )
 from ._spending_category import (
     CATEGORY_FAMILY_MEMBERS,
+    HOME_OFFICE_FAMILIES,
     SpendingCategory,
     SpendingCategoryFamily,
     categories_for_family,
     family_for,
+    home_office_categories,
 )
 
 __all__ = [
     "CATEGORY_FAMILY_MEMBERS",
+    "HOME_OFFICE_FAMILIES",
     "CategoryCitation",
     "CategoryCitationSource",
     "CategoryProfile",
@@ -91,6 +94,7 @@ __all__ = [
     "category_profile_years",
     "effective_usage_ratio",
     "family_for",
+    "home_office_categories",
     "load_category_profiles",
     "load_category_profiles_from_manual",
     "parse_http_url",

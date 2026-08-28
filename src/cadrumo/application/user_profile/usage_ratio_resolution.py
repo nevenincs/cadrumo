@@ -43,7 +43,7 @@ from decimal import Decimal
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...domain.categories import SpendingCategory
 from ...domain.usage_ratios import derive_home_office_ratios_from_censo
-from .censo_sync import CensoSyncService
+from .censo_sync import bound_raw_afectacion_ratio_for_bucket
 
 __all__ = ["resolve_effective_usage_ratios"]
 
@@ -71,9 +71,7 @@ def resolve_effective_usage_ratios(
         stored nothing and declared no dwelling m².
     """
     stored = dict(load_usage_ratios(bucket_id=bucket_id).ratios)
-    raw_afectacion_ratio = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
-        profile_id=bucket_id,
-    )
+    raw_afectacion_ratio = bound_raw_afectacion_ratio_for_bucket(bucket_id)
     if raw_afectacion_ratio is None:
         return stored
     derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year).ratios
