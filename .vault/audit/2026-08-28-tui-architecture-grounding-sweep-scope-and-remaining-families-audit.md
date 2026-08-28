@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:d05f8a055d7fbf837c71e5917b39e1265df0668344eb0f591755a9907c1247d7'
+body_hash: 'sha256:3b91b514cbe7e39ada4fcf70069f04de0bf3cc0528b5d4e3d09470e7b90355e7'
 related: []
 ---
 
@@ -110,3 +110,34 @@ someone else.
 So grounding across the registry is now swept, with the scope caveat above
 retired: the modelo and legal subtrees by the numeric probe, and the remaining
 three by this one.
+
+## Swept clean: the undated-constant-for-an-annual-figure class
+
+The RETA cuota-máxima cap (see above) is a confirmed instance of a distinct
+defect shape, and it is worth knowing whether it had siblings:
+
+> a single undated constant standing in for a figure the law re-fixes each
+> ejercicio, where every real year is higher, so the constant under-states the
+> relief and the taxpayer over-pays.
+
+Swept: 317 single-scalar registry parameters, keeping those that carry no date
+axis, no `valid_from`/`effective_from`, and no per-year rows, whose id or notes
+name a concept Spanish law re-fixes annually (cuota, cotización, SMI, IPREM,
+tope, módulo, escala, límite, umbral).
+
+Twelve candidates surfaced and **all twelve are sound**. Each is a figure fixed
+by article text rather than re-fixed annually, and each says so in its own note:
+the RIRPF art. 95 retención percentages (7 %, 2 %, 1 %), the LIRPF art. 101.2
+reduced administrator rate (19 %) and its 100.000 EUR INCN threshold, the
+RDL 7/2024 DANA simplified-regime reduction (25 %, and its id carries the year),
+plus several non-numeric Modelo 036 activity-code selectors the value filter
+should not have admitted.
+
+So the class has exactly one known instance, already repaired with a dated
+schedule. Recorded so it is not re-swept.
+
+**Residual, stated:** this probe reads the REGISTRY only. The same shape in a
+Python constant — a regulatory magnitude inlined in a feature module — is not
+covered here. `aeat-registry-authority-flow` forbids that placement and an AST
+gate enforces the modelo-identifier case, but the annual-figure case has not been
+checked from the Python side.
