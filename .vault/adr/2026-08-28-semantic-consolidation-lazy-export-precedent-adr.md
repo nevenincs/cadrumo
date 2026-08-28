@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:9834b204956301c2fe02a0d9c591906a091c853b5b1de4c80bf1400ba6529157'
+body_hash: 'sha256:fb4fb8c11ac6aa3edb0cbb8b936599021ee63087be6e6e7a65543e6103e776b8'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -160,6 +160,35 @@ because a namespace containing classes cannot be made inert by deleting a dict.
 `crypto` leads: a true facade, 18 symbols over two owning submodules, 14 importing
 modules of which over 80 per cent are tests. It is the smallest honest proof of the
 mechanics.
+
+ONE OF THE NINE IS NOT A TARGET, AND MEASURING IT IS WHAT SHOWED THAT. `cadrumo/tests`
+carries exactly TWO lazy entries, and its module docstring already argues each one
+individually: both defer a domain surface out of an unrelated test's import graph, and it
+states in terms that the two "are consequently NOT a template" and that a new shared helper
+belongs in a submodule rather than a third row. That is this decision's sanctioned shape
+described in prose -- named symbols, stated reasons -- lacking only the measurement this
+decision requires.
+
+Measured, three runs, fresh interpreter:
+
+| | modules in `sys.modules` | added time |
+|---|---|---|
+| `import cadrumo.tests` | 371 | -- |
+| plus its two deferred targets | 1672 | +2.73 s |
+
+Deferring two names saves 1301 modules and 2.7 seconds for every test module that touches
+any OTHER name on that facade. That is a larger saving than `core`'s entire 357-symbol map,
+from two entries.
+
+So `cadrumo/tests` KEEPS its `__getattr__`. It is not an unmeasured whole-namespace export
+map; it is the bounded exception, applied correctly, and the table above is the record it
+was missing. The retirement population is EIGHT packages and 1112 symbols, not nine and
+1114.
+
+This is worth stating plainly because the campaign nearly deleted the one instance that was
+right. The nine were assembled by searching for a MECHANISM -- `_LAZY_EXPORTS` -- and a
+mechanism census cannot distinguish the sanctioned use from the copied one. Only applying
+this decision's own test, symbol by symbol with a number attached, separates them.
 
 `application/registry` was named the first slice in an earlier draft of this decision, on
 the strength of its 8 importing modules. That was wrong and the survey corrected it: a
