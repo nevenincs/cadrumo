@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:825ddaa102cfd1350c4ac600d4cf0b29004f801b3f8b39f57715418dfd3aabed'
+body_hash: 'sha256:5e98b172a3a361db75da07626cd87af99ff7b925f5e730a44cac184a522100a8'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -287,6 +287,38 @@ submodule imports that bypass `__getattr__` entirely. So unlike `application/reg
 Each package's locally-defined `__init__.py` exports are counted alongside its lazy map
 before that package is called done, because retiring the map alone leaves the namespace
 non-inert and would let the package be recorded as closed while still re-exporting.
+
+## Disposition, settled by measurement
+
+Every package was measured on the two figures that survive scrutiny -- what a real consumer
+pays, and whether the facade is cheaper than importing the owning module directly. The
+result is unanimous and simpler than any intermediate reading of it:
+
+| package | facade | direct | disposition |
+|---|---|---|---|
+| `core` | 69 / 201 / 237 | identical | retire in full |
+| `storage` | 265 / 236 | identical | retire in full |
+| `custody` | 275 | identical | retire in full |
+| `modelos` | 605 of 625 eager | -- | retire in full |
+| `registry` | root eager regardless | -- | retire in full |
+| `filing` | 1267 / 1268 / 1263 | identical | retire in full |
+| `crypto`, `review` | -- | -- | RETIRED |
+| `tests` | 371 against 1672 | -- | EXEMPT |
+
+EIGHT RETIRE, ONE IS EXEMPT, AND NO PACKAGE KEEPS A BOUNDED GUARD. Three intermediate
+rulings -- a guard for `core`, a guard for `filing`, and `application/registry` as the cheap
+first slice -- were each overturned by a later measurement, and each had been reached by
+comparing the facade against the EAGER state rather than against the direct import. Nothing
+imports all of a package's targets at once, so that comparison measures a state no consumer
+occupies.
+
+`cadrumo/tests` is the sole exemption and the reason generalises: its consumers reach
+SUBMODULE paths and never touch its two deferred names, so retiring the map would force two
+domain-bearing fixtures EAGERLY into a namespace every test already imports -- 1301 modules
+onto callers who currently pay none of it. That is the only shape in which a package-level
+`__getattr__` saves anything: the deferral must be realised by a consumer that imports the
+package for some OTHER reason. In the other eight, consumers stop importing the namespace
+entirely, so nothing is forced anywhere.
 
 ## Consequences
 
