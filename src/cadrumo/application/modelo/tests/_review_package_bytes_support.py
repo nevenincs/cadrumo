@@ -15,7 +15,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from ....domain.modelos import CalculationRevision, WorkUnit
+from ....domain.modelos import WorkUnit
+from ....domain.modelos.calculation_revision import CalculationRevision
 from .._review_package import build_review_package
 
 __all__ = ["build_package_bytes", "build_package_path"]

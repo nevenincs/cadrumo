@@ -14,12 +14,11 @@ __all__ = ["isolated_backend"]
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos import (
+from ....domain.modelos import upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision

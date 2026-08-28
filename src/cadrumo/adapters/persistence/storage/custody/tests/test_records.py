@@ -21,23 +21,26 @@ from ......core.credentials import (
     assess_profile_password,
 )
 from ... import __all__ as storage_exports
-from .. import (
-    PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
-    PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
+from .. import __all__ as custody_exports
+from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
-    ProfileCustodyWrappedDek,
-    parse_profile_custody_envelope,
-    profile_custody_path,
 )
-from .. import __all__ as custody_exports
-from .._records import __all__ as record_exports
-from .._records import _decode_profile_password, _encode_profile_password
+from ..paths import profile_custody_path
+from ..records import (
+    PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+    PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+    _decode_profile_password,
+    _encode_profile_password,
+    parse_profile_custody_envelope,
+)
+from ..records import __all__ as record_exports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

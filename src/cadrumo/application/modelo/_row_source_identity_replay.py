@@ -12,7 +12,8 @@ from ...domain.calculations import RowBindingKey
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.filing import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.modelos import CalculationRevision, ModeloValidationError
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloValidationError
 
 
 class ModeloRowSourceFingerprint(BaseModel):

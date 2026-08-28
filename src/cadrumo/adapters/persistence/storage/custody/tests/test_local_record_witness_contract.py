@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import (
-    ProfileCustodyRecordError,
+from ..errors import ProfileCustodyRecordError
+from ..filesystem import (
     clear_profile_custody_local_record,
     compare_and_replace_profile_custody_local_record,
     compare_and_replace_same_or_predecessor_profile_custody_local_record,

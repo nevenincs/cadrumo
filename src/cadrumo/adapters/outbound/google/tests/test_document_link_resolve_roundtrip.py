@@ -110,7 +110,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
 
     from .....adapters.persistence.storage.sql.engine import get_engine
     from .....adapters.persistence.storage.sql.session import session_scope
-    from ....persistence.storage.crypto import (
+    from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,

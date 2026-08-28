@@ -14,7 +14,16 @@ from ....application.user_profile.login_session_port import (
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
 )
-from . import custody, master_key
+from . import master_key
+from .custody.acceleration_receipt import (
+    PersistedProfileSession,
+    advance_persisted_profile_session_idle_deadline,
+    delete_profile_session,
+    mint_profile_session,
+    profile_session_path,
+    resume_profile_session,
+)
+from .custody.zeroise import zeroise
 
 
 def _bucket_session(session: ProfileBucketSessionPort) -> master_key.BucketSession:
@@ -23,8 +32,8 @@ def _bucket_session(session: ProfileBucketSessionPort) -> master_key.BucketSessi
     return session
 
 
-def _persisted_receipt(record: ProfilePersistedSessionPort) -> custody.PersistedProfileSession:
-    if not isinstance(record, custody.PersistedProfileSession):
+def _persisted_receipt(record: ProfilePersistedSessionPort) -> PersistedProfileSession:
+    if not isinstance(record, PersistedProfileSession):
         raise TypeError("acceleration receipt is not owned by the persistence substrate")
     return record
 
@@ -82,7 +91,7 @@ class _PersistenceProfileLoginSession:
         master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
     def acceleration_receipt_path(self, *, storage_root: Path, profile_id: UUID) -> Path:
-        return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
+        return profile_session_path(storage_root=storage_root, profile_id=profile_id)
 
     def mint_acceleration_receipt(
         self,
@@ -96,7 +105,7 @@ class _PersistenceProfileLoginSession:
         idle_minutes: int,
         absolute_minutes: int,
     ) -> ProfilePersistedSessionPort:
-        return custody.mint_profile_session(
+        return mint_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,
             custody_generation=custody_generation,
@@ -116,7 +125,7 @@ class _PersistenceProfileLoginSession:
         dek_epoch: str,
         now: datetime,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return custody.resume_profile_session(
+        return resume_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,
             custody_generation=custody_generation,
@@ -125,7 +134,7 @@ class _PersistenceProfileLoginSession:
         )
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
-        custody.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
+        delete_profile_session(storage_root=storage_root, profile_id=profile_id)
 
     def advance_acceleration_idle_deadline(
         self,
@@ -135,7 +144,7 @@ class _PersistenceProfileLoginSession:
         record: ProfilePersistedSessionPort,
         new_idle_deadline: datetime,
     ) -> ProfilePersistedSessionPort:
-        return custody.advance_persisted_profile_session_idle_deadline(
+        return advance_persisted_profile_session_idle_deadline(
             storage_root=storage_root,
             profile_id=profile_id,
             record=_persisted_receipt(record),
@@ -143,10 +152,10 @@ class _PersistenceProfileLoginSession:
         )
 
     def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        return isinstance(record, custody.PersistedProfileSession)
+        return isinstance(record, PersistedProfileSession)
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
-        custody.zeroise(buffer)
+        zeroise(buffer)
 
 
 def build_profile_login_session_port() -> ProfileLoginSessionPort:

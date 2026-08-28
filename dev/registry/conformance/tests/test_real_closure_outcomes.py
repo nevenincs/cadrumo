@@ -26,12 +26,10 @@ from cadrumo.application.filing import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from cadrumo.application.registry import (
-    compose_filing_export_coverage,
-    compose_source_connectivity_coverage,
-    compose_temporal_coverage,
-    load_source_connectivity_census,
-)
+from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
+from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
+from cadrumo.application.registry.temporal_coverage import compose_temporal_coverage
 from cadrumo.core import (
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,

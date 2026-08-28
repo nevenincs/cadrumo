@@ -51,15 +51,12 @@ from ..application.ledger.actions_manual import update_manual_transaction_fields
 from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.iva import IvaCategory
-from ..domain.modelos import (
+from ..domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ..domain.transactions import (
     BusinessClassification,

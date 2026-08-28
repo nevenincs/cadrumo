@@ -29,17 +29,19 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings

@@ -97,7 +97,10 @@ def _rows(engine, namespace: str) -> list[tuple[object, bytes, bytes]]:
     """Return ``(row, aad, plaintext)`` for every row in ``namespace``."""
     from sqlalchemy import select
 
-    from .....persistence.storage.crypto import decrypt_secure_object_payload, secure_object_payload_aad
+    from .....persistence.storage.crypto.encrypted_columns import (
+        decrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from .....persistence.storage.sql import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
 
@@ -119,7 +122,7 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
     """
     from sqlalchemy import select
 
-    from .....persistence.storage.crypto import encrypt_secure_object_payload
+    from .....persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
     from .....persistence.storage.sql import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
 

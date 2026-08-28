@@ -112,7 +112,7 @@ def test_fingerprint_admits_a_decimal_bearing_domain_model() -> None:
 
 def test_fingerprint_admits_the_real_motivating_calculation_revision_model() -> None:
     """The real production model that surfaced this, not just a synthetic stand-in."""
-    from ....domain.modelos import CalculationRevision
+    from ....domain.modelos.calculation_revision import CalculationRevision
 
     modelo_workspace_projection_schema_fingerprint(CalculationRevision)
 

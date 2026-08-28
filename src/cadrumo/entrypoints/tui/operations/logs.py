@@ -22,7 +22,7 @@ from ....application.operations.frontend_contracts import (
     OperationPublicTerminalEventV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
-from ....application.operations.persistence.replay import OperationReplayStatus
+from ....application.operations.persistence.replay import RESYNCHRONIZING_REPLAY_STATUSES, OperationReplayStatus
 from ....core.operations import OperationEventKind
 
 _LOG_VIEW_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -58,7 +58,7 @@ class OperationModalLogViewV1(BaseModel):
 
     @model_validator(mode="after")
     def _validate_view(self) -> OperationModalLogViewV1:
-        if self.resynchronized != (self.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}):
+        if self.resynchronized != (self.status in RESYNCHRONIZING_REPLAY_STATUSES):
             raise ValueError("modal log resynchronization flag must mirror its replay status")
         if self.resynchronized and self.rows:
             raise ValueError("a resynchronizing modal log view cannot retain stale historical rows")
@@ -92,7 +92,7 @@ def fold_event_page(
     """Fold one public event page into the bounded live/historical log view."""
     if page.operation_id != view.operation_id:
         raise ValueError("modal log view cannot fold a page from a different operation")
-    if page.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+    if page.status in RESYNCHRONIZING_REPLAY_STATUSES:
         assert page.restart_cursor is not None
         return OperationModalLogViewV1(
             operation_id=view.operation_id,

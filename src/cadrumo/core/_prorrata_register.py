@@ -149,10 +149,40 @@ class SectorDiferenciadoLetra(StrEnum):
     D = "d"
 
 
+#: The regimes under which a percentage apportions the deducible cuotas.
+#:
+#: Membership is stated rather than derived as "not NINGUNA" so that adding a
+#: regime is a decision rather than a default. ``test_prorrata_regime.py`` pins
+#: the enum's membership, so a new member reds that test until someone rules on
+#: which side it falls -- silently inheriting either answer would change how
+#: much input IVA a taxpayer deducts.
+_APPORTIONING_REGIMES: frozenset[ProrrataRegisterRegime] = frozenset(
+    {ProrrataRegisterRegime.GENERAL, ProrrataRegisterRegime.ESPECIAL},
+)
+
+
+def regime_apportions_deduction(regime: ProrrataRegisterRegime) -> bool:
+    """Return whether this regime apportions the deducible cuotas by a percentage.
+
+    ``GENERAL`` (LIVA art. 104) and ``ESPECIAL`` (LIVA art. 106) both ration
+    input IVA by a percentage; ``NINGUNA`` leaves the art. 94 full-deduction
+    default standing, so no percentage applies and none should be sought.
+
+    This is the single spelling of that question. It was previously written
+    three ways across the IVA ledger, the Renta ledger and the prorrata
+    regularizacion -- as ``regime not in (GENERAL, ESPECIAL)`` and as
+    ``regime is not NINGUNA`` -- which are equivalent only because the enum has
+    exactly three members, and would have silently diverged the moment it grew
+    a fourth.
+    """
+    return regime in _APPORTIONING_REGIMES
+
+
 __all__ = [
     "ProrrataActivityRowType",
     "ProrrataEspecialTransitionKind",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "SectorDiferenciadoLetra",
+    "regime_apportions_deduction",
 ]

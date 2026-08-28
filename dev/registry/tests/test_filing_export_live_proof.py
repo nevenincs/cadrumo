@@ -13,7 +13,8 @@ from cadrumo.application.filing.tests._export_support import (
     _approved_modelo_200_registry_draft,
     _typed_producer_snapshot,
 )
-from cadrumo.application.registry import FilingExportProofConflictError, compose_filing_export_coverage
+from cadrumo.application.registry.filing_export_authority import FilingExportProofConflictError
+from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.core import (
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,

@@ -12,6 +12,7 @@ never reclassifies lifecycle truth beyond what
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from typing import ClassVar, Literal, override
 
@@ -21,6 +22,7 @@ from textual.binding import Binding
 from textual.containers import ItemGrid, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
+from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
 from ....application.operations.frontend_contracts import (
     OperationCancellationSuccessV1,
@@ -117,6 +119,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         self._log_view: OperationModalLogViewV1 = build_initial_log_view(controller.operation_id)
         self._interaction: OperationModalInteractionStateV1 | None = None
         self._closing = False
+        self._poll_worker: Worker[None] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -137,7 +140,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
 
     def on_mount(self) -> None:
         """Start the bounded observation poll loop as an exclusive worker."""
-        self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
+        self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
 
     async def _poll_loop(self) -> None:
         cursor = self._log_view.next_cursor
@@ -161,6 +164,17 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))
                 return
             await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+
+    async def _stop_poll_worker(self) -> None:
+        """End the poll worker and wait for it, so teardown never races a live poll."""
+        self._closing = True
+        worker = self._poll_worker
+        if worker is None:
+            return
+        self._poll_worker = None
+        worker.cancel()
+        with suppress(WorkerCancelled, WorkerFailed):
+            await worker.wait()
 
     def _refresh_view_state(self) -> None:
         view_model = self._view_model
@@ -263,7 +277,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
             return
         result = await self._controller.detach(expected_revision=view_model.projection.revision)
         if isinstance(result, OperationDetachSuccessV1):
-            self._closing = True
+            # Flagging alone let the screen pop while the worker was still parked
+            # in its sleep or inside the observation read, so teardown raced a live
+            # poller. Stop it and wait for it to actually end before dismissing.
+            await self._stop_poll_worker()
             self.dismiss(
                 OperationModalDetachedOutcomeV1(operation_id=self._controller.operation_id, revision=result.revision)
             )

@@ -31,7 +31,7 @@ from ....filing import (
     ModeloValueKind,
     registry_schema_version,
 )
-from ....modelos import (
+from ....modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,

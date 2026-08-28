@@ -33,7 +33,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....adapters.persistence.storage.custody import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
 from ..capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source
 
 if TYPE_CHECKING:

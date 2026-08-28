@@ -37,7 +37,7 @@ _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
     "cadrumo.adapters.persistence.storage.sql",
     "cadrumo.adapters.persistence.storage.master_key",
     # The capsule machinery: the child is handed framed bytes, never a capsule.
-    "cadrumo.adapters.persistence.storage.custody._capsule",
+    "cadrumo.adapters.persistence.storage.custody.capsule",
 )
 
 

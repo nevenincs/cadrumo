@@ -28,7 +28,7 @@ def test_review_queue_unknown_kind_lists_accepted_set() -> None:
     vocabulary; the parseable-but-empty ``live_notification`` /
     ``sync_divergence`` tokens are intentionally not advertised.
     """
-    from ....application.review import ACCEPTED_KINDS
+    from ....application.review.operator import ACCEPTED_KINDS
 
     result = invoke_cached_cli(["app", "review", "queue", "--kind", "bogus"])
 

@@ -24,7 +24,7 @@ _READ = ExecutionPolicySpec(frozenset({"registry"}), frozenset({"none"}), "compu
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry", "RegistryManualId"))
+_MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
 _PART = ValueContract(DeferredTarget("cadrumo.domain.manuals", "ManualPart"))
 
 

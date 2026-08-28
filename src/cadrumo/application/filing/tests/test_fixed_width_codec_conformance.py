@@ -22,7 +22,7 @@ from ....domain.filing import (
     ModeloDraft,
     registry_schema_version,
 )
-from ....domain.modelos import ModeloExportError
+from ....domain.modelos.errors import ModeloExportError
 from ....domain.submission import ModeloDraftStatus
 from .._export import _RecordRenderRow, _render_record
 from ._export_support import _typed_producer_snapshot

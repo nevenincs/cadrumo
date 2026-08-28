@@ -33,7 +33,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....adapters.persistence.storage.custody import profile_session_path
+from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ....adapters.persistence.storage.master_key import (
     BucketSession,
     bind_active_bucket_session,

@@ -27,12 +27,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from ......core.config import Settings
-from .. import (
-    ProfileCustodyKdfParameters,
-    ProfileCustodyRecordError,
-    create_profile_custody_password_envelope,
-    create_profile_custody_recovery_envelope,
-    create_profile_custody_sentinel,
+from ..capsule import (
     inventory_committed_profile_custody_capsule,
     profile_custody_deletion_path,
     publish_profile_custody_capsule,
@@ -43,6 +38,11 @@ from .. import (
     verify_profile_custody_deletion_tombstone,
     write_profile_custody_deletion_marker,
 )
+from ..envelope import create_profile_custody_password_envelope
+from ..errors import ProfileCustodyRecordError
+from ..records import ProfileCustodyKdfParameters
+from ..recovery import create_profile_custody_recovery_envelope
+from ..sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

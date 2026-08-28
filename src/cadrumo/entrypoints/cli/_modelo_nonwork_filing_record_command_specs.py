@@ -122,7 +122,7 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="evidence_kind",
                 declarations=("--evidence-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.modelos", "ExternalEvidenceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.modelos._filing_record", "ExternalEvidenceKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.filing_record.evidence_kind_help"),
                 multiple=False,

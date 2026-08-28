@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 
 from ...errors import DecryptionError, EncryptionError, KeyDerivationError
-from .._crypto import (
+from ..aead import (
     GCM_TAG_SIZE,
     KEY_SIZE,
     NONCE_SIZE,

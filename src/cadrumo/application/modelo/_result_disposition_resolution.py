@@ -69,7 +69,8 @@ from ...domain.iva import (
     is_last_filing_period_of_year,
     refund_disposition_available,
 )
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,

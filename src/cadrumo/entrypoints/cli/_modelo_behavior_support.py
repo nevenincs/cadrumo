@@ -29,7 +29,8 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
+from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ._common import _no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,

@@ -63,7 +63,7 @@ from ...domain.transactions import (
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )
-from ..review import LedgerReviewStatus
+from ..review.filter import LedgerReviewStatus
 from .actions_common import (
     EventSpec,
     blocking_modelo_references,

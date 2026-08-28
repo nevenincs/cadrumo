@@ -12,9 +12,10 @@ from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import ReviewSeverity, ReviewState
-from .._models import FindingReviewItem
-from .._operator import (
+from ..enums import ReviewSeverity, ReviewState
+from ..errors import ReviewError, ReviewKindReservedError
+from ..models import FindingReviewItem
+from ..operator import (
     ACCEPTED_KINDS,
     ReviewQueueRow,
     _resolve_internal_kinds,
@@ -22,7 +23,6 @@ from .._operator import (
     _to_row,
     project_review_item,
 )
-from ..errors import ReviewError, ReviewKindReservedError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

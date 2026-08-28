@@ -59,7 +59,10 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import M303Exonerado390FilingEvidence, M303RegimenSimplificadoFilingEvidence
+from ....domain.modelos.calculation_revision import (
+    M303Exonerado390FilingEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 from ....domain.prorrata_register import ProrrataRegister
 from ....domain.submission import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival

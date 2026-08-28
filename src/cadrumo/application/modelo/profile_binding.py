@@ -67,7 +67,7 @@ from ...domain.contribuyente import (
     marriage_full_year,
     marriage_month_start,
 )
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.registry_contract import profile_binding_selectors

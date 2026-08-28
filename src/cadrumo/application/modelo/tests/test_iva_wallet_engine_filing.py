@@ -12,7 +12,8 @@ from pydantic import SecretStr
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import AuthProviderKind
 from ....core.config import Settings
-from ....domain.modelos import CalculationRevisionState, ModeloRecordStatus
+from ....domain.modelos import ModeloRecordStatus
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests import general_m303_filing_evidence
 from ...calculations import (
     CalculationObservationRepository,

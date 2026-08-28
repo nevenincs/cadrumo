@@ -19,7 +19,7 @@ from ...domain.iva import (
     is_last_filing_period_of_year,
     validate_regimen_simplificado_rows,
 )
-from ...domain.modelos import (
+from ...domain.modelos.calculation_revision import (
     M303DANA2024EligibilityEvidence,
     M303DANA2024ReductionResult,
     M303RegimenSimplificadoActivityCalculationResult,

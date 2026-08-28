@@ -264,6 +264,12 @@ class BindingSourceKind(StrEnum):
     PREVIOUS_FILING = "previous_filing"
     RELATION_PREFILL = "relation_prefill"
     MANUAL_INPUT = "manual_input"
+    # A byte run whose value AEAT fixes in the diseno de registro itself -- the
+    # record-type marker, the modelo number, a sheet discriminator. Distinct from
+    # MANUAL_INPUT because no operator supplies it: routing a constant through the
+    # manual channel makes it answerable-blank, and a blank emits behind a valid
+    # digest. The value rides on the binding selector; see design_constant_bindings.
+    DESIGN_CONSTANT = "design_constant"
     # Ledger-aggregation sources (all five ledger kinds).
     LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
     LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
@@ -453,14 +459,22 @@ evidence row, or a payable/collectible invoice. Replaces the former
 ``AggregationSourceKind``-derived subset, which was deleted in the same change.
 """
 
-COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
-    {
-        BindingSourceKind.LEDGER_TRANSACTION,
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        BindingSourceKind.PAYABLE_INVOICE,
-        BindingSourceKind.COLLECTIBLE_INVOICE,
-    },
+COUNTERPART_SOURCE_KIND_ORDER: Final[tuple[CounterpartSourceKind, ...]] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
+"""Operator-facing display order for :data:`COUNTERPART_SOURCE_KINDS`.
+
+This is the order the ``--kind`` help text and alias table present to an
+operator (documented in ``docs/how-to/review-queue.md``), so it is
+authoritative and MUST NOT be reordered incidentally.
+:data:`COUNTERPART_SOURCE_KINDS` derives its membership from this tuple so
+the two can never drift apart.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(COUNTERPART_SOURCE_KIND_ORDER)
 
 
 def counterpart_source_kind(value: object) -> CounterpartSourceKind:

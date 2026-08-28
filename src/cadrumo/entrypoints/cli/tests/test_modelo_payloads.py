@@ -22,12 +22,11 @@ from pydantic import ValidationError
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.modelos import (
+from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
     derive_calculation_revision_id,
 )
 from .._modelo_payloads import (

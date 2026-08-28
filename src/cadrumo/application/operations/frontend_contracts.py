@@ -19,6 +19,7 @@ from ...core import (
     OperationTerminalCondition,
 )
 from ...core.identity import ContentDigest
+from ...core.operations import LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
 from ...core.time import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
@@ -32,7 +33,12 @@ from .models import (
     OperationRevision,
     validate_terminal_reference_meaning,
 )
-from .persistence.replay import OperationReplayLimit, OperationReplayStatus
+from .persistence.replay import (
+    RESYNCHRONIZING_REPLAY_STATUSES,
+    OperationReplayLimit,
+    OperationReplayStatus,
+    PublicReplayStatus,
+)
 from .registry import (
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
@@ -397,13 +403,7 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("public cleanup deadline and cancellation request must be declared together")
         if self.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not self.cancellation_requested:
             raise ValueError("cancellation-requested lifecycle requires its declared request fact")
-        if self.cancellation_requested and self.lifecycle in {
-            OperationLifecycle.CREATED,
-            OperationLifecycle.QUEUED,
-            OperationLifecycle.RUNNING,
-            OperationLifecycle.WAITING_FOR_INTERACTION,
-            OperationLifecycle.WAITING_FOR_EXTERNAL,
-        }:
+        if self.cancellation_requested and self.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
             raise ValueError("public cancellation request disagrees with the current lifecycle")
         if self.cancellation_acknowledged and not self.cancellation_requested:
             raise ValueError("cancellation acknowledgement requires a cancellation request")
@@ -539,12 +539,7 @@ class OperationPublicEventPageV1(BaseModel):
     operation_id: OperationId
     anchor_cursor: OperationEventCursor
     requested_cursor: OperationEventCursor
-    status: Literal[
-        OperationReplayStatus.PAGE,
-        OperationReplayStatus.CAUGHT_UP,
-        OperationReplayStatus.EXPIRED,
-        OperationReplayStatus.COMPACTED,
-    ]
+    status: PublicReplayStatus
     events: tuple[OperationPublicEventV1, ...]
     next_cursor: OperationEventCursor
     restart_cursor: OperationEventCursor | None
@@ -571,7 +566,7 @@ class OperationPublicEventPageV1(BaseModel):
                 or self.restart_cursor is not None
             ):
                 raise ValueError("caught-up public event page must equal its observation anchor cursor")
-        else:
+        elif self.status in RESYNCHRONIZING_REPLAY_STATUSES:
             if self.events or self.restart_cursor is None or self.next_cursor != self.restart_cursor:
                 raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
             if self.restart_cursor <= self.requested_cursor:

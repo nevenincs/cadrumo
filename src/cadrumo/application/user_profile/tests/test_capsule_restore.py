@@ -12,10 +12,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    parse_profile_custody_recovery_envelope,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.recovery import parse_profile_custody_recovery_envelope
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..capsule_restore import (
     ProfileCapsuleSourceError,

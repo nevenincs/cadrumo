@@ -41,7 +41,7 @@ from cadrumo.application.filing import (
 from cadrumo.application.filing import (
     FilingExportProof as TwoChannelFilingExportProof,
 )
-from cadrumo.application.registry import (
+from cadrumo.application.registry.filing_export_authority import (
     FilingExportProof,
     FilingExportProofConflictError,
 )

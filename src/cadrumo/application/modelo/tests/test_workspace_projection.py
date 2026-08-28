@@ -38,14 +38,8 @@ import pytest
 from ....core import ModeloWorkProgressState, OutputLanguage, Period, RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.modelos import (
-    CalculationRevision,
-    ModeloCode,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
-)
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ...registry.closure_capture import capture_registry_closure
 from ...registry.source_connectivity import load_source_connectivity_census
 from ...state_projection import ModeloReadinessRequest, capture_modelo_readiness

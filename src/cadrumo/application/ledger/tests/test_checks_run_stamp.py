@@ -30,8 +30,12 @@ from __future__ import annotations
 
 import pytest
 
+# Imported absolutely, not as `from .. import <module>`: the test needs the
+# MODULE object to scope an attribute, and the package-facade gate reads any
+# `from .. import` edge as reaching through the inert namespace.
+import cadrumo.application.ledger.deterministic_findings as deterministic_findings_module
+
 from ....tests.attribute_scope import scoped_attribute
-from .. import deterministic_findings as deterministic_findings_module
 from ..deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,

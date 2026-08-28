@@ -67,7 +67,7 @@ def test_a_capsule_directory_restores_into_a_fresh_storage_root(tmp_path: Path) 
     the records rather than recovered them, and every cross-period reference
     the operator holds would dangle.
     """
-    from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+    from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
     source_root = tmp_path / "source-root"
     with isolated_profile_storage_root(tmp_path=source_root):
@@ -159,7 +159,7 @@ def test_an_artifact_restore_warns_that_the_credential_did_not_come_back(tmp_pat
     """
     from uuid import UUID as _UUID
 
-    from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+    from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
     from ....application.user_profile.recovery_custody import (
         ProfileRecoveryEnrollment,
         export_profile_recovery_artifact,

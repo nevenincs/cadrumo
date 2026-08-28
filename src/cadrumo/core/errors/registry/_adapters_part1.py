@@ -348,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.custody._acceleration_receipt.AccelerationReceiptRevocationError",
+        "cadrumo.adapters.persistence.storage.custody.acceleration_receipt.AccelerationReceiptRevocationError",
         ErrorCode(
             code="FAIL_ACCELERATION_RECEIPT_REVOCATION",
             category=ErrorCategory.FAIL,

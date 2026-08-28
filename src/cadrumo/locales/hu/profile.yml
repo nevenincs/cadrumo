@@ -367,6 +367,8 @@ profile:
       taxpayer_type:
         country_of_fiscal_residence:
           label: Adóügyi illetőség országa
+        declaration_roles:
+          label: Harmadik feles bevallói szerepkörök (347-es modell)
         entity_type:
           label: Adózó típusa
         fiscal_residency:

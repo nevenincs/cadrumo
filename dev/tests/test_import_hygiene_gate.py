@@ -90,7 +90,10 @@ from __future__ import annotations
 
 import ast
 import importlib
+import os
 import pkgutil
+import shutil
+import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import cache
@@ -1340,9 +1343,31 @@ def _enclosing_function(path: Path, lineno: int) -> str:
     return enclosing
 
 
+@cache
+def _tracked_pkg_py_files() -> tuple[Path, ...]:
+    """Return every TRACKED ``.py`` file in the shipped package.
+
+    A filesystem walk also picks up untracked and mid-relocation files, which
+    are by definition not shipped, so a peer's uncommitted work would otherwise
+    contribute to whether a gate over this set passes. ``git ls-files`` is the
+    shipped set.
+    """
+    executable = shutil.which("git")
+    assert executable is not None, "git is required to enumerate the shipped source set"
+    completed = subprocess.run(  # noqa: S603 - git resolved from PATH like every other dev gate
+        [executable, "ls-files", "-z", "--", PKG_ROOT.relative_to(REPO_ROOT).as_posix()],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    entries = completed.stdout.split("\x00")
+    return tuple(sorted(REPO_ROOT / entry for entry in entries if entry.endswith(".py")))
+
+
 def _live_tui_boundary_violations() -> list[TuiBoundaryViolation]:
-    """Scan every shipped source file, not merely the components subtree."""
-    return find_tui_boundary_violations(sorted(PKG_ROOT.rglob("*.py")), src_root=REPO_ROOT / "src")
+    """Scan every tracked source file in the shipped package, not merely the components subtree."""
+    return find_tui_boundary_violations(_tracked_pkg_py_files(), src_root=REPO_ROOT / "src")
 
 
 def test_no_production_module_reaches_the_tui_outside_a_declared_launch_seam() -> None:
@@ -1356,6 +1381,38 @@ def test_no_production_module_reaches_the_tui_outside_a_declared_launch_seam() -
     ]
 
     assert unexempt == [], f"undeclared TUI reach: {[(v.importer_path, v.lineno, v.target) for v in unexempt]}"
+
+
+def test_the_boundary_gate_judges_tracked_files_and_ignores_untracked_ones() -> None:
+    """An untracked file is not shipped, so a peer's uncommitted work cannot decide this gate.
+
+    The denominator was a filesystem walk, which admitted untracked and
+    mid-relocation files while the docstring claimed it scanned shipped source.
+    Both halves are asserted: the probe genuinely violates the boundary when
+    handed to the scanner directly, and it is still absent from the live set.
+    """
+    # Warm the sibling filesystem walk BEFORE the probe exists, so its memo
+    # cannot capture the probe and leak it into another gate in this worker.
+    _scanned_py_files()
+
+    # Unique per process: two concurrent pytest runs share this worktree.
+    probe = PKG_ROOT / f"_untracked_tui_boundary_probe_{os.getpid()}.py"
+    assert not probe.exists(), f"{probe} already exists; refusing to overwrite another writer's file"
+
+    probe.write_text("import textual\n", encoding="utf-8")
+    try:
+        direct = find_tui_boundary_violations([probe], src_root=REPO_ROOT / "src")
+        assert direct, "the probe must violate the boundary, or the exclusion below proves nothing"
+
+        _tracked_pkg_py_files.cache_clear()
+        assert probe not in _tracked_pkg_py_files(), "an untracked file reached the shipped denominator"
+        leaked = [v for v in _live_tui_boundary_violations() if v.importer_path.endswith(probe.name)]
+        assert leaked == [], "an untracked file contributed a violation to the gate verdict"
+    finally:
+        probe.unlink(missing_ok=True)
+        _tracked_pkg_py_files.cache_clear()
+
+    assert PKG_ROOT / "core" / "config.py" in _tracked_pkg_py_files()
 
 
 def test_every_declared_launch_seam_still_names_a_real_import() -> None:

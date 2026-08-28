@@ -32,7 +32,8 @@ from ...core import Modelo
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 
 _LOG = get_logger(__name__)
 

@@ -7,15 +7,12 @@ from datetime import datetime
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations

@@ -49,16 +49,10 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import (
-    FindingReviewItem,
-    InvoiceReviewItem,
-    ReviewSeverity,
-    ReviewSourceLoadError,
-    TransactionReviewItem,
-    drafts_pending,
-    invoices_pending,
-    transactions_pending,
-)
+from .._adapters import drafts_pending, invoices_pending, transactions_pending
+from ..enums import ReviewSeverity
+from ..errors import ReviewSourceLoadError
+from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

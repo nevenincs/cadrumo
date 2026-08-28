@@ -22,10 +22,8 @@ from ....adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.i18n import tr
 from ....core.time import now

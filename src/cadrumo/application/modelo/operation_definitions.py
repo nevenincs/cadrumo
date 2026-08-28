@@ -50,13 +50,11 @@ from ...core.identity import (
 from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import (
-    CalculationRevisionAmendmentKind,
     M184Clave,
     M184ClaveDeclarado,
     M184NaturalezaInmueble,
     M184SituacionInmueble,
     M184Subclave,
-    M303RectificativaMotive,
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
@@ -65,6 +63,7 @@ from ...domain.modelos import (
     Modelo349RectificacionRow,
     ModeloCode,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

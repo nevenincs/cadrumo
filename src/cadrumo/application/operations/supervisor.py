@@ -23,6 +23,7 @@ from ...core import (
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
+from ...core.operations import LIFECYCLES_BEFORE_EXECUTOR_ENTRY
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .capabilities import OperationRequestStoragePolicy
@@ -819,7 +820,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._require_cleanup_timeout(cancellation)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             raise ValueError("terminal operation cannot receive a cancellation request")
-        if snapshot.lifecycle in {OperationLifecycle.CREATED, OperationLifecycle.QUEUED}:
+        if snapshot.lifecycle in LIFECYCLES_BEFORE_EXECUTOR_ENTRY:
             raise ValueError("operation must be running before cancellation can be requested")
         if snapshot.cancellation_requested_at is not None:
             return snapshot
@@ -976,10 +977,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         condition: OperationTerminalCondition,
     ) -> None:
         """Require local stop proof before a terminal condition claims work is over."""
-        if snapshot.executor_entered_at is None or snapshot.lifecycle in {
-            OperationLifecycle.CREATED,
-            OperationLifecycle.QUEUED,
-        }:
+        if snapshot.executor_entered_at is None or snapshot.lifecycle in LIFECYCLES_BEFORE_EXECUTOR_ENTRY:
             return
         executor_task = self._executor_tasks.get(snapshot.identity.operation_id)
         if executor_task is None or not executor_task.done():

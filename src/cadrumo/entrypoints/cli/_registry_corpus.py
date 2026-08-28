@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ...application.registry import (
+from ...application.registry.corpus import (
     RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
     RegistryCitationShowReport,

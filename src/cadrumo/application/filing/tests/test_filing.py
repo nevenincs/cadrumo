@@ -39,7 +39,6 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     ModeloCalculateError,
-    _binding_provenance,
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
@@ -50,6 +49,7 @@ from .. import (
     refresh_review_status,
     validate_draft,
 )
+from .._draft_construction import _binding_provenance
 from ..conftest import _BUCKET_ID
 from ..runtime import ModeloOperatorProfile
 

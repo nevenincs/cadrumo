@@ -36,7 +36,7 @@ from .storage import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
-from .storage.crypto import secure_object_key_digest
+from .storage.crypto.encrypted_columns import secure_object_key_digest
 
 _logger = get_logger(__name__)
 

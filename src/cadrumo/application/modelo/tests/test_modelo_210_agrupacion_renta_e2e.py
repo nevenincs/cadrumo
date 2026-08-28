@@ -16,7 +16,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import M210PayerMode, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
+from ....domain.modelos import Modelo210AgrupacionRentaRow
+from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli

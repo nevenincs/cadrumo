@@ -16,43 +16,40 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings
-from .. import (
-    PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfCalibration,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyKdfResources,
+from .._kdf_attestation import parse_ready_attestation
+from .._kdf_process import apply_posix_worker_limits, worker_environment
+from .._kdf_process import terminate_process_tree as _terminate_process_tree
+from .._kdf_windows_job import _WindowsJob
+from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
-    ProfileCustodySentinelRecord,
+)
+from ..kdf_supervision import (
+    KDF_FRAME_CONTROL,
+    KDF_FRAME_HEADER,
+    KDF_FRAME_MAGIC,
+    KDF_FRAME_VERSION,
+    PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
+    ProfileCustodyKdfCalibration,
+    ProfileCustodyKdfResources,
+    _select_profile_kdf_calibration,
+    _SupervisedKdfWorker,
     calibrate_profile_kdf,
     fixed_profile_kdf_fallback,
-    parse_profile_custody_envelope,
-    parse_profile_custody_sentinel_record,
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
     propose_profile_kdf_ratchet,
+    read_kdf_frame,
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,
     wrap_profile_custody_password_material,
     wrap_profile_custody_recovery_material,
 )
-from .._kdf_attestation import parse_ready_attestation
-from .._kdf_process import apply_posix_worker_limits, worker_environment
-from .._kdf_process import terminate_process_tree as _terminate_process_tree
-from .._kdf_supervision import (
-    KDF_FRAME_CONTROL,
-    KDF_FRAME_HEADER,
-    KDF_FRAME_MAGIC,
-    KDF_FRAME_VERSION,
-    _select_profile_kdf_calibration,
-    _SupervisedKdfWorker,
-    read_kdf_frame,
-)
-from .._kdf_windows_job import _WindowsJob
+from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, parse_profile_custody_envelope
+from ..sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -177,7 +174,7 @@ from pathlib import Path
 import sys
 import time
 
-from cadrumo.adapters.persistence.storage.custody import profile_kdf_lease
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import profile_kdf_lease
 
 with profile_kdf_lease(deadline=time.monotonic() + 30):
     print("leased", flush=True)

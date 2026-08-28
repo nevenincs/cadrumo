@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.filing import ModeloBuilderError
-from ...filing import _binding_input
+from ...filing._draft_construction import _binding_input
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

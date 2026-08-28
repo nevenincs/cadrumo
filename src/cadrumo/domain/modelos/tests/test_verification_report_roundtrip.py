@@ -21,12 +21,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, SensitivityClass
 from ....core import CasillaId, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
 from .._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -37,6 +31,12 @@ from .._verification_report import (
     derive_verification_report_id,
 )
 from .._verification_repository import VerificationReportPersistenceError
+from ..calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

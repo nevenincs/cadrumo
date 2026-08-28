@@ -75,7 +75,6 @@ from . import (
     SecureObjectRepository,
     bucket,
     crypto,
-    custody,
     generate_recovery_key,
     master_key,
     secure_object_repository_for_active_bucket,
@@ -83,6 +82,70 @@ from . import (
     secure_object_repository_for_staged_bucket,
 )
 from ._kdf_salt import KDF_SALT_BYTES
+from .custody._filesystem_primitives import ensure_profile_custody_local_directory
+from .custody.capsule import (
+    inventory_committed_profile_custody_capsule,
+    inventory_staged_profile_custody_capsule,
+    list_current_profile_custody_capsule_ids,
+    list_current_profile_custody_capsule_summary_witnesses,
+    load_committed_profile_custody_label_record,
+    load_committed_profile_password_material,
+    load_staged_profile_custody_label_record,
+    profile_custody_deletion_path,
+    profile_custody_staging_path,
+    publish_profile_custody_capsule,
+    publish_staged_profile_custody_capsule,
+    recognize_current_profile_capsule,
+    remove_profile_custody_deletion_tombstone,
+    rename_profile_custody_capsule_for_deletion,
+    replace_committed_profile_custody_envelope,
+    verify_profile_custody_deletion_marker,
+    verify_profile_custody_deletion_tombstone,
+    write_profile_custody_deletion_marker,
+)
+from .custody.capsule_records import PROFILE_CUSTODY_LABEL_FILENAME, ProfileCustodyCapsuleLabel
+from .custody.envelope import create_profile_custody_password_envelope
+from .custody.errors import (
+    ProfileCustodyConcurrentCapsuleChangeError,
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
+)
+from .custody.filesystem import (
+    PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
+    clear_profile_custody_local_record,
+    compare_and_clear_profile_custody_local_record,
+    compare_and_replace_profile_custody_local_record,
+    compare_and_replace_same_or_predecessor_profile_custody_local_record,
+    profile_custody_local_lock,
+    profile_custody_root_lock,
+    read_optional_profile_custody_local_record,
+    read_profile_custody_local_record,
+    write_profile_custody_local_record,
+)
+from .custody.kdf_supervision import calibrate_profile_kdf, unlock_profile_custody
+from .custody.label_head_repository import ProfileLabelHeadRepository
+from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope
+from .custody.recovery import (
+    PROFILE_CUSTODY_RECOVERY_FILENAME,
+    ProfileCustodyRecoveryEnvelope,
+    create_profile_custody_recovery_envelope,
+)
+from .custody.recovery_artifact import (
+    export_profile_custody_recovery_artifact,
+    import_profile_custody_recovery_artifact,
+    unlock_imported_profile_custody_recovery_artifact,
+)
+from .custody.sentinel import (
+    PROFILE_CUSTODY_SENTINEL_FILENAME,
+    PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
+    create_profile_custody_sentinel,
+)
+from .custody.sentinel_contract import (
+    ProfileCustodySentinelRecord,
+    parse_profile_custody_sentinel_record,
+    verify_profile_custody_sentinel,
+)
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -109,25 +172,25 @@ def _substrate_handle[T](value: object, expected: type[T], subject: str) -> T:
 
 class _PersistenceProfileCustodyLocalRecordStore:
     def ensure_directory(self, path: Path) -> None:
-        custody.ensure_profile_custody_local_directory(path)
+        ensure_profile_custody_local_directory(path)
 
     def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        return custody.profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
+        return profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
 
     def root_lock(self, root: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        return custody.profile_custody_root_lock(root, timeout_seconds=timeout_seconds)
+        return profile_custody_root_lock(root, timeout_seconds=timeout_seconds)
 
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
-        return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
+        return read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
     def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
+        return read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
     def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
-        custody.write_profile_custody_local_record(path, payload, publish_once=publish_once)
+        write_profile_custody_local_record(path, payload, publish_once=publish_once)
 
     def clear(self, path: Path) -> None:
-        custody.clear_profile_custody_local_record(path)
+        clear_profile_custody_local_record(path)
 
     def compare_and_replace(
         self,
@@ -137,7 +200,7 @@ class _PersistenceProfileCustodyLocalRecordStore:
         replacement: bytes,
         maximum_bytes: int,
     ) -> None:
-        custody.compare_and_replace_profile_custody_local_record(
+        compare_and_replace_profile_custody_local_record(
             path,
             expected=expected,
             replacement=replacement,
@@ -152,7 +215,7 @@ class _PersistenceProfileCustodyLocalRecordStore:
         predecessor: bytes | None,
         maximum_bytes: int,
     ) -> None:
-        custody.compare_and_replace_same_or_predecessor_profile_custody_local_record(
+        compare_and_replace_same_or_predecessor_profile_custody_local_record(
             path,
             current=current,
             predecessor=predecessor,
@@ -160,7 +223,7 @@ class _PersistenceProfileCustodyLocalRecordStore:
         )
 
     def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
-        custody.compare_and_clear_profile_custody_local_record(path, expected=expected, maximum_bytes=maximum_bytes)
+        compare_and_clear_profile_custody_local_record(path, expected=expected, maximum_bytes=maximum_bytes)
 
 
 class _PersistenceProfileBucketStorage:
@@ -441,35 +504,35 @@ class _PersistenceProfileCustody:
         database_bytes: bytes,
     ) -> ProfileCustodyCapsuleSourceMaterial:
         return ProfileCustodyCapsuleSourceMaterial(
-            password_envelope=custody.parse_profile_custody_envelope(envelope_bytes),
-            sentinel=custody.parse_profile_custody_sentinel_record(sentinel_bytes),
+            password_envelope=parse_profile_custody_envelope(envelope_bytes),
+            sentinel=parse_profile_custody_sentinel_record(sentinel_bytes),
             database_bytes=database_bytes,
         )
 
     def read_capsule_source(self, source: Path) -> ProfileCustodyCapsuleSourceMaterial:
         def required(relative: Path, maximum_bytes: int, subject: str) -> bytes:
             try:
-                return custody.read_profile_custody_local_record(source / relative, maximum_bytes=maximum_bytes)
+                return read_profile_custody_local_record(source / relative, maximum_bytes=maximum_bytes)
             except Exception as exc:
                 raise ValueError(f"capsule source is missing or has an invalid {subject}") from exc
 
-        envelope = custody.parse_profile_custody_envelope(
+        envelope = parse_profile_custody_envelope(
             required(
                 _capsule_relative(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE),
-                custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+                PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
                 "password envelope",
             )
         )
-        sentinel = custody.parse_profile_custody_sentinel_record(
+        sentinel = parse_profile_custody_sentinel_record(
             required(
-                _capsule_relative(StorageCategory.PROFILE_CAPSULE_DATA) / custody.PROFILE_CUSTODY_SENTINEL_FILENAME,
-                custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
+                _capsule_relative(StorageCategory.PROFILE_CAPSULE_DATA) / PROFILE_CUSTODY_SENTINEL_FILENAME,
+                PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
                 "DEK sentinel",
             )
         )
         database_bytes = required(
             _capsule_relative(StorageCategory.BUCKET_DATABASE_FILE),
-            custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
+            PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
             "profile database",
         )
         return ProfileCustodyCapsuleSourceMaterial(envelope, sentinel, database_bytes)
@@ -480,30 +543,30 @@ class _PersistenceProfileCustody:
         *,
         root: Path | None = None,
     ) -> ProfileCustodyInventoryPort:
-        return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
+        return inventory_committed_profile_custody_capsule(profile_id, root=root)
 
     def create_capsule_label(self, *, profile_id: UUID, label: str) -> ProfileCustodyCapsuleLabelPort:
-        return custody.ProfileCustodyCapsuleLabel.create(profile_id=profile_id, label=label)
+        return ProfileCustodyCapsuleLabel.create(profile_id=profile_id, label=label)
 
     def staging_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
-        return custody.profile_custody_staging_path(
+        return profile_custody_staging_path(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
         )
 
     def deletion_path(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
-        return custody.profile_custody_deletion_path(
+        return profile_custody_deletion_path(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
         )
 
     def committed_capsule_path(self, profile_id: UUID, *, root: Path) -> Path | None:
-        return custody.recognize_current_profile_capsule(profile_id, root=root)
+        return recognize_current_profile_capsule(profile_id, root=root)
 
     def list_committed_profile_ids(self, *, root: Path) -> tuple[UUID, ...]:
-        return custody.list_current_profile_custody_capsule_ids(root=root)
+        return list_current_profile_custody_capsule_ids(root=root)
 
     def list_committed_capsule_summaries(
         self,
@@ -511,14 +574,14 @@ class _PersistenceProfileCustody:
         root: Path,
     ) -> tuple[ProfileCustodyCapsuleSummaryWitnessPort, ...]:
         try:
-            return custody.list_current_profile_custody_capsule_summary_witnesses(root=root)
-        except custody.ProfileCustodyConcurrentCapsuleChangeError as exc:
+            return list_current_profile_custody_capsule_summary_witnesses(root=root)
+        except ProfileCustodyConcurrentCapsuleChangeError as exc:
             raise ProfileCustodyConcurrentChangeError(str(exc)) from exc
-        except custody.ProfileCustodyRecordError as exc:
+        except ProfileCustodyRecordError as exc:
             raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
 
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
-        return custody.load_committed_profile_custody_label_record(profile_id, root=root)
+        return load_committed_profile_custody_label_record(profile_id, root=root)
 
     def verify_or_recover_initial_label_head(
         self,
@@ -528,8 +591,8 @@ class _PersistenceProfileCustody:
         root: Path,
     ) -> ProfileCustodyLabelHeadPort:
         try:
-            repository = custody.ProfileLabelHeadRepository(root=root)
-            custody_label = _substrate_handle(label, custody.ProfileCustodyCapsuleLabel, "capsule label")
+            repository = ProfileLabelHeadRepository(root=root)
+            custody_label = _substrate_handle(label, ProfileCustodyCapsuleLabel, "capsule label")
             repository.recover_pending(profile_id=custody_label.profile_id, current_label=custody_label)
             verified = repository.verify(label=custody_label)
             return (
@@ -537,7 +600,7 @@ class _PersistenceProfileCustody:
                 if verified is not None
                 else repository.publish_initial(label=custody_label, source_witness=source_witness)
             )
-        except custody.ProfileCustodyRecordError as exc:
+        except ProfileCustodyRecordError as exc:
             raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
 
     def load_staged_capsule_label(
@@ -547,7 +610,7 @@ class _PersistenceProfileCustody:
         *,
         root: Path,
     ) -> ProfileCustodyCapsuleLabelPort:
-        return custody.load_staged_profile_custody_label_record(
+        return load_staged_profile_custody_label_record(
             profile_id,
             transaction_id,
             root=root,
@@ -568,26 +631,26 @@ class _PersistenceProfileCustody:
         published_at: datetime,
         stage_initializer: Callable[[Path], None] | None,
     ) -> Path:
-        return custody.publish_profile_custody_capsule(
+        return publish_profile_custody_capsule(
             profile_id=profile_id,
             transaction_id=transaction_id,
             publication_kind=publication_kind,
             password_envelope=_substrate_handle(
                 password_envelope,
-                custody.ProfileCustodyEnvelope,
+                ProfileCustodyEnvelope,
                 "password envelope",
             ),
-            sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+            sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
             data_files={
                 **data_files,
-                custody.PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
+                PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
             },
             recovery_envelope=(
                 None
                 if recovery_envelope is None
                 else _substrate_handle(
                     recovery_envelope,
-                    custody.ProfileCustodyRecoveryEnvelope,
+                    ProfileCustodyRecoveryEnvelope,
                     "recovery envelope",
                 )
             ),
@@ -604,14 +667,14 @@ class _PersistenceProfileCustody:
         transaction_id: UUID,
         root: Path,
     ) -> ProfileCustodyInventoryPort:
-        return custody.inventory_staged_profile_custody_capsule(
+        return inventory_staged_profile_custody_capsule(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
         )
 
     def publish_staged(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
-        return custody.publish_staged_profile_custody_capsule(
+        return publish_staged_profile_custody_capsule(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
@@ -625,7 +688,7 @@ class _PersistenceProfileCustody:
         inventory_digest: str,
         root: Path,
     ) -> None:
-        custody.write_profile_custody_deletion_marker(
+        write_profile_custody_deletion_marker(
             profile_id=profile_id,
             transaction_id=transaction_id,
             inventory_digest=inventory_digest,
@@ -640,7 +703,7 @@ class _PersistenceProfileCustody:
         inventory_digest: str,
         root: Path,
     ) -> None:
-        custody.verify_profile_custody_deletion_marker(
+        verify_profile_custody_deletion_marker(
             profile_id=profile_id,
             transaction_id=transaction_id,
             inventory_digest=inventory_digest,
@@ -655,7 +718,7 @@ class _PersistenceProfileCustody:
         inventory_digest: str,
         root: Path,
     ) -> None:
-        custody.verify_profile_custody_deletion_tombstone(
+        verify_profile_custody_deletion_tombstone(
             profile_id=profile_id,
             transaction_id=transaction_id,
             inventory_digest=inventory_digest,
@@ -663,14 +726,14 @@ class _PersistenceProfileCustody:
         )
 
     def rename_capsule_for_deletion(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> Path:
-        return custody.rename_profile_custody_capsule_for_deletion(
+        return rename_profile_custody_capsule_for_deletion(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
         )
 
     def remove_deletion_tombstone(self, *, profile_id: UUID, transaction_id: UUID, root: Path) -> None:
-        custody.remove_profile_custody_deletion_tombstone(
+        remove_profile_custody_deletion_tombstone(
             profile_id=profile_id,
             transaction_id=transaction_id,
             root=root,
@@ -741,8 +804,8 @@ class _PersistenceProfileCustody:
         salt: bytes,
         password_generation: int,
     ) -> ProfileCustodyRegistrationMaterial:
-        calibration = custody.calibrate_profile_kdf(salt=salt)
-        envelope = custody.create_profile_custody_password_envelope(
+        calibration = calibrate_profile_kdf(salt=salt)
+        envelope = create_profile_custody_password_envelope(
             profile_id=profile_id,
             password=password,
             dek=dek,
@@ -750,7 +813,7 @@ class _PersistenceProfileCustody:
             kdf=calibration.parameters,
             password_generation=password_generation,
         )
-        sentinel = custody.create_profile_custody_sentinel(envelope=envelope, dek=dek)
+        sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
     def create_recovery_enrollment_material(
@@ -761,10 +824,10 @@ class _PersistenceProfileCustody:
         dek_epoch: str,
         salt: bytes,
     ) -> ProfileCustodyRecoveryEnrollmentMaterial:
-        calibration = custody.calibrate_profile_kdf(salt=salt)
+        calibration = calibrate_profile_kdf(salt=salt)
         recovery_key = generate_recovery_key()
         try:
-            envelope = custody.create_profile_custody_recovery_envelope(
+            envelope = create_profile_custody_recovery_envelope(
                 profile_id=profile_id,
                 recovery_secret=recovery_key.mnemonic,
                 dek=dek,
@@ -786,13 +849,13 @@ class _PersistenceProfileCustody:
         target: Path,
     ) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
         return _recovery_artifact_receipt(
-            custody.export_profile_custody_recovery_artifact(
-                _substrate_handle(recovery_envelope, custody.ProfileCustodyRecoveryEnvelope, "recovery envelope"),
+            export_profile_custody_recovery_artifact(
+                _substrate_handle(recovery_envelope, ProfileCustodyRecoveryEnvelope, "recovery envelope"),
                 current_password=current_password,
                 password_envelope=_substrate_handle(
-                    password_envelope, custody.ProfileCustodyEnvelope, "password envelope"
+                    password_envelope, ProfileCustodyEnvelope, "password envelope"
                 ),
-                sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+                sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
                 target=target,
             )
         )
@@ -806,13 +869,13 @@ class _PersistenceProfileCustody:
         expected_dek_epoch: str,
         sentinel: ProfileCustodySentinelPort,
     ) -> ProfileCustodyRecoveryUnlockPort:
-        substrate_sentinel = _substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel")
-        artifact = custody.import_profile_custody_recovery_artifact(
+        substrate_sentinel = _substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel")
+        artifact = import_profile_custody_recovery_artifact(
             source,
             expected_profile_id=expected_profile_id,
             expected_dek_epoch=expected_dek_epoch,
         )
-        return custody.unlock_imported_profile_custody_recovery_artifact(
+        return unlock_imported_profile_custody_recovery_artifact(
             artifact,
             recovery_secret,
             sentinel=substrate_sentinel,
@@ -828,15 +891,15 @@ class _PersistenceProfileCustody:
         dek_epoch: str,
         sentinel: ProfileCustodySentinelPort,
     ) -> None:
-        custody.verify_profile_custody_sentinel(
+        verify_profile_custody_sentinel(
             dek=dek,
             profile_id=profile_id,
             dek_epoch=dek_epoch,
-            sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+            sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
         )
 
     def recovery_envelope_path(self, capsule_path: Path) -> Path:
-        return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME
+        return capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
 
     def unlock_password(
         self,
@@ -844,10 +907,10 @@ class _PersistenceProfileCustody:
         *,
         password: str,
     ) -> ProfileCustodyUnlockPort:
-        return custody.unlock_profile_custody(
-            _substrate_handle(material.envelope, custody.ProfileCustodyEnvelope, "password envelope"),
+        return unlock_profile_custody(
+            _substrate_handle(material.envelope, ProfileCustodyEnvelope, "password envelope"),
             password,
-            sentinel=_substrate_handle(material.sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+            sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
         )
 
     def replace_password_envelope(
@@ -858,7 +921,7 @@ class _PersistenceProfileCustody:
         rotated: ProfileCustodyEnvelopePort,
         root: Path,
     ) -> None:
-        custody.replace_committed_profile_custody_envelope(
+        replace_committed_profile_custody_envelope(
             profile_id,
             rotated.canonical_json_bytes(),
             expected_sha256=prefixed_digest(current.canonical_json_bytes()),
@@ -871,7 +934,7 @@ class _PersistenceProfileCustody:
         *,
         root: Path | None = None,
     ) -> ProfileCustodyPasswordMaterialPort:
-        return custody.load_committed_profile_password_material(profile_id, root=root)
+        return load_committed_profile_password_material(profile_id, root=root)
 
     def is_authentication_proof_failure(
         self,
@@ -880,14 +943,14 @@ class _PersistenceProfileCustody:
         operation: ProfilePasswordProofOperation,
     ) -> bool:
         expected = (
-            custody.ProfileCustodyRecoverySecretError
+            ProfileCustodyRecoverySecretError
             if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE
-            else custody.ProfileCustodyPasswordError
+            else ProfileCustodyPasswordError
         )
         return isinstance(error, expected)
 
     def refuse_login_without_password_channel(self) -> NoReturn:
-        raise custody.ProfileCustodyPasswordError("profile login requires an explicit password channel")
+        raise ProfileCustodyPasswordError("profile login requires an explicit password channel")
 
     def is_authentication_failure(self, error: BaseException) -> bool:
         return isinstance(error, (KeyringUnavailableError, MasterKeyMaterialMissingError))

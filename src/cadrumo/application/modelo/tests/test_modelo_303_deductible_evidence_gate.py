@@ -28,17 +28,19 @@ from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import InvoiceKind, IvaDeductionClassificationProvenance
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.transactions import (
     BusinessClassification,

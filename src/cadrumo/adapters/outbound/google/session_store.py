@@ -49,7 +49,7 @@ from ....adapters.persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
-from ....adapters.persistence.storage.crypto import secure_object_key_digest
+from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ._impersonation import GoogleCredentialSourceSelection

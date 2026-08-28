@@ -30,7 +30,7 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import profile_session_path
+from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ....core.bucket_pointer import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..registration import ProfileRegistrationError, register_profile_with_credentials

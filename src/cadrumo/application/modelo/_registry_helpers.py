@@ -44,10 +44,7 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ...domain.modelos import (
-    CalculationRevision,
-    derive_calculation_revision_id_from_revision,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
 from ._action_errors import (
     AmendmentOverrideCasillaError,
     AmendmentVerificationRefusedError,

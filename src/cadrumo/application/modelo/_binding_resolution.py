@@ -45,7 +45,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceResolution
 from .borrador_binding import Modelo100BorradorSourceResolver
 from .calculation_route import require_calculation_route_resolver

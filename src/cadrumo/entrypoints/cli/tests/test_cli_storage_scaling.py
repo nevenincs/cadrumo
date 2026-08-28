@@ -32,14 +32,14 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyCapsuleLabel,
+from ....adapters.persistence.storage.custody.capsule import publish_profile_custody_capsule
+from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
-    publish_profile_custody_capsule,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import Settings
 from ....tests.cli_performance import profile_cli_path
 

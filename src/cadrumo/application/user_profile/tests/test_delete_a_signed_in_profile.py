@@ -15,7 +15,7 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..lifecycle import ProfileCapsuleLifecycle
 from ..login_session import login_profile

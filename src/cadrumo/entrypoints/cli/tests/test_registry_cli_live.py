@@ -38,7 +38,7 @@ from ....application.live.remote_state_models import (
     IvaWalletCaptureReport,
     LiveIvaReadStatus,
 )
-from ....application.registry import verify_filed_state
+from ....application.registry.filed_state import verify_filed_state
 from ....core import (
     AuthProviderKind,
     CasillaId,

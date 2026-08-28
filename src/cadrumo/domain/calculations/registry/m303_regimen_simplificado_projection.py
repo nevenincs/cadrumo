@@ -30,7 +30,7 @@ from ...iva import (
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
-    from ...modelos import M303RegimenSimplificadoCalculationResult
+    from ...modelos.calculation_revision import M303RegimenSimplificadoCalculationResult
 
 type _RegimenSimplificadoProjectionRef = (
     M303RegimenSimplificadoActivityProjectionRef

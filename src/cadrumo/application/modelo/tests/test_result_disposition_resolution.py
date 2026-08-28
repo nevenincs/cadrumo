@@ -12,13 +12,11 @@ from ....core.errors import CoreValidationError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from .._result_disposition_resolution import resolve_modelo_result_disposition

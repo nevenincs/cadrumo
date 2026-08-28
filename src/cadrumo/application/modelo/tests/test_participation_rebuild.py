@@ -21,21 +21,23 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ModeloCode,
     ModeloRecord,
     ModeloRecordStatus,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_transaction_participation,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._participation_index_rebuild import rebuild_participation_index

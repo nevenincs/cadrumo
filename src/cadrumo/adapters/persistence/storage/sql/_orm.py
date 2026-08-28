@@ -30,10 +30,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto import (
-    EncryptedString,
-    HashedLookup,
-)
+from ..crypto.encrypted_columns import EncryptedString, HashedLookup
 
 _HASH_HEX_LENGTH = 64
 

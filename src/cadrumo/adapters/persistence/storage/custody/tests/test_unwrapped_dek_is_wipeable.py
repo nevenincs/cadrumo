@@ -26,14 +26,15 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .. import WipeTypeError, zeroise
-from .._acceleration_receipt import (
+from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
     resume_profile_session,
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
 )
+from ..errors import WipeTypeError
+from ..zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

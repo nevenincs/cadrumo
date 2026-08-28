@@ -48,7 +48,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.modelos import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
@@ -110,8 +110,12 @@ def _dependency_inventory_item_payload(
                 filing_year=requirement.filing_year,
                 period=requirement.period,
                 source_casilla_ids=requirement.source_casilla_ids,
+                required_source_casilla_ids=requirement.required_source_casilla_ids,
+                source_presence_groups=requirement.source_presence_groups,
                 origin=requirement.origin.value,
                 origin_ids=requirement.origin_ids,
+                legal_refs=requirement.legal_refs,
+                source_refs=requirement.source_refs,
                 requires_member_fan_in=requirement.requires_member_fan_in,
             )
             for requirement in item.dependencies

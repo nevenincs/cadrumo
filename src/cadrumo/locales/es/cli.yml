@@ -703,6 +703,7 @@ cli:
           activo_extranjero: activo extranjero
           borrador_aeat: borrador de la AEAT
           compensacion_iva_anual: compensación anual del IVA
+          constante_diseno: Constante del diseño de registro
           dato_perfil: dato del perfil
           datos_libro: datos del libro
           decision_compensacion_iva: decisión de compensación de IVA

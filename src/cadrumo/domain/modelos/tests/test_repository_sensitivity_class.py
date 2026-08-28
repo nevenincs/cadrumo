@@ -42,12 +42,8 @@ from ....adapters.persistence.storage import (
 )
 from ....domain.buckets import BucketEventHistoryCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    CalculationRevisionCatalogue,
-    ModeloRecordCatalogue,
-    VerificationReportCatalogue,
-    WorkUnitCatalogue,
-)
+from .. import ModeloRecordCatalogue, VerificationReportCatalogue, WorkUnitCatalogue
+from ..calculation_revision import CalculationRevisionCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -45,7 +45,7 @@ def collect_residue() -> tuple[ResidueCell, ...]:
     Returns:
         The residue, sorted so two runs over an unchanged corpus are identical.
     """
-    from cadrumo.application.registry import compose_temporal_coverage
+    from cadrumo.application.registry.temporal_coverage import compose_temporal_coverage
     from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()

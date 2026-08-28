@@ -525,6 +525,11 @@ def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: P
     assert annual["target_modelo"] == "390"
     assert annual["dependency_count"] >= 4
     assert {dependency["source_modelo"] for dependency in annual["dependencies"]} == {"303"}
+    for dependency in annual["dependencies"]:
+        assert dependency["legal_refs"], "cross-period dependency payload must carry its grounding legal_refs"
+        assert dependency["source_refs"], "cross-period dependency payload must carry its grounding source_refs"
+        assert "required_source_casilla_ids" in dependency
+        assert "source_presence_groups" in dependency
 
 
 def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_backend: Path) -> None:

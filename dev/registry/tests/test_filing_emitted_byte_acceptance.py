@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.registry import compose_filing_export_coverage
 from cadrumo.application.registry.closure import RegistryClosureLimb
+from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.core import Modelo, RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import (

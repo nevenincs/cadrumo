@@ -29,10 +29,10 @@ from ....core import (
     SourceConnectivityProofFailureCause,
     SourceConnectivityResolverOwnershipProof,
 )
-from ....domain.modelos import (
+from ....domain.modelos import CalculationRevisionPersistenceError
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
@@ -41,17 +41,16 @@ from ....entrypoints.cli import current_operator_surface_reconciliation
 from ...aggregation import BindingSourceDisposition
 from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import build_supported_modelo_calculation_workflow_catalogue
-from .. import (
+from ..source_connectivity import SourceConnectivityCensusEntry, load_source_connectivity_census
+from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,
     LiveSourceConnectivityProofAuthority,
     LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,
-    SourceConnectivityCensusEntry,
     build_calculation_route_source_ownership_catalogue,
-    compose_source_connectivity_coverage,
-    load_source_connectivity_census,
 )
+from ..source_connectivity_coverage import compose_source_connectivity_coverage
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

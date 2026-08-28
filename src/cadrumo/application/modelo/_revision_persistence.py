@@ -76,15 +76,8 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.iva import is_m303_annual_settlement_period
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
-    FilingInstanceEvidence,
     LedgerFilingSnapshot,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -93,12 +86,21 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_transaction_participation,
     upsert_work_unit,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceIssue,
+    CalculationSourceRef,
+    FilingInstanceEvidence,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
+    derive_calculation_revision_id,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register import (

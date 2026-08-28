@@ -26,6 +26,8 @@ when it is absent.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
@@ -50,7 +52,7 @@ from ..blob_store import (
     BlobReference,
     EncryptedBlobStore,
 )
-from ..crypto import hkdf_hmac_digest
+from ..crypto.aead import derive_key
 from ..envelope import Envelope
 from ..errors import (
     BlobIntegrityError,
@@ -71,6 +73,21 @@ _log = get_logger(__name__)
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"cadrumo.secret_store.lookup.v1"
 _HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
+
+
+def _hkdf_hmac_digest(master_key: bytes, *, context: bytes, material: bytes) -> bytes:
+    """Return the deterministic HMAC-SHA256 digest of ``material`` under a master-derived sub-key.
+
+    The "keyed lookup digest" recipe this store uses for both its natural-key
+    lookup digest and its value witness: derive a per-consumer 32-byte sub-key
+    from ``master_key`` via HKDF-SHA256 (empty salt, ``context`` as the HKDF
+    info/context), then HMAC-SHA256 ``material`` under that sub-key. Distinct
+    ``context`` values produce unrelated digest spaces from the same master
+    key. This store is the only caller, so the recipe lives here rather than
+    as a shared crypto-package export.
+    """
+    sub_key = derive_key(key_material=master_key, salt=b"", context=context)
+    return hmac.new(sub_key, material, hashlib.sha256).digest()
 
 
 #: The only classes a record in this store may carry. The record model and
@@ -245,7 +262,7 @@ class SecretStore:
 
     def _digest(self, key: str) -> str:
         """Return the HMAC-SHA256 lookup digest for ``key`` as 64 hex chars."""
-        digest = hkdf_hmac_digest(
+        digest = _hkdf_hmac_digest(
             self._master_key(),
             context=_HKDF_CONTEXT_SECRET_LOOKUP,
             material=key.encode(UTF_8_ENCODING),
@@ -255,7 +272,7 @@ class SecretStore:
     def value_witness(self, *, key: str, value: bytes) -> str:
         """Return a master-keyed, non-reversible witness for one key/value request."""
         material = key.encode(UTF_8_ENCODING) + b"\x00" + value
-        digest = hkdf_hmac_digest(
+        digest = _hkdf_hmac_digest(
             self._master_key(),
             context=_HKDF_CONTEXT_SECRET_VALUE_WITNESS,
             material=material,

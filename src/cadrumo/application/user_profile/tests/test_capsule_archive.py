@@ -13,7 +13,7 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..capsule_archive import (
@@ -192,7 +192,7 @@ def test_a_capsule_that_is_not_published_cannot_be_archived(tmp_path: Path) -> N
     """Export reads a committed capsule; there is nothing else to back up."""
     from uuid import uuid4
 
-    from ....adapters.persistence.storage.custody import ProfileCustodyRecordError
+    from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),

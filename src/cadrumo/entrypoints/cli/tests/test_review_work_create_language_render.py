@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.review import ReviewQueueReport
+from ....application.review.operator import ReviewQueueReport
 from ....core.config import override_settings
 from ....tests.clean_install_fixtures import _clean_install
 from .._review import _queue_lines

@@ -98,7 +98,8 @@ if TYPE_CHECKING:
     from ...core import Period
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
+    from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+    from ...domain.modelos.calculation_revision import CalculationRevision
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
     {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
@@ -1098,7 +1099,7 @@ def _select_filed_revision(revisions: tuple[CalculationRevision, ...]) -> Calcul
     by ``updated_at``; falls back to the most recent revision of any state so a
     receipt can still be value-reconciled before the filing is recorded in-app.
     """
-    from ...domain.modelos import CalculationRevisionState
+    from ...domain.modelos.calculation_revision import CalculationRevisionState
 
     if not revisions:
         return None

@@ -10,15 +10,12 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.modelos import (
+from .....domain.modelos import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry, derive_work_unit_id
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    LedgerEvidenceRow,
-    LedgerFilingEvidence,
-    ManualFactBasisEntry,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from .....tests import general_m303_filing_evidence
 from .....tests.secure_objects_fixture import secure_objects

@@ -9,9 +9,9 @@ from uuid import UUID
 import pytest
 
 from ......tests.path_obstruction import obstructed_path
-from .._capsule_records import ProfileCustodyCapsuleLabel
-from .._label_head_repository import ProfileLabelHeadRepository
+from ..capsule_records import ProfileCustodyCapsuleLabel
 from ..errors import ProfileCustodyRecordError
+from ..label_head_repository import ProfileLabelHeadRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

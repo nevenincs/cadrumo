@@ -11,7 +11,8 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
 from ....core import Period
 from ....domain.buckets import BucketEventType
-from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
+from ....domain.modelos import ExternalEvidenceKind
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...calculations import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,

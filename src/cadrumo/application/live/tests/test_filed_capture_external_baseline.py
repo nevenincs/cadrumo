@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo.tests import seed_ready_profile as _seed_ready_profile
 from ....core import CasillaValueKind, validated_casilla_id
-from ....domain.modelos import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...modelo._action_errors import ExternalModeloImportError
 from ...modelo._amendment_actions import amend_modelo_revision

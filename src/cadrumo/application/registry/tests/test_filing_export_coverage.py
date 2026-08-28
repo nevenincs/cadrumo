@@ -24,13 +24,8 @@ from ...filing import (
     FilingExportPublicProvenance,
     FilingExportSecureReplayReceipt,
 )
-from .. import (
-    FilingExportEmissionProof,
-    FilingExportGenerationProof,
-    GeneratedExportFileDigest,
-    compose_filing_export_coverage,
-)
-from .._filing_export_coverage import _filing_export_proof
+from ..filing_export_authority import FilingExportEmissionProof, FilingExportGenerationProof, GeneratedExportFileDigest
+from ..filing_export_coverage import _filing_export_proof, compose_filing_export_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

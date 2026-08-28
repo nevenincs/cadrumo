@@ -12,7 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage.custody import profile_session_path
+from ...adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ...core.bucket_pointer import read_pointer
 from ...core.directory_scan import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session

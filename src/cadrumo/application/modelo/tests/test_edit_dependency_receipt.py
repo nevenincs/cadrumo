@@ -22,13 +22,8 @@ from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_work_unit_id,
-)
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from .. import _edit_execution, _edit_facade, _edit_models, _edit_services, _revision_persistence
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,

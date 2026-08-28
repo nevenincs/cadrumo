@@ -39,15 +39,14 @@ from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
 from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.modelos import (
+from .....domain.modelos import CalculationRevisionPersistenceError, derive_work_unit_id
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
-    derive_work_unit_id,
 )
 from .....tests.secure_objects_fixture import secure_objects
 from .....tests.secure_sql import mutate_encrypted_secure_object_json

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from itertools import pairwise
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -23,6 +23,41 @@ class OperationReplayStatus(StrEnum):
     EXPIRED = "expired"
     COMPACTED = "compacted"
     UNKNOWN_OPERATION = "unknown_operation"
+
+
+type PublicReplayStatus = Literal[
+    OperationReplayStatus.PAGE,
+    OperationReplayStatus.CAUGHT_UP,
+    OperationReplayStatus.EXPIRED,
+    OperationReplayStatus.COMPACTED,
+]
+"""The replay statuses reachable once the operation is known to exist.
+
+:attr:`OperationReplayStatus.UNKNOWN_OPERATION` is excluded because the code
+paths that use this narrower type are structurally unreachable while it could
+apply: the one production site that produces ``UNKNOWN_OPERATION``
+(:func:`~adapters.persistence.operations.journal.OperationJournalRepository.read_after`)
+sits behind an exception boundary one function up from every consumer of this
+alias -- :class:`~application.operations.observation.OperationObservationService`
+catches the corresponding
+:exc:`~application.operations.persistence.journal.OperationObservationUnknownOperationError`
+and returns a typed refusal before ever reaching the code that builds a
+:class:`PublicReplayStatus`-typed projection. This is not "the four statuses
+we happen to use" -- it is the statuses that remain possible once the
+operation-lookup gate has already passed."""
+
+
+RESYNCHRONIZING_REPLAY_STATUSES: frozenset[OperationReplayStatus] = frozenset(
+    {
+        OperationReplayStatus.EXPIRED,
+        OperationReplayStatus.COMPACTED,
+    },
+)
+"""Replay statuses meaning the consumer cannot continue incrementally and
+must resynchronize from an authoritative restart cursor rather than the
+requested one. Every other status (``PAGE``, ``CAUGHT_UP``, and, at the
+adapter boundary, ``UNKNOWN_OPERATION``) can be followed from the requested
+cursor; a status in this set cannot."""
 
 
 def _validate_replay_status_events(status: OperationReplayStatus, events: tuple[OperationEvent, ...]) -> None:
@@ -74,7 +109,7 @@ def _validate_replay_cursor_state(
         if restart_cursor is not None:
             raise ValueError(f"{status.value} replay forbids a restart cursor")
         return
-    if status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+    if status in RESYNCHRONIZING_REPLAY_STATUSES:
         if restart_cursor is None:
             raise ValueError(f"{status.value} replay requires a restart cursor")
         if next_cursor != restart_cursor:

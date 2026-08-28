@@ -34,9 +34,7 @@ from ...domain.calculations.registry.relations import (
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -48,6 +46,7 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     is_receipt_bound_external_evidence,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 from .cross_period_models import (
@@ -995,7 +994,15 @@ def _filing_external_evidence_blockers(
         metadata_filing_id = _clean_metadata_value(
             (observation_source_metadata or {}).get("filing_record_id"),
         )
-        if (
+        # Absent and divergent are different operator situations and must not
+        # collapse: MISSING sends the operator to CAPTURE the register record,
+        # MISMATCHED sends them to RESOLVE a divergence, and asking someone to
+        # reconcile a divergence when nothing was ever captured is wrong
+        # guidance. The receipt-bound branch below already splits these by
+        # testing for None first; this is the same split for the register.
+        if metadata_reference is None and metadata_filing_id is None:
+            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+        elif (
             observation_source_kind != ObservationSourceKind.AEAT_CSV_REGISTER.value
             or metadata_reference != filing.external_evidence.reference_id
             or metadata_filing_id != filing.filing_record_id

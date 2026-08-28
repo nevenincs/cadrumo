@@ -85,10 +85,10 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.filing import (
     ModeloOperatorProfile,
-    _filing_period_date,
     build_draft,
     build_runtime_schema_provider,
 )
+from ....application.filing._draft_construction import _filing_period_date
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority

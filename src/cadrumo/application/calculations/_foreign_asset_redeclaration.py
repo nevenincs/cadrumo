@@ -41,11 +41,11 @@ from ...domain.calculations.registry.bindings_previous_filing import previous_fi
 from ...domain.calculations.registry.detail_record_bindings import foreign_asset_binding_row_field
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos import (
-    CalculationRevision,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
 from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
 _M720_VALUATION_CASILLA_GROUPS: Mapping[CasillaId, ForeignAssetObligationGroup] = {

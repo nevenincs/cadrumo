@@ -5,13 +5,9 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from ......core.config import SecretStoreBackend, Settings
-from ...custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
-    publish_profile_custody_capsule,
-)
+from ...custody.capsule import publish_profile_custody_capsule
+from ...custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ...custody.sentinel import create_profile_custody_sentinel
 
 _CAPSULE_DEK = bytes(range(32))
 

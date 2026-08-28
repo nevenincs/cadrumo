@@ -95,6 +95,7 @@ def select_revision_for_year(
             filing_year=filing_year,
             period="year",
             revision_id=None,
+            available_revision_ids=tuple(str(declared) for declared in modelo.revisions),
         )
     if len(candidates) > 1:
         # A year-only answer for a year covered by more than one revision is wrong
@@ -195,6 +196,7 @@ def _select_single_revision(
             filing_year=filing_year,
             period=period,
             revision_id=revision_id,
+            available_revision_ids=tuple(str(declared) for declared in modelo.revisions),
         )
     if len(candidates) > 1:
         raise AmbiguousRevisionSelectionError(

@@ -15,19 +15,19 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId, validated_casilla_id
-from .._calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    LedgerFilingCoverageError,
-    assert_revision_snapshot_evidence_coverage,
-    derive_calculation_revision_id,
-)
 from .._ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     LedgerRowFingerprint,
     snapshot_fingerprint,
+)
+from ..calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    LedgerFilingCoverageError,
+    assert_revision_snapshot_evidence_coverage,
+    derive_calculation_revision_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

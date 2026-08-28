@@ -18,7 +18,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_repository_for_active_bucket
-from ....adapters.persistence.storage.crypto import secure_object_key_digest
+from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes

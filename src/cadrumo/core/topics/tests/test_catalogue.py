@@ -11,7 +11,7 @@ See Also:
         Closed catalogue loaded from ``registry/aeat/topics``.
     :class:`~core.resources._repos.topics.TopicCatalogueRepository`
         Resource repository consumed by tests and application registry services.
-    :mod:`~application.registry._corpus`
+    :mod:`~application.registry.corpus`
         Registry citation projection service that consumes topic records for
         operator-facing reports.
 """

@@ -30,8 +30,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from ..bucket import BucketLockedError
-from ..crypto import KEY_SIZE
-from ..custody import zeroise as _zeroise
+from ..crypto.aead import KEY_SIZE
+from ..custody.zeroise import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
@@ -368,7 +368,7 @@ class BucketSession:
             raise BucketLockedError(bucket_id=self._bucket_id)
         cached = self._hmac_subkeys.get(context)
         if cached is None:
-            from ..crypto import derive_key
+            from ..crypto.aead import derive_key
 
             cached = derive_key(key_material=bytes(self._dek_buffer), salt=b"", context=context)
             self._hmac_subkeys[context] = cached

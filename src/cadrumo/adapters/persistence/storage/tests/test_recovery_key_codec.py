@@ -29,7 +29,8 @@ from .._recovery_key import (
     encode_mnemonic,
     generate_recovery_key,
 )
-from ..custody import WipeTypeError, zeroise
+from ..custody.errors import WipeTypeError
+from ..custody.zeroise import zeroise
 from ..errors import StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -747,7 +747,7 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
 def _restore_material(tmp_path: Path) -> tuple[Path, Path, str]:
     source = tmp_path / "restore-source"
     outcome, enrollments, phrases = _register(source, recovery=True)
-    from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+    from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=source)
     artifact = tmp_path / "recovery.artifact.json"

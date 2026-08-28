@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...core import Modelo, Period
+from ...core import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.profile_grounding import (
@@ -261,9 +261,14 @@ class ProfilePreflightService:
         per_operation_selected = 0
         for section in self._schema.sections:
             for field in section.fields:
-                if not field.required:
-                    continue
-                if not self._selectors_match_modelo(field.model_selectors, target):
+                # A field reaches this walk either because it is required of
+                # every profile AND its selectors name this modelo, or because
+                # it declares this modelo in ``required_for_modelos`` -- the
+                # modelo-scoped axis, which completeness and presentation
+                # deliberately ignore so a per-modelo fact is never demanded of
+                # a taxpayer with no such obligation.
+                required_here = field.required and self._selectors_match_modelo(field.model_selectors, target)
+                if not required_here and modelo.strip() not in {item.value for item in field.required_for_modelos}:
                     continue
                 per_operation_selected += 1
                 candidate_path = f"{section.key}.{field.key}"
@@ -274,18 +279,6 @@ class ProfilePreflightService:
                         candidate_path,
                         schema=self._schema,
                         selector=field.model_selectors[0] if field.model_selectors else candidate_path,
-                        grounding_index=grounding_index,
-                    ),
-                )
-        if modelo.strip() == Modelo.M111.value:
-            colegio_path = "withholding.colegio_concertado"
-            per_operation_selected += 1
-            if not self._has_value(values, colegio_path):
-                missing.append(
-                    build_profile_preflight_requirement(
-                        colegio_path,
-                        schema=self._schema,
-                        selector="colegio_concertado",
                         grounding_index=grounding_index,
                     ),
                 )

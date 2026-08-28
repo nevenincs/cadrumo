@@ -21,13 +21,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage import SecureObjectRevisionConflictError
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    CalculationRevisionCatalogue,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_work_unit_id,
-)
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (

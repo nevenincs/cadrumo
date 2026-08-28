@@ -83,9 +83,6 @@ from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
 from .....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
@@ -97,10 +94,15 @@ from .....domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_verification_report_id,
     derive_work_unit_id,
+)
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from .....domain.submission import (
     ModeloDraftStatus,

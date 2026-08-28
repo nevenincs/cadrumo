@@ -26,10 +26,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() -> None:
     states = (
-        _state(filing_year=2026, period="1T", generated=Decimal("50.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
+        _state(filing_year=2025, period="1T", generated=Decimal("50.00")),
+        _state(filing_year=2025, period="4T", generated=Decimal("100.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
@@ -51,12 +51,12 @@ def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() ->
     assert cross_check.generated_not_in_last_period_difference_amount == Decimal("0.00")
     assert cross_check.mismatched_casilla_ids == ()
     assert cross_check.matches is True
-    assert cross_check.summary_source_observation_key == "390:2026:0A:200039000000001Z"
+    assert cross_check.summary_source_observation_key == "390:2025:0A:200039000000001Z"
 
 
 def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> None:
-    states = (_state(filing_year=2026, period="4T", generated=Decimal("100.00")),)
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+    states = (_state(filing_year=2025, period="4T", generated=Decimal("100.00")),)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("80.00"),
@@ -81,9 +81,9 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
     tuple[int, IvaCompensationExpiryReviewState, tuple[str, ...]],
     ...,
 ] = (
-    (2025, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
+    (2024, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
     (
-        2021,
+        2020,
         IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED,
         ("expired_review_required", "active"),
     ),
@@ -102,9 +102,9 @@ def test_modelo_390_cross_check_keeps_prior_year_lots_out_of_annual_fields(
 ) -> None:
     states = (
         _state(filing_year=prior_year, period="4T", generated=Decimal("25.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
+        _state(filing_year=2025, period="4T", generated=Decimal("100.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),

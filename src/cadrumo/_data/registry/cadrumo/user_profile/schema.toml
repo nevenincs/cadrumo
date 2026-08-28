@@ -1332,6 +1332,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Whether the withholder is a colegio concertado, which Modelo 111 declares in its own header field."
 model_selectors = ["colegio_concertado"]
+required_for_modelos = ["111"]
 
 [[sections.fields]]
 key = "pays_professionals_with_retencion"

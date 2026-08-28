@@ -36,16 +36,14 @@ from ....domain.calculations.registry.external_grounding import (
 )
 from ....domain.calculations.registry.schema import ModeloDefinition
 from ....tests.registry_tree import bundled_registry_tree
-from .. import (
-    RegistryApplicationInputError,
+from ..conformance import (
+    AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     build_registry_conformance_profile,
-)
-from .._conformance import (
-    AnnualCasillaPopulationComparison,
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
 )
+from ..errors import RegistryApplicationInputError
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

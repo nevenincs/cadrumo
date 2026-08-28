@@ -25,12 +25,11 @@ from ....core import (
 from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import ObligationStatus
-from ....domain.modelos import (
+from ....domain.modelos import upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url

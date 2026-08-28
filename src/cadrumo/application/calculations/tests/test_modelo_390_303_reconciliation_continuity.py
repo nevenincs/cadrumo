@@ -22,7 +22,7 @@ This module is the multi-year-renta authorization enrollment for Modelo
 390. It drives the REAL backend (real encrypted-SQLite observation store,
 the real registry authority, the real registry calculation engine, the
 real relation resolver — no mocks) across two distinct renta years: for
-each of 2025 and 2026 it computes the four 303 quarters, persists them as
+each of 2024 and 2025 it computes the four 303 quarters, persists them as
 filed observations, then computes the 390/0A annual and asserts the annual
 reconciliation casillas equal the sum of the four quarters. Both annual
 computations are recorded through the :class:`EnrollmentRecorder` and
@@ -89,7 +89,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "390"
 
 #: The two distinct renta years the resumen reconciliation spans.
-_RENTA_YEARS = (2025, 2026)
+_RENTA_YEARS = (2024, 2025)
 
 #: Quarterly periods of a renta year, summed by the 390 previous_filing bindings.
 _QUARTERS = ("1T", "2T", "3T", "4T")
@@ -119,7 +119,7 @@ _303_AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
 _303_STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
 _303_CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
-_CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 # Per-quarter IVA ledger detail for one renta year: one repercutido (output)
 # and one soportado (input) line per quarter, both general-rate 21%. The 303
@@ -374,21 +374,21 @@ def test_390_reconciliation_isolates_renta_years(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        annual_2025, _, devengada_2025 = _file_year_quarters_and_reconcile(
+        annual_earlier, _, devengada_earlier = _file_year_quarters_and_reconcile(
             filing_year=_RENTA_YEARS[0],
             repository=repository,
         )
-        annual_2026, _, devengada_2026 = _file_year_quarters_and_reconcile(
+        annual_later, _, devengada_later = _file_year_quarters_and_reconcile(
             filing_year=_RENTA_YEARS[1],
             repository=repository,
         )
 
-    assert annual_2025.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
-        devengada_2025.values(),
+    assert annual_earlier.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
+        devengada_earlier.values(),
         Decimal("0"),
     )
-    assert annual_2026.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
-        devengada_2026.values(),
+    assert annual_later.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
+        devengada_later.values(),
         Decimal("0"),
     )
 

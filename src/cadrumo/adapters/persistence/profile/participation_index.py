@@ -121,7 +121,7 @@ class TransactionParticipationIndexRepository:
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.crypto import secure_object_key_digest
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
 
         object_key = derive_participation_index_id(transaction_id)
         try:
@@ -207,7 +207,7 @@ class TransactionParticipationIndexRepository:
             The number of stale participation objects removed.
         """
         from ..storage import SecureObjectDeletion
-        from ..storage.crypto import secure_object_key_digest
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)
         retained = {secure_object_key_digest(write.object_key).hex() for write in writes}

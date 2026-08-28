@@ -14,32 +14,31 @@ from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, validated_casi
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.manuals import ManualPart
-from .. import (
-    RegistryApplicationInputError,
+from ..conformance import _AxisIndex
+from ..corpus import (
     RegistryCitationShowCommand,
     RegistryManualId,
     RegistryManualRulesCommand,
     RegistryManualShowCommand,
     RegistryManualsListCommand,
-    _verified_required_casilla_ids,
-    diff_registry_revisions,
     list_registry_manual_rules,
     list_registry_manuals,
     registry_manual_id,
     show_registry_citation,
     show_registry_manual,
 )
-from .._conformance import _AxisIndex
-from .._diff import _revision_for_year
+from ..diff import _revision_for_year, diff_registry_revisions
+from ..errors import RegistryApplicationInputError
+from ..filed_state import _verified_required_casilla_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REGISTRY_ROOT = Path(__file__).resolve().parents[1]
 _REFUSAL_SOURCES = (
-    _REGISTRY_ROOT / "_diff.py",
-    _REGISTRY_ROOT / "__init__.py",
+    _REGISTRY_ROOT / "diff.py",
+    _REGISTRY_ROOT / "filed_state.py",
     _REGISTRY_ROOT / "_conformance.py",
-    _REGISTRY_ROOT / "_corpus.py",
+    _REGISTRY_ROOT / "corpus.py",
     _REGISTRY_ROOT / "_corpus_manual_helpers.py",
 )
 
@@ -329,7 +328,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
     observed = set().union(*(_terminal_refusal_calls(path) for path in _REFUSAL_SOURCES))
     assert observed == {
         (
-            "_diff.py",
+            "diff.py",
             "_revision_for_year",
             "RegistryPreconditionCondition.DIFF_REVISION_SELECTION_UNAMBIGUOUS",
             "{'modelo': str(definition.id), 'filing_year': filing_year, 'revision_selection_unambiguous': False, "
@@ -338,7 +337,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "_diff.py",
+            "diff.py",
             "_revision_for_year",
             "RegistryPreconditionCondition.DIFF_REVISION_AVAILABLE",
             "{'modelo': str(definition.id), 'filing_year': filing_year, 'revision_available': False, "
@@ -347,7 +346,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "__init__.py",
+            "filed_state.py",
             "_verified_required_casilla_ids",
             "RegistryPreconditionCondition.FILED_STATE_CASILLA_ID_CANONICAL",
             "{'modelo': str(snapshot.modelo.id), 'revision_id': str(snapshot.revision.id), 'casilla_id_canonical': False}",
@@ -355,7 +354,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "__init__.py",
+            "filed_state.py",
             "_verified_required_casilla_ids",
             "RegistryPreconditionCondition.FILED_STATE_CASILLA_DECLARED",
             "{'modelo': str(snapshot.modelo.id), 'revision_id': str(snapshot.revision.id), 'casilla_id_declared': False}",
@@ -379,7 +378,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.SAFETY",
         ),
         (
-            "_corpus.py",
+            "corpus.py",
             "show_registry_manual",
             "RegistryPreconditionCondition.MANUAL_SECTION_STRUCTURE_AVAILABLE",
             "{'manual_structure_available': False, 'section_requested': True}",
@@ -387,7 +386,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.SAFETY",
         ),
         (
-            "_corpus.py",
+            "corpus.py",
             "show_registry_manual",
             "RegistryPreconditionCondition.MANUAL_SECTION_DECLARED",
             "{'manual_structure_available': True, 'requested_section_declared': False}",
@@ -395,7 +394,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "_corpus.py",
+            "corpus.py",
             "_registry_topic_locale",
             "RegistryPreconditionCondition.TOPIC_OUTPUT_LANGUAGE_SUPPORTED",
             "{'output_language_supported': False}",
@@ -403,7 +402,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "_corpus.py",
+            "corpus.py",
             "_citation_not_found_error",
             "RegistryPreconditionCondition.CITATION_REFERENCE_AVAILABLE",
             "{'citation_reference_available': False, 'article_requested': command.articulo is not None}",
@@ -411,7 +410,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "_corpus.py",
+            "corpus.py",
             "registry_manual_id",
             "RegistryPreconditionCondition.MANUAL_ID_SUPPORTED",
             "{'manual_id_supported': False}",

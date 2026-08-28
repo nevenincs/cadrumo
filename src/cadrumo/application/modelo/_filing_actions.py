@@ -60,11 +60,8 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
-    ModeloError,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -73,6 +70,8 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import (
     CalculationObservationRepository,
@@ -93,6 +92,7 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._preconditions import build_modelo_work_file_unverified_revision_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
@@ -334,6 +334,7 @@ def file_modelo_revision(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
+        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
     )
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.

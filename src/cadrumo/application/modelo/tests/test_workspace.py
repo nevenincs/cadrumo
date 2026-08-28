@@ -1213,11 +1213,11 @@ def _real_calculation_revision_with_row_materialization():
     from ....core import BindingSourceKind, validated_casilla_id
     from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos import (
+    from ....domain.modelos import derive_work_unit_id
+    from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
         derive_calculation_revision_id,
-        derive_work_unit_id,
     )
 
     bucket_id = "30330300-0000-4000-8000-000000000601"
@@ -1322,7 +1322,8 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     from decimal import Decimal
 
     from ....core import validated_casilla_id
-    from ....domain.modelos import CalculationRevision, CalculationRevisionState, derive_work_unit_id
+    from ....domain.modelos import derive_work_unit_id
+    from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
     from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
 
     bucket_id = "30330300-0000-4000-8000-000000000601"
@@ -1450,7 +1451,7 @@ def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_u
     """A source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
     from ....core import CalculationSourceLineageRole, validated_casilla_id
     from ....core.aggregation import BindingSourceKind
-    from ....domain.modelos import CalculationSourceRef
+    from ....domain.modelos.calculation_revision import CalculationSourceRef
     from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
 
     linked_casilla = validated_casilla_id("00501")
@@ -1524,7 +1525,7 @@ def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "20
 
 
 def _minimal_calculation_revision(*, work_unit_id: str, state):
-    from ....domain.modelos import (
+    from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
         derive_calculation_revision_id,
@@ -1558,7 +1559,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
 
 def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() -> None:
     """CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
-    from ....domain.modelos import CalculationRevisionState
+    from ....domain.modelos.calculation_revision import CalculationRevisionState
     from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceCapabilityName
 
     work_unit_id = "f" * 64

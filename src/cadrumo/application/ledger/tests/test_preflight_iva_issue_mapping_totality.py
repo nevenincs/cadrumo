@@ -26,6 +26,11 @@ from pathlib import Path
 
 import pytest
 
+# Imported absolutely, not as `from .. import <module>`: the test needs
+# the MODULE object, and the package-facade gate reads any `from ..
+# import` edge as reaching through the inert namespace.
+import cadrumo.application.ledger.preflight as preflight_module
+
 from ....core import BindingSourceKind, OperatorActionAxis
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
@@ -44,7 +49,6 @@ from ...aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
-from .. import preflight as preflight_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

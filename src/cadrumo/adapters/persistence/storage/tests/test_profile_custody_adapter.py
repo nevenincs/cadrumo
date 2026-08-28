@@ -13,7 +13,9 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordEncryptedBlob,
 )
 from .. import build_profile_custody_port
-from ..custody import ProfileCustodyCapsuleLabel, ProfileLabelHead, ProfileLabelHeadRepository
+from ..custody.capsule_records import ProfileCustodyCapsuleLabel
+from ..custody.label_head_models import ProfileLabelHead
+from ..custody.label_head_repository import ProfileLabelHeadRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -31,7 +31,7 @@ from sqlalchemy.engine.default import DefaultDialect
 from ......core import StorageCategory, bucket_scoped_storage_path
 from ......core.config import load_settings, override_settings
 from ..._namespace_registry import USER_PROFILE_VALUE_NAMESPACE
-from ...crypto import EncryptedBytes
+from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
 from .._active_session import activate_session
 from .._bucket_session import BucketSession

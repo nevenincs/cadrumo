@@ -12,12 +12,11 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId
 from ....domain.iva_compensation import IvaCompensationOverride
-from ....domain.modelos import (
+from ....domain.modelos import upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (

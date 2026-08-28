@@ -44,7 +44,7 @@ from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
     RegistrySnapshot,
 )
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 from ..aggregation import (
     BorradorSourceProvenance,
     CalculationSourceContext,

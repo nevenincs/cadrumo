@@ -50,6 +50,7 @@ from ...iva import (
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
+    is_deducible_flow,
     validate_iva_deduction_fact,
 )
 from ._ledger_binding_resolution import (
@@ -476,11 +477,7 @@ class IvaLedgerObservation(BaseModel):
                 f"got category {self.category.value!r}",
             )
         if (
-            self.flow_direction
-            not in {
-                IvaFlowDirection.SOPORTADO,
-                IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            }
+            not is_deducible_flow(self.flow_direction)
             or self.category is IvaCategory.RECARGO_EQUIVALENCIA
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:

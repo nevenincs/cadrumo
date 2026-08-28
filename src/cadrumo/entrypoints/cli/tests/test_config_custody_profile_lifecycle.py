@@ -543,7 +543,7 @@ def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> Non
         stdin_payload=json.dumps({"passphrase": passphrase}),
     )
     assert logged_in.returncode == 0, _combined_output(logged_in)
-    from ....adapters.persistence.storage.custody import profile_session_path
+    from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 
     assert profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file(), (
         "the os_keychain lane requires a host backend that can persist the cross-process session"

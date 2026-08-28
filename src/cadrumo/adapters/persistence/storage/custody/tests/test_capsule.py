@@ -17,43 +17,42 @@ from ......core import StorageCategory
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......tests.path_obstruction import obstructed_path
-from .. import (
-    PROFILE_CUSTODY_SENTINEL_FILENAME,
-    ProfileCustodyCapsuleLabel,
-    ProfileCustodyCommit,
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
+from ..capsule import (
+    list_current_profile_custody_capsule_ids,
+    list_current_profile_custody_capsule_summary_witnesses,
+    load_committed_profile_custody_summary_witness,
+    load_committed_profile_password_material,
+    publish_profile_custody_capsule,
+    recognize_current_profile_capsule,
+)
+from ..capsule_discovery import detect_retired_profile_custody_member_paths
+from ..capsule_records import ProfileCustodyCapsuleLabel, ProfileCustodyCommit, parse_profile_custody_commit
+from ..envelope import create_profile_custody_password_envelope
+from ..errors import (
     ProfileCustodyRecordError,
-    ProfileCustodyRecoveryArtifact,
-    ProfileCustodyRecoveryEnvelope,
     ProfileCustodyRecoveryGuidance,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_password_envelope,
+)
+from ..kdf_supervision import unlock_profile_custody
+from ..paths import profile_custody_path
+from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ..recovery import (
+    PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
+    ProfileCustodyRecoveryEnvelope,
     create_profile_custody_recovery_envelope,
-    create_profile_custody_sentinel,
-    detect_retired_profile_custody_member_paths,
+    parse_profile_custody_recovery_envelope,
+    unlock_profile_custody_recovery,
+)
+from ..recovery_artifact import (
+    ProfileCustodyRecoveryArtifact,
     export_profile_custody_recovery_artifact,
     import_profile_custody_recovery_artifact,
-    list_current_profile_custody_capsule_ids,
-    load_committed_profile_password_material,
-    parse_profile_custody_commit,
     parse_profile_custody_recovery_artifact,
-    parse_profile_custody_recovery_envelope,
-    profile_custody_path,
-    publish_profile_custody_capsule,
-    recognize_current_profile_capsule,
     unlock_imported_profile_custody_recovery_artifact,
-    unlock_profile_custody,
-    unlock_profile_custody_recovery,
-    verify_profile_custody_sentinel,
 )
-from .._capsule import (
-    list_current_profile_custody_capsule_summary_witnesses,
-    load_committed_profile_custody_summary_witness,
-)
-from .._recovery import PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES
+from ..sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, create_profile_custody_sentinel
+from ..sentinel_contract import verify_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

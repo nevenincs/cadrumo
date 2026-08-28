@@ -27,10 +27,10 @@ from ....domain.modelos import (
     Modelo349RectificacionRow,
     ModeloCode,
     ModeloDetailRow,
-    ModeloError,
     WorkUnit,
     derive_work_unit_id,
 )
+from ....domain.modelos.errors import ModeloError
 from .._calculation_modelo_adjustments import require_detail_rows_declared_for_their_owning_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -29,7 +29,8 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import CalculationRevisionCatalogue, ModeloDetailRow, WorkUnit, WorkUnitCatalogue
+from ...domain.modelos import ModeloDetailRow, WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ..operations.registry import OperationSchemaIdentityV1
 from ._calculation_modelo_adjustments import DETAIL_ROW_OWNING_MODELO
 from ._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES

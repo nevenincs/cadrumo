@@ -27,7 +27,7 @@ from .._namespace_registry import (
 )
 from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
 from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
-from ..crypto import (
+from ..crypto.encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_key_digest,
     secure_object_payload_aad,

@@ -59,7 +59,8 @@ from ....domain.iva import (
     IvaDeductionClassificationProvenance,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import FilingInstanceEvidence, ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.modelos.calculation_revision import FilingInstanceEvidence
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

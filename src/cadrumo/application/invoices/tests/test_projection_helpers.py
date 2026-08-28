@@ -33,7 +33,7 @@ import pytest
 
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ...review import InvoiceReviewRecord
+from ...review.models import InvoiceReviewRecord
 from .. import invoice_display_amounts, invoice_review_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

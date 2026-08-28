@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....core import validated_casilla_id
 from ...filing_evidence import FilingEvidenceReference
-from .._calculation_revision import (
+from ..calculation_revision import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,

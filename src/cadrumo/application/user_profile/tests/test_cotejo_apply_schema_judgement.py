@@ -37,10 +37,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ....core.config import override_settings
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ....domain.user_profile.errors import ProfileSchemaValidationError

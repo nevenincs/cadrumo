@@ -52,7 +52,7 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     CalculationRevisionAmendmentKind,
     FilingInstanceEvidence,
     M303Exonerado390ActivityRowEvidence,

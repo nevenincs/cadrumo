@@ -1057,12 +1057,12 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/registry/_conformance.py"
+path = "src/cadrumo/application/registry/conformance.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/registry/_corpus.py"
+path = "src/cadrumo/application/registry/corpus.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1659,7 +1659,7 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/registry/_temporal_coverage.py"
+path = "src/cadrumo/application/registry/temporal_coverage.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 

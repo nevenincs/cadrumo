@@ -28,14 +28,8 @@ from ....domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from .. import (
-    FindingReviewItem,
-    InvoiceReviewItem,
-    ReviewItem,
-    ReviewItemKind,
-    ReviewSeverity,
-    TransactionReviewItem,
-)
+from ..enums import ReviewItemKind, ReviewSeverity
+from ..models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

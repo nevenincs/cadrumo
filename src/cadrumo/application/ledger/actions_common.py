@@ -42,11 +42,8 @@ from ...domain.buckets import (
     build_bucket_event,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos import (
-    SEALED_REVISION_STATES,
-    CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-)
+from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions import (
     BucketTransactionRef,

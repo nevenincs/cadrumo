@@ -5,10 +5,10 @@
 # -deducible-total / -resultado-regimen-general (op=sum, source_periods
 # 1T-4T, Orden EHA/3111/2009 art. 1). The wiring invariant — each 390 annual
 # computed total equals its 303-quarter-summed reconciliation casilla — is
-# asserted for two distinct renta years (2025, 2026) with year-isolation
+# asserted for two distinct renta years (2024, 2025) with year-isolation
 # verified. Both annual computations run through the real registry engine.
 [modelo]
 modelo = "390"
-renta_years = [2025, 2026]
+renta_years = [2024, 2025]
 evidence_class = "reconciliation"
 enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py"

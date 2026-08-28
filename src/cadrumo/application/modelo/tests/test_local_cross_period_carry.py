@@ -388,10 +388,8 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     """
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ....domain.modelos import (
-        CalculationRevisionState,
-        upsert_calculation_revision,
-    )
+    from ....domain.modelos import upsert_calculation_revision
+    from ....domain.modelos.calculation_revision import CalculationRevisionState
     from ...calculations import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 

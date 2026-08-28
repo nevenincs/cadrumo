@@ -94,8 +94,23 @@ def m303_regimen_simplificado_scope_for_composition(
     )
 
 
+def m303_regimen_simplificado_annual_summary_applies(work_unit: WorkUnit) -> bool:
+    """Return whether regimen simplificado reaches this work unit's taxpayer.
+
+    The single derivation the Modelo 390 annual-summary guard, resolver, and
+    persisted-handoff validator all consult, so one taxpayer cannot be judged
+    applicable by one and not another. Boxes 74--83 ride on every Modelo 390
+    form, so a revision declaring that binding family says what the FORM
+    carries and never that the regime reaches this filer: LIVA art. 122 Uno
+    applies regimen simplificado only to sujetos pasivos meeting its three
+    stated requirements.
+    """
+    return not m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(work_unit)).is_not_claimed
+
+
 __all__ = [
     "active_taxpayer_profile",
+    "m303_regimen_simplificado_annual_summary_applies",
     "m303_regimen_simplificado_scope_for_composition",
     "m303_regimen_simplificado_scope_for_profile",
     "resolve_m303_regimen_simplificado_scope",

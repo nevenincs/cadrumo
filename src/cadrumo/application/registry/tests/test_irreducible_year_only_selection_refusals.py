@@ -43,7 +43,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.temporal import select_revision
-from .._temporal_coverage import compose_temporal_coverage
+from ..temporal_coverage import compose_temporal_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -20,7 +20,7 @@ from ....domain.calculations.registry.schema_references import SourceReference
 from ....domain.filing import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,

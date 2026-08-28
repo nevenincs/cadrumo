@@ -41,11 +41,11 @@ from ...core import CasillaId, TipoRentaIrnr
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_semantic_role,

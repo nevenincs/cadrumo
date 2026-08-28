@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...review import LedgerReviewStatus
+from ...review.filter import LedgerReviewStatus
 from ..actions_lifecycle import mark_transaction_reviewed_excluded
 from ..actions_manual import update_manual_transaction_fields
 from ..models import ManualLedgerTransactionPatch

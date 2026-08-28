@@ -53,11 +53,8 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    WorkUnitState,
-)
+from ...domain.modelos import WorkUnitState
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._calculate_input import (
     ModeloCalculateBindingInputError,
 )

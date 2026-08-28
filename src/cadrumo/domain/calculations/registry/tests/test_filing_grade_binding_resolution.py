@@ -19,13 +19,13 @@ from dataclasses import dataclass
 import pytest
 
 from .....application.aggregation import BindingSourceDisposition
-from .....application.filing import _binding_provenance
+from .....application.filing._draft_construction import _binding_provenance
 from .....application.modelo._calculation_actions import assert_no_novel_source_kinds
 from .....application.modelo.calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
-from .....application.registry import (
+from .....application.registry.source_connectivity import (
     SourceConnectivityCensusEntry,
     SourceConnectivityCensusManifest,
     load_source_connectivity_census,

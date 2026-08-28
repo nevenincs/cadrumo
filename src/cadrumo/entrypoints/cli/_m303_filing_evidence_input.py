@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ...domain.modelos import FilingInstanceEvidence
+from ...domain.modelos.calculation_revision import FilingInstanceEvidence
 
 
 def m303_filing_instance_evidence_from_cli(

@@ -647,6 +647,7 @@ cli:
           activo_extranjero: foreign asset
           borrador_aeat: AEAT draft
           compensacion_iva_anual: annual IVA compensation
+          constante_diseno: Record design constant
           dato_perfil: profile fact
           datos_libro: ledger data
           decision_compensacion_iva: IVA compensation decision

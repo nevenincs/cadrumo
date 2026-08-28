@@ -16,7 +16,7 @@ from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 
 from .._kdf_salt import KDF_SALT_BYTES
-from ..crypto import KEY_SIZE
+from ..crypto.aead import KEY_SIZE
 from ..errors import StorageValidationError
 
 SALT_SIZE: Final[int] = KDF_SALT_BYTES

@@ -32,7 +32,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import custody
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
     profile_session_path,

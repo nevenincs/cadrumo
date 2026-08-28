@@ -47,7 +47,7 @@ from ...domain.buckets import (
     build_bucket_event,
 )
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from ...domain.modelos import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
+from ...domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository

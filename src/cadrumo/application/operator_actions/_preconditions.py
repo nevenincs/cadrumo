@@ -15,6 +15,20 @@ from ...core import (
 from ._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 
+def conditionality_for_binding(binding: ActionArgumentBinding) -> ActionConditionality:
+    """Return whether a recovery action needing this binding is immediately available.
+
+    An action is materialisable right now (``IMMEDIATE``) unless the argument
+    it depends on is still ``MISSING``, in which case the operator must
+    supply it first (``REQUIRES_ARGUMENTS``).
+    """
+    return (
+        ActionConditionality.REQUIRES_ARGUMENTS
+        if binding.status is ActionArgumentStatus.MISSING
+        else ActionConditionality.IMMEDIATE
+    )
+
+
 def no_action_precondition_verdict(
     *,
     condition_id: str,
@@ -89,6 +103,7 @@ def corrupt_active_profile_pointer_verdict(*, path: str) -> PreconditionVerdict:
 
 __all__ = [
     "active_profile_pointer_repair_verdict",
+    "conditionality_for_binding",
     "corrupt_active_profile_pointer_verdict",
     "no_action_precondition_verdict",
 ]

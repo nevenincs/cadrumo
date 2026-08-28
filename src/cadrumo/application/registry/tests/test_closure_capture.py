@@ -13,7 +13,6 @@ from datetime import date
 
 import pytest
 
-from .. import load_source_connectivity_census
 from ..closure_capture import (
     RegistryClosureCapture,
     RegistryClosureCaptureError,
@@ -21,6 +20,7 @@ from ..closure_capture import (
     capture_registry_closure,
     read_registry_closure_current_coordinate,
 )
+from ..source_connectivity import load_source_connectivity_census
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

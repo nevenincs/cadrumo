@@ -34,7 +34,7 @@ from cadrumo.application.modelo._calculation_helpers import build_typed_observat
 from cadrumo.application.modelo._calculation_resolution import build_calculation_replay_payloads
 from cadrumo.application.modelo._revision_persistence import persist_calculation_revision
 from cadrumo.application.operator_surface import build_supported_modelo_calculation_workflow_catalogue
-from cadrumo.application.registry import (
+from cadrumo.application.registry.source_connectivity_authority import (
     LiveSourceConnectivityProofAuthority,
     LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,

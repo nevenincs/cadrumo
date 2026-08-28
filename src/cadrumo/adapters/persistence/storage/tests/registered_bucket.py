@@ -24,13 +24,9 @@ from uuid import UUID, uuid4
 
 from .....core.config import Settings
 from ..bucket import bucket_paths
-from ..custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
-    publish_profile_custody_capsule,
-)
+from ..custody.capsule import publish_profile_custody_capsule
+from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ..custody.sentinel import create_profile_custody_sentinel
 
 #: The data key the published sentinel is bound to. Tests that only need the
 #: bucket to *exist* may bind any session key they like; tests that go on to

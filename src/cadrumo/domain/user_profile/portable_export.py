@@ -25,9 +25,9 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.time import UtcInstant, validate_utc_aware
 from ...core.time import now as _utc_now
-from ..modelos import CalculationRevision as _CalculationRevision
 from ..modelos import ModeloRecord as _ModeloRecord
 from ..modelos import WorkUnit as _WorkUnit
+from ..modelos.calculation_revision import CalculationRevision as _CalculationRevision
 from ..transactions import Transaction as _Transaction
 from .values import UserProfileRecord
 

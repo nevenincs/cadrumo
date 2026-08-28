@@ -33,8 +33,6 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
@@ -44,6 +42,7 @@ from ....domain.modelos import (
     WorkUnit,
     upsert_work_unit,
 )
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

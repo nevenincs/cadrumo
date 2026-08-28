@@ -77,7 +77,8 @@ if TYPE_CHECKING:
     from ...core import CasillaId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-    from ...domain.modelos import CalculationRevision, WorkUnit
+    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ..calculations import CalculationObservationRepository
 
 

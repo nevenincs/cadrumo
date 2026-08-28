@@ -56,11 +56,9 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
-from ...domain.modelos import (
-    CalculationRevision,
-    ModeloError,
-    WorkUnit,
-)
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloError
 from ..calculations import (
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     M303_DISPONIBLE_CASILLA,

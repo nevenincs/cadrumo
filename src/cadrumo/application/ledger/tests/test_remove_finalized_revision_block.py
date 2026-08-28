@@ -6,7 +6,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....domain.modelos import CalculationRevisionState
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ._action_test_support import (
     _BUCKET_ID,
     SecureObjectRepository,

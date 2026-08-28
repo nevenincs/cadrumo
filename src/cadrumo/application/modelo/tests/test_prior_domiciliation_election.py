@@ -18,19 +18,21 @@ from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, Res
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import ModeloPriorDomiciliationElectionRefusedError

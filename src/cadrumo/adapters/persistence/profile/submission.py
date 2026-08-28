@@ -96,7 +96,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
                 submission id than the key it is filed under.
         """
         from ..storage import SecureObjectRowIdentityError
-        from ..storage.crypto import secure_object_key_digest
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.sql import SecureObjectRecord
 
         envelope_cls = self._envelope_cls()

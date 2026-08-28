@@ -6,7 +6,7 @@ import secrets
 
 import pytest
 
-from ..crypto import KEY_SIZE
+from ..crypto.aead import KEY_SIZE
 
 
 @pytest.fixture

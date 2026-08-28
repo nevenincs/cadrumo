@@ -15,11 +15,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from ..adapters.persistence.storage import custody
-from ..adapters.persistence.storage.custody import (
-    create_profile_custody_sentinel,
+from ..adapters.persistence.storage.custody.capsule import (
     list_current_profile_custody_capsule_ids,
+    load_committed_profile_password_material,
 )
+from ..adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
 from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     derive_test_bucket_key,
@@ -123,7 +123,7 @@ def mint_test_profile_recovery_envelope(
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
-    material = custody.load_committed_profile_password_material(profile_id, root=root)
+    material = load_committed_profile_password_material(profile_id, root=root)
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=_active_bucket_dek(profile_id),
@@ -353,13 +353,15 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
     This does not, because a test forging a state has no concurrent writer to
     exclude, and the lock is not on the custody package's public facade.
     """
-    from ..adapters.persistence.storage.custody import (
-        PROFILE_CUSTODY_LABEL_FILENAME,
-        ProfileCustodyCapsuleLabel,
-        ProfileLabelHeadRepository,
+    from ..adapters.persistence.storage.custody.capsule import (
         load_committed_profile_custody_label_record,
         replace_committed_profile_custody_data_file,
     )
+    from ..adapters.persistence.storage.custody.capsule_records import (
+        PROFILE_CUSTODY_LABEL_FILENAME,
+        ProfileCustodyCapsuleLabel,
+    )
+    from ..adapters.persistence.storage.custody.label_head_repository import ProfileLabelHeadRepository
     from ..core.config import load_settings
     from ..core.hashing import prefixed_digest
 

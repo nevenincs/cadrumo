@@ -121,7 +121,7 @@ def _create_profile(storage_root: Path) -> str:
 
 def _session_record(storage_root: Path, bucket_id: str) -> Path:
     """Return the on-disk persisted-session path for ``bucket_id``."""
-    from ....adapters.persistence.storage.custody import profile_session_path
+    from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 
     return profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
 

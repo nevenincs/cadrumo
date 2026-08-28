@@ -72,7 +72,7 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
     """
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto import (
+    from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
@@ -148,7 +148,10 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto import decrypt_secure_object_payload, secure_object_payload_aad
+    from ....persistence.storage.crypto.encrypted_columns import (
+        decrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....persistence.storage.sql import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from .._usage import _USAGE_NAMESPACE

@@ -39,7 +39,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Substring of the registry's filing-grade review refusal. Publication selects a
 #: filing-grade snapshot partway through, so an unreviewed target revision raises the
 #: same exception type a drift case expects, before the drift under test is reached.
-_REVIEW_GATE_REFUSAL = "filing-grade snapshot requires operator_reviewed"
+#: Substring of the registry's filing-grade review refusal. Pinned to the
+#: message the refusal ACTUALLY raises: it once read "requires
+#: operator_reviewed" and was relaxed to admit any reviewed status, agent or
+#: operator, because demanding the operator stamp made a filing-grade
+#: snapshot unreachable by construction. This pin was not swept with it, so
+#: the guard below matched nothing and silently stopped distinguishing a
+#: review-gate refusal from the injected defect -- an anti-tautology check
+#: that cannot fire is worse than none, because it reads as coverage.
+_REVIEW_GATE_REFUSAL = "filing-grade snapshot requires a reviewed revision"
 
 
 # Modelo 130 throughout: `_write_isolated_generated_authority_tree` in

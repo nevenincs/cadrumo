@@ -18,12 +18,8 @@ from .....core.identity import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..bucket import BucketPaths, bucket_paths
-from ..custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
-)
+from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ..custody.sentinel import create_profile_custody_sentinel
 from ..master_key import BucketSession
 
 

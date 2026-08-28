@@ -66,11 +66,8 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing import ModeloScalar, ModeloValueKind
 from ...domain.modelos import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -79,6 +76,8 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,

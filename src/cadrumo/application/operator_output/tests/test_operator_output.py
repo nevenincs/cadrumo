@@ -22,12 +22,12 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord

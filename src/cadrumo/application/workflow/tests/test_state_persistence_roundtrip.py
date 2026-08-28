@@ -15,7 +15,7 @@ import pytest
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth.models import AuthState
-from ...review import (
+from ...review.models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
 )

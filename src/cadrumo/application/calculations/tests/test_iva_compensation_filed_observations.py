@@ -318,7 +318,7 @@ def test_iva_compensation_annual_summary_refuses_printed_number_references() -> 
 
     assert excinfo.value.context == {
         "modelo": "390",
-        "revision": "2010-y-siguientes",
+        "revision": "2025",
         "period": "0A",
         "casilla_ids": (_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,),
     }

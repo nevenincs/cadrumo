@@ -69,13 +69,11 @@ from ....core import (
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations

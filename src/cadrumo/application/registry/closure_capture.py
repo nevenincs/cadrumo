@@ -20,8 +20,8 @@ content itself, so any of those independent axes moving is observed without
 this module re-deriving or duplicating what each composer already computed.
 
 See Also:
-    :func:`~cadrumo.application.registry._filing_export_coverage.compose_filing_export_coverage`
-    :func:`~cadrumo.application.registry._source_connectivity_coverage.compose_source_connectivity_coverage`
+    :func:`~cadrumo.application.registry.filing_export_coverage.compose_filing_export_coverage`
+    :func:`~cadrumo.application.registry.source_connectivity_coverage.compose_source_connectivity_coverage`
         The two sole authorities this module captures without reimplementation.
 """
 
@@ -38,10 +38,10 @@ from ...core.errors import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..filing import FilingExportProofAuthority
-from ._filing_export_coverage import compose_filing_export_coverage
-from ._source_connectivity_coverage import compose_source_connectivity_coverage
 from .closure import RegistryClosureLimb
+from .filing_export_coverage import compose_filing_export_coverage
 from .source_connectivity import SourceConnectivityCensusManifest
+from .source_connectivity_coverage import compose_source_connectivity_coverage
 
 _closure_capture_process_pid = os.getpid()
 _closure_capture_process_nonce = token_bytes(32)

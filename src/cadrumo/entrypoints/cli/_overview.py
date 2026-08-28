@@ -848,7 +848,8 @@ def overview_pipeline(
     from ...application.modelo._filing_actions import list_verification_reports
     from ...application.modelo._work_lifecycle import list_work_units
     from ...application.overview import build_pipeline_health_report
-    from ...domain.modelos import CalculationRevision, VerificationReport
+    from ...domain.modelos import VerificationReport
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ._ledger_payloads import LedgerStatusResult
 
     current = _state()

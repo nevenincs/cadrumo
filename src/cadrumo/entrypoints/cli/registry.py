@@ -6,14 +6,9 @@ from pathlib import Path
 
 import typer
 
-from ...application.registry import (
-    RegistryRevisionDiffReport,
-    RegistryTreeReport,
-    diff_registry_revisions,
-    inspect_registry_tree,
-    verify_filed_state,
-    verify_registry_tree,
-)
+from ...application.registry.diff import RegistryRevisionDiffReport, diff_registry_revisions
+from ...application.registry.filed_state import verify_filed_state
+from ...application.registry.tree import RegistryTreeReport, inspect_registry_tree, verify_registry_tree
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path

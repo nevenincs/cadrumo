@@ -32,10 +32,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact

@@ -106,3 +106,53 @@ def test_modelo_reconciliation_diff_payload_round_trips_a_grounded_total_diff() 
 def test_modelo_reconciliation_diff_payload_refuses_malformed_field(field: str, bad_value: object) -> None:
     with pytest.raises(ValidationError):
         ModeloReconciliationDiffPayload.model_validate(_diff_kwargs(**{field: bad_value}))
+
+
+@pytest.mark.parametrize(
+    "bad_ref",
+    (
+        "Ley 37/1992 art. 164",
+        "",
+        "   ",
+        "x" * 161,
+    ),
+)
+def test_modelo_reconciliation_diff_payload_refuses_a_ref_that_is_not_a_registry_id(bad_ref: str) -> None:
+    """A citation an operator cannot resolve is worse than no citation shown.
+
+    The refs travel so the operator can look the divergence up in the registry.
+    Free prose, blank text, and an over-long token each name nothing there, and
+    a bare string tuple published every one of them as though it did.
+    """
+    grounded = _diff_kwargs(
+        field_name="0027",
+        kind="total_ingresar_mismatch",
+        diff_kind=ModeloReconciliationDiffKind.TOTAL,
+        legal_refs=("ley-37-1992:art-164",),
+        source_refs=("aeat-modelo-303-instrucciones-2026",),
+    )
+
+    with pytest.raises(ValidationError):
+        ModeloReconciliationDiffPayload.model_validate({**grounded, "legal_refs": (bad_ref,)})
+    with pytest.raises(ValidationError):
+        ModeloReconciliationDiffPayload.model_validate({**grounded, "source_refs": (bad_ref,)})
+
+
+def test_narrowing_the_refs_left_the_json_wire_form_untouched() -> None:
+    """The published tokens are unchanged; only the declared shape tightened.
+
+    Both aliases are constrained strings, so a consumer reads exactly what it
+    read before and now has the shape written down beside it.
+    """
+    wire = ModeloReconciliationDiffPayload.model_validate(
+        _diff_kwargs(
+            field_name="0027",
+            kind="total_ingresar_mismatch",
+            diff_kind=ModeloReconciliationDiffKind.TOTAL,
+            legal_refs=("ley-37-1992:art-164",),
+            source_refs=("aeat-modelo-303-instrucciones-2026",),
+        ),
+    ).model_dump(mode="json")
+
+    assert wire["legal_refs"] == ["ley-37-1992:art-164"]
+    assert wire["source_refs"] == ["aeat-modelo-303-instrucciones-2026"]

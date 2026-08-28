@@ -6,8 +6,9 @@ import hashlib
 
 import pytest
 
+from ...workflow.review_models import LedgerReviewRecord
 from ...workflow.state_models import WorkflowState
-from .. import LedgerReviewRecord, update_ledger_review
+from ..actions import update_ledger_review
 from ..errors import ReviewError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

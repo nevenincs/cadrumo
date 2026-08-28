@@ -38,9 +38,9 @@ def test_recovery_paths_have_no_profile_password_policy_dependency() -> None:
     custody_root = Path(__file__).parents[1]
     recovery_sources = "\n".join(
         (custody_root / name).read_text(encoding="utf-8")
-        for name in ("_recovery.py", "_recovery_artifact.py", "_recovery_secret_codec.py")
+        for name in ("recovery.py", "recovery_artifact.py", "_recovery_secret_codec.py")
     )
-    supervision = (custody_root / "_kdf_supervision.py").read_text(encoding="utf-8")
+    supervision = (custody_root / "kdf_supervision.py").read_text(encoding="utf-8")
     recovery_supervision = supervision[supervision.index("def unlock_profile_custody_recovery_material") :]
     worker = (custody_root / "_kdf_worker.py").read_text(encoding="utf-8")
 
@@ -51,7 +51,7 @@ def test_recovery_paths_have_no_profile_password_policy_dependency() -> None:
 
 
 def test_obsolete_conflated_material_entry_points_are_absent() -> None:
-    from .. import _kdf_supervision
+    from .. import kdf_supervision
 
-    assert not hasattr(_kdf_supervision, "wrap_profile_custody_material")
-    assert not hasattr(_kdf_supervision, "unlock_profile_custody_material")
+    assert not hasattr(kdf_supervision, "wrap_profile_custody_material")
+    assert not hasattr(kdf_supervision, "unlock_profile_custody_material")

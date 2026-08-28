@@ -25,7 +25,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.capsule import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
 )

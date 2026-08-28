@@ -154,7 +154,12 @@ class LlmUsageCostProviderPayload(OutputSchema):
     provider: str = Field(min_length=1)
     calls: int = Field(ge=0)
     cache_hits: int = Field(ge=0)
-    unpriced_calls: int = Field(default=0, ge=0)
+    # unpriced_calls is unbounded here: the canonical LlmUsageCostProviderMetrics
+    # (application/ledger/llm_diagnostics.py) now declares `Field(default=0, ge=0)`
+    # itself, and this payload is built only from an already-validated instance of
+    # it (entrypoints/cli/_ledger_rule_payloads.py's sole producer dumps a real
+    # LlmUsageCostProviderMetrics), so restating the bound here would be redundant.
+    unpriced_calls: int = 0
     input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
@@ -208,7 +213,12 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     total_input_tokens: int = Field(ge=0)
     total_output_tokens: int = Field(ge=0)
     total_cost_estimate_usd: DecimalWireText | None
-    total_unpriced_calls: int = Field(default=0, ge=0)
+    # Unbounded for the same reason as LlmUsageCostProviderPayload.unpriced_calls
+    # above: the canonical LlmDiagnosticsReport.total_unpriced_calls now carries
+    # `Field(default=0, ge=0)` itself, and this payload's sole producer
+    # (entrypoints/cli/_ledger_read_cli.py `_llm_diagnostics_result`) builds it
+    # from an already-validated `LlmDiagnosticsReport` instance.
+    total_unpriced_calls: int = 0
     confidence_providers: list[LlmConfidenceProviderPayload]
     total_classified: int = Field(ge=0)
     total_low_confidence: int = Field(ge=0)

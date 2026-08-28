@@ -1,14 +1,14 @@
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-2013.type_1.1-1.tipo-de-registro"
-source = "manual_input"
-selector = { record = "type_1", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer" }
+source = "design_constant"
+selector = { record = "type_1", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer", value = "1" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-2013.type_1.2-4.modelo-declaracion"
-source = "manual_input"
-selector = { record = "type_1", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer" }
+source = "design_constant"
+selector = { record = "type_1", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer", value = "720" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
 
@@ -91,15 +91,15 @@ source_refs = ["aeat-dr-720"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-2013.type_2.1-1.tipo-de-registro"
-source = "manual_input"
-selector = { record = "type_2", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer" }
+source = "design_constant"
+selector = { record = "type_2", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer", value = "2" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-2013.type_2.2-4.modelo-declaracion"
-source = "manual_input"
-selector = { record = "type_2", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer" }
+source = "design_constant"
+selector = { record = "type_2", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer", value = "720" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
 

@@ -40,16 +40,18 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import (
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
-    derive_calculation_revision_id_from_revision,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    derive_calculation_revision_id_from_revision,
 )
 from .._action_errors import (
     ModeloChargeAccountMissingError,

@@ -73,7 +73,7 @@ def _row_payload(model: str) -> bytes:
     """
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto import (
+    from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
@@ -95,7 +95,7 @@ def _substitute_row(*, victim_model: str, donor_model: str) -> None:
     """Re-encrypt the donor row's genuine plaintext under the victim row's identity."""
     from sqlalchemy import select
 
-    from ....persistence.storage.crypto import (
+    from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,

@@ -19,7 +19,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger.models import ManualLedgerTransactionResult
-from ....application.review import LedgerReviewFilterSpec
+from ....application.review.filter import LedgerReviewFilterSpec
 from ....core import LedgerSortField, LedgerSortOrder
 from ....domain.transactions import (
     BucketTransactionRef,

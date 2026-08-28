@@ -18,9 +18,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -29,13 +27,17 @@ from ....domain.modelos import (
     VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    derive_calculation_revision_id,
-    derive_calculation_revision_id_from_revision,
     derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_verification_report,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
 )
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact

@@ -36,13 +36,13 @@ from ...domain.transactions import (
     TransactionCatalogue,
     is_classified,
 )
-from ._enums import ReviewSeverity
-from ._models import (
+from .enums import ReviewSeverity
+from .errors import ReviewSourceLoadError
+from .models import (
     FindingReviewItem,
     InvoiceReviewItem,
     TransactionReviewItem,
 )
-from .errors import ReviewSourceLoadError
 
 _LOGGER = get_logger(__name__)
 

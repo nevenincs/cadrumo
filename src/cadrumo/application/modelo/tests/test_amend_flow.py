@@ -31,19 +31,21 @@ from ....core.config import Settings
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
-    FilingInstanceEvidence,
     ModeloRecord,
     ModeloRecordStatus,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence

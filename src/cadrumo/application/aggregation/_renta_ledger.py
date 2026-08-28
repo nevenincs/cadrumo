@@ -33,7 +33,14 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
+from ...core import (
+    CasillaId,
+    ElidedProse,
+    Modelo,
+    Period,
+    PeriodKind,
+    regime_apportions_deduction,
+)
 from ...core.identity import TransactionId
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -333,7 +340,7 @@ def _resolve_iva_deduction_ratio(
 
     register = prorrata_register_repository.load()
     entry = register.entry_for(ejercicio, sector_id=None)
-    if entry is None or entry.regime not in (ProrrataRegisterRegime.GENERAL, ProrrataRegisterRegime.ESPECIAL):
+    if entry is None or not regime_apportions_deduction(entry.regime):
         return None
     resolution = register.resolve_provisional(ejercicio, sector_id=None)
     if resolution.percentage is None:

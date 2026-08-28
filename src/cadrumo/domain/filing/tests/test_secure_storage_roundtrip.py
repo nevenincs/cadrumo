@@ -235,7 +235,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
 
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...calculations.registry.bindings import CasillaObservation
-    from ...modelos import (
+    from ...modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionCatalogue,
         CalculationRevisionState,

@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from ....application.filing import _filing_binding_values
+from ....application.filing._draft_construction import _filing_binding_values
 from ....core import CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
@@ -24,14 +24,11 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.modelos import (
+from ....domain.modelos import Modelo349OperadorRow, ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    Modelo349OperadorRow,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....domain.submission import ModeloDraftStatus
 from ....entrypoints.cli import (

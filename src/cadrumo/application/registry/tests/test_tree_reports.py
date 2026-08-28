@@ -7,7 +7,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .. import RegistryRevisionDetailReport, RegistryTreeReport, RegistryWorkbookParityDetailReport
+from ..tree import RegistryRevisionDetailReport, RegistryTreeReport, RegistryWorkbookParityDetailReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -23,20 +23,22 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
     ModeloRecord,
     ModeloRecordStatus,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url

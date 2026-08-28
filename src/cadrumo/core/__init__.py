@@ -323,6 +323,7 @@ if TYPE_CHECKING:
         ProrrataProvisionalProvenance,
         ProrrataRegisterRegime,
         SectorDiferenciadoLetra,
+        regime_apportions_deduction,
     )
     from ._provenance_stamp import (
         LOCAL_TRANSPORT_LABEL,
@@ -807,6 +808,7 @@ __all__: list[str] = [
     "provenance_transport_label",
     "read_toml",
     "record_design_epoch_year",
+    "regime_apportions_deduction",
     "registry_period_kind",
     "render_corpus_sidecar_text",
     "require_optional_extra",
@@ -1054,6 +1056,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProrrataEspecialTransitionKind": "._prorrata_register",
     "ProrrataProvisionalProvenance": "._prorrata_register",
     "ProrrataRegisterRegime": "._prorrata_register",
+    "regime_apportions_deduction": "._prorrata_register",
     "RECORD_DESIGN_EPOCH_PATTERN": "._record_design_epoch",
     "RECORD_DESIGN_EPOCH_RE": "._record_design_epoch",
     "RELEASED_FORMAT_FLOORS": ".compatibility_lifecycle",

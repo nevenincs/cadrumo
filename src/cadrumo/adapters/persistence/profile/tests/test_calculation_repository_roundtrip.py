@@ -40,10 +40,10 @@ from .....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from .....domain.modelos import (
+from .....domain.modelos import CalculationRevisionPersistenceError
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,

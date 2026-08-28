@@ -68,7 +68,8 @@ from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.filing import FilingExportError
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
+from ....domain.modelos import ExternalEvidenceKind
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
