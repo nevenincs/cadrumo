@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ec45aab9fd578a7fa063a5a00c058b29fccd1994214a376882e577ea0ba8fe2'
+body_hash: 'sha256:6da766f1d73a983718d2929aabc1704b33003b99973f49b20a158bbd53265dfd'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1509,7 +1509,6 @@ and every other notice must carry none, named in the failure message. Five tests
 in the file pass, and the wall catalogue is at 25 passing, up from 23 when this
 sweep of it started.
 
-
 ### Two work units pinned to revisions the registry never shipped, and a wall that passed vacuously
 
 Wall #328 (Modelo 190 reconcile) failed, and the reconcile output named the
@@ -1559,4 +1558,46 @@ One transient scare: a run failed with `ImportError: cannot import name
 broken tree. It was a peer mid-commit -- the package imports cleanly moments
 later and the tests pass. Worth remembering before attributing a failure to a
 shared worktree's momentary state.
+
+
+### Systematic sweep for the vacuous-pass class: two bad ids were the whole of it
+
+The Modelo 190 and 390 fixtures had been pinned to revisions the registry never
+shipped, and the failure mode was silent -- reconcile degraded to receipt
+identity and reported a clean match. A test can therefore be GREEN and prove
+nothing. That is worth sweeping for rather than waiting to trip over.
+
+Swept every `revision=` / `revision_id=` string literal under `src/cadrumo`
+test packages against the 62 revision ids the registry actually ships. 75
+distinct unknown ids, which sounds alarming and is not: 67 are deliberately
+synthetic (`test-drift`, `wrong-revision`, `unrelated-stale-revision`,
+`test-dangling`) belonging to negative tests and hand-built registries, where a
+fabricated id IS the fixture.
+
+Filtering to YEAR-SHAPED ids -- the ones that look real and so could deceive --
+leaves 8. Six are transparently synthetic (`2025-clean-state-test`, `2026-v1`,
+`2019-y-siguientes-successor`, `2024-01-01-a-2024-12-31`). Two were worth
+checking:
+
+- Modelo 714 `2021-y-siguientes` in `test_modelo_unsupported_work_refusal`,
+  against real revisions 2021 through 2025. The test passes, and it passes for
+  the RIGHT reason: its `required_groups` assert the refusal names Ley 19/1991,
+  Orden HAC/1023/2021 and the Sede host, which only a genuine unsupported-modelo
+  refusal carries. Corrected to `2021` anyway, and the correction doubled as the
+  proof: 13 tests still pass, so the id was provably inert rather than
+  load-bearing. A false constant that happens not to matter today is the same
+  landmine the M190 one was before it mattered.
+- Modelo 353 `2008-2025` in `test_cross_modelo_carry_taxonomy`. Genuinely inert:
+  `_classify` returns on the `per_grupo_member` grouping before the revision is
+  read, and that early branch is exactly what the assertion checks. Left alone.
+
+The adjacent vacuity risk was checked too. `_DIRECT_CROSS_MODELO_CARRIES` keys
+its rows by `(modelo, revision, binding)`, so a stale key would silently
+classify a row as unowned and pass. Its one entry resolves: Modelo 130
+`2019-y-siguientes` exists and carries
+`irpf.previous_year_economic_activity_net_income`.
+
+So the two fixtures already corrected were the whole of this defect class in the
+test tree, which is the useful result -- the sweep was worth running to learn
+that rather than to assume it.
 
