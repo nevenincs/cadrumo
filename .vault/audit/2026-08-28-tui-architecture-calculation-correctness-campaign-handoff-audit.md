@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:5495629f17422fcdbdc7b17cd28e23a50c590f106b24020772352488f9985b56'
+body_hash: 'sha256:dabb6fbb4135938a31e4264b8a0d2b77ef35275856a1ea6a99eaed2f632c11b3'
 related: []
 ---
 
@@ -381,3 +381,54 @@ manual-grounded parameters the probe cannot see. The Madrid 2022 entries are the
 worked example: flagged by the probe, verbatim in the manual. Findings established
 by reading corpus files directly — Modelo 347, Modelo 232, Modelo 360 — are
 unaffected.
+
+## The campaign's origin finding is RESOLVED at HEAD
+
+This campaign was opened by a guard that refused an entire filing citing
+under-declaration while firing on a population — `InvoiceKind.RECEIVED`, purchase
+invoices — where a ledger shortfall makes the taxpayer **over-pay**. The stated
+criterion and the real direction disagreed, and nothing said so.
+
+Re-verified at HEAD: **that disagreement is gone.**
+`_raise_if_screened_invoice_iva_would_be_silent`
+(`application/aggregation/_modelo_bindings.py`) now states the distinction in its
+own comment and implements it:
+
+> Withholding an unauthorised input row is unconditional; REFUSING the whole
+> filing over it is not. This guard's criterion… is invoice IVA that would EXCEED
+> the transaction-ledger cuota — that is the under-declaration. An unlinked
+> purchase invoice whose cuota the ledger already carries is corroborating
+> evidence of an operation that IS declared, so refusing there blocks a filing
+> whose totals are correct. It stays withheld (no invented deduction family
+> reaches a casilla) and the operator is told through the diagnostic channel
+> instead.
+
+The refusal is now gated on `_uncovered_withheld_invoice_cuota(...) > 0` — invoice
+IVA in excess of the ledger cuota. Criterion and population agree: it fires only
+where the direction genuinely is under-declaration, and the corroborating-purchase
+case is withheld with an operator diagnostic rather than refused.
+
+Confirmed committed, not a working-tree edit: the symbol is present in
+`git show HEAD:…` and the file is unmodified in `git status`. (`git log -S` does
+not trace it, presumably across a rename; HEAD content is the authority.) The
+behaviour is exercised by `test_invoice_declared_category_survives.py` and
+`test_terminal_preconditions.py`.
+
+**The organising question survives its origin case.** It kept earning findings
+after this one was fixed — the M390 fourth recargo tier, the M360 refund
+thresholds, the RIC 80 % concept — so the question, not the instance, is what the
+handoff should carry forward.
+
+### The two direction probes, re-run at HEAD
+
+Both are stable and neither surfaces a new candidate:
+
+- `direction_audit` — 66 refusing functions scanned, **one** hit, and it is this
+  now-resolved guard. Its detector matches the old prose that survives in the
+  comment explaining the fix, so the hit is a residue of the explanation, not a
+  live defect.
+- `restrictive_defaults` — the relief-side zero fallbacks remain the reviewed
+  DANA / recargo / suplido set; the nine liability-side ones are all
+  `recargo_amount or Decimal("0")`, legitimately zero where no recargo applies.
+
+Re-run both after any change that adds a relief or a guard.
