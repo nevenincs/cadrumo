@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7520f6cb4f68b9a39b5254285f534d5dfc4f259a31dbacb4c21ad0f9b9a53213'
+body_hash: 'sha256:2af84d1501c1f16fcba0b1abe5f108e508249cb15ce61c9282583fc9106002e1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2107,3 +2107,56 @@ Measurement note: the third sweep was running during these edits. Its totals
 therefore reflect a mixed tree and should be read as a floor, not a snapshot;
 every fix in this campaign is established by running its own file, which is what
 the per-fix runs above record.
+
+### Hand-rolled stubs hid a resolver returning nothing, and sweep 3 is not a measurement
+
+`test_profile_export_values` failed five ways on missing dictionary fields
+(`DP_APENOM_D`, `DPNIF_C`, `DPFNAC_D`). None of those was the defect.
+
+The file declared its own `_Fact` and `_Record` dataclasses standing in for the
+domain models. `profile_fact_index` guards with
+`isinstance(record, UserProfileRecord)` and returns an EMPTY index for anything
+else, so the resolver produced `{}` and every assertion died on a KeyError
+naming a field that was never missing. Measured before editing: 30 export-addressed
+bindings resolve, `DP_APENOM_D` among them, yet the resolved mapping was empty.
+
+Replacing the stubs with real `UserProfileFact` / `UserProfileRecord` is also
+what `aeat-quality-gates` asks for -- stubs standing in for domain models are
+exactly what it forbids -- and it immediately exposed two more fixture lies the
+stub had been absorbing:
+
+- `tax_residence.ccaa = "10"`. The schema declares that enum over community
+  NAMES (`madrid`, `andalucia`, ...), never numeric codes, so `"10"` was a value
+  the field cannot hold. With `madrid` the resolver returns `'madrid'` cleanly.
+- `renta_filing.declaration_type = "1"` resolving to `Decimal('1')`. This one is
+  DELIBERATE and documented: `_coerce_profile_fact_value` restores the Decimal
+  and date types JSON drops on persistence, because a stored `"1"` is
+  indistinguishable from a round-tripped `Decimal(1)`; values with an
+  insignificant leading zero (postcodes) are carved out and stay `str`. The
+  assertion now records that contract with its rationale rather than fighting
+  it.
+
+A related measurement worth keeping: six enum fields carry codes that become
+Decimal under the same coercion (`codigo_provincia`, `marital_status`,
+`participe_clave`, `naturaleza_inmueble`, `situacion_inmueble`,
+`elected_withholding_pct`), so `"10"` and `"01"` take different Python types and
+the renderer branches on type. That is a consequence of the documented design
+rather than a fresh defect, and it is recorded here rather than acted on.
+
+9 tests in the file pass, up from 4.
+
+**Sweep 3 must not be read as a result.** It reports 571 failed / 121 errors
+against sweep 2's 452 / 4, which looks like a large regression and is not one.
+The errors are collection failures from a peer's IN-FLIGHT work:
+`src/cadrumo/core/aggregation.py` is modified in the working tree adding
+`BindingSourceKind.DESIGN_CONSTANT`, and it is not yet enrolled in the
+source-kind-to-`OperatorActionAxis` map, so `application/state_projection`
+raises at import and takes collection down tree-wide. Edits from this campaign
+also landed mid-run. Both make the totals a mixed reading; every fix here is
+established by running its own file.
+
+The missing enrolment was deliberately NOT completed. Every `OperatorActionAxis`
+member names something the operator must DO, and a design constant's value rides
+on the binding selector -- the operator does nothing. Enrolling it under any
+existing axis would hand operators a false instruction to satisfy a gate, so the
+choice belongs to whoever is adding the kind.

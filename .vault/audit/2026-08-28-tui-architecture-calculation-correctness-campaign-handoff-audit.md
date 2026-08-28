@@ -181,8 +181,22 @@ are cross-checked even where the legal chain is not. The defect is the chain.
 7. **Citation defects over verified figures** — kept distinct from wrong numbers
    throughout: 90 autonomic scale tables cite the delegating article; the 2022
    Madrid mínimos
-   pin one `corpus_ref` across six years of differing amounts; and 99 parameters
-   carry a `required_text` pinning no number.
+   pin one `corpus_ref` across six years of differing amounts.
+
+   **99 parameters carry a `required_text` pinning no number** — re-verified at
+   HEAD, and sharper than first recorded. The mechanism is real and *enforced*:
+   `registry/_validate_evidence.py` requires every `required_text` phrase to
+   appear verbatim in the bundled source, failing registry validation otherwise,
+   and the bundled authority threads a `source_root` so the check runs on the
+   standard load path. Coverage is total — 0 of 458 numeric parameters lack a
+   `required_text`, and 359 pin at least one digit.
+
+   The gap is strength, not absence. For those 99, the check confirms the cited
+   source *discusses the topic* without constraining the *figure*: a wrong number
+   would pass validation untouched. One structural caveat worth knowing — the
+   text check is skipped entirely when the validator is built without a
+   `source_root`, so any caller constructing one that way gets no verification at
+   all.
 
    ~~Modelo 232's threshold cites the framework documentation article~~ —
    **FIXED in `accd590f4e`.** Orden HFP/816/2017 art. 2 was already catalogued,
