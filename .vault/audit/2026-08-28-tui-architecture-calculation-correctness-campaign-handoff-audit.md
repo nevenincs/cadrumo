@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:030dab8aaecc369dad5c60c4fca23633ce6598fd93c8fdc71d8c8aed1330092a'
+body_hash: 'sha256:5495629f17422fcdbdc7b17cd28e23a50c590f106b24020772352488f9985b56'
 related: []
 ---
 
@@ -338,3 +338,46 @@ either consumed or explicitly deferred.
 
 The second is deciding the verification-power ratchet, since coverage can
 currently fall without any gate noticing.
+
+## Re-verification of the Madrid finding at HEAD, and a correction to how it was read
+
+The Madrid finding above was briefly withdrawn in a working note and is
+**re-instated**. The withdrawal checked the wrong artefact. Both facts below are
+true at once, and confusing them is the trap:
+
+- The **parameter's** `source_citations` are year-correct. The 2022 mínimos cite
+  `aeat-renta-2022-manual-parte1` → `corpus/manuals/renta/2022/part1/`, and all
+  three figures (2.498,40 / 2.810,70 / 2.914,80) appear verbatim in that year's
+  extracted text under "Mínimo por descendientes". Their `required_text` pins the
+  digits and matches exactly. **The figures are grounded.**
+- The **legal catalogue entry's** `corpus_ref` is the defect, and it is unchanged:
+
+| entry | `evidence_tier` / `kind` | `corpus_ref` | `effective_from` | review |
+|---|---|---|---|---|
+| `madrid-dl-1-2010:art-2` | `legal_authority` / `real_decreto_legislativo` | `corpus/manuals/renta/**2025**/part1/source.pdf.extracted.md#madrid-minimo-descendientes` | 2020-01-01 | `agent_reviewed` |
+| `:art-4` | same | `corpus/manuals/renta/**2025**/part2-deducciones-autonomicas/...#madrid-nacimiento-adopcion` | 2023-01-01 | `agent_reviewed` |
+| `:art-18` | same | `corpus/manuals/renta/**2025**/part2-deducciones-autonomicas/...#madrid-nacimiento-adopcion-limites` | 2023-01-01 | `agent_reviewed` |
+
+Each declares itself the regional *real decreto legislativo* while pointing at an
+AEAT **manual** extraction, and `art-2` spans from 2020 on a single corpus stating
+only the latest figures. That is the "one `corpus_ref` across six years of
+differing amounts" claim, confirmed concretely rather than asserted.
+
+An authenticity note worth keeping, since this audit distinguishes transcribed
+from authored excerpts: the 2022 `required_text` reproduces the manual's own
+grammatical slip, "por el primer descendient**es**". A fabricated excerpt would
+carry correct Spanish, so the slip is positive evidence of transcription.
+
+### A probe caveat that qualifies this audit's grounding tally
+
+The `numeric_match` sweep behind the "every encoded number is stated" count
+resolves **only** `legal_refs` → legal-catalogue `corpus_ref`. Parameters grounded
+through `source_refs` → source-catalogue `corpus_path` (the AEAT manuals tree) are
+never opened, so they report as "number not stated" regardless of truth.
+
+The verified-stated figure therefore stands as a **lower bound**, and the
+some-absent set is **not** evidence of ungroundedness — it mixes genuine gaps with
+manual-grounded parameters the probe cannot see. The Madrid 2022 entries are the
+worked example: flagged by the probe, verbatim in the manual. Findings established
+by reading corpus files directly — Modelo 347, Modelo 232, Modelo 360 — are
+unaffected.
