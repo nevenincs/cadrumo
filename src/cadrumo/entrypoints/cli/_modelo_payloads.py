@@ -953,13 +953,20 @@ class DataInventoryCasillaPayload(OutputSchema):
     and ``binding_source`` are populated only for ``ledger_derivable`` and
     ``profile_derivable`` rows; required and optional manual entries carry no
     binding (they are hand-entered).
+
+    The grounding invariant — ``legal_refs`` and ``source_refs`` non-empty —
+    belongs to the canonical
+    :class:`~application.modelo.DataInventoryCasilla`, which refuses to build an
+    ungrounded entry, so every consumer of the checklist inherits it rather than
+    only the JSON surface. This schema is the wire shape of an entry that
+    already satisfies it.
     """
 
     casilla_id: CasillaId
     number: str
     label: str
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     binding_id: BindingId | None = None
     binding_source: str | None = None
 
