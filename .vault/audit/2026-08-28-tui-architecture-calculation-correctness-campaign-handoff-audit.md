@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:5bc9a919030ac423939dee73eb8b54b14307a97f1e5f505c19e469ea3df204ce'
+body_hash: 'sha256:a8e9a683ca0a9ff593940f58058b666767cdbe305ce4055c8184a6ae0097fbd0'
 related: []
 ---
 
@@ -115,9 +115,24 @@ below are sorted on that axis because it is the axis with no coverage.
    throughout: 90 autonomic scale tables cite the delegating article; Modelo 100's
    2024 savings scale cites a redaction stating a different rate, where two gates
    conflict and neither available citation satisfies both; the 2022 Madrid mínimos
-   pin one `corpus_ref` across six years of differing amounts; Modelo 232's
-   threshold cites the framework documentation article; and 99 parameters carry a
-   `required_text` pinning no number.
+   pin one `corpus_ref` across six years of differing amounts; and 99 parameters
+   carry a `required_text` pinning no number.
+
+   ~~Modelo 232's threshold cites the framework documentation article~~ —
+   **FIXED in `accd590f4e`.** Orden HFP/816/2017 art. 2 was already catalogued,
+   corpus-backed and operator-reviewed, its note saying it "Define los umbrales
+   de operaciones vinculadas" and its excerpt reading "Operaciones específicas
+   ... supere los 100.000 euros". Added as the establishing provision; 28 Modelo
+   232 registry tests pass.
+
+   Re-verifying it surfaced a **separate, still-open** observation. Art. 2 sets
+   TWO thresholds: 250.000 EUR for operaciones with the same related party, and
+   100.000 EUR for operaciones específicas. The registry declares ONE parameter,
+   `modelo-232-related-party-threshold-eur`, carrying 100.000 — the *específicas*
+   figure under a *related-party* name — and does not model the 250.000 general
+   threshold at all. Latent today, because the parameter is one of the ten nothing
+   consumes; the same trap as the RIC naming, and it will be sprung by whoever
+   wires it.
 8. **Modelo 303 to Modelo 390 handoff**: five tests across two modules need
    genuinely filed quarters. No production defect — the guards are right and the
    tests predate the filing contract.
