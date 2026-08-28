@@ -56,6 +56,7 @@ from ...domain.modelos import (
     M184NaturalezaInmueble,
     M184SituacionInmueble,
     M184Subclave,
+    M303RectificativaMotive,
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
@@ -64,7 +65,6 @@ from ...domain.modelos import (
     Modelo349RectificacionRow,
     ModeloCode,
 )
-from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
