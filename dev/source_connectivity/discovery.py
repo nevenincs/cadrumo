@@ -512,9 +512,12 @@ def _module_level_bindings(tree: ast.Module) -> dict[str, ast.AST]:
             for target in statement.targets:
                 if isinstance(target, ast.Name):
                     bindings[target.id] = statement.value
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            if statement.value is not None:
-                bindings[statement.target.id] = statement.value
+        elif (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.value is not None
+        ):
+            bindings[statement.target.id] = statement.value
     return bindings
 
 
