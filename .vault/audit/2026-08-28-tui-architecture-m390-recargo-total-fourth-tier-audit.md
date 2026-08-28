@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0a30b21ceaf47895153e26dded603549f3eefa281d380b5db57cb2d47eee01b'
+body_hash: 'sha256:4ad577e13971b4065a3892fecb5fe4c2aacaf51db0ef6162be76abf983086305'
 related: []
 ---
 
@@ -131,3 +131,46 @@ Neither is applied here: the first changes a declared total and must be grounded
 before it ships, per the standing rule that the oracle follows the fix.
 
 No production code, registry data or test was changed by this audit.
+
+## Blast radius and sibling sweep, same day
+
+Two follow-up checks against the loaded snapshots, both narrowing the finding to
+exactly one aggregate and widening its consequence by one predicate.
+
+### No base-side sibling
+
+Enumerating every formula on both returns and filtering for recargo members:
+exactly one aggregate per return reaches them —
+`modelo-390-iva-anual-cuota-devengada-total` (3 recargo members, no `tipo-1-75`)
+and `modelo-303-iva-cuota-devengada-total` (`18`, `21`, `24`, `158`, `170`,
+tabaco present). There is no base-side total that omits `tipo-1-75.base`, because
+no computed aggregate sums the recargo *bases* at all. The defect is confined to
+the single cuota total, and the standing "check whether it has siblings" question
+is answered: it does not.
+
+### The omission propagates to the annual result, and to a second predicate
+
+`modelo-390-iva-anual-resultado-regimen-general` computes
+`iva.anual.resultado-regimen-general` from exactly two members:
+
+```
+[iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total]
+```
+
+So the missing tier flows straight into the annual result. That matters because a
+second exact-equality predicate guards it:
+
+```
+modelo-390-resultado-regimen-general-equals-reconciliacion-303
+  equals(["iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"])
+```
+
+The finding above cited one blocking equality
+(`...cuota-devengada-total-equals-reconciliacion-303`). There are two: the total
+and the result are each compared against their M303-derived reconciliation, and a
+tabaco-declaring filer diverges on both. This is the propagation path the formula
+header predicted in prose — "and therefore from
+`iva.anual.resultado-regimen-general`" — now confirmed structurally rather than
+read from a comment.
+
+Neither check changes the remediation question, which remains the owner's.
