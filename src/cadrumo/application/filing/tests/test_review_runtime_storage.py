@@ -70,13 +70,17 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
-        pytest.raises(StorageValidationError, match=r"no active bucket session|route does not match"),
+        pytest.raises(StorageValidationError) as refusal,
     ):
         compute_current_approval_basis(
             draft,
             bucket_id=_BUCKET_ID,
             schema_provider=schema_provider,
         )
+
+    # The key, not the rendered sentence: the prose alternation this replaced
+    # named two older wordings and matched neither once the refusal was localized.
+    assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:

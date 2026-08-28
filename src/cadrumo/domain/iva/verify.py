@@ -18,13 +18,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core.citation_grounding import CitationGrounding
 from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
 from ._schema import (
     IvaCatalogue,
     IvaCategory,
     IvaCitation,
-    IvaCitationGrounding,
     IvaVerificationIssue,
     IvaVerificationReport,
 )
@@ -106,7 +106,7 @@ def _citation_issues(
     # the corpus and refused, and its reason is recorded beside it.
     # Flagging it here would erase the distinction between a citation
     # nobody checked and one that failed the check.
-    if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
+    if citation.grounding is CitationGrounding.VERIFIED and not citation.quoted_text.strip():
         issues.append(
             IvaVerificationIssue(
                 level=BaseSeverity.ERROR,
@@ -153,7 +153,7 @@ def _citation_issues(
     # A non-empty quotation is not yet grounding. This reads the stored
     # text back against the bundled corpus, which is the only check that
     # separates a transcription from an assertion about one.
-    if citation.grounding is not IvaCitationGrounding.VERIFIED:
+    if citation.grounding is not CitationGrounding.VERIFIED:
         return issues
     try:
         quoted = legal_reference_quotes_corpus(

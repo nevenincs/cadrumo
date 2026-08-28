@@ -709,6 +709,7 @@ cli:
           inventario: készletnyilvántartás
           miembro_atribucion: jövedelemtulajdonítás tagja
           operacion_reembolso: visszatérítési művelet
+          operacion_tercero: harmadik féllel folytatott ügylet
           operacion_vinculada: kapcsolt ügylet
           registro_retenciones: levonási nyilvántartás
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója

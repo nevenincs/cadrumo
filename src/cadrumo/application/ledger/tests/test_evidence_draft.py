@@ -71,7 +71,7 @@ _SUPPLIER_CIF = "B12345674"
 
 _FULL_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
-    f"NIF: {_SUPPLIER_CIF}",
+    f"Proveedor NIF: {_SUPPLIER_CIF}",
     "Numero de factura: 2026-0142",
     "Fecha: 10/03/2026",
     "Base imponible: 100,00",
@@ -105,6 +105,13 @@ _PARTIAL_INVOICE_LINES = (
 _FULL_INVOICE_FIELDS = {
     "supplier_tax_id": _SUPPLIER_CIF,
     "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    # The printed heading that ties the identifier to the SUPPLIER role. Without
+    # it the identity stays deliberately unresolved and confirmation blocks:
+    # one verified identifier is not evidence of whose it is, and promoting it
+    # because nothing else competes would name whatever entity the page happens
+    # to print. The value must occur in the document text -- grounded_reading
+    # drops role evidence a reader invented -- so it matches the line above.
+    "supplier_tax_id_role_evidence": "Proveedor NIF:",
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
     "invoice_date": "2026-03-10",

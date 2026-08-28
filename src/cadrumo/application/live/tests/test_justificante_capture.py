@@ -33,6 +33,11 @@ from ..justificante import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+# Canonical UUIDv4 profile identity. Test buckets are published through
+# ``canonical_profile_bucket_id``, which accepts only a version-4 UUID,
+# so a readable label cannot address a bucket.
+_BUCKET_ID = "1a5c0000-0000-4000-8000-000000000001"
+
 _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _PDF_SHA256 = hashlib.sha256(_PDF_BYTES).hexdigest()
 _OTHER_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Rev 2>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
@@ -92,7 +97,7 @@ def _active_snapshot(
 
 def test_active_capture_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """A populated ACTIVE capture round-trips, PDF bytes byte-for-byte intact."""
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
         original = _active_snapshot(bucket_id=bucket_id)
@@ -120,7 +125,7 @@ def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
                 period=_PERIOD_2T,
                 pdf_sha256=_OTHER_PDF_SHA256,
             ),
-            bucket_id="renta-2026-bucket",
+            bucket_id=_BUCKET_ID,
             modelo=Modelo.M130.value,
             filing_year=2026,
             period=_PERIOD_2T,
@@ -136,7 +141,7 @@ def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
 
 def test_superseded_capture_survives_roundtrip(tmp_path: Path) -> None:
     """A SUPERSEDED capture round-trips with its successor pointer intact."""
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
         successor = _active_snapshot(bucket_id=bucket_id)
@@ -162,7 +167,7 @@ def test_superseded_capture_survives_roundtrip(tmp_path: Path) -> None:
 
 def test_discarded_capture_survives_roundtrip(tmp_path: Path) -> None:
     """A DISCARDED capture round-trips with all discard audit metadata populated non-default."""
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
         discarded = _active_snapshot(bucket_id=bucket_id).model_copy(
@@ -197,7 +202,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
         justificante_capture_snapshot_object_key,
     )
 
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
         successor = _active_snapshot(bucket_id=bucket_id)
@@ -241,7 +246,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
 
 def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
     """A re-filed period (a different signed PDF) supersedes the prior ACTIVE capture."""
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
         first = service.capture(
@@ -275,7 +280,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
 
 def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
     """Re-capturing the identical signed PDF returns the existing snapshot."""
-    bucket_id = "renta-2026-bucket"
+    bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
         kwargs = _CaptureKwargs(

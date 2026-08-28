@@ -556,7 +556,7 @@ classification = "orchestration_routing"
 justification = "Applicability/dispatch guard on `modelo_code == Modelo.M210 and load_settings().cadrumo_m210_engine_live`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
 
 [[branch]]
-key = "src/cadrumo/application/modelo/_work_plazo.py::calculated_m210_plazo_notice::M210"
+key = "src/cadrumo/application/modelo/_work_plazo.py::calculated_m210_plazo_resolution::M210"
 classification = "orchestration_routing"
 justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M210`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
 

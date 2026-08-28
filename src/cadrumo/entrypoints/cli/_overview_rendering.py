@@ -72,8 +72,6 @@ from ._overview_payloads import (
     OverviewPipelineResult,
     OverviewPrepareResult,
     OverviewPrepareStepPayload,
-    OverviewRecargoBandPayload,
-    OverviewRecoveryPayload,
 )
 
 _NEXT_STEP_NOTICE_CODE = "overview.status.next_step"
@@ -138,21 +136,6 @@ def _resolved_action(declaration: DeclaredNextAction | None) -> ResolvedNoticeAc
         argument_bindings=tuple(
             ResolvedActionArgument.model_validate(binding.model_dump()) for binding in declaration.argument_bindings
         ),
-    )
-
-
-def _recovery_payload(entry: OverviewCalendarEntry) -> OverviewRecoveryPayload | None:
-    """Resolve an overdue recovery's application declaration for CLI output."""
-    if entry.recovery is None:
-        return None
-    next_action = _resolved_action(entry.recovery_action)
-    if next_action is None:
-        raise ValueError("overdue overview recovery requires an application action declaration")
-    recargo_band = OverviewRecargoBandPayload.model_validate_json(entry.recovery.recargo_band.model_dump_json())
-    return OverviewRecoveryPayload(
-        still_filable=entry.recovery.still_filable,
-        recargo_band=recargo_band,
-        next_action=next_action,
     )
 
 

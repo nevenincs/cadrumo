@@ -76,6 +76,9 @@ def _activate_locale(locale: str | None) -> None:
     clear_output_language_cache()
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: Pilot[ReturnType] is an
+# invariant generic; this harness drives any concrete app regardless of the
+# type it returns from run(), which only Any satisfies for every instantiation.
 async def _apply(pilot: Pilot[Any], session: Session) -> None:
     """Deliver every recorded gesture, in order, through the real pipeline."""
     for gesture in session.gestures:
@@ -111,6 +114,9 @@ async def _apply(pilot: Pilot[Any], session: Session) -> None:
         await pilot.pause()
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-TEXTUAL-APP: App[ReturnType] is an
+# invariant generic; read accepts any concrete app regardless of the type it
+# returns from run(), which only Any satisfies for every instantiation.
 def _run[T](session: Session, read: Callable[[App[Any], float], Awaitable[T] | T]) -> T:
     """Build, drive and hand the settled app to ``read``.
 

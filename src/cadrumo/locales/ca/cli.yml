@@ -707,6 +707,7 @@ cli:
           inventario: inventari d’existències
           miembro_atribucion: membre d'atribució de rendes
           operacion_reembolso: operació de reemborsament
+          operacion_tercero: operació amb tercers
           operacion_vinculada: operació vinculada
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió

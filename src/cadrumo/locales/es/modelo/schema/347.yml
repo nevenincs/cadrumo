@@ -83,6 +83,9 @@ modelo:
               help: Casilla contraparte.pais-codigo del modelo 347, ejercicio 2008.
               label: Codigo de pais de la contraparte (ISO 3166-1 alfa-2; vacio para
                 contrapartes nacionales)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: null
+              label: null
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dato declarado en el modelo 347, declaracion anual de operaciones
                 con terceras personas.
@@ -268,6 +271,9 @@ modelo:
               help: Casilla contraparte.pais-codigo del modelo 347, ejercicio 2025.
               label: Codigo de pais de la contraparte (ISO 3166-1 alfa-2; vacio para
                 contrapartes nacionales)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: null
+              label: null
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dato declarado en el modelo 347, declaracion anual de operaciones
                 con terceras personas.

@@ -130,20 +130,30 @@ class ModeloWorkspaceRefusalCode(StrEnum):
     """Stable domain-boundary refusals for an otherwise supported Workspace V1."""
 
     TARGET_NOT_FOUND = "target_not_found"
+    """The natural (modelo, filing_year, period) coordinate the target names
+    resolves cleanly, but no :class:`WorkUnit` exists there yet -- the WORK
+    selector's own ``ABSENT`` state (``resolution.work_unit is None``).
+    Distinct from ``CALCULATION_UNAVAILABLE``, whose work unit DOES exist and
+    merely carries no calculation revision: an absent work unit cannot be
+    "calculated"; it must be created first, a different operator remedy the
+    two codes must not share."""
     VISIBLE_TARGET_AMBIGUOUS = "visible_target_ambiguous"
     BUCKET_ASSERTION_MISMATCH = "bucket_assertion_mismatch"
     REVISION_ASSERTION_MISMATCH = "revision_assertion_mismatch"
     STATIC_INSPECTION_UNAVAILABLE = "static_inspection_unavailable"
     AUTHORITY_GRADE_UNAVAILABLE = "authority_grade_unavailable"
     CALCULATION_UNAVAILABLE = "calculation_unavailable"
-    """S296/S128: the WORK axis carries no calculation for this target
-    (``current_calculation_revision_id is None``), so a GRADED_SNAPSHOT
-    admission cannot produce the required materialization/provenance
-    facets. Distinct from ``AUTHORITY_GRADE_UNAVAILABLE`` (a REGISTRY-axis
-    fact): folding a missing calculation into the grade code would send an
-    operator to the wrong remedy -- the registry, not "calculate this work
-    unit first". Never raised for a STATIC_INSPECTION admission, which has
-    no calculation dependency."""
+    """The WORK axis resolved an EXISTING work unit for this target, but it
+    carries no calculation revision yet (``current_calculation_revision_id is
+    None``), so a GRADED_SNAPSHOT admission cannot produce the required
+    materialization/provenance facets. Distinct from
+    ``AUTHORITY_GRADE_UNAVAILABLE`` (a REGISTRY-axis fact): folding a missing
+    calculation into the grade code would send an operator to the wrong
+    remedy -- the registry, not "calculate this work unit first". Also
+    distinct from ``TARGET_NOT_FOUND`` (no work unit exists at all): this
+    code's own reconsideration text ("calculate this work unit") presumes a
+    work unit the operator can act on. Never raised for a STATIC_INSPECTION
+    admission, which has no calculation dependency."""
     SCHEMA_UNAVAILABLE = "schema_unavailable"
     LOCALE_UNAVAILABLE = "locale_unavailable"
     CONSISTENCY_UNAVAILABLE = "consistency_unavailable"

@@ -195,6 +195,21 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
 ) = _taxpayer_type_choice_values()
 
 
+def _third_party_declaration_role_choice_values() -> list[str]:
+    """Return choice tokens for the Modelo 347 declaring-role enum.
+
+    Derived from :class:`ThirdPartyDeclarationRole` so the
+    ``--declaration-roles`` flag choices never drift from the
+    values the wizard catalogue and the profile schema validate against.
+    """
+    from ...core import ThirdPartyDeclarationRole
+
+    return [member.value for member in ThirdPartyDeclarationRole]
+
+
+_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = _third_party_declaration_role_choice_values()
+
+
 def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     """Return choice tokens for IRPF-personal enums.
 
@@ -504,6 +519,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
+    ),
+    "declaration-roles": typer.Option(
+        "--declaration-roles",
+        click_type=_choice(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
+        metavar=_choice_metavar(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.declaration-roles.help"),
     ),
     "incn-prior-12-months": typer.Option(
         "--incn-prior-12-months",

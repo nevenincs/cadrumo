@@ -14,7 +14,7 @@ from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
+from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period, TravelAgencyMediationType
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -27,7 +27,13 @@ from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
-from .._source_resolver import _OWNED_SOURCES, M349_CLAVE_INFERRED_REASON, _intracommunity_clave
+from .._source_resolver import (
+    _OWNED_SOURCES,
+    M349_CLAVE_INFERRED_REASON,
+    _intracommunity_clave,
+    _m347_filer_declaration_roles,
+    _m347_invoice_observation,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -229,7 +235,11 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         ),
     )
 
-    assert resolution.owned_sources == (BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE)
+    assert resolution.owned_sources == (
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.PAYABLE_INVOICE,
+    )
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
@@ -675,6 +685,7 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
         "base_amount",
         "invoice_total_amount",
         "intracommunity_clave",
+        "operation_clave",
         "party_legal_name",
     },
 )
@@ -753,6 +764,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("3000.00"),
         "invoice_total_amount": Decimal("3000.00"),
         "intracommunity_clave": "I",
+        "operation_clave": None,
         "party_legal_name": "Servizi SRL",
     }
 
@@ -832,6 +844,9 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     # Pinned for the same reason as the M349 proof above: these are the facts
     # the retired slim store declared, every one of them read off the fixture.
     # ``intracommunity_clave`` is None because M347 is the domestic informativa.
+    # ``operation_clave`` is "B" (entregas): this is an ISSUED invoice with no
+    # travel-agency mediation fact, so it falls through to the ordinary
+    # invoice-direction classification.
     declared_facts = {
         "party_tax_id": "B12345674",
         "country_code": "ES",
@@ -839,6 +854,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("1500.00"),
         "invoice_total_amount": Decimal("1815.00"),
         "intracommunity_clave": None,
+        "operation_clave": "B",
         "party_legal_name": "Cliente M347 SL",
     }
 
@@ -1074,15 +1090,20 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     assert len(rows) == 2
 
 
-def test_capability_parity_m347_declares_only_the_domestic_party(
+def test_capability_parity_m347_excludes_the_intracommunity_operations(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """M347 counts the domestic party and excludes the intra-community ones.
+    """M347 excludes the intra-community operations, by CLASSIFICATION not country.
 
     The same bucket as the M349 proof, asserted from the other modelo, because
     the two projections share one resolver and a filter error would move a
     record between them rather than losing it -- a shape that a single-modelo
-    proof reads as correct.
+    proof reads as correct. The DE/IT invoices this fixture excludes from
+    M347 carry a genuine intra-community `IvaCategory`
+    (RD 1065/2007 art. 33.2.i), not merely a non-ES country; see
+    `test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty`
+    for the discrimination this test alone cannot prove -- a non-resident
+    counterparty under an ORDINARY operation still reaches the declaration.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
@@ -1099,6 +1120,151 @@ def test_capability_parity_m347_declares_only_the_domestic_party(
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A non-resident counterparty under an ordinary operation REACHES M347.
+
+    RD 1065/2007 art. 33.2 is a closed exclusion list whose only
+    residency-adjacent items are the filer's own foreign permanent
+    establishment and operations reported through a coincident informativa --
+    neither covers a genuinely non-resident, non-recapitulativa counterparty.
+    A US customer under an ordinary export sale (zero-rated, not intra-EU) is
+    exactly that case: it must count toward the M347 declarante summary, not
+    vanish silently.
+    """
+    export_sale = _invoice(
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-US-2026-001",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="US000000001",
+        counterparty_name="Acme Imports Inc",
+        counterparty_country="US",
+        base_total=Decimal("4000.00"),
+        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    )
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((export_sale,)))
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="347",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision=_modelo_revision("347", "2011-2024"),
+        ),
+    )
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not() -> None:
+    """The discrimination S303 exists to prove, not just the classification.
+
+    A travel agency's ISSUED invoice under RD 1619/2012 disposición adicional
+    cuarta declares clave F. An ORDINARY issued invoice of the identical
+    amount, direction and counterparty -- carrying no mediation fact -- must
+    NOT declare F: it falls through to the ordinary clave B. Varying only the
+    mediation fact, nothing else, is what proves the classifier reads the
+    fact rather than the amount or direction.
+    """
+    mediated_sale = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-AGENCY-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente Agencia SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    mediated_sale = mediated_sale.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+    )
+    ordinary_sale = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-ORDINARY-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente Agencia SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    assert ordinary_sale.travel_agency_mediation is None
+
+    mediated_observation = _m347_invoice_observation(mediated_sale)
+    ordinary_observation = _m347_invoice_observation(ordinary_sale)
+
+    assert mediated_observation is not None
+    assert mediated_observation.operation_clave == "F"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+
+
+def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_purchases() -> None:
+    """Clave G is narrower than F: only air passenger transport, RECEIVED direction.
+
+    A RECEIVED invoice for a mediated but NON-air service (e.g. hostelería)
+    is neither F nor G by the diseño's own text, and must fall through to the
+    ordinary clave A rather than being fabricated into G.
+    """
+    air_transport_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-AIR-2026-001",
+        issued_at=date(2026, 5, 2),
+        counterparty_tax_id="B11223344",
+        counterparty_name="Agencia de Viajes SA",
+        counterparty_country="ES",
+        base_total=Decimal("1200.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    air_transport_purchase = air_transport_purchase.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT},
+    )
+    non_air_mediated_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-HOTEL-2026-001",
+        issued_at=date(2026, 5, 2),
+        counterparty_tax_id="B11223344",
+        counterparty_name="Agencia de Viajes SA",
+        counterparty_country="ES",
+        base_total=Decimal("1200.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    non_air_mediated_purchase = non_air_mediated_purchase.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+    )
+
+    air_observation = _m347_invoice_observation(air_transport_purchase)
+    non_air_observation = _m347_invoice_observation(non_air_mediated_purchase)
+
+    assert air_observation is not None
+    assert air_observation.operation_clave == "G"
+    assert non_air_observation is not None
+    assert non_air_observation.operation_clave == "A"
+
+
+def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent_bucket(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """No `UserProfileRecord` was ever seeded for this bucket -- a real absent profile.
+
+    Exercises the real repository's `ProfileNotFoundError` path, not a mock:
+    the loader must fail closed to an empty role set rather than raising, so
+    an M347 filer whose profile is otherwise incomplete or unset still
+    reaches claves A, B, F and G, and simply carries no C/D/E eligibility.
+    """
+    assert _m347_filer_declaration_roles(secure_profile.bucket_id) == frozenset()
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])

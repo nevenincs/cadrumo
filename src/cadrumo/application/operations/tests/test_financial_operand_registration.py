@@ -9,8 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operations import OperationEffect, OperationInteractionKind
-from .._financial_operand import OperationTransientFinancialOperandDeclaration
-from .._financial_operand_custody import (
+from ..financial_operand import OperationTransientFinancialOperandDeclaration
+from ..financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyState,

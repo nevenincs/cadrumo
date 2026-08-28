@@ -29,6 +29,7 @@ is the difference between prose and a gate.
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 
 import pytest
 
@@ -131,7 +132,7 @@ def _undeclared_terms(tree: ast.AST) -> list[tuple[int, list[str]]]:
     return offenders
 
 
-def _production_modules() -> list:
+def _production_modules() -> list[Path]:
     """Return the package's production modules."""
     return [path for path in SRC_CADRUMO.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py"]
 

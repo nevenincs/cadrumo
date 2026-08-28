@@ -130,6 +130,7 @@ flows:
           ledger_transaction: Nyilvántartási tétel
           m303_regimen_simplificado_annual_summary: 303-as modelo egyszerűsített rendszer
             összesítő
+          m347_third_party_operation: Harmadik féllel folytatott ügylet
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás

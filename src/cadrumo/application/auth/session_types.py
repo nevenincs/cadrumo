@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ...core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
 from ...core.time import coerce_utc_aware
+from ...core.time import now as clock_now
 
 
 class CertificateSessionDetail(BaseModel):
@@ -202,7 +203,7 @@ class AeatSession(BaseModel):
 
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return whether the idle deadline has elapsed at ``now``."""
-        reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+        reference = coerce_utc_aware(now) if now is not None else clock_now()
         return reference > self.idle_deadline
 
 

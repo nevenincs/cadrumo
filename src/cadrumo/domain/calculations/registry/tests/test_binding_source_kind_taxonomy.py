@@ -163,11 +163,12 @@ def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> No
 
 
 def test_invoice_frozenset_is_the_invoice_subset_of_the_enum() -> None:
-    """``INVOICE_BINDING_SOURCE_KINDS`` is exactly the three invoice members."""
+    """``INVOICE_BINDING_SOURCE_KINDS`` is exactly the four invoice members."""
     assert {
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
     } == INVOICE_BINDING_SOURCE_KINDS
     assert set(BindingSourceKind) >= INVOICE_BINDING_SOURCE_KINDS
 

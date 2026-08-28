@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .....application.operations._financial_operand import OperationFinancialOperandRefusalReason
-from .....application.operations._financial_operand_custody import (
+from .....application.operations.financial_operand import OperationFinancialOperandRefusalReason
+from .....application.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyState,
     advance_custody,

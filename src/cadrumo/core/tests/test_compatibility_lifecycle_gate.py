@@ -43,8 +43,10 @@ from .. import (
     COMPATIBILITY_REGIME,
     PERSISTED_FORMATS,
     RELEASED_FORMAT_FLOORS,
-    CompatibilityRegime,
     PersistedFormatClass,
+)
+from ..compatibility_lifecycle import (
+    CompatibilityRegime,
     misclassified_floor_keys,
     unfloored_durable_formats,
     unknown_floor_keys,

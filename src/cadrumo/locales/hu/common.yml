@@ -366,6 +366,11 @@ categories:
     seguros_salud_autonomo:
       notes: 'Törvényi felső határig levonható: legfeljebb 500 EUR/év, adóalanyonként
         (Ley 35/2006 art. 30.2.5.c szabály 1.ª, betegségbiztosítási díjak).'
+      statutory_cap_variants:
+        discapacidad:
+          label: Felső határ fogyatékossággal élő biztosított személyenként
+        general:
+          label: Általános felső határ biztosított személyenként
     software_suscripcion:
       label: Szoftver-előfizetések
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).

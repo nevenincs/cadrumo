@@ -34,7 +34,7 @@ from ._record_design_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_INVOICE_SOURCES = {"payable_invoice", "collectible_invoice"}
+_INVOICE_SOURCES = {"payable_invoice", "collectible_invoice", "m347_third_party_operation"}
 
 
 def _invoice_facts_by_modelo() -> dict[str, set[str]]:

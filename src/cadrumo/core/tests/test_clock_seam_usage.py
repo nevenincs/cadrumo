@@ -68,20 +68,10 @@ _SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 #: the 2026-07-14 Madrid-civil-date ruling: both now default to
 #: :func:`cadrumo.core.time.today_madrid`, so the gate ratchets shut on them.
 _ALLOWLIST: dict[str, str] = {
-    "application/auth/_acquisition_lock.py": (
-        "Injectable live-AEAT site: the auth acquisition-lock staleness check accepts "
-        "an explicit `now=` and falls back to wall-clock only on the live path, where "
-        "the frozen-clock seam is barred under CADRUMO_LIVE_TESTS_ENABLED."
-    ),
     "adapters/outbound/aeat/auth/certificate.py": (
         "Injectable live-AEAT site: certificate validity/expiry evaluators accept an "
         "explicit `now=` and read wall-clock only as the default on the live "
         "certificate path barred from the frozen-clock seam."
-    ),
-    "adapters/outbound/aeat/auth/authenticator_types.py": (
-        "Injectable live-AEAT site: the authenticator freshness check accepts an "
-        "explicit `now=` and falls back to wall-clock only on the live auth path "
-        "barred from the frozen-clock seam."
     ),
     "adapters/outbound/aeat/browser/_site_health_parsers.py": (
         "Injectable live-AEAT site: the browser site-health parser accepts an explicit "

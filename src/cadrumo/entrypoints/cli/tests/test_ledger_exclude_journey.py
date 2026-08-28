@@ -95,8 +95,10 @@ def test_exclude_returns_quintet_and_marks_row_excluded() -> None:
     assert len(result["bucket_event_ids"]) == 1
     assert result["transaction"]["business_classification"] == "REVIEWED_EXCLUDED"
 
-    # The row reads as excluded in the single-row review view.
-    reviewed = _invoke(["--format", "json", "app", "ledger", "review", transaction_id])
+    # The row reads as excluded in the single-row view. `review` is the
+    # interactive list surface and takes no positional id -- addressing one
+    # transaction is `view`, whose id is a positional argument.
+    reviewed = _invoke(["--format", "json", "app", "ledger", "view", transaction_id])
     assert reviewed.exit_code == 0, reviewed.output
     review_payload = json.loads(reviewed.output)["result"]
     assert review_payload["review_status"] == "excluded"

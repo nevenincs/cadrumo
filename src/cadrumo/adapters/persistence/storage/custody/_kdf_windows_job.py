@@ -62,7 +62,7 @@ class _ExtendedLimitInformation(ctypes.Structure):
 class _WindowsJob:
     """A required kill-on-close Windows process-tree and resource boundary."""
 
-    def __init__(self, handle: int, kernel32: Any) -> None:
+    def __init__(self, handle: int, kernel32: ctypes.WinDLL) -> None:
         self._handle = handle
         self._kernel32 = kernel32
 

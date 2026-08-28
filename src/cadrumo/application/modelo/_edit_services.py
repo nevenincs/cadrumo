@@ -14,7 +14,7 @@ copied from a Workspace read.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
 
 from ...core.decimal import (
     european_thousands_reading_is_ambiguous,
@@ -22,6 +22,7 @@ from ...core.decimal import (
     try_parse_canonical_decimal,
 )
 from ...core.hashing import content_hash_hex
+from ...core.time import now as clock_now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -355,7 +356,7 @@ def admit_modelo_edit(
         ),
         completeness_manifest_digest=_completeness_manifest_digest(revision.completeness_manifest),
     )
-    issued_at = datetime.now(UTC)
+    issued_at = clock_now()
     coordinate_seed = {
         "bucket_id": bucket_id,
         "work_unit_id": work_unit.work_unit_id,
@@ -409,7 +410,7 @@ def reconfirm_modelo_edit_baseline(
     work_unit = work_catalogue.work_units.get(baseline.work_unit_id)
     if work_unit is None or work_unit.current_calculation_revision_id != baseline.current_calculation_revision_id:
         mismatches.append("current_calculation_revision_id")
-    if datetime.now(UTC) >= baseline.expires_at:
+    if clock_now() >= baseline.expires_at:
         mismatches.append("baseline_expiry")
     if not mismatches:
         return None

@@ -32,7 +32,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
@@ -204,10 +207,10 @@ def _reconstruct_detail_rows(
 def apply_modelo_edit(
     request: ModeloEditApplyRequestV1,
     *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
-    receipt_repository: ModeloEditReceiptRepository,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    receipt_repository: ModeloEditReceiptRepository | None = None,
     now: datetime,
     result_destination: str,
 ) -> ModeloEditExecutionResultV1:
@@ -217,7 +220,18 @@ def apply_modelo_edit(
     calculation boundary and single-writer primitive; this function adds only
     the commit-point recheck, the intent-reachability gate, and the
     atomically co-committed result receipt.
+
+    Every repository port defaults when omitted, matching the sibling
+    lifecycle actions (:func:`verify_modelo_revision`,
+    :func:`amend_modelo_revision`, :func:`file_modelo_revision`,
+    :func:`export_modelo_revision`): the single writer this function is
+    owns default construction, so a caller - an operation executor among
+    them - never opens its own repository to reach it.
     """
+    work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
+    calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
+    bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    receipt_repository = receipt_repository or ModeloEditReceiptRepository()
     submission = request.submission
     baseline = submission.baseline
 

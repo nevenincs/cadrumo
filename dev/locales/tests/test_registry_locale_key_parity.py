@@ -94,13 +94,30 @@ def test_registry_scan_excludes_citation_quotes() -> None:
     evidence pass; enrolling them here would invite a translator to author
     legal evidence.
 
-    The count is pinned deliberately: a new spending category reds this gate
-    until the number is raised by hand, which forces the carve-out to be
-    re-examined rather than silently widened.
+    The carve-out is held by SHAPE rather than by a pinned count. A tally reds
+    on every new spending category, which trains the reader to raise the number
+    and stops discriminating; it also says nothing about which key appeared.
+    What remains are the properties the data can actually violate: a citation
+    quote entering the scan, a key escaping the namespace, and the literal key
+    "None", which is what a profile that declares no value for a stringified
+    field produces. That last one shipped: the mutualidad rule's ``notes`` sat
+    after its cap-schedule array-of-tables, so TOML bound it to the final
+    schedule row and the rule itself had none.
     """
     keys = scan_registry_keys()
-    assert len(keys) == 88
+
+    assert keys, "the scan returned nothing, so the assertions below are vacuous"
     assert not [key for key in keys if key.endswith(".quote")]
+    assert "None" not in keys, (
+        "the scan emitted the literal key 'None', which means a profile declares no "
+        "value for a field the scanner stringifies unconditionally -- the key is then "
+        "unauthorable and reds the parity gate with no way to fix it in a catalogue"
+    )
+    escaped = sorted(k for k in keys if not k.startswith("categories.registry."))
+    assert not escaped, (
+        "a scanned key escaped the category-registry namespace, so it is outside "
+        f"this gate's reasoning entirely: {escaped}"
+    )
 
 
 @pytest.mark.parametrize("locale", _LOCALES)

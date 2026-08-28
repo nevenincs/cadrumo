@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -91,7 +92,7 @@ def _declared_markers(tree: ast.AST) -> set[str]:
     return found
 
 
-def _test_modules() -> list:
+def _test_modules() -> list[Path]:
     """Return every test module shipped under the package."""
     return [path for path in SRC_CADRUMO.rglob("test_*.py") if "tests" in path.parts]
 

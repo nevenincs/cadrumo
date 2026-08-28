@@ -21,7 +21,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.operations import OperationEffect
-from .._financial_operand import (
+from ..financial_operand import (
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandAcknowledgement,
     OperationTransientFinancialOperandDeclaration,
@@ -32,7 +32,7 @@ from .._financial_operand import (
     OperationTransientFinancialOperandRequirement,
     OperationTransientFinancialOperandSubmission,
 )
-from .._financial_operand_custody import (
+from ..financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyError,
@@ -53,8 +53,8 @@ _STATE = OperationFinancialOperandCustodyState
 _T0 = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
 
 _OPERAND_MODULES = (
-    "cadrumo.application.operations._financial_operand",
-    "cadrumo.application.operations._financial_operand_custody",
+    "cadrumo.application.operations.financial_operand",
+    "cadrumo.application.operations.financial_operand_custody",
     "cadrumo.application.operations.persistence.financial_operand_custody",
 )
 
@@ -128,7 +128,7 @@ def test_custody_transition_evidence_is_total_and_refuses_every_skip() -> None:
             )
             reason = None
             if target in {_STATE.EXPIRED, _STATE.CANCELLED}:
-                from .._financial_operand import OperationFinancialOperandRefusalReason
+                from ..financial_operand import OperationFinancialOperandRefusalReason
 
                 reason = OperationFinancialOperandRefusalReason.CANCELLED
             if target in allowed:

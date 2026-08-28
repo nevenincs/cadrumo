@@ -20,7 +20,7 @@ import os
 import socket
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -41,6 +41,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware
 from ...core.time import now as _utc_now
+from ...core.time import now as clock_now
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 if TYPE_CHECKING:
@@ -172,7 +173,7 @@ def _inspect_with_observed_text(
     what was judged. ``None`` means the file was absent or unreadable.
     """
     path = auth_acquisition_lock_path(settings, kind, bucket_id=bucket_id)
-    reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+    reference = coerce_utc_aware(now) if now is not None else clock_now()
     try:
         observed = path.read_text(encoding=UTF_8_ENCODING)
     except FileNotFoundError:

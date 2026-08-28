@@ -859,6 +859,9 @@ def _windows_replace_file(*, target: Path, replacement: Path, backup: Path) -> N
     )
 
 
+# info is the ctypes.Structure windows_file_information_type() builds as a
+# function-local class returning type[Any]; ctypes itself types its field
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-WIN32-FILE-INFO: access as Any, so no concrete annotation is nameable here.
 def _windows_read_handle_bounded(*, handle: int, info: Any, maximum_bytes: int) -> bytes:
     import ctypes
     from ctypes import wintypes

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from ..crypto import GCM_TAG_SIZE, encrypt_record
+from ._filesystem_primitives import is_real_directory
 from ._records import ProfileCustodyEnvelope
 from ._sentinel_contract import (
     ProfileCustodySentinelRecord,
@@ -57,6 +58,15 @@ def write_profile_custody_sentinel(path: Path, record: ProfileCustodySentinelRec
 def _write_exclusive_fsynced(path: Path, payload: bytes) -> None:
     if not payload or len(payload) > PROFILE_CUSTODY_SENTINEL_MAX_BYTES:
         raise ProfileCustodyRecordError("profile custody sentinel write is outside its bounded format")
+    # Same anchoring guarantee the sibling exclusive writer in
+    # _filesystem_primitives gives its staging records. Without it this writer
+    # carried that one's name and O_EXCL flags while accepting a linked parent,
+    # which is the guarantee-by-association the custody package already lost
+    # once on the read side.
+    if os.name != "nt" and not is_real_directory(path.parent):
+        raise ProfileCustodyRecordError(
+            "profile custody sentinel staging parent must not be a link or reparse directory",
+        )
     try:
         descriptor = os.open(
             path,

@@ -207,8 +207,11 @@ def _seed_clean_cross_period_sources_for_m130(
             bucket_event_repository=bucket_event_repository,
             clock=_T0,
         )
+        # The reference id IS the justificante CSV, and a codigo seguro de
+        # verificacion is uppercase alphanumeric (``^[A-Z0-9]{8,32}$``), so the
+        # hyphenated spelling this replaced was a shape AEAT never issues.
         evidence_reference_id = (
-            f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
+            f"JUST{requirement.source_modelo}{requirement.filing_year}{requirement.period.registry_token}"
         )
         _persist_justificante_metadata(
             evidence_reference_id,
@@ -462,38 +465,24 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     original = catalogue.get(revision.calculation_revision_id)
     assert original is not None
 
-    # Construct a tampered revision via model_construct — this bypasses all
-    # pydantic validators so the hash mismatch is not caught at build time.
-    # The tampered version keeps the original calculation_revision_id (which
-    # was derived from the original casilla_values) but carries mutated
-    # casilla_values, breaking the content-address contract.
+    # Construct a tampered revision via model_copy — like model_construct it
+    # bypasses the validators, so the hash mismatch is not caught at build time,
+    # but unlike it every other field is carried over from the original.
+    #
+    # The enumerated model_construct call this replaces listed the fields by
+    # hand, so each field added to CalculationRevision afterwards was simply
+    # absent from the tampered object: reading `source_provenance` raised
+    # AttributeError inside the integrity check, and the test failed on a
+    # missing attribute instead of on the drift it exists to prove.
     tampered_values = dict(original.casilla_values)
     tampered_values[_M130_GASTOS_CASILLA] = Decimal("999999")
 
-    tampered = original.model_construct(
-        calculation_revision_id=original.calculation_revision_id,
-        work_unit_id=original.work_unit_id,
-        state=original.state,
-        input_values_by_casilla_id=original.input_values_by_casilla_id,
-        binding_overrides=original.binding_overrides,
-        filing_instance_evidence=original.filing_instance_evidence,
-        source_transaction_ids=original.source_transaction_ids,
-        borrador_snapshot_id=original.borrador_snapshot_id,
-        bindings_sourced_from_borrador=original.bindings_sourced_from_borrador,
-        casilla_values=tampered_values,
-        observations=(),  # cleared so the obs-vs-casilla_values pydantic check is skipped
-        created_at=original.created_at,
-        updated_at=original.updated_at,
-        verified_at=original.verified_at,
-        verified_by=original.verified_by,
-        filed_at=original.filed_at,
-        filed_by=original.filed_by,
-        superseded_at=original.superseded_at,
-        discarded_at=original.discarded_at,
-        discarded_by=original.discarded_by,
-        discard_reason=original.discard_reason,
-        amendment_identity=original.amendment_identity,
-        amendment_reason=original.amendment_reason,
+    tampered = original.model_copy(
+        update={
+            "casilla_values": tampered_values,
+            # Cleared so the obs-vs-casilla_values pydantic check is skipped.
+            "observations": (),
+        },
     )
 
     # The guard must detect the hash mismatch and raise StoredCalculationDriftError.

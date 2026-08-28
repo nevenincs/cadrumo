@@ -44,6 +44,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import TextIO
 
+from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
 
@@ -272,14 +273,14 @@ def assess_claude_sessions(
     except OSError:
         return verdicts
     for project in projects:
-        if project.is_symlink() or not project.is_dir():
+        if is_link_like(project) or not project.is_dir():
             continue
         try:
             sessions = scan_directory(project, require_root=True)
         except OSError:
             continue
         for session in sessions:
-            if session.is_symlink() or not session.is_dir() or (mine and session.name == mine):
+            if is_link_like(session) or not session.is_dir() or (mine and session.name == mine):
                 continue
             verdicts.append(
                 assess_session(

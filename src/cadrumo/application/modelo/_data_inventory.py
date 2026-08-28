@@ -66,6 +66,7 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.FOREIGN_ASSET,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PRORRATA_REGULARIZACION,
         BindingSourceKind.RETENCIONES_AGGREGATION,

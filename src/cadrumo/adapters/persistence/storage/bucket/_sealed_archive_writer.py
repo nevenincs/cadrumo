@@ -19,6 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
+from .....core import fsync_parent_dir
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.product_identity import PRODUCT_IDENTITY
@@ -147,6 +148,11 @@ def write_sealed_archive(
             payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_bytes), instant)
             archive.addfile(payload_info, io.BytesIO(payload_bytes))
         os.replace(staging_path, target_path)
+        # The rename is only a directory-entry change until that entry is
+        # durable. Without this the archive can survive a crash as a name
+        # pointing at nothing, which the no-overwrite guard above then
+        # refuses to let the operator re-export over.
+        fsync_parent_dir(target_path)
     except OSError as exc:
         _discard_staging_archive(staging_path)
         raise SealedArchiveWriteError(

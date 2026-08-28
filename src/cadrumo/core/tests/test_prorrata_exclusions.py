@@ -14,10 +14,10 @@ from __future__ import annotations
 import pytest
 
 from .. import (
-    ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
     Art104TresExclusion,
 )
+from .._prorrata_exclusions import ART_104_TRES_AUTO_DERIVED_EXCLUSIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

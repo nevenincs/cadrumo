@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ...core.validity_window import ValidityWindow
@@ -128,7 +129,16 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         url: Canonical URL where the citation can be checked. Constrained
             to an official AEAT or BOE origin over ``https`` -- see
             :meth:`_validate_authoritative_url`.
-        quote: Authoritative Spanish-language quote backing the rule.
+        quote: Verbatim Spanish from the bundled corpus, stored INLINE and never
+            as a translation key. Verifying a quotation requires the literal
+            text at the citation site; indirecting it means the record no longer
+            carries its own evidence, whatever the key resolves to. Empty when,
+            and only when, :attr:`grounding` is not ``VERIFIED``.
+        grounding: Which of the three states this citation's evidence is in --
+            read against the corpus, examined and refused, or unreachable
+            because the cited document is not bundled.
+        grounding_reason: Why no quotation is carried. Required when, and only
+            when, :attr:`grounding` is not ``VERIFIED``.
         legal_ref: The registry legal-catalogue id of the provision cited.
             Required on a STATUTORY source and forbidden on an annual-edition
             one, so that every citation is bounded on exactly one axis: an
@@ -144,7 +154,18 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     reference: str = Field(min_length=1, max_length=256)
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
-    quote: tr = Field(description="Authoritative Spanish-language quote.")
+    quote: str = Field(
+        default="",
+        description="Verbatim Spanish from the bundled corpus; empty only when grounding is not verified.",
+    )
+    grounding: CitationGrounding = Field(
+        default=CitationGrounding.VERIFIED,
+        description="Whether the quotation was verified against the corpus, refused, or is unreachable.",
+    )
+    grounding_reason: str = Field(
+        default="",
+        description="Why no quotation is carried; required when grounding is not verified.",
+    )
     legal_ref: str | None = Field(
         default=None,
         min_length=1,
@@ -188,7 +209,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
 
     @model_validator(mode="after")
     def _validate_quote(self) -> CategoryCitation:
-        _require_translatable_text(self.quote, "category citation quote")
+        self._validate_grounding_matches_its_evidence()
         # Constructing the window is the validation: an inverted span refuses
         # here, where the citation was written, rather than silently covering
         # no year at all downstream.
@@ -196,6 +217,42 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         self._validate_edition_year_bounds_the_window()
         self._validate_legal_ref_matches_the_source_kind()
         return self
+
+    def _validate_grounding_matches_its_evidence(self) -> None:
+        """Hold each grounding state to the evidence it claims.
+
+        Unlike the check this replaced, both branches can fail. The old one
+        asserted a translatable was non-empty AFTER the loader had already
+        resolved it through a fallback that never yields an empty string, so it
+        inspected the literal word "Quote", found it non-empty, and passed for
+        all eighty-three citations in the corpus.
+
+        The second branch matters as much as the first. The corpus-containment
+        gate skips a non-verified citation by design, so candidate text parked
+        there would never be read against anything while still reading as
+        evidence to anyone who printed it.
+        """
+        where = f"CategoryCitation[{self.source.value}/{self.locator}]"
+        if self.grounding is CitationGrounding.VERIFIED:
+            if not self.quote.strip():
+                raise CategoryValidationError(
+                    f"{where}: a verified citation must carry its verbatim quotation",
+                )
+            if self.grounding_reason.strip():
+                raise CategoryValidationError(
+                    f"{where}: a verified citation must not carry a grounding reason",
+                )
+            return
+        if not self.grounding_reason.strip():
+            raise CategoryValidationError(
+                f"{where}: a {self.grounding.value!r} citation must record WHY it carries no "
+                "quotation, so that it reads as examined rather than merely unchecked",
+            )
+        if self.quote.strip():
+            raise CategoryValidationError(
+                f"{where}: a {self.grounding.value!r} citation must not carry a quotation; "
+                "the containment gate skips this state, so the text would never be checked",
+            )
 
     def _validate_legal_ref_matches_the_source_kind(self) -> None:
         """Every citation must be checkable on exactly one axis, never neither.

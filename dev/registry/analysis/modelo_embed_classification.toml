@@ -157,6 +157,12 @@ kind = "decimal_literal"
 symbol = "bucket"
 reason = "Decimal('0') accumulator seed for the per-party bucket; a sentinel zero."
 
+[[classification.evidence_disposition]]
+enclosing_symbol = "AtributionMemberObservation"
+kind = "regulatory_prose_literal"
+symbol = ""
+reason = "Field DOCSTRING, not a value: it quotes the diseno's own \"X\" marker to explain why the field is typed str rather than bool (position 82 is text, marked or blank). The marker is the wire format the fixed-width renderer emits; nothing here fixes a regulatory quantity."
+
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/formula_runtime.py"
 classification = "machinery"
@@ -317,6 +323,12 @@ kind = "decimal_literal"
 symbol = "base_row_total"
 reason = "Decimal('0') accumulator seed for the base-row total; a sentinel zero."
 
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_contraparte_clave_rows"
+kind = "decimal_literal"
+symbol = "bucket"
+reason = "Accumulator seed: `base_total=Decimal(\"0\")` initialises an operator-clave grouping bucket before invoice amounts are summed into it. A sentinel zero, which aeat-registry-authority-flow names as an acceptable non-regulatory literal."
+
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/irnr_ledger_bindings.py"
 classification = "machinery"
@@ -341,18 +353,23 @@ reason = "Decimal('0') comparison sentinel deciding whether an unrouted observat
 
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/inventory_bindings.py"
-classification = "regulatory_data_embed"
+classification = "machinery"
 justification = """
-The embed is the 2025 Modelo 100 inventory-selector declaration: its fixed
-filing year and the operation-to-casilla destination map (0181, 0177, 0182).
-Those are revision-owned binding facts; encoding them in a Python selector
-makes a new inventory operation or layout revision a source edit instead of an
-authoring-tree change. The selector parser, strict model, and aggregation-shape
-validation are machinery and survive when the revision-owned binding
-declarations supply these coordinates.
+Reclassified after the embed half was retired. The fixed `filing_year =
+Literal[2025]` pin is gone: which years carry an inventory projection is now
+read from the bindings the Modelo 100 revision itself declares, all three of
+which already carry their own year and target casilla, so the Python was
+duplicating the registry outright.
+
+What remains is the selector model, the aggregation-shape validation, and the
+operation-to-casilla identity map. The map was deliberately NOT migrated: an
+operation names WHICH figure it produces, so its destination is what the
+operation MEANS rather than a value the law re-sets per filing year, and
+retiring it would leave nothing checking that a binding declaring
+`complete_acquisition_cost` targets the acquisition-cost box. A guard with no
+replacement is worse than a duplicated declaration. The detector finds no
+regulatory literal in the module, so no evidence disposition is owed.
 """
-destination = "Modelo 100 2025 revision data-binding declarations and their source-casilla coordinates"
-tree_ownership = "unowned"
 
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py"
@@ -915,3 +932,25 @@ enclosing_symbol = "_append_previous_filing_gap_failures"
 kind = "regulatory_prose_literal"
 symbol = "year_label"
 reason = "The name matches the prose-suffix detector but the value is a diagnostic label rendering a year into the failure message; not authored regulatory prose."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/binding_selector_utils.py"
+classification = "regulatory_data_embed"
+justification = """
+Overwhelmingly shared selector-normalisation machinery, but it defines two AEAT
+clave vocabularies as Python frozensets: `M349_OPERATION_CLAVES` (E, M, H, A, T,
+S, I, R, D, C) and `M347_OPERATION_CLAVES` (A, B, C, D, E, F, G). Each is a
+closed code set the law fixes -- the module's own comment grounds them in RD
+1065/2007 arts. 31 and 33 and RD 1619/2012 disposicion adicional cuarta, and
+records that they are disjoint, the letter A meaning a different thing in each.
+
+That is registry-shaped data: a clave vocabulary is versioned by modelo and
+revision exactly as a rate or threshold is, and a new AEAT clave would today be
+a source edit. The detector reports no evidence for this module because a
+frozenset of single letters matches none of its literal kinds -- decimal,
+filing-year, prose -- which is why the embed went unnoticed until the module was
+newly derived. The selector normalisation, field validators and export-selector
+builders around them are machinery and survive the migration.
+"""
+destination = "Modelo 347 and Modelo 349 revision clave vocabularies in the registry authoring tree"
+tree_ownership = "unowned"

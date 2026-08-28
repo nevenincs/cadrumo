@@ -11,7 +11,7 @@ already exercises the plain domestic-invoice shape, including a populated
 ``notes`` and ``linked_transaction_ids``. This test fills the remaining
 coverage gap: every optional :class:`Invoice` (and :class:`InvoiceLine`)
 field that fixture still leaves at its default (``bucket_id``,
-``iva_category``, ``operation_type``, ``oss_ioss_regime``,
+``iva_category``, ``operation_type``, ``travel_agency_mediation``, ``oss_ioss_regime``,
 ``oss_transaction_kind``, ``oss_rate_kind``, ``retention_rate``,
 ``retention_amount``, ``payment_id``) is populated with a non-default value
 here, split across a domestic professional invoice (retention-bearing) and a
@@ -39,7 +39,7 @@ from pydantic import ValidationError
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
-from ....core import IntracomOperationType
+from ....core import IntracomOperationType, TravelAgencyMediationType
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
 from .. import (
@@ -119,6 +119,7 @@ def _domestic_retention_invoice() -> Invoice:
             "recargo_amount": Decimal("52.00"),
             "suplido_amount": Decimal("25.00"),
             "payment_id": _HEX64_A,
+            "travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE,
         },
     )
 
@@ -189,6 +190,7 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert domestic.linked_transaction_ids == (_HEX64_A, _HEX64_B)
     assert domestic.notes == "Factura con retención IRPF aplicable a profesional."
     assert domestic.operation_type is None
+    assert domestic.travel_agency_mediation is TravelAgencyMediationType.MEDIATED_SERVICE
     assert domestic.oss_ioss_regime is None
     assert domestic.oss_transaction_kind is None
     assert domestic.invoice_class is InvoiceClass.RECTIFICATIVA

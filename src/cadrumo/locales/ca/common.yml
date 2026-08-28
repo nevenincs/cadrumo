@@ -382,6 +382,11 @@ categories:
     seguros_salud_autonomo:
       notes: Deduïble fins a un límit legal de 500 EUR/any per contribuent (Ley 35/2006
         art. 30.2.5.c regla 1a, primes d'assegurança de malaltia).
+      statutory_cap_variants:
+        discapacidad:
+          label: Límit per persona assegurada amb discapacitat
+        general:
+          label: Límit general per persona assegurada
     software_suscripcion:
       label: Subscripcions de programari
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).

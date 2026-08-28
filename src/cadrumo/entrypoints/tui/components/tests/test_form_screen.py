@@ -62,7 +62,7 @@ def _form[AppResult](app: App[AppResult]) -> FormScreen:
 
 
 def _rows[AppResult](app: App[AppResult]) -> dict[str, str]:
-    table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
+    table = _form(app).query_one("#form-table", DataTable)
     return {str(row_key.value): str(table.get_row(row_key)[1]) for row_key in table.rows}
 
 
@@ -243,7 +243,7 @@ async def test_a_shrinking_page_drops_the_values_it_no_longer_asks_for() -> None
     app = _form_app(_page(FormField(key="count", label="Count", value="2")), rebuild=rebuild)
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
+        table = _form(app).query_one("#form-table", DataTable)
         table.action_select_cursor()
         await pilot.pause()
         app.screen.query_one("#edit-input", Input).value = "2"

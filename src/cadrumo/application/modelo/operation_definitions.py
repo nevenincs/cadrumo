@@ -20,15 +20,16 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime
-from decimal import Decimal
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    M210PayerMode,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -36,10 +37,33 @@ from ...core import (
     OperationEffect,
     OperationInteractionKind,
     PaymentElection,
+    Period,
     RefundElection,
 )
 from ...core.errors import CadrumoError
-from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    ContentDigest,
+    ModeloEditBaselineId,
+    WorkUnitId,
+)
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    M184Clave,
+    M184ClaveDeclarado,
+    M184NaturalezaInmueble,
+    M184SituacionInmueble,
+    M184Subclave,
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloCode,
+)
 from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -49,6 +73,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.financial_operand import OperationTransientFinancialOperandDeclaration
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.registry import (
     OperationDefinition,
@@ -59,6 +84,30 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ._amendment_actions import amend_modelo_revision
+from ._edit_execution import apply_modelo_edit
+from ._edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloDetailRowEditIntentV1,
+    ModeloEditApplyRequestV1,
+    ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditCompatibilityTupleV1,
+    ModeloEditDetailRowAddressV1,
+    ModeloEditDetailRowIntentKind,
+    ModeloEditExecutionNoEffectV1,
+    ModeloEditMutationFamily,
+    ModeloEditMutationResultReceiptV1,
+    ModeloEditPermittedSurfaceEntryV1,
+    ModeloEditRowAddressV1,
+    ModeloEditRowIntentKind,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
+    ModeloEditSchemaIdentityV1,
+    ModeloEditSubmissionV1,
+    ModeloRowEditIntentV1,
+    ModeloScalarEditIntentV1,
+)
 from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -77,6 +126,7 @@ MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
 MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
+MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
@@ -861,6 +911,620 @@ def build_modelo_work_amend_registration(
     )
 
 
+_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND = "modelo.edit.manual_casilla_override"
+
+#: Declared but not yet reachable from inside the executor: the manual
+#: override amount already crosses fully typed and pre-admitted as part of
+#: ModeloEditSubmissionV1 (the Edit Contract admission phase already
+#: validated it), so nothing here asks the operator for it mid-flight today.
+#: The declaration documents the operand this family is defined over and lets
+#: a future mid-flight ask enroll under it; OperationExecutorContext has no
+#: accessor for OperationTransientFinancialOperandProtocolV1 yet, so no
+#: executor anywhere can exercise the broker side of this contract.
+_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND = OperationTransientFinancialOperandDeclaration(
+    operand_kind=_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND,
+    currency="EUR",
+    scale=2,
+    minimum=Decimal("-999999999999.99"),
+    maximum=Decimal("999999999999.99"),
+    lifetime=timedelta(minutes=5),
+)
+
+
+class ModeloEditApplyBaselineV1(BaseModel):
+    """Wire mirror of ModeloEditBaselineV1 with a plain-string modelo code.
+
+    Every field of ModeloEditBaselineV1 except ``modelo`` already crosses an
+    operation payload safely: Hex64Str, bounded Annotated str, Period and the
+    permitted-surface union are all plain Pydantic shapes with no custom core
+    schema. Only ``modelo: ModeloCode`` does - it is a str subclass that
+    customises its Pydantic core schema, which the operations payload-graph
+    gate refuses inside a registered request payload - so only that one field
+    is mirrored here. ``to_baseline`` re-validates it through the real type.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    compatibility: ModeloEditCompatibilityTupleV1
+    bucket_id: BucketId
+    modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^\d{3}$")]
+    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    period_filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    period_code: Annotated[str, Field(min_length=1, max_length=16)]
+    work_unit_id: WorkUnitId
+    work_catalogue_revision: ContentDigest
+    calculation_catalogue_revision: ContentDigest
+    current_calculation_revision_id: CalculationRevisionId | None
+    law_selected_revision_id: RevisionId
+    schema_identity: ModeloEditSchemaIdentityV1
+    schema_version: Annotated[int, Field(ge=1)]
+    permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=2000)]
+    permitted_surface_digest: ContentDigest
+    mutation_family: ModeloEditMutationFamily
+    issued_at: datetime
+    expires_at: datetime
+    baseline_id: ModeloEditBaselineId
+
+    def to_baseline(self) -> ModeloEditBaselineV1:
+        """Translate back to the real, fully re-validated domain baseline.
+
+        ``period`` is mirrored the same way as ``modelo``: ``Period`` is a
+        core ``BaseModel`` that does not declare ``strict=True``, which the
+        operations payload-graph gate also refuses, so the wire form carries
+        its two source fields and reconstructs the real type here.
+        """
+        data = self.model_dump(mode="python")
+        data["modelo"] = ModeloCode(data["modelo"])
+        period_filing_year = data.pop("period_filing_year")
+        period_code = data.pop("period_code")
+        data["period"] = Period.from_year_and_code(period_filing_year, period_code)
+        return ModeloEditBaselineV1.model_validate(data)
+
+
+#: Wire-safe mirror of ``ModeloScalar`` (``Decimal | int | str | bool | date | None``).
+#: ``Decimal`` validates from a JSON number OR a pattern-matched string but
+#: always SERIALIZES back to a string, so a field typed ``ModeloScalar``
+#: fails the operations payload-graph gate's validation/serialization
+#: schema-identity check. Dropping the raw ``Decimal`` input option and
+#: requiring a decimal amount to arrive as a string - exactly what
+#: serialization already produces, and what real fixtures already pass
+#: (``value="150.00"``) - removes the asymmetry with no loss of expressible
+#: values: the real type's own validator still parses a numeric string into
+#: ``Decimal`` when it is reconstructed in ``to_submission``.
+type _ModeloEditApplyScalarValue = int | str | bool | date | None
+
+
+class ModeloEditApplyScalarIntentV1(BaseModel):
+    """Wire mirror of ModeloScalarEditIntentV1 with a payload-safe value."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditScalarAddressV1
+    kind: ModeloEditScalarIntentKind
+    value: _ModeloEditApplyScalarValue = None
+
+    def to_intent(self) -> ModeloScalarEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloScalarEditIntentV1(address=self.address, kind=self.kind, value=self.value)
+
+
+class ModeloEditApplyBindingIntentV1(BaseModel):
+    """Wire mirror of ModeloBindingEditIntentV1 with a payload-safe value."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditBindingAddressV1
+    kind: ModeloEditBindingIntentKind
+    value: _ModeloEditApplyScalarValue = None
+
+    def to_intent(self) -> ModeloBindingEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloBindingEditIntentV1(address=self.address, kind=self.kind, value=self.value)
+
+
+class ModeloEditApplyRowIntentV1(BaseModel):
+    """Wire mirror of ModeloRowEditIntentV1 with payload-safe row values."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    address: ModeloEditRowAddressV1
+    kind: ModeloEditRowIntentKind
+    row: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=200)] | None = None
+    move_to_index: Annotated[int, Field(ge=1)] | None = None
+
+    def to_intent(self) -> ModeloRowEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloRowEditIntentV1(
+            address=self.address,
+            kind=self.kind,
+            row=None if self.row is None else tuple(entry.to_intent() for entry in self.row),
+            move_to_index=self.move_to_index,
+        )
+
+
+def _amount_within_declared_operand_bounds(value: _ModeloEditApplyScalarValue) -> bool:
+    """Report whether a wire scalar value that parses as a decimal amount stays in bounds.
+
+    A value that is not decimal-shaped (an integer, a plain non-numeric
+    string, a boolean, or a date) carries no financial-operand meaning and is
+    left to whatever business validation the domain reconstruction applies.
+    """
+    if not isinstance(value, str):
+        return True
+    try:
+        amount = Decimal(value)
+    except InvalidOperation:
+        return True
+    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(amount)
+
+
+_WIRE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+type _WireAmount = Annotated[str, Field(min_length=1, max_length=40)]
+"""One decimal amount as the exact characters submitted.
+
+``Decimal`` validates from a number or a string but always serializes to a
+string, so a ``Decimal`` field fails the operations payload-graph gate's
+validation/serialization schema-identity check. Carrying the characters
+verbatim also keeps translation honest: the real row type parses them with the
+same code the CLI path uses, so an amount the CLI would refuse is refused here
+too rather than being pre-normalised into acceptability.
+"""
+
+type _WireOptionalAmount = _WireAmount | None
+
+type _WireCode = Annotated[str, Field(max_length=40)]
+"""One registry code exactly as supplied, left unhydrated on purpose.
+
+The M232 row type hydrates its own codes through ``BeforeValidator`` metadata.
+Mirroring a hydrated enum here would put a second hydration on the wire path,
+free to drift until the wire accepts a code the CLI refuses. Carrying the raw
+characters instead means translation hands them to the row type's own
+constructor and the existing hydration runs unchanged - not a delegating copy,
+no copy at all.
+"""
+
+
+def _optional_decimal(value: str | None) -> Decimal | None:
+    """Parse one optional wire amount, leaving an absent value absent."""
+    return None if value is None else Decimal(value)
+
+
+class ModeloEditApply184MemberRowV1(BaseModel):
+    """Wire mirror of Modelo184MemberRow with decimal amounts as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["miembro"] = "miembro"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    pais: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+    porcentaje: _WireAmount
+    importe: _WireAmount
+    clave: M184Clave
+    subclave: M184Subclave | None = None
+    codigo_provincia: Annotated[str, Field(max_length=2)] | None = None
+    miembro_a_31_diciembre: bool | None = None
+    dias_miembro: Annotated[int, Field(ge=0, le=366)] | None = None
+    domicilio_fiscal: Annotated[str, Field(max_length=40)] | None = None
+    naturaleza_inmueble: M184NaturalezaInmueble | None = None
+    situacion_inmueble: M184SituacionInmueble | None = None
+    referencia_catastral: Annotated[str, Field(max_length=20)] | None = None
+    clave_declarado: M184ClaveDeclarado | None = None
+    porcentaje_titularidad_inmueble: _WireOptionalAmount = None
+    dias_arrendamiento: Annotated[int, Field(ge=0, le=366)] | None = None
+    reduccion: _WireOptionalAmount = None
+    rendimiento_neto_previo_eo: _WireOptionalAmount = None
+    rendimiento_neto_minorado_agricola_eo: _WireOptionalAmount = None
+
+    def to_row(self) -> Modelo184MemberRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo184MemberRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            pais=self.pais,
+            porcentaje=Decimal(self.porcentaje),
+            importe=Decimal(self.importe),
+            clave=self.clave,
+            subclave=self.subclave,
+            codigo_provincia=self.codigo_provincia,
+            miembro_a_31_diciembre=self.miembro_a_31_diciembre,
+            dias_miembro=self.dias_miembro,
+            domicilio_fiscal=self.domicilio_fiscal,
+            naturaleza_inmueble=self.naturaleza_inmueble,
+            situacion_inmueble=self.situacion_inmueble,
+            referencia_catastral=self.referencia_catastral,
+            clave_declarado=self.clave_declarado,
+            porcentaje_titularidad_inmueble=_optional_decimal(self.porcentaje_titularidad_inmueble),
+            dias_arrendamiento=self.dias_arrendamiento,
+            reduccion=_optional_decimal(self.reduccion),
+            rendimiento_neto_previo_eo=_optional_decimal(self.rendimiento_neto_previo_eo),
+            rendimiento_neto_minorado_agricola_eo=_optional_decimal(self.rendimiento_neto_minorado_agricola_eo),
+        )
+
+
+class ModeloEditApply232VinculadaRowV1(BaseModel):
+    """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["vinculada"] = "vinculada"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    pais: Annotated[str, Field(min_length=2, max_length=2)]
+    tipo_vinculacion: _WireCode = ""
+    tipo_operacion: _WireCode = ""
+    metodo: _WireCode = ""
+    importe: _WireAmount
+
+    def to_row(self) -> Modelo232VinculadaRow:
+        """Translate back through the row type's own code hydration."""
+        return Modelo232VinculadaRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            pais=self.pais,
+            tipo_vinculacion=self.tipo_vinculacion,
+            tipo_operacion=self.tipo_operacion,
+            metodo=self.metodo,
+            importe=Decimal(self.importe),
+        )
+
+
+class ModeloEditApply349OperadorRowV1(BaseModel):
+    """Wire mirror of Modelo349OperadorRow with its importe as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["operador"] = "operador"
+    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    importe: _WireAmount
+
+    def to_row(self) -> Modelo349OperadorRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo349OperadorRow(
+            codigo_pais=self.codigo_pais,
+            nif_comunitario=self.nif_comunitario,
+            razon_social=self.razon_social,
+            clave_operacion=self.clave_operacion,
+            importe=Decimal(self.importe),
+        )
+
+
+class ModeloEditApply349RectificacionRowV1(BaseModel):
+    """Wire mirror of Modelo349RectificacionRow with its bases as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["rectificacion"] = "rectificacion"
+    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    ejercicio: Annotated[str, Field(min_length=4, max_length=4)]
+    periodo: Annotated[str, Field(min_length=1, max_length=2)]
+    base_rectificada: _WireAmount
+    base_anterior: _WireAmount
+
+    def to_row(self) -> Modelo349RectificacionRow:
+        """Translate back through the row type's own periodo normalisation."""
+        return Modelo349RectificacionRow(
+            codigo_pais=self.codigo_pais,
+            nif_comunitario=self.nif_comunitario,
+            razon_social=self.razon_social,
+            clave_operacion=self.clave_operacion,
+            ejercicio=self.ejercicio,
+            periodo=self.periodo,
+            base_rectificada=Decimal(self.base_rectificada),
+            base_anterior=Decimal(self.base_anterior),
+        )
+
+
+class ModeloEditApply347ContraparteRowV1(BaseModel):
+    """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["contraparte"] = "contraparte"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    importe_Q1: _WireAmount = "0"
+    importe_Q2: _WireAmount = "0"
+    importe_Q3: _WireAmount = "0"
+    importe_Q4: _WireAmount = "0"
+    clave_operacion: Literal["A", "B", "C", "D", "E", "F", "G"] = "A"
+    pais_codigo: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+
+    def to_row(self) -> Modelo347ContraparteRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo347ContraparteRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            importe_Q1=Decimal(self.importe_Q1),
+            importe_Q2=Decimal(self.importe_Q2),
+            importe_Q3=Decimal(self.importe_Q3),
+            importe_Q4=Decimal(self.importe_Q4),
+            clave_operacion=self.clave_operacion,
+            pais_codigo=self.pais_codigo,
+        )
+
+
+class ModeloEditApply210AgrupacionRentaRowV1(BaseModel):
+    """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["agrupacion_renta"] = "agrupacion_renta"
+    source_id: Annotated[str, Field(min_length=1, max_length=200)]
+    tipo_renta_code: Annotated[str, Field(min_length=2, max_length=2)]
+    importe: _WireAmount
+    tipo_gravamen: _WireAmount
+    pagador_mode: M210PayerMode
+    pagador_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    deriva_de_bien_derecho: bool
+    bien_derecho_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+
+    def to_row(self) -> Modelo210AgrupacionRentaRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo210AgrupacionRentaRow(
+            source_id=self.source_id,
+            tipo_renta_code=self.tipo_renta_code,
+            importe=Decimal(self.importe),
+            tipo_gravamen=Decimal(self.tipo_gravamen),
+            pagador_mode=self.pagador_mode,
+            pagador_id=self.pagador_id,
+            deriva_de_bien_derecho=self.deriva_de_bien_derecho,
+            bien_derecho_id=self.bien_derecho_id,
+        )
+
+
+type ModeloEditApplyDetailRowV1 = Annotated[
+    ModeloEditApply184MemberRowV1
+    | ModeloEditApply232VinculadaRowV1
+    | ModeloEditApply349OperadorRowV1
+    | ModeloEditApply349RectificacionRowV1
+    | ModeloEditApply347ContraparteRowV1
+    | ModeloEditApply210AgrupacionRentaRowV1,
+    Field(discriminator="row_type"),
+]
+"""The wire mirror of the per-modelo detail-row union, discriminated as it is."""
+
+
+class ModeloEditApplyDetailRowIntentV1(BaseModel):
+    """Wire mirror of ModeloDetailRowEditIntentV1 with a payload-safe row."""
+
+    model_config = _WIRE_CONFIG
+
+    address: ModeloEditDetailRowAddressV1
+    kind: ModeloEditDetailRowIntentKind
+    row: ModeloEditApplyDetailRowV1 | None = None
+
+    def to_intent(self) -> ModeloDetailRowEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloDetailRowEditIntentV1(
+            address=self.address,
+            kind=self.kind,
+            row=None if self.row is None else self.row.to_row(),
+        )
+
+
+class ModeloEditApplySubmissionV1(BaseModel):
+    """Wire mirror of ModeloEditSubmissionV1 carrying a payload-safe baseline.
+
+    Scalar, binding and row intents are mirrored only for their ``value``
+    field: ``ModeloScalar`` (``Decimal | int | str | bool | date | None``)
+    fails the operations payload-graph gate's validation/serialization
+    schema-identity check, because ``Decimal`` validates from a number or a
+    string but always serializes to a string. Every other field of these
+    three families - addresses, intent kinds, ``move_to_index`` - is already
+    payload-safe and carried through unchanged. This is a total translation:
+    every field of every mirrored intent converts, nothing is dropped.
+
+    ``detail_row_intents`` is still ABSENT from this wire type, and no longer
+    for the reason the six row mirrors below were built to solve. Every one
+    of those six is now admitted by the payload-graph gate: each carries its
+    ``Decimal`` fields as the exact characters submitted, and the two that
+    hydrate registry codes carry them raw so the real row type runs its own
+    hydration during translation - one hydration shared with the CLI
+    ``--row key=value`` path, not a second copy free to drift.
+
+    What blocks the field is elsewhere and is not a property of the rows at
+    all: ``ModeloEditDetailRowAddressV1.natural_key`` is refused by the
+    credential-free field-name check, which matches the token ``key`` in a
+    field name with no knowledge of the field's type. The value is a row's
+    own business identity - a NIF, or ``nif_comunitario|clave_operacion`` -
+    and carries no credential meaning. Mirroring the address under a
+    different field name would clear the gate while changing nothing about
+    what crosses it, so that is deliberately not done here: it would hide
+    the construct from the matcher rather than resolve it. Admitting this
+    family needs either a type-aware carve-out for a natural key, as already
+    exists for a content digest, or a rename of the domain field itself.
+
+    The mirrored payload is INPUT, not authority: ``apply_modelo_edit``
+    re-resolves and independently re-validates every coordinate at the
+    guarded commit point regardless of what this wire type carried, so a
+    stale or forged mirror cannot be believed - a mismatch surfaces as the
+    typed no-effect result, never a bad write.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    edit_contract_version: Literal[1] = 1
+    baseline: ModeloEditApplyBaselineV1
+    mutation_family: ModeloEditMutationFamily
+    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=500)] = ()
+    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
+    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
+
+    @model_validator(mode="after")
+    def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
+        """Enforce the manual-override operand's own declared currency, scale and range.
+
+        The broker path (`OperationTransientFinancialOperandProtocolV1`) that
+        would normally enforce `_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND` is not
+        reachable from any executor today (`OperationExecutorContext` has no
+        accessor for it). The manual-override amount instead arrives here,
+        through the already-admitted scalar intent value, so this duplicates
+        the bounds the declaration promises rather than leaving them
+        unenforced. It should collapse into the broker once that wire lands.
+        """
+        for intent in self.scalar_intents:
+            if not _amount_within_declared_operand_bounds(intent.value):
+                raise ValueError(
+                    "scalar edit intent amount is outside the declared manual-override financial operand bounds"
+                )
+        return self
+
+    def to_submission(self) -> ModeloEditSubmissionV1:
+        """Translate back to the real, fully re-validated domain submission.
+
+        ``detail_row_intents`` is always empty: this wire type cannot carry
+        one yet (see the class docstring), so there is nothing to translate
+        for that family.
+        """
+        return ModeloEditSubmissionV1(
+            baseline=self.baseline.to_baseline(),
+            mutation_family=self.mutation_family,
+            scalar_intents=tuple(intent.to_intent() for intent in self.scalar_intents),
+            binding_intents=tuple(intent.to_intent() for intent in self.binding_intents),
+            row_intents=tuple(intent.to_intent() for intent in self.row_intents),
+        )
+
+
+class ModeloEditApplyOperationRequestV1(CredentialFreeOperationRequest):
+    """The admitted Edit Contract submission this operation is authorized to apply.
+
+    Credential-free by construction: every field is a pre-validated,
+    pre-admitted coordinate or typed value the Edit Contract admission
+    phase already produced, so nothing here is unsafe to journal.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    submission: ModeloEditApplySubmissionV1
+
+
+class ModeloEditApplyPublicResultV1(BaseModel):
+    """The settled receipt id a caller outside this package may see.
+
+    Only the id: the full receipt is the domain record of truth, addressable
+    through ModeloEditReceiptRepository, and this result exists to confirm
+    which one a submission produced.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+def project_modelo_edit_apply_result(receipt: ModeloEditMutationResultReceiptV1) -> ModeloEditApplyPublicResultV1:
+    """Project one settled receipt onto the safe public result."""
+    return ModeloEditApplyPublicResultV1(
+        receipt_id=str(receipt.receipt_id),
+        calculation_revision_id=str(receipt.calculation_revision_id),
+    )
+
+
+class ModeloEditApplyExecutor:
+    """Run the Edit Contract's guarded compare-and-swap apply under one recorded identity.
+
+    apply_modelo_edit already owns the commit-point baseline recheck, the
+    calculate/recalculate discrimination (recalculate refuses honestly, by
+    design, until it is wired) and the co-committed result receipt; this only
+    binds the running operation's own identity to that call and re-implements
+    no lifecycle policy.
+    """
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloEditApplyOperationRequestV1],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to apply_modelo_edit and return the settled receipt id.
+
+        A failed compare-and-swap is a typed domain fact
+        (ModeloEditExecutionNoEffectV1), not an unexpected error, but the
+        executor protocol this method implements returns only an optional
+        reference. No channel exists yet to carry the typed refusal back to a
+        caller outside this package through the operation result path, so it
+        is reported here as a no-effect None rather than fabricated into an
+        exception the refusal was deliberately designed not to be.
+        """
+        submission = request.payload.submission.to_submission()
+        baseline = submission.baseline
+        apply_request = ModeloEditApplyRequestV1(
+            operation_id=context.identity.operation_id,
+            submission=submission,
+        )
+        outcome = apply_modelo_edit(
+            apply_request,
+            now=datetime.now(UTC),
+            result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
+        )
+        if isinstance(outcome, ModeloEditExecutionNoEffectV1):
+            return None
+        return str(outcome.receipt.receipt_id)
+
+
+def build_modelo_edit_apply_definition() -> OperationDefinition:
+    """Bind the Edit Contract's guarded apply path to its registered operation contract."""
+
+    def build() -> ModeloEditApplyExecutor:
+        return ModeloEditApplyExecutor()
+
+    return OperationDefinition(
+        definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        request_type=ModeloEditApplyOperationRequestV1,
+        result_type=ModeloEditApplyPublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloEditApplyOperationRequestV1,
+            executor_type=ModeloEditApplyExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.edit.apply",),
+        interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        transient_financial_operands=(_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND,),
+    )
+
+
+def build_modelo_edit_apply_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the edit-apply definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.edit.apply.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.edit.apply.result",
+            schema_version=1,
+            model_type=ModeloEditApplyPublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition() -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -916,6 +1580,7 @@ def build_modelo_work_rename_registration(
 
 
 __all__ = [
+    "MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID",
     "MODELO_EXPORT_OPERATION_DEFINITION_ID",
     "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
@@ -923,6 +1588,9 @@ __all__ = [
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_PROGRESS_UNIT",
+    "ModeloEditApplyExecutor",
+    "ModeloEditApplyOperationRequestV1",
+    "ModeloEditApplyPublicResultV1",
     "ModeloExportExecutor",
     "ModeloExportPublicResultV1",
     "ModeloExportRequest",
@@ -946,6 +1614,8 @@ __all__ = [
     "ModeloWorkVerifyExecutor",
     "ModeloWorkVerifyPublicResultV1",
     "ModeloWorkVerifyRequest",
+    "build_modelo_edit_apply_definition",
+    "build_modelo_edit_apply_registration",
     "build_modelo_export_definition",
     "build_modelo_export_registration",
     "build_modelo_lifecycle_operation_definitions",
@@ -960,6 +1630,7 @@ __all__ = [
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
     "build_modelo_work_verify_registration",
+    "project_modelo_edit_apply_result",
     "project_modelo_export_result",
     "project_modelo_work_verify_result",
 ]
@@ -973,6 +1644,7 @@ def build_modelo_lifecycle_operation_definitions() -> tuple[OperationDefinition,
     shape this population exists to make impossible to ship.
     """
     return (
+        build_modelo_edit_apply_definition(),
         build_modelo_export_definition(),
         build_modelo_work_amend_definition(),
         build_modelo_work_discard_definition(),
@@ -987,6 +1659,7 @@ def build_modelo_lifecycle_operation_registrations(
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind each lifecycle definition to its stable public schemas."""
     builders = {
+        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID: build_modelo_edit_apply_registration,
         MODELO_EXPORT_OPERATION_DEFINITION_ID: build_modelo_export_registration,
         MODELO_WORK_AMEND_OPERATION_DEFINITION_ID: build_modelo_work_amend_registration,
         MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID: build_modelo_work_discard_registration,

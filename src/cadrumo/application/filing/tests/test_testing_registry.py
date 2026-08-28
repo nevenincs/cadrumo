@@ -138,12 +138,14 @@ def test_non_approved_status_clears_approval_fields() -> None:
 
 
 def test_unsupported_modelo_fails_at_registry_boundary() -> None:
-    with pytest.raises(ModeloBuilderError, match="missing requested modelo definitions"):
+    with pytest.raises(ModeloBuilderError) as refusal:
         build_registry_filing_draft(
             modelo="999",
             period=_ANNUAL_2026,
             casilla_values={_RENTA_MINIMO_ESTATAL_CASILLA: Decimal("5550.00")},
         )
+
+    assert refusal.value.translated_message == "application.filing.runtime.errors.registry_missing_requested_modelos"
 
 
 def test_duplicate_casilla_and_binding_ids_are_rejected() -> None:

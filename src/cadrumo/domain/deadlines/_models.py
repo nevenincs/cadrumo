@@ -17,7 +17,15 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core import IBAN_SHAPE_RE, OBJECT_TUPLE_ADAPTER, Modelo, Period, iban_mod_97, normalise_iban
+from ...core import (
+    IBAN_SHAPE_RE,
+    OBJECT_TUPLE_ADAPTER,
+    Modelo,
+    Period,
+    ThirdPartyDeclarationRole,
+    iban_mod_97,
+    normalise_iban,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
@@ -581,6 +589,11 @@ class TaxpayerProfile(BaseModel):
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
+        declaration_roles: The filer's :class:`~core.ThirdPartyDeclarationRole`
+            memberships -- orthogonal to ``entity_type`` and independent of
+            it. Drives Modelo 347 claves C, D and E; empty when the operator
+            has not declared any such role, which is the correct default
+            for the overwhelming majority of filers.
         legal_entity_form: The recognised legal form when
             ``entity_type`` is ``LEGAL_ENTITY``; ``None`` otherwise.
         irpf_income_categories: The IRPF income categories a natural
@@ -681,6 +694,7 @@ class TaxpayerProfile(BaseModel):
 
     tax_id: SubjectTaxId
     entity_type: EntityType | None = None
+    declaration_roles: frozenset[ThirdPartyDeclarationRole] = frozenset()
     legal_entity_form: LegalEntityForm | None = None
     irpf_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     irpf_estimation_regime: IrpfEstimationRegime | None = None

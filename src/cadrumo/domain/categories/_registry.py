@@ -28,6 +28,7 @@ from typing import cast
 from pydantic import ValidationError
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core.citation_grounding import CitationGrounding
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
@@ -286,7 +287,13 @@ def _parse_citation(raw_citation: object) -> CategoryCitation:
             "reference": data.get("reference"),
             "locator": data.get("locator"),
             "url": parse_http_url(url),
-            "quote": tr(str(data.get("quote"))),
+            # Read as plain text, never through ``tr``. Resolving it here is how
+            # the defect survived: the loader turned every locale key into the
+            # fallback word "Quote" before the validator saw it, so a check for
+            # non-empty text passed for all eighty-three ungrounded citations.
+            "quote": str(data.get("quote") or ""),
+            "grounding": CitationGrounding(str(data.get("grounding") or "verified")),
+            "grounding_reason": str(data.get("grounding_reason") or ""),
             "legal_ref": data.get("legal_ref"),
             "valid_from": data.get("valid_from"),
             "valid_to": data.get("valid_to"),

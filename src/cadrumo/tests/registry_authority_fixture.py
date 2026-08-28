@@ -9,7 +9,7 @@ import pytest
 from ..domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 
-def bundled_registry_authority_fixture(*, name: str) -> Callable[[], ValidatedRegistryAuthority]:
+def bundled_registry_authority_fixture(*, name: str) -> Callable[..., ValidatedRegistryAuthority]:
     """Build a fixture handing back the bundled :class:`ValidatedRegistryAuthority`.
 
     The same one-line body was written under two names in two trees, which a

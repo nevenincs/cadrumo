@@ -38,6 +38,7 @@ from ....domain.transactions import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
+from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations import CalculationObservationRepository
 from .._calculation_actions import (
     BucketAggregationCalculationResult,
@@ -68,18 +69,18 @@ _ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2025-modelo-100-estimacio
 _M100_SS_BINDING: BindingId = "renta-2025-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-2025-ledger-expense-0199-deductible"
 
+# Sources the caller must not supply. The bucket-locked half is DERIVED from the
+# caller-override ladder rather than hand-listed, because a hand-listed copy is
+# only correct until the next resolver is enrolled -- this set named six ledger
+# and invoice kinds and omitted `inventory`, so the lock rejected the calculate.
 _AUTO_RESOLVED_SOURCES = frozenset(
     {
+        # Mesh-resolved rather than locked: `profile` comes from the seeded
+        # record and `relation_prefill` folds from the store.
         "profile",
         "relation_prefill",
-        "ledger_renta_gastos_estimacion_directa_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_oss_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
     },
-)
+) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
 
 def _seed_sofia_profile(objects: SecureObjectRepository) -> None:

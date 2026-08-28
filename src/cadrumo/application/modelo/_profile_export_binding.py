@@ -27,7 +27,8 @@ from ..filing import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentit
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.
-from .profile_binding import profile_fact_index, resolve_profile_binding_value
+from ..user_profile.projections import profile_fact_index
+from .profile_binding import resolve_profile_binding_value
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 

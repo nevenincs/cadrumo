@@ -117,7 +117,6 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 
 _logger = get_logger(__name__)
 
-_BUCKET_EVENT_PAYLOAD_VERSION = 1
 
 
 # The CLI binary each subprocess provider shells out to. Used by

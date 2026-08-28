@@ -11,17 +11,15 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 
 from ....core import OperationDurability, OperationEffect
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import CredentialFreeOperationRequest
+from ...operations.registry import OperationDefinition
 from .. import operation_definitions as definitions_module
-
-if TYPE_CHECKING:
-    from ...operations.registry import OperationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,6 +38,7 @@ _KNOWN_AUTHORITIES = {
     "file_modelo_revision",
     "export_modelo_revision",
     "amend_modelo_revision",
+    "apply_modelo_edit",
 }
 
 

@@ -18,9 +18,9 @@ from .. import (
     accepted_filing_period_codes,
     accepted_filing_period_patterns,
     accepted_period_codes,
-    accepted_period_patterns,
     aggregation,
 )
+from .._period import accepted_period_patterns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

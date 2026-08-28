@@ -115,6 +115,17 @@ legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:a
 source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f025"]
 [[revisions."2025-y-siguientes".casillas]]
+id = "contraparte.provincia-codigo"
+number = "contraparte.provincia-codigo"
+section = ["contraparte", "identificacion"]
+data_type = "text"
+semantic_role = "contraparte_provincia_codigo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f009a"]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
 number = "contraparte.pais-codigo"
 section = ["contraparte", "identificacion"]
@@ -122,6 +133,6 @@ data_type = "country_code"
 semantic_role = "contraparte_pais_codigo"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f009"]
+export_refs = ["m347-2025.declarado.f009b"]

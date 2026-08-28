@@ -661,6 +661,7 @@ cli:
           inventario: inventory stock schedule
           miembro_atribucion: income-attribution member
           operacion_reembolso: refund operation
+          operacion_tercero: third-party operation
           operacion_vinculada: related-party operation
           registro_retenciones: withholding register
           regularizacion_bienes_inversion: capital-goods adjustment

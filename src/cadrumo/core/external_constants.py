@@ -543,6 +543,18 @@ SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang i
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
+#: Modelo 347 clave C declaration floor per beneficiary. Binding provisions:
+#: RD 1065/2007 art. 32.c ("300,51 euros durante el mismo periodo, cuando...
+#: realicen la función de cobro por cuenta de terceros de honorarios
+#: profesionales o de derechos derivados de la propiedad intelectual,
+#: industrial o de autor") and art. 33.4 (same figure, framed as the
+#: declaration threshold rather than the exclusion floor). Applies ONLY to
+#: :attr:`~core.ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR` rows,
+#: alongside -- never instead of -- ``M347_THRESHOLD_EUR``: the same
+#: counterparty can carry both ordinary and clave-C operations in the same
+#: year, and each is judged against its own floor.
+M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
+
 #: IVA regularización de deducciones por bienes de inversión — regulatory constants
 #: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
 #: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``

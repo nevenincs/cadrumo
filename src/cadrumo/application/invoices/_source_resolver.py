@@ -6,8 +6,9 @@
 :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
 into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
-:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
+:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
+:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
+:attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
 
 The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
@@ -30,7 +31,15 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType, Modelo, Period
+from ...core import (
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+    IntracomOperationType,
+    Modelo,
+    Period,
+    ThirdPartyDeclarationRole,
+    TravelAgencyMediationType,
+)
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -38,6 +47,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
     is_m347_declarante_summary_invoice_binding,
+    m347_operation_clave,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
@@ -61,6 +71,7 @@ from ..aggregation import (
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
@@ -593,8 +604,53 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
+def _m347_filer_declaration_roles(bucket_id: object) -> frozenset[ThirdPartyDeclarationRole]:
+    """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
+
+    Mirrors the established bucket-scoped profile-fact loading pattern (see
+    e.g. ``m111_no_retenciones_periods_for_bucket``): a missing or unset
+    profile fails closed to an empty role set rather than raising, because
+    the overwhelming majority of filers legitimately carry none. An empty
+    set means claves C, D and E simply do not classify for this filer --
+    never that A, B, F or G are affected, since those read no profile fact.
+    """
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import projection_for_taxpayer
+
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return frozenset()
+    return projection_for_taxpayer(record).declaration_roles
+
+
 def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
-    if invoice.counterparty_country != "ES":
+    """Build the M347 observation for one invoice, or ``None`` if excluded.
+
+    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
+    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    its nine enumerated items. The diseño de registro's own `pais-codigo`
+    field (a "XX" alphabetic slot for a non-established non-resident
+    declarado) is direct evidence AEAT expects some M347 counterparties to be
+    non-resident.
+
+    The one residency-shaped exclusion the article DOES state is art.
+    33.2.i): an operation already reported through a coincident periodic
+    informativa. For an invoice, that informativa is Modelo 349's
+    intracommunity recapitulativa, so an operation `_intracommunity_clave`
+    classifies as intracommunity is excluded here and routes to M349 instead
+    -- the same classification M349's own branch of this resolver uses, never
+    a bare country comparison.
+
+    Claves C, D and E each additionally need the filer's own
+    :class:`ThirdPartyDeclarationRole` membership, loaded by
+    :func:`_m347_filer_declaration_roles` from ``context.bucket_id`` --
+    wired in by claves C/D/E's own Steps (S308, S309), which pass ``context``
+    through to this function at that point. Adding the parameter here ahead
+    of that first real caller would be an unused argument no clave reads yet.
+    """
+    if _intracommunity_clave(invoice) is not None:
         return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party
@@ -602,17 +658,44 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
         # (RD 1619/2012 art. 6.1.d). Without this the row reached the observation
         # constructor with None and raised there instead of being skipped.
         return None
+    source_kind = BindingSourceKind(_invoice_source_kind(invoice))
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
+        source_kind=source_kind,
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=_eur(invoice.base_total_eur, invoice),
         invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=None,
+        operation_clave=_m347_operation_clave(invoice, source_kind=source_kind),
         party_legal_name=invoice.counterparty_name,
     )
+
+
+def _m347_operation_clave(invoice: Invoice, *, source_kind: BindingSourceKind) -> str | None:
+    """Classify the M347 clave de operacion for one invoice, or ``None``.
+
+    Checks the RD 1619/2012 disposición adicional cuarta travel-agency
+    mediation fact first (claves F/G), then falls back to
+    :func:`m347_operation_clave`'s invoice-direction classification
+    (claves A/B). Claves C-G's remaining unclassifiable members (C, D, E)
+    still return ``None`` -- each needs a fact (a professional-fees-collection
+    classification, or the FILER's own entity type) this invoice does not
+    carry and no direction or mediation flag can substitute for.
+
+    F ("ventas agencia viaje") covers the disposition's FULL listed service
+    set for an ISSUED invoice; G ("compras agencia viaje") covers ONLY air
+    passenger transport for a RECEIVED invoice. A RECEIVED invoice for a
+    non-air mediated service is neither F nor G by the diseño's own text, and
+    falls through to the ordinary A/B classification below.
+    """
+    mediation = invoice.travel_agency_mediation
+    if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
+        return "F"
+    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
+        return "G"
+    return m347_operation_clave(source_kind)
 
 
 def _intracommunity_clave(invoice: Invoice) -> str | None:

@@ -74,6 +74,15 @@ from ._review_package_bytes_support import build_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+# Canonical UUIDv4 profile identities. Test buckets publish through
+# ``canonical_profile_bucket_id``, which accepts only a version-4 UUID, so
+# a readable label cannot address a bucket. The foreign id is a VALID but
+# different identity on purpose: the refusal under test is a bucket
+# mismatch, and a malformed id would refuse for the wrong reason.
+_OWNER_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
+_FOREIGN_BUCKET_ID = "2e510000-0000-4000-8000-000000000002"
+_CONCURRENT_BUCKET_ID = "2e510000-0000-4000-8000-000000000003"
+
 _NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_signing")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_signing")
@@ -321,17 +330,22 @@ def test_two_buckets_mint_independent_keypairs(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "stored_bucket_id",
-    (
-        pytest.param("review-pkg-sign-foreign", id="foreign"),
-        pytest.param(" review-pkg-sign-owner ", id="whitespace"),
-    ),
+    (pytest.param(_FOREIGN_BUCKET_ID, id="foreign"),),
 )
-def test_signing_keypair_refuses_foreign_or_whitespace_payload_bucket(
+def test_signing_keypair_refuses_foreign_payload_bucket(
     tmp_path: Path,
     stored_bucket_id: str,
 ) -> None:
-    """A real encrypted row cannot claim a different or ambiguous bucket identity."""
-    target_bucket_id = "review-pkg-sign-owner"
+    """A real encrypted row cannot claim a different bucket identity.
+
+    A whitespace-wrapped spelling is deliberately NOT part of this refusal.
+    :data:`~cadrumo.core.identity.BucketId` declares
+    ``StringConstraints(strip_whitespace=True)``, so a padded spelling of a
+    valid id IS the same identity -- ``canonical_bucket_id`` exists precisely
+    so a wrapped spelling cannot address a second bucket. The padded case is
+    proved as normalisation below rather than as a refusal here.
+    """
+    target_bucket_id = _OWNER_BUCKET_ID
     private_key = Ed25519PrivateKey.generate()
     misplaced = ReviewPackageSigningKeypair(
         bucket_id=stored_bucket_id,
@@ -368,9 +382,51 @@ def test_signing_keypair_refuses_foreign_or_whitespace_payload_bucket(
         assert unchanged.payload == misplaced_payload
 
 
+def test_signing_keypair_accepts_a_whitespace_wrapped_spelling_as_the_same_bucket(tmp_path: Path) -> None:
+    """A padded spelling of a valid id addresses ONE bucket, not a second one.
+
+    This replaces a case that asserted the opposite. It only ever passed
+    because the fixture used a readable label, which failed UUID parsing
+    before any bucket comparison happened -- a refusal for the wrong reason.
+    With canonical identities the documented contract is visible: the stored
+    row is accepted, because stripping is what keeps one bucket from wearing
+    two addresses.
+    """
+    padded = f" {_OWNER_BUCKET_ID} "
+    private_key = Ed25519PrivateKey.generate()
+    stored = ReviewPackageSigningKeypair(
+        bucket_id=padded,
+        private_key_hex=private_key.private_bytes_raw().hex(),
+        public_key_hex=private_key.public_key().public_bytes_raw().hex(),
+        created_at=_NOW,
+    )
+
+    assert stored.bucket_id == _OWNER_BUCKET_ID, "BucketId must strip surrounding whitespace on construction"
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OWNER_BUCKET_ID) as profile:
+        profile.repository.save(
+            namespace=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+            object_key=_signing_key_object_key(_OWNER_BUCKET_ID),
+            classification=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity,
+            schema_version=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.schema_version,
+            written_at=_NOW,
+            payload=stored.model_dump_json().encode("utf-8"),
+            write_provenance="test.review_package_signing.whitespace_payload",
+        )
+
+        loaded = load_review_package_signing_keypair(
+            bucket_id=_OWNER_BUCKET_ID,
+            repository=profile.repository,
+        )
+
+    assert loaded is not None
+    assert loaded.bucket_id == _OWNER_BUCKET_ID
+    assert loaded.public_key_hex == stored.public_key_hex
+
+
 def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_package(tmp_path: Path) -> None:
     """Concurrent first use returns one persisted Ed25519 keypair, which signs a real package."""
-    bucket_id = "review-pkg-sign-concurrent"
+    bucket_id = _CONCURRENT_BUCKET_ID
     worker_count = 12
     gate = threading.Barrier(worker_count)
     result_lock = threading.Lock()

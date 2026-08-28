@@ -168,7 +168,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tarfile.open",
     ): "sealed bucket archive writer emits encrypted archive payloads",
     (
-        "src/cadrumo/application/auth/_acquisition_lock.py",
+        "src/cadrumo/application/auth/acquisition_lock.py",
         "acquire_auth_acquisition_lock",
         "os.open",
     ): "auth acquisition lock file; non-sensitive lock metadata only",

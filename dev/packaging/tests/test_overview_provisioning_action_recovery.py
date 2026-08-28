@@ -45,9 +45,19 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.s
 # had under src/, which resolved ABOVE the repository and built a wheel from
 # a directory with no pyproject.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-if not (_REPO_ROOT / "pyproject.toml").is_file():  # pragma: no cover - configuration guard
-    _message = f"packaging gate lost the repository root: {_REPO_ROOT}"
-    raise RuntimeError(_message)
+
+
+@pytest.fixture(autouse=True)
+def _repository_root_resolved() -> None:
+    """Fail this module's tests if the depth arithmetic retargeted.
+
+    Checked per test rather than at import. Collection must stay side-effect
+    free, and a guard that raises during collection reports a broken module
+    rather than a named gate that lost its root, which is harder to act on.
+    """
+    assert (_REPO_ROOT / "pyproject.toml").is_file(), f"packaging gate lost the repository root: {_REPO_ROOT}"
+
+
 _PROVISIONING_MARKER = "S35_PROVISIONING_MATRIX:"
 
 

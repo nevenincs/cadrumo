@@ -1137,6 +1137,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
     BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
     BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION: _InvoiceSelector,
     BindingSourceKind.LEDGER_OSS_AGGREGATION: _OssIossLedgerSelector,
     BindingSourceKind.LEDGER_IVA_AGGREGATION: _IvaLedgerSelector,
     BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: _RentaLedgerGastosEstimacionDirectaSelector,
@@ -1237,6 +1238,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
     BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
     BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION: validate_invoice_binding,
     BindingSourceKind.LEDGER_OSS_AGGREGATION: validate_ledger_oss_aggregation_binding,
     BindingSourceKind.LEDGER_IVA_AGGREGATION: validate_ledger_iva_aggregation_binding,
     BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (

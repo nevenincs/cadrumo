@@ -717,6 +717,7 @@ cli:
           inventario: inventario de existencias
           miembro_atribucion: miembro de atribución de rentas
           operacion_reembolso: operación de reembolso
+          operacion_tercero: operación con terceras personas
           operacion_vinculada: operación vinculada
           registro_retenciones: registro de retenciones
           regularizacion_bienes_inversion: regularización de bienes de inversión

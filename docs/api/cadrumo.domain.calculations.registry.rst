@@ -35,6 +35,7 @@ Submodules
    cadrumo.domain.calculations.registry._schema_governance
    cadrumo.domain.calculations.registry._snapshot_internals
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
+   cadrumo.domain.calculations.registry._source_file_text
    cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers

@@ -351,6 +351,7 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
     return resolved
 
 
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
 def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved: Mapping[str, _CarveOut]) -> str:
     """Return the row's alpha-2 code, refusing a malformed or repeated one."""
     from .errors import IvaCatalogueError
@@ -363,6 +364,7 @@ def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved:
     return code
 
 
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
 def _carve_out_disposition(
     target: object,
     record: Mapping[str, Any],
@@ -404,6 +406,7 @@ def _carve_out_disposition(
     return parent, scope, nothing
 
 
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
 def _carve_out_citations(target: object, record: Mapping[str, Any], *, code: str) -> tuple[str, ...]:
     """Return the row's legal_refs, refusing an uncited or malformed row.
 
@@ -420,6 +423,7 @@ def _carve_out_citations(target: object, record: Mapping[str, Any], *, code: str
     return references
 
 
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
 def _carve_out_row(
     target: object,
     record: Mapping[str, Any],

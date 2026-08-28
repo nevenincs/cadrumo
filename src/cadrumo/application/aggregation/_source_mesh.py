@@ -379,6 +379,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
+                BindingSourceKind.M347_THIRD_PARTY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
             },

@@ -21,7 +21,6 @@ from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from .._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
-    OverviewCalendarPayload,
     OverviewCalendarProfilePayload,
     OverviewCalendarResult,
 )
@@ -70,9 +69,9 @@ def test_calendar_coverage_refuses_omission_and_overlapping_dispositions() -> No
     without_coverage = _calendar_payload()
     without_coverage.pop("coverage")
     with pytest.raises(ValidationError):
-        OverviewCalendarPayload.model_validate(without_coverage)
+        OverviewCalendarResult.model_validate(without_coverage)
     with pytest.raises(ValidationError):
-        OverviewCalendarPayload.model_validate(
+        OverviewCalendarResult.model_validate(
             _calendar_payload(
                 coverage=_coverage_payload(advised=[{"modelo": "303", "reason": "applicable_window_missing"}])
             ),

@@ -8,6 +8,8 @@ proved that a widget can render correctly and still be unusable by keyboard.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
@@ -31,6 +33,7 @@ class _StageHarness(App[None]):
         super().__init__()
         self._current_index = current_index
 
+    @override
     def compose(self) -> ComposeResult:
         yield StageNavigationStrip(_STAGES, current_index=self._current_index, id="stages")
 
@@ -63,6 +66,7 @@ async def test_stage_strip_shows_every_stage_with_a_distinct_non_colour_glyph(si
 
 
 class _RequirementHarness(App[None]):
+    @override
     def compose(self) -> ComposeResult:
         yield RequirementBadge("NIF", RequirementStatus.REQUIRED_MISSING, id="badge-missing")
         yield RequirementBadge("Postcode", RequirementStatus.NOT_APPLICABLE, id="badge-not-applicable")
@@ -86,6 +90,7 @@ async def test_requirement_badges_are_distinguishable_by_text_not_colour_alone()
 
 
 class _DisclosureHarness(App[None]):
+    @override
     def compose(self) -> ComposeResult:
         yield DisclosureGroup(Static("hidden detail", id="detail"), title="Optional detail", id="group")
 
@@ -109,6 +114,7 @@ async def test_disclosure_group_starts_collapsed_and_opens_by_keyboard() -> None
 class _SourceCardHarness(App[None]):
     pressed_count = 0
 
+    @override
     def compose(self) -> ComposeResult:
         yield SourceActionCard(
             SourceActionDescriptor(

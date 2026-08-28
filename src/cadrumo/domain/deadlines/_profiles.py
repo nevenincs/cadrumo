@@ -22,7 +22,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import TypedDict
 
-from ...core import Modelo, Period
+from ...core import Modelo, Period, ThirdPartyDeclarationRole
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_setup_answers
@@ -65,6 +65,7 @@ def taxpayer_profile_from_mapping(
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None
     income_categories = _resolve_income_categories(typed.irpf_income_categories)
+    declaration_roles = _resolve_declaration_roles(typed.declaration_roles)
     estimation_regime = typed.irpf_estimation_regime or None
     activity_kind = typed.irpf_activity_kind or None
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
@@ -80,6 +81,7 @@ def taxpayer_profile_from_mapping(
     return TaxpayerProfile(
         tax_id=tax_id,
         entity_type=entity_type,
+        declaration_roles=declaration_roles,
         legal_entity_form=legal_entity_form,
         irpf_income_categories=income_categories,
         irpf_estimation_regime=estimation_regime,
@@ -526,6 +528,17 @@ def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
     """
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
     return frozenset(IrpfIncomeCategory(token) for token in tokens)
+
+
+def _resolve_declaration_roles(raw: str) -> frozenset[ThirdPartyDeclarationRole]:
+    """Parse the comma-separated role token into a typed set.
+
+    Mirrors :func:`_resolve_income_categories`: ``SetupAnswers.declaration_roles``
+    carries the canonical comma-separated string the CHECKBOX widget produces;
+    this projects it into the typed ``frozenset`` ``TaxpayerProfile`` declares.
+    """
+    tokens = [token.strip() for token in raw.split(",") if token.strip()]
+    return frozenset(ThirdPartyDeclarationRole(token) for token in tokens)
 
 
 def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:

@@ -17,7 +17,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import Period, ThirdPartyDeclarationRole
+from ...calculations.registry.applicability import derive_tax_route
+from ...calculations.registry.applicability_routes import TaxRoute
 from .. import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -51,6 +53,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B12345674",
         entity_type=EntityType.LEGAL_ENTITY,
+        declaration_roles=frozenset({ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR}),
         legal_entity_form=LegalEntityForm.COOPERATIVA,
         irpf_income_categories=frozenset(
             {
@@ -95,6 +98,7 @@ class TestTaxpayerModelRoundTrip:
         assert restored == original
         # Spot-check each axis explicitly so a regression names the axis.
         assert restored.entity_type is EntityType.LEGAL_ENTITY
+        assert restored.declaration_roles == frozenset({ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR})
         assert restored.legal_entity_form is LegalEntityForm.COOPERATIVA
         assert restored.irpf_income_categories == frozenset(
             {
@@ -640,3 +644,47 @@ class TestMultiplePagadoresObligationWithTotalIncome:
                 total_income,
                 year,
             )
+
+
+class TestThirdPartyDeclarationRoleOrthogonality:
+    """`ThirdPartyDeclarationRole` must never change the tax-selection consequence.
+
+    `EntityType` selects the tax route (see :func:`derive_tax_route`); a
+    Modelo 347 filer-role membership is a SEPARATE, coexisting fact. The
+    proof is not merely that the two fields hold independent values -- it is
+    that the actual tax-route DERIVATION a real consumer runs is unchanged
+    by every possible role membership, singly and combined.
+    """
+
+    def test_every_role_combination_leaves_the_legal_entity_tax_route_unchanged(self) -> None:
+        baseline = TaxpayerProfile(
+            tax_id="B12345674",
+            entity_type=EntityType.LEGAL_ENTITY,
+            iva_regime=IVARegime.GENERAL,
+        )
+        assert derive_tax_route(baseline) is TaxRoute.IMPUESTO_SOCIEDADES
+
+        all_roles = frozenset(ThirdPartyDeclarationRole)
+        for role in (*ThirdPartyDeclarationRole, None):
+            roles = all_roles if role is None else frozenset({role})
+            colegio_profesional = TaxpayerProfile(
+                tax_id="B12345674",
+                entity_type=EntityType.LEGAL_ENTITY,
+                iva_regime=IVARegime.GENERAL,
+                declaration_roles=roles,
+            )
+            assert derive_tax_route(colegio_profesional) is TaxRoute.IMPUESTO_SOCIEDADES
+            assert colegio_profesional.entity_type is EntityType.LEGAL_ENTITY
+
+    def test_every_role_combination_leaves_the_natural_person_tax_route_unchanged(self) -> None:
+        """The same proof for IRPF, so the axis is orthogonal on both routes it could distort."""
+        all_roles = frozenset(ThirdPartyDeclarationRole)
+        for role in (*ThirdPartyDeclarationRole, None):
+            roles = all_roles if role is None else frozenset({role})
+            profile = TaxpayerProfile(
+                tax_id="12345678Z",
+                entity_type=EntityType.NATURAL_PERSON,
+                iva_regime=IVARegime.GENERAL,
+                declaration_roles=roles,
+            )
+            assert derive_tax_route(profile) is TaxRoute.IRPF

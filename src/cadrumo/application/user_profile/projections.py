@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date
+from typing import TypeGuard
 
 from pydantic import BaseModel
 
@@ -21,7 +22,12 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
+from ...domain.user_profile.values import (
+    UserProfileFact,
+    UserProfileFactValue,
+    UserProfileRecord,
+    UserProfileSnapshot,
+)
 
 _WINDOWLESS_SENTINEL = date.min
 """Sort position for a fact carrying no ``valid_from``.
@@ -307,8 +313,47 @@ def _merged_taxpayer_values(
 __all__ = [
     "fact_value",
     "facts_to_values",
+    "profile_fact_index",
     "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",
     "snapshot_to_values",
 ]
+
+
+def _is_user_profile_record(record: object) -> TypeGuard[UserProfileRecord]:
+    """Prove that an optional caller override is the canonical live record."""
+    return isinstance(record, UserProfileRecord)
+
+
+def profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
+    """Build a selector -> typed-value index covering both selector forms.
+
+    A profile binding's selector resolves either as the canonical
+    ``section.field`` fact path (``profile_key`` form) or as a schema
+    ``model_selector`` alias (``profile_model`` + ``field`` form). The
+    index exposes each non-null fact under its canonical path AND under
+    every ``model_selector`` the schema declares for it, so both
+    selector forms find the value.
+
+    Values are preserved as their original :data:`UserProfileFactValue` type
+    (``bool``, ``Decimal``, ``date``, ``str``, …) so that downstream
+    channel routing can branch on the concrete Python type rather than
+    re-parsing a ``str(value)`` rendering.
+    """
+    selector_index: dict[str, tuple[str, ...]] = {}
+    for section in schema.sections:
+        for field in section.fields:
+            selector_index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
+
+    if not _is_user_profile_record(record):
+        return {}
+
+    index: dict[str, UserProfileFactValue] = {}
+    for fact in record.facts:
+        if fact.value is None:
+            continue
+        index[fact.path] = fact.value
+        for selector in selector_index.get(fact.path, ()):
+            index[selector] = fact.value
+    return index
