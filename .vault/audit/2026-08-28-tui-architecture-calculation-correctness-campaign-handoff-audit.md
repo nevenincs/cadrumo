@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9f859385c72aace69d4720fb2a18f695e7292f8279987c2e76d50ecd661ce0f'
+body_hash: 'sha256:5d3dd53c68c158b1643ef42e8cce29cc47315906c239fb04af97657a744b67b3'
 related: []
 ---
 
@@ -78,6 +78,21 @@ below are sorted on that axis because it is the axis with no coverage.
    tabaco, and no production caller reads `.tabaco_rate`; only tests do. So a
    supply of labores del tabaco cannot be classified into the rung, and the
    1,75 % recargo can never be charged.
+
+   **Correction to my own earlier statement of this finding.** I recorded that the
+   rate "has a validated parameter and boxes on Modelo 303 and Modelo 390". The
+   boxes half is FALSE. Checked at HEAD: neither modelo declares any tabaco
+   casilla or binding. Modelo 303 carries three recargo bindings (general,
+   reducido, super-reducido); Modelo 390 carries nine (those three plus six
+   rate-specific ones at 0,26 / 0,5 / 0,62 / 1 / 1,4 / 5,2). 1,75 appears in none
+   of them.
+
+   The true picture is simpler and more coherent than I described: the registry
+   holds the legal rate — correctly, art. 161.4.º exists — and models no box for
+   it anywhere. What I cannot establish from the bundled material is whether
+   AEAT's own record designs for these modelos provide such a box. That is the
+   question an owner needs to answer, and it decides whether this is an
+   unreachable rung or simply a rate the forms do not collect.
 
    Direction unchanged: a recargo not charged is under-declaration.
 
