@@ -56,9 +56,9 @@ from ...domain.modelos import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
-    ModeloError,
     WorkUnit,
 )
+from ...domain.modelos.errors import ModeloError
 from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure
 

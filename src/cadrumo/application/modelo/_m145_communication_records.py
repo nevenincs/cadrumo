@@ -63,7 +63,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos import ModeloError, ModeloExportError
+from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,

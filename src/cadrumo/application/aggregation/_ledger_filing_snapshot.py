@@ -51,10 +51,10 @@ from ...domain.modelos import (
     LedgerFilingStalenessVerdict,
     LedgerRowFingerprint,
     ManualFactBasisEntry,
-    ModeloValidationError,
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.transactions import Transaction, TransactionCatalogue
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.

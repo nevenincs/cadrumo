@@ -13,25 +13,26 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyCapsuleLabel,
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyRecordError,
-    ProfileCustodySentinelRecord,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
+from ....adapters.persistence.storage.custody.acceleration_receipt import mint_profile_session, profile_session_path
+from ....adapters.persistence.storage.custody.capsule import (
     inventory_staged_profile_custody_capsule,
     list_current_profile_custody_capsule_ids,
     load_committed_profile_custody_label_record,
-    mint_profile_session,
     profile_custody_staging_path,
-    profile_session_path,
     publish_profile_custody_capsule,
     publish_staged_profile_custody_capsule,
     rename_profile_custody_capsule_for_deletion,
     write_profile_custody_deletion_marker,
 )
+from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
 from ....adapters.persistence.storage.master_key import (
     BucketSession,
     bind_active_bucket_session,
@@ -195,8 +196,8 @@ def _persist_real_current_session_acceleration(root: Path) -> Path:
 
 def _publish_once_in_sibling(path_text: str, payload: bytes, result_queue: Any) -> None:
     """Run the real publish primitive in one spawned interpreter."""
-    from ....adapters.persistence.storage.custody import (
-        ProfileCustodyRecordError,
+    from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+    from ....adapters.persistence.storage.custody.filesystem import (
         ensure_profile_custody_local_directory,
         write_profile_custody_local_record,
     )

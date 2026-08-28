@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....application.registry import (
+from ....application.registry.corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
     RegistryCorpusIssueProjection,

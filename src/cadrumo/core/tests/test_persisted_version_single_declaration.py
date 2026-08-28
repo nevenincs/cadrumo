@@ -106,7 +106,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_capsule_records.py",
+        "src/cadrumo/adapters/persistence/storage/custody/capsule_records.py",
         "ProfileCustodyDeletionMarker",
         "schema_version",
     ): (
@@ -114,12 +114,12 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "is a different record; the deletion marker has none of its own."
     ),
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_label_head_models.py",
+        "src/cadrumo/adapters/persistence/storage/custody/label_head_models.py",
         "ProfileLabelHead",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_label_head_models.py",
+        "src/cadrumo/adapters/persistence/storage/custody/label_head_models.py",
         "ProfileLabelHeadPendingAdvance",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,

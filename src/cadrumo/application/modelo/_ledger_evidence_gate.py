@@ -20,7 +20,8 @@ from ...domain.iva import (
     flow_direction_for_invoice_kind,
     is_deducible_flow,
 )
-from ...domain.modelos import CalculationRevision, LedgerEvidenceRow, ModeloError
+from ...domain.modelos import CalculationRevision, LedgerEvidenceRow
+from ...domain.modelos.errors import ModeloError
 from ...domain.transactions import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,

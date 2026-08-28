@@ -37,7 +37,7 @@ from .....domain.calculations.registry.fixed_width_codec import (
     render_fixed_width_export_record_body,
 )
 from .....domain.calculations.registry.schema_exports import ExportRecordDefinition
-from .....domain.modelos import ModeloExportError
+from .....domain.modelos.errors import ModeloExportError
 
 
 def _export_error(*, field_id: str | None, reason: str, **context: object) -> ModeloExportError:

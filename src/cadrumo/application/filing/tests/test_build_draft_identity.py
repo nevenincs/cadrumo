@@ -22,7 +22,8 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import ModeloBuilderError
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from .. import _filing_period_date, build_draft, build_runtime_schema_provider
+from .. import build_draft, build_runtime_schema_provider
+from .._draft_construction import _filing_period_date
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -22,13 +22,13 @@ from ...domain.modelos import (
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,
     ModeloDetailRow,
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
     validate_m210_agrupacion_renta_rows,
 )
+from ...domain.modelos.errors import ModeloError
 
 _M210_AGRUPACION_LEGAL_REF = "orden-eha-3316-2010:art-2"
 _M210_AGRUPACION_SOURCE_REF = "boe-modelo-210-2024-form-layout"

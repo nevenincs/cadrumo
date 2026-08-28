@@ -6,7 +6,7 @@ import pytest
 
 from ....core import Period
 from ....domain.filing import ModeloBuilderError
-from .. import _load_registry_snapshot
+from .._draft_construction import _load_registry_snapshot
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

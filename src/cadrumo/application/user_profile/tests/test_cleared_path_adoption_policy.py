@@ -62,7 +62,7 @@ _DECLARED_WRITERS: dict[str, str] = {
         "PRESENT in the projection. The resume-answer seed treats an absent path as "
         "unanswered and re-asks it, which is what clearing an answer should cause."
     ),
-    "application/wizard/_persistence.py": (
+    "application/wizard/persistence.py": (
         "Writes operator-supplied wizard answers, which are unconditional on what the "
         "projection holds. Its projection read is a descendant-list scan that only reads."
     ),
@@ -71,7 +71,7 @@ _DECLARED_WRITERS: dict[str, str] = {
         "comes from values the operator explicitly supplied for the new row, so absence "
         "never causes a cleared value to be re-adopted."
     ),
-    "application/wizard/_commands.py": (
+    "application/wizard/commands.py": (
         "The command reads the projection only to preserve the filing baseline before "
         "its CAS command. Every resulting fact comes from an explicit wizard answer or "
         "flag, never from an absent projected value, so a cleared path is not adopted."

@@ -51,12 +51,11 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     ModeloCode,
-    ModeloError,
-    ModeloValidationError,
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
 )
+from ...domain.modelos.errors import ModeloError, ModeloValidationError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,

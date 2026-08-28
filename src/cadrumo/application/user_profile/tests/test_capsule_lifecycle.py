@@ -11,20 +11,24 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyCapsuleLabel,
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyRecordError,
-    ProfileCustodyRefusal,
-    ProfileCustodyRefusedError,
-    ProfileCustodySentinelRecord,
-    ProfileCustodyWrappedDek,
-    ProfileLabelHeadRepository,
-    create_profile_custody_sentinel,
+from ....adapters.persistence.storage.custody.capsule import (
     load_committed_profile_custody_label_record,
     replace_committed_profile_custody_data_file,
 )
+from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
+from ....adapters.persistence.storage.custody.errors import (
+    ProfileCustodyRecordError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
+from ....adapters.persistence.storage.custody.label_head_repository import ProfileLabelHeadRepository
+from ....adapters.persistence.storage.custody.records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
 from ....core.bucket_pointer import read_pointer
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile.errors import ProfileNotFoundError

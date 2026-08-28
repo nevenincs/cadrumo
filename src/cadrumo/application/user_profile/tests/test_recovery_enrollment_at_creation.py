@@ -17,10 +17,10 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import RecoveryKey, generate_recovery_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecoverySecretError
+from ....adapters.persistence.storage.custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    ProfileCustodyRecoverySecretError,
-    load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )

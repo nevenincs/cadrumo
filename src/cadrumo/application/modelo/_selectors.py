@@ -24,9 +24,9 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
-    ModeloError,
     WorkUnit,
 )
+from ...domain.modelos.errors import ModeloError
 
 
 class ModeloCalculationRevisionSelector(StrEnum):

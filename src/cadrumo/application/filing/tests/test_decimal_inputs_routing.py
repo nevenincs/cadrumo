@@ -23,7 +23,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from .. import _filing_binding_values, _string_inputs_for_ids
+from .._draft_construction import _filing_binding_values, _string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

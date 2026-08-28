@@ -12,12 +12,12 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....application.state_projection import _build_active_profile
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle

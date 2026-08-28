@@ -64,7 +64,6 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloCode,
-    ModeloError,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -73,6 +72,7 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import (
     CalculationObservationRepository,

@@ -59,7 +59,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.TOKENS,
         "tokens",
-        consumer_module="application/auth/_acquisition_lock.py",
+        consumer_module="application/auth/acquisition_lock.py",
         settings_field="cadrumo_token_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -339,7 +339,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.WORKFLOW_RUNS,
         "workflow-runs",
-        consumer_module="application/workflow/_persistence.py",
+        consumer_module="application/workflow/persistence.py",
         settings_field="cadrumo_workflow_runs_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -496,7 +496,11 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.ACTIVE_PROFILE_POINTER,
         "active-profile",
-        consumer_module="core/config.py",
+        # `core/bucket_pointer.py` is what resolves this location: its
+        # `pointer_path()` reads `StorageCategory.ACTIVE_PROFILE_POINTER`.
+        # `core/config.py` references the category nowhere, so the claim named a
+        # module that does not back it.
+        consumer_module="core/bucket_pointer.py",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -534,7 +538,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.OPERATION_JOURNAL,
         "operation-journals",
-        consumer_module="adapters/persistence/operations/_journal.py",
+        consumer_module="adapters/persistence/operations/journal.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -590,7 +594,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_LABEL_HEAD,
         "profile-custody-label-heads",
-        consumer_module="adapters/persistence/storage/custody/_label_head_repository.py",
+        consumer_module="adapters/persistence/storage/custody/label_head_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -641,7 +645,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_MANIFEST,
         "manifest.toml",
-        consumer_module="adapters/persistence/storage/custody/_capsule_discovery.py",
+        consumer_module="adapters/persistence/storage/custody/capsule_discovery.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -685,7 +689,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CAPSULE_CUSTODY,
         "custody",
-        consumer_module="adapters/persistence/storage/custody/_paths.py",
+        consumer_module="adapters/persistence/storage/custody/paths.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -694,7 +698,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE,
         "custody/envelope.v1.json",
-        consumer_module="adapters/persistence/storage/custody/_paths.py",
+        consumer_module="adapters/persistence/storage/custody/paths.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -704,7 +708,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE,
         "custody/recovery.v1.json",
-        consumer_module="adapters/persistence/storage/custody/_paths.py",
+        consumer_module="adapters/persistence/storage/custody/paths.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -714,7 +718,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CAPSULE_DATA,
         "data",
-        consumer_module="adapters/persistence/storage/custody/_paths.py",
+        consumer_module="adapters/persistence/storage/custody/paths.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -723,7 +727,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CAPSULE_COMMIT,
         "profile.commit.v1.json",
-        consumer_module="adapters/persistence/storage/custody/_paths.py",
+        consumer_module="adapters/persistence/storage/custody/paths.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

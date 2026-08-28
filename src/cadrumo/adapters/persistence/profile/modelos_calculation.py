@@ -53,8 +53,8 @@ from ....domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
     assert_revision_snapshot_evidence_coverage,
-    raise_catalogue_integrity_error,
 )
+from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 

@@ -83,7 +83,6 @@ from ...domain.modelos import (
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
     ModeloDetailRow,
-    ModeloError,
     WorkUnit,
     WorkUnitCatalogue,
     compute_dt12_reduccion_plan_pensiones,
@@ -92,6 +91,7 @@ from ...domain.modelos import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
+from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture

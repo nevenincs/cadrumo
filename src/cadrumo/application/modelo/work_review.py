@@ -70,7 +70,6 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloCode,
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -79,6 +78,7 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
 )
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,

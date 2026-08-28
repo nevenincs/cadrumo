@@ -365,6 +365,8 @@ profile:
       taxpayer_type:
         country_of_fiscal_residence:
           label: País de residencia fiscal
+        declaration_roles:
+          label: Roles declarantes de terceros (modelo 347)
         entity_type:
           label: Tipo de contribuyente
         fiscal_residency:

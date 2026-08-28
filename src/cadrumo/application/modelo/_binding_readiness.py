@@ -160,7 +160,22 @@ def _annual_period_for_year(
         return None
     try:
         revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
-    except NoRevisionForPeriodError:
+    except NoRevisionForPeriodError as exc:
+        # Logged for the same reason the two sibling branches are: this helper
+        # answers None for three distinct causes, and a developer asking why
+        # profile bindings came back undetermined saw a diagnostic for two of
+        # them and silence for the third -- which is the common one. The
+        # contract that None means undetermined is unchanged; only the silence
+        # is. As in the ambiguous branch below, the remedy rides on the raiser:
+        # the error now carries the revisions the modelo declares, so this
+        # quotes it rather than composing a second copy that could drift.
+        _log.debug(
+            "binding-readiness: modelo=%s has no revision for filing_year=%s; "
+            "treating profile bindings as unresolved (%s)",
+            modelo,
+            filing_year,
+            exc,
+        )
         return None
     except AmbiguousRevisionSelectionError as exc:
         # A filing year carrying a mid-year AEAT design boundary is covered by more

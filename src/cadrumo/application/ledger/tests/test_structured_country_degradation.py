@@ -800,11 +800,20 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
     ) -> None:
         """The positive control, and it is the specimen exactly as authored.
 
-        Nothing was stated, so nothing is our gap and nothing is forgiven: the
-        refusal names both residencies. Without this the cases above would pass
+        The DOCUMENT states no country for either party, so nothing is our
+        vocabulary's gap and nothing is forgiven. The refusal therefore names
+        the counterparty's residency. Without this the cases above would pass
         against a guard that had simply stopped naming the counterparty at all,
         which is the shape of a green run measuring the harness rather than the
         code.
+
+        It names ONE slot, not two, and that is the correct reading: the filer's
+        own territory is a PROFILE fact this document cannot supply, and the
+        profile supplies it -- the issuer scope resolves from the asserted fact
+        rather than from the specimen. A refusal naming a residency the profile
+        already established would send the operator to fix something that is not
+        broken. The both-slots case is covered where it genuinely arises, by
+        ``test_the_exemption_does_not_forgive_the_filers_own_slot``.
         """
         confirmed = self._confirmed(
             None,
@@ -815,8 +824,11 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert "issuer_residency" in confirmed.category.note
         assert "customer_residency" in confirmed.category.note
+        # The filer's slot is absent from the refusal because it is ESTABLISHED,
+        # not because the guard stopped naming slots -- assert that directly, or
+        # this control would pass against a guard that had gone silent.
+        assert "issuer_residency" not in {gap.field for gap in confirmed.assembly.missing}
 
     def test_an_iso_unassigned_code_is_not_forgiven(
         self,

@@ -36,7 +36,7 @@ from ..adapters.persistence.storage.crypto.encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..adapters.persistence.storage.custody import delete_profile_session
+from ..adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,

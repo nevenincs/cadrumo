@@ -35,7 +35,7 @@ from ._inventory import production_ast_items
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 ACCELERATION_RECEIPT_PATHS: tuple[str, ...] = (
-    "adapters/persistence/storage/custody/_acceleration_receipt.py",
+    "adapters/persistence/storage/custody/acceleration_receipt.py",
     "application/user_profile/login_session.py",
 )
 """Modules owning the keystore-resident acceleration receipt."""
@@ -61,7 +61,7 @@ _QUALIFIERS: tuple[str, ...] = ("profile", "bucket", "auth", "browser", "aeat", 
 
 RECEIPT_SIDE_EXEMPTIONS: dict[tuple[str, str], str] = {
     (
-        "adapters/persistence/storage/custody/_acceleration_receipt.py",
+        "adapters/persistence/storage/custody/acceleration_receipt.py",
         "PROFILE_SESSION_KEYCHAIN_SERVICE",
     ): (
         "OS-credential-store wire identifier. Renaming it orphans entries outside the "
@@ -69,7 +69,7 @@ RECEIPT_SIDE_EXEMPTIONS: dict[tuple[str, str], str] = {
         "would be a migration path. The token lags the concept name by decision."
     ),
     (
-        "adapters/persistence/storage/custody/_acceleration_receipt.py",
+        "adapters/persistence/storage/custody/acceleration_receipt.py",
         "PROFILE_SESSION_SCHEMA_VERSION",
     ): "Versions the wire record the keychain service addresses; moves only with that token.",
 }

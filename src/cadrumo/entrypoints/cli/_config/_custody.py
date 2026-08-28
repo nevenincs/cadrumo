@@ -172,7 +172,7 @@ def _login_through_the_prompt(
     The callback always closes over a value acquired by this entrypoint, so
     application and storage code cannot silently redeclare transport policy.
     """
-    from ....adapters.persistence.storage.custody import ProfileCustodyPasswordError
+    from ....adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
     from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
     from ....application.user_profile.login_session import login_profile
     from ..errors import CliRefusedBoundaryError

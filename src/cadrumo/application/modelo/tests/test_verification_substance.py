@@ -14,7 +14,8 @@ from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
-from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
+from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.modelos.errors import ModeloError
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,

@@ -17,7 +17,8 @@ from ...core.logging import get_logger
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryError, RegistrySnapshotError
 from ..calculations.registry.ids import RevisionId
-from ..modelos import ModeloCode, ModeloValidationError
+from ..modelos import ModeloCode
+from ..modelos.errors import ModeloValidationError
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._entries import (

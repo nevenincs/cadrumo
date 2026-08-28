@@ -1182,7 +1182,8 @@ application:
       cross_period_activity_start_missing: A(z) %{target_modelo} %{target_filing_year}
         %{target_period} modelóhoz bejelentett tevékenységkezdési dátum szükséges.
       cross_period_dependency_unclean: 'A(z) %{source_modelo} %{source_filing_year}
-        %{source_period} forrásmodelo nem tiszta ehhez: %{origin_ids} — %{blocker_codes}.'
+        %{source_period} forrásmodelo nem tiszta ehhez: %{origin_ids}; akadályok:
+        %{blocker_codes}.'
       cross_period_first_year_fractional_suppression: 'A(z) %{source_modelo} %{source_filing_year}
         %{source_period} modelo hatókörön kívül esik: a tevékenység %{activity_start_date}
         napon kezdődött.'

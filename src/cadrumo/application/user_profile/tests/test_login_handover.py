@@ -31,14 +31,13 @@ from ....adapters.persistence.storage import (
     build_profile_login_session_port,
     master_key,
 )
-from ....adapters.persistence.storage.custody import (
-    PROFILE_CUSTODY_SENTINEL_FILENAME,
-    ProfileCustodyRecordError,
+from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path, resume_profile_session
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.filesystem import (
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
-    load_committed_profile_password_material,
-    profile_session_path,
-    resume_profile_session,
 )
+from ....adapters.persistence.storage.custody.sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME
 from ....core import ProfileSessionRefusalReason
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer

@@ -40,11 +40,11 @@ from ...domain.calculations.registry.schema_verification import (
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloError
 from ._action_errors import ModeloApplicabilityFilterError
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 

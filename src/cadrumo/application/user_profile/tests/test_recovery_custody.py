@@ -24,11 +24,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from ....adapters.persistence.storage import RecoveryKey, generate_recovery_key
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyRecordError,
-    create_profile_custody_sentinel,
-)
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import override_settings
 from ....core.errors import build_error_envelope, render_error_text
 from ....core.i18n import tr

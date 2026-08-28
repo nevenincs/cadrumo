@@ -34,7 +34,7 @@ from typing import cast
 
 from ...core import ActionEvidenceProvenance
 from ...core.errors import CoreNotFoundError
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 from ..operator_actions import PreconditionVerdict
 from ..workflow.run_models import WorkflowResult
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario

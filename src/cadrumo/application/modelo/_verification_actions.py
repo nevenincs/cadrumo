@@ -86,7 +86,6 @@ from ...domain.modelos import (
     CalculationSourceIssue,
     ManualFactBasisEntry,
     ModeloRecordCatalogueRepositoryProtocol,
-    ModeloValidationError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -103,6 +102,7 @@ from ...domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,

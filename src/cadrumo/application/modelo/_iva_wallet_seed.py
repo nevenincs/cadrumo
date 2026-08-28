@@ -39,7 +39,8 @@ from ...domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
     iva_compensation_period_sort_key,
 )
-from ...domain.modelos import SEALED_REVISION_STATES, ModeloError
+from ...domain.modelos import SEALED_REVISION_STATES
+from ...domain.modelos.errors import ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario

@@ -22,12 +22,12 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ....application.user_profile.profile_record_repository import bound_profile_record_session
@@ -202,7 +202,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
 
 def test_resolve_profile_bucket_refuses_a_retired_manifest_without_reading_it(tmp_path: Path) -> None:
     """A retired manifest is a typed custody refusal, not an alternate discovery route."""
-    from ....adapters.persistence.storage.custody import ProfileCustodyRefusal, ProfileCustodyRefusedError
+    from ....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 
     retired = tmp_path / "buckets" / "51c1fa97-28e1-4700-ac1e-ed7cf094d37b" / "manifest.toml"
     retired.parent.mkdir(parents=True)

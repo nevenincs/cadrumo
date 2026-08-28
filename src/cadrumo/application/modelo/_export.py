@@ -88,12 +88,11 @@ from ...domain.modelos import (
     SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloError,
-    ModeloExportError,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
     IvaDifferentiatedDeductionContribution,

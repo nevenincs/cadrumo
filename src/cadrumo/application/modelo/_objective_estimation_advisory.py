@@ -31,11 +31,11 @@ from ...core.resources import bundled_path
 from ...domain.calculations.registry.loader import load_legal_parameters_only
 from ...domain.deadlines import IrpfEstimationRegime, TaxpayerProfile
 from ...domain.modelos import (
-    ModeloValidationError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloValidationError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.ids import SourceRefId

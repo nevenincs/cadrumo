@@ -22,7 +22,7 @@ import pytest
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_registry_tree
-from .. import _refuse_unsupported_filing_year
+from .._draft_construction import _refuse_unsupported_filing_year
 from ..errors import ModeloApplicationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

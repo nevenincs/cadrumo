@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import pytest
 
 from .....application.aggregation import BindingSourceDisposition
-from .....application.filing import _binding_provenance
+from .....application.filing._draft_construction import _binding_provenance
 from .....application.modelo._calculation_actions import assert_no_novel_source_kinds
 from .....application.modelo.calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,

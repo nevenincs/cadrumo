@@ -31,7 +31,8 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage import master_key
-from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
+from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings

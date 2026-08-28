@@ -10,12 +10,8 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ....domain.modelos import (
-    LedgerFilingEvidence,
-    LedgerFilingSnapshot,
-    ManualFactBasisEntry,
-    ModeloValidationError,
-)
+from ....domain.modelos import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
+from ....domain.modelos.errors import ModeloValidationError
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
