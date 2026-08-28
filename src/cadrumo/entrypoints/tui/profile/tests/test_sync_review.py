@@ -3,7 +3,7 @@
 Drives a real registered profile record and the real Textual
 `CensalFieldReviewScreen`/`ProfileManagerScreen` -- no mocks, no synthetic
 schema. `test_census_sync_review.py` already proves the full operation
-round-trip; this file proves the narrower D6 surface `W03.P06` adds:
+round-trip; this file proves the narrower D6 surface adds:
 provenance is read through the settled classification authority (never a
 locally invented source), a conflict is exactly a persisted/observed
 divergence and nothing more, a reject dismisses with `None` and the exact

@@ -4,8 +4,8 @@ Covers both public doors: the generic public projection (stage, lifecycle,
 refusal/diagnostic references, effect), visible for any settlement outcome,
 and the typed public result-projection door
 (``OperationResultProjectionService``, registered with filed-history's own
-``FiledHistoryPublicResultV1`` schema and projector -- see
-W05.P12.S255/S256), which resolves the settled evidence, IVA-wallet,
+``FiledHistoryPublicResultV1`` schema and projector), which resolves the
+settled evidence, IVA-wallet,
 notification, and provenance facts without ever importing the private
 ``FiledHistoryOnboardingRun`` type. No mocks; every test drives the real
 registered operation through composed production services.

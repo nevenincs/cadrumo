@@ -1,4 +1,4 @@
-"""Top-level Workspace V1 projection/result proofs (S130).
+"""Top-level Workspace V1 projection/result proofs.
 
 Complements, and deliberately does not duplicate, the piece-level proofs
 already carried elsewhere: manifest coverage (``test_workspace_manifest.py``),
@@ -6,7 +6,7 @@ epoch/ABA/cross-incarnation refusal and native-capture discipline at the
 port level (``test_workspace_producers.py``), locale resolution and bounded
 schema-facet pagination (``test_workspace.py``), and complete
 ``ModeloWorkReview``/readiness parity against their sole public producers
-(``test_workspace.py``, landed with S128). What this module proves is
+(``test_workspace.py``). What this module proves is
 specific to the assembled ``ModeloWorkspaceStaticInspectionResultV1`` /
 ``ModeloWorkspaceGradedSnapshotResultV1`` themselves: strict round trips with
 an anti-tautology mutation proof, admission-specific contributor-set
@@ -154,7 +154,7 @@ def _seed_and_calculate(repos) -> tuple[WorkUnit, CalculationRevision]:
 
 
 def test_static_inspection_result_strict_round_trip_and_anti_tautology(repos) -> None:
-    """S130: the full static-inspection result round-trips, and a corrupted payload refuses to load."""
+    """The full static-inspection result round-trips, and a corrupted payload refuses to load."""
     work_repo, *_rest = repos
     _seed_work_unit_only(repos)
 
@@ -179,7 +179,7 @@ def test_static_inspection_result_strict_round_trip_and_anti_tautology(repos) ->
 
 
 def test_graded_snapshot_result_strict_round_trip_and_anti_tautology(repos) -> None:
-    """S130: the full graded-snapshot result round-trips, and a corrupted payload refuses to load."""
+    """The full graded-snapshot result round-trips, and a corrupted payload refuses to load."""
     _work_unit, revision = _seed_and_calculate(repos)
     work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
 
@@ -240,7 +240,7 @@ def test_admission_specific_contributor_sets_are_exact_and_differ_by_four() -> N
 
 
 def test_assembled_results_each_carry_exactly_their_own_admissions_contributor_set(repos) -> None:
-    """S130: the assembled projection's own contributors never drift from its admission's canonical set."""
+    """The assembled projection's own contributors never drift from its admission's canonical set."""
     work_repo, *_rest = repos
     _seed_work_unit_only(repos)
 
@@ -414,7 +414,7 @@ def test_static_inspection_reads_neither_closure_nor_readiness(repos) -> None:
 
 
 def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(repos) -> None:
-    """S130: mutating the work unit AFTER a capture never retroactively changes the resolved target.
+    """Mutating the work unit AFTER a capture never retroactively changes the resolved target.
 
     ``CalculationRevision`` is content-addressed -- its own
     ``calculation_revision_id`` is DERIVED from ``casilla_values`` among
@@ -486,7 +486,7 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
 def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(
     repos, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """S130: the assembly invokes each of the CALCULATION and BOUNDED_REVIEW ports exactly once.
+    """The assembly invokes each of the CALCULATION and BOUNDED_REVIEW ports exactly once.
 
     A thin spy wraps the REAL bound method on each port class -- every call
     still executes the genuine implementation; the wrapper only counts
@@ -539,7 +539,7 @@ def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(
 
 
 def test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol() -> None:
-    """S130: domain/ and adapters/ never depend on the application-layer Workspace read contract.
+    """domain/ and adapters/ never depend on the application-layer Workspace read contract.
 
     Workspace V1 is an application-layer, read-only projection assembled
     FROM domain and adapter primitives; a dependency running the other way
@@ -597,7 +597,7 @@ def test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol() -> No
 
 
 def test_exactly_one_module_defines_each_canonical_workspace_assembly_symbol() -> None:
-    """S130: a duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authority reds this.
+    """A duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authority reds this.
 
     Walks every tracked ``application/modelo`` production module (excluding
     tests) and asserts that each of the canonical Workspace assembly entry

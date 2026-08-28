@@ -230,6 +230,23 @@ def _review_rows(host: ScreenHostApp[None]) -> dict[str, list[str]]:
     }
 
 
+async def _settled_cursor(pilot: Pilot[None], flow: FlowScreen, expected: str) -> str:
+    """Pump the message queue until the engine cursor reaches ``expected``.
+
+    Hosting the flow as a screen puts one more layer between a click and the
+    state it produces, so an assertion taken on the very next line can read
+    the pre-click cursor. This waits on the real postcondition rather than on
+    a longer sleep: it returns as soon as the transition lands, and returns
+    the actual cursor unchanged when it never does, so the caller's assertion
+    still fails with the true value rather than on a timeout message.
+    """
+    for _ in range(50):
+        if flow.state.cursor == expected:
+            return flow.state.cursor
+        await pilot.pause()
+    return flow.state.cursor
+
+
 async def _answer_all_required(pilot: Pilot[None], app: FlowScreen) -> None:
     """Walk the flow answering both required pages through the widgets."""
     await pilot.press(*"ada")
@@ -299,7 +316,7 @@ async def test_back_button_returns_the_cursor_to_the_previous_page() -> None:
 
         await pilot.click("#btn-back")
 
-        assert app.state.cursor == "p_name"
+        assert await _settled_cursor(pilot, app, "p_name") == "p_name"
 
 
 @pytest.mark.asyncio

@@ -496,6 +496,28 @@ def _write_policy_names(cli_root: Path) -> frozenset[str]:
     return frozenset(names)
 
 
+def _module_level_bindings(tree: ast.Module) -> dict[str, ast.AST]:
+    """Bind module-level ``NAME = <expr>`` assignments for structural resolution.
+
+    A command-spec module routinely hoists the handler's dotted module path to a
+    module-level constant and passes that NAME into its ``_leaf`` wrapper. The
+    wrapper's own parameter bindings cannot see it, so resolution returned
+    ``None`` for the handler target and the walk raised as if the spec were
+    unresolvable. Seeding the module scope resolves the name the same way the
+    interpreter would, without executing the module.
+    """
+    bindings: dict[str, ast.AST] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            for target in statement.targets:
+                if isinstance(target, ast.Name):
+                    bindings[target.id] = statement.value
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if statement.value is not None:
+                bindings[statement.target.id] = statement.value
+    return bindings
+
+
 def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapability, ...]:
     write_policies = _write_policy_names(cli_root)
     capabilities: list[IngressCapability] = []
@@ -503,12 +525,13 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
         leaf_wrapper = functions.get("_leaf")
+        module_bindings = _module_level_bindings(tree)
         for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
             call_name = _dotted_name(call.func).rsplit(".", maxsplit=1)[-1]
-            bindings: dict[str, ast.AST] = {}
+            bindings: dict[str, ast.AST] = dict(module_bindings)
             command_call = call
             if call_name == "_leaf" and leaf_wrapper is not None:
-                bindings = _function_bindings(leaf_wrapper, call)
+                bindings = module_bindings | _function_bindings(leaf_wrapper, call)
                 command_call = next(
                     (
                         child

@@ -146,11 +146,9 @@ def modelo_work_create_applicability_refusal(
         return None
 
     from ...application.user_profile.projections import projection_for_taxpayer
-    from ...domain.calculations.registry.applicability import (
-        ApplicabilityVerdict,
-        derive_modelo_applicability,
-    )
+    from ...domain.calculations.registry.applicability import derive_modelo_applicability
     from ..workflow.persistence import workflow_state_repository
+    from ._profile_readiness_gate import _BLOCKING_APPLICABILITY_VERDICTS
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -159,11 +157,7 @@ def modelo_work_create_applicability_refusal(
     except ValidationError:
         return None
     applicability = derive_modelo_applicability(profile, modelo.strip())
-    blocking = {
-        ApplicabilityVerdict.NOT_APPLICABLE,
-        ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-    }
-    if applicability.verdict not in blocking:
+    if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)
 

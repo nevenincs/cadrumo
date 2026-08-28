@@ -788,7 +788,7 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
 
 
 def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:
-    """S283: None means the producer never carries the grounding; () means it does and declares none."""
+    """None means the producer never carries the grounding; () means it does and declares none."""
     base_payload = {
         "reference": {"kind": "casilla", "casilla_id": "0001"},
         "section_path": ("filing", "income"),
@@ -822,14 +822,14 @@ def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_d
     assert reloaded.legal_refs is None
     assert reloaded.constraints is None
 
-    # The default stays () for every caller that does not opt into the S283 distinction.
+    # The default stays () for every caller that does not opt into the None-vs-empty distinction.
     defaulted = ModeloWorkspaceSchemaRecordV1.model_validate(base_payload)
     assert defaulted.legal_refs == ()
     assert defaulted.constraints == ()
 
 
 def test_workspace_schema_record_label_distinguishes_localized_from_technical() -> None:
-    """S284: a formula/binding/relation/parameter row's label is honest about never being translated."""
+    """A formula/binding/relation/parameter row's label is honest about never being translated."""
     base_payload = {
         "reference": {"kind": "formula", "formula_id": "modelo-130-rendimiento-neto"},
         "section_path": ("formulas",),
@@ -884,7 +884,7 @@ def test_workspace_schema_record_label_distinguishes_localized_from_technical() 
 
 
 def test_workspace_ledger_issue_subject_distinguishes_transaction_from_period() -> None:
-    """S291: a period-level ledger-preflight issue is represented as itself.
+    """A period-level ledger-preflight issue is represented as itself.
 
     ``LedgerPreflightIssue.transaction_id`` is ``TransactionId | Literal["__period__"]``
     for exactly one non-transaction case (an unsupported period with no date span).

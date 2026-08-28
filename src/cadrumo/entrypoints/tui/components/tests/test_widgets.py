@@ -2,7 +2,7 @@
 
 Every assertion drives a real Textual `App`/pilot -- never a presence-only
 check -- across narrow-terminal geometry and real keyboard focus movement,
-since a `DataTable` swallowing `enter` in this same tree (S25) already
+since a `DataTable` swallowing `enter` in this same tree already
 proved that a widget can render correctly and still be unusable by keyboard.
 """
 

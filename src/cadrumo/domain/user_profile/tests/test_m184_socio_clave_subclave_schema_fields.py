@@ -1,6 +1,6 @@
 """Schema coverage for the Modelo 184 socio (member, clave, subclave) facts.
 
-Grounds the accepted row-shape ADR's profile-schema half: the socio record
+Grounds the governing row-shape decision's profile-schema half: the socio record
 repeats per (member, clave, subclave), and carries a set of fields whose
 applicability is conditional on the declared clave/subclave. This module
 pins the fields exist, are grounded, and resolve in all four shipped
@@ -24,10 +24,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SECTION_KEY = "attribution_entity_socios"
 
-# Every field this Step adds. Excludes the clave-A reducción (blocked
-# pending its own citation research), provisiones-gastos-dificil-
+# Every field this schema coverage adds. Excludes the clave-A reducción
+# (blocked pending its own citation research), provisiones-gastos-dificil-
 # justificacion (computed, not collected) and any clave-E eligibility fact
-# (out of scope, tracked gap) -- see the accepted row-shape ADR.
+# (out of scope, tracked gap).
 _NEW_FIELD_KEYS = (
     "clave",
     "subclave",
@@ -96,7 +96,7 @@ def test_clave_and_subclave_enums_match_the_socio_records_own_field_text(
 ) -> None:
     """Grounded against the SOCIO record's own clave/subclave tables (positions 93-95),
     never the entidad record's lookalike clave-A subclave table at a different byte
-    range (see the accepted row-shape ADR's lookalike-table hazard note).
+    range (a distinct lookalike-table hazard).
     """
     clave = schema.field(f"{_SECTION_KEY}.clave")
     subclave = schema.field(f"{_SECTION_KEY}.subclave")
@@ -132,8 +132,8 @@ def test_reduccion_field_cites_both_clave_c_and_clave_d_provisions(
 ) -> None:
     """The shared REDUCCIÓN field (diseño positions 109-119) covers clave C
     (LIRPF art. 23) and clave D (LIRPF art. 32.1); the clave-A branch of this
-    same physical field is deliberately excluded pending the blocked ADR
-    citation.
+    same physical field is deliberately excluded pending its own blocked
+    legal citation.
     """
     field = schema.field(f"{_SECTION_KEY}.reduccion")
 

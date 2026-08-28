@@ -1,10 +1,10 @@
 """The settled profile presentation contract: what to show, and why.
 
 This is the typed projection behind the guided `Overview -> Get data ->
-Required -> Review -> Ready` interface (`2026-08-11-tui-interface-adr` D6),
-distinct from :mod:`overview`'s schema-completeness projection: where
-`overview` answers "what does the record hold and is it masked", this module
-answers the presentation question D6 poses -- classification (is this field
+Required -> Review -> Ready` interface, distinct from :mod:`overview`'s
+schema-completeness projection: where `overview` answers "what does the
+record hold and is it masked", this module answers the interface contract's
+own presentation question -- classification (is this field
 required, conditionally required with its applicability still unassessed,
 optional, or not applicable), source class, and whether it currently blocks
 filing readiness.
@@ -13,10 +13,11 @@ Every classification is read from application-owned facts already computed
 elsewhere -- the schema's own `required` declaration, the conditional
 completeness rules in :mod:`completeness`, the domain's Modelo-IVA claiming
 rules, and the schema-declared `provenance.source` token on the effective
-fact -- never guessed from locale or presentation state, per D6's explicit
-instruction. A conditionally required field whose trigger fact is itself
-unanswered is `NEEDS_APPLICABILITY`, never silently folded into
-`NOT_APPLICABLE`: that collapse is exactly the anti-pattern D6 names
+fact -- never guessed from locale or presentation state, per the interface
+contract's explicit instruction. A conditionally required field whose
+trigger fact is itself unanswered is `NEEDS_APPLICABILITY`, never silently
+folded into `NOT_APPLICABLE`: that collapse is exactly the anti-pattern the
+interface contract names
 ("Unknown applicability is displayed as unassessed, never silently treated
 as ... not applicable").
 
@@ -95,7 +96,7 @@ _MODELO_IVA_BLOCK_PATHS = frozenset(MODELO_IVA_BLOCK_REQUIRED_PATHS)
 
 
 class ProfileFieldSourceClass(StrEnum):
-    """Coarse origin class for a profile field's current value (D6's source table).
+    """Coarse origin class for a profile field's current value (the interface contract's source table).
 
     Derived from the schema-declared `provenance.source` token
     (`manual_cli`, `setup_wizard`, `modelo_036_import`, `aeat_censo_read`,
@@ -120,7 +121,7 @@ _SOURCE_TOKEN_CLASSES: dict[str, ProfileFieldSourceClass] = {
 
 
 def profile_field_source_class(source_token: str) -> ProfileFieldSourceClass:
-    """Classify one schema-declared provenance token into D6's coarse source class."""
+    """Classify one schema-declared provenance token into the interface contract's coarse source class."""
     try:
         return _SOURCE_TOKEN_CLASSES[source_token]
     except KeyError:
@@ -128,7 +129,7 @@ def profile_field_source_class(source_token: str) -> ProfileFieldSourceClass:
 
 
 class ProfileFieldClassification(StrEnum):
-    """D6's classification table, minus the two rows this module never emits.
+    """The interface contract's classification table, minus the two rows this module never emits.
 
     `ADVISORY_NOTICE` and `UNRESOLVED_CONFLICT` are envelope-level and
     operation-proposal-level facts respectively, never a static per-field

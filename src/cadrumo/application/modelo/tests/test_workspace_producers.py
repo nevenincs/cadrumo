@@ -92,7 +92,7 @@ def test_workspace_producer_contract_and_stamp_reproduce_the_exact_projection_sc
 
 
 def test_fingerprint_admits_a_decimal_bearing_domain_model() -> None:
-    """S274: a bare Decimal field must no longer refuse registration.
+    """A bare Decimal field must no longer refuse registration.
 
     RegistrySnapshot, ModeloWorkReview and CalculationRevision all carry
     Decimal fields and were the real, motivating failures -- exercised here
@@ -297,7 +297,7 @@ def test_workspace_producer_inventory_refuses_a_current_contract_set_that_has_dr
 
 
 def test_the_closed_inventory_registers_all_eight_contributors_exactly() -> None:
-    """S167: the real production inventory, not a synthetic fixture."""
+    """The real production inventory, not a synthetic fixture."""
     from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
 
     kinds = {contract.contributor_kind for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts}
@@ -306,7 +306,7 @@ def test_the_closed_inventory_registers_all_eight_contributors_exactly() -> None
 
 
 def test_every_contract_matches_the_governing_adrs_contributor_fixed_point() -> None:
-    """The owner/producer identities reproduce the ADR's table verbatim, not a free-form label."""
+    """The owner/producer identities reproduce the governing decision's table verbatim, not a free-form label."""
     from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
 
     expected = {

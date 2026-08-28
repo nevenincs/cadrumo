@@ -451,7 +451,7 @@ def test_locale_summary_falls_back_to_spanish_when_the_requested_language_has_no
 def test_static_inspection_capabilities_cover_the_closed_denominator_exactly_once(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """schema_inspection is AVAILABLE (S278); the other four are UNMEASURED (S279), each citing its own producer."""
+    """schema_inspection is AVAILABLE; the other four are UNMEASURED, each citing its own producer."""
     bucket_id, repository = workspace_repos
     authority = bundled_authority()
     resolved = resolve_modelo_workspace_target(
@@ -494,7 +494,7 @@ def test_static_inspection_capabilities_are_identical_regardless_of_work_state(
 ) -> None:
     """Capability dispositions must not be inferred from work_state, review_status or any neighbour.
 
-    Proves S279's rule directly: the same STATIC_INSPECTION capability
+    Proves the invariant directly: the same STATIC_INSPECTION capability
     dispositions and producers are returned whether or not a work unit
     exists, and whether the requested-axis assertion is present or absent --
     none of those neighbouring facts may leak into a capability disposition
@@ -531,7 +531,7 @@ def test_static_inspection_capabilities_are_identical_regardless_of_work_state(
     assert absent_shape == present_shape
 
 
-# --- S277: schema-record join semantics, proven against real revisions
+# --- schema-record join semantics, proven against real revisions
 # carrying both edge directions ---
 
 
@@ -586,7 +586,7 @@ def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field
 
 
 def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_digest() -> None:
-    """schema_identity must use the S278 generated-manifest digest, never the completeness manifest's."""
+    """schema_identity must use the generated-manifest digest, never the completeness manifest's."""
     from ....application.modelo.workspace_manifest import generate_modelo_workspace_field_manifest_for_inspection
     from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -914,7 +914,7 @@ def _real_303_snapshot():
 
 
 def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_snapshot() -> None:
-    """S296: the shared BINDING/FORMULA/RELATION/PARAMETER builders cannot drift between admissions.
+    """The shared BINDING/FORMULA/RELATION/PARAMETER builders cannot drift between admissions.
 
     Both admissions resolve the same modelo/filing_year/period, so
     ``inspection.bindings``/``.formulas``/``.relations``/``.parameters`` and
@@ -950,7 +950,7 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
 
 
 def test_graded_casilla_schema_records_populate_what_static_correctly_leaves_absent() -> None:
-    """S296: the same casilla's legal_refs/constraints are None for static, real for graded."""
+    """The same casilla's legal_refs/constraints are None for static, real for graded."""
     from ....core import OutputLanguage
 
     inspection = _real_303_inspection()
@@ -1171,7 +1171,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """S296 capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
+    """Capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
     import logging
 
     from ....core import RegistryAuthorityGrade
@@ -1356,7 +1356,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
 
 
 def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_subject() -> None:
-    """Readiness is a pure axis-preserving pass-through, including the S291 subject union."""
+    """Readiness is a pure axis-preserving pass-through, including the ledger-issue subject union."""
     from ...ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
     from ...state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
     from ...user_profile.commands import ProfilePreflightRequirement
@@ -1448,7 +1448,7 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
 
 
 def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
-    """S290: a source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
+    """A source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
     from ....core import CalculationSourceLineageRole, validated_casilla_id
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos import CalculationSourceRef
@@ -1558,7 +1558,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
 
 
 def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() -> None:
-    """S287: CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
+    """CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
     from ....domain.modelos import CalculationRevisionState
     from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceCapabilityName
 
@@ -1644,7 +1644,7 @@ def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() ->
 
 
 def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_a_real_snapshot() -> None:
-    """S128: the graded schema identity/evidence horizon/contributors read the real bundled snapshot."""
+    """The graded schema identity/evidence horizon/contributors read the real bundled snapshot."""
     from ..workspace import (
         graded_snapshot_contributors,
         graded_snapshot_evidence_horizon,
@@ -1671,7 +1671,7 @@ def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_
 def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculation(
     repos,
 ) -> None:
-    """S128: CALCULATION_UNAVAILABLE fires before REGISTRY grade admission, for a real never-calculated work unit."""
+    """CALCULATION_UNAVAILABLE fires before REGISTRY grade admission, for a real never-calculated work unit."""
     from ....core import OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
@@ -1724,8 +1724,8 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     assert isinstance(result, ModeloWorkspaceRefusedResultV1)
     assert result.refusal.kind == "domain"
     assert result.refusal.code is ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE
-    # ADR fixed point, refusal arm: a refused result carries no projection at
-    # all -- structurally, not merely by omission -- so no review, stale or
+    # Governing invariant, refusal arm: a refused result carries no projection
+    # at all -- structurally, not merely by omission -- so no review, stale or
     # otherwise, can ever leak through this outcome.
     assert not hasattr(result, "projection")
 
@@ -1776,7 +1776,7 @@ def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_un
 def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_real_calculation(
     repos,
 ) -> None:
-    """S128: the full assembly over a real work unit, calculation, and verification report."""
+    """The full assembly over a real work unit, calculation, and verification report."""
     from decimal import Decimal
 
     from ....core import ModeloWorkProgressState, OutputLanguage, RegistryAuthorityGrade
@@ -1869,7 +1869,7 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     assert projection.schema_facet.records  # a real, non-empty graded schema facet
     assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
 
-    # ADR fixed point: BOUNDED_REVIEW is a pass-through, never a second,
+    # Governing invariant: BOUNDED_REVIEW is a pass-through, never a second,
     # independently maintained review join. The projection's work_review MUST
     # equal, field for field, the exact record the sole canonical producer
     # (build_modelo_work_review) assembles for the SAME coordinate and the
@@ -1898,7 +1898,7 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
 def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     repos,
 ) -> None:
-    """S128: a real revision whose declared grade cannot satisfy the requested one refuses honestly.
+    """A real revision whose declared grade cannot satisfy the requested one refuses honestly.
 
     Modelo 117's ``2019-y-siguientes`` revision declares ``calculation``
     authority (``revision.toml``); requesting ``filing`` cannot be satisfied.
@@ -1962,8 +1962,8 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     assert isinstance(result, ModeloWorkspaceRefusedResultV1)
     assert result.refusal.kind == "domain"
     assert result.refusal.code is ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE
-    # ADR fixed point, refusal arm: a refused result carries no projection at
-    # all -- structurally, not merely by omission -- so no review, stale or
+    # Governing invariant, refusal arm: a refused result carries no projection
+    # at all -- structurally, not merely by omission -- so no review, stale or
     # otherwise, can ever leak through this outcome.
     assert not hasattr(result, "projection")
 
@@ -1972,7 +1972,7 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
     repos,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """S128: only the typed SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT condition maps to AUTHORITY_GRADE_UNAVAILABLE.
+    """Only the typed SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT condition maps to AUTHORITY_GRADE_UNAVAILABLE.
 
     ``RegistryValidationError`` is a broad type; a catch that maps every
     instance of it to ``AUTHORITY_GRADE_UNAVAILABLE`` would silently report a
@@ -2063,7 +2063,7 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
     repos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """S128: the assembly's every work-unit-catalogue event, scoped to the call, is a read.
+    """The assembly's every work-unit-catalogue event, scoped to the call, is a read.
 
     This does NOT assert the total work-unit-catalogue READ count across the
     whole assembly is 1: BOUNDED_REVIEW delegates to the real
@@ -2185,7 +2185,7 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
 def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_change(
     repos,
 ) -> None:
-    """S128 epoch consistency: a real change to one contributor must change the pinned baseline.
+    """Epoch consistency: a real change to one contributor must change the pinned baseline.
 
     Two identical calls over unchanged data must agree byte-for-byte
     (deterministic assembly); a real second calculation on the SAME work
@@ -2309,17 +2309,17 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
 
 
 def test_workspace_assembly_has_one_public_module_and_no_private_or_package_binding_remnant() -> None:
-    """S129: the assembly/dispatch module is the sole public home, with no package binding.
+    """The assembly/dispatch module is the sole public home, with no package binding.
 
     Mirrors ``test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant``
     and ``test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant``
-    -- the same fixed point S171/S172 proved for the model and producer
-    families, applied to the assembly/dispatch family S128/S129 own.
+    -- the same fixed point proved for the model and producer
+    families, applied to the assembly/dispatch family's own case.
     ``workspace.py`` never had a private predecessor (unlike
     ``_workspace_models.py``/``_workspace_producers.py``), so there is no
     retired private module to assert against; what remains to prove is that
     ``application.modelo`` stays inert with respect to every Workspace
-    assembly symbol, and that the two private paths S128's own module
+    assembly symbol, and that the two private paths this module's own
     docstring names as forbidden (``_workspace.py``, a private predecessor of
     this module, and ``_workspace_projection.py``, an explicitly rejected
     intermediate design) have not reappeared anywhere in the tracked tree.
@@ -2338,7 +2338,7 @@ def test_workspace_assembly_has_one_public_module_and_no_private_or_package_bind
 
 
 def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_tracked_tree() -> None:
-    """S129 zero-remnant fixed point: enumerate TRACKED files, never walk the filesystem.
+    """Zero-remnant fixed point: enumerate TRACKED files, never walk the filesystem.
 
     A gitignored mirror or a peer's in-flight deletion can make a filesystem
     walk report a phantom remnant or silently skip a real one; ``git
@@ -2379,10 +2379,11 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
         ),
     )
     # workspace.py's own module docstring names "_workspace_projection.py" once,
-    # deliberately: it records the REJECTED intermediate design S128 chose
-    # against, the same way this test's own docstring names it too. Neither is
-    # a stale reference thinking that module exists; both are excluded from
-    # the scan for that reason, and nowhere else in the tracked tree may name it.
+    # deliberately: it records the REJECTED intermediate design this assembly
+    # chose against, the same way this test's own docstring names it too.
+    # Neither is a stale reference thinking that module exists; both are
+    # excluded from the scan for that reason, and nowhere else in the tracked
+    # tree may name it.
     excluded_paths = {Path(__file__).resolve(), (repository / "src/cadrumo/application/modelo/workspace.py").resolve()}
     prose_remnants = tuple(
         path.relative_to(repository)

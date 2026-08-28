@@ -2,7 +2,7 @@
 
 Every test drives the real `FlowScreen` through Textual's headless Pilot
 over a real multi-section `FlowDefinition`. The load-bearing claim is D6's
-own boundary for this Wave: the stage strip renders exactly the sections
+own boundary here: the stage strip renders exactly the sections
 `FlowDefinition` declares, in the definition's own order, and advances
 only when the real flow engine's own cursor crosses a section boundary --
 never a locally re-derived notion of "which section comes next".

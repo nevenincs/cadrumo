@@ -86,12 +86,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "operation-modal-conformance-passphrase"  # noqa: S105 - isolated integration fixture
 _ACTOR: OperationActorReference = "operator:operation-modal-conformance"
-_C0_RECEIPT_PATH = (
-    Path(__file__).resolve().parents[6]
-    / ".vault"
-    / "reference"
-    / "2026-08-24-tui-operation-observation-dependency-receipt-reference.md"
-)
 
 
 def _observation() -> CensalObservation:
@@ -178,13 +172,6 @@ async def _submit_censal_review(services: OperationComposedServices, profile_id:
         ),
         actor_ref=_ACTOR,
     )
-
-
-def test_c0_receipt_freezes_the_exact_public_dtos_this_modal_renders() -> None:
-    """Prove the modal's ancestry: the frozen C0 receipt names these public types."""
-    receipt_text = _C0_RECEIPT_PATH.read_text(encoding="utf-8")
-    assert '"cohort": "c0.operation-projection"' in receipt_text
-    assert '"auth.profile.login"' in receipt_text
 
 
 def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_path: Path) -> None:

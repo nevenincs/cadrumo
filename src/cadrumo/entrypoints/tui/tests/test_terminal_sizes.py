@@ -59,7 +59,6 @@ from ..flows.app import FlowScreen
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
 from ..profile.overview import ProfileManagerScreen
-from ..secret.credentials import CredentialHostApp
 from ..secret.login import LoginScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -158,7 +157,7 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
             choices=[ProfileLoginChoice(profile_id=bucket_id, label=_LABEL)],
             authenticate=lambda profile_id, secret: attempt_profile_login(profile_id=profile_id, passphrase=secret),
         )
-        app = CredentialHostApp(screen)
+        app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
             await pilot.pause()

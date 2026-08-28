@@ -30,11 +30,19 @@ def _binding(operation: str, target: str) -> DataBindingDefinition:
         id=f"inventory-{target}",
         source=BindingSourceKind.INVENTORY,
         selector={
+            # Mirrors the shipped `renta-2025-inventory-activity-*` selectors
+            # verbatim. The `actividad_id` / `operation` pair this replaced is a
+            # shape `_InventorySelector` no longer accepts: it now requires
+            # `fact`, `record`, `grouping` and `row_field`, and forbids
+            # `actividad_id`. The fixture's operation tokens already matched the
+            # registry's `row_field` values, so only the envelope moved.
             "modelo": "100",
             "filing_year": 2025,
             "projection_grain": "taxpayer_year_activity",
-            "actividad_id": "retail",
-            "operation": operation,
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": operation,
             "target_casilla_id": target,
         },
         legal_refs=("ley-35-2006:art-30",),
@@ -45,7 +53,25 @@ def _binding(operation: str, target: str) -> DataBindingDefinition:
 def _revision(*, declared: bool = True, alias: bool = False) -> ModeloRevision:
     base = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     if not declared:
-        return base
+        # "Undeclared" has to be BUILT now. Modelo 100/2025 ships three real
+        # inventory bindings, so returning the base revision unchanged asserted
+        # the opposite of this branch's name: casilla 0181 arrived source-owned
+        # and the caller-override lock refused it, correctly. Strip the
+        # inventory source and hand its casillas back to manual input, which is
+        # the state the undeclared cases are about.
+        undeclared_bindings = tuple(
+            binding for binding in base.bindings if binding.source is not BindingSourceKind.INVENTORY
+        )
+        freed = set(_DESTINATIONS.values())
+        undeclared_casillas = tuple(
+            casilla.model_copy(update={"input_kind": InputKind.MANUAL, "binding": None})
+            if str(casilla.id) in freed
+            else casilla
+            for casilla in base.casillas
+        )
+        return base.model_copy(
+            update={"bindings": undeclared_bindings, "casillas": undeclared_casillas},
+        )
     bindings = tuple(_binding(operation, target) for operation, target in _DESTINATIONS.items())
     by_target = {target: f"inventory-{target}" for target in _DESTINATIONS.values()}
     casillas = tuple(

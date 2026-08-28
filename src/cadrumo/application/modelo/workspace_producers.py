@@ -420,10 +420,10 @@ def _declared_contract(
     )
 
 
-# Owner and producer identities below reproduce the "contributor fixed point"
-# table in 2026-08-24-tui-registry-api-gate-adr.md verbatim -- these are not
-# free-form labels, they are the ADR's own canonical-semantic-owner and
-# producer-identity columns.
+# Owner and producer identities below reproduce the governing "contributor
+# fixed point" table verbatim -- these are not free-form labels, they are the
+# canonical semantic-owner and producer-identity columns the registry API
+# surface is contractually bound to.
 
 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1 = _declared_contract(
     contributor_kind=ModeloWorkspaceContributorKindV1.REGISTRY,

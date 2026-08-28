@@ -50,10 +50,10 @@ class Surface:
 
 def _registration() -> App[Any]:
     from ....core.credentials import assess_profile_password
-    from ....entrypoints.tui.secret.credentials import CredentialHostApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
     from ....entrypoints.tui.secret.registration import RegistrationScreen
 
-    return CredentialHostApp(RegistrationScreen(assess=assess_profile_password, register=registration_attempt))
+    return ScreenHostApp(RegistrationScreen(assess=assess_profile_password, register=registration_attempt))
 
 
 def _login() -> App[Any]:
@@ -62,10 +62,10 @@ def _login() -> App[Any]:
         preselected_profile_login_id,
         profile_login_choices,
     )
-    from ....entrypoints.tui.secret.credentials import CredentialHostApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
     from ....entrypoints.tui.secret.login import LoginScreen
 
-    return CredentialHostApp(
+    return ScreenHostApp(
         LoginScreen(
             choices=profile_login_choices(),
             authenticate=attempt_profile_login,

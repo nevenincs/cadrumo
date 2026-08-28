@@ -1,4 +1,4 @@
-"""Real-model tests for the detail-row whole-set reconstruction (S288).
+"""Real-model tests for the detail-row whole-set reconstruction.
 
 Proves the natural-key-addressed ADD/UPDATE/DELETE/MOVE reconstruction the
 guarded executor performs before every calculate call, mirroring

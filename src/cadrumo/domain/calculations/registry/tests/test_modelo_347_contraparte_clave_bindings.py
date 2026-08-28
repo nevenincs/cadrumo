@@ -1,4 +1,4 @@
-"""The real, committed modelo 347 contraparte row bindings (S294 piece 3).
+"""The real, committed modelo 347 contraparte row bindings.
 
 Proves a real declaration mixing BOTH invoice directions -- adquisiciones
 (clave A, payable_invoice) and entregas (clave B, collectible_invoice) --

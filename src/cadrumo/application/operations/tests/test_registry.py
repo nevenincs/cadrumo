@@ -844,8 +844,8 @@ class _DigestNamedSiblingConceptPayload(CredentialFreeOperationRequest):
     """A digest-named field typed as a Hex64-shaped SIBLING concept - admitted.
 
     ``ContentDigest is WorkUnitId`` at runtime (both are ``= Hex64Str``), so
-    there is no type-identity test available; this pins the residual risk
-    the ADR accepts (a Hex64-shaped, digest-named field declared for a
+    there is no type-identity test available; this pins the accepted
+    residual risk (a Hex64-shaped, digest-named field declared for a
     sibling concept is also admitted) as a documented test outcome rather
     than an undiscovered gap.
     """
@@ -873,7 +873,7 @@ def test_credential_free_schema_refuses_hex64_shaped_field_named_for_another_for
 
 
 def test_credential_free_schema_admits_hex64_shaped_sibling_concept_named_digest() -> None:
-    """Pins the ADR's named residual risk rather than leaving it undiscovered."""
+    """Pins the accepted residual risk rather than leaving it undiscovered."""
     schema = _strict_model_json_schema(_DigestNamedSiblingConceptPayload)
     _validate_credential_free_schema(schema)
 

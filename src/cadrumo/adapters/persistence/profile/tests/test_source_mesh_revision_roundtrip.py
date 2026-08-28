@@ -84,7 +84,7 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
     carry distinct, non-default ``dependency_treatment`` values so a
     save-drops-field regression on either declared treatment is not masked by
     both rows sharing the same value. Likewise, each row carries a distinct
-    ``source_casilla_ids`` entry (S290) so a drop of that field is not masked
+    ``source_casilla_ids`` entry so a drop of that field is not masked
     either.
     """
     return (

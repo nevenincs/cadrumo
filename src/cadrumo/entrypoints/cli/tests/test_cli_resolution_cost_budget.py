@@ -7,14 +7,14 @@ family at all before execution. Both are blind to weight that belongs to no
 named family -- a node could pull a hundred unfamilied modules and pass each.
 This budgets the total.
 
-**Why module count and not latency.** The Step calls for calibrated latency
-budgets. That is not measurable here: a quiet-control CLI resolution takes
+**Why module count and not latency.** Calibrated latency budgets were the
+original ask. That is not measurable here: a quiet-control CLI resolution takes
 about 1.75 seconds on this repository's backing share, and peer agents commonly
 run two hundred concurrent processes on the same machine, so wall-clock
 readings track contention rather than code. A timing gate would fail when a
 colleague runs a suite and pass when the machine is idle, which is worse than
-no gate and is what the campaign ADR means by refusing single-sample
-host-specific thresholds. Module count is what latency is a proxy FOR on a cold
+no gate and is why single-sample host-specific thresholds were refused.
+Module count is what latency is a proxy FOR on a cold
 process, and it is exact and load-independent.
 
 **The floor is measured, never pinned.** Every node pays the CLI bootstrap, and

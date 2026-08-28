@@ -1,4 +1,4 @@
-"""Structural guard for the retrospective S175 c941 family census."""
+"""Structural guard for the retrospective c941 family census."""
 
 from __future__ import annotations
 
