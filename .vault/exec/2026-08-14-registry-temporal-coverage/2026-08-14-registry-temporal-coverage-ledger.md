@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f80b0db89f54991012a4afecab8ab31e3937c92e2967274c4dda74ec66770d6'
+body_hash: 'sha256:65e94e397f2d9285824bdad076e4b0a45b31bff0e4322892458d9cc908358979'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -816,7 +816,6 @@ fact rather than an unexplained entry -- the coverage matrix's `(year, period)`
 coordinate is coarser than the law it measures, for exactly one boundary AEAT
 published.
 
-
 ### Red-gate sweep of `dev/`: five reds, one mine
 
 Ran `dev/tests`, `dev/registry/tests` and `dev/quality` (430 passed, 5 failed).
@@ -863,7 +862,6 @@ The `src/cadrumo` half of this sweep is NOT yet done -- only `dev/` was
 covered. A full `src/cadrumo` run is in flight; its failures still need the
 same sequential re-run before any of them is called a defect.
 
-
 ### Modelo 165 2023-2025 re-verified by execution: blocked, and the tempting fix is wrong
 
 The earlier "blocked on an external artefact" claim was re-tested rather than
@@ -908,7 +906,6 @@ record design for ejercicios 2023-2025 is genuinely absent from the corpus. The
 remedies remain acquiring and hash-pinning it, or an operator ruling to
 withdraw or bound the 2023-2025 revision. Widening the 2016-2022 window stays
 barred by `aeat-calculation-grounding`.
-
 
 ### Import-time configuration guards converted to test-time fixtures
 
@@ -959,7 +956,6 @@ Peer sweep, again: tick 4's work was committed by a peer as `4cd0abf4c9 test:
 count every name a module binds when proving decimal string uniqueness`, taking
 both the canonical-decimal fix and the irreducible-refusal gate. Only the
 subsequent `pairwise`/format polish remains uncommitted.
-
 
 ### src/cadrumo sweep: 475 reproducible failures, one root cause worth 80
 
@@ -1020,7 +1016,6 @@ pass. The fourth, `test_every_cli_translation_resolves_in_every_locale`, is
 pre-existing and not mine: it and `test_parity` fail on 15 `cli.*.view_help`
 keys from another peer's new `view` verbs, none of them declaration-roles.
 
-
 ### Correction: the executable-parity gaps DO have teeth, via filing_eligible
 
 Tick 3 concluded that the queue's "executable_parity_evidence gaps on Modelos
@@ -1076,3 +1071,46 @@ cells, which is feature work, and even then raising the authority grade is the
 `S17` operator attestation that no program may perform on its own. The 764
 advisory `executable_parity_gaps` are the same absence counted per coordinate.
 
+### Canonical profile identities: 13 tests migrated, one false assertion corrected
+
+The third sweep cluster was 13 `ValueError: profile_id is not a canonical
+profile identity` (the 13 `badly formed hexadecimal UUID string` entries are the
+same failures' `from exc` causes, not a separate cluster).
+
+Chain: test -> `isolated_runtime_profile(bucket_id=...)` ->
+`provision_test_profile_bucket_session` -> `publish_test_profile_capsule` ->
+`canonical_profile_bucket_id`, which accepts only a version-4 UUID. Commit
+`fd1b71807b` (2026-08-18, ten days old and not in flight) routed the production
+keying sites and left three test files addressing buckets by readable label.
+
+A measurement went wrong and was caught. A `grep -A3` for `bucket_id=` near
+`isolated_runtime_profile(` suggested hundreds of readable literals reaching the
+capsule path, implying a 227-site migration. Running one such file
+(`test_filing_record_repository_roundtrip`) returned 32 passed, refuting it: the
+`-A3` window was catching `bucket_id=` lines belonging to other calls. The real
+scope is three files, and the corpus already has the convention -- structured
+valid UUIDv4 constants such as `30330300-0000-4000-8000-000000000700`.
+
+Migrated to canonical UUIDv4 constants, readable names kept as the `label` the
+helper already takes separately: `test_multi_bucket_runtime` (4 tests),
+`test_justificante_capture` (7), `test_review_package_signing` (the rest). All
+29 tests across the three files pass.
+
+The migration exposed a test asserting the opposite of the documented design.
+`test_signing_keypair_refuses_foreign_or_whitespace_payload_bucket[whitespace]`
+fed a whitespace-wrapped bucket id and demanded a refusal. It only ever passed
+because the readable label failed UUID parsing BEFORE any bucket comparison --
+a refusal for the wrong reason. With a canonical id the padded spelling is
+accepted, and that is correct:
+:data:`~cadrumo.core.identity.BucketId` declares
+`StringConstraints(strip_whitespace=True, ...)`, and `canonical_bucket_id`'s own
+docstring states the rule it protects -- a whitespace-wrapped spelling of a
+VALID id must not yield a different address, "two buckets to the address, one
+bucket to every other layer".
+
+So the case was not deleted and no strictness guard was bolted on to make it
+green. The refusal test now covers the `foreign` case alone -- which for the
+first time exercises a REAL bucket mismatch rather than a malformed id -- and a
+new test proves the normalisation contract positively: a padded row is stored,
+loaded and resolves to the same bucket. An accidental pass became two honest
+assertions.
