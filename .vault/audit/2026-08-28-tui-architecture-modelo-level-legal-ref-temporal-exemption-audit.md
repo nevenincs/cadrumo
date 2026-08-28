@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:42e7e7d1c1ce51a039a98a837e853936d54beee299d3416809a93f93b24be705'
+body_hash: 'sha256:e513b9b358b13bdd48ef8435af26d6af4915d2242eeb60bfa2fa640528a36d65'
 related:
   - "[[2026-08-28-tui-architecture-orden-kind-temporal-carveout-population-audit]]"
 ---
@@ -137,3 +137,44 @@ This time the guard was read before anything was concluded. The rule that preven
 the repeat — grep the tests for the casilla id before calling a registry state a
 defect — did its job on a row reached from an entirely different direction, which
 is the strongest evidence available that it is worth keeping.
+
+## The remaining three: list closed
+
+The 39 temporally uncovered values are now fully accounted for. 36 are the M100
+`art-23` rows above; the other three sit outside modelo 100 and outside the
+modelo-level exemption, which makes them the more useful evidence.
+
+**Modelo 360, two rows.** `modelo-360-quarterly-refund-threshold-eur` (400 €) and
+`modelo-360-annual-refund-threshold-eur` (50 €), windowed from 2010-01-01 and
+citing `orden-eha-789-2010:art-4`, effective 2010-04-01. The three-month gap is
+the flag, but the catalogue's own notes give the real problem:
+
+> Articulo 4 de la Orden EHA/789/2010: **plazo de presentacion** del formulario
+> 360 … concluye el 30 de septiembre siguiente al ano natural
+
+Its `required_text` is likewise all deadline language — "Plazo de presentación del
+formulario 360", "30 de septiembre", "año natural". The article states no
+threshold at all, which is exactly the open M360 finding. It is worth recording
+that a **temporal** probe re-derived it: that finding has now been reached three
+independent ways — numerically (neither 400 nor 50 appears in the cited text),
+structurally (LIVA art. 119 is not bundled), and now temporally.
+
+**Modelo 136, one row.** `irpf.lottery_prize_special_levy_rate` = 20 %, windowed
+from 2013-01-01, citing `ley-35-2006:da-33` effective 2020-01-01. Here the value
+is sound: the entry's `required_text` pins "tipo del 20 por ciento" and the
+40.000 € exemption, and its notes describe it as the *current consolidated* DA 33.
+Only one `da-33` entry exists — no earlier redaction is catalogued — so a value
+window opening in 2013 simply reaches back past the only redaction on file. The
+revision is `2026`, so nothing before 2020 is reachable and the excess is inert.
+
+## What the three add
+
+They show the blind spot does not depend on the modelo-level exemption. M136's
+citation is revision-scoped and substantive, and the devengo gate passes it
+because the **revision's** devengo (2026) is inside the provision's window — while
+the **value's** own window (2013 onward) is not. Two different mechanisms,
+the same gap: a value window wider than any provision grounding it goes unchecked.
+
+None of the three is a liability error. The M360 pair's real defect is the cited
+article's subject matter, already open; M136's is an over-wide window on an inert
+range.
