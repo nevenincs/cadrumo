@@ -14,7 +14,7 @@ from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
 from .....core.external_constants import UTF_8_ENCODING
-from ..crypto import GCM_TAG_SIZE, KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 from ._kdf_attestation import kdf_worker_ready_attestation
 from ._kdf_codec import (

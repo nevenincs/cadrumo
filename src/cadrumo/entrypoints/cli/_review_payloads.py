@@ -18,7 +18,7 @@ tooling does not depend on free-form ``model_dump(mode="json")`` output.
 
 from __future__ import annotations
 
-from ...application.review import ReviewSeverity, ReviewState
+from ...application.review.enums import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.time import UtcInstant

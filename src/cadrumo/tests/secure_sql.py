@@ -31,7 +31,7 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage.bucket import (
     BucketPaths,
 )
-from ..adapters.persistence.storage.crypto import (
+from ..adapters.persistence.storage.crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,

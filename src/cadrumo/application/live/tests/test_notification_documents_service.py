@@ -40,7 +40,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....adapters.inbound.notificacion import NotificationDocumentReader
 from ....adapters.persistence.storage import AttachmentStore
-from ....adapters.persistence.storage.crypto import encrypt_secure_object_payload
+from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
 from ....core.i18n import tr
 from ....domain.attachments import Attachment, AttachmentKind
 from ....domain.notifications import SancionLiquidacion

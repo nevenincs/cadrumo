@@ -75,6 +75,21 @@ _HKDF_CONTEXT_SECRET_LOOKUP = b"cadrumo.secret_store.lookup.v1"
 _HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
 
 
+def _hkdf_hmac_digest(master_key: bytes, *, context: bytes, material: bytes) -> bytes:
+    """Return the deterministic HMAC-SHA256 digest of ``material`` under a master-derived sub-key.
+
+    The "keyed lookup digest" recipe this store uses for both its natural-key
+    lookup digest and its value witness: derive a per-consumer 32-byte sub-key
+    from ``master_key`` via HKDF-SHA256 (empty salt, ``context`` as the HKDF
+    info/context), then HMAC-SHA256 ``material`` under that sub-key. Distinct
+    ``context`` values produce unrelated digest spaces from the same master
+    key. This store is the only caller, so the recipe lives here rather than
+    as a shared crypto-package export.
+    """
+    sub_key = derive_key(key_material=master_key, salt=b"", context=context)
+    return hmac.new(sub_key, material, hashlib.sha256).digest()
+
+
 #: The only classes a record in this store may carry. The record model and
 #: the index row that describes it both enforce this one set, so an index
 #: cannot name a class no record here can have.
@@ -247,7 +262,7 @@ class SecretStore:
 
     def _digest(self, key: str) -> str:
         """Return the HMAC-SHA256 lookup digest for ``key`` as 64 hex chars."""
-        digest = hkdf_hmac_digest(
+        digest = _hkdf_hmac_digest(
             self._master_key(),
             context=_HKDF_CONTEXT_SECRET_LOOKUP,
             material=key.encode(UTF_8_ENCODING),
@@ -257,7 +272,7 @@ class SecretStore:
     def value_witness(self, *, key: str, value: bytes) -> str:
         """Return a master-keyed, non-reversible witness for one key/value request."""
         material = key.encode(UTF_8_ENCODING) + b"\x00" + value
-        digest = hkdf_hmac_digest(
+        digest = _hkdf_hmac_digest(
             self._master_key(),
             context=_HKDF_CONTEXT_SECRET_VALUE_WITNESS,
             material=material,

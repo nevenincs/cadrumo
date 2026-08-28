@@ -17,7 +17,7 @@ import pytest
 from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.operator_actions import lookup_action
-from ....application.review import ReviewKindReservedError
+from ....application.review.errors import ReviewKindReservedError
 from ....core import ActionArgumentStatus
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.config import override_settings

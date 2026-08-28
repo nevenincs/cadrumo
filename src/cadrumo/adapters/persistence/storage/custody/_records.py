@@ -20,7 +20,7 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
-from ..crypto import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
+from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1

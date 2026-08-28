@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.engine import Dialect
 
 from ...errors import StorageValidationError
-from .. import EncryptedBytes, EncryptedString, HashedLookup
+from ..encrypted_columns import EncryptedBytes, EncryptedString, HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -46,7 +46,7 @@ from .._schema_lineage import (
     inner_envelope_classification_is_expected,
     upgrade_secure_object_payload,
 )
-from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
+from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from . import _orm
 from ._secure_object_crypto import verify_revision_self_consistency

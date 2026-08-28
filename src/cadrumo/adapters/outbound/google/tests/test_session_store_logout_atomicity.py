@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage import SecureObjectDeletion, StorageValidationError
-from .....adapters.persistence.storage.crypto import secure_object_key_digest
+from .....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken

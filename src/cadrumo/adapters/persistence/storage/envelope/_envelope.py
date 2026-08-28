@@ -48,12 +48,7 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._schema_lineage import inner_envelope_classification_is_expected
-from ..crypto import (
-    EncryptedBlob,
-    decrypt_record,
-    derive_key,
-    encrypt_record,
-)
+from ..crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..errors import (
     ClassificationError,
     DecryptionError,

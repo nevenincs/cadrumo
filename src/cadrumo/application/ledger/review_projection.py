@@ -18,7 +18,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
 )
 from ..bucket_event_repository import bucket_event_history_repository
-from ..review import LedgerReviewStatus
+from ..review.filter import LedgerReviewStatus
 from .actions_common import display_decimal, require_transaction
 from .models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
 

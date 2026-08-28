@@ -142,11 +142,13 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     assert isinstance(profile, CalculationRouteResolverOwnership)
     typed_manual_owner = replace(manual)
     object.__setattr__(typed_manual_owner, "resolver_type", profile.resolver_type)
+    # Swap the canonical manual owner for the typed one by IDENTITY. Slicing
+    # the last row off would drop the design-constant sibling instead and
+    # leave a duplicate id, so the refusal under test would never be reached.
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
-            (
-                *CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1],
-                typed_manual_owner,
+            tuple(
+                typed_manual_owner if row is manual else row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
             ),
         )
 

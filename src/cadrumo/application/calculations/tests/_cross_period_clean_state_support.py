@@ -55,6 +55,7 @@ from .. import (
     evaluate_cross_period_clean_state,
     filing_external_evidence_blockers,
 )
+from ..observations_repository import ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID
@@ -471,11 +472,37 @@ def _seed_official_303_source_filings(
             and period not in omit_justificante_metadata_periods
         ):
             default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
+        # A csv-register import persists its OWN observation carrying the
+        # register identity: source kind, the evidence reference, and the id of
+        # the filing record it just created. The save below replaces that
+        # observation on the same key, so unless it reproduces that identity
+        # the clean-state check compares the filing against an observation
+        # claiming to be a justificante and reports a mismatch against the very
+        # import that produced it. Only the DEFAULTS are filled here; an
+        # explicit per-period source kind or metadata still wins.
+        default_source_kind = source_kind_by_period.get(period, "aeat_sede_justificante")
+        if (
+            evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
+            and period not in omit_justificante_metadata_periods
+            and period not in source_kind_by_period
+        ):
+            default_source_kind = ObservationSourceKind.AEAT_CSV_REGISTER.value
+            default_source_metadata["external_evidence_reference_id"] = evidence_reference_id
+            imported_record = next(
+                (
+                    record
+                    for record in ModeloRecordCatalogueRepository().load().records.values()
+                    if record.work_unit_id == work_unit.work_unit_id
+                ),
+                None,
+            )
+            if imported_record is not None:
+                default_source_metadata["filing_record_id"] = imported_record.filing_record_id
         _save_source_observation(
             observation_repository,
             period=period,
             source_values=values,
-            source_kind=source_kind_by_period.get(period, "aeat_sede_justificante"),
+            source_kind=default_source_kind,
             source_metadata=source_metadata_by_period.get(period, default_source_metadata),
         )
 

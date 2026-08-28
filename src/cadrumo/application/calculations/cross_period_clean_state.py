@@ -995,7 +995,15 @@ def _filing_external_evidence_blockers(
         metadata_filing_id = _clean_metadata_value(
             (observation_source_metadata or {}).get("filing_record_id"),
         )
-        if (
+        # Absent and divergent are different operator situations and must not
+        # collapse: MISSING sends the operator to CAPTURE the register record,
+        # MISMATCHED sends them to RESOLVE a divergence, and asking someone to
+        # reconcile a divergence when nothing was ever captured is wrong
+        # guidance. The receipt-bound branch below already splits these by
+        # testing for None first; this is the same split for the register.
+        if metadata_reference is None and metadata_filing_id is None:
+            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+        elif (
             observation_source_kind != ObservationSourceKind.AEAT_CSV_REGISTER.value
             or metadata_reference != filing.external_evidence.reference_id
             or metadata_filing_id != filing.filing_record_id

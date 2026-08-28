@@ -162,8 +162,8 @@ def test_a_crypto_parameter_is_defined_only_in_the_crypto_package(parameter: str
     """
     homes = _defining_modules_under(_STORAGE_PACKAGE, parameter)
 
-    assert homes == ("crypto/_crypto.py",), (
-        f"{parameter} is defined in {list(homes)}. Its one home is crypto/_crypto.py, where it is "
+    assert homes == ("crypto/aead.py",), (
+        f"{parameter} is defined in {list(homes)}. Its one home is crypto/aead.py, where it is "
         "documented with the standard it comes from. Import it rather than restating the number."
     )
 
@@ -178,7 +178,7 @@ def test_the_storage_scan_reaches_the_crypto_module() -> None:
     """
     modules = {path.relative_to(_STORAGE_PACKAGE).as_posix() for path in _STORAGE_PACKAGE.rglob("*.py")}
 
-    assert "crypto/_crypto.py" in modules
+    assert "crypto/aead.py" in modules
     assert "custody/_records.py" in modules
     assert "master_key/_bucket_session.py" in modules
 

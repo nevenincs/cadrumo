@@ -17,7 +17,7 @@ from uuid import UUID
 from .....core import StorageCategory, storage_path
 from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ..crypto import KEY_SIZE
+from ..crypto.aead import KEY_SIZE
 from ._kdf_codec import (
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,

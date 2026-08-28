@@ -17,7 +17,7 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ..crypto import KEY_SIZE
+from ..crypto.aead import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
 )

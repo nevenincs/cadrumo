@@ -21,4 +21,9 @@ Submodules
    cadrumo.application.review._filter
    cadrumo.application.review._models
    cadrumo.application.review._operator
+   cadrumo.application.review.actions
+   cadrumo.application.review.enums
    cadrumo.application.review.errors
+   cadrumo.application.review.filter
+   cadrumo.application.review.models
+   cadrumo.application.review.operator

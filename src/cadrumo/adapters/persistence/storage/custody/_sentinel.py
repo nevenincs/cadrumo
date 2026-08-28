@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Final
 
-from ..crypto import GCM_TAG_SIZE, encrypt_record
+from ..crypto.aead import GCM_TAG_SIZE, encrypt_record
 from ._filesystem_primitives import is_real_directory
 from ._records import ProfileCustodyEnvelope
 from ._sentinel_contract import (

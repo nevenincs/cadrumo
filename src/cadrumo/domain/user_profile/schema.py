@@ -18,6 +18,7 @@ from typing import Annotated, Final, Self
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo
 from ...core.classification import SensitivityClass
 from ...core.decimal import coerce_decimal_strict
 from ...core.parsing import parse_bool, parse_iso8601_date
@@ -124,6 +125,14 @@ class ProfileFieldDefinition(BaseModel):
     description: _Description
     enum_values: tuple[str, ...] = Field(default=())
     model_selectors: tuple[_Selector, ...] = Field(default=())
+    #: Modelos that require this field even though it is not globally required.
+    #:
+    #: ``required`` is a property of the field across the whole profile: it
+    #: drives completeness, overview and presentation, so setting it to satisfy
+    #: one modelo demands the fact from every taxpayer, including those with no
+    #: such obligation. This axis carries the modelo-scoped requirement instead,
+    #: and ONLY the filing-preflight walk consults it.
+    required_for_modelos: tuple[Modelo, ...] = Field(default=())
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
@@ -133,6 +142,16 @@ class ProfileFieldDefinition(BaseModel):
     @classmethod
     def _parse_type(cls, value: object) -> object:
         return _parse_str_enum(ProfileFieldType, value)
+
+    @field_validator("required_for_modelos", mode="before")
+    @classmethod
+    def _hydrate_required_for_modelos(cls, value: object) -> object:
+        """Hydrate the free-form registry tokens into typed modelo members."""
+        if isinstance(value, str):
+            raise UserProfileValidationError("required_for_modelos must be a sequence of modelo ids")
+        if isinstance(value, Iterable):
+            return tuple(_parse_str_enum(Modelo, item) for item in value)
+        return value
 
     @field_validator("sensitivity", mode="before")
     @classmethod

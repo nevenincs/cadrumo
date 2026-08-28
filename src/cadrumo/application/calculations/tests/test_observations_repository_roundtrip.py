@@ -878,7 +878,7 @@ def _restamp_wallet_decision_row_as_v1(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
+    from ....adapters.persistence.storage.crypto.encrypted_columns import (
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )

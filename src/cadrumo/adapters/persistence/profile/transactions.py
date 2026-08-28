@@ -880,7 +880,7 @@ class TransactionCatalogueRepository:
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""
         from ..storage import Envelope
-        from ..storage.crypto import secure_object_key_digest
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
 
         selected_ids = tuple(sorted(transaction_ids))
         if not selected_ids:
@@ -1119,7 +1119,7 @@ class TransactionCatalogueRepository:
         fresh-serialization side of the diff is skipped for a cache hit.
         """
         from ..storage import SecureObjectDeletion, SecureObjectWrite
-        from ..storage.crypto import secure_object_key_digest
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
 
         current_ids = self._load_index_ids()
         incoming_ids = set(catalogue.transactions)

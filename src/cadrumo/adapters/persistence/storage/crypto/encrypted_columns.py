@@ -57,7 +57,7 @@ from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ..master_key import get_active_hmac_subkey, get_active_master_key
-from .aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from .aead import EncryptedBlob, decrypt_record, encrypt_record
 
 
 class EncryptedPayload(BaseModel):
@@ -322,8 +322,8 @@ class HashedLookup(TypeDecorator[bytes]):
         # The sub-key depends only on the active DEK and the column-lookup
         # context, so it is resolved through the session-scoped memo rather
         # than re-derived per digest; the HMAC over ``plaintext`` is the only
-        # per-call work. Byte-identical to
-        # ``hkdf_hmac_digest(get_active_master_key(), ...)`` by construction.
+        # per-call work. The same HKDF-then-HMAC recipe as the secret store's
+        # own (private, single-caller) digest helper, by construction.
         sub_key = get_active_hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
 

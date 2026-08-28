@@ -21,7 +21,7 @@ import pytest
 import typer
 from typer.core import TyperGroup
 
-from ....application.review import LedgerReviewFilterKey
+from ....application.review.filter import LedgerReviewFilterKey
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader_cache import discover_modelo_sources

@@ -52,12 +52,7 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
-from ..crypto import (
-    KEY_SIZE,
-    EncryptedBlob,
-    decrypt_record,
-    encrypt_record,
-)
+from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope import (
     EncryptionMetadata,
     Envelope,

@@ -34,7 +34,8 @@ from ...application.ledger.actions_manual import (
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.operator_actions import ActionReference
-from ...application.review import FilterParseError, LedgerReviewFilterSpec
+from ...application.review.errors import FilterParseError
+from ...application.review.filter import LedgerReviewFilterSpec
 from ...core import ActionArgumentSource, ActionArgumentStatus, LedgerSortField, LedgerSortOrder, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal import coerce_decimal_strict

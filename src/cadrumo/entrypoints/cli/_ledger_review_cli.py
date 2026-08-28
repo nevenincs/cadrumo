@@ -14,7 +14,8 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...application.ledger.actions_manual import query_ledger_review_rows
 from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow
-from ...application.review import FilterParseError, LedgerReviewFilterSpec
+from ...application.review.errors import FilterParseError
+from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.i18n import tr
 from ._common import _state, _tx_repo, emit_envelope
 from ._ledger_list import ledger_review_query_for_spec

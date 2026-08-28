@@ -80,7 +80,7 @@ from .....core.identity import canonical_profile_bucket_id
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
-from ..crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
     DecryptionError,
     EncryptionError,

@@ -18,7 +18,7 @@ import pytest
 
 from ......core import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...crypto import secure_object_key_digest
+from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .._secure_object_records import SecureObjectDeletion
