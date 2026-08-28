@@ -26,6 +26,7 @@ from .....application.user_profile.passphrase_rotation import (
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
 from .....tests.secure_sql import isolated_profile_storage_root
+from ...components.widgets import ContentScroll
 from ..credentials import CredentialHostApp
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
 
@@ -232,15 +233,25 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", [(80, 24), (120, 40), (200, 50)], ids=["narrow", "medium", "wide"])
-async def test_every_field_and_action_is_actually_on_screen_not_only_present(
+async def test_every_field_and_action_is_actually_reachable_not_only_present(
     tmp_path: Path,
     size: tuple[int, int],
 ) -> None:
-    """Presence in the DOM is not reachability: a control can exist and still
-    render outside any real viewport, exactly as `SourceActionCard` did before
-    its `height: auto` fix pushed a sibling 180 rows down. Every field and
-    button this screen composes must have a positive on-screen region wholly
-    inside the terminal at real narrow, ordinary, and wide sizes.
+    """Presence in the DOM is not reachability.
+
+    A control can exist and still render outside any real viewport, exactly as
+    `SourceActionCard` did before its `height: auto` fix pushed a sibling 180
+    rows down. Every field and button this screen composes must therefore have
+    a positive on-screen region, lie wholly inside the terminal horizontally,
+    and be scrollable into full view vertically.
+
+    The two axes are asserted differently because the operator has different
+    recourse on each. There is no horizontal scroll affordance on this surface,
+    so a control past the right edge is unrecoverable and containment is
+    absolute. Vertically the surface mounts a scroll host, so the reachable
+    property is that each control can be brought fully into view -- asserted
+    here by actually scrolling to it and re-measuring, never by assuming that
+    mounting a scroll host makes anything reachable.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _enroll()
@@ -248,22 +259,94 @@ async def test_every_field_and_action_is_actually_on_screen_not_only_present(
         width, height = size
         async with CredentialHostApp(app).run_test(size=size) as pilot:
             await pilot.pause()
-            controls = [
-                app.query_one(selector, widget_type)
-                for selector, widget_type in (
-                    ("#field-current", Input),
-                    ("#field-new", Input),
-                    ("#field-confirm", Input),
-                    ("#btn-change", Button),
-                    ("#btn-cancel", Button),
-                )
-            ]
-            for control in controls:
+            selectors = (
+                ("#field-current", Input),
+                ("#field-new", Input),
+                ("#field-confirm", Input),
+                ("#btn-change", Button),
+                ("#btn-cancel", Button),
+            )
+            for selector, widget_type in selectors:
+                control = app.query_one(selector, widget_type)
                 region = control.region
                 assert region.width > 0 and region.height > 0, f"{control.id} has no visible area at {size}"
                 assert region.x >= 0 and region.x + region.width <= width, (
                     f"{control.id} sits outside the {width}-column terminal: {region}"
                 )
+
+            for selector, widget_type in selectors:
+                control = app.query_one(selector, widget_type)
+                control.scroll_visible(animate=False, force=True)
+                await pilot.pause()
+                region = control.region
+                assert region.height > 0, f"{control.id} lost its area after being scrolled to at {size}"
                 assert region.y >= 0 and region.y + region.height <= height, (
-                    f"{control.id} sits outside the {height}-row terminal: {region}"
+                    f"{control.id} cannot be brought into a {height}-row terminal: {region}"
                 )
+
+
+@pytest.mark.asyncio
+async def test_the_narrow_terminal_reaches_the_actions_only_by_scrolling(tmp_path: Path) -> None:
+    """The eighty-by-twenty-four floor is served by scrolling, and that is a decision.
+
+    This screen carries three credential fields, each with its own label, plus
+    the new password hint and its live strength line. Measured at the floor the
+    content column is twenty-eight rows against a twenty-two row viewport, so
+    it cannot be made to fit without removing something the operation needs:
+    collapsing the intro and the hint recovers three rows and still does not
+    fit, and dropping a field or a label would remove part of the operation
+    rather than lay it out differently.
+
+    So the surface scrolls, which is the answer the responsive-layout proofs
+    already record for every other full-screen surface -- vertical extent is
+    carried by the scroll host rather than asserted away. This test pins both
+    halves of that decision so it cannot be reversed silently: the actions
+    genuinely start below the fold at the floor, and the scroll host genuinely
+    carries them into view. If a later change makes the content fit outright,
+    the first assertion fails and this test should be retired deliberately
+    rather than relaxed.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _enroll()
+        app = _app(profile_id)
+        async with CredentialHostApp(app).run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            scroll = app.query_one(ContentScroll)
+            change = app.query_one("#btn-change", Button)
+
+            assert scroll.max_scroll_y > 0, (
+                "the content column fits the floor, so this surface no longer depends on scrolling"
+            )
+            assert change.region.y + change.region.height > 24, (
+                "the primary action already fits unscrolled; the decision this test pins no longer applies"
+            )
+
+            change.scroll_visible(animate=False, force=True)
+            await pilot.pause()
+            assert scroll.scroll_offset.y > 0, "reaching the primary action did not move the scroll host"
+            assert change.region.y >= 0 and change.region.y + change.region.height <= 24, (
+                f"the primary action is unreachable even after scrolling: {change.region}"
+            )
+
+
+@pytest.mark.asyncio
+async def test_the_action_row_costs_one_row_of_buttons_not_two(tmp_path: Path) -> None:
+    """Cancel and change share one row, as the sibling login screen actions do.
+
+    Stacking them cost three rows on a surface already past the floor, for no
+    layout benefit: both buttons are short and the panel is at least
+    seventy-three columns wide wherever this screen renders. The asserted
+    property is that the two actions occupy a single row, which a vertical
+    stack cannot satisfy.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _enroll()
+        app = _app(profile_id)
+        async with CredentialHostApp(app).run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            cancel = app.query_one("#btn-cancel", Button)
+            change = app.query_one("#btn-change", Button)
+            assert cancel.region.y == change.region.y, (
+                f"the actions are stacked rather than sharing a row: {cancel.region} {change.region}"
+            )
+            assert cancel.region.right <= change.region.x, "the actions overlap horizontally"

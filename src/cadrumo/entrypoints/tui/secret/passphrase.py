@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Input, Label, Static
 
 from ....core.external_constants import UTF_8_ENCODING
@@ -95,6 +95,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         + CREDENTIAL_PANEL_CSS
         + """
     #passphrase-intro { margin: $cadrumo-space-0; }
+    #passphrase-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     #strength-line { margin: $cadrumo-space-0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
@@ -143,7 +144,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
             yield Label(id="label-confirm", classes="field-label")
             yield Input(id="field-confirm", password=True)
 
-            with Vertical(id="passphrase-actions", classes="credential-actions"):
+            with Horizontal(id="passphrase-actions", classes="credential-actions"):
                 yield Button(tr("flows.passphrase.cancel_button"), id="btn-cancel")
                 yield Button(tr("flows.passphrase.change_button"), id="btn-change", classes="-primary")
         yield Footer()
