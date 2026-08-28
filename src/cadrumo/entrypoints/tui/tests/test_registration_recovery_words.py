@@ -11,6 +11,8 @@ through Textual's headless Pilot, the real recovery enrollment.
 
 from __future__ import annotations
 
+from time import monotonic
+
 import pytest
 from textual.widgets import Input
 from textual.worker import WorkerCancelled
@@ -35,6 +37,8 @@ pytestmark = [
     pytest.mark.hex_entrypoint,
 ]
 
+#: Deliberately past the 30s wall-clock bound this handoff no longer carries.
+_PAST_REMOVED_BOUND_SECONDS = 33.0
 _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "recovery-words-screen-operator-secret"  # noqa: S105 - synthetic test fixture
 
@@ -174,6 +178,56 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
 
         assert app.outcome is None
         assert not any(view.label == "Wrong Recovery Reentry" for view in CommittedProfileRepository().list())
+
+
+@pytest.mark.asyncio
+async def test_a_confirmation_past_the_removed_wall_clock_bound_still_publishes(tmp_path) -> None:
+    """An operator copying down 24 words is not a failure, however long they take.
+
+    The handoff used to block on ``resolved.wait(timeout=30.0)`` and treat a
+    False return as cancellation, so a confirmation arriving after that bound
+    was refused and the capsule was never published. Under concurrent load the
+    bound was reachable without any operator hesitation at all, which is why
+    the parametrised cases failed non-deterministically while passing in
+    isolation.
+
+    The wait is now bounded by message-loop liveness rather than elapsed time,
+    so this deliberately waits PAST the removed bound before confirming. That
+    delay is the whole point of the test: a shorter one passes against the old
+    defect too and would prove nothing. Do not shorten it, and do not replace
+    the real wait with a patched clock -- the property under test is that no
+    wall-clock deadline governs this handoff at all.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        app = _screen()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _fill(
+                pilot,
+                username="Unhurried Recovery Subject",
+                password=_TYPED_PASSWORD,
+                confirm=_TYPED_PASSWORD,
+            )
+            await pilot.click("#btn-create")
+            words = await _wait_for_recovery_screen(pilot)
+            rendered = str(words.query_one("#words-value").render())
+
+            deadline = monotonic() + _PAST_REMOVED_BOUND_SECONDS
+            while monotonic() < deadline:
+                await pilot.pause(0.5)
+            assert not any(
+                view.label == "Unhurried Recovery Subject" for view in CommittedProfileRepository().list()
+            ), "nothing may publish while the operator has not yet confirmed"
+
+            words.query_one("#field-recovery-verification", Input).value = rendered
+            await pilot.click("#btn-confirm-words")
+            await pilot.app.workers.wait_for_complete()
+            for _ in range(100):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
+
+        assert app.outcome is not None, "a late but live confirmation must still publish"
+        assert app.outcome.label == "Unhurried Recovery Subject"
 
 
 @pytest.mark.asyncio

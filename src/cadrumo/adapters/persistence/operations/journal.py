@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 from typing import override
@@ -296,7 +297,14 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         limit: OperationReplayLimit,
     ) -> OperationObservationMaterialization:
         """Return snapshot, replay, and progress facts anchored to one locked record."""
-        materialization = self._repository.read_observation(
+        # The underlying read takes an exclusive file lock whose acquisition is a
+        # synchronous retry spin. Called inline it would block the caller's event
+        # loop for as long as the lock is contended -- which on a polling frontend
+        # stalls the whole interface, not merely the poller, and leaves no await
+        # point for a cancellation to land on. Offloading keeps the loop free and
+        # makes this a real suspension point.
+        materialization = await asyncio.to_thread(
+            self._repository.read_observation,
             operation_id,
             _OperationReplayRequest(cursor=after_cursor, limit=limit),
         )
