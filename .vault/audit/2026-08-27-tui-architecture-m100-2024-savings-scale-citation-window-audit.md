@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:4bcc72a54430c63ddc13fea3c142ff09dc190323b077801b1e402ad911b68c14'
+body_hash: 'sha256:02ef6b21c16e30270915993f26d25cd9bab993d46bc1efdcdeca4aabb5c25aaf'
 related: []
 ---
 
@@ -157,3 +157,34 @@ individually plausible tidying edits.
 it should be relaxed deliberately — for a provision that governed the filing
 period rather than merely the devengo instant — and not by moving the citation to
 whichever entry passes.
+
+### Correction: the mismatch is already in the record, not a future risk
+
+The section above says "the tempting repair is to repoint 2024 at `art-66`" and
+warns against it. **It is already pointed there.**
+`renta-2024-escala-estatal-base-ahorro` declares:
+
+```toml
+legal_refs = ["ley-35-2006:art-66"]
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+```
+
+`ley-35-2006:art-66` is the redaction in force from 2024-12-22, and its corpus
+text states the top tranche as **"En adelante 15"**. The parameter encodes
+**0.14**. So the citation already contradicts the value it is supposed to ground.
+
+The registry had no alternative. `_check_revision_scoped_legal_windows` runs at
+build and requires the cited provision to be in force at the devengo date, so
+citing `art-66-2023` — the redaction that governed the period and states 14 —
+would fail the build. Since the tree loads, every citation in it is in-window by
+construction; this one is in-window and wrong about the number.
+
+That makes the finding more urgent than the earlier wording implied, and the
+direction of the residual risk unchanged: nothing detects the contradiction,
+because the evidence gate never compares phrase to value and this `required_text`
+states no number. A reviewer reconciling the two would most naturally "correct"
+the value to match its cited source, changing 2024's top savings tranche from 14
+to 15 — a live over-declaration on the highest tranche.
+
+The value is right. The citation is the defect, and it is the only citation the
+window rule permits. That is the conflict, stated exactly.
