@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7abb38f21acc3b2a98394ddfe119fa615877248d221742d835c7d2ef3aff74d3'
+body_hash: 'sha256:ef372b831764cc8d98f44174268fed02bf2615008f88a62eae58006a67851cb4'
 related: []
 ---
 
@@ -827,3 +827,44 @@ missed the legal catalogue; digit-matching missed words; row-counting
 double-counted revisions. The question — "is this value named in evidence a reader
 can reach" — has been right throughout. **Treat every count here as scoped until
 its scope is stated, and state it.**
+
+#### And the 48 is not a grounding gap either: the excerpts state every figure
+
+Reading the excerpts settles it. Each mínimo article's per-article corpus file
+contains **every** tranche, not just the ones its `required_text` names:
+
+| excerpt | figures present |
+|---|---|
+| `ley-35-2006-art-57.html` (874 B) | 5.550, 1.150, **1.400** |
+| `ley-35-2006-art-58.html` (1.101 B) | 2.400, 2.700, **4.000**, **4.500**, **2.800** |
+| `ley-35-2006-art-59.html` (1.028 B) | 1.150, **1.400** |
+
+So `renta-2025-minimo-contribuyente-edad-75-2025` and its siblings are grounded on
+every axis that matters: the **right article**, a **tight excerpt**, and the
+**figure stated verbatim** in it. Nothing about them is unanchored.
+
+### What this means for the whole "pinned" line of work
+
+`required_text` is a **bundling spot-check** — evidence that the right document is
+present and is the document the author read — not an exhaustive manifest of every
+value an article establishes. Naming two of an article's five tranches is a
+reasonable authoring choice, not an omission, and for a multi-tranche article
+enumerating all of them adds length without adding enforcement, since the gate
+compares phrases to the source and never to the encoded value.
+
+So the sequence of counts in this audit — 99, then 300, then 204, then 48 — was
+measuring `required_text` **enumeration completeness**, and calling it grounding.
+It is not the same thing. Grounding is *(right provision) + (corpus that states
+the figure) + (value matching it)*, and on that test the mínimo family passes
+completely.
+
+**This does not dissolve the real findings; it sharpens why they are real.**
+Modelo 360 is not a thin `required_text` over a good citation — its cited article
+is the *plazo* article, which states no threshold, and the whole Orden states
+neither 400 nor 50 anywhere. The M200 pyme row cites an article stating different
+rates than it encodes. Those are grounding defects in the strict sense: no
+document in the chain states the value. The mínimo rows never were.
+
+The residual `required_text` observation stands as what it is — a reviewability
+nicety, cheap to improve where an article's leading figures are named and its
+later tranches are not — and should not be carried forward as a grounding count.
