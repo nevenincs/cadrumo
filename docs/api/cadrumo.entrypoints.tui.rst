@@ -27,5 +27,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.__main__
    cadrumo.entrypoints.tui.app
    cadrumo.entrypoints.tui.launcher
