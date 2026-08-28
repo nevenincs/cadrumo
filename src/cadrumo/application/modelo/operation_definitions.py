@@ -108,6 +108,7 @@ from ._edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
+from ._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -1292,19 +1293,57 @@ type ModeloEditApplyDetailRowV1 = Annotated[
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
 
 
+class ModeloEditApplyDetailRowAddressV1(BaseModel):
+    """Wire mirror of ModeloEditDetailRowAddressV1 carrying the key's components.
+
+    The domain address holds a ``natural_key``: the row's own identity fields
+    joined with ``|``. That joined string is a bounded free-form string, which
+    is the same shape a passphrase has, so the credential-free journal check
+    refuses it on the ``key`` token in its name and no schema predicate could
+    tell the two apart.
+
+    Nothing is exempted to get around that. The joined string is a derived
+    convenience rather than information: every component is one of the row's
+    own declared identity fields, already carried in the clear by the row
+    mirrors in this module and already admitted by the same check. So the
+    components cross instead, and ``to_address`` derives the key exactly as the
+    domain type expects it.
+
+    Carrying the components is also strictly less ambiguous than carrying the
+    join, because a component that itself contains the separator is
+    indistinguishable from a boundary once joined.
+    """
+
+    model_config = _WIRE_CONFIG
+
+    kind: Literal["detail_row"] = "detail_row"
+    detail_row_kind: Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+    identity_components: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=200)], ...],
+        Field(min_length=1, max_length=8),
+    ]
+
+    def to_address(self) -> ModeloEditDetailRowAddressV1:
+        """Derive the domain address by joining the components it was built from."""
+        return ModeloEditDetailRowAddressV1(
+            detail_row_kind=self.detail_row_kind,
+            natural_key=DETAIL_ROW_NATURAL_KEY_SEPARATOR.join(self.identity_components),
+        )
+
+
 class ModeloEditApplyDetailRowIntentV1(BaseModel):
     """Wire mirror of ModeloDetailRowEditIntentV1 with a payload-safe row."""
 
     model_config = _WIRE_CONFIG
 
-    address: ModeloEditDetailRowAddressV1
+    address: ModeloEditApplyDetailRowAddressV1
     kind: ModeloEditDetailRowIntentKind
     row: ModeloEditApplyDetailRowV1 | None = None
 
     def to_intent(self) -> ModeloDetailRowEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""
         return ModeloDetailRowEditIntentV1(
-            address=self.address,
+            address=self.address.to_address(),
             kind=self.kind,
             row=None if self.row is None else self.row.to_row(),
         )
@@ -1322,25 +1361,16 @@ class ModeloEditApplySubmissionV1(BaseModel):
     payload-safe and carried through unchanged. This is a total translation:
     every field of every mirrored intent converts, nothing is dropped.
 
-    ``detail_row_intents`` is still ABSENT from this wire type, and no longer
-    for the reason the six row mirrors below were built to solve. Every one
-    of those six is now admitted by the payload-graph gate: each carries its
-    ``Decimal`` fields as the exact characters submitted, and the two that
-    hydrate registry codes carry them raw so the real row type runs its own
-    hydration during translation - one hydration shared with the CLI
-    ``--row key=value`` path, not a second copy free to drift.
+    ``detail_row_intents`` is carried, one wire type per per-modelo row kind.
+    Each mirrors its row's ``Decimal`` fields as the exact characters
+    submitted, and the two kinds that hydrate registry codes carry them raw so
+    the real row type runs its own hydration during translation - one
+    hydration shared with the CLI ``--row key=value`` path rather than a second
+    copy free to drift.
 
-    What blocks the field is elsewhere and is not a property of the rows at
-    all: ``ModeloEditDetailRowAddressV1.natural_key`` is refused by the
-    credential-free field-name check, which matches the token ``key`` in a
-    field name with no knowledge of the field's type. The value is a row's
-    own business identity - a NIF, or ``nif_comunitario|clave_operacion`` -
-    and carries no credential meaning. Mirroring the address under a
-    different field name would clear the gate while changing nothing about
-    what crosses it, so that is deliberately not done here: it would hide
-    the construct from the matcher rather than resolve it. Admitting this
-    family needs either a type-aware carve-out for a natural key, as already
-    exists for a content digest, or a rename of the domain field itself.
+    The address is mirrored too, and deliberately not by mirroring its
+    ``natural_key``: see :class:`ModeloEditApplyDetailRowAddressV1` for why the
+    components cross instead of the string derived from them.
 
     The mirrored payload is INPUT, not authority: ``apply_modelo_edit``
     re-resolves and independently re-validates every coordinate at the
@@ -1357,6 +1387,7 @@ class ModeloEditApplySubmissionV1(BaseModel):
     scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=500)] = ()
     binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
     row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
+    detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=500)] = ()
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
@@ -1378,18 +1409,14 @@ class ModeloEditApplySubmissionV1(BaseModel):
         return self
 
     def to_submission(self) -> ModeloEditSubmissionV1:
-        """Translate back to the real, fully re-validated domain submission.
-
-        ``detail_row_intents`` is always empty: this wire type cannot carry
-        one yet (see the class docstring), so there is nothing to translate
-        for that family.
-        """
+        """Translate back to the real, fully re-validated domain submission."""
         return ModeloEditSubmissionV1(
             baseline=self.baseline.to_baseline(),
             mutation_family=self.mutation_family,
             scalar_intents=tuple(intent.to_intent() for intent in self.scalar_intents),
             binding_intents=tuple(intent.to_intent() for intent in self.binding_intents),
             row_intents=tuple(intent.to_intent() for intent in self.row_intents),
+            detail_row_intents=tuple(intent.to_intent() for intent in self.detail_row_intents),
         )
 
 

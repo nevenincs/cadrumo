@@ -458,6 +458,14 @@ def _writable_detail_row_entry(
     return None
 
 
+DETAIL_ROW_NATURAL_KEY_SEPARATOR = "|"
+"""The one separator a compound detail-row natural key is joined on.
+
+Declared once because both the key derivation here and the operation wire
+form that carries the key's components must agree on it exactly; two
+literals would be free to drift into addressing different rows.
+"""
+
 _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
     "miembro": ("nif", "clave", "subclave"),
     "vinculada": ("nif",),
@@ -474,7 +482,7 @@ def detail_row_natural_key(row: ModeloDetailRow) -> str:
     Never a minted or positional identity -- see :class:`ModeloEditDetailRowAddressV1`.
     """
     fields = _DETAIL_ROW_NATURAL_KEY_FIELDS[row.row_type]
-    return "|".join(str(getattr(row, field)) for field in fields)
+    return DETAIL_ROW_NATURAL_KEY_SEPARATOR.join(str(getattr(row, field)) for field in fields)
 
 
 def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusalV1:
