@@ -1,0 +1,125 @@
+---
+tags:
+  - '#audit'
+  - '#tui-architecture'
+date: '2026-08-28'
+modified: '2026-08-28'
+body_schema: 'body-v2'
+body_hash: 'sha256:775d5469a79734debdd33ec1766cbddf1780a9d6ef187463f6d57aa962006076'
+related:
+  - "[[2026-08-28-tui-architecture-m210-pension-scale-corpus-row-audit]]"
+---
+
+# `tui-architecture` audit: `Murcia 2022 autonomic scale over-states accumulated cuota above 60.000 euros`
+
+## Scope
+
+## Findings
+
+## Recommendations
+
+## Finding
+
+`renta-2022-escala-autonomica-murcia-base-general` over-states its accumulated
+cuota at the top rung by **90,83 €**. The runtime computes
+
+```
+cuota = fixed_addition + marginal_rate * (base - lower_bound)
+```
+
+(`domain/calculations/registry/formula_runtime_ops.py:248`), so every Murcia 2022
+filer with base liquidable general above 60.000 € receives an autonomic cuota
+90,83 € **higher** than the scale's own lower tranches produce.
+
+| lower_bound | rate | fixed_addition | implied by the rows beneath | gap |
+|---|---|---|---|---|
+| 0 | 0,096 | 0 | — | — |
+| 12.960,45 | 0,1146 | 1.244,20 | 1.244,2032 | ok |
+| 21.028,20 | 0,1374 | 2.168,76 | 2.168,7642 | ok |
+| 35.394,00 | 0,1822 | 4.142,62 | 4.142,6209 | ok |
+| 60.000,00 | 0,227 | **8.716,67** | **8.625,84** | **+90,83** |
+
+Rows one to four are mutually exact. Only the top rung breaks.
+
+## The cause is provable from the table itself
+
+Murcia deflated its 2022 scale by **4,1 %**. The three lower bounds are the
+standard bounds multiplied by exactly 1,041:
+
+| standard | encoded | factor |
+|---|---|---|
+| 12.450 | 12.960,45 | **1,041** |
+| 20.200 | 21.028,20 | **1,041** |
+| 34.000 | 35.394,00 | **1,041** |
+| 60.000 | 60.000,00 | 1,00 — not inflated |
+
+Recomputing the accumulated cuota at the top rung with the **same rates** but the
+**un-deflated** bounds gives `8.716,67` — the encoded value, exact to the cent.
+With the deflated bounds actually in the table it is `8.625,84`.
+
+So the top rung's `fixed_addition` was carried over from the un-deflated version
+of the scale while rows two to four were recomputed for the deflactación. The
+table carries the accumulated cuota of a version it is not — the same shape as the
+M210 pension excerpt recorded alongside this, and here it is live arithmetic
+rather than evidence.
+
+## Direction — over-payment, and nothing watches it
+
+The taxpayer is charged **more** than the scale prescribes. Over-payment produces
+a valid return, no refusal and no signal, which is precisely the direction this
+campaign's organising question was written for. An under-declaration of the same
+size would have had several guards to trip; this had none.
+
+**Nothing pins the value.** `8716.67` appears in no Python file in the tree, so no
+test would notice the repair or the defect. The table *is* engine-reachable —
+`test_modelo_100_autonomic_chain.py:57` drives murcia — but the chain test checks
+wiring, not the accumulated column.
+
+## This escalates an already-open finding
+
+The row cites only `ley-35-2006:art-74`, the framework article that states no
+Murcia figure, and its `required_text` is `["Región de Murcia", "escala
+autonómica"]` — pinning no number. It is one of the 90 ungrounded autonomic
+tables already recorded, and one of the 99 parameters whose `required_text` pins
+no number.
+
+Those were carried as reviewability findings. This one shows the gap is not
+cosmetic: an ungrounded scale concealed a real arithmetic error that
+over-charges taxpayers, and the error survived because neither a citation nor a
+test nor a comment stood between it and the engine.
+
+## Remediation — owner's decision, not taken here
+
+Two repairs are each internally self-consistent, and choosing between them needs
+the official Murcia 2022 scale, which I did not have and did not invent:
+
+1. the deflated table is correct → `fixed_addition` becomes `8.625,84`;
+2. the top bound should also have been inflated → `60.000,00` becomes
+   `62.460,00` (= 60.000 × 1,041), with its `fixed_addition` recomputed.
+
+Many autonomic deflactaciones deliberately leave the top threshold at 60.000, so
+(1) is the more likely reading — but that is a tax review against the Región de
+Murcia's published scale, not an inference to be made here.
+
+Whichever bound is correct, `8.716,67` is not consistent with the rows beneath it
+and cannot be right as it stands.
+
+A fix should land with a grounded citation and a regression pinning the
+accumulated column, so the next such break is caught by more than an invariant
+sweep.
+
+## How it was found
+
+A sweep of the accumulated-cuota continuity invariant
+`fixed_addition[i] == fixed_addition[i-1] + rate[i-1] * (lower[i] - lower[i-1])`
+over all 133 registry bracket tables. The invariant is a property of any
+progressive scale and is not derived from the formula under test, so it is not
+tautological.
+
+Raw equality flagged 113 of 126 groups, which was implausible and was an
+over-strict invariant rather than 113 defects: official scales publish the
+accumulated column rounded to cents. Classified by magnitude the picture is
+clean — **570 exact, 106 within half a cent, 6 at a one-cent rounding convention,
+and exactly one gap above 1,5 cents**, which is this row at 90,83 €.
+
+No production code, registry data or test was changed by this audit.
