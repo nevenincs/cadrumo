@@ -22,19 +22,13 @@ from ...domain.iva import (
 )
 from ...domain.modelos import CalculationRevision, LedgerEvidenceRow, ModeloError
 from ...domain.transactions import (
+    BUSINESS_BEARING_STATES,
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
 )
 from ..aggregation import invoice_kind_for_direction
 from ._preconditions import build_modelo_precondition_failure
-
-_EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    },
-)
 
 
 def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:
@@ -122,7 +116,7 @@ def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) 
     if lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return False
     business_classification = _enum_or_none(BusinessClassification, row.business_classification)
-    if business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
+    if business_classification not in BUSINESS_BEARING_STATES:
         return False
     if row.iva_amount is None or row.iva_amount <= Decimal("0"):
         return False

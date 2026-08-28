@@ -43,6 +43,7 @@ from ...domain.iva import (
     is_devengada_flow,
 )
 from ...domain.transactions import (
+    BUSINESS_BEARING_STATES,
     Transaction,
     TransactionLifecycleState,
 )

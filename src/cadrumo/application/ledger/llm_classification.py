@@ -61,6 +61,7 @@ from ...domain.buckets import (
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
+    BUSINESS_BEARING_STATES,
     BusinessClassification,
     LLMClassificationResponse,
     LLMClassifier,
@@ -666,7 +667,7 @@ def apply_llm_classification(
             },
         )
     category_id: str | None = None
-    if classification in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}:
+    if classification in BUSINESS_BEARING_STATES:
         category_id = suggestion.category.value if suggestion.category is not None else None
     updated_catalogue = set_classification(
         catalogue,
@@ -917,7 +918,7 @@ def apply_saturated_llm_classification(
     patch_fields: dict[str, object] = {"business_classification": classification}
     if classification is BusinessClassification.MIXED:
         patch_fields["business_pct"] = effective_business_pct
-    category_carrying = classification in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}
+    category_carrying = classification in BUSINESS_BEARING_STATES
     if category_carrying and suggestion.category is not None:
         patch_fields["category_id"] = suggestion.category.value
     if suggestion.iva_category is not None:
@@ -1002,10 +1003,7 @@ def derive_operator_iva_substrate(
             translated_message="application.ledger.errors.transaction_not_found",
             context={"transaction_id": transaction_id},
         )
-    if transaction.business_classification not in {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    }:
+    if transaction.business_classification not in BUSINESS_BEARING_STATES:
         raise TransactionValidationError(
             "IVA derivation applies only to a business transaction; classify it as "
             "BUSINESS or MIXED first, then derive the IVA substrate",
