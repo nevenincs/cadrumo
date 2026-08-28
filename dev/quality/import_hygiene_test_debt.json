@@ -13,7 +13,7 @@
             {
                 "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.entrypoints.cli._common",
+                "target_mod": "cadrumo.entrypoints.cli._period_parsing",
                 "imported_names": ["_canonical_period", "_filter_canonical_period"],
                 "reason": "White-box test of the private CLI period-token canonicalisation helpers backing the single period-filter boundary authority. Internal to the CLI's argument-parsing layer; the public authority is Period.contains()."
             },

@@ -580,7 +580,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         # it has nothing these informativas can declare rather than a defect.
         return None
     if context.modelo == Modelo.M347.value:
-        return _m347_invoice_observation(invoice)
+        return _m347_invoice_observation(invoice, context=context)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
@@ -625,7 +625,7 @@ def _m347_filer_declaration_roles(bucket_id: object) -> frozenset[ThirdPartyDecl
     return projection_for_taxpayer(record).declaration_roles
 
 
-def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
+def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
     """Build the M347 observation for one invoice, or ``None`` if excluded.
 
     Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
@@ -643,12 +643,14 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
     -- the same classification M349's own branch of this resolver uses, never
     a bare country comparison.
 
-    Claves C, D and E each additionally need the filer's own
-    :class:`ThirdPartyDeclarationRole` membership, loaded by
-    :func:`_m347_filer_declaration_roles` from ``context.bucket_id`` --
-    wired in by claves C/D/E's own Steps (S308, S309), which pass ``context``
-    through to this function at that point. Adding the parameter here ahead
-    of that first real caller would be an unused argument no clave reads yet.
+    Clave C additionally needs the filer's own
+    :class:`ThirdPartyDeclarationRole` membership, loaded here via
+    ``context.bucket_id``. When the invoice IS a clave-C collection
+    (``collected_on_behalf_of_tax_id`` set AND the filer carries
+    ``THIRD_PARTY_FEE_COLLECTOR``), the declared counterparty is the
+    BENEFICIARY whose fees were collected (RD 1065/2007 art. 34.g), not
+    whoever actually paid this invoice -- so ``party_tax_id`` and
+    ``party_legal_name`` are substituted, not merely the clave.
     """
     if _intracommunity_clave(invoice) is not None:
         return None
@@ -659,30 +661,50 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
         # constructor with None and raised there instead of being skipped.
         return None
     source_kind = BindingSourceKind(_invoice_source_kind(invoice))
+    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
+    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=declaration_roles)
+    is_third_party_collection = clave == "C"
+    party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
+    party_legal_name = (
+        invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
+    )
+    assert party_tax_id is not None  # clave "C" only returns when collected_on_behalf_of_tax_id is set
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
         source_kind=source_kind,
-        party_tax_id=invoice.counterparty_tax_id,
+        party_tax_id=party_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=_eur(invoice.base_total_eur, invoice),
         invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=None,
-        operation_clave=_m347_operation_clave(invoice, source_kind=source_kind),
-        party_legal_name=invoice.counterparty_name,
+        operation_clave=clave,
+        party_legal_name=party_legal_name,
     )
 
 
-def _m347_operation_clave(invoice: Invoice, *, source_kind: BindingSourceKind) -> str | None:
+def _m347_operation_clave(
+    invoice: Invoice,
+    *,
+    source_kind: BindingSourceKind,
+    declaration_roles: frozenset[ThirdPartyDeclarationRole] = frozenset(),
+) -> str | None:
     """Classify the M347 clave de operacion for one invoice, or ``None``.
 
-    Checks the RD 1619/2012 disposición adicional cuarta travel-agency
-    mediation fact first (claves F/G), then falls back to
-    :func:`m347_operation_clave`'s invoice-direction classification
-    (claves A/B). Claves C-G's remaining unclassifiable members (C, D, E)
-    still return ``None`` -- each needs a fact (a professional-fees-collection
-    classification, or the FILER's own entity type) this invoice does not
-    carry and no direction or mediation flag can substitute for.
+    Checks clave C first (RD 1065/2007 art. 31.3: the filer collects this
+    amount on behalf of a socio, asociado or colegiado), then the RD
+    1619/2012 disposición adicional cuarta travel-agency mediation fact
+    (claves F/G), then falls back to :func:`m347_operation_clave`'s
+    invoice-direction classification (claves A/B). Claves D and E remain
+    unclassifiable here -- each needs the FILER's own entity type, wired in
+    S309.
+
+    Clave C requires BOTH facts together: the filer's own
+    ``THIRD_PARTY_FEE_COLLECTOR`` role AND the invoice's own
+    ``collected_on_behalf_of_tax_id``. Neither alone is sufficient -- a
+    collecting entity's ORDINARY sale is not a clave-C operation, and an
+    invoice carrying a beneficiary fact from a filer who never declared the
+    role would let an unaudited fact silently reclassify a row.
 
     F ("ventas agencia viaje") covers the disposition's FULL listed service
     set for an ISSUED invoice; G ("compras agencia viaje") covers ONLY air
@@ -690,6 +712,11 @@ def _m347_operation_clave(invoice: Invoice, *, source_kind: BindingSourceKind) -
     non-air mediated service is neither F nor G by the diseño's own text, and
     falls through to the ordinary A/B classification below.
     """
+    if (
+        invoice.collected_on_behalf_of_tax_id is not None
+        and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
+    ):
+        return "C"
     mediation = invoice.travel_agency_mediation
     if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
         return "F"

@@ -630,6 +630,13 @@ class Invoice(BaseModel):
     # :class:`~core.TravelAgencyMediationType`). Feeds Modelo 347 claves F/G
     # -- never inferred from `iva_category`, which carries no mediation axis.
     travel_agency_mediation: TravelAgencyMediationType | None = None
+    # RD 1065/2007 art. 34.g: when the filer collects this amount on behalf
+    # of a socio, asociado or colegiado (Modelo 347 clave C), the declared
+    # counterparty is the BENEFICIARY whose fees were collected, not
+    # necessarily whoever paid this invoice. `None` means this invoice is
+    # NOT a third-party collection -- the ordinary counterparty declares.
+    collected_on_behalf_of_tax_id: TaxIdIdentityToken | None = None
+    collected_on_behalf_of_name: str | None = Field(default=None, min_length=1)
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None

@@ -1172,7 +1172,9 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
 
 
-def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not() -> None:
+def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
+    secure_profile: TestRuntimeProfile,
+) -> None:
     """The discrimination S303 exists to prove, not just the classification.
 
     A travel agency's ISSUED invoice under RD 1619/2012 disposición adicional
@@ -1182,6 +1184,13 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     mediation fact, nothing else, is what proves the classifier reads the
     fact rather than the amount or direction.
     """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
     mediated_sale = _invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
@@ -1209,8 +1218,8 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     )
     assert ordinary_sale.travel_agency_mediation is None
 
-    mediated_observation = _m347_invoice_observation(mediated_sale)
-    ordinary_observation = _m347_invoice_observation(ordinary_sale)
+    mediated_observation = _m347_invoice_observation(mediated_sale, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_sale, context=context)
 
     assert mediated_observation is not None
     assert mediated_observation.operation_clave == "F"
@@ -1218,13 +1227,22 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     assert ordinary_observation.operation_clave == "B"
 
 
-def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_purchases() -> None:
+def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_purchases(
+    secure_profile: TestRuntimeProfile,
+) -> None:
     """Clave G is narrower than F: only air passenger transport, RECEIVED direction.
 
     A RECEIVED invoice for a mediated but NON-air service (e.g. hostelería)
     is neither F nor G by the diseño's own text, and must fall through to the
     ordinary clave A rather than being fabricated into G.
     """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
     air_transport_purchase = _invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
@@ -1254,8 +1272,8 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
     )
 
-    air_observation = _m347_invoice_observation(air_transport_purchase)
-    non_air_observation = _m347_invoice_observation(non_air_mediated_purchase)
+    air_observation = _m347_invoice_observation(air_transport_purchase, context=context)
+    non_air_observation = _m347_invoice_observation(non_air_mediated_purchase, context=context)
 
     assert air_observation is not None
     assert air_observation.operation_clave == "G"
@@ -1314,6 +1332,134 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
     roles = _m347_filer_declaration_roles(secure_profile.bucket_id)
 
     assert roles == frozenset({ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR})
+
+
+def _third_party_fee_collector_profile_facts() -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+        ),
+    )
+
+
+def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_resolver(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave C production reachability: a real filer, a real profile, the real resolver.
+
+    A colegio profesional that collects fees on behalf of its colegiados
+    (RD 1065/2007 art. 31.3) receives a payment from a CLIENT, but the M347
+    row it declares must name the COLEGIADO on whose behalf the fee was
+    collected (art. 34.g), not the client who paid. An ORDINARY invoice from
+    the SAME collecting-entity filer, carrying no beneficiary fact, must NOT
+    become clave C -- the role alone is not sufficient, proving the
+    classifier reads both facts together, not either one.
+    """
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_third_party_fee_collector_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+    collection_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-COBRO-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    collection_invoice = collection_invoice.model_copy(
+        update={
+            "collected_on_behalf_of_tax_id": "A87654321",
+            "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+        },
+    )
+    ordinary_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-ORDINARIA-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    assert ordinary_invoice.collected_on_behalf_of_tax_id is None
+
+    collection_observation = _m347_invoice_observation(collection_invoice, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_invoice, context=context)
+
+    assert collection_observation is not None
+    assert collection_observation.operation_clave == "C"
+    assert collection_observation.party_tax_id == "A87654321"
+    assert collection_observation.party_legal_name == "Colegiado Beneficiario SL"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+    assert ordinary_observation.party_tax_id == "C3333333G"
+
+
+def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_enough(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The other half of the AND: a beneficiary fact without the filer's own role does not declare C.
+
+    Guards against a fact injected on an invoice from reclassifying a row
+    for a filer who never declared the collecting-entity role -- the role
+    must be attested on the PROFILE, not merely implied by the invoice.
+    """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    collection_shaped_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-COBRO-2026-002",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    collection_shaped_invoice = collection_shaped_invoice.model_copy(
+        update={
+            "collected_on_behalf_of_tax_id": "A87654321",
+            "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+        },
+    )
+
+    observation = _m347_invoice_observation(collection_shaped_invoice, context=context)
+
+    assert observation is not None
+    assert observation.operation_clave == "B"
+    assert observation.party_tax_id == "C3333333G"
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])

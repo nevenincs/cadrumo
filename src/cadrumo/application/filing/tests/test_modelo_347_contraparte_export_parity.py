@@ -23,7 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import M347_THRESHOLD_EUR, BindingSourceKind, CasillaId
+from ....core import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR, BindingSourceKind, CasillaId
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId

@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
-from ._m347_threshold import m347_declarable_party_ids
+from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     M347_OPERATION_CLAVES,
@@ -742,6 +742,40 @@ def _m347_declarable_party_ids(observations: tuple[InvoiceObservation, ...]) -> 
     return m347_declarable_party_ids(totals)
 
 
+def _m347_row_family_threshold_filter(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[InvoiceObservation, ...]:
+    """Filter the per-row family's observations, clave C judged on its own floor.
+
+    Clave C carries its OWN, lower 300,51 EUR floor (RD 1065/2007 arts. 32.c,
+    33.4), applied ALONGSIDE -- never instead of -- the general 3.005,06 EUR
+    floor every other clave shares: the same party can carry both ordinary
+    operations and a clave-C collection in the same year, and each must be
+    judged against its own figure.
+
+    Filters observation-by-observation on a (party, clave-bucket) pair
+    rather than returning a flat party-id set: a beneficiary who clears the
+    LOWER clave-C floor but not the general floor must still lose their
+    below-floor ORDINARY rows, and a flat "party is declarable" set would
+    let those through once the party cleared either floor at all.
+    """
+    clave_c_totals: dict[str, Decimal] = {}
+    general_totals: dict[str, Decimal] = {}
+    for observation in observations:
+        totals = clave_c_totals if observation.operation_clave == "C" else general_totals
+        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
+            observation,
+        )
+    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals)
+    general_declarable = m347_declarable_party_ids(general_totals)
+    return tuple(
+        observation
+        for observation in observations
+        if (observation.operation_clave == "C" and observation.party_tax_id in clave_c_declarable)
+        or (observation.operation_clave != "C" and observation.party_tax_id in general_declarable)
+    )
+
+
 def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:
     if observation.invoice_total_amount is None:
         raise RegistryValidationError(
@@ -1118,20 +1152,17 @@ def _build_contraparte_clave_rows(
     construction, not by a separate reconciling step.
 
     Applies the RD 1065/2007 art. 31 declaration floor to *this* family
-    before grouping, routed through the one canonical comparison
-    (:func:`_m347_declarable_party_ids`, which delegates to
-    :func:`~._m347_threshold.m347_declarable_party_ids`) rather than a new
-    comparison written out here -- the same function
-    :func:`_resolve_m347_declarante_summary_values` already applies to the
-    summary-totals family. A counterparty's TOTAL across every clave (not
-    per-clave) decides declarability: the floor is strictly exceeded
-    (``>``), never merely reached, so a counterparty landing exactly on the
-    figure produces no row.
+    before grouping, routed through :func:`_m347_row_family_threshold_filter`,
+    which itself delegates to the same canonical comparison
+    (:func:`~._m347_threshold.m347_declarable_party_ids` /
+    ``m347_clave_c_declarable_party_ids``) rather than a new one written out
+    here. A party's TOTAL across every NON-clave-C clave decides general
+    declarability (the floor is strictly exceeded, ``>``, never merely
+    reached); a beneficiary's clave-C total is judged separately against its
+    OWN, lower 300,51 EUR floor (arts. 32.c, 33.4), alongside rather than
+    instead of the general one.
     """
-    declarable_party_ids = _m347_declarable_party_ids(observations)
-    observations = tuple(
-        observation for observation in observations if observation.party_tax_id in declarable_party_ids
-    )
+    observations = _m347_row_family_threshold_filter(observations)
     grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
     for observation in observations:
         if observation.operation_clave is None:
