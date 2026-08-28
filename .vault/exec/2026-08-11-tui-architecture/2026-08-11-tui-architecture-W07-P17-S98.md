@@ -5,16 +5,12 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:bcf0128eafb5bb6accdfb0cd87d08197fcbfac673dfa6d4ee56fe6785ab1a8a9'
+body_hash: 'sha256:4bcc43d0420964f60eae708d40c8e1390600bffbc7a235c12347ced29a858dd1'
 step_id: 'S98'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Prove spinner, phase, deadline, cancellation availability, live logs, diagnostic detail, review content, and terminal receipts follow supervisor revisions
 

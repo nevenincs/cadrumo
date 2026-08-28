@@ -5,16 +5,12 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:837f4221e4f39db196fb8aca13f7700bb16fba0f5bb1fdb6d43679a4fd77d33a'
+body_hash: 'sha256:bec00919bb6d71848a9e826c0ebb87b5e3022f51982eec85d3ad3b5a6d1fd7e6'
 step_id: 'S327'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Surface the operation phase, deadlines, diagnostic reference and terminal receipt references in the operation modal, which today renders none of them although the public projection already carries every one: the modal's view model carries only the projection, spinner visibility, three control-enablement flags, close policy, interaction affordance and terminal copy key, and the modal itself renders status copy, a review dump, log rows and button enablement -- while `phase_code`, `execution_deadline_at`, `cleanup_deadline_at`, `diagnostic_ref`, `result_ref` and `refusal_ref` all exist on the public projection contract. So four of the eight facts the modal is supposed to present are not merely unproven, they are unrendered. Extend the view model with derived fields for each, validated against the projection in the same shape as the existing derivation validator so a derived field cannot disagree with its source, and render them. This is production work and is a prerequisite for proving that rendered state follows supervisor revisions -- that proof cannot discharge its own row while half the facts it names never reach a widget
 
