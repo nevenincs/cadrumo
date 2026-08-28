@@ -296,7 +296,11 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
         reached_boundary.set()
         await release_boundary.wait()
 
-    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (services, _registry, profile_id):
+    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (
+        services,
+        _registry,
+        profile_id,
+    ):
 
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
@@ -381,7 +385,11 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
         reached_boundary.set()
         await release_boundary.wait()
 
-    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (services, _registry, profile_id):
+    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (
+        services,
+        _registry,
+        profile_id,
+    ):
 
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
