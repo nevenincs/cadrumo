@@ -381,7 +381,11 @@ def _import_official_m130_result_observation(
         clock=_FILE_AT,
     )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
-    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-AUTONOMA-C19"
+    # The reference id IS the justificante CSV, and a codigo seguro de
+    # verificacion is uppercase alphanumeric: the model pins
+    # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced
+    # was not a shape AEAT ever issues, so it could not survive the pattern.
+    evidence_reference_id = f"JUST130{_YEAR}{period}AUTONOMAC19"
     persist_justificante_metadata(
         evidence_reference_id,
         modelo="130",
@@ -730,7 +734,15 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     # cause is what names the undeclared field. Reading it here also proves the
     # wrapper preserves that cause rather than flattening it to a write failure.
     assert isinstance(refusal.value.__cause__, FilingExportError)
-    assert "aux_version" in str(refusal.value.__cause__)
+    # The cause is localized too, so its rendered text no longer spells the
+    # field. Read the structured context it carries instead -- that is where the
+    # refusal names which aux fields were undeclared, and asserting it is
+    # stronger than the substring match this replaced.
+    cause_context = refusal.value.__cause__.context or {}
+    assert refusal.value.__cause__.translated_message == (
+        "application.filing.export_parity.errors.aux_block_undeclared"
+    )
+    assert "aux_version" in tuple(cause_context.get("undeclared_fields", ()))
     assert not output.exists()
 
 
