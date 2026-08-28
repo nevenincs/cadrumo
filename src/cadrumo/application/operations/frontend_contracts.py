@@ -32,7 +32,12 @@ from .models import (
     OperationRevision,
     validate_terminal_reference_meaning,
 )
-from .persistence.replay import OperationReplayLimit, OperationReplayStatus
+from .persistence.replay import (
+    RESYNCHRONIZING_REPLAY_STATUSES,
+    OperationReplayLimit,
+    OperationReplayStatus,
+    PublicReplayStatus,
+)
 from .registry import (
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
@@ -539,12 +544,7 @@ class OperationPublicEventPageV1(BaseModel):
     operation_id: OperationId
     anchor_cursor: OperationEventCursor
     requested_cursor: OperationEventCursor
-    status: Literal[
-        OperationReplayStatus.PAGE,
-        OperationReplayStatus.CAUGHT_UP,
-        OperationReplayStatus.EXPIRED,
-        OperationReplayStatus.COMPACTED,
-    ]
+    status: PublicReplayStatus
     events: tuple[OperationPublicEventV1, ...]
     next_cursor: OperationEventCursor
     restart_cursor: OperationEventCursor | None
@@ -571,7 +571,7 @@ class OperationPublicEventPageV1(BaseModel):
                 or self.restart_cursor is not None
             ):
                 raise ValueError("caught-up public event page must equal its observation anchor cursor")
-        else:
+        elif self.status in RESYNCHRONIZING_REPLAY_STATUSES:
             if self.events or self.restart_cursor is None or self.next_cursor != self.restart_cursor:
                 raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
             if self.restart_cursor <= self.requested_cursor:

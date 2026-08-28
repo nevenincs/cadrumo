@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar, Literal, cast
+from typing import ClassVar, cast
 
 from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
@@ -51,7 +51,7 @@ from .persistence.journal import (
     OperationObservationUnknownOperationError,
     OperationProgressFoldInput,
 )
-from .persistence.replay import OperationReplayStatus
+from .persistence.replay import PublicReplayStatus
 from .registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
@@ -60,12 +60,6 @@ from .registry import (
 
 _SUPPORTED_OBSERVATION_VERSION = 1
 _UNSUPPORTED_INTERACTION_CODE = "operation.interaction.unsupported"
-_PublicReplayStatus = Literal[
-    OperationReplayStatus.PAGE,
-    OperationReplayStatus.CAUGHT_UP,
-    OperationReplayStatus.EXPIRED,
-    OperationReplayStatus.COMPACTED,
-]
 _CANCELLABLE_LIFECYCLES = frozenset(
     {
         OperationLifecycle.CREATED,
@@ -170,7 +164,7 @@ class OperationObservationService:
             diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
         )
         replay = materialization.replay
-        replay_status = cast(_PublicReplayStatus, replay.status)
+        replay_status = cast(PublicReplayStatus, replay.status)
         event_page = OperationPublicEventPageV1(
             operation_id=snapshot.operation_id,
             anchor_cursor=materialization.anchor_cursor,

@@ -41,6 +41,7 @@ from .leases import (
     OperationOwnerLease,
 )
 from .replay import (
+    RESYNCHRONIZING_REPLAY_STATUSES,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
@@ -158,7 +159,7 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("caught-up observation replay must reach its authoritative anchor")
         self._validate_event_set(self.replay.events, label="replay")
         self._validate_progress_fold()
-        if self.replay.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+        if self.replay.status in RESYNCHRONIZING_REPLAY_STATUSES:
             checkpoint = self.progress_fold.checkpoint
             if checkpoint is None or checkpoint.through_cursor != self.replay.restart_cursor:
                 raise ValueError("resynchronizing observation replay requires its exact progress checkpoint")
