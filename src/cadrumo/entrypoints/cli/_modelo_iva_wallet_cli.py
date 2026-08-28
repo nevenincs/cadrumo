@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import typer
 
-from ...application.calculations import query_iva_wallet_balance
+from ...application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ...application.modelo._iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -52,7 +52,7 @@ def _wallet_amount(amount: str) -> Decimal:
 
 def _load_existing_seeded_period(bucket_id: str, period: Period):
     """Return the stored period state before correction, or ``None`` when absent."""
-    from ...application.calculations import IvaCompensationHistoryRepository
+    from ...application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 
     del bucket_id
     return IvaCompensationHistoryRepository().load_period(period)

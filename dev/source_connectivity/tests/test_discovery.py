@@ -285,7 +285,7 @@ def test_new_source_readiness_declaration_is_detected_independently(tmp_path: Pa
 def test_new_row_grouping_and_typed_assembler_are_detected_together(tmp_path: Path) -> None:
     _write(
         tmp_path,
-        "src/cadrumo/application/calculations/_row_set_assembly.py",
+        "src/cadrumo/application/calculations/row_set_assembly.py",
         """_GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_probe": RowSetGroupingKind.PROBE,
 }

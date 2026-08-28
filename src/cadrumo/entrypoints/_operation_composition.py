@@ -7,6 +7,9 @@ from datetime import timedelta
 
 from ..adapters.outbound.google import apply_export_plan, preview_export_plan
 from ..adapters.outbound.storage import build_google_credentials, resolve_drive_root_folder_id
+from ..adapters.persistence.operations.financial_operand_custody import (
+    OperationFinancialOperandCustodyFilesystemRepository,
+)
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -197,6 +200,7 @@ def compose_operation_dependencies(
         lease_duration=_LEASE_DURATION,
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
+        financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(settings=resolved_settings),
     )
 
 

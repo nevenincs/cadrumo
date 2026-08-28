@@ -48,12 +48,16 @@ class _RegularisationContributionProtocol(Protocol):
 
 
 class M303DifferentiatedDeductionEndpointValue(BaseModel):
+    """One projected endpoint value for a differentiated-sector deduction row."""
+
     model_config = STRICT_FROZEN_CONFIG
     projection_ref: M303DifferentiatedDeductionProjectionRef
     value: Decimal
 
 
 class M303DifferentiatedDeductionRowProjection(BaseModel):
+    """A differentiated-sector prorrata deduction row projected across its 18 endpoints."""
+
     model_config = STRICT_FROZEN_CONFIG
     slot: int = Field(ge=1, le=2)
     sector_id: str

@@ -51,9 +51,7 @@ def test_a_two_digit_group_refuses_for_the_mirrored_convention_too() -> None:
         ("1,234,567.89", ".", Decimal("1234567.89")),
     ],
 )
-def test_real_thousands_grouping_still_parses(
-    text: str, separator: Literal[",", "."], expected: Decimal
-) -> None:
+def test_real_thousands_grouping_still_parses(text: str, separator: Literal[",", "."], expected: Decimal) -> None:
     """The guard must not cost a legitimately grouped amount.
 
     Without these the refusal above could be satisfied by rejecting every

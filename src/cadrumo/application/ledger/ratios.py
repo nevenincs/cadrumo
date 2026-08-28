@@ -21,10 +21,10 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
 from ...domain.categories import (
+    HOME_OFFICE_FAMILIES,
     ProportionalityKind,
     ProportionalityRule,
     SpendingCategory,
-    SpendingCategoryFamily,
     effective_usage_ratio,
     family_for,
     resolve_category_profiles,
@@ -36,13 +36,6 @@ from ...domain.usage_ratios import (
     usage_ratio_bucket_lock,
 )
 from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
-
-_HOME_OFFICE_FAMILIES = frozenset(
-    {
-        SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
-        SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-    },
-)
 
 
 class EligibleCategoryRow(BaseModel):
@@ -299,7 +292,7 @@ def censo_business_pct_for(
     """
     if raw_afectacion_ratio is None:
         return None
-    if family_for(category) not in _HOME_OFFICE_FAMILIES:
+    if family_for(category) not in HOME_OFFICE_FAMILIES:
         return None
     rule = resolve_category_profiles(year)[category].proportionality
     return effective_usage_ratio(rule, raw_afectacion_ratio)
@@ -336,7 +329,7 @@ def censo_override_warning(
         A :class:`RatiosCensoOverrideWarning` if a warning should be
         emitted, otherwise ``None``.
     """
-    if family_for(category) not in _HOME_OFFICE_FAMILIES:
+    if family_for(category) not in HOME_OFFICE_FAMILIES:
         return None
     rule = resolve_category_profiles(year)[category].proportionality
     derived = effective_usage_ratio(rule, raw_afectacion_ratio)

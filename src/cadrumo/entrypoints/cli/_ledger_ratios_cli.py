@@ -14,9 +14,10 @@ from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
 from ...domain.categories import SpendingCategory
-from ._common import _bad, emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
+from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import _ledger_cli_no_recovery
 
 _log = get_logger(__name__)

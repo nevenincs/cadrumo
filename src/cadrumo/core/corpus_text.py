@@ -236,9 +236,7 @@ def resolve_anchored_extracted_unit(
     # canonicalises equal, so this disambiguates without letting a request
     # select a unit canonicalisation would have rejected.
     literal = [
-        (title, text)
-        for unit_anchor, title, text in units
-        if _literal_anchor(unit_anchor) == _literal_anchor(anchor)
+        (title, text) for unit_anchor, title, text in units if _literal_anchor(unit_anchor) == _literal_anchor(anchor)
     ]
     if len(literal) == 1:
         return _render_unit(*literal[0], include_title=include_title)

@@ -10,16 +10,19 @@ reclassified downstream of what the projection already declares.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ....application.operations.events import OperationEventCode
 from ....application.operations.frontend_contracts import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
     OperationUnsupportedInteractionV1,
 )
+from ....application.operations.models import OperationDiagnosticReference, OperationReference
 from ....core.operations import (
     OperationClosePolicy,
     OperationEffect,
@@ -43,6 +46,16 @@ type OperationModalTerminalCopyKeyV1 = Literal[
     "operation.modal.terminal.interrupted",
 ]
 """Locale key naming the terminal copy; the modal resolves prose through it."""
+
+type OperationModalReceiptKindV1 = Literal["result", "refusal"]
+"""Which settled reference the modal is showing.
+
+The projection refuses to carry a result and a refusal together, so a
+settled operation has at most one receipt. Collapsing the two fields into
+one reference plus this discriminator is the whole derivation: it makes
+the mutual exclusion the contract already guarantees impossible to render
+wrongly, rather than leaving two nullable fields for a renderer to show
+side by side."""
 
 _TERMINAL_COPY_KEYS: dict[OperationTerminalCondition, OperationModalTerminalCopyKeyV1] = {
     OperationTerminalCondition.SUCCEEDED: "operation.modal.terminal.succeeded",
@@ -70,6 +83,12 @@ class OperationModalViewModelV1(BaseModel):
     close_policy: OperationClosePolicy
     interaction_affordance: OperationModalInteractionAffordanceV1
     terminal_copy_key: OperationModalTerminalCopyKeyV1 | None
+    phase_code: OperationEventCode | None
+    execution_deadline_at: datetime | None
+    cleanup_deadline_at: datetime | None
+    diagnostic_ref: OperationDiagnosticReference | None
+    receipt_kind: OperationModalReceiptKindV1 | None
+    receipt_ref: OperationReference | None
 
     @model_validator(mode="after")
     def _validate_derivation(self) -> OperationModalViewModelV1:
@@ -90,12 +109,26 @@ class OperationModalViewModelV1(BaseModel):
         expected_copy = _terminal_copy_key(projection) if terminal else None
         if self.terminal_copy_key != expected_copy:
             raise ValueError("modal terminal copy key must mirror the projection's terminal settlement")
+        if self.phase_code != projection.phase_code:
+            raise ValueError("modal phase must mirror the projection's declared phase")
+        if self.execution_deadline_at != projection.execution_deadline_at:
+            raise ValueError("modal execution deadline must mirror the projection's execution deadline")
+        if self.cleanup_deadline_at != projection.cleanup_deadline_at:
+            raise ValueError("modal cleanup deadline must mirror the projection's cleanup deadline")
+        if self.diagnostic_ref != projection.diagnostic_ref:
+            raise ValueError("modal diagnostic reference must mirror the projection's diagnostic reference")
+        expected_kind, expected_ref = _terminal_receipt(projection)
+        if self.receipt_kind != expected_kind:
+            raise ValueError("modal receipt kind must mirror which settled reference the projection carries")
+        if self.receipt_ref != expected_ref:
+            raise ValueError("modal receipt reference must mirror the projection's settled reference")
         return self
 
 
 def build_operation_modal_view_model(projection: OperationPublicProjectionV1) -> OperationModalViewModelV1:
     """Derive the one immutable modal view model for a public projection."""
     terminal = projection.lifecycle is OperationLifecycle.TERMINAL
+    receipt_kind, receipt_ref = _terminal_receipt(projection)
     return OperationModalViewModelV1(
         projection=projection,
         spinner_visible=not terminal,
@@ -104,7 +137,24 @@ def build_operation_modal_view_model(projection: OperationPublicProjectionV1) ->
         close_policy=projection.close_policy,
         interaction_affordance=_interaction_affordance(projection),
         terminal_copy_key=_terminal_copy_key(projection) if terminal else None,
+        phase_code=projection.phase_code,
+        execution_deadline_at=projection.execution_deadline_at,
+        cleanup_deadline_at=projection.cleanup_deadline_at,
+        diagnostic_ref=projection.diagnostic_ref,
+        receipt_kind=receipt_kind,
+        receipt_ref=receipt_ref,
     )
+
+
+def _terminal_receipt(
+    projection: OperationPublicProjectionV1,
+) -> tuple[OperationModalReceiptKindV1 | None, OperationReference | None]:
+    """Return the one settled reference the projection carries, and its kind."""
+    if projection.result_ref is not None:
+        return "result", projection.result_ref
+    if projection.refusal_ref is not None:
+        return "refusal", projection.refusal_ref
+    return None, None
 
 
 def _interaction_affordance(projection: OperationPublicProjectionV1) -> OperationModalInteractionAffordanceV1:
@@ -129,6 +179,7 @@ def _terminal_copy_key(projection: OperationPublicProjectionV1) -> OperationModa
 
 __all__ = [
     "OperationModalInteractionAffordanceV1",
+    "OperationModalReceiptKindV1",
     "OperationModalTerminalCopyKeyV1",
     "OperationModalViewModelV1",
     "build_operation_modal_view_model",

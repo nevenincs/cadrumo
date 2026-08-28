@@ -84,6 +84,7 @@ from ..projection_services import (
     OperationResponseControlService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
+    UnavailableOperationSecureResponseAuthority,
 )
 from ..registry import (
     OperationDefinition,
@@ -733,13 +734,20 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
     actor_mismatch = control.model_copy(update={"actor_ref": "operator:intruder"})
     stale = control.model_copy(update={"revision": 1})
     forged = OperationResponseAuthorityBroker().reserve(_OPERATION_ID, "operator:reviewer")
-    assert broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith(
-        "_Unavailable"
+    assert isinstance(
+        broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW),
+        UnavailableOperationSecureResponseAuthority,
     )
-    assert broker.bind(stale, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
-    assert broker.bind(control, pending, forged, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    assert isinstance(
+        broker.bind(stale, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
+    assert isinstance(
+        broker.bind(control, pending, forged, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
     authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
-    assert broker.bind(control, pending, capability, clock=lambda: _NOW).__class__.__name__.startswith("_Unavailable")
+    assert isinstance(
+        broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+    )
     supervisor = OperationSupervisor(
         registry=registry,
         journal=repository,

@@ -11,13 +11,13 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.config import override_settings
 from .....domain.calculations.registry.authority import bundled_authority
 from .._engine import build_export_plan
-from .._parity_harness import (
+from ..errors import CalcSheetsParityError
+from ..parity_harness import (
     OperatorInputScenario,
     _build_operator_inputs,
     _seed_inputs_into_sheet,
     _sheets_recalc_delay_seconds,
 )
-from ..errors import CalcSheetsParityError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _UNKNOWN_SCENARIO_CASILLA: CasillaId = validated_casilla_id(

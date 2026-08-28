@@ -130,7 +130,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567892",
                 status="ALTA",
                 presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="Y7654321Z",
+                authenticated_identity="Y7654321G",
                 artefacts=(wrong_identity_artefact,),
             ),
         )

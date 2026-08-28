@@ -95,10 +95,14 @@ class IrnrIncomeObservationProtocol(Protocol):
     """Structural protocol for one selected M210 gross-income observation."""
 
     @property
-    def target_casilla_id(self) -> CasillaId: ...
+    def target_casilla_id(self) -> CasillaId:
+        """Return the casilla this observation's gross income is routed to."""
+        ...
 
     @property
-    def gross_income_amount(self) -> Decimal: ...
+    def gross_income_amount(self) -> Decimal:
+        """Return the observed gross income amount."""
+        ...
 
 
 def _irnr_income_build_matcher(

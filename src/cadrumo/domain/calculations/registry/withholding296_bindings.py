@@ -91,7 +91,10 @@ class Withholding296Observation(BaseModel):
     fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
     naturaleza: str = Field(default="D", pattern=r"^[DE]$")
     clave: str = Field(default="01", pattern=r"^\d{2}$")
-    subclave: str = Field(default="", pattern=r"^\d{2}$")
+    # The official 296 perceptor record declares subclave as a non-required
+    # two-character slot, so an undeclared subclave is a legitimate empty
+    # value rather than a code this model may invent one for.
+    subclave: str = Field(default="", pattern=r"^(\d{2})?$")
     base_retenciones: Decimal = Decimal("0")
     porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
     retencion_practicada: Decimal = Decimal("0")
@@ -141,6 +144,7 @@ def _withholding296_selector(binding: DataBindingDefinition) -> _Withholding296S
 
 
 def validate_withholding296_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``withholding296`` binding's selector shape and fact/aggregation invariants."""
     try:
         selector = _withholding296_selector(binding)
     except ValueError as exc:
@@ -285,6 +289,7 @@ def resolve_withholding296_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[Withholding296Observation],
 ) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve every ``withholding296`` ``row_field`` binding to its per-row perceptor value."""
     available = tuple(observations)
     rows = _build_withholding296_rows(available)
     resolved: dict[tuple[str, int], Decimal | str] = {}

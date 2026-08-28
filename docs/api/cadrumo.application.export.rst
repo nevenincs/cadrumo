@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.export._google_operation
-   cadrumo.application.export._tabular
    cadrumo.application.export.errors
+   cadrumo.application.export.google_operation
+   cadrumo.application.export.tabular

@@ -37,7 +37,7 @@ See Also:
         Shared M720/M721 re-declaration advisory implementation exercised here.
     :func:`~application.calculations._foreign_asset_redeclaration.modelo_720_redeclaration_advisory_findings`
         Modelo 720 advisory entry point pinned by the grown/omitted cuentas case.
-    :class:`~application.calculations._observations_repository.CalculationObservationRepository`
+    :class:`~application.calculations.observations_repository.CalculationObservationRepository`
         Real repository used for the two-year observation roundtrip.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
         Registry-grounded modelo observation envelope persisted by the test.
@@ -76,7 +76,7 @@ from .._multi_year import (
     PreviousFilingSourceResolver,
     assert_enrollment_matches_manifest,
 )
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation
 

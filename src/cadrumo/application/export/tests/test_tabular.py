@@ -258,7 +258,7 @@ def test_model_validator_raises_export_field_error_on_blank_fieldname() -> None:
     """Site: TabularExportResult._validate_fieldnames — blank field in model."""
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"transaction_id,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -281,7 +281,7 @@ def test_model_validator_raises_export_field_error_on_duplicate_fieldname() -> N
     """Site: TabularExportResult._validate_fieldnames — duplicate field in model."""
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"amount,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -305,7 +305,7 @@ def test_model_validator_raises_export_field_error_on_invalid_sha256() -> None:
 
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"transaction_id,amount\n"
     with pytest.raises(ValidationError) as exc_info:

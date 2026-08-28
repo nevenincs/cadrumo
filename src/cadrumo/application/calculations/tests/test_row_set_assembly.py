@@ -20,7 +20,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .. import assemble_observations_for_snapshot
-from .._row_set_assembly import (
+from ..row_set_assembly import (
     assemble_atribucion_observations,
     assemble_donativo_observations,
     assemble_foreign_asset_observations,

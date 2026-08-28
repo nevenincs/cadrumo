@@ -59,7 +59,7 @@ from ...modelo._work_lifecycle import create_work_unit
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
 from .._binding_prefill import resolve_bindings_from_local_store
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

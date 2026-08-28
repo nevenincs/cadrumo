@@ -1331,18 +1331,21 @@ def check_matrix_document(document: dict[str, object]) -> None:
         exported_symbols = row["facade_exported_symbols"]
         if not isinstance(exported_symbols, list):
             raise RuntimeError(f"registry facade row {pair[0]} has malformed exported symbols")
-        if exported_symbols and rag_result["symbol"] not in exported_symbols:
-            # Every exported symbol may have been retired at source after the
-            # c941 baseline while the family's own logic survives.  The anchor
-            # then cannot be an exported symbol, and demanding one would force
-            # a deletion disposition that asserts something false about a
-            # family with a live defining owner.  Absence is computed over the
-            # current tree, never declared, and the anchor still has to be a
-            # real definition -- the admissible SET widens, the proof does not.
-            if not _facade_symbols_all_absent(exported_symbols):
-                raise RuntimeError(
-                    f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols",
-                )
+        # Every exported symbol may have been retired at source after the
+        # c941 baseline while the family's own logic survives.  The anchor
+        # then cannot be an exported symbol, and demanding one would force
+        # a deletion disposition that asserts something false about a
+        # family with a live defining owner.  Absence is computed over the
+        # current tree, never declared, and the anchor still has to be a
+        # real definition -- the admissible SET widens, the proof does not.
+        if (
+            exported_symbols
+            and rag_result["symbol"] not in exported_symbols
+            and not _facade_symbols_all_absent(exported_symbols)
+        ):
+            raise RuntimeError(
+                f"registry facade row {pair[0]} RAG result is unrelated to its exported symbols",
+            )
         if rag_result["symbol"] not in row["rag_query"]:
             raise RuntimeError(f"registry facade row {pair[0]} RAG query omits its returned symbol")
         if _collapsed_prose(row["follow_on_action"]) in _collapsed_prose(row["rag_query"]):

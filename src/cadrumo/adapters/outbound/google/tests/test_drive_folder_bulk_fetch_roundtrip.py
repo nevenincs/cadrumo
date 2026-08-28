@@ -40,7 +40,7 @@ from .....domain.attachments import (
 )
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStorageError, OutboundStoragePermissionError
-from .._document_link_resolver import list_drive_folder_documents, resolve_document_link
+from ..document_link_resolver import list_drive_folder_documents, resolve_document_link
 from .drive_media_server import drive_files_list_endpoint, drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

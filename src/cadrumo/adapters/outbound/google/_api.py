@@ -1,7 +1,7 @@
 """Shared Google API request execution with typed-error translation.
 
 Both :mod:`adapters.outbound.google._calc_sheets_apply` and
-:mod:`adapters.outbound.google._calc_sheets_pull` issue
+:mod:`adapters.outbound.google.calc_sheets_pull` issue
 ``google-api-python-client`` requests. This module provides the single
 :func:`~adapters.outbound.google._api.execute_request` boundary they route
 through so transport failures, HTTP failures, and quota responses become the typed
@@ -105,7 +105,7 @@ class GoogleDriveFile(_GoogleDriveFileRequired, total=False):
 
     Covers the file metadata fields consumed by
     :mod:`adapters.outbound.google._calc_sheets_apply` and
-    :mod:`adapters.outbound.google._calc_sheets_pull`. Additional fields
+    :mod:`adapters.outbound.google.calc_sheets_pull`. Additional fields
     returned by Drive are ignored by :class:`typing.TypedDict` consumers.
 
     See https://developers.google.com/drive/api/reference/rest/v3/files.

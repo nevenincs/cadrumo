@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .._active_profile import resolve_active_profile
+from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthProfileUnboundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

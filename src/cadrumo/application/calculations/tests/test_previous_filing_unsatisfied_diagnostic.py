@@ -41,7 +41,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._multi_year import PreviousFilingSourceResolver
-from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
+from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

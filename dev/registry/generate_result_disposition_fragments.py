@@ -53,28 +53,23 @@ class GeneratedFragment:
 
 
 def _render(modelo: str, revision: str, *, negative: str | None, zero: str | None, note: str, scanned: int) -> str:
-    header = (
-        f"# Modelo {modelo} result disposition, read from its own diseno de registro.\n"
-        "#\n"
-    )
+    header = f"# Modelo {modelo} result disposition, read from its own diseno de registro.\n#\n"
     if negative is None:
         return (
-            header
-            + f"# The diseno declares no 'Tipo de declaracion' field anywhere across the\n"
+            header + f"# The diseno declares no 'Tipo de declaracion' field anywhere across the\n"
             f"# {scanned} corpus files bundled for this modelo. An informative declaration\n"
             "# settles no cuota, so there is no result to dispose of. The absence is\n"
             "# measured rather than assumed, which is what makes this declaration honest.\n"
             f'[[revisions."{revision}".result_dispositions]]\n'
             f'id = "modelo-{modelo}-result-disposition"\n'
-            'applicable = false\n'
+            "applicable = false\n"
             'not_applicable_reason = "El diseno de registro de este modelo no declara campo '
-            '\'Tipo de declaracion\': es una declaracion informativa que no liquida cuota, '
+            "'Tipo de declaracion': es una declaracion informativa que no liquida cuota, "
             'por lo que no existe disposicion de resultado."\n'
         )
     quoted = note[:180].replace('"', "'")
     return (
-        header
-        + "# The diseno states the admissible letters verbatim; the letters ARE the\n"
+        header + "# The diseno states the admissible letters verbatim; the letters ARE the\n"
         "# disposition. A negative result takes the most specific letter the modelo\n"
         "# admits -- C, else B, else D -- and falls back to N when it admits none.\n"
         f'[[revisions."{revision}".result_dispositions]]\n'

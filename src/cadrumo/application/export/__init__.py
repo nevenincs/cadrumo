@@ -32,7 +32,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._google_operation import (
+from .google_operation import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
     GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
     GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
@@ -47,7 +47,7 @@ from ._google_operation import (
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
 )
-from ._tabular import (
+from .tabular import (
     ExportSerializationFormat,
     TabularExportResult,
     serialize_tabular_rows,

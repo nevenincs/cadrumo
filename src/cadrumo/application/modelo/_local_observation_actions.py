@@ -18,7 +18,7 @@ See Also:
     :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Local-filing projection that uses ``app_filing`` rather than
         operator-manual source.
-    :mod:`~application.calculations._cross_period_clean_state`:
+    :mod:`~application.calculations.cross_period_clean_state`:
         Classifies local observations as non-official for filing-grade readiness.
 """
 

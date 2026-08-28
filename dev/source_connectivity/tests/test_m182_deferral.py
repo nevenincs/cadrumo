@@ -59,7 +59,7 @@ def test_m182_remains_measurably_ingress_blocked_until_its_missing_authority_exi
 
     stale_entry = entry.model_copy(
         update={
-            "capability_locators": ("src/cadrumo/application/calculations/_row_set_assembly.py:176",),
+            "capability_locators": ("src/cadrumo/application/calculations/row_set_assembly.py:176",),
         },
     )
     stale_census = m182_census.model_copy(update={"entries": (stale_entry,)})

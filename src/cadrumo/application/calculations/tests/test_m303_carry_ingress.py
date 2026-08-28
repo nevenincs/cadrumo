@@ -20,7 +20,7 @@ from ....domain.iva_compensation import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m303_carry_ingress import M303CarryIngressError
-from .._observations_repository import (
+from ..observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     ResultDispositionProjection,

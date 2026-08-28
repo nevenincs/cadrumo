@@ -103,12 +103,12 @@ from ..storage.calc_sheets import (
     RelationValue,
     RelationValues,
 )
-from ._m111_no_retenciones import (
+from ._revision_carry_gate import revision_carry_outcome
+from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
 )
-from ._observations_repository import CalculationObservationRepository
-from ._revision_carry_gate import revision_carry_outcome
+from .observations_repository import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from ...domain.deadlines import EntityType
@@ -497,7 +497,7 @@ def _relation_period_scoped_out(
         return True
     if activity_start_date is None:
         return False
-    from ._cross_period_models import period_strictly_before_activity_start
+    from .cross_period_models import period_strictly_before_activity_start
 
     return period_strictly_before_activity_start(
         Period.from_year_and_code(filing_year, period_token),

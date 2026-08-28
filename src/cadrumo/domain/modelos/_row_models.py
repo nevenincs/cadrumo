@@ -38,7 +38,7 @@ import re
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, get_args
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
@@ -161,7 +161,15 @@ class Modelo184MemberRow(BaseModel):
 
     @field_validator("pais")
     @classmethod
-    def _pais_uppercase_alpha(cls, value: str) -> str:
+    def _pais_uppercase_alpha(cls, value: str | None) -> str | None:
+        # ``pais`` is optional on THIS row for the reason recorded on the field
+        # above: the profile-driven producer has no country to supply, so a
+        # missing one is a declared state rather than a malformed value. The
+        # shape check therefore applies to a present value only -- calling
+        # ``.upper()`` on the absent case raised AttributeError instead of
+        # validating anything, which is a crash rather than a refusal.
+        if value is None:
+            return value
         if value != value.upper() or not value.replace(" ", "").isalpha():
             raise ValueError("pais must be an uppercase two-letter ISO 3166-1 country code (e.g. ES, DE, FR)")
         return value
@@ -281,19 +289,19 @@ class Modelo232VinculadaRow(BaseModel):
     # against what the counterparty itself declared.
     pais: _IsoCountryCode
     tipo_vinculacion: Annotated[
-        TipoVinculacion,
+        TipoVinculacion | str,
         BeforeValidator(
             lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion),
         ),
     ] = TipoVinculacion.NO_DECLARADO
     tipo_operacion: Annotated[
-        TipoOperacionVinculada,
+        TipoOperacionVinculada | str,
         BeforeValidator(
             lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, code_set=TipoOperacionVinculada),
         ),
     ] = TipoOperacionVinculada.NO_DECLARADO
     metodo: Annotated[
-        MetodoValoracion,
+        MetodoValoracion | str,
         BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, code_set=MetodoValoracion)),
     ] = MetodoValoracion.NO_DECLARADO
     importe: Decimal
@@ -480,7 +488,7 @@ class Modelo349RectificacionRow(BaseModel):
     razon_social: _RequiredNameStr
     clave_operacion: _M349_CLAVE_OPERACION
     ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
-    periodo: _M349_RECTIFICACION_PERIODO
+    periodo: _M349_RECTIFICACION_PERIODO | str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
     base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
 
@@ -498,7 +506,11 @@ class Modelo349RectificacionRow(BaseModel):
     @classmethod
     def _periodo_uppercase(cls, value: object) -> object:
         if isinstance(value, str):
-            return value.strip().upper()
+            normalised = value.strip().upper()
+            if normalised not in get_args(_M349_RECTIFICACION_PERIODO):
+                accepted = ", ".join(repr(member) for member in get_args(_M349_RECTIFICACION_PERIODO))
+                raise ValueError(f"periodo must be one of {accepted}; got {value!r}")
+            return normalised
         return value
 
     @field_validator("ejercicio")

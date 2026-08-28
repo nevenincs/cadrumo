@@ -28,7 +28,7 @@ from ...storage import (
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
-from .._document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
+from ..document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
 from .drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -133,7 +133,7 @@ import importlib.abc
 import json
 import sys
 
-from cadrumo.adapters.outbound.google._document_link_resolver import _drive_service
+from cadrumo.adapters.outbound.google.document_link_resolver import _drive_service
 from cadrumo.adapters.outbound.storage import OutboundStorageNetworkError
 
 

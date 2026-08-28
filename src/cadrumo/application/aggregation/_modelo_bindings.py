@@ -34,7 +34,6 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -115,6 +114,7 @@ from ...domain.transactions import (
     TransactionPersistenceError,
 )
 from ...domain.usage_ratios import UsageRatioPersistenceError
+from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -503,7 +503,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
                 profile_year=context.filing_year,
-                usage_ratios=load_usage_ratios(bucket_id=context.bucket_id).ratios,
+                usage_ratios=resolve_effective_usage_ratios(
+                    bucket_id=context.bucket_id,
+                    year=context.filing_year,
+                ),
                 modelo=context.modelo,
                 prorrata_register_repository=self._prorrata_register_repository,
             )

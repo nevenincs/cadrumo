@@ -14,6 +14,9 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from ...adapters.persistence.operations.financial_operand_custody import (
+    OperationFinancialOperandCustodyFilesystemRepository,
+)
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -385,6 +388,9 @@ def _runtime(
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=execution_timeout,
                 cleanup_timeout=timedelta(minutes=2),
+                financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+                    root=root / "operations" / "financial_operand_custody",
+                ),
             )
             try:
                 yield _ExecutionDriver(services=services), registry, profile_id

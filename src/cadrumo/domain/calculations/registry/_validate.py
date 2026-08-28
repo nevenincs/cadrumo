@@ -65,7 +65,6 @@ if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
 
 
-
 class RegistryValidator:
     """Validate legal/source closure and calculability for registry modelos.
 

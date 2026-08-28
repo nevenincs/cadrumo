@@ -52,14 +52,14 @@ def test_m232_related_party_dispatch_locator_bites_on_the_pre_dispatch_line() ->
     )
     focused = load_source_connectivity_census().model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
-    canonical = "src/cadrumo/application/calculations/_row_set_assembly.py:170"
+    canonical = "src/cadrumo/application/calculations/row_set_assembly.py:170"
 
     assert canonical in entry.capability_locators
     assert any(item.reference == canonical for item in entry.grounding)
     check_capability_locators(REPO_ROOT, focused, capability_evidence=evidence)
 
     stale = entry.model_copy(
-        update={"capability_locators": ("src/cadrumo/application/calculations/_row_set_assembly.py:168",)},
+        update={"capability_locators": ("src/cadrumo/application/calculations/row_set_assembly.py:168",)},
     )
     with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
         check_capability_locators(

@@ -479,6 +479,8 @@ class RegistryModel(BaseModel):
 
 
 class SourceCitation(RegistryModel):
+    """A source reference paired with the exact text required to ground it."""
+
     source_ref: SourceRefId
     required_text: SourceCitationText
 

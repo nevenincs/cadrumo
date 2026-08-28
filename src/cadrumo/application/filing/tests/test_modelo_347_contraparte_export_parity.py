@@ -23,7 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, CasillaId
+from ....core import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR, BindingSourceKind, CasillaId
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
@@ -119,6 +119,110 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
     row_indexes = {row_index for (_binding_id, row_index) in resolved}
 
     assert row_indexes == {1, 2}
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(revision_id: str) -> None:
+    """RD 1065/2007 art. 31's floor, proven for all three cases through the real resolver.
+
+    Before this Step the ``contraparte_clave`` per-row family applied NO
+    threshold at all -- a real over-declaration bug, distinct from every
+    under-declaration finding this campaign found tonight. This proves the
+    fix routes through the one canonical comparison
+    (``m347_declarable_party_ids``) rather than a new one written here: a
+    counterparty BELOW the floor produces no row, one landing EXACTLY on it
+    (the `>`, never `>=`, semantics the canonical comparison's own docstring
+    names) produces no row either, and one ABOVE it still produces its row.
+    """
+    revision = _revision(revision_id)
+    observations = (
+        _observation(
+            invoice_id="inv-below",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Bajo Umbral SL",
+            transaction_date=date(2025, 2, 10),
+            total=str(M347_THRESHOLD_EUR - Decimal("0.01")),
+            operation_clave="A",
+        ),
+        _observation(
+            invoice_id="inv-exactly",
+            party_tax_id="C22222229",
+            party_legal_name="Contraparte Umbral Exacto SA",
+            transaction_date=date(2025, 6, 15),
+            total=str(M347_THRESHOLD_EUR),
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+        _observation(
+            invoice_id="inv-above",
+            party_tax_id="D33333335",
+            party_legal_name="Contraparte Sobre Umbral SL",
+            transaction_date=date(2025, 9, 1),
+            total=str(M347_THRESHOLD_EUR + Decimal("0.01")),
+            operation_clave="A",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+    row_indexes = {row_index for (_binding_id, row_index) in resolved}
+
+    # Only the above-threshold counterparty produces a row: one row, not three.
+    assert len(row_indexes) == 1
+    resolved_values = set(resolved.values())
+    assert "D33333335" in resolved_values
+    assert "B11111112" not in resolved_values
+    assert "C22222229" not in resolved_values
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id: str) -> None:
+    """RD 1065/2007 arts. 32.c/33.4's 300,51 EUR clave-C floor, through the real resolver.
+
+    A beneficiary below the clave-C floor produces no row even though the
+    amount would clear nothing at all; a beneficiary above it does. A THIRD
+    party -- the SAME tax id as the below-floor clave-C beneficiary -- also
+    carries an ORDINARY (clave B) operation above the clave-C floor but below
+    the GENERAL floor: it must still produce no row, proving the two floors
+    are judged independently rather than the lower one leaking into the
+    general comparison.
+    """
+    revision = _revision(revision_id)
+    observations = (
+        _observation(
+            invoice_id="inv-c-below",
+            party_tax_id="B11111112",
+            party_legal_name="Colegiado Bajo Umbral SL",
+            transaction_date=date(2025, 2, 10),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR - Decimal("0.01")),
+            operation_clave="C",
+        ),
+        _observation(
+            invoice_id="inv-c-above",
+            party_tax_id="C22222229",
+            party_legal_name="Colegiado Sobre Umbral SA",
+            transaction_date=date(2025, 6, 15),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("0.01")),
+            operation_clave="C",
+        ),
+        _observation(
+            invoice_id="inv-b-below-general",
+            party_tax_id="B11111112",
+            party_legal_name="Colegiado Bajo Umbral SL",
+            transaction_date=date(2025, 3, 1),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("100.00")),
+            operation_clave="B",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved_values = set(resolved.values())
+
+    # Only the above-clave-C-floor beneficiary produces a row.
+    assert "C22222229" in resolved_values
+    # The below-clave-C-floor beneficiary produces no clave-C row, AND its
+    # unrelated clave-B operation (above the clave-C floor, below the
+    # general one) produces no row either -- the two floors do not leak.
+    assert "B11111112" not in resolved_values
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
@@ -243,7 +347,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
             transaction_date=date(2025, 3, 31),
-            total="500.00",
+            total="2000.00",
             operation_clave="A",
         ),
         _observation(
@@ -251,7 +355,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
             transaction_date=date(2025, 4, 1),
-            total="700.00",
+            total="1200.00",
             operation_clave="A",
         ),
     )
@@ -265,11 +369,11 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
         assert isinstance(value, Decimal)
         return value
 
-    assert _value("-importe-q1") == Decimal("500.00")
-    assert _value("-importe-q2") == Decimal("700.00")
+    assert _value("-importe-q1") == Decimal("2000.00")
+    assert _value("-importe-q2") == Decimal("1200.00")
     assert _value("-importe-q3") == Decimal("0")
     assert _value("-importe-q4") == Decimal("0")
-    assert _value("-importe") == Decimal("1200.00")
+    assert _value("-importe") == Decimal("3200.00")
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)

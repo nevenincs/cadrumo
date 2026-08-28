@@ -18,10 +18,9 @@ from .....core.config import override_settings
 from .....core.errors import TerminalPreconditionErrorMixin
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
-from .. import _active_profile as active_profile_module
 from .. import _impersonation as impersonation_module
 from .. import _oauth_flow as oauth_flow_module
-from .._active_profile import resolve_active_profile
+from .. import active_profile as active_profile_module
 from .._impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
 from .._oauth_flow import (
     _decode_email_from_id_token,
@@ -32,6 +31,7 @@ from .._oauth_flow import (
     resolve_active_tax_id,
 )
 from .._records import REQUIRED_SCOPES
+from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -58,7 +58,7 @@ def _contract(
 # and 4 impersonation GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
-    "_active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
+    "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
         GoogleAuthPreconditionCondition.ACTIVE_PROFILE_RESOLVED,
         (("active_profile_resolved", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,

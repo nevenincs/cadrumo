@@ -1,6 +1,6 @@
 """Pilot-driven structural tests for the read-only status page.
 
-Every test drives the real :class:`StatusApp` through Textual's headless
+Every test drives the real :class:`StatusScreen` through Textual's headless
 Pilot over a hand-built :class:`StatusPageData`, and asserts against
 widget ids, table row counts, and cell content — never rendered prose,
 which is locale data and would make the assertion tautological. Copy
@@ -43,7 +43,8 @@ from ....core.json_contract import (
     ResolvedNoticeAction,
 )
 from ....tests.locales_root_fixture import locales_root_scope
-from ..profile.status import StatusApp
+from ..components.host import ScreenHostApp
+from ..profile.status import StatusScreen
 
 pytestmark = [
     pytest.mark.unit,
@@ -136,8 +137,8 @@ def _all_cell_text(table: DataTable[str]) -> list[str]:
 
 @pytest.mark.asyncio
 async def test_all_status_zones_render_as_bordered_panels() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         panels = {
             "#panel-profile": "SEC-PROFILE",
             "#panel-profiles": "SEC-PROFILES",
@@ -151,8 +152,8 @@ async def test_all_status_zones_render_as_bordered_panels() -> None:
 
 @pytest.mark.asyncio
 async def test_profile_facts_table_has_one_row_per_fact() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profile-facts", DataTable)
         assert table.row_count == 3
         labels = [str(table.get_row_at(index)[0]) for index in range(table.row_count)]
@@ -161,8 +162,8 @@ async def test_profile_facts_table_has_one_row_per_fact() -> None:
 
 @pytest.mark.asyncio
 async def test_masked_fact_never_renders_its_raw_value() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profile-facts", DataTable)
         cells = _all_cell_text(table)
         assert _HIDDEN_SENTINEL not in cells
@@ -173,8 +174,8 @@ async def test_masked_fact_never_renders_its_raw_value() -> None:
 
 @pytest.mark.asyncio
 async def test_empty_facts_show_the_no_profile_line_and_no_table() -> None:
-    app = StatusApp(StatusPageData(active_profile_label=None))
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(StatusPageData(active_profile_label=None))
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         assert not app.query(DataTable)
         panel = app.query_one("#panel-profile", Static)
         rendered = " ".join(str(child.content) for child in panel.query(Static))
@@ -183,8 +184,8 @@ async def test_empty_facts_show_the_no_profile_line_and_no_table() -> None:
 
 @pytest.mark.asyncio
 async def test_profiles_table_rows_and_active_marker() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profiles-table", DataTable)
         assert table.row_count == 3
         rows = [tuple(str(cell) for cell in table.get_row_at(index)) for index in range(table.row_count)]
@@ -200,8 +201,8 @@ async def test_unmapped_profile_status_renders_an_operator_label_not_the_token()
     # A future lifecycle token must remain visibly unknown without exposing
     # the storage vocabulary or being misrepresented as active.
     data = StatusPageData(profiles=(StatusProfileRow(label="mystery", setup_state="future_state", active=False),))
-    app = StatusApp(data)
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(data)
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profiles-table", DataTable)
         row = tuple(str(cell) for cell in table.get_row_at(0))
         assert row[1] == "ST-UNKNOWN"
@@ -211,8 +212,8 @@ async def test_unmapped_profile_status_renders_an_operator_label_not_the_token()
 
 @pytest.mark.asyncio
 async def test_auth_panel_reports_provider_and_login_state() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         text = str(app.query_one("#auth-lines", Static).content)
         assert "certificate" in text
         assert "AUTH-READY" in text
@@ -221,8 +222,8 @@ async def test_auth_panel_reports_provider_and_login_state() -> None:
 
 @pytest.mark.asyncio
 async def test_auth_panel_reports_unconfigured_provider() -> None:
-    app = StatusApp(StatusPageData(auth=StatusAuthView(provider=None, login_ready=False)))
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(StatusPageData(auth=StatusAuthView(provider=None, login_ready=False)))
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         text = str(app.query_one("#auth-lines", Static).content)
         assert "AUTH-NONE" in text
         assert "AUTH-NOT-READY" in text
@@ -278,8 +279,8 @@ async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() 
             )
         ),
     )
-    app = StatusApp(data)
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(data)
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         panel = app.query_one("#panel-notices", Static)
         assert str(panel.border_title) == "SEC-NOTICES"
 
@@ -310,8 +311,8 @@ async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() 
 @pytest.mark.asyncio
 async def test_no_notices_leaves_no_empty_advisory_box() -> None:
     """A healthy profile carries no permanent 'nothing to report' placeholder."""
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
+    app = StatusScreen(_populated_data())
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
         assert not app.query("#panel-notices")
 
 
@@ -359,7 +360,7 @@ async def test_a_notice_does_not_eliminate_the_other_panels() -> None:
     necessary — Textual compiles ``CSS`` once at class-body execution, so
     reassigning the attribute on the live class after the fact is a no-op)
     measured the notices panel at 82-92 rows and reds this test; the
-    shipped, unmodified ``StatusApp`` measures 2 rows and passes. No tracked
+    shipped, unmodified ``StatusScreen`` measures 2 rows and passes. No tracked
     file was edited to prove this — the broken CSS lived only in a
     throwaway subclass in an ad-hoc verification script, never committed.
     """
@@ -371,8 +372,8 @@ async def test_a_notice_does_not_eliminate_the_other_panels() -> None:
             ),
         ),
     )
-    app = StatusApp(data)
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = StatusScreen(data)
+    async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
         # A DataTable's intrinsic auto-height is not settled by the single
         # implicit pass ``run_test`` performs on entry; unrelated to the
         # regression itself, but without this pause every panel measures
@@ -411,8 +412,8 @@ async def test_a_notice_does_not_eliminate_the_other_panels_at_a_smaller_termina
             ),
         ),
     )
-    app = StatusApp(data)
-    async with app.run_test(size=(100, 50)) as pilot:
+    app = StatusScreen(data)
+    async with ScreenHostApp(app).run_test(size=(100, 50)) as pilot:
         await pilot.pause()
         notices_panel = app.query_one("#panel-notices", Static)
         assert notices_panel.size.height <= _UNREASONABLE_NOTICE_PANEL_HEIGHT

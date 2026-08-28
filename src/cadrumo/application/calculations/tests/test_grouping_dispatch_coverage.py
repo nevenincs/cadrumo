@@ -23,7 +23,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from .._row_set_assembly import _GROUPING_DISPATCH
+from ..row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -178,11 +178,7 @@ def seguro_enfermedad_insured_counts_from_facts(
     Returns:
         The per-limb counts.
     """
-    descendant_facts = {
-        key: str(value)
-        for key, value in fact_index.items()
-        if key.startswith(_DESCENDANT_FACT_PREFIX)
-    }
+    descendant_facts = {key: str(value) for key, value in fact_index.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
     marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip()
     return count_seguro_enfermedad_insured(
         descendant_list_from_facts(descendant_facts),

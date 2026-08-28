@@ -20,12 +20,12 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from .._observations_repository import (
+from ..errors import ObservationKeyError
+from ..observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     observation_key,
 )
-from ..errors import ObservationKeyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -200,7 +200,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     """
 
     from ....tests.secure_sql import isolated_runtime_profile
-    from .._observations_repository import IvaWalletDecisionRepository
+    from ..observations_repository import IvaWalletDecisionRepository
 
     decided_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
     decision = IvaCompensationReconciliationDecision(

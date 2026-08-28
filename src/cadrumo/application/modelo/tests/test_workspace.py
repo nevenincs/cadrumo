@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -17,6 +17,7 @@ from ....domain.modelos import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ...registry.source_connectivity import load_source_connectivity_census
 from .._work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
@@ -61,6 +62,10 @@ from ..workspace_models import (
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ..workspace_producers import ModeloWorkspaceRegistryProjectionV1
+
+#: Fixed observation instant for the closure capture, so a limb set does not
+#: shift under the suite because a census entry expired between runs.
+_CLOSURE_AS_OF = date(2026, 8, 24)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -640,7 +645,7 @@ def test_static_inspection_baseline_pins_the_exact_target_and_revision(
     _seed_work_unit(repository, bucket_id=bucket_id)
     authority = bundled_authority()
 
-    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+    work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
@@ -706,13 +711,12 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
     from ..workspace_producers import ModeloWorkspaceFieldManifestPortV1, ModeloWorkspaceLocaleCataloguePortV1
 
     authority = bundled_authority()
-    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+    work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
     )
-    resolution = work_capture.projection
     registry_projection = registry_capture.projection
     inspection = registry_projection.inspection
     assert isinstance(inspection, RegistryRevisionInspection)
@@ -1659,7 +1663,7 @@ def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_
     assert len(evidence_horizon.source_refs) > 0
 
     contributors = graded_snapshot_contributors()
-    assert len(contributors) == 6
+    assert len(contributors) == 8
     contributors_again = graded_snapshot_contributors()
     assert contributors == contributors_again  # deterministic ordering
 
@@ -1712,6 +1716,8 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -1755,6 +1761,8 @@ def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_un
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -1844,6 +1852,8 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -1944,6 +1954,8 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
+        census=load_source_connectivity_census(),
+        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -2038,6 +2050,8 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
+            census=load_source_connectivity_census(),
+            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
 
@@ -2148,6 +2162,8 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
+            census=load_source_connectivity_census(),
+            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
 
@@ -2251,6 +2267,8 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
+            census=load_source_connectivity_census(),
+            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
         assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -2333,7 +2351,7 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
     repository = Path(__file__).resolve().parents[5]
     forbidden_module_stems = ("_workspace_projection", "_workspace")
     tracked = subprocess.run(
-        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),
+        ("git", "ls-files", "-z", "--", "src", "docs", "dev"),  # noqa: S607
         capture_output=True,
         check=True,
         cwd=repository,

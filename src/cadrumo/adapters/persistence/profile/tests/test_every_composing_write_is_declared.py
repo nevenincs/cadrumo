@@ -79,7 +79,7 @@ _REPOSITORY_LAYERS = ("/adapters/persistence/profile/", "/adapters/persistence/s
 #: an edit above it does not silently retarget the entry.
 _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     (
-        "src/cadrumo/application/calculations/_observations_repository.py",
+        "src/cadrumo/application/calculations/observations_repository.py",
         "save_decision",
     ): "builds a fresh decision envelope rather than deriving one from a read, so no revision exists to assert",
     (
@@ -140,7 +140,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "the communication record arrives as a parameter and is a per-record row rather than a catalogue; "
     "its event side goes through the guarded composer",
     (
-        "src/cadrumo/application/calculations/_iva_compensation_history.py",
+        "src/cadrumo/application/calculations/iva_compensation_history.py",
         "persist_observation_envelope_and_iva_history",
     ): "the envelope arrives as a parameter and the history state is projected fresh from it, so neither "
     "write derives from a read this function performed",

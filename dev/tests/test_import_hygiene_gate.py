@@ -367,6 +367,97 @@ def test_production_family1_baseline_is_hard_zero() -> None:
     )
 
 
+def _site(*, importer_mod: str, target_mod: str, names: list[str]) -> ImportSite:
+    """Build one resolved import site for the private-reach scanner to judge."""
+    return ImportSite(
+        importer_mod=importer_mod,
+        importer_path=REPO_ROOT / "src" / (importer_mod.replace(".", "/") + ".py"),
+        lineno=1,
+        target_mod=target_mod,
+        imported_names=names,
+        is_test=False,
+        in_type_checking=False,
+    )
+
+
+def test_a_private_name_reached_through_a_public_module_is_a_violation() -> None:
+    """The reach that a module rename would otherwise have hidden is caught.
+
+    A private symbol imported across a package boundary is the same coupling
+    whether the module holding it is named privately or not. Judging only the
+    module path meant promoting that module to a public name cleared the reach
+    from this scanner without a single import changing.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["_redact_validation_context"],
+    )
+
+    violations = find_private_import_violations([site])
+
+    assert len(violations) == 1
+    assert violations[0].target_mod == "cadrumo.application.wizard.widgets"
+    assert violations[0].imported_names == ["_redact_validation_context"]
+    assert violations[0].owning_package == "cadrumo.application.wizard"
+
+
+def test_a_public_name_reached_through_a_public_module_stays_clean() -> None:
+    """The widening must not swallow an ordinary cross-package import.
+
+    Without this the rule above could be satisfied by flagging every import,
+    which would make the scanner useless rather than sharper.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["redact_validation_context"],
+    )
+
+    assert find_private_import_violations([site]) == []
+
+
+def test_a_private_name_reached_inside_its_own_package_stays_clean() -> None:
+    """A private symbol is private to its package, not to its module.
+
+    Siblings inside the owning package are the population the name is private
+    FOR, so exempting them is the same judgement the private-module rule
+    already makes for its own owning package.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.wizard.tests.test_widgets",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["_redact_validation_context"],
+    )
+
+    assert find_private_import_violations([site]) == []
+
+
+def test_only_the_private_names_of_a_mixed_import_are_reported() -> None:
+    """A mixed import is reported for what is actually private in it."""
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["redact_validation_context", "_MASK_KEYWORDS"],
+    )
+
+    violations = find_private_import_violations([site])
+
+    assert len(violations) == 1
+    assert violations[0].imported_names == ["_MASK_KEYWORDS"]
+
+
+def test_a_dunder_name_is_not_treated_as_private() -> None:
+    """Structural introspection of a submodule's own exports is not a reach."""
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["__all__"],
+    )
+
+    assert find_private_import_violations([site]) == []
+
+
 def test_production_family1_violations_do_not_exceed_baseline_count() -> None:
     """The gate fails if MORE production cross-package private imports appear than baselined.
 

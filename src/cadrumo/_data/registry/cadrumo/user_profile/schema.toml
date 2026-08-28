@@ -570,6 +570,16 @@ schedule_predicates = ["taxpayer.irpf_income_categories"]
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-33"]
 
 [[sections.fields]]
+key = "declaration_roles"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Papeles institucionales del declarante a efectos del Modelo 347 (claves C, D y E): cobro de honorarios por cuenta de terceros, comunidad de propietarios, entidad de carácter social, entidad sometida al deber general de informar, o entidad integrada en una Administración pública. Eje independiente del tipo de entidad a efectos fiscales."
+model_selectors = ["taxpayer.declaration_roles", "modelo_347"]
+legal_refs = ["rd-1065-2007:art-31", "ley-58-2003:art-93", "ley-58-2003:art-94"]
+
+[[sections.fields]]
 key = "fiscal_residency"
 type = "enum"
 required = false

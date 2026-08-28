@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ....domain.calculations.registry.period_selector_match import selector_period_matches_request
-from .._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from ..observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 
 def find_observation(

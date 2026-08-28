@@ -45,6 +45,7 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -742,7 +743,9 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert refusal.value.__cause__.translated_message == (
         "application.filing.export_parity.errors.aux_block_undeclared"
     )
-    assert "aux_version" in tuple(cause_context.get("undeclared_fields", ()))
+    undeclared_fields = cause_context.get("undeclared_fields", ())
+    assert isinstance(undeclared_fields, Sequence)
+    assert "aux_version" in undeclared_fields
     assert not output.exists()
 
 

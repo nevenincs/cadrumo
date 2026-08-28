@@ -1,7 +1,7 @@
 [[revisions.2019-2022.application_links]]
 id = "modelo-180-2014-extractor"
 surface = "extractor"
-consumer = "cadrumo.domain.calculations.registry.parse_export_payload"
+consumer = "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
 requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]

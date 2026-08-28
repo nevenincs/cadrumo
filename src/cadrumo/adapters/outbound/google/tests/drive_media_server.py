@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 import httplib2
 from googleapiclient.discovery import build
 
-from .._document_link_resolver import _DriveService
+from ..document_link_resolver import _DriveService
 
 
 def _is_drive_service(value: object) -> TypeGuard[_DriveService]:

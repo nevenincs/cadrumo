@@ -59,9 +59,7 @@ _PROBE = textwrap.dedent(
 
 
 def _state_free_paths() -> list[list[str]]:
-    return [
-        list(node.path[1:]) for node in command_graph.nodes() if "state-free" in node.spec.policy.capabilities
-    ]
+    return [list(node.path[1:]) for node in command_graph.nodes() if "state-free" in node.spec.policy.capabilities]
 
 
 def _probe(paths: list[list[str]]) -> dict[str, list[str]]:

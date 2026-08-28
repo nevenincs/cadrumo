@@ -106,7 +106,7 @@ def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
         filed_declaration_observations=(
             _filed_declaration_observation(
                 artefacts=(_filed_declaration_artefact(),),
-            ).model_copy(update={"authenticated_identity": "Y7654321Z"}),
+            ).model_copy(update={"authenticated_identity": "Y7654321G"}),
         ),
         expected_tax_id="X1234567L",
     )
@@ -166,7 +166,7 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
 def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_verified() -> None:
     csv = "JUST3032025X1T7"
     cases = (
-        ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y7654321Z"),
+        ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y7654321G"),
         ("wrong-modelo", "130", 2025, _PERIOD_2025_1T, "X1234567L"),
         ("wrong-ejercicio", "303", 2024, _PERIOD_2025_1T, "X1234567L"),
         ("wrong-period", "303", 2025, Period.from_year_and_code(2025, "2T"), "X1234567L"),

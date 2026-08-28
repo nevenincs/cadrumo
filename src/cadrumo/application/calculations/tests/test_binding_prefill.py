@@ -53,10 +53,10 @@ from .._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from .._iva_compensation_history import IvaCompensationHistoryRepository
-from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
 from ..errors import BindingPrefillTypeError
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

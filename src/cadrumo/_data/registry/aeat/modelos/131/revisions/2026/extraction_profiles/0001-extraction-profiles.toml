@@ -36,7 +36,7 @@ id = "modelo-131-submitted-file"
 surface = "export_record"
 artefact_kind = "submitted_file"
 accepted_artefact_kinds = ["submitted_file"]
-parser = "cadrumo.domain.calculations.registry.parse_export_payload"
+parser = "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
 target_casillas = [
     {casilla_id = "01", match_strategy = "numeric_casilla", value_kind = "amount"},
     {casilla_id = "02", match_strategy = "numeric_casilla", value_kind = "amount"},

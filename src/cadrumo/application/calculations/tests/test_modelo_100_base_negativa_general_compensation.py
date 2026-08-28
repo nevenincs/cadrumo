@@ -38,7 +38,7 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._calculation_actions import calculate_modelo_revision
 from ...modelo._work_lifecycle import create_work_unit
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

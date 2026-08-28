@@ -28,13 +28,13 @@ from ....core.json_contract import (
 )
 from .. import current_operator_surface_reconciliation
 from .._common import (
-    _OPERATOR_SURFACE_RECONCILIATION_META_KEY,
     _action_text_lines,
     _powershell_action_token,
     _resolve_notice_actions,
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
+from .._operator_surface_reconciliation import _OPERATOR_SURFACE_RECONCILIATION_META_KEY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

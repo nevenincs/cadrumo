@@ -68,7 +68,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo._work_lifecycle import create_work_unit
-from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
+from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

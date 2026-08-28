@@ -27,12 +27,12 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext, CalculationSourceResolution
-from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import (
     RelationPrefillSourceResolver,
     _scoped_relation_source_requirements,
     resolve_relations_from_local_store,
 )
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

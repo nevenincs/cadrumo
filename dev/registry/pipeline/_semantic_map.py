@@ -343,8 +343,6 @@ class SemanticMap(_StrictModel):
         return self
 
 
-
-
 def semantic_anchor_key(anchor: SemanticMapAnchor) -> AnchorKey:
     """Return the identity one anchor is matched and de-duplicated by.
 

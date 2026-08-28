@@ -224,3 +224,35 @@ def categories_for_family(family: SpendingCategoryFamily) -> tuple[SpendingCateg
         Tuple of :class:`SpendingCategory` members in the family.
     """
     return CATEGORY_FAMILY_MEMBERS[family]
+
+
+#: The two families whose deduction is a proportion of the taxpayer's dwelling.
+#:
+#: LIRPF art. 30.2.5.b splits them: HOME_OFFICE_SUMINISTROS carries the utility
+#: costs, on which the statutory thirty per cent applies on top of the afectación
+#: proportion, while HOME_OFFICE_OWNERSHIP carries the titularity costs
+#: (amortización, IBI, comunidad) that deduct at the raw proportion under the
+#: general art. 29.2 partial-affectation doctrine, with no statutory multiplier.
+#:
+#: Declared here, beside the membership table, because four modules had each
+#: restated the pair -- two as tuples and two as frozensets -- and a fifth was
+#: about to. A grouping of families belongs with the families.
+HOME_OFFICE_FAMILIES: frozenset[SpendingCategoryFamily] = frozenset(
+    {
+        SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
+        SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
+    },
+)
+
+
+def home_office_categories() -> frozenset[SpendingCategory]:
+    """Return every category whose deduction needs a dwelling-afectación proportion.
+
+    Derived from :data:`HOME_OFFICE_FAMILIES` through the same membership table
+    every other family lookup reads, so a category added to either family joins
+    this set by construction rather than by a second list being remembered.
+
+    Returns:
+        The union of both home-office families' members.
+    """
+    return frozenset(category for family in HOME_OFFICE_FAMILIES for category in categories_for_family(family))

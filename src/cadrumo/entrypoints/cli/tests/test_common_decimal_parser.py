@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 import typer
 
-from .._common import parse_decimal_amount, parse_optional_decimal_amount
+from .._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._strict_cli_fixture_support import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]

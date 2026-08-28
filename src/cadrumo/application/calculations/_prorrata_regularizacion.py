@@ -97,8 +97,8 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
+from .observations_repository import CalculationObservationRepository
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
 #: block, "Regularización prorrata por porcentaje definitivo - Cuota"

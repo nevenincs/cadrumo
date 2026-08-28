@@ -5,7 +5,7 @@ the machine through the capsule restore door (rather than registration)
 must present on the login screen and unlock through the real door.
 
 No mocks. Real registration, real restore, real Argon2id, the real
-LoginApp through Textual's headless Pilot.
+LoginScreen through Textual's headless Pilot.
 """
 
 from __future__ import annotations
@@ -23,7 +23,8 @@ from ....application.user_profile.login_interaction import (
 )
 from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....entrypoints.tui.secret.login import LoginApp
+from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.secret.login import LoginScreen
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
@@ -35,12 +36,12 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "login-restored-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
-def _screen(choices: list[ProfileLoginChoice]) -> LoginApp:
-    return LoginApp(choices=choices, authenticate=attempt_profile_login)
+def _screen(choices: list[ProfileLoginChoice]) -> LoginScreen:
+    return LoginScreen(choices=choices, authenticate=attempt_profile_login)
 
 
 async def _unlock_with(pilot, password: str) -> None:
-    pilot.app.query_one("#field-passphrase", Input).value = password
+    pilot.app.screen.query_one("#field-passphrase", Input).value = password
     await pilot.pause()
     await pilot.click("#btn-unlock")
     await pilot.app.workers.wait_for_complete()
@@ -74,7 +75,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
         logout_active_profile()
 
         app = _screen(choices)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _PASSWORD)
             assert app.error is None
             assert app.outcome is not None

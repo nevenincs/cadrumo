@@ -62,8 +62,6 @@ class SemanticMapAnomalyException(_StrictModel):
     reason: str = Field(min_length=1)
 
 
-
-
 def validate_semantic_map(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
@@ -218,8 +216,7 @@ def _validate_variable_envelope_boundary(
         )
     records_by_anchor = {semantic_record_key(record): record for record in semantic_map.records}
     body_record_ids = tuple(
-        records_by_anchor[intermediate_record_key(sheet)].export_record_id
-        for sheet in intermediate.sheets
+        records_by_anchor[intermediate_record_key(sheet)].export_record_id for sheet in intermediate.sheets
     )
     validate_variable_envelope(
         semantic,
@@ -234,9 +231,7 @@ def _validate_exact_bijection(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
 ) -> None:
-    intermediate_keys = tuple(
-        intermediate_anchor_key(field) for sheet in intermediate.sheets for field in sheet.fields
-    )
+    intermediate_keys = tuple(intermediate_anchor_key(field) for sheet in intermediate.sheets for field in sheet.fields)
     semantic_keys = tuple(semantic_anchor_key(entry.anchor) for entry in semantic_map.entries)
     duplicate_intermediate = _duplicate_anchor_keys(intermediate_keys)
     if duplicate_intermediate:
@@ -353,9 +348,7 @@ def _validate_exact_record_bijection(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
 ) -> None:
-    intermediate_keys = tuple(
-        intermediate_record_key(sheet) for sheet in intermediate.sheets
-    )
+    intermediate_keys = tuple(intermediate_record_key(sheet) for sheet in intermediate.sheets)
     semantic_keys = tuple(semantic_record_key(record) for record in semantic_map.records)
     duplicate_intermediate = _duplicate_record_keys(intermediate_keys)
     if duplicate_intermediate:
@@ -408,12 +401,6 @@ def _projection_endpoint_index(
     for declaration in projection_endpoints:
         index.setdefault(declaration.projection_ref, []).append(declaration)
     return {projection_ref: tuple(declarations) for projection_ref, declarations in index.items()}
-
-
-
-
-
-
 
 
 def _duplicate_anchor_keys(keys: tuple[AnchorKey, ...]) -> tuple[AnchorKey, ...]:

@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from ...core.atomic_write import atomic_write_bytes
+from ...core.decimal import format_decimal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
@@ -34,7 +35,6 @@ from ...domain.transactions import (
 from ..export import serialize_tabular_rows
 from .actions_common import (
     build_ledger_bucket_event,
-    decimal_to_string,
     normalise_timestamp,
     optional_decimal,
     resolve_bucket_event_repository,
@@ -203,7 +203,7 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         booked_date=raw.booked_date.isoformat(),
         value_date="" if raw.value_date is None else raw.value_date.isoformat(),
         effective_date=effective_date.isoformat(),
-        amount=decimal_to_string(raw.amount),
+        amount=format_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,

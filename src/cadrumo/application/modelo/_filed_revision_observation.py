@@ -13,7 +13,7 @@ forward automatically via the ``previous_filing`` resolver.
 The persisted observation is stamped with a NON-official ``source_kind``
 (``app_filing``): a value an operator filed through the app is not external AEAT
 evidence. The cross-period clean-state guard
-(:mod:`~cadrumo.application.calculations._cross_period_clean_state`) treats any
+(:mod:`~cadrumo.application.calculations.cross_period_clean_state`) treats any
 ``source_kind`` outside its official set as the
 ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`` blocker, so this carry feeds
 calculate/draft but never satisfies the filing gate for a dependent period —
@@ -40,7 +40,7 @@ See Also:
         Consumes stored
         :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation`
         rows for ``previous_filing`` bindings during calculation.
-    :mod:`~cadrumo.application.calculations._cross_period_clean_state`:
+    :mod:`~cadrumo.application.calculations.cross_period_clean_state`:
         Classifies ``app_filing`` as non-official evidence for filing-grade
         readiness.
     :func:`~cadrumo.application.calculations.persist_observation_envelope_and_iva_history`:

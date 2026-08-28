@@ -16,7 +16,7 @@ class ExportFormatError(CoreError):
     """Raised when an unsupported export serialization format is requested.
 
     The tabular export pipeline is closed over the declared
-    :class:`~application.export._tabular.ExportSerializationFormat`
+    :class:`~application.export.tabular.ExportSerializationFormat`
     enum members.  Requesting any value outside that set violates the
     pipeline contract and is surfaced as this error rather than a bare
     :class:`ValueError`.

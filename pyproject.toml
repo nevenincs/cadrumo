@@ -698,7 +698,7 @@ convention = "google"
 "src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py" = ["S105"]
 "src/cadrumo/adapters/outbound/aeat/auth/clave_permanente_support.py" = ["S105"]
 # Registry applicability enum + legal-text rationale strings are not passwords.
-"src/cadrumo/domain/calculations/registry/_applicability.py" = ["S105"]
+"src/cadrumo/domain/calculations/registry/applicability.py" = ["S105"]
 # Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
 "src/cadrumo/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]

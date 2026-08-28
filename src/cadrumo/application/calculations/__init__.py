@@ -75,27 +75,6 @@ from ._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from ._cross_period_clean_state import (
-    CrossPeriodCleanStateBlocker,
-    CrossPeriodCleanStateVerdict,
-    CrossPeriodDependencyEvidence,
-    CrossPeriodDependencyInventory,
-    CrossPeriodDependencyInventoryItem,
-    CrossPeriodDependencyOrigin,
-    CrossPeriodDependencyRequirement,
-    CrossPeriodExpectedMemberSet,
-    NoPriorObligationProvenance,
-    NoPriorObligationProvenanceKind,
-    cross_period_dependency_inventory,
-    cross_period_dependency_requirements,
-    evaluate_cross_period_clean_state,
-    filing_external_evidence_blockers,
-    partition_cross_period_requirements_by_activity_start,
-)
-from ._cross_period_models import (
-    OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER,
-    period_strictly_before_activity_start,
-)
 from ._foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
@@ -113,28 +92,11 @@ from ._iva_compensation_casillas import (
     M303_GENERADA_CASILLA,
     M303_POSTERIOR_CASILLA,
 )
-from ._iva_compensation_history import (
-    IvaCompensationAnnualCrossCheck,
-    IvaCompensationAnnualSummary,
-    IvaCompensationHistoryRepository,
-    correct_iva_compensation_period,
-    cross_check_iva_compensation_annual_summary,
-    iva_compensation_annual_summary_from_filed_observation,
-    iva_compensation_period_key,
-    iva_compensation_state_from_observation_envelope,
-    persist_observation_envelope_and_iva_history,
-    seed_iva_compensation_period,
-)
-from ._iva_wallet_balance import query_iva_wallet_balance
 from ._iva_wallet_reconciliation import (
     IvaCompensationReconciliationReport,
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
-)
-from ._m111_no_retenciones import (
-    M111_NO_RETENCIONES_PROFILE_PATH,
-    m111_no_retenciones_periods_for_bucket,
 )
 from ._m303_carry_ingress import (
     M303_DECLARATION_TYPE_HEADER_KEY,
@@ -160,7 +122,64 @@ from ._multi_year import (
     PreviousFilingSourceResolver,
     assert_enrollment_matches_manifest,
 )
-from ._observations_repository import (
+from ._prorrata_regularizacion import (
+    CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+    ProrrataApplicabilityProjection,
+    ProrrataDeclaredVolumeLedgerRollup,
+    ProrrataRegularizacionFeedProjection,
+    ProrrataRegularizacionSourceResolver,
+    build_prorrata_declared_volume_divergence_advisory,
+    build_prorrata_especial_mandatory_advisory,
+    build_prorrata_missing_provisional_advisory,
+    build_prorrata_regularizacion_advisory,
+    derive_prorrata_applicability,
+    project_prorrata_regularizacion_feed,
+)
+from ._relation_prefill import (
+    RelationPrefillSourceResolver,
+    relation_prefill_period_zero_default_binding_ids,
+    resolve_relations_from_local_store,
+)
+from ._revision_carry_gate import RevisionCarryOutcome, revision_carry_outcome
+from .cross_period_clean_state import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyInventory,
+    CrossPeriodDependencyInventoryItem,
+    CrossPeriodDependencyOrigin,
+    CrossPeriodDependencyRequirement,
+    CrossPeriodExpectedMemberSet,
+    NoPriorObligationProvenance,
+    NoPriorObligationProvenanceKind,
+    cross_period_dependency_inventory,
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+    filing_external_evidence_blockers,
+    partition_cross_period_requirements_by_activity_start,
+)
+from .cross_period_models import (
+    OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER,
+    period_strictly_before_activity_start,
+)
+from .iva_compensation_history import (
+    IvaCompensationAnnualCrossCheck,
+    IvaCompensationAnnualSummary,
+    IvaCompensationHistoryRepository,
+    correct_iva_compensation_period,
+    cross_check_iva_compensation_annual_summary,
+    iva_compensation_annual_summary_from_filed_observation,
+    iva_compensation_period_key,
+    iva_compensation_state_from_observation_envelope,
+    persist_observation_envelope_and_iva_history,
+    seed_iva_compensation_period,
+)
+from .iva_wallet_balance import query_iva_wallet_balance
+from .m111_no_retenciones import (
+    M111_NO_RETENCIONES_PROFILE_PATH,
+    m111_no_retenciones_periods_for_bucket,
+)
+from .observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
@@ -175,27 +194,7 @@ from ._observations_repository import (
     observation_key,
     observation_key_for_token,
 )
-from ._prorrata_regularizacion import (
-    CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
-    ProrrataApplicabilityProjection,
-    ProrrataDeclaredVolumeLedgerRollup,
-    ProrrataRegularizacionFeedProjection,
-    ProrrataRegularizacionSourceResolver,
-    build_prorrata_declared_volume_divergence_advisory,
-    build_prorrata_especial_mandatory_advisory,
-    build_prorrata_missing_provisional_advisory,
-    build_prorrata_regularizacion_advisory,
-    derive_prorrata_applicability,
-    project_prorrata_regularizacion_feed,
-)
-from ._registry_preconditions import calculation_registry_failure_verdict
-from ._relation_prefill import (
-    RelationPrefillSourceResolver,
-    relation_prefill_period_zero_default_binding_ids,
-    resolve_relations_from_local_store,
-)
-from ._revision_carry_gate import RevisionCarryOutcome, revision_carry_outcome
-from ._row_set_assembly import (
+from .row_set_assembly import (
     AssembledObservations,
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
@@ -279,7 +278,6 @@ __all__ = [
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "calculate_m303_regimen_simplificado_result",
-    "calculation_registry_failure_verdict",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",

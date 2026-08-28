@@ -32,10 +32,10 @@ from contextvars import copy_context
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
@@ -48,6 +48,7 @@ from ....application.user_profile.acquisition_sources import (
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
@@ -285,10 +286,11 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 }
 
 
-class ProfileManagerApp(App[None]):
+class ProfileManagerScreen(Screen[None]):
     """Full-screen profile overview with in-place editing."""
 
-    CSS = (
+    SCOPED_CSS = False
+    DEFAULT_CSS = (
         BASE_CSS
         + NOTICE_BAND_CSS
         + """
@@ -413,9 +415,9 @@ class ProfileManagerApp(App[None]):
 
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._sync_source_actions()
-        await self._render()
+        await self._redraw()
 
     def _credential_requirement_badge(
         self, key: ProfileAcquisitionSourceKey
@@ -461,7 +463,7 @@ class ProfileManagerApp(App[None]):
 
     # ── rendering ───────────────────────────────────────────────────────
 
-    async def _render(self) -> None:
+    async def _redraw(self) -> None:
         """Rebuild the profile context and every schema section table.
 
         This is the wholesale redraw: it destroys and remounts every table.
@@ -522,7 +524,7 @@ class ProfileManagerApp(App[None]):
         previous = self.overview
         self.overview = updated
         if self._shape_of(previous) != self._shape_of(updated):
-            await self._render()
+            await self._redraw()
             return
 
         self._render_chrome()
@@ -534,7 +536,7 @@ class ProfileManagerApp(App[None]):
             if table is None or columns is None:
                 # The page was never fully rendered, so there are no cells to
                 # address. Build it rather than silently dropping the update.
-                await self._render()
+                await self._redraw()
                 return
             if (was.present_count, was.total_count) != (now.present_count, now.total_count):
                 self.query_one(f"#section-{now.key}", Static).border_title = self._section_title(now)
@@ -717,7 +719,7 @@ class ProfileManagerApp(App[None]):
         field = self._field_by_key.get(str(key))
         if field is None:
             return
-        self.push_screen(
+        self.app.push_screen(
             FieldEditScreen(field, validate=self._validator_for(field)),
             self._apply_edit_for(field),
         )
@@ -829,7 +831,7 @@ class ProfileManagerApp(App[None]):
                 # chrome rather than cells. Rebuilding is the only redraw
                 # that reaches all of it.
                 self.overview = worker.result
-                await self._render()
+                await self._redraw()
                 return
             await self._apply_overview(worker.result)
             return
@@ -882,7 +884,7 @@ class ProfileManagerApp(App[None]):
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
-        self.exit(None)
+        self.dismiss(None)
 
     def action_choose_language(self) -> None:
         """Open the language chooser on the field that already holds it.
@@ -909,7 +911,7 @@ class ProfileManagerApp(App[None]):
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
-        self.push_screen(
+        self.app.push_screen(
             FieldEditScreen(
                 field,
                 prompt=tr("wizard.setup.profile.output-language.prompt"),
@@ -924,7 +926,7 @@ class ProfileManagerApp(App[None]):
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
-        toggle_appearance(self)
+        toggle_appearance(self.app)
 
 
 def run_profile_manager_tui(
@@ -934,10 +936,10 @@ def run_profile_manager_tui(
     validate: Callable[[str, str], str | None] | None = None,
 ) -> None:
     """Run the manager to completion against an already-built overview."""
-    ProfileManagerApp(overview, persist=persist, validate=validate).run()
+    ScreenHostApp(ProfileManagerScreen(overview, persist=persist, validate=validate)).run()
 
 
 __all__ = [
-    "ProfileManagerApp",
+    "ProfileManagerScreen",
     "run_profile_manager_tui",
 ]

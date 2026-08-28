@@ -40,7 +40,6 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
     build_bucket_event,
-    emit_bucket_events,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos import (
@@ -615,15 +614,11 @@ def verify_usage_ratio_reference(
 
 
 def optional_decimal(value: Decimal | None) -> str:
-    return "" if value is None else decimal_to_string(value)
+    return "" if value is None else format_decimal(value)
 
 
 def display_decimal(value: Decimal) -> str:
     return format_decimal(value, normalize=True)
-
-
-def decimal_to_string(value: Decimal) -> str:
-    return format_decimal(value)
 
 
 def normalise_timestamp(value: datetime | None) -> datetime:
@@ -860,8 +855,7 @@ def build_ledger_bucket_event(
     """Derive one ledger :class:`BucketEvent` without persisting it.
 
     Delegates to the domain builder rather than restating the envelope, so the
-    ledger cannot drift from the emitter the way this module's own
-    :func:`append_bucket_events` once did. Supplies the ledger's
+    ledger cannot drift from the canonical event shape. Supplies the ledger's
     :data:`_BUCKET_EVENT_PAYLOAD_VERSION` and its default object type.
     """
     return build_bucket_event(
@@ -874,18 +868,6 @@ def build_ledger_bucket_event(
         payload=payload,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
     )
-
-
-def append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
-    """Append a batch of events through the domain emitter rather than a local copy.
-
-    This used to load, append and save the catalogue here. That is exactly
-    what the domain emitter does, and the copy drifted the moment that gained
-    a revision guard: the history is a singleton row, so a local
-    load-append-save discards an event a concurrent caller wrote, and the
-    content-addressed survivors leave no gap to notice it happened.
-    """
-    emit_bucket_events(repository=repository, events=events)
 
 
 def _commit_with_guarded_events(

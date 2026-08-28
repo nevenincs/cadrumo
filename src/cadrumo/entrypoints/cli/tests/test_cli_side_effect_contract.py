@@ -121,7 +121,9 @@ def test_the_side_effect_free_declaration_still_covers_real_leaves() -> None:
     """FIXTURE ANCHOR: the gate below must not pass by measuring nothing."""
     leaves = _side_effect_free_leaves()
 
-    assert len(leaves) >= 40, f"only {len(leaves)} exercisable side-effect-free leaves; the declaration may have drifted"
+    assert len(leaves) >= 40, (
+        f"only {len(leaves)} exercisable side-effect-free leaves; the declaration may have drifted"
+    )
 
 
 @pytest.mark.parametrize("argv", _side_effect_free_leaves(), ids=lambda argv: "/".join(argv))

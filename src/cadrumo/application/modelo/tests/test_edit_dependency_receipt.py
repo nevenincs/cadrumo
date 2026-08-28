@@ -9,18 +9,21 @@ the durable `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-rece
 artifact is deferred to the C3 custody phase; this module builds and proves
 the schema and validator only, per this Step's own scope.
 
-`c2_predecessor_proof` is honestly `NOT_APPLICABLE` today: the required
-predecessor, `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
-(`ModeloWorkspaceC2DependencyReceiptV1`), has not been minted yet. D8 permits
-this ADR's own acceptance ahead of that receipt, but a discriminated
-`NOT_APPLICABLE` with a stable code and evidence reference is the only honest
-shape for an unmeasured required dependency -- never a fabricated `PASSED`.
+`c2_predecessor_proof` now derives as `PASSED`: the required predecessor
+(`ModeloWorkspaceC2DependencyReceiptV1`) has been minted and records its own
+green verdict. The `NOT_APPLICABLE` arm remains, because it is the only
+honest shape for an unmeasured required dependency -- never a fabricated
+`PASSED` -- and a withdrawn predecessor must fall back to it rather than
+silently drop the field. The `PASSED` arm reads the predecessor's recorded
+verdict rather than its mere existence: a red or reshaped predecessor breaks
+this derivation instead of passing as a filename.
 """
 
 from __future__ import annotations
 
 import ast
 import inspect
+import json
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -60,7 +63,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROOT = Path(__file__).resolve().parents[5]
 _GOVERNING_ADR = _ROOT / ".vault" / "adr" / "2026-08-24-modelo-edit-contract-adr.md"
-_C2_PREDECESSOR_RECEIPT = _ROOT / ".vault" / "reference" / "2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md"
+_C2_PREDECESSOR_RECEIPT = (
+    _ROOT / ".vault" / "reference" / "2026-08-24-tui-registry-api-gate-c2-dependency-receipt-reference.md"
+)
+
+_C2_PREDECESSOR_SCHEMA = "ModeloWorkspaceC2DependencyReceiptV1"
 
 _EDIT_CONTRACT_MODULES = (_edit_models, _edit_services, _edit_execution, _edit_facade, _revision_persistence)
 
@@ -200,6 +207,33 @@ def _adr_body_hash() -> str | None:
     return None
 
 
+def _c2_predecessor_evidence() -> str:
+    """Return the predecessor's own green verdict, refusing a merely-present file.
+
+    Existence is not a dependency proof. The predecessor is a validator's
+    recorded verdict, so this reads that verdict and raises unless it is
+    ``PASSED`` for the expected receipt schema -- a red or reshaped
+    predecessor must break this derivation rather than pass as a filename.
+    """
+    return _green_c2_predecessor_evidence(json.loads(_C2_PREDECESSOR_RECEIPT.read_text(encoding="utf-8")))
+
+
+def _green_c2_predecessor_evidence(document: object) -> str:
+    """Project a predecessor document's green verdict, refusing every other shape."""
+    if not isinstance(document, dict):
+        raise AssertionError("C2 predecessor is not a receipt document")
+    verdict = document.get("validation_result")
+    schema = document.get("receipt_schema")
+    if schema != _C2_PREDECESSOR_SCHEMA:
+        raise AssertionError(f"C2 predecessor declares a foreign receipt schema: {schema!r}")
+    if verdict != "PASSED":
+        raise AssertionError(f"C2 predecessor is not green: {verdict!r}")
+    receipt = document.get("receipt")
+    if not isinstance(receipt, dict) or not receipt.get("current_head_commit"):
+        raise AssertionError("C2 predecessor records no head commit to bind against")
+    return f"{schema} {verdict} at {receipt['current_head_commit']}"
+
+
 def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC3DependencyReceiptV1:
     """Derive the C3 receipt fresh from the current tree; mint nothing durable."""
     headings = _adr_status_headings()
@@ -211,7 +245,7 @@ def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC
     adr_body_hash = ModeloEditC3PassedProofV1(evidence=body_hash)
 
     if _C2_PREDECESSOR_RECEIPT.is_file():
-        c2_predecessor: ModeloEditC3ProofV1 = ModeloEditC3PassedProofV1(evidence=str(_C2_PREDECESSOR_RECEIPT))
+        c2_predecessor: ModeloEditC3ProofV1 = ModeloEditC3PassedProofV1(evidence=_c2_predecessor_evidence())
     else:
         c2_predecessor = ModeloEditC3NotApplicableProofV1(
             code="c2_receipt_not_minted",
@@ -330,11 +364,26 @@ def test_c3_receipt_validates_against_the_current_tree() -> None:
 
 
 def test_c3_receipt_reports_the_c2_predecessor_honestly() -> None:
-    """The required C2 predecessor is genuinely unmeasured today, not fabricated green."""
+    """The required C2 predecessor is measured green, and its verdict is what proves it."""
     receipt = validate_modelo_edit_contract_c3_dependency_receipt()
-    assert not _C2_PREDECESSOR_RECEIPT.is_file(), "predecessor now exists; re-derive this proof as PASSED"
-    assert isinstance(receipt.c2_predecessor_proof, ModeloEditC3NotApplicableProofV1)
-    assert receipt.c2_predecessor_proof.code == "c2_receipt_not_minted"
+    assert _C2_PREDECESSOR_RECEIPT.is_file(), "predecessor withdrawn; re-derive this proof as NOT_APPLICABLE"
+    assert isinstance(receipt.c2_predecessor_proof, ModeloEditC3PassedProofV1)
+    assert receipt.c2_predecessor_proof.evidence.startswith(f"{_C2_PREDECESSOR_SCHEMA} PASSED at ")
+
+
+def test_c2_predecessor_proof_refuses_every_non_green_predecessor_shape() -> None:
+    """A present-but-red, foreign or headless predecessor breaks the derivation."""
+    green = json.loads(_C2_PREDECESSOR_RECEIPT.read_text(encoding="utf-8"))
+    assert _green_c2_predecessor_evidence(green).startswith(f"{_C2_PREDECESSOR_SCHEMA} PASSED at ")
+
+    for corrupted, expected in (
+        ({**green, "validation_result": "FAILED"}, "not green"),
+        ({**green, "receipt_schema": "SomeOtherReceiptV1"}, "foreign receipt schema"),
+        ({**green, "receipt": {}}, "no head commit"),
+        ("not-a-document", "not a receipt document"),
+    ):
+        with pytest.raises(AssertionError, match=expected):
+            _green_c2_predecessor_evidence(corrupted)
 
 
 def test_not_applicable_proof_requires_every_named_field() -> None:

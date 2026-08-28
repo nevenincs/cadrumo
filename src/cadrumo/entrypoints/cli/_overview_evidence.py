@@ -214,7 +214,7 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     this module: this is an overview ENRICHMENT, never something the whole
     command should fail over.
     """
-    from ...application.calculations import CalculationObservationRepository
+    from ...application.calculations.observations_repository import CalculationObservationRepository
     from ...application.operator_actions import ActionReference
     from ...core.json_contract import ResolvedNoticeAction
 
@@ -272,7 +272,7 @@ def _local_calendar_filing_evidence(
         from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ...application.calculations import CalculationObservationRepository
+        from ...application.calculations.observations_repository import CalculationObservationRepository
         from ...application.live.justificante import JustificanteCaptureSnapshotService
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())

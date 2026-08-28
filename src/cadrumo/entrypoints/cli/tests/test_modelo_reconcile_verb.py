@@ -597,7 +597,11 @@ AEAT's Spanish and English presentador-NIF labels alike (the shared
 ``PRESENTADOR_NIF_LABEL`` fragment in ``adapters/inbound/pdf``), so the
 English-render `2021-0A.pdf` parses cleanly too."""
 
-_M390_2022_0A_REVISION_ID = "2010-y-siguientes"
+# Modelo 390 ships revisions 2021 through 2025; there is no
+# `2010-y-siguientes`. Same defect as the Modelo 190 constant below: a work
+# unit seeded with a revision the registry does not carry fails snapshot
+# resolution, and reconcile falls back to receipt identity alone.
+_M390_2022_0A_REVISION_ID = "2022"
 """Law-determined registry revision for M390 filing_year=2022, period=0A."""
 
 # `computed_casilla_ids` for this revision has 3 entries, all printed by the
@@ -686,7 +690,12 @@ single ``1.000,00`` placeholder while this was a redacted real render, which
 meant the mismatch assertion below could have been reading either money box and
 would have passed either way."""
 
-_M190_2024_0A_REVISION_ID = "2024-y-siguientes"
+# Modelo 190 ships revisions `2024` and `2025-y-siguientes`; there is no
+# `2024-y-siguientes`. Seeding a work unit with a revision the registry does
+# not carry made snapshot resolution fail, and reconcile then degraded to
+# "receipt identity only" -- which reports a clean match without comparing a
+# single casilla, so the sibling matches-case passed vacuously.
+_M190_2024_0A_REVISION_ID = "2024"
 """Law-determined registry revision for M190 filing_year=2024, period=0A."""
 
 # `computed_casilla_ids` for this revision has 3 entries, all printed by the

@@ -312,22 +312,22 @@ def test_export_mime_consumers_alias_core_constants() -> None:
             "_declarations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_CSV_MIME_TYPE",
             "CSV_MIME_TYPE",
-            "_tabular must import CSV_MIME_TYPE under the alias _CSV_MIME_TYPE",
+            "tabular must import CSV_MIME_TYPE under the alias _CSV_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_JSONL_MIME_TYPE",
             "JSONL_MIME_TYPE",
-            "_tabular must import JSONL_MIME_TYPE under the alias _JSONL_MIME_TYPE",
+            "tabular must import JSONL_MIME_TYPE under the alias _JSONL_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_XLSX_MIME_TYPE",
             "XLSX_MIME_TYPE",
-            "_tabular must import XLSX_MIME_TYPE under the alias _XLSX_MIME_TYPE",
+            "tabular must import XLSX_MIME_TYPE under the alias _XLSX_MIME_TYPE",
         ),
     ):
         _assert_module_constant_identity(
@@ -338,7 +338,7 @@ def test_export_mime_consumers_alias_core_constants() -> None:
         )
 
     declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
-    tabular = importlib.import_module("cadrumo.application.export._tabular")
+    tabular = importlib.import_module("cadrumo.application.export.tabular")
     assert declarations._JSON_MIME_TYPE == "application/json"
     assert tabular._CSV_MIME_TYPE == "text/csv"
 
@@ -353,7 +353,7 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
-        ("src/cadrumo/application/export/_tabular.py", "text/csv", "_CSV_MIME_TYPE"),
+        ("src/cadrumo/application/export/tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
         offenders.extend(
             _string_literal_offenders(

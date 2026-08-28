@@ -80,8 +80,8 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
+from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

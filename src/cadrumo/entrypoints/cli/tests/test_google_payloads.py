@@ -215,7 +215,7 @@ class TestPullRelationEditGrounding:
         from decimal import Decimal
 
         from ....adapters.outbound.google import relation_edit_payload
-        from ....adapters.outbound.google._calc_sheets_pull import RelationEdit
+        from ....adapters.outbound.google.calc_sheets_pull import RelationEdit
 
         edit = RelationEdit(
             relation="m130-cuota-carry",
@@ -255,7 +255,7 @@ class TestPullRelationEditGrounding:
         would assert a provenance the workbook never recorded.
         """
         from ....adapters.outbound.google import relation_edit_payload
-        from ....adapters.outbound.google._calc_sheets_pull import RelationEdit
+        from ....adapters.outbound.google.calc_sheets_pull import RelationEdit
 
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1

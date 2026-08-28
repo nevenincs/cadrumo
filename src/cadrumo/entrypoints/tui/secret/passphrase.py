@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Input, Label, Static
 
 from ....core.external_constants import UTF_8_ENCODING
@@ -34,11 +34,11 @@ from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_theme
 from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
-    CredentialApp,
     CredentialAttempt,
+    CredentialScreen,
     assessment_copy,
     assessment_css_class,
-    run_credential_app,
+    run_credential_screen,
 )
 
 if TYPE_CHECKING:
@@ -48,9 +48,9 @@ if TYPE_CHECKING:
     from ....core.credentials import ProfilePasswordAssessment
 
 __all__ = [
-    "PassphraseApp",
     "PassphraseChangeAttempt",
     "PassphraseChangeRefusal",
+    "PassphraseScreen",
     "run_passphrase_change_tui",
 ]
 
@@ -86,14 +86,16 @@ class PassphraseChangeAttempt:
         return self.expected_refusal.render() if self.expected_refusal is not None else None
 
 
-class PassphraseApp(CredentialApp["ProfilePassphraseRotationOutcome"]):
+class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
     """Full-screen credential entry that re-wraps one profile's password."""
 
-    CSS = tokenised(
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
     #passphrase-intro { margin: $cadrumo-space-0; }
+    #passphrase-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
     #strength-line { margin: $cadrumo-space-0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
@@ -142,14 +144,14 @@ class PassphraseApp(CredentialApp["ProfilePassphraseRotationOutcome"]):
             yield Label(id="label-confirm", classes="field-label")
             yield Input(id="field-confirm", password=True)
 
-            with Vertical(id="passphrase-actions", classes="credential-actions"):
+            with Horizontal(id="passphrase-actions", classes="credential-actions"):
                 yield Button(tr("flows.passphrase.cancel_button"), id="btn-cancel")
                 yield Button(tr("flows.passphrase.change_button"), id="btn-change", classes="-primary")
         yield Footer()
 
     def on_mount(self) -> None:
         """Install the theme, render copy, and focus the current-password field."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._render_localised_copy()
         self.query_one("#field-current", Input).focus()
 
@@ -285,4 +287,4 @@ def run_passphrase_change_tui(
     ``None`` means the operator abandoned the screen -- an ordinary outcome,
     not an error.
     """
-    return run_credential_app(PassphraseApp(assess=assess, rotate=rotate))
+    return run_credential_screen(PassphraseScreen(assess=assess, rotate=rotate))

@@ -126,9 +126,7 @@ def test_a_real_multi_counterparty_declaration_emits_one_row_per_counterparty() 
 def test_a_single_counterparty_still_resolves_to_exactly_one_row() -> None:
     """A count-only assertion would also pass a broken resolver emitting N identical rows."""
     revision = _modelo_347_revision()
-    observations = (
-        _observation(party="B11111112", country="ES", name="Cliente Uno SL", total="4000.00", clave="B"),
-    )
+    observations = (_observation(party="B11111112", country="ES", name="Cliente Uno SL", total="4000.00", clave="B"),)
 
     resolved = resolve_invoice_binding_row_values(revision, observations)
 

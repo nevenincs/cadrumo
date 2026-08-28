@@ -112,8 +112,7 @@ def test_every_repository_root_constant_lands_on_the_repository() -> None:
     declared = _declared_repository_roots()
 
     assert len(declared) > 30, (
-        f"only {len(declared)} repository-root constants were discovered; the scan "
-        f"collapsed and would pass vacuously"
+        f"only {len(declared)} repository-root constants were discovered; the scan collapsed and would pass vacuously"
     )
 
     stray = [

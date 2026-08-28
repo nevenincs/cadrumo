@@ -75,7 +75,7 @@ from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket
 from ...modelo._verification_actions import verify_modelo_revision
 from ...modelo._work_lifecycle import create_work_unit
 from .._foreign_asset_redeclaration import modelo_720_evidence_observation
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

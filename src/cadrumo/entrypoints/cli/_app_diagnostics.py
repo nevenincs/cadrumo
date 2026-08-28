@@ -47,7 +47,8 @@ from datetime import date as _date
 import typer
 
 from ...core.i18n import tr
-from ._common import emit_envelope, optional_decimal_text
+from ._common import emit_envelope
+from ._decimal_parsing import optional_decimal_text
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,
     ErrorsBreakdownResult,
@@ -99,7 +100,7 @@ def diagnostics_root(ctx: typer.Context) -> None:
 def _parse_iso_date(value: str | None, option: str) -> _date | None:
     if value is None:
         return None
-    from ._common import _parse_iso_date as _parse_required_iso_date
+    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
 
     return _parse_required_iso_date(
         value,

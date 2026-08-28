@@ -118,7 +118,6 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 _logger = get_logger(__name__)
 
 
-
 # The CLI binary each subprocess provider shells out to. Used by
 
 

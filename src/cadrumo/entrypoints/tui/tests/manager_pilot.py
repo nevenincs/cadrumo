@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..profile.overview import ProfileManagerApp
+    from ..profile.overview import ProfileManagerScreen
 
 __all__ = ["wait_until_settled"]
 
@@ -43,7 +43,7 @@ than about the machine's speed.
 """
 
 
-async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
+async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
     """Drain the page's messages until no background work is left in flight.
 
     Waits on the page's own state — that it holds no unfinished write —
@@ -80,5 +80,7 @@ async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
         if write is None:
             await pilot.pause()
             return
-    message = f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
+    message = (
+        f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
+    )
     raise AssertionError(message)

@@ -127,8 +127,7 @@ def test_every_usage_ratio_category_is_ineligible_until_the_operator_declares() 
             deducted_anyway.append((category.value, result.deductible_amount))
 
     assert not deducted_anyway, (
-        "these categories deducted something with no operator-declared proportion: "
-        f"{deducted_anyway}"
+        f"these categories deducted something with no operator-declared proportion: {deducted_anyway}"
     )
 
 

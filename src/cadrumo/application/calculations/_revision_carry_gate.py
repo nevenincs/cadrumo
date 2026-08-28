@@ -23,7 +23,7 @@ See Also:
         Previous-filing binding reader that drops unreconfirmable carries.
     :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.
-    :func:`~application.calculations._cross_period_clean_state.evaluate_cross_period_clean_state`
+    :func:`~application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`
         Filing-grade dependency proof that maps the shared outcome to blockers.
 """
 

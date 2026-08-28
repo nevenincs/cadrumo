@@ -33,6 +33,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    emit_bucket_events,
 )
 from ...domain.currency import (
     CurrencyNormalizationService,
@@ -54,7 +55,6 @@ from ...domain.transactions import (
 )
 from ..transactions import LedgerImportDiagnostic, classify_import_row, import_ledger_with_diagnostics
 from .actions_common import (
-    append_bucket_events,
     build_ledger_bucket_event,
     normalise_timestamp,
     resolve_bucket_event_repository,
@@ -426,7 +426,7 @@ def import_ledger_source(
         source_command=command.source_command,
     )
     if diagnostic_events:
-        append_bucket_events(repository=event_repository, events=diagnostic_events)
+        emit_bucket_events(repository=event_repository, events=diagnostic_events)
     return LedgerSourceImportResult(
         rows=len(parsed_rows),
         imported=summary.imported,

@@ -31,7 +31,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
-from .._calc_sheets_pull import (
+from ..calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,
     OperatorEdit,

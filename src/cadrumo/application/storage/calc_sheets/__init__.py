@@ -50,7 +50,6 @@ from ._evidence import sheet_evidence_from_ledger_filing
 from ._export_service import export_modelo_to_sheets
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
-from ._parity_harness import OperatorInputScenario, verify_modelo_parity
 from ._records import (
     OperatorInput,
     OperatorInputs,
@@ -106,6 +105,7 @@ from ._workbook_export import (
     serialize_offline_workbook,
 )
 from .errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
+from .parity_harness import OperatorInputScenario, verify_modelo_parity
 
 __all__ = [
     "CALC_SHEETS_ENGINE_VERSION",

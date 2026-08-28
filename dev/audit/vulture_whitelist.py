@@ -9,7 +9,7 @@ consumed in the body:
   (:mod:`cadrumo.adapters.outbound.google._api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
 * ``fileId`` — the Drive ``get_media`` keyword on the ``_DriveFilesResource``
-  Protocol stub (:mod:`cadrumo.adapters.outbound.google._document_link_resolver`).
+  Protocol stub (:mod:`cadrumo.adapters.outbound.google.document_link_resolver`).
   The name is the google API's keyword and is part of the structural type.
 * ``q`` / ``pageSize`` / ``pageToken`` — the Drive ``files().list`` keyword
   contract on the same ``_DriveFilesResource`` Protocol stub. The names are the
@@ -23,7 +23,7 @@ consumed in the body:
   curation API signature.
 * ``cache_discovery`` — the ``googleapiclient.discovery.build`` keyword
   contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
-  (:mod:`cadrumo.application.storage.calc_sheets._parity_harness`). The name is
+  (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
   the google API client's keyword and is part of the structural type.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing

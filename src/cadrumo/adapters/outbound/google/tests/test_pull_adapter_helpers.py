@@ -27,7 +27,7 @@ from ...storage import (
     OutboundStorageConflictError,
     OutboundStorageValidationError,
 )
-from .._calc_sheets_pull import (
+from ..calc_sheets_pull import (
     MetadataMatchState,
     _classify_metadata_match,
     _coerce_value,

@@ -32,7 +32,7 @@ from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -102,7 +102,7 @@ def _ensure_logged_in() -> None:
     login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
 
 
-def _manager() -> ProfileManagerApp:
+def _manager() -> ProfileManagerScreen:
     _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
 
@@ -114,10 +114,10 @@ def _manager() -> ProfileManagerApp:
         )
         return build_profile_overview(applied, label=_LABEL)
 
-    return ProfileManagerApp(build_profile_overview(record, label=_LABEL), persist=persist)
+    return ProfileManagerScreen(build_profile_overview(record, label=_LABEL), persist=persist)
 
 
-def _footer_entries(app: ProfileManagerApp) -> dict[str, str]:
+def _footer_entries(app: ProfileManagerScreen) -> dict[str, str]:
     """Every key the footer names, with the words it names it by.
 
     Read off the rendered footer rather than the binding table, because a
@@ -135,12 +135,12 @@ def _language_key(footer_entries: dict[str, str], *, locale: str) -> str:
     return matches[0]
 
 
-def _column_headings(app: ProfileManagerApp) -> list[str]:
+def _column_headings(app: ProfileManagerScreen) -> list[str]:
     """Every table's column headings, in the words currently on screen."""
     return [str(column.label) for table in app.query(DataTable) for column in table.columns.values()]
 
 
-async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
+async def _drained_footer(app: ProfileManagerScreen, pilot) -> dict[str, str]:
     """Drain the page's pending messages until the footer settles, then report it.
 
     ``pilot.pause()`` is a barrier, not a sleep: it posts a callback to the
@@ -277,7 +277,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
         )
 
 
-def _language_tokens(app: ProfileManagerApp) -> tuple[str, ...]:
+def _language_tokens(app: ProfileManagerScreen) -> tuple[str, ...]:
     """The stored tokens behind the chooser's rows, in the order shown."""
     for section in app.overview.sections:
         for field in section.fields:

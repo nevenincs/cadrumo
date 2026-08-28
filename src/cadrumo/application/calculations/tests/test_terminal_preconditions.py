@@ -36,15 +36,15 @@ from ....domain.iva_compensation import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _m303_carry_ingress as m303_module
-from .. import _observations_repository as observations_module
 from .. import errors as errors_module
+from .. import observations_repository as observations_module
 from .._m303_carry_ingress import M303CarryIngressError, _resolve_available_compensation_formula_id
-from .._observations_repository import (
+from ..errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
+from ..observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ..errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -125,7 +125,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("registry_operands", "','.join((str(item) for item in expected_operands))"),
         ),
     ),
-    "_observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:1": _contract(
+    "observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:1": _contract(
         CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
         (
             ("modelo", "str(observation.modelo)"),
@@ -135,7 +135,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("incoming_source_kind", "payload.source_kind.value"),
         ),
     ),
-    "_observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:2": _contract(
+    "observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:2": _contract(
         CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
         (
             ("modelo", "str(observation.modelo)"),

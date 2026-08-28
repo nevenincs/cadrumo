@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell
 
 from .....adapters.outbound.google import RowSetEdit
-from .....adapters.outbound.google._calc_sheets_pull import _decode_row_set_block
+from .....adapters.outbound.google.calc_sheets_pull import _decode_row_set_block
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository

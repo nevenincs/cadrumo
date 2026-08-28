@@ -1094,9 +1094,7 @@ class CalculationRevision(BaseModel):
         default_factory=_empty_row_source_identities,
         repr=False,
     )
-    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(
-        default_factory=_empty_row_casilla_values, repr=False
-    )
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=_empty_row_casilla_values, repr=False)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
         default_factory=_empty_row_casilla_provenance,
         repr=False,

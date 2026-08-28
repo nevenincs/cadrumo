@@ -23,6 +23,7 @@ from ....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyRepository,
 )
 from ....core import StorageCategory, exclusive_file_lock, storage_path
+from ....core.config import Settings
 from ..storage import RepositoryError
 
 if TYPE_CHECKING:
@@ -41,9 +42,18 @@ def _checkpoint_path(root: Path, interaction_id: str) -> Path:
 class OperationFinancialOperandCustodyFilesystemRepository(OperationFinancialOperandCustodyRepository):
     """One durable checkpoint per wait, advanced only by compare-and-swap."""
 
-    def __init__(self, *, root: Path | None = None) -> None:
-        """Bind the directory this repository keeps its checkpoints in."""
-        self._root = root if root is not None else storage_path(StorageCategory.OPERATION_JOURNAL) / _CUSTODY_DIRECTORY
+    def __init__(self, *, root: Path | None = None, settings: Settings | None = None) -> None:
+        """Bind the directory this repository keeps its checkpoints in.
+
+        ``settings`` resolves the default location, so a caller that already
+        resolved a storage root gets custody beside that root's journal rather
+        than beside whatever the ambient settings point at.
+        """
+        self._root = (
+            root
+            if root is not None
+            else storage_path(StorageCategory.OPERATION_JOURNAL, settings=settings) / _CUSTODY_DIRECTORY
+        )
         self._root.mkdir(parents=True, exist_ok=True)
 
     @override

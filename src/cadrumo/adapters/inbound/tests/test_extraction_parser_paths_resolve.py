@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.directory_scan import scan_directory
+from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

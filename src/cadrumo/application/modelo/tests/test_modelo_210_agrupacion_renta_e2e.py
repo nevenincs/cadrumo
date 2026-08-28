@@ -266,9 +266,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
                 borrador_snapshot_id=None,
             ),
         )
-        calculate_notices = tuple(
-            resolution for resolution in calculation_result.plazo_resolutions
-        )
+        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1
@@ -318,9 +316,7 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
                 borrador_snapshot_id=None,
             ),
         )
-        calculate_notices = tuple(
-            resolution for resolution in calculation_result.plazo_resolutions
-        )
+        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert calculate_notices == ()
@@ -361,9 +357,7 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
                 borrador_snapshot_id=None,
             ),
         )
-        calculate_notices = tuple(
-            resolution for resolution in calculation_result.plazo_resolutions
-        )
+        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1

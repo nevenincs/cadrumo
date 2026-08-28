@@ -164,7 +164,7 @@ def test_resources_registry_clear_empties_every_repository() -> None:
 
     resources.cache_clear()
     registry = resources()
-    registry.apoderamientos.singleton
+    _ = registry.apoderamientos.singleton
     assert registry.apoderamientos._cache != {}
 
     registry.clear()

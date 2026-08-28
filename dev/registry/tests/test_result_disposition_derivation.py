@@ -63,6 +63,7 @@ def test_an_informative_modelo_derives_no_disposition_from_real_corpus_files() -
 
 def test_the_letter_precedence_actually_selects() -> None:
     """The rule must discriminate, not answer the same way regardless of input."""
+
     def evidence(*codes: str) -> DisenoDispositionEvidence:
         return DisenoDispositionEvidence(
             modelo="test",

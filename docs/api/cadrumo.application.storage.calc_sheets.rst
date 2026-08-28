@@ -18,7 +18,6 @@ Submodules
    cadrumo.application.storage.calc_sheets._export_service
    cadrumo.application.storage.calc_sheets._layout
    cadrumo.application.storage.calc_sheets._parity_comparison
-   cadrumo.application.storage.calc_sheets._parity_harness
    cadrumo.application.storage.calc_sheets._records
    cadrumo.application.storage.calc_sheets._row_set_assembly
    cadrumo.application.storage.calc_sheets._styling
@@ -26,3 +25,4 @@ Submodules
    cadrumo.application.storage.calc_sheets._translator
    cadrumo.application.storage.calc_sheets._workbook_export
    cadrumo.application.storage.calc_sheets.errors
+   cadrumo.application.storage.calc_sheets.parity_harness

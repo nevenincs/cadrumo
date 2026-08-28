@@ -24,10 +24,10 @@ See Also:
     :mod:`application.calculations._binding_prefill`:
         Previous-filing binding readers that raise
         :exc:`BindingPrefillTypeError`.
-    :mod:`application.calculations._iva_compensation_history`:
+    :mod:`application.calculations.iva_compensation_history`:
         Modelo 303 IVA compensation carry-forward readers that raise
         :exc:`IvaCompensationModeloError`.
-    :mod:`application.calculations._observations_repository`:
+    :mod:`application.calculations.observations_repository`:
         Encrypted observation storage that raises :exc:`ObservationKeyError`
         and :exc:`ObservationCasillaReferenceError`.
 """
@@ -105,9 +105,9 @@ class IvaCompensationModeloError(CoreError):
 
     The IVA compensation carry-forward pipeline is exclusively sourced from
     Modelo 303 filed observations. Passing any other modelo to
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_observation_envelope`,
+    :func:`~application.calculations.iva_compensation_history.iva_compensation_state_from_observation_envelope`,
     or
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`
+    :func:`~application.calculations.iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`
     violates the calculation boundary contract.
     """
 
@@ -133,7 +133,7 @@ class ObservationKeyError(CoreValidationError):
     :func:`~adapters.persistence.storage.safe_repository_id` for string
     components and fall within the supported year range ``[2000, 2099]`` for
     the integer year component. The key builders in
-    :mod:`application.calculations._observations_repository` raise this
+    :mod:`application.calculations.observations_repository` raise this
     error instead of a bare :class:`ValueError` so failures propagate through
     the typed error registry and produce structured envelopes.
     """

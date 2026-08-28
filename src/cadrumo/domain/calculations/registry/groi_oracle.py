@@ -26,6 +26,7 @@ class GroiOracle(CheckerOracle):
     expected_blank_message = "GROI expected values must not contain blanks"
 
     def __init__(self, *, driver: CheckerDriver | None = None) -> None:
+        """Construct the oracle, optionally injecting a checker driver for replay."""
         super().__init__(driver=driver)
 
     @property

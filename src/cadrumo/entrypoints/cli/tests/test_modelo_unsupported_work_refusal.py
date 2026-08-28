@@ -81,7 +81,7 @@ _UNSUPPORTED_WORK_CASES = (
         modelo="714",
         year=2024,
         period="0A",
-        revision="2021-y-siguientes",
+        revision="2021",
         required_groups=(("19/1991", "1991"), ("HAC/1023/2021", "1023"), (_SEDE_HOST, "Sede")),
     ),
     UnsupportedWorkCase(

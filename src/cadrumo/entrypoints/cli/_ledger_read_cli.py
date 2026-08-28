@@ -22,7 +22,7 @@ import typer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.export import ExportSerializationFormat
+from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_export import export_ledger_transactions
 from ...application.ledger.actions_manual import (
     get_manual_transaction,
@@ -53,22 +53,14 @@ from ...domain.categories import (
 )
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, TransactionCatalogue, ledger_irpf_category_catalogue
-from ._common import (
-    _bad,
-    _canonical_period,
-    _optional_canonical_period,
-    _state,
-    _tx_repo,
-    active_profile_label,
-    emit_envelope,
-    optional_decimal_text,
-    resolve_notice_action,
-)
+from ._common import _bad, _state, _tx_repo, active_profile_label, emit_envelope, resolve_notice_action
+from ._decimal_parsing import optional_decimal_text
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
 )
 from ._ledger_support import _ledger_cli_no_recovery
+from ._period_parsing import _canonical_period, _optional_canonical_period
 
 if TYPE_CHECKING:
     from ...application.ledger.llm_diagnostics import (
@@ -240,7 +232,7 @@ def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[li
 def _parse_iso_date(value: str | None, option: str) -> date | None:
     if value is None:
         return None
-    from ._common import _parse_iso_date as _parse_required_iso_date
+    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
 
     return _parse_required_iso_date(
         value,

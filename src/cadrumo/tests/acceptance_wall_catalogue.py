@@ -167,7 +167,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "registry-grounded checklist."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_requires_data_inventory.py",
-        test_function="test_requires_classifies_m130_casillas_against_live_registry_no_active_profile",
+        test_function="test_requires_classifies_real_m130_sources_without_an_active_profile",
     ),
     AcceptanceWallEntry(
         issue=276,

@@ -16,9 +16,10 @@ rejects.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Annotated
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core import M210PayerMode
 from ....domain.modelos import (
@@ -29,6 +30,9 @@ from ....domain.modelos import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
+from ...operations.registry import _strict_model_json_schema, _validate_credential_free_schema
+from .._edit_models import ModeloEditDetailRowIntentKind
+from .._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 from ..operation_definitions import (
     ModeloEditApply184MemberRowV1,
     ModeloEditApply210AgrupacionRentaRowV1,
@@ -36,6 +40,10 @@ from ..operation_definitions import (
     ModeloEditApply347ContraparteRowV1,
     ModeloEditApply349OperadorRowV1,
     ModeloEditApply349RectificacionRowV1,
+    ModeloEditApplyDetailRowAddressV1,
+    ModeloEditApplyDetailRowIntentV1,
+    ModeloEditApplyOperationRequestV1,
+    ModeloEditApplySubmissionV1,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -288,3 +296,97 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
     direct_errors = [(error["loc"], error["type"]) for error in direct.value.errors()]
     wire_errors = [(error["loc"], error["type"]) for error in through_wire.value.errors()]
     assert wire_errors == direct_errors
+
+
+def test_the_address_derives_the_exact_natural_key_the_domain_derives() -> None:
+    """The key built from carried components equals the one built from the row.
+
+    This is the assertion that makes carrying components safe rather than
+    merely convenient: the wire never sends the key, so the only thing that
+    could go wrong is deriving a different one.
+    """
+    _, row = _m349_operador_pair()
+
+    address = ModeloEditApplyDetailRowAddressV1(
+        detail_row_kind="operador",
+        identity_components=(row.nif_comunitario, row.clave_operacion),
+    )
+
+    assert address.to_address().natural_key == detail_row_natural_key(row)
+
+
+@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+def test_every_row_kind_addresses_itself_through_carried_components(kind: str) -> None:
+    """Each kind's own identity fields reconstruct its domain address key."""
+    _, row = _PAIRS[kind]()
+    expected = detail_row_natural_key(row)
+
+    address = ModeloEditApplyDetailRowAddressV1(
+        detail_row_kind=row.row_type,
+        identity_components=tuple(expected.split(DETAIL_ROW_NATURAL_KEY_SEPARATOR)),
+    )
+
+    assert address.to_address().natural_key == expected
+    assert address.to_address().detail_row_kind == row.row_type
+
+
+def test_a_delete_intent_carries_only_the_address_and_still_translates() -> None:
+    """Removal names the row by its components and carries no row at all."""
+    intent = ModeloEditApplyDetailRowIntentV1(
+        address=ModeloEditApplyDetailRowAddressV1(
+            detail_row_kind="operador",
+            identity_components=("DE111111111", "E"),
+        ),
+        kind=ModeloEditDetailRowIntentKind.DELETE_ROW,
+    )
+
+    translated = intent.to_intent()
+
+    assert translated.row is None
+    assert translated.address.natural_key == "DE111111111|E"
+
+
+def test_a_component_carrying_the_separator_is_unambiguous_on_the_wire() -> None:
+    """Components survive a value that the joined form could not express.
+
+    A joined key cannot distinguish a separator inside a component from a
+    component boundary. Carrying the components keeps that distinction, which
+    is why this is not merely an equivalent way to say the same thing.
+    """
+    with_separator = ModeloEditApplyDetailRowAddressV1(
+        detail_row_kind="agrupacion_renta",
+        identity_components=("alquiler|2025",),
+    )
+    as_two_parts = ModeloEditApplyDetailRowAddressV1(
+        detail_row_kind="agrupacion_renta",
+        identity_components=("alquiler", "2025"),
+    )
+
+    assert with_separator.identity_components != as_two_parts.identity_components
+    assert with_separator.to_address().natural_key == as_two_parts.to_address().natural_key
+
+
+def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None:
+    """Nothing was widened: the gate that refused ``natural_key`` still refuses it.
+
+    The whole point of carrying components is that no exemption was spent, so
+    a bounded free-form string named for a forbidden token must still be
+    refused exactly as before.
+    """
+
+    class AddressCarryingTheJoinedKey(BaseModel):
+        model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+        natural_key: Annotated[str, Field(min_length=1, max_length=256)]
+
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(_strict_model_json_schema(AddressCarryingTheJoinedKey))
+
+
+def test_the_admitted_request_type_carries_the_detail_row_family() -> None:
+    """The real registered request type is admitted WITH detail rows on it."""
+    schema = _strict_model_json_schema(ModeloEditApplyOperationRequestV1)
+    _validate_credential_free_schema(schema)
+
+    submission = ModeloEditApplySubmissionV1.model_fields
+    assert "detail_row_intents" in submission

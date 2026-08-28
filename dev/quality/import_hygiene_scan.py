@@ -1157,19 +1157,50 @@ class PrivateImportViolation:
     in_type_checking: bool
 
 
+def defining_package(mod: str) -> str:
+    """Return the package that owns a private NAME defined in ``mod``.
+
+    A private symbol belongs to the module that defines it, and that module's
+    own package is the boundary it is private within: siblings may use it,
+    anything outside must go through a public name. This is the same ownership
+    question :func:`owning_package` answers for a private module path, asked on
+    the other axis.
+    """
+    parts = mod.split(".")
+    return ".".join(parts[:-1]) if len(parts) > 1 else mod
+
+
+def _reaches_outside(importer: str, owner: str) -> bool:
+    """True when ``importer`` sits outside the package that owns the target."""
+    return not (importer == owner or importer.startswith(owner + "."))
+
+
 def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateImportViolation]:
-    """Return every import site that reaches into a foreign package's privates."""
+    """Return every import site that reaches into a foreign package's privates.
+
+    Two shapes count, because either one alone can be renamed away while the
+    coupling survives. A private MODULE path is the familiar shape. A private
+    NAME imported from a public module is the other: promoting a private module
+    to a public name would otherwise clear every private-symbol reach into it
+    from this scanner without changing a single import, so a rename would
+    launder a live reach past the gate.
+    """
     violations: list[PrivateImportViolation] = []
     for site in all_sites:
         if not site.target_mod.startswith("cadrumo"):
             continue
-        if not has_private_component(site.target_mod):
-            continue
-        owner = owning_package(site.target_mod)
         importer = site.importer_mod
-        # Legitimate: importer is under the owning package (sibling/descendant),
-        # OR importer *is* the owning package's own __init__ building its facade.
-        if importer == owner or importer.startswith(owner + "."):
+        if has_private_component(site.target_mod):
+            # Legitimate: importer is under the owning package (sibling/descendant),
+            # OR importer *is* the owning package's own __init__ building its facade.
+            owner = owning_package(site.target_mod)
+            reached_names = site.imported_names
+        else:
+            owner = defining_package(site.target_mod)
+            reached_names = [name for name in site.imported_names if is_underscore_named(name)]
+            if not reached_names:
+                continue
+        if not _reaches_outside(importer, owner):
             continue
         violations.append(
             PrivateImportViolation(
@@ -1178,7 +1209,7 @@ def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateI
                 lineno=site.lineno,
                 target_mod=site.target_mod,
                 owning_package=owner,
-                imported_names=site.imported_names,
+                imported_names=reached_names,
                 is_test=site.is_test,
                 in_type_checking=site.in_type_checking,
             )
