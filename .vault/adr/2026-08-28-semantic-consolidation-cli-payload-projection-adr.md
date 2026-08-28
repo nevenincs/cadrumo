@@ -5,12 +5,12 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:39ba77c0da78878e09013fbff87c4f488efd780b27c9566b82d23a2b5bc418ab'
+body_hash: 'sha256:d989fbe8319b7e4da7b09c8c7ca19afce5d46cf0dfdfc726a957f587dd418181'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
 
-# `semantic-consolidation` adr: `CLI payloads are projections, never independent declarations` | (**status:** `proposed`)
+# `semantic-consolidation` adr: `CLI payloads are projections, never independent declarations` | (**status:** `accepted`)
 
 ## Problem Statement
 
