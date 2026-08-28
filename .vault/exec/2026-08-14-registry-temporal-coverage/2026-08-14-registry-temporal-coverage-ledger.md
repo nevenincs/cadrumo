@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:1114b54f2f4bd0ed274aaf5c8e5c70571c0abd91eddbbe968c2ac9199f394aac'
+body_hash: 'sha256:22756991559f69838df05da24f53544aa203e3d9a5aa9e92b6c521e3064668f0'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1161,4 +1161,45 @@ key without that would have quietly widened what the test accepts.
 The remaining regex failures in this cluster are M303 carry, IVA-wallet and
 M303-exonerado-390 messages, left to the campaign that owns them, plus two
 genuine rewordings rather than key migrations.
+
+
+### Ledger confirm tests: the fixture invoice named no role, so direction blocked
+
+Nine `TestConfirmInvoiceDraftFromEvidence` cases failed with
+`ConfirmationBlockedError`. Probed the refusal context with an out-of-repo
+pytest plugin rather than editing anything: one unresolved blocker,
+`unresolved_direction` -- "the identifier 'B12345674' verified, but no role
+evidence ties it to the counterparty; accepting it because it is the only one
+left would name whichever unrelated entity happens to appear on the page".
+
+The gate is deliberate and carries its own passing tests
+(`test_direction_cross_check_at_the_confirm_boundary`,
+`test_absent_identity_is_not_a_failed_role`). `identity_roles.py` withholds a
+resolution when a verified identifier carries no `role_evidence`, and
+`grounded_reading.py` keeps role evidence only when
+`printed_excerpt_occurs(...)` confirms it in the transcription -- an
+anti-hallucination guard, so a reader that invents a heading loses it.
+
+The fixture was the defect. `_FULL_INVOICE_LINES` printed a bare
+`"NIF: B12345674"` with nothing tying it to the supplier, and
+`_FULL_INVOICE_FIELDS` supplied no `supplier_tax_id_role_evidence`. These nine
+cases are about MINTING, IDEMPOTENCY, OVERRIDES and LINKING, so the document was
+made well-formed rather than the gate worked around: the line now reads
+`"Proveedor NIF: B12345674"` and the reader returns
+`supplier_tax_id_role_evidence = "Proveedor NIF:"`, which occurs in the
+document text and therefore survives the excerpt check. The file had been
+adapted the same way once before, when wiring the semantic reader made these
+cases stop at a connection error.
+
+What was NOT done: no resolution was injected to answer the blocker, and no
+candidate was promoted for being the only one left. Either would have made nine
+tests green while retiring the guard's meaning for this fixture -- the blocker
+exists precisely because one verified identifier is not evidence of whose it is.
+
+22 tests in the file pass, up from 13 passed 9 failed, and the direction gate's
+own 16 selected tests still pass.
+
+The constants are file-local: `entrypoints/cli/tests/`
+`test_ledger_evidence_extract_cli.py` defines its own same-named
+`_FULL_INVOICE_LINES`, which this change does not touch.
 
