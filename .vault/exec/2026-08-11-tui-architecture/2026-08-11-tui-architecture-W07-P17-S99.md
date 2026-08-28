@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b5f45b0de6107933dc8b9cb5b20f10702a9f8290b91c56593e94c99c59de474'
+body_hash: 'sha256:e35e32720f6c890f165c7bba74b160e034066f3c4cf6b076f0e77cca2eba82b6'
 step_id: 'S99'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -38,6 +38,15 @@ return, because the journal's observation read acquires a synchronous OS file
 lock on the event loop and the modal's polling worker cannot be cancelled
 inside it. That is a production defect tracked separately; the deselected case
 remains in the file so it reds when the defect is repaired incorrectly.
+
+The reject case was later found to fail under load while passing in
+isolation. The cause was not this Step's test but a production defect: the
+modal rebound a single-use response capability on every poll, so the apply and
+reject controls went dead after one frame while the review was still pending.
+That is fixed separately, and the proof here is deterministic against the
+fixed behaviour with no change to its own budget. An earlier record described
+that behaviour as fragility; with the trace in hand it was a dead end, and the
+severity assessment is corrected there.
 
 Gate proven by mutation: dismissing on close unconditionally, neutering the
 cancel request, and routing reject through apply each red the suite, applied
