@@ -66,9 +66,11 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...aggregation import (
+    CallerOverrideDisposition,
     RetencionObservation,
     RetencionObservationRepository,
     RetencionScheme,
+    precedence_ladder_sources,
 )
 from ...calculations import CalculationObservationRepository
 from .._calculation_actions import (
@@ -284,18 +286,21 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     # Sources the live mesh resolves automatically or that are bucket-locked.
     # Passing any of these in binding_values triggers ModeloAggregationBindingError.
+    #
+    # The bucket-locked half is DERIVED from the caller-override ladder rather
+    # than hand-listed. A hand-listed copy is only correct until the next
+    # resolver is enrolled: this set once named six ledger and invoice kinds and
+    # silently omitted `inventory`, so every inventory binding was offered to the
+    # engine as a caller value and the lock rejected the whole calculate.
     _AUTO_RESOLVED = frozenset(
         {
+            # Mesh-resolved rather than locked, and excluded for this scenario:
+            # `profile` comes from the seeded record, and `relation_prefill` is
+            # left unset on purpose so the enrolled resolver folds from the store.
             "profile",
             _RELATION_PREFILL_SOURCE,
-            "ledger_renta_gastos_estimacion_directa_aggregation",
-            "ledger_renta_income_aggregation",
-            "ledger_iva_aggregation",
-            "ledger_oss_aggregation",
-            "collectible_invoice",
-            "payable_invoice",
         },
-    )
+    ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
