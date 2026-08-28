@@ -42,8 +42,9 @@ import pytest
 
 from .....core import Modelo
 from .. import _validate_export_layout_coverage as coverage
-from ..authority import bundled_authority
+from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..errors import RegistryError
+from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +87,9 @@ _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
 _MINIMUM_REVISIONS_SCANNED = 40
 
 
-def _resolve(authority: object, modelo: Modelo, filing_year: int, period: str) -> object | None:
+def _resolve(
+    authority: ValidatedRegistryAuthority, modelo: Modelo, filing_year: int, period: str
+) -> RegistrySnapshot | None:
     """Return the snapshot for this coordinate, or ``None`` when law defines none.
 
     A ``(modelo, year, period)`` triple that no published revision covers is not
@@ -96,7 +99,7 @@ def _resolve(authority: object, modelo: Modelo, filing_year: int, period: str) -
     shrinking the scanned population.
     """
     try:
-        return authority.snapshot(modelo, filing_year=filing_year, period=period)  # type: ignore[attr-defined]
+        return authority.snapshot(modelo.value, filing_year=filing_year, period=period)
     except RegistryError:
         return None
 
@@ -123,7 +126,7 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                     continue
                 snapshot = resolution
                 revision = snapshot.revision
-                revision_id = getattr(revision, "id", None) or getattr(revision, "revision", None)
+                revision_id = revision.id
                 if (modelo.value, revision_id) in seen:
                     break
                 seen.add((modelo.value, revision_id))
