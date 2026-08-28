@@ -205,6 +205,7 @@ def test_catalogue_and_producer_argument_declarations_fail_closed() -> None:
             ActionCatalogueEntry(
                 action_id="operator.profile.custom_create",
                 target_command_key="config.profile.create",
+                canonical_cli_path=("config", "profile", "create"),
             ),
         ),
     )
