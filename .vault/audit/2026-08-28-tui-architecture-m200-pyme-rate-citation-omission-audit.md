@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:377516b66a7ab1355003d01d41572a94165bfed1dd5b7e9676fde13aa070fa44'
+body_hash: 'sha256:61ebce4ce1c5da04423fa638081f1623d93d3456d3446fb0a06d95e16b6a09ac'
 related: []
 ---
 
@@ -312,3 +312,61 @@ absence from art. 29 is arithmetic, not an omission.
 
 The finding is unaffected: the rates 0,19 / 0,21 / 0,22 remain genuinely absent
 from the cited articles, and `dt-44` remains the provision that establishes them.
+
+## Correction: the dt-44 remediation this audit proposed would be refused by a gate
+
+Everything above about "add `ley-27-2014:dt-44` to the 2024 rows" is **wrong**,
+and the registry is right.
+
+`ley-27-2014:dt-44` declares `effective_from = 2025-01-01`.
+`_check_revision_scoped_legal_windows` tests a revision-scoped legal ref against
+the revision's **devengo**, and `_legal_window_covers_devengo` states the rule
+explicitly:
+
+> A substantive-law reference (a rate scale, a deduction limit, a threshold) must
+> be in force AT THE REVISION'S OWN DEVENGO DATE … A redaction that only starts
+> partway through the following calendar year, while the return is still being
+> filed, did NOT govern the tax period and must not ground it.
+
+DT 44ª is a rate schedule — substantive law — and the modelo 200 **2024**
+revision's devengo is 31 December 2024. Adding the citation would be **refused**.
+The 2024 revision does not omit dt-44 by oversight; it is structurally forbidden
+from citing it.
+
+That also explains the asymmetry cleanly. `2025-y-siguientes` carries dt-44 on
+three rows because its devengo is 2025 or later, where the disposición is in
+force. The two revisions are each correct for their own period, and what looked
+like "a correction never backported" is two revisions obeying the same rule.
+
+## What actually survives
+
+Two things, and both are narrower than what this audit previously claimed.
+
+**1. A real, validator-compatible gap on one row.** `is.modelo-200.tipo-gravamen-pyme`
+encodes 0,23 for the 2024 window and cites only `ley-27-2014:art-29`, which states
+the 25 % general rate and not 23 %. Its siblings `-pyme-display` and `-erd` both
+cite `ley-31-2022:art-39` for that same 23 %, and art. 39 declares
+`effective_from = 2023-01-01`, so it **is** in force at a 2024 devengo and can be
+cited. That is the fix: one row, one citation, no value moves.
+
+**2. Structurally ungroundable inert data.** The 2024 revision carries forward
+windows for 2025, 2026 and beyond whose establishing provision cannot be cited in
+that revision by construction. Period resolution never reaches them — 2025 filings
+resolve to their own revision — so they are documentation, not live values. They
+sit in a state no citation can legitimise. Whether to delete them or accept them
+as annotation is an owner's call; what cannot happen is grounding them where they
+are.
+
+## What this says about the method
+
+Three ticks grew this finding from one row to four on the strength of a numeric
+corpus comparison, and the fourth-row extension was correct as an observation and
+wrong as a defect. The presence check sees that a cited article does not state a
+value; it cannot see that the provision which does state it was not yet law when
+the period closed.
+
+The campaign's own rule covers this and I did not apply it early enough: when two
+gates or two rules conflict, report, do not pick. The grounding rule says cite the
+provision that establishes the value; the window rule says never cite a provision
+that did not govern the period. For an inert forward-dated value those cannot both
+be satisfied, and that tension is the finding — not a missing citation.
