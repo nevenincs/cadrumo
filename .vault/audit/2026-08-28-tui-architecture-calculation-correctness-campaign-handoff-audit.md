@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:02b8e5cb43454b22fc7cffd26d27918bed8ba71fa5a11fd6f035ce75d3185708'
+body_hash: 'sha256:5638d9e64a80b59ce8884477d4de6ec253b9f5fbe215332d01df772ff0fd1a9d'
 related: []
 ---
 
@@ -900,3 +900,37 @@ summed and none is dropped, as recorded.
 Both verdicts stand. Recording the re-check rather than the verdict alone is the
 point: a handoff list that says "sound" without saying *when* invites the next
 reader to trust a measurement taken against a tree that has since moved.
+
+### The reconciliation pairs, re-verified — and why only one carries predicates
+
+The recorded verdict is that all five annual/quarterly pairs reconcile **base and
+retenciones**. That holds at HEAD, on the axis it was about — the folds:
+
+| pair | folded source casillas |
+|---|---|
+| M190 ← M111 | `02 05 08 11 14 17 20 23 26` percepciones + `28` retenciones |
+| M180 ← M115 | `02` base, `03` retenciones |
+| M193 ← M123 | `06` base, `09` retenciones |
+| M296 ← M216 | `10` base, `13` cuota |
+| M390 ← M303 | devengada, deducible, resultado |
+
+A separate question surfaced while checking: **only M390 declares reconciliation
+predicates** — three of them — and the other four declare none. That is not a gap,
+and it would be a mistake to "fix".
+
+The reason is construction. M180's and M193's annual totals are `op=copy` of the
+relation; M190's are `add` over folds; M296 has no total formula at all, its
+casillas being bound directly from the relations. In every one of those the annual
+total **is** the fold of the quarters, so an equality predicate comparing them
+would be tautological — it would assert that a copy equals what it copied.
+
+M390 is the exception because its annual total is **hand-enumerated from boxes**
+rather than copied from a fold. It is the only pair where the annual can diverge
+from the quarters, and it is the only one carrying equality predicates. So
+predicates exist exactly where divergence is possible, which is the right design.
+
+This sharpens the separately recorded M390 fourth-tier finding rather than
+softening it: M390 is the *only* annual return computed independently of its
+quarterly source, which is both why it needs guarding and why a tier missing from
+its hand-enumerated total is consequential in a way the copy-based pairs cannot
+be.
