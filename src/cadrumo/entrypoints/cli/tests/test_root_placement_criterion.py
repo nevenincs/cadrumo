@@ -22,7 +22,7 @@ top-level-family granularity the rule moves the whole `config google` family to
 `app`, because three of its fourteen leaves once carried `app` signals -- which
 would have dragged OAuth, folder and credential-source configuration along with
 the workbook verbs. At narrowest-subject granularity -- the deepest group that
-can move as one -- the same rule produced exactly the two moves this campaign
+can move as one -- the same rule produced exactly the two moves that were
 made and demanded no splits.
 
 **This is a refusal criterion, not a placement criterion, and the distinction is

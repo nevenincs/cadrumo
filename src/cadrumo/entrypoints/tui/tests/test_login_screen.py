@@ -23,8 +23,8 @@ from textual.widgets import Button, Input, Select
 from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.credentials import CredentialHostApp
 from ....entrypoints.tui.secret.login import LoginScreen
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -98,7 +98,7 @@ async def test_typing_the_password_and_pressing_log_in_opens_a_real_session(tmp_
         profile_id = _register("Login Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Login Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(app, pilot, _PASSWORD)
 
         assert app.error is None
@@ -122,7 +122,7 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
         profile_id = _register("Refusal Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Refusal Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(app, pilot, _WRONG_PASSWORD)
 
             assert app.outcome is None, "a wrong password must not open anything"
@@ -163,7 +163,7 @@ async def test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears
         profile_id = _register("Retry Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Retry Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(app, pilot, _WRONG_PASSWORD)
             assert app.outcome is None
 
@@ -196,7 +196,7 @@ async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
             ],
             preselected=first,
         )
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.selected_profile_id() == first, "the preselection must be what the chooser opens on"
 
             app.query_one("#field-profile", Select).value = second
@@ -217,7 +217,7 @@ async def test_the_password_field_is_masked(tmp_path) -> None:
         profile_id = _register("Masked Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Masked Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.query_one("#field-passphrase", Input).password is True
             await pilot.pause()
             pilot.app.exit(None)
@@ -230,7 +230,7 @@ async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> N
         profile_id = _register("Empty Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Empty Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.click("#btn-unlock")
             await pilot.pause()
 
@@ -254,7 +254,7 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
         profile_id = _register("Cancel Subject")
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Cancel Subject")])
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             app.query_one("#field-passphrase", Input).value = _PASSWORD
             await pilot.pause()
             await pilot.click("#btn-cancel")

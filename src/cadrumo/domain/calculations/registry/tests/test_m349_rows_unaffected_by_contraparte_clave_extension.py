@@ -1,4 +1,4 @@
-"""M349's row resolution is byte-identical after the contraparte_clave extension (S294 piece 2).
+"""M349's row resolution is byte-identical after the contraparte_clave extension.
 
 The extension moved the ``_InvoiceSelector.claves`` membership check from a
 FIELD validator to a ``model_validator(mode="after")`` (grouping determines

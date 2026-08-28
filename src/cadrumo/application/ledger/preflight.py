@@ -50,6 +50,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
     has_employment_irpf_category,
+    is_classified,
 )
 from ...domain.usage_ratios import CensoRatioMismatchError
 from ..aggregation import (
@@ -62,14 +63,6 @@ from ..aggregation import (
 from ..user_profile.censo_sync import bound_raw_afectacion_ratio_for_bucket
 from .transaction_repository import transaction_catalogue_repository
 from .usage_ratio_repository import usage_ratio_profile_with_censo_guard
-
-_CLASSIFIED_TAX_STATES = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-        BusinessClassification.PERSONAL,
-    },
-)
 
 
 class LedgerPreflightIssueReason(StrEnum):
@@ -437,7 +430,7 @@ def _issues_for_transaction(
         TransactionDirection.OUTGOING,
     }:
         return ()
-    if transaction.business_classification not in _CLASSIFIED_TAX_STATES:
+    if not is_classified(transaction.business_classification):
         return (
             LedgerPreflightIssue(
                 **common,

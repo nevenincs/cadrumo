@@ -23,6 +23,7 @@ from collections.abc import Callable, Mapping
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import (
     OUT_OF_SCOPE_OBLIGATIONS,
@@ -45,7 +46,12 @@ from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog
 from .._calendar import build_overview_calendar
 from .._calendar_models import OverviewCalendarRange
-from .._coverage import CoverageAdviceReason, ObligationCoverageReport, build_obligation_coverage
+from .._coverage import (
+    AdvisedObligation,
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    build_obligation_coverage,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -127,6 +133,53 @@ def _assert_total_partition(
     for i, left in enumerate(buckets):
         for right in buckets[i + 1 :]:
             assert not (left & right), f"disposition overlap: {left & right}"
+
+
+def test_report_refuses_a_modelo_filed_under_two_dispositions() -> None:
+    """The canonical report refuses a partition that contradicts itself.
+
+    The four tuples are a partition, so a modelo cannot be simultaneously
+    confidently excluded (an answered "no") and advised (an open question the
+    operator must investigate). The refusal lives on the model rather than on
+    any one consumer, so a caller that never renders JSON inherits it too, and
+    the message must name the modelo and both dispositions it was filed under.
+    """
+    with pytest.raises(ValidationError) as excinfo:
+        ObligationCoverageReport(
+            confidently_excluded=("303",),
+            advised=(AdvisedObligation(modelo="303", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),),
+        )
+
+    message = str(excinfo.value)
+    assert "'303'" in message
+    assert "confidently_excluded" in message
+    assert "advised" in message
+
+
+def test_report_refuses_one_modelo_repeated_inside_a_disposition() -> None:
+    """One disposition cannot list the same modelo twice.
+
+    A repeated code inflates every count taken off the report -- the advised
+    count the operator reads as "obligations to investigate" above all -- so the
+    partition is enforced by multiplicity, not merely by set overlap.
+    """
+    with pytest.raises(ValidationError) as excinfo:
+        ObligationCoverageReport(surfaced=("303", "303"))
+
+    message = str(excinfo.value)
+    assert "'303'" in message
+    assert "surfaced" in message
+
+
+def test_a_real_built_report_satisfies_the_partition_invariant() -> None:
+    """The production builder produces a report the invariant accepts.
+
+    The refusal above is only worth having if the live path clears it: this
+    proves the enforcement is not merely unreachable, running the real
+    registry-backed build rather than a hand-built fixture.
+    """
+    report = build_obligation_coverage(_paying_autonomo(), {"100", "303"}, today=_TODAY)
+    _assert_total_partition(report)
 
 
 @_PERSONAS

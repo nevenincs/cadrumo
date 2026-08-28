@@ -23,7 +23,7 @@ from ....application.user_profile.login_interaction import (
 )
 from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.login import LoginScreen
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -75,7 +75,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
         logout_active_profile()
 
         app = _screen(choices)
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _PASSWORD)
             assert app.error is None
             assert app.outcome is not None

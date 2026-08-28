@@ -31,10 +31,9 @@ from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
 from ..devtools.fixture import registration_attempt
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerScreen
-from ..secret.credentials import CredentialHostApp
 from ..secret.login import LoginScreen
 from ..secret.registration import RecoveryWordsScreen, RegistrationScreen
 
@@ -50,7 +49,7 @@ _CANONICAL_DEFINITIONS = (
     ("cadrumo.entrypoints.tui.secret.login", "LoginScreen"),
     ("cadrumo.entrypoints.tui.secret.registration", "RegistrationScreen"),
     ("cadrumo.entrypoints.tui.secret.registration", "RecoveryWordsScreen"),
-    ("cadrumo.entrypoints.tui.flows.app", "FlowTuiApp"),
+    ("cadrumo.entrypoints.tui.flows.app", "FlowScreen"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewScreen"),
 )
@@ -334,7 +333,7 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
     """Register, unlock, and render an actual encrypted profile through relocated apps."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         registration = RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
-        async with CredentialHostApp(registration).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(registration).run_test(size=_TERMINAL_SIZE) as pilot:
             registration.query_one("#field-username", Input).value = _LABEL
             registration.query_one("#field-password", Input).value = _PASSPHRASE
             registration.query_one("#field-confirm", Input).value = _PASSPHRASE
@@ -360,7 +359,7 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         logout_active_profile()
 
         login = LoginScreen(choices=profile_login_choices(), authenticate=attempt_profile_login)
-        async with CredentialHostApp(login).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(login).run_test(size=_TERMINAL_SIZE) as pilot:
             login.query_one("#field-passphrase", Input).value = _PASSPHRASE
             await pilot.click("#btn-unlock")
             await pilot.app.workers.wait_for_complete()
@@ -387,14 +386,15 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
             rendered_rows = sum(table.row_count for table in manager.query(DataTable))
             assert rendered_rows == overview.total_count
             assert overview.total_count > overview.present_count
-            manager.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_flow_and_modelo_review_project_real_application_contracts(tmp_path: Path) -> None:
     """The relocated flow and read-only review render authoritative application data."""
-    flow = FlowTuiApp(_flow_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with flow.run_test(size=_TERMINAL_SIZE) as pilot:
+    flow = FlowScreen(_flow_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(flow)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"Ada")
         await pilot.press("enter")
         await pilot.pause()

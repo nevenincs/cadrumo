@@ -1071,3 +1071,33 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert _is_missing_active_bucket_session(first) is False
+_REGISTRY_SUMMARY_COUNT_FIELDS = ("modelo_count", "revision_count", "casilla_count", "formula_count")
+
+
+def test_registry_version_summary_rejects_a_negative_count() -> None:
+    """Every summary tally is a ``len()`` over loaded registry data.
+
+    ``build_registry_version_summary`` fills these from ``len(modelos)``,
+    ``len(revisions)`` and sums of ``len(revision.casillas)`` /
+    ``len(revision.formulas)``, so a negative is incoherent. The bound lives on
+    the canonical summary rather than on the CLI repair payload, so the version
+    surface and any other consumer inherit the same refusal.
+    """
+    for field_name in _REGISTRY_SUMMARY_COUNT_FIELDS:
+        with pytest.raises(ValidationError, match=field_name):
+            RegistryVersionSummary(available=True, registry_root="/x", **{field_name: -1})
+
+
+def test_registry_version_summary_defaults_to_zero_counts_when_unavailable() -> None:
+    """The unavailable branch reports zeroes, and ``ge=0`` must permit them.
+
+    ``build_registry_version_summary`` returns this shape when the authority
+    fails to load, so a bound rejecting zero would turn a reported failure into
+    an unhandled one.
+    """
+    summary = RegistryVersionSummary(available=False, registry_root="/x", error="RegistryLoadError: boom")
+
+    assert summary.modelo_count == 0
+    assert summary.revision_count == 0
+    assert summary.casilla_count == 0
+    assert summary.formula_count == 0

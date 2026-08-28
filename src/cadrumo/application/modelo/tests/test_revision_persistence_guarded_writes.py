@@ -216,7 +216,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Pat
     This drives an ACTUAL conflicting write between the stale read and the
     duplicate-branch save: the CAS guard must reject it outright rather than
     silently discarding the concurrent change, which is exactly what the
-    unguarded ``.save`` this Step replaces would have done.
+    unguarded ``.save`` this fix replaces would have done.
     """
     work_unit = _work_unit()
 

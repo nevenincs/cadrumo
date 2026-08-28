@@ -47,6 +47,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
+    CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionState,
     ModeloCode,
@@ -1714,10 +1715,9 @@ def resolve_exportable_modelo_calculation_revision_address(
     )
     return _require_revision_state(
         revision,
-        allowed=(
-            CalculationRevisionState.VERIFICADO_COMPLETO,
-            CalculationRevisionState.PRESENTADO,
-        ),
+        # Sorted, not `tuple(frozenset)`: `allowed` is joined into the operator-facing
+        # refusal, and a frozenset's iteration order would vary the message run to run.
+        allowed=tuple(sorted(CURRENT_SEALED_REVISION_STATES, key=lambda state: state.value)),
         purpose="export",
     )
 

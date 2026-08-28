@@ -20,7 +20,7 @@ from ....application.user_profile.registration import ProfileRegistrationError, 
 from ....core.credentials import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
-from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
@@ -101,7 +101,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
     """Creation at the full-screen door enrols recovery and displays it once."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Recovery Words Subject",
@@ -135,7 +135,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
     """A displayed phrase is not enrollment until the operator confirms it."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Cancelled Recovery Subject",
@@ -158,7 +158,7 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
     """The masked control proves the exact ordered phrase, not button intent."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Wrong Recovery Reentry",
@@ -181,7 +181,7 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
     """Stopping the message loop cannot strand the registration worker."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Shutdown Recovery Subject",

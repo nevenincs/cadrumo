@@ -39,22 +39,10 @@ from ...domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
     iva_compensation_period_sort_key,
 )
-from ...domain.modelos import CalculationRevisionState, ModeloError
+from ...domain.modelos import SEALED_REVISION_STATES, ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
-
-#: Sealed (already-filed) revision states that consume the IVA compensation
-#: basis. A correction of a seeded period whose carry-forward fed any sealed
-#: Modelo 303 filing would silently change a filed return's basis, so the guard
-#: refuses it. This mirrors the ledger restore guard's blocking-state set.
-_SEALED_REVISION_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    },
-)
 
 
 class ModeloIvaWalletSeedError(ModeloError):
@@ -221,7 +209,7 @@ def _sealed_modelo_303_blocker_for_period(
     revisions = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load()
     candidates: list[tuple[tuple[int, tuple[int, str]], str, str, int, str]] = []
     for revision in revisions.values():
-        if revision.state not in _SEALED_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         work_unit = work_units.work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:

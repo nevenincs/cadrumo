@@ -19,6 +19,7 @@ from ...core import (
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest
+from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...core.time import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -339,7 +340,7 @@ def _definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

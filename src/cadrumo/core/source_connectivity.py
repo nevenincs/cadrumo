@@ -167,11 +167,21 @@ def _is_stable_token(value: str) -> bool:
 
 
 def _is_repository_locator(value: str) -> bool:
-    """Return whether ``value`` names a stable in-repository evidence location."""
+    """Return whether ``value`` names a stable in-repository evidence location.
+
+    Only distributed trees are admitted.  Census grounding must cite the
+    SUBJECT of a claim, and the subject of every connectivity claim is a
+    production surface; a locator into a development tree cites the INSTRUMENT
+    that produced the claim, which proves the scanner ran rather than that the
+    claim is true.  The narrower grammar is also what keeps this shipped
+    validator honest for an installed user, who receives ``_data/`` inside the
+    wheel and can resolve a ``src/`` or ``docs/`` locator but never one
+    pointing outside the distribution.
+    """
     path, separator, line = value.rpartition(":")
     candidate_path = path if separator and line.isdigit() else value
     return (
-        candidate_path.startswith(("src/", "dev/", "docs/"))
+        candidate_path.startswith(("src/", "docs/"))
         and "\\" not in candidate_path
         and "//" not in candidate_path
         and ".." not in candidate_path.split("/")

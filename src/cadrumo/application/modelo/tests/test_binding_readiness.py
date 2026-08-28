@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import Period, RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.queries import RegistryQueryService
@@ -27,7 +27,7 @@ document_id = "BOE-T-001"
 article = "1"
 permalink = "https://example.com/test"
 effective_from = 2025-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2025-01-01
 reviewed_by = "registry-test"
 required_text = ["test provision text"]
@@ -77,6 +77,11 @@ period_selector = {{ years = [2025], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
 orden_aplicabilidad = ["test-ley-001:art-1"]
+# Declared by INTENT, as the validator requires, not read off the fragments
+# below: this synthetic revision exists only to make two revisions cover one
+# year so a year-only readiness query meets an ambiguous boundary. It is
+# never asked to compute an amount or back a filing draft.
+authority_grade = "applicability"
 """
 
 _APPLICATION_LINKS_FRAGMENT_TEMPLATE = """\
@@ -125,6 +130,14 @@ def _write_year_ambiguous_registry(
     modelos_dir = registry_root / "modelos" / "999"
     legal_dir.mkdir(parents=True)
     modelos_dir.mkdir(parents=True)
+    # The loader requires one registry-wide supported-filing-years declaration.
+    # This fixture's revisions select 2025 and the readiness call asks about
+    # 2026, so both are admitted here; without the file the tree refuses to load
+    # before any readiness behaviour is reached.
+    (legal_dir / "supported-filing-years.toml").write_text(
+        "[supported_filing_years]\nyears = [2025, 2026]\n",
+        encoding="utf-8",
+    )
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
@@ -284,6 +297,12 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     assert (late_report.revision, late_report.period) == ("2025-late", "2T")
     assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
     assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
+    # These assertions are about which revision SELECTION lands on, so they ask
+    # for the applicability rung the fixture declares. ``snapshot`` defaults to
+    # ``FILING``, which this synthetic revision truthfully cannot satisfy -- and
+    # raising its declared grade to silence that would be picking the rung to
+    # match a caller instead of the revision's intent, which is exactly what the
+    # grade validator refuses.
     assert (
         authority.snapshot(
             "999",
@@ -291,6 +310,7 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
             period=early_report.period or "",
             on=early_as_of,
             revision_id=early_report.revision,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         ).revision.id
         == early_report.revision
     )
@@ -301,6 +321,7 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
             period=late_report.period or "",
             on=late_as_of,
             revision_id=late_report.revision,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         ).revision.id
         == late_report.revision
     )

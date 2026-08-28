@@ -52,6 +52,7 @@ from .record_design_schema import (
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
     RecordDesignNote,
+    RecordDesignRangeStartCorrection,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSinglePositionCorrection,
@@ -106,6 +107,7 @@ class _WorkbookSheetRows:
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
 type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
 type _SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
+type _RangeStartCorrectionIndex = Mapping[tuple[str, int], RecordDesignRangeStartCorrection]
 
 _EMPTY_HEADER_CORRECTIONS: Final[_HeaderCorrectionIndex] = dict[
     tuple[str, int, str], RecordDesignHeaderCellCorrection
@@ -140,12 +142,18 @@ class _CorrectionIndex:
     single_position_corrections: _SinglePositionCorrectionIndex = field(
         default_factory=dict[tuple[str, int], RecordDesignSinglePositionCorrection],
     )
+    #: Keys on ``(sheet, declared_start)`` -- the start AEAT printed, which is
+    #: what identifies the row being corrected.
+    range_start_corrections: _RangeStartCorrectionIndex = field(
+        default_factory=dict[tuple[str, int], RecordDesignRangeStartCorrection],
+    )
 
 
 _EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
     type_corrections={},
     header_corrections={},
     single_position_corrections={},
+    range_start_corrections={},
 )
 
 
@@ -181,6 +189,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
     type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
     header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
     single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
+    range_start_corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection] = {}
     for entry in entries:
         # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
         # ``editions_read`` array arrives as a ``list`` and needs the ordinary
@@ -195,6 +204,14 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
                     f"row {correction.source_row}",
                 )
             type_corrections[type_key] = correction
+        elif isinstance(correction, RecordDesignRangeStartCorrection):
+            range_key = (correction.sheet, correction.declared_start)
+            if range_key in range_start_corrections:
+                raise RegistryValidationError(
+                    f"{sidecar_path}: duplicate range-start correction for sheet "
+                    f"{correction.sheet!r} start {correction.declared_start}",
+                )
+            range_start_corrections[range_key] = correction
         elif isinstance(correction, RecordDesignSinglePositionCorrection):
             position_key = (correction.sheet, correction.position)
             if position_key in single_position_corrections:
@@ -215,6 +232,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
         type_corrections=type_corrections,
         header_corrections=header_corrections,
         single_position_corrections=single_position_corrections,
+        range_start_corrections=range_start_corrections,
     )
 
 
@@ -3540,6 +3558,7 @@ class _PdfParseState:
         if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
         read = _recover_inline_constants(read)
+        read = _apply_range_start_corrections(read, self.corrections.range_start_corrections)
         # A sheet whose rows do not tile its own declared extent was not read as
         # published, so it is reported as SKIPPED rather than handed over as if
         # it were whole. See :func:`contiguity_failure`.
@@ -3950,6 +3969,74 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
     return tuple(recovered)
 
 
+def _apply_range_start_corrections(
+    sheets: tuple[RecordDesignSheet, ...],
+    corrections: Mapping[tuple[str, int], RecordDesignRangeStartCorrection],
+) -> tuple[RecordDesignSheet, ...]:
+    """Extend a declared filler run backwards over a span no field describes.
+
+    Applied to a row that WAS read, at a start AEAT mis-declared: Modelo 165's
+    2013 orden prints ``104-500 BLANCOS`` where both later editions of the same
+    orden print ``102-500``, leaving 102-103 described by nothing.
+
+    THE PRECONDITION IS ENFORCED HERE, not trusted from the declaration, and it
+    is the whole guard: every position the run would gain must currently be
+    described by NO field on the sheet. A correction that would swallow, split
+    or overlap a read field RAISES rather than applying, so this kind can only
+    ever reclaim a hole -- it can never invent a field, displace one, or quietly
+    absorb data AEAT actually declared. A declaration naming a start no row
+    begins at raises too, because a correction that matches nothing is a
+    mis-transcription and silently ignoring it would leave the hole it was
+    written to close.
+    """
+    if not corrections:
+        return sheets
+    corrected: list[RecordDesignSheet] = []
+    for sheet in sheets:
+        applicable = {
+            start: correction
+            for (name, start), correction in corrections.items()
+            if name == sheet.name
+        }
+        if not applicable:
+            corrected.append(sheet)
+            continue
+        described: set[int] = set()
+        for parsed in sheet.fields:
+            described.update(range(parsed.offset, parsed.offset + parsed.length))
+        fields = list(sheet.fields)
+        applied: list[RecordDesignRangeStartCorrection] = []
+        for start, correction in sorted(applicable.items()):
+            matches = [index for index, parsed in enumerate(fields) if parsed.offset == start]
+            if not matches:
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet.name!r} declares a range-start correction at "
+                    f"{start} but no field begins there; the correction names nothing and the "
+                    "span it was written to close would stay open",
+                )
+            gained = set(range(correction.corrected_start, start))
+            if collides := sorted(gained & described):
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet.name!r} range-start correction would extend a run "
+                    f"back over position(s) {collides} that a read field already describes; this "
+                    "correction kind reclaims a hole and must never displace declared data",
+                )
+            index = matches[0]
+            original = fields[index]
+            fields[index] = original.model_copy(
+                update={
+                    "offset": correction.corrected_start,
+                    "length": original.length + (start - correction.corrected_start),
+                },
+            )
+            described |= gained
+            applied.append(correction)
+        corrected.append(
+            sheet.model_copy(update={"fields": tuple(fields), "corrections": (*sheet.corrections, *applied)}),
+        )
+    return tuple(corrected)
+
+
 def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
     """Return why ``sheet``'s parsed rows do not tile its declared extent, else ``None``.
 
@@ -4022,6 +4109,16 @@ def _position_runs(positions: list[int]) -> str:
     return ", ".join(runs[:6]) + (" and more" if len(runs) > 6 else "")
 
 
+#: A naturaleza column holding only dash/underscore punctuation. AEAT uses it to
+#: mean "no data type", i.e. filler positions.
+_DASH_NATURALEZA_RE = re.compile(r"[-–_]+")
+
+#: The fillers a dash naturaleza may describe. Anchored and word-bounded so
+#: "BLANCOS." and "CEROS." match while a sentence merely opening with a similar
+#: word does not.
+_FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
+
+
 def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
@@ -4050,6 +4147,33 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         return None
 
     naturaleza = _naturaleza_or_none(narrative.group("type"))
+    if (
+        naturaleza is not None
+        and _DASH_NATURALEZA_RE.fullmatch(narrative.group("type") or "")
+        and not _FILLER_DESCRIPTION_RE.match(narrative.group("text").strip())
+    ):
+        # A BARE DASH in the naturaleza column means "no data type -- filler",
+        # so the row's own description says which filler: BLANCOS/BLANCO or
+        # CEROS. When it says anything else the dash is not a naturaleza at all
+        # but the punctuation of an ENUMERATED PROSE ITEM inside a field's
+        # description -- AEAT writes "1 - En el caso de que en el campo Clave
+        # Tipo de Identificacion se haya consignado una 'C'..." -- and reading
+        # that as a row invents a field at position 1.
+        #
+        # That invention is not a lost row, it is a lost RECORD: because the
+        # fabricated offset restarts at 1, the extractor concluded a new record
+        # body began mid-description and reported an unidentified record it
+        # could not name. Modelo 181 lost one that way in each of its three
+        # bundled editions.
+        #
+        # MEASURED before narrowing, across all 102 bundled design PDFs: 183
+        # rows carry a bare-dash naturaleza. Every legitimate one describes
+        # filler -- including eight that declare a SINGLE position rather than a
+        # range (BLANCOS at 58, 81 and 500 across modelos 185, 270, 296 and
+        # 347), which is why the absence of a range is NOT the discriminator and
+        # rejecting on it would have dropped eight real rows. The six that
+        # describe prose are exactly modelo 181's three editions, twice each.
+        return None
     if naturaleza is None:
         # The line has a leading number but the token after it names no
         # naturaleza AEAT uses, so this is prose, not a position row. AEAT

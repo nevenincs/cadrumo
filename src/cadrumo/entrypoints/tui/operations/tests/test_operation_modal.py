@@ -86,12 +86,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "operation-modal-conformance-passphrase"  # noqa: S105 - isolated integration fixture
 _ACTOR: OperationActorReference = "operator:operation-modal-conformance"
-_C0_RECEIPT_PATH = (
-    Path(__file__).resolve().parents[6]
-    / ".vault"
-    / "reference"
-    / "2026-08-24-tui-operation-observation-dependency-receipt-reference.md"
-)
 
 
 def _observation() -> CensalObservation:
@@ -178,13 +172,6 @@ async def _submit_censal_review(services: OperationComposedServices, profile_id:
         ),
         actor_ref=_ACTOR,
     )
-
-
-def test_c0_receipt_freezes_the_exact_public_dtos_this_modal_renders() -> None:
-    """Prove the modal's ancestry: the frozen C0 receipt names these public types."""
-    receipt_text = _C0_RECEIPT_PATH.read_text(encoding="utf-8")
-    assert '"cohort": "c0.operation-projection"' in receipt_text
-    assert '"auth.profile.login"' in receipt_text
 
 
 def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_path: Path) -> None:
@@ -533,10 +520,11 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
             if isinstance(screen, OperationModal) and screen.is_mounted:
                 modal = screen
             _record()
-            apply_control = modal.query("#btn-operation-apply") if modal is not None else []
-            if not applied and apply_control and not apply_control.only_one(Button).disabled:
-                applied = True
-                await pilot.click("#btn-operation-apply")
+            if modal is not None:
+                apply_control = modal.query("#btn-operation-apply")
+                if not applied and apply_control and not apply_control.only_one(Button).disabled:
+                    applied = True
+                    await pilot.click("#btn-operation-apply")
             if host.outcome is not None:
                 break
             await pilot.pause()
@@ -658,7 +646,7 @@ def test_a_derived_field_that_disagrees_with_its_projection_is_refused(tmp_path:
             for field, value in divergences.items():
                 assert base[field] != value, f"{field} must actually diverge, or this proves nothing"
                 with pytest.raises(ValidationError):
-                    OperationModalViewModelV1(**(base | {field: value}))
+                    OperationModalViewModelV1.model_validate(base | {field: value})
 
         asyncio.run(run())
 

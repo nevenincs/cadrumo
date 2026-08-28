@@ -32,8 +32,8 @@ from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
 from ....entrypoints.tui.profile.status import StatusScreen
-from ....entrypoints.tui.secret.credentials import CredentialHostApp, CredentialScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
+from ..components.host import ScreenHostApp
 from ..components.theme import (
     BASE_CSS,
     CADRUMO_CSS_TOKENS,
@@ -239,7 +239,7 @@ async def test_the_content_column_consumes_the_available_terminal(
 ) -> None:
     """Real mounted surfaces use every cell except an active scrollbar."""
     surface = build()
-    app = CredentialHostApp(surface) if isinstance(surface, CredentialScreen) else surface
+    app = ScreenHostApp(surface) if isinstance(surface, Screen) else surface
     async with app.run_test(size=(width, height)) as pilot:
         await pilot.pause()
         left, right = _gutters(pilot.app.screen)
@@ -258,7 +258,7 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     and it would break on every token rename while a genuinely reserved
     gutter slipped through.
     """
-    app = CredentialHostApp(_registration_screen())
+    app = ScreenHostApp(_registration_screen())
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         scroll = pilot.app.screen.query_one(".cadrumo-scroll")

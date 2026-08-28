@@ -345,7 +345,7 @@ def test_the_retired_private_manifest_module_is_gone() -> None:
         importlib.import_module("cadrumo.application.modelo._workspace_manifest")
 
 
-# --- S278: STATIC_INSPECTION gets its own complete manifest, over its own
+# STATIC_INSPECTION gets its own complete manifest, over its own
 # type universe, never a filtered view into the snapshot-rooted manifest ---
 
 

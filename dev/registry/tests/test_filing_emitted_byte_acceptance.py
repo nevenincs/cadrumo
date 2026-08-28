@@ -126,7 +126,7 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
         assert limb.name == "filing_export"
         if limb.outcome == "satisfied":
             evidence_by_authority = {evidence.authority: evidence.locator for evidence in limb.evidence}
-            generation = evidence_by_authority["dev.registry.pipeline.verify_export_fragment_provenance_manifest"]
+            generation = evidence_by_authority["generated_export_fragment_provenance_manifest"]
             emission = evidence_by_authority["cadrumo.application.filing.export_draft"]
             assert ";semantic=" in generation and ";render=" in generation and ";loader=" in generation
             assert ";payload-sha256=" in emission and ";checked-offsets=" in emission

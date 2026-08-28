@@ -880,10 +880,9 @@ def _validate_credential_free_schema(schema: object) -> None:
     refused regardless of shape, and regardless of whether it also matches
     ``digest``; the exemption never widens any token but ``digest`` and
     never overrides a second, independently-matched forbidden token on the
-    same field. See ``2026-08-27-tui-architecture-credential-free-type-aware-gate-adr``
-    for the residual risk this accepts: a Hex64-shaped field declared as one
-    of ``ContentDigest``'s shape-sharing siblings, named ``*_digest``, is
-    also admitted by this rule.
+    same field. The residual risk this accepts: a Hex64-shaped field
+    declared as one of ``ContentDigest``'s shape-sharing siblings, named
+    ``*_digest``, is also admitted by this rule.
     """
     if isinstance(schema, list):
         for item in cast(list[object], schema):

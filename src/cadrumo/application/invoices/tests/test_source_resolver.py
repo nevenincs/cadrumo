@@ -1176,7 +1176,7 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """The discrimination S303 exists to prove, not just the classification.
+    """The discrimination this test exists to prove, not just the classification.
 
     A travel agency's ISSUED invoice under RD 1619/2012 disposición adicional
     cuarta declares clave F. An ORDINARY issued invoice of the identical
@@ -1300,7 +1300,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
 ) -> None:
     """The role set must be reachable from a REAL persisted profile, not only a test object.
 
-    S313 built the axis and a fail-closed loader but left `declaration_roles`
+    The role axis arrived with a fail-closed loader but left `declaration_roles`
     with no operator-input path -- `taxpayer_profile_from_mapping` never read
     or wrote it, so no real persisted profile could ever carry a non-empty
     value. This seeds a real `UserProfileRecord` (the wizard-facts shape) and

@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator, model_va
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -58,12 +59,7 @@ class PerModeloAggregationContributor(StrEnum):
     FOREIGN_ASSETS = "foreign_assets"
 
 
-ACCEPTED_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
-    BindingSourceKind.LEDGER_TRANSACTION,
-    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    BindingSourceKind.PAYABLE_INVOICE,
-    BindingSourceKind.COLLECTIBLE_INVOICE,
-)
+ACCEPTED_SOURCE_KINDS: tuple[BindingSourceKind, ...] = COUNTERPART_SOURCE_KIND_ORDER
 
 AggregationErrorCodes: tuple[str, ...] = (
     "ERROR_FINANCIAL_AGGREGATION",

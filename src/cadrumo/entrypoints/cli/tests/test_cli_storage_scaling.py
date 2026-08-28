@@ -1,6 +1,6 @@
 """Listing cost must scale linearly with the number of stored profiles.
 
-The defect this campaign removed was per-profile custody entry on a pure read:
+The defect this fix removed was per-profile custody entry on a pure read:
 the old listing took a transaction lock, loaded password material, read the
 transaction journal and verified-or-published a label head FOR EVERY PROFILE,
 to answer a question that needs a UUID and a label. That is invisible on an

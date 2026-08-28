@@ -50,7 +50,14 @@ def _m151_advisory_predicate() -> VerificationPredicateDefinition:
         filing_year=max(declared_years.years),
         period="0A",
     ).revision
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M151_ADVISORY_PREDICATE_ID)
+    predicate = next(
+        (p for p in revision.verification_predicates if p.predicate_id == _M151_ADVISORY_PREDICATE_ID),
+        None,
+    )
+    assert predicate is not None, (
+        f"revision {revision.id} ships no predicate {_M151_ADVISORY_PREDICATE_ID!r}; it declares "
+        f"{sorted(p.predicate_id for p in revision.verification_predicates)}"
+    )
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == (
         'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'

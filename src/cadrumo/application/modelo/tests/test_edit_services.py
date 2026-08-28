@@ -255,7 +255,7 @@ def test_admission_never_double_surfaces_a_binding_as_both_row_group_and_binding
 
 
 def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest() -> None:
-    """The edit contract's completeness digest and the S278 field-manifest digest are independent.
+    """The edit contract's completeness digest and the workspace field-manifest digest are independent.
 
     Both real producers run over the SAME registry revision. Proves three
     things at once: the two digests are genuinely different values (not a
@@ -263,7 +263,7 @@ def test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifes
     on distinct types (``ModeloEditSchemaIdentityV1.completeness_manifest_digest``
     versus ``ModeloWorkspaceSchemaIdentityV1.field_manifest_digest``), and
     mutating ONLY the registry's completeness manifest moves the completeness
-    digest while leaving the S278 field-manifest digest -- computed from the
+    digest while leaving the field-manifest digest -- computed from the
     unrelated public registry TYPE denominator -- untouched.
     """
     from ..workspace_manifest import generate_modelo_workspace_field_manifest

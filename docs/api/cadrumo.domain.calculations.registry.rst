@@ -107,6 +107,7 @@ Submodules
    cadrumo.domain.calculations.registry.counterpart_bindings
    cadrumo.domain.calculations.registry.coverage
    cadrumo.domain.calculations.registry.deadline_coordinate
+   cadrumo.domain.calculations.registry.design_constant_bindings
    cadrumo.domain.calculations.registry.detail_record_bindings
    cadrumo.domain.calculations.registry.donativo_bindings
    cadrumo.domain.calculations.registry.errors

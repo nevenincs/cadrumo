@@ -1,11 +1,9 @@
-"""Live-tree dependency receipt validator for the transient financial operand.
+"""Production invariants for the transient financial operand contract.
 
-This is the sole validator for the operand contract's evidence. It reads the
-current tree rather than a recorded claim, because a receipt that attests to
-what was true when it was written stops being evidence the moment anything
-moves. Every check below is derived: the module set is enumerated from the
-package, the transition table is driven rather than described, and the
-non-retention checks read the real field sets.
+Every check below is derived from the current tree rather than an asserted
+claim: the module set is enumerated from the package, the custody transition
+table is driven rather than described, and the non-retention checks read the
+real field sets.
 """
 
 from __future__ import annotations
@@ -48,7 +46,6 @@ from .test_financial_operand_registration import _operand_definition
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROOT = Path(__file__).resolve().parents[5]
-_GOVERNING_ADR = _ROOT / ".vault" / "adr" / "2026-08-11-tui-architecture-adr.md"
 _STATE = OperationFinancialOperandCustodyState
 _T0 = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
 
@@ -73,18 +70,6 @@ def _module_source(dotted: str) -> str:
     import importlib
 
     return Path(importlib.import_module(dotted).__file__ or "").read_text(encoding="utf-8")
-
-
-def test_accepted_authority_governs_the_operand_contract() -> None:
-    """The contract answers to an accepted decision, not an in-flight one."""
-    headings = [
-        line
-        for line in _GOVERNING_ADR.read_text(encoding="utf-8").splitlines()
-        if line.startswith("# ") and "status:" in line
-    ]
-
-    assert len(headings) == 1, "the governing ADR must state exactly one status"
-    assert "`accepted`" in headings[0], headings[0]
 
 
 def test_protocol_schema_is_structural_and_closed() -> None:

@@ -1,12 +1,12 @@
 """Modelo 347 declarado record renders one occurrence per counterparty.
 
-Before this Step's export repoint, ``m347-declarado`` carried scalar
+Before this export was repointed, ``m347-declarado`` carried scalar
 ``kind = 'casilla'`` fields with no ``repeat`` marker, so the record rendered
 a single fixed occurrence regardless of how many counterparties the resolver
 produced -- a multi-counterparty declaration would have truncated to one
-counterparty, the exact defect S294's own Step title names. This module
+counterparty, the exact defect this module guards against. This module
 proves the repoint against BOTH real bundled revisions
-(``2025-y-siguientes`` and ``2011-2024``, per S294's action text naming no
+(``2025-y-siguientes`` and ``2011-2024``, since the underlying defect names no
 revision qualifier) and the real production entry points:
 :func:`resolve_invoice_binding_row_values` and :func:`_record_render_rows`.
 
@@ -80,9 +80,9 @@ def test_declarado_record_is_wired_for_row_indexed_binding_rendering(revision_id
 
     Without this, every assertion below would pass vacuously against a record
     that reverted to a single fixed occurrence. Parametrized across both
-    revisions -- S294's action text names no revision qualifier, and both
-    were already known calc-grade before this Step, so closing on one alone
-    would narrow the Step's own completion criterion.
+    revisions -- the underlying defect names no revision qualifier, and both
+    were already known calc-grade beforehand, so closing on one alone
+    would narrow the fix's own completion criterion.
     """
     record = _declarado_record(_revision(revision_id))
 
@@ -93,7 +93,7 @@ def test_declarado_record_is_wired_for_row_indexed_binding_rendering(revision_id
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_id: str) -> None:
-    """The S294 defect, reproduced and proven fixed against the real bindings."""
+    """The multi-counterparty truncation defect, reproduced and proven fixed against the real bindings."""
     revision = _revision(revision_id)
     observations = (
         _observation(
@@ -125,9 +125,9 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
 def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(revision_id: str) -> None:
     """RD 1065/2007 art. 31's floor, proven for all three cases through the real resolver.
 
-    Before this Step the ``contraparte_clave`` per-row family applied NO
-    threshold at all -- a real over-declaration bug, distinct from every
-    under-declaration finding this campaign found tonight. This proves the
+    Before this fix, the ``contraparte_clave`` per-row family applied NO
+    threshold at all -- a real over-declaration bug, distinct from the
+    under-declaration findings elsewhere in this area. This proves the
     fix routes through the one canonical comparison
     (``m347_declarable_party_ids``) rather than a new one written here: a
     counterparty BELOW the floor produces no row, one landing EXACTLY on it
@@ -380,7 +380,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
 def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id: str) -> None:
     """The conditional fields (importe-metalico, transmisiones, ...) stay off the binding path.
 
-    Confirms the repointed scope is exactly the money fields this Step built
+    Confirms the repointed scope is exactly the money fields this repoint built
     a real per-row source for, and that the conditional fields the diseño
     itself gates with an explicit "Sólo..."/exception clause were
     deliberately left unbound rather than silently dropped from the record.

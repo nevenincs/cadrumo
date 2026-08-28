@@ -3,7 +3,7 @@
 Drives a real registered profile record and the real Textual
 `CensalFieldReviewScreen`/`ProfileManagerScreen` -- no mocks, no synthetic
 schema. `test_census_sync_review.py` already proves the full operation
-round-trip; this file proves the narrower D6 surface `W03.P06` adds:
+round-trip; this file proves the narrower D6 surface adds:
 provenance is read through the settled classification authority (never a
 locally invented source), a conflict is exactly a persisted/observed
 divergence and nothing more, a reject dismisses with `None` and the exact
@@ -153,7 +153,7 @@ async def test_reject_dismisses_with_none_and_never_touches_the_baseline(tmp_pat
     app = _ReviewHostApp()
     async with app.run_test() as pilot:
         outcomes: list[CensalOperationRequest | None] = []
-        app.push_screen(_screen(baseline, rows), callback=outcomes.append)
+        app.app.push_screen(_screen(baseline, rows), callback=outcomes.append)
         await pilot.pause()
         await pilot.click("#btn-censal-reject")
         await pilot.pause()
@@ -180,12 +180,12 @@ async def test_confirm_produces_the_exact_operator_selection_never_a_wider_or_na
     app = _ReviewHostApp()
     async with app.run_test() as pilot:
         outcomes: list[CensalOperationRequest | None] = []
-        app.push_screen(_screen(baseline, rows), callback=outcomes.append)
+        app.app.push_screen(_screen(baseline, rows), callback=outcomes.append)
         await pilot.pause()
         # `app.query_one` always resolves against the App's DEFAULT screen, never a
         # pushed one (a documented Textual behaviour, not a flake) -- a pushed
-        # modal's own contents must be queried through the active `app.screen`.
-        choices = app.screen.query_one("#censal-field-review-choices", SelectionList)
+        # modal's own contents must be queried through the active `app.app.screen`.
+        choices = app.app.screen.query_one("#censal-field-review-choices", SelectionList)
         # SelectionList.select/deselect key on the option's own VALUE (the row's
         # path), never its list position.
         choices.deselect("contact.postcode")
@@ -262,9 +262,9 @@ async def test_apply_all_selects_by_value_reverting_to_the_suggested_intents(tmp
     app = _ReviewHostApp()
     async with app.run_test() as pilot:
         outcomes: list[CensalOperationRequest | None] = []
-        app.push_screen(_screen(baseline, rows), callback=outcomes.append)
+        app.app.push_screen(_screen(baseline, rows), callback=outcomes.append)
         await pilot.pause()
-        choices = app.screen.query_one("#censal-field-review-choices", SelectionList)
+        choices = app.app.screen.query_one("#censal-field-review-choices", SelectionList)
         choices.deselect("contact.postcode")
         choices.select("contact.fiscal_address")
         await pilot.pause(0.1)

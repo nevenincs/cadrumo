@@ -80,6 +80,14 @@ _PASSPHRASE = "operation-modal-lifecycle-passphrase"  # noqa: S105 - isolated in
 _ACTOR: OperationActorReference = "operator:operation-modal-lifecycle"
 _TERMINAL_POLL_BUDGET = 400
 _POLL_PAUSE_SECONDS = 0.02
+_POLL_INTERVAL_SECONDS = 0.2
+"""The modal's own observation interval, which liveness is measured in."""
+_RESPONSE_LIVENESS_POLLS = 12
+"""How many of the modal's polls a pending REVIEW must survive.
+
+One is what the defect offered. A dozen spans well over two seconds of
+real operator time, which is the scale at which the affordance either
+holds or does not."""
 _WORKER_DRAIN_SECONDS = 0.5
 
 
@@ -476,6 +484,74 @@ def test_reject_through_the_modal_settles_the_operation_without_an_effect(tmp_pa
                     if host.outcome is not None:
                         break
                     await pilot.pause()
+
+            settled = await _settle(controller)
+            assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            assert settled.effect is OperationEffect.NONE
+
+        asyncio.run(run())
+
+
+def test_the_response_controls_stay_live_across_many_polls_while_a_review_waits(tmp_path: Path) -> None:
+    """Apply and reject remain offered for as long as the REVIEW is pending.
+
+    The defect this pins offered both controls for exactly one poll and then
+    switched them off permanently, at an unchanged revision, while the
+    supervisor still waited for the answer. A proof that sampled the controls
+    once would have passed against that behaviour, so this one samples across
+    many consecutive polls and requires every sample to be live.
+    """
+    with _runtime(tmp_path) as (services, _registry, profile_id):
+
+        async def run() -> None:
+            submitted = await _submit_censal_review(services, profile_id)
+            controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
+            await controller.start()
+
+            host = _ModalHost(controller)
+            async with host.run_test(size=(100, 40)) as pilot:
+                modal = await _pause_until_rendered(pilot, host)
+                await _await_enabled(pilot, modal, "#btn-operation-apply")
+
+                # Span several poll intervals, not several message-pump
+                # cycles: the modal re-resolves its interaction on a timed
+                # poll, so a budget counted in pauses can elapse without a
+                # single re-resolution having happened.
+                observed_polls = 0
+                samples: list[tuple[bool, bool]] = []
+                deadline = _RESPONSE_LIVENESS_POLLS * _POLL_INTERVAL_SECONDS
+                elapsed = 0.0
+                while elapsed < deadline:
+                    await asyncio.sleep(_POLL_INTERVAL_SECONDS / 2)
+                    elapsed += _POLL_INTERVAL_SECONDS / 2
+                    await pilot.pause()
+                    projection = await _project(controller)
+                    if projection.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
+                        break
+                    observed_polls += 1
+                    samples.append(
+                        (
+                            not modal.query_one("#btn-operation-apply", Button).disabled,
+                            not modal.query_one("#btn-operation-reject", Button).disabled,
+                        )
+                    )
+
+                assert observed_polls >= _RESPONSE_LIVENESS_POLLS, (
+                    f"only {observed_polls} samples were taken while the REVIEW waited, "
+                    "which is too few to distinguish a live control from a one-frame one"
+                )
+                dead = [
+                    index for index, (apply_live, reject_live) in enumerate(samples) if not (apply_live and reject_live)
+                ]
+                assert not dead, (
+                    f"the response controls went dead at sample(s) {dead} while the REVIEW was still pending; "
+                    "the modal must not rebind a single-use response capability on every poll"
+                )
+
+                # Still answerable at the end, which is the operator-facing
+                # claim: the affordance was not merely drawn, it still works.
+                await pilot.click("#btn-operation-reject")
+                await host.action_quit()
 
             settled = await _settle(controller)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED

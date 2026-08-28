@@ -282,30 +282,17 @@ class OverviewAdvisedObligationPayload(OutputSchema):
 class OverviewObligationCoveragePayload(OutputSchema):
     """JSON projection of the canonical total obligation-coverage partition.
 
-    Each modelo must occur in exactly one disposition.  The application service
-    establishes completeness against its authoritative obligation universe;
-    this transport contract preserves the non-overlap invariant so malformed
-    JSON cannot make an obligation appear both surfaced and advised.
+    Each modelo occurs in exactly one disposition. That invariant belongs to the
+    canonical :class:`~application.overview.ObligationCoverageReport`, which
+    refuses to construct a self-contradicting partition, so every consumer of
+    the application layer inherits it rather than only the JSON surface. This
+    schema is the transport shape of a report that already satisfies it.
     """
 
     surfaced: list[str] = []
     confidently_excluded: list[str] = []
     advised: list[OverviewAdvisedObligationPayload] = []
     out_of_scope: list[str] = []
-
-    @model_validator(mode="after")
-    def _require_disjoint_dispositions(self) -> Self:
-        bucket_modelos = (
-            self.surfaced,
-            self.confidently_excluded,
-            [item.modelo for item in self.advised],
-            self.out_of_scope,
-        )
-        total_items = sum(len(modelos) for modelos in bucket_modelos)
-        distinct_modelos = {modelo for modelos in bucket_modelos for modelo in modelos}
-        if total_items != len(distinct_modelos):
-            raise ValueError("obligation coverage dispositions must form a disjoint partition")
-        return self
 
 
 class OverviewCalendarProfilePayload(OutputSchema):

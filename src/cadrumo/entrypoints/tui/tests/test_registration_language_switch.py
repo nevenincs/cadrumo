@@ -27,7 +27,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.credentials import assess_profile_password
 from ....core.i18n import output_language, tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.tui.secret.credentials import CredentialHostApp
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -112,7 +112,7 @@ async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             started = _expected_copy(_STARTING_LANGUAGE)
@@ -155,7 +155,7 @@ async def test_the_language_switch_keeps_what_has_already_been_typed(tmp_path) -
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _STARTING_LANGUAGE)
 
@@ -192,7 +192,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
 
@@ -219,7 +219,10 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
                 await pilot.pause(0.05)
             await pilot.click("#btn-confirm-words")
             await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            for _ in range(200):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
 
         assert app.error is None
         assert app.outcome is not None, "the screen must still create the profile"
@@ -264,7 +267,7 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
         )
 
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (

@@ -1,7 +1,7 @@
-"""``contraparte_clave`` groups invoice observations into modelo 347 rows (S294 piece 2).
+"""``contraparte_clave`` groups invoice observations into modelo 347 rows.
 
 No modelo 347 revision declares a row-producer binding on this grouping yet
-(the registry-authoring piece, S294 piece 3, is deferred pending corpus
+(the registry-authoring piece is deferred pending corpus
 grounding -- see the tui-architecture modelo 347 contraparte binding
 inventory reference). Bindings here are synthetic-but-valid
 :class:`DataBindingDefinition` instances, the same technique
@@ -10,7 +10,7 @@ committed registry does not itself cover -- this proves the shared resolver
 core handles the new grouping correctly ahead of the registry TOML that will
 eventually declare it for real.
 
-The other half of this Step's proof lives in ``test_invoice_bindings.py``:
+The other half of this module's proof lives in ``test_invoice_bindings.py``:
 its ``test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_
 summing_bases`` test (M349's own grouping, unmodified by this change) still
 asserts its exact expected dict byte-for-byte, proving the new

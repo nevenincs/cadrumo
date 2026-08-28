@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
+from ...core.aggregation import COUNTERPART_SOURCE_KINDS
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -83,6 +84,9 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
         "sync_divergence": frozenset[ReviewItemKind](),
     },
 )
+assert frozenset(key for key in _ACCEPTED_KIND_TO_INTERNAL if isinstance(key, BindingSourceKind)) == (
+    COUNTERPART_SOURCE_KINDS
+), "review queue's BindingSourceKind keys must match the canonical counterpart source-kind set"
 
 # The operator-facing ``--kind`` vocabulary: only the source kinds that map to an
 # emitted review item, in the order documented in

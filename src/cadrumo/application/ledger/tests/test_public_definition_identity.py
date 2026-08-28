@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).parents[1]
 _REPOSITORY_ROOT = _PACKAGE_ROOT.parents[3]
-_SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT / "dev")
+_SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src",)
 _PUBLIC_MODULE_NAMES = (
     "actions_classification",
     "actions_common",

@@ -1,6 +1,6 @@
 """Modelo 184 socio export renders one occurrence per (member, clave, subclave).
 
-The record used to render a single fixed occurrence (S289's own finding), and
+The record used to render a single fixed occurrence, and
 its natural key was ``nif`` alone, so a member declaring income under two
 different claves -- an ordinary case, e.g. capital mobiliario alongside
 capital inmobiliario -- either truncated to one clave or collided the two
@@ -149,7 +149,7 @@ def test_two_members_each_declaring_one_clave_resolve_two_distinct_rows() -> Non
 
 
 def test_one_member_under_two_claves_resolves_two_rows_not_one() -> None:
-    """The S289 regression, reproduced and proven fixed.
+    """The single-clave-truncation regression, reproduced and proven fixed.
 
     The SAME member, same nif, declares income under two different claves --
     capital mobiliario and capital inmobiliario, an ordinary real-world case.
@@ -240,7 +240,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_resolved_row() -> None:
 
 
 def test_two_rows_for_one_member_under_different_claves_survive_the_union() -> None:
-    """The exact S298 collision this Step's scope names.
+    """The exact identity collision this test guards against.
 
     ``_ROW_IDENTITY_FIELDS`` widened to ``(nif, clave, subclave)`` so the
     two-source union treats these as two different real-world things, not a
@@ -302,7 +302,7 @@ def test_two_rows_sharing_the_full_widened_identity_but_disagreeing_still_refuse
 
 
 def test_clave_a_reduccion_is_refused_at_the_row_boundary() -> None:
-    """The ADR's clave-A block, enforced in code rather than only in prose.
+    """The governing row-shape decision's clave-A block, enforced in code rather than only in prose.
 
     Modelling reducción as ONE shared field (matching the diseño's own
     physical layout for positions 109-119) makes it reachable under clave A
@@ -355,10 +355,10 @@ def test_clave_a_without_reduccion_is_still_accepted() -> None:
 
 
 def test_an_ordinary_multi_member_attribution_emits_one_row_per_member_with_the_right_values() -> None:
-    """S289's own defect, reproduced with plain distinct members (no clave variation).
+    """The single-fixed-occurrence defect, reproduced with plain distinct members (no clave variation).
 
     Four ordinary members, all under the same clave -- no exotic multi-clave
-    shape needed to trigger the truncation this Step names. Before the
+    shape needed to trigger the truncation. Before the
     binding_rows migration the export record rendered a single fixed
     occurrence regardless of how many members the resolver produced, so
     every member past the first silently vanished from the fichero. Proves

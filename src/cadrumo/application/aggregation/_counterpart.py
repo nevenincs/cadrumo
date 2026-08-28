@@ -23,7 +23,6 @@ from pydantic import BaseModel, Field, InstanceOf, field_validator, model_valida
 
 from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, FilingPeriodCode, Modelo, Period
 from ...core.aggregation import (
-    COUNTERPART_SOURCE_KINDS,
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
@@ -31,8 +30,6 @@ from ...core.aggregation import (
 )
 from ...core.parsing import IsoDateString
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
-
-_CANONICAL_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:

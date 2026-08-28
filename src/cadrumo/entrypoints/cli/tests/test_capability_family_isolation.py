@@ -5,8 +5,8 @@ surface all read. This makes it mean something at the import level too: if a
 spec says ``profile-custody`` and nothing else, then resolving that node must
 not drag in the calculation registry.
 
-**Why groups rather than nodes.** The Step this implements asks for a
-fresh-process check over every projected live node -- 365 of them, which is 365
+**Why groups rather than nodes.** The requirement is a fresh-process check
+over every projected live node -- 365 of them, which is 365
 interpreters. The 365 nodes carry only 25 DISTINCT capability declarations, and
 those declarations PARTITION the node set. Resolving a whole group in one
 process and checking the UNION of what it loaded is therefore equivalent to
@@ -17,7 +17,7 @@ and the sweep costs 25 processes instead of 365.
 **Resolution, not invocation.** A leaf may load whatever its declared
 capabilities allow once an operator actually runs it. What this measures is the
 cost paid on the way *to* a command, by ancestors and siblings, before anything
-has been asked for -- which is the amplification this campaign exists to
+has been asked for -- which is the amplification this gate exists to
 remove.
 
 Two groups do not satisfy their declaration yet. They are named below with

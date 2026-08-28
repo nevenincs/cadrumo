@@ -23,17 +23,10 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
-from ...core.aggregation import RetencionScheme
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, COUNTERPART_SOURCE_KINDS, RetencionScheme
 from ...core.identity import TaxIdIdentityToken
 from ...core.parsing import IsoDateString
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
-
-_CANONICAL_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
-    BindingSourceKind.LEDGER_TRANSACTION,
-    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    BindingSourceKind.PAYABLE_INVOICE,
-    BindingSourceKind.COLLECTIBLE_INVOICE,
-)
 
 
 def _retenciones_source_kind(value: object) -> BindingSourceKind:
@@ -46,8 +39,8 @@ def _retenciones_source_kind(value: object) -> BindingSourceKind:
             raise ValueError(f"retenciones source_kind {value!r} is not a BindingSourceKind") from exc
     else:
         raise ValueError("retenciones source_kind must be a BindingSourceKind or source-kind string")
-    if source_kind not in _CANONICAL_SOURCE_KINDS:
-        allowed = ", ".join(_CANONICAL_SOURCE_KINDS)
+    if source_kind not in COUNTERPART_SOURCE_KINDS:
+        allowed = ", ".join(COUNTERPART_SOURCE_KIND_ORDER)
         raise ValueError(f"retenciones source_kind {source_kind.value!r} is unsupported; use one of {allowed}")
     return source_kind
 

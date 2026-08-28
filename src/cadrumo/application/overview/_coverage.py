@@ -35,8 +35,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from enum import StrEnum
+from typing import Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from ...core import OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -94,9 +95,10 @@ class ObligationCoverageReport(BaseModel):
 
     Every :func:`~application.modelo.registry_discovery.registry_modelo_codes`
     code lands in
-    exactly one of the four tuples. ``advised`` is the load-bearing field: a
-    non-empty ``advised`` means the default surface would otherwise have hidden a
-    filing obligation the operator must investigate.
+    exactly one of the four tuples, and construction refuses a report that places
+    one code in two of them (or twice in one). ``advised`` is the load-bearing
+    field: a non-empty ``advised`` means the default surface would otherwise have
+    hidden a filing obligation the operator must investigate.
 
     Attributes:
         surfaced: Modelos positively resolved by registry windows and
@@ -126,6 +128,36 @@ class ObligationCoverageReport(BaseModel):
     def has_advisories(self) -> bool:
         """Return whether any obligation must be investigated."""
         return bool(self.advised)
+
+    @model_validator(mode="after")
+    def _require_disjoint_dispositions(self) -> Self:
+        """Refuse a report that files one modelo under more than one disposition.
+
+        The four tuples are a partition, not four independent lists: a modelo
+        classified as both confidently excluded and advised would let one
+        surface read it as an answered question while another raises an
+        advisory for it. Enforcing it here — rather than at any one consumer —
+        means no caller can observe a report that contradicts itself.
+        """
+        seen: dict[str, str] = {}
+        for disposition, modelos in (
+            ("surfaced", self.surfaced),
+            ("confidently_excluded", self.confidently_excluded),
+            ("advised", self.advised_modelos),
+            ("out_of_scope", self.out_of_scope),
+        ):
+            for modelo in modelos:
+                previous = seen.get(modelo)
+                if previous is None:
+                    seen[modelo] = disposition
+                    continue
+                placement = (
+                    f"twice in {previous!r}" if previous == disposition else f"in both {previous!r} and {disposition!r}"
+                )
+                raise ValueError(
+                    f"obligation coverage dispositions must form a partition: modelo {modelo!r} appears {placement}",
+                )
+        return self
 
 
 _CONFIDENT_NEGATIVE_VERDICTS = frozenset(

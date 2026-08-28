@@ -104,7 +104,14 @@ def _predicate(predicate_id: str, expression: str) -> VerificationPredicateDefin
     # latest window is the honest target and a future revision moves it along.
     modelo = bundled_authority().validate_modelo("390")
     revision = max(modelo.revisions.values(), key=lambda item: item.valid_from)
-    predicate = next(item for item in revision.verification_predicates if item.predicate_id == predicate_id)
+    predicate = next(
+        (item for item in revision.verification_predicates if item.predicate_id == predicate_id),
+        None,
+    )
+    assert predicate is not None, (
+        f"revision {revision.id} ships no predicate {predicate_id!r}; it declares "
+        f"{sorted(item.predicate_id for item in revision.verification_predicates)}"
+    )
     assert predicate.finding_kind == "BLOCKING_RULE"
     assert predicate.expression == expression
     return predicate

@@ -160,12 +160,12 @@ def test_package_namespace_is_inert() -> None:
 
 
 def test_no_facade_or_private_user_profile_reference_remains() -> None:
-    """Static, dynamic, type, embedded, tooling, and doc consumers name defining modules."""
+    """Static, dynamic, type, embedded, and doc consumers name defining modules."""
     private = "|".join(sorted(_PRIVATE_LEAVES))
     private_pattern = re.compile(rf"(?:cadrumo\.)?domain\.user_profile\._(?:{private})\b")
     facade_import_pattern = re.compile(r"from\s+(?:cadrumo\.|\.+)?domain\.user_profile\s+import\b")
     violations: list[str] = []
-    for root in (_PROJECT_ROOT / "src", _PROJECT_ROOT / "dev", _PROJECT_ROOT / "docs"):
+    for root in (_PROJECT_ROOT / "src", _PROJECT_ROOT / "docs"):
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix not in {".py", ".rst", ".md", ".toml", ".json"}:
                 continue

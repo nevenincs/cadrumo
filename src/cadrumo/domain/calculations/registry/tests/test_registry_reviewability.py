@@ -54,11 +54,10 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate_surfaces.py": 354,
     "_validate_verification_predicates.py": 335,
 }
-# The workbook-parity backend used to be ratcheted here. It now lives at
-# dev/registry/parity/_workbook_parity.py, and its ratchet moved with it to
-# dev/registry/tests/test_dev_module_reviewability.py. The gate left behind
-# pointed at a path that no longer existed, so it raised FileNotFoundError
-# on every run rather than measuring anything.
+# The workbook-parity backend used to be ratcheted here. It has since moved
+# out of the product package, and its ratchet moved with it. The gate left
+# behind pointed at a path that no longer existed, so it raised
+# FileNotFoundError on every run rather than measuring anything.
 
 
 @dataclass(frozen=True)

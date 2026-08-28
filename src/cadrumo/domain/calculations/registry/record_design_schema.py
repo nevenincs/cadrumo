@@ -126,7 +126,45 @@ AUXILIARY_ENVELOPE_HEADER_CONTENT: tuple[str | None, ...] = (
 #: modelo-neutral, so the literal was the only thing rejecting an identical
 #: header on another form.
 _AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX: Final[int] = 1
-_AUXILIARY_ENVELOPE_HEADER_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^Constante "\d{3}"$')
+_AUXILIARY_ENVELOPE_HEADER_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^"\d{3}"$')
+#: The slot carrying the modelo's filing CADENCE. Pinned to the annual literal
+#: ``"0A"``, which made this contract annual-only by exactly the accident the
+#: modelo slot above already suffered: every other check here -- roles, lengths,
+#: rows, ordinals, extent, and the envelope tag constants -- is cadence-neutral,
+#: so the literal was the only thing rejecting an identical header on a
+#: quarterly or monthly form. Modelo 390 is annual and prints ``"0A"``; Modelo
+#: 303 is quarterly and monthly and prints its period RANGE in the same slot.
+#: The header contract states that a period is declared here, not which one.
+_AUXILIARY_ENVELOPE_HEADER_PERIOD_INDEX: Final[int] = 4
+#: Separators are enumerated from the corpus, not guessed: Modelo 303's own
+#: cell writes BOTH ellipsis spellings side by side -- three literal dots
+#: between the month bounds and U+2026 between the quarter bounds.
+#: A period slot declares either one AEAT period token or a range of them. Kept
+#: deliberately shape-based rather than enumerating every vocabulary: the
+#: authority on which periods a revision admits is its own period selector, and
+#: duplicating that list here would be a second copy free to drift from it.
+_AUXILIARY_ENVELOPE_HEADER_PERIOD_RE: Final[re.Pattern[str]] = re.compile(
+    r'^"[0-9A-Z]{2}"(?:\s*(?:\.{3}|…|-|–|o|y|,)\s*"?[0-9A-Z]{2}"?)*$',
+    re.IGNORECASE,
+)
+#: AEAT spells a constant slot two ways across its own designs: ``Constante
+#: "<T"`` in Modelo 390's and a bare ``"<T"`` in Modelo 303's. Both assert the
+#: identical constant, so the comparison reads THROUGH the prefix rather than
+#: requiring one spelling -- the same tolerance the row parser already applies
+#: to naturaleza tokens, whose closed alternation once turned every variant into
+#: a silently dropped row.
+_AUXILIARY_ENVELOPE_HEADER_CONSTANT_PREFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"^Constante\s+(?:número\s+)?",
+    re.IGNORECASE,
+)
+
+
+def _auxiliary_header_constant(value: str | None) -> str | None:
+    """Return a constant slot's value with AEAT's optional ``Constante`` prefix removed."""
+    if value is None:
+        return None
+    return _AUXILIARY_ENVELOPE_HEADER_CONSTANT_PREFIX_RE.sub("", value.strip()).strip()
+
 #: Slots AEAT footnotes rather than fills: the filing year and the two entidad
 #: desarrolladora identity positions. Modelo 390 writes the marker IN the
 #: Contenido cell ("Nota 2", "Nota 1"); Modelo 232 leaves the cell empty and
@@ -212,10 +250,19 @@ def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]
     """
     for index, (expected, value) in enumerate(zip(AUXILIARY_ENVELOPE_HEADER_CONTENT, contents, strict=True)):
         if index == _AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX:
-            if value is None or not _AUXILIARY_ENVELOPE_HEADER_MODELO_RE.fullmatch(value.strip()):
+            modelo_constant = _auxiliary_header_constant(value)
+            if modelo_constant is None or not _AUXILIARY_ENVELOPE_HEADER_MODELO_RE.fullmatch(modelo_constant):
                 raise ValueError(
                     "auxiliary envelope header does not declare a three-digit modelo constant at its "
                     f"second slot: {value!r}",
+                )
+            continue
+        if index == _AUXILIARY_ENVELOPE_HEADER_PERIOD_INDEX:
+            period_constant = _auxiliary_header_constant(value)
+            if period_constant is None or not _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(period_constant):
+                raise ValueError(
+                    "auxiliary envelope header does not declare a period token or range at its period "
+                    f"slot: {value!r}",
                 )
             continue
         if index in _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES:
@@ -226,7 +273,7 @@ def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]
                     f"empty cell: {value!r}",
                 )
             continue
-        if value != expected:
+        if _auxiliary_header_constant(value) != _auxiliary_header_constant(expected):
             raise ValueError(
                 f"auxiliary envelope header slot {index} carries {value!r}, not the required {expected!r}",
             )
@@ -482,8 +529,61 @@ class RecordDesignSinglePositionCorrection(RegistryModel):
 #: discriminated union. A worklist reading ``corrections`` needs no per-kind
 #: branch to keep treating "corrected" as distinct from "complete" -- see
 #: ``_classify()`` in ``test_every_bundled_design_is_read_or_reported.py``.
+class RecordDesignRangeStartCorrection(RegistryModel):
+    """A declared, sourced correction of ONE filler run's mis-declared start.
+
+    Subject is a filler row whose declared START is wrong, leaving a span no row
+    describes. Modelo 165's 2013 orden prints ``104-500 BLANCOS`` where both
+    later editions of the SAME orden print ``102-500``, and no edition describes
+    a field at 102-103, so the span is filler in every reading and only the
+    original mis-declares where filler begins.
+
+    Separate from the three existing kinds rather than a widening of any of
+    them, for the reason each of those is separate: a field-type correction
+    names a data row read with a blank type cell, a header-cell correction names
+    a header column, and a single-position correction admits one row that was
+    not read at all. This names a row that WAS read, at a position it should not
+    have started from -- a claim none of the others can make without loosening
+    what they guarantee.
+
+    THE PRECONDITION IS THE WHOLE GUARD, and it is enforced at extraction rather
+    than trusted here: the vacated span must be described by NO field in the
+    sheet. That is what keeps this a filler-boundary move and never a way to
+    invent, displace, or overlap a data row. ``editions_read`` carries the
+    cross-edition evidence a reviewer follows, since one parse cannot see the
+    sibling editions that justify the correction.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    kind: Literal["range_start"] = "range_start"
+    sheet: str = Field(min_length=1)
+    #: The start AEAT printed, used to identify the row being corrected.
+    declared_start: int = Field(gt=0)
+    #: The start the sibling editions publish. Must precede ``declared_start``:
+    #: a correction that moved a filler run LATER would vacate positions in the
+    #: other direction and could strand described data, which is not this kind.
+    corrected_start: int = Field(gt=0)
+    reason: str = Field(min_length=1)
+    editions_read: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_direction(self) -> RecordDesignRangeStartCorrection:
+        if self.corrected_start >= self.declared_start:
+            raise ValueError(
+                f"range-start correction for sheet {self.sheet!r} moves the start from "
+                f"{self.declared_start} to {self.corrected_start}, which does not EXTEND the run "
+                "backwards; this kind exists to reclaim a span no row describes, so the corrected "
+                "start must precede the declared one",
+            )
+        return self
+
+
 RecordDesignCorrection = Annotated[
-    RecordDesignFieldTypeCorrection | RecordDesignHeaderCellCorrection | RecordDesignSinglePositionCorrection,
+    RecordDesignFieldTypeCorrection
+    | RecordDesignHeaderCellCorrection
+    | RecordDesignSinglePositionCorrection
+    | RecordDesignRangeStartCorrection,
     Field(discriminator="kind"),
 ]
 

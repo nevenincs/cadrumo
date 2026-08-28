@@ -207,7 +207,7 @@ def certificate_check(
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import check_operator_certificate_sources
-    from ....application.auth.probes import ProviderProbeResult
+    from ....application.auth.probes import PROBE_RESULTS_NEEDING_ATTENTION
     from .._config_payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
 
     report = check_operator_certificate_sources()
@@ -238,7 +238,7 @@ def certificate_check(
             context={"name": entry.name, "result": entry.result},
         )
         for entry in report.entries
-        if entry.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED)
+        if entry.result in PROBE_RESULTS_NEEDING_ATTENTION
     ]
 
     if not report.entries:

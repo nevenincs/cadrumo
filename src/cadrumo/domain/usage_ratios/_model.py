@@ -27,8 +27,8 @@ from ...core import STRICT_FROZEN_CONFIG
 from ..categories import (
     ProportionalityKind,
     SpendingCategory,
+    load_category_profiles,
 )
-from ..categories._registry import load_category_profiles
 from .errors import UsageRatioValidationError
 
 __all__ = [

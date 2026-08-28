@@ -98,8 +98,7 @@ class MissingTranslationError(CoreError):
         """
         super().__init__(
             f"locale key {key!r} is not translated in {locale!r}; "
-            f"run `python -m dev.locales scaffold` to declare it, then "
-            f"`python -m dev.locales set {locale} {key} <value>` to translate it"
+            f"declare it in the locale catalogues and set a real translation for {locale!r}"
         )
         self.key = key
         self.locale = locale

@@ -52,7 +52,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, NamedTuple
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import BindingSourceKind as _BindingSourceKind
@@ -382,27 +382,34 @@ def _verified_required_casilla_ids(
 
 
 class RegistryTreeReport(BaseModel):
-    """Read-only registry tree load or verification result."""
+    """Read-only registry tree load or verification result.
+
+    Every ``*_count`` is an inventory tally -- a ``len()`` over a collection the
+    loaded authority already holds, or a sum of such tallies -- so none can be
+    negative and each declares that bound. No count is authored in registry
+    TOML; they are all derived at report assembly, which is what makes the
+    bound a statement about this type rather than a hope about its input.
+    """
 
     model_config = ConfigDict(frozen=True)
 
     registry_root: str
     source_root: str | None = None
-    modelo_count: int
-    revision_count: int
-    legal_reference_count: int
-    source_reference_count: int
-    casilla_count: int
-    formula_count: int
-    extraction_profile_count: int
-    cross_reference_count: int
-    workbook_parity_ref_count: int
-    verification_expectation_count: int
-    application_link_count: int
+    modelo_count: int = Field(ge=0)
+    revision_count: int = Field(ge=0)
+    legal_reference_count: int = Field(ge=0)
+    source_reference_count: int = Field(ge=0)
+    casilla_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
+    extraction_profile_count: int = Field(ge=0)
+    cross_reference_count: int = Field(ge=0)
+    workbook_parity_ref_count: int = Field(ge=0)
+    verification_expectation_count: int = Field(ge=0)
+    application_link_count: int = Field(ge=0)
     application_link_surfaces: tuple[str, ...]
-    relation_count: int
+    relation_count: int = Field(ge=0)
     relation_dependency_roles: tuple[str, ...]
-    filing_schedule_count: int
+    filing_schedule_count: int = Field(ge=0)
     modelos: tuple[str, ...]
     revision_details: tuple[RegistryRevisionDetailReport, ...]
     verified: bool
@@ -419,7 +426,7 @@ class RegistryWorkbookParityDetailReport(BaseModel):
     workbook_source: _SourceRefId
     formula_coverage: str
     runner_required: bool
-    output_cell_count: int
+    output_cell_count: int = Field(ge=0)
 
 
 class RegistryRevisionDetailReport(BaseModel):
@@ -432,16 +439,16 @@ class RegistryRevisionDetailReport(BaseModel):
     legal_refs: tuple[_LegalRefId, ...]
     source_refs: tuple[_SourceRefId, ...]
     export_layout_ids: tuple[_ExportLayoutId, ...]
-    export_layout_count: int
-    export_record_count: int
-    export_field_count: int
-    deadline_window_count: int
+    export_layout_count: int = Field(ge=0)
+    export_record_count: int = Field(ge=0)
+    export_field_count: int = Field(ge=0)
+    deadline_window_count: int = Field(ge=0)
     deadline_periods: tuple[str, ...]
     relation_ids: tuple[_RelationId, ...]
-    relation_count: int
+    relation_count: int = Field(ge=0)
     relation_dependency_roles: tuple[str, ...]
     filing_schedule_ids: tuple[str, ...]
-    filing_schedule_count: int
+    filing_schedule_count: int = Field(ge=0)
     portal_guard_policy_ids: tuple[str, ...]
     workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
 

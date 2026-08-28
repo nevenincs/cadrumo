@@ -27,8 +27,9 @@ from ....application.user_profile.login_interaction import attempt_profile_login
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr
+from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.credentials import CredentialHostApp, assessment_refusal
+from ....entrypoints.tui.secret.credentials import assessment_refusal
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..devtools.fixture import registration_attempt
@@ -79,7 +80,7 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
         assert dict(expected.context)["reason"] == reason.value
         exact_message = tr(expected.translated_message, **dict(expected.context))
 
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Refused candidate", password=candidate, confirm=candidate)
             live_rendered = str(app.query_one("#strength-line", Static).render())
             assert live_rendered == exact_message
@@ -146,7 +147,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Screen Subject", password=candidate, confirm=candidate)
             await pilot.click("#btn-create")
             for _ in range(100):
@@ -173,7 +174,10 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
                 await pilot.pause(0.05)
             await pilot.click("#btn-confirm-words")
             await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            for _ in range(200):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
 
         assert app.outcome is not None
         assert app.outcome.label == "Screen Subject"
@@ -205,7 +209,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
 async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Mismatch", password=_TYPED_PASSWORD, confirm="something-else-entirely")
             await pilot.click("#btn-create")
             await pilot.pause()
@@ -227,7 +231,7 @@ async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_pa
     assert len(candidate) == 7
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Short", password=candidate, confirm=candidate)
             strength = app.query_one("#strength-line", Static)
             live_rendered = str(strength.render())
@@ -262,7 +266,7 @@ async def test_unkeyed_unexpected_registration_failure_keeps_internal_classifica
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = RegistrationScreen(assess=assess_profile_password, register=fail_registration)
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Unexpected", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
             await pilot.click("#btn-create")
             await pilot.app.workers.wait_for_complete()
@@ -280,7 +284,7 @@ async def test_unkeyed_unexpected_registration_failure_keeps_internal_classifica
 async def test_blank_username_refuses_and_focuses_the_field(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="   ", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
             await pilot.click("#btn-create")
             await pilot.pause()
@@ -299,7 +303,7 @@ async def test_the_strength_line_tracks_the_password_field(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             field = app.query_one("#field-password", Input)
             line = app.query_one("#strength-line", Static)
 
@@ -330,7 +334,7 @@ async def test_the_password_fields_are_masked(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with CredentialHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.query_one("#field-password", Input).password is True
             assert app.query_one("#field-confirm", Input).password is True
             assert app.query_one("#field-username", Input).password is False

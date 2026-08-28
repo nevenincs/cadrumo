@@ -12,6 +12,7 @@ from pydantic import (
 
 from ...application.live.errors import LiveIvaAcquisitionFailureMode
 from ...application.live.remote_state_models import (
+    LiveIvaDiagnosticRef,
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
@@ -183,13 +184,19 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
 
 
 class LiveIvaAuthOutcomePayload(OutputSchema):
-    """Redacted JSON projection of :class:`LiveIvaAuthOutcome`."""
+    """Redacted JSON projection of :class:`LiveIvaAuthOutcome`.
+
+    ``diagnostic_ref`` carries the projected model's own
+    :data:`~cadrumo.application.live.remote_state_models.LiveIvaDiagnosticRef`
+    rather than restating the digest shape, so the wire schema and the record
+    it projects cannot come to disagree about the truncation width.
+    """
 
     status: LiveIvaReadStatus
     outcome_mode: LiveIvaAcquisitionFailureMode
     failure_mode: LiveIvaAcquisitionFailureMode | None
     failure_type: str | None
-    diagnostic_ref: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{12}$")
+    diagnostic_ref: LiveIvaDiagnosticRef | None = None
     provider_kind: str | None
     reused_persisted_session: bool | None
     fresh: bool | None

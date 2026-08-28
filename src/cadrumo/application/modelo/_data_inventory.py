@@ -80,15 +80,35 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class DataInventoryCasilla:
-    """One casilla entry on a data-inventory checklist."""
+    """One casilla entry on a data-inventory checklist.
+
+    ``legal_refs`` and ``source_refs`` are mandatory and non-empty: regulatory
+    grounding travels with a casilla all the way to the operator, so an entry
+    that cannot say which provision establishes it has nothing to show and must
+    not be built. The refs are copied from the registry
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`,
+    which already refuses an ungrounded casilla at registry build; enforcing it
+    here too means the checklist type states the guarantee itself rather than
+    inheriting it from wherever its fields happened to come from.
+    """
 
     casilla_id: CasillaId
     number: str
     label: str
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     binding_id: BindingId | None = None
     binding_source: str | None = None
+
+    def __post_init__(self) -> None:
+        """Refuse an entry whose regulatory grounding is missing."""
+        missing = [
+            name for name, refs in (("legal_refs", self.legal_refs), ("source_refs", self.source_refs)) if not refs
+        ]
+        if missing:
+            raise ValueError(
+                f"data-inventory casilla {self.casilla_id} must carry non-empty {' and '.join(missing)}",
+            )
 
 
 @dataclass(frozen=True, slots=True)

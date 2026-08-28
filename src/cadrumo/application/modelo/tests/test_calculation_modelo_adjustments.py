@@ -108,7 +108,7 @@ def test_union_keeps_disjoint_rows_from_both_supply_paths() -> None:
 
 
 def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
-    """The bite proof this Step exists for: without the union, this pair double-counts.
+    """The bite proof this test exists for: without the union, this pair double-counts.
 
     An invoice-sourced operador row the operator ALSO enters manually for the
     SAME (nif_comunitario, clave_operacion) must count once, not twice, in
@@ -171,7 +171,7 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
 
 
 def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
-    """Gate: a row kind added to the union without an identity entry regresses S298 silently."""
+    """Gate: a row kind added to the union without an identity entry regresses the double-count fix silently."""
     assert uncovered_detail_row_kinds() == frozenset()
 
 

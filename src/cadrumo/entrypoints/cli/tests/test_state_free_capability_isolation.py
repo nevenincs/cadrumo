@@ -13,7 +13,7 @@ the fix is the declaration or the import, never an exemption here.
 
 Resolution, not invocation, is deliberately what is measured. A leaf may load
 whatever its declared capabilities allow once an operator actually runs it; the
-cost this campaign exists to remove is the cost paid on the way *to* a command,
+cost this gate exists to remove is the cost paid on the way *to* a command,
 by every sibling and ancestor, before anything has been asked for.
 """
 

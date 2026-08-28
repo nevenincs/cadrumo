@@ -18,13 +18,23 @@ from ._verification_substance_support import _CASILLA_06, _CASILLA_09, _workflow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_M123_ADVISORY_PREDICATE_ID = "modelo-123-2024-base-total-implica-retenciones-total"
+# The shipped id carries the full revision stem. The `modelo-123-2024-...`
+# spelling this replaced matched nothing, and the lookup below reported that
+# as a bare StopIteration naming neither the id nor the revision.
+_M123_ADVISORY_PREDICATE_ID = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
 
 
 def _m123_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M123 silent-under-declaration advisory from the authority."""
     revision = bundled_authority().validate_modelo("123").revisions["2024-y-siguientes"]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M123_ADVISORY_PREDICATE_ID)
+    predicate = next(
+        (p for p in revision.verification_predicates if p.predicate_id == _M123_ADVISORY_PREDICATE_ID),
+        None,
+    )
+    assert predicate is not None, (
+        f"revision {revision.id} ships no predicate {_M123_ADVISORY_PREDICATE_ID!r}; it declares "
+        f"{sorted(p.predicate_id for p in revision.verification_predicates)}"
+    )
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["06", "09"])'
     return predicate

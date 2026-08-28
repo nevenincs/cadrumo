@@ -111,7 +111,7 @@
       {
         "importer_path": "src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py",
         "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
+        "target_mod": "cadrumo.adapters.outbound.google.calc_sheets_pull",
         "imported_names": [
           "_decode_row_set_block"
         ],
@@ -226,7 +226,7 @@
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
         "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
+        "target_mod": "cadrumo.adapters.outbound.google.calc_sheets_pull",
         "imported_names": [
           "RelationEdit"
         ],
@@ -235,7 +235,7 @@
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
         "occurrence": 2,
-        "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
+        "target_mod": "cadrumo.adapters.outbound.google.calc_sheets_pull",
         "imported_names": [
           "RelationEdit"
         ],

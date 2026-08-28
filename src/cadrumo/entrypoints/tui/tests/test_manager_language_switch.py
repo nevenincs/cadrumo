@@ -32,6 +32,7 @@ from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
@@ -196,7 +197,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             settled = await _drained_footer(app, pilot)
@@ -208,7 +209,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
             await pilot.press(language_key)
             await pilot.pause()
 
-            options = app.screen.query_one("#edit-options", OptionList)
+            options = app.app.screen.query_one("#edit-options", OptionList)
             rendered = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
             tokens = _language_tokens(app)
             assert len(tokens) > 1, "a profile offering one language cannot prove a chooser"
@@ -219,7 +220,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
                 tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=_STARTING_LANGUAGE)
                 for token in tokens
             ], f"each row must name its own language, in the page's language, but showed {rendered}"
-            app.exit(None)
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -238,7 +239,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             started_in = tr(_COLUMN_KEYS[0], locale=_STARTING_LANGUAGE)
@@ -252,7 +253,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             language_key = _language_key(await _drained_footer(app, pilot), locale=_STARTING_LANGUAGE)
             await pilot.press(language_key)
             await pilot.pause()
-            options = app.screen.query_one("#edit-options", OptionList)
+            options = app.app.screen.query_one("#edit-options", OptionList)
             options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -266,7 +267,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             assert settled.get(language_key) == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
                 f"the footer must be rewritten too, but showed {settled}"
             )
-            app.exit(None)
+            app.app.exit(None)
 
         _ensure_logged_in()
 

@@ -145,6 +145,8 @@ if TYPE_CHECKING:
     from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
     from ._filing_producer_key import FilingProducerKey
     from ._filing_projection_ref import (
+        M303_MESA_FACTS,
+        M303_REPEATING_FACTS,
         FilingProjectionRef,
         M296AnexoCertificadoField,
         M296AnexoCertificadoProjectionRef,
@@ -502,6 +504,8 @@ __all__: list[str] = [
     "LOCAL_TRANSPORT_LABEL",
     "LOCKFILE_UNLINK_RETRY_SECONDS",
     "M210_TIPO_RENTA_CODE_PROJECTION",
+    "M303_MESA_FACTS",
+    "M303_REPEATING_FACTS",
     "M347_CLAVE_C_THRESHOLD_EUR",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -964,6 +968,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "M303RegimenSimplificadoFactProjectionRef": "._filing_projection_ref",
     "M303RegimenSimplificadoModuleProjectionRef": "._filing_projection_ref",
     "M303RegimenSimplificadoModuleValue": "._filing_projection_ref",
+    "M303_MESA_FACTS": "._filing_projection_ref",
+    "M303_REPEATING_FACTS": "._filing_projection_ref",
     "M390ActivityField": "._filing_projection_ref",
     "M390DifferentiatedDeductionProjectionField": "._filing_projection_ref",
     "M390ProrrataActivityProjectionField": "._filing_projection_ref",

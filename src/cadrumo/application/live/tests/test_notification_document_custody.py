@@ -359,15 +359,19 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
 
-def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) -> None:
-    """Anti-tautology proof for the one field with a default to fall back to.
+def test_deleting_the_parse_refusal_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
+    """Anti-tautology proof for the field that is optional only in isolation.
 
-    Every other proof in this module deletes a REQUIRED field and shows the
-    load refuses outright. ``parse_refusal`` is optional, so a dropped key
-    does not raise at all — it silently re-defaults to ``None``. Strict
-    equality against the originally persisted record is what surfaces that
-    instead, which is exactly why the roundtrip above compares the whole
-    record rather than checking individual fields.
+    ``parse_refusal`` declares a default, so on its own a dropped key would
+    re-default to ``None`` and be lost in silence. It does not, because the
+    record requires exactly one of the reading and the refusal: dropping the
+    refusal from a record that carries no reading leaves the record saying
+    nothing at all about what became of the reading, and the load refuses.
+
+    That is the whole point of siting the invariant on the record. The
+    surviving record would have been the dangerous one — no figures and no
+    stated reason reads as "this act carried no amounts" — and it is exactly
+    the record that a dropped optional key would otherwise have produced.
     """
     truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
@@ -396,9 +400,8 @@ def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) ->
             mutate=_drop,
         )
 
-        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
-        assert loaded != persisted
-        assert loaded.parse_refusal is None
+        with pytest.raises(ValidationError, match="neither a reading nor a refusal"):
+            service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
 
 def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:

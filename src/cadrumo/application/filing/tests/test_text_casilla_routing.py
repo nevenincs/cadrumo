@@ -38,9 +38,17 @@ _RETENCION_PRACTICADA_CASILLA: CasillaId = validated_casilla_id(
     surface="_RETENCION_PRACTICADA_CASILLA",
 )
 _BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("base_imponible", surface="_BASE_IMPONIBLE_CASILLA")
-_M184_MEMBER_NIF_CASILLA: CasillaId = validated_casilla_id(
-    "tipo2.miembro-nif",
-    surface="_M184_MEMBER_NIF_CASILLA",
+# `tipo2.miembro-nif` is gone, and its removal is recorded in the registry
+# itself: no field exists at those positions in either bundled design epoch, and
+# the casilla named for the member was reading the DECLARANTE's NIF bytes. The
+# member's own NIF is `tipo3.miembro-nif`, but that one is declared `text`
+# rather than `nif` -- members may be non-resident and carry a foreign
+# identifier, which Spanish NIF validation would wrongly refuse. So the routing
+# property this case exists for is exercised on the casilla the registry DOES
+# declare as `nif`.
+_M184_NIF_TYPED_CASILLA: CasillaId = validated_casilla_id(
+    "decl.representante-nif",
+    surface="_M184_NIF_TYPED_CASILLA",
 )
 # Modelo 303 and Modelo 369 declare the same informational period casilla id.
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
@@ -80,7 +88,7 @@ def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
     assert values[_BASE_IMPONIBLE_CASILLA].value == Decimal("1100.00")
 
 
-def test_build_draft_routes_and_validates_required_m184_member_nif() -> None:
+def test_build_draft_routes_and_validates_a_nif_typed_m184_casilla() -> None:
     """A registry-declared NIF reaches its scalar validator, not Decimal parsing."""
     period = Period.from_year_and_code(2026, "0A")
 
@@ -88,21 +96,25 @@ def test_build_draft_routes_and_validates_required_m184_member_nif() -> None:
         modelo="184",
         period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
-        inputs={_M184_MEMBER_NIF_CASILLA: "12345678Z"},
+        inputs={_M184_NIF_TYPED_CASILLA: "12345678Z"},
         schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
     )
 
     values = {value.casilla_id: value for value in draft.values}
-    assert values[_M184_MEMBER_NIF_CASILLA].value == "12345678Z"
+    assert values[_M184_NIF_TYPED_CASILLA].value == "12345678Z"
 
-    with pytest.raises(ModeloBuilderError, match="invalid NIF / NIE / CIF identifier"):
+    with pytest.raises(ModeloBuilderError) as refusal:
         build_draft(
             modelo="184",
             period=period,
             profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
-            inputs={_M184_MEMBER_NIF_CASILLA: "12345678A"},
+            inputs={_M184_NIF_TYPED_CASILLA: "12345678A"},
             schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
         )
+
+    # The wrapper is localized; the wrapped registry error still names the defect.
+    assert refusal.value.translated_message == "application.filing.build_draft.errors.text_casilla_invalid"
+    assert "invalid NIF / NIE / CIF identifier" in str(refusal.value.__cause__)
 
 
 def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
@@ -122,7 +134,7 @@ def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
     values = {value.casilla_id: value for value in draft.values}
     assert values[_DECL_PERIODO_CASILLA].value == "EXT-1T"
 
-    with pytest.raises(ModeloBuilderError, match="period_code value 'T1'"):
+    with pytest.raises(ModeloBuilderError) as refusal:
         build_draft(
             modelo="369",
             period=period,
@@ -130,6 +142,17 @@ def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
             inputs={_DECL_PERIODO_CASILLA: "T1"},
             schema_provider=provider,
         )
+
+    # The refusal is localized, so its rendered text no longer spells the
+    # offending value. One key serves every text-casilla rejection, so the key
+    # alone would not tell an invalid period token from any other bad scalar:
+    # the context names the casilla and its declared data_type, and the CAUSE
+    # -- the registry validation error this wraps -- still carries the value.
+    assert refusal.value.translated_message == "application.filing.build_draft.errors.text_casilla_invalid"
+    context = refusal.value.context or {}
+    assert context.get("casilla_id") == _DECL_PERIODO_CASILLA
+    assert context.get("data_type") == "period_code"
+    assert "period_code value 'T1' does not match" in str(refusal.value.__cause__)
 
 
 def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
@@ -158,7 +181,7 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
     provider = build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period)
     profile = ModeloOperatorProfile(tax_id="12345678Z", display_name="M303 stale period value")
 
-    with pytest.raises(ModeloBuilderError, match="period_code value '1' does not match"):
+    with pytest.raises(ModeloBuilderError) as refusal:
         build_draft(
             modelo="303",
             period=period,
@@ -166,3 +189,14 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
             inputs={_DECL_PERIODO_CASILLA: "1"},
             schema_provider=provider,
         )
+
+    # The refusal is localized, so its rendered text no longer spells the
+    # offending value. One key serves every text-casilla rejection, so the key
+    # alone would not tell an invalid period token from any other bad scalar:
+    # the context names the casilla and its declared data_type, and the CAUSE
+    # -- the registry validation error this wraps -- still carries the value.
+    assert refusal.value.translated_message == "application.filing.build_draft.errors.text_casilla_invalid"
+    context = refusal.value.context or {}
+    assert context.get("casilla_id") == _DECL_PERIODO_CASILLA
+    assert context.get("data_type") == "period_code"
+    assert "period_code value '1' does not match" in str(refusal.value.__cause__)

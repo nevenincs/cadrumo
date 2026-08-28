@@ -42,8 +42,8 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "participe_clave",
         "country_of_residence",
         "role",
-        # (member, clave, subclave) facts added per the accepted M184 socio
-        # row-shape ADR; see test_m184_socio_clave_subclave_schema_fields.py
+        # (member, clave, subclave) facts added per the governing M184 socio
+        # row-shape decision; see test_m184_socio_clave_subclave_schema_fields.py
         # for their own dedicated coverage.
         "clave",
         "subclave",

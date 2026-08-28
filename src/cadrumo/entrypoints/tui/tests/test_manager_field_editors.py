@@ -29,6 +29,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
@@ -99,7 +100,7 @@ def _manager() -> ProfileManagerScreen:
 
 def _open(app: ProfileManagerScreen, path: str) -> None:
     field = app._field_by_key[path]
-    app.push_screen(
+    app.app.push_screen(
         FieldEditScreen(field, validate=app._validator_for(field)),
         app._apply_edit_for(field),
     )
@@ -114,7 +115,7 @@ async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_pat
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             declared = app._field_by_key[_BOOLEAN_PATH]
             assert [choice.value for choice in declared.choices] == ["true", "false"], (
@@ -122,9 +123,9 @@ async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_pat
             )
             _open(app, _BOOLEAN_PATH)
             await pilot.pause()
-            assert app.screen.query("#edit-options"), "a boolean must be offered as a list"
-            assert not app.screen.query("#edit-input"), "a boolean must not be typed into"
-            app.exit(None)
+            assert app.app.screen.query("#edit-options"), "a boolean must be offered as a list"
+            assert not app.app.screen.query("#edit-input"), "a boolean must not be typed into"
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -142,14 +143,14 @@ async def test_picking_yes_stores_the_canonical_boolean(tmp_path) -> None:
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             _open(app, _BOOLEAN_PATH)
             await pilot.pause()
-            app.screen.query_one("#edit-options", OptionList).highlighted = 0
+            app.app.screen.query_one("#edit-options", OptionList).highlighted = 0
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
-            app.exit(None)
+            app.app.exit(None)
 
         assert _stored().get(_BOOLEAN_PATH) is True, "picking the affirmative option must store a real boolean"
 
@@ -167,14 +168,14 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             _open(app, _BOOLEAN_PATH)
             await pilot.pause()
-            app.screen.query_one("#edit-options", OptionList).highlighted = 1
+            app.app.screen.query_one("#edit-options", OptionList).highlighted = 1
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
-            app.exit(None)
+            app.app.exit(None)
 
         assert _stored().get(_BOOLEAN_PATH) is False
 
@@ -188,13 +189,13 @@ async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             _open(app, PROFILE_OUTPUT_LANGUAGE_PATH)
             await pilot.pause()
-            assert app.screen.query("#edit-options")
-            assert not app.screen.query("#edit-input")
-            app.exit(None)
+            assert app.app.screen.query("#edit-options")
+            assert not app.app.screen.query("#edit-input")
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -210,14 +211,14 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             _open(app, _TEXT_PATH)
             await pilot.pause()
-            assert app.screen.query("#edit-input"), "a free-text field must keep its box"
-            assert not app.screen.query("#edit-options")
-            assert not app.screen.query("#edit-hint"), "a name box explains itself; a hint there is noise"
-            app.exit(None)
+            assert app.app.screen.query("#edit-input"), "a free-text field must keep its box"
+            assert not app.app.screen.query("#edit-options")
+            assert not app.app.screen.query("#edit-hint"), "a name box explains itself; a hint there is noise"
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -229,17 +230,17 @@ async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_p
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_TEXT_PATH]
             assert field.label != field.path, "the fixture needs distinct operator and storage names"
             _open(app, _TEXT_PATH)
             await pilot.pause()
 
-            assert str(app.screen.query_one("#edit-label", Label).render()) == field.label
-            assert not app.screen.query("#edit-path")
-            assert field.path not in app.export_screenshot()
-            app.exit(None)
+            assert str(app.app.screen.query_one("#edit-label", Label).render()) == field.label
+            assert not app.app.screen.query("#edit-path")
+            assert field.path not in app.app.export_screenshot()
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -251,11 +252,11 @@ async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
         )
 
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             _open(app, _DATE_PATH)
             await pilot.pause()
-            hint = str(app.screen.query_one("#edit-hint", Static).content)
+            hint = str(app.app.screen.query_one("#edit-hint", Static).content)
             assert hint.strip(), "a date box must say what layout it accepts"
             assert _VALID_DATE in hint, "the hint must show the layout by example, not only describe it"
-            app.exit(None)
+            app.app.exit(None)

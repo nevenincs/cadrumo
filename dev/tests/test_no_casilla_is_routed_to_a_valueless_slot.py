@@ -30,20 +30,25 @@ the one that discards only false positives.
 SCOPE. Only ``export_refs`` that RESOLVE against a bundled semantic map are
 judged. A revision whose layout is hand-authored rather than generated has no map
 entry to look up, and inventing a verdict for it would be a guess.
+
+This gate reads the dev-authored semantic-map mappings directly, so it lives
+here rather than under ``src/cadrumo``: the mappings tree is the generator's
+input, and the shipped registry authority is its compiled output.
 """
 
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
 
 import pytest
 
-from ..authority import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from .._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_MAPPINGS = Path("dev/registry/mappings")
+_MAPPINGS = REPO_ROOT / "dev" / "registry" / "mappings"
 #: Map entry kinds that write no casilla value: padding and constants.
 _VALUELESS_KINDS = frozenset({"filler", "literal"})
 #: Below these the walk found nothing and every assertion would be vacuous.

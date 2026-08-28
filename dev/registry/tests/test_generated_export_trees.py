@@ -125,8 +125,8 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # supporting-modelo needs too: the isolation must admit modelo 200, whose
     # annual IS return these pagos fraccionados are instalments of.
     _GeneratedTree("222", "2025-y-siguientes", "aeat-dr-222-2025", "2025", 2025, "1P"),
-    # The selected five source-bound M303 epochs.  The 2022 layout remains
-    # outside this campaign; the superseded 2023-y-siguientes revision is not a
+    # The selected five source-bound M303 epochs.  The 2022 layout is out of
+    # scope here; the superseded 2023-y-siguientes revision is not a
     # generated-tree fallback and must never re-enter this set.
     _GeneratedTree("303", "2023", "aeat-dr-303-2023", "2023", 2023, "4T"),
     _GeneratedTree("303", "2024-hasta-08-y-2t", "aeat-dr-303-2024-early", "2024-early", 2024, "2T"),

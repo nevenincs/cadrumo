@@ -64,7 +64,22 @@ class GeneratedExportFileDigest(_ProofModel):
 class FilingExportGenerationProof(_ProofModel):
     """Canonical generator-verifier result for one exact revision layout set."""
 
-    authority: Literal["dev.registry.pipeline.verify_export_fragment_provenance_manifest"]
+    authority: Literal["generated_export_fragment_provenance_manifest"]
+    """Stable token naming the authority that produced this proof.
+
+    Deliberately NOT a dotted module path. The generator that satisfies this
+    contract lives outside the distribution, so pinning its import location
+    here would make a shipped model's only valid value a path no installed
+    user can resolve -- and would rename the wire contract every time the
+    generator moved. The token names what was proved instead: the canonical
+    provenance manifest for a generated export fragment set was verified
+    against the current semantic map and render profile.
+
+    :attr:`FilingExportEmissionProof.authority` reads as a dotted path for the
+    opposite reason: it names a shipped production writer, which is a stable
+    in-distribution location the operator can actually reach.
+    """
+
     manifest_locator: _Locator
     manifest_sha256: _Sha256
     semantic_map_sha256: _Sha256

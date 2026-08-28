@@ -6,8 +6,8 @@ facet filters, keyboard scroll) is already proven exhaustively in
 This module proves the piece that owns the C1 DESTINATION as a whole: the
 keyboard-only picker (``ModeloWorkSelectApp``/``ModeloWorkSelectScreen``) an
 operator actually lands on first, across the same four-locale, three-geometry,
-two-theme, non-colour, and stable-keyboard-order matrix the companion ADR
-requires before C1's route can become callable.
+two-theme, non-colour, and stable-keyboard-order matrix the companion decision
+record requires before C1's route can become callable.
 
 Every assertion here is a real Textual pilot interaction against the real
 screen classes -- never a presence-only check. Selecting a row and reading

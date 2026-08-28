@@ -20,4 +20,14 @@ class ProviderProbeResult(StrEnum):
     INVALID_IDENTITY = "invalid_identity"
 
 
-__all__ = ["ProviderProbeResult"]
+PROBE_RESULTS_NEEDING_ATTENTION: frozenset[ProviderProbeResult] = frozenset(
+    {
+        ProviderProbeResult.EXPIRING,
+        ProviderProbeResult.EXPIRED,
+    },
+)
+"""Probe results that warrant an operator-facing warning: the credential is
+still usable today but its trustworthiness is degrading or has lapsed."""
+
+
+__all__ = ["PROBE_RESULTS_NEEDING_ATTENTION", "ProviderProbeResult"]

@@ -226,17 +226,21 @@ def test_default_currency_consumers_alias_core_constant() -> None:
 
 
 def test_classified_by_manual_consumers_alias_core_constant() -> None:
-    """Application/domain consumers import or re-export ``CLASSIFIED_BY_MANUAL`` from core.
+    """Application/domain consumers bind ``CLASSIFIED_BY_MANUAL`` from core.
 
-    The application layer must not define a local copy; it must import the
-    canonical constant from ``cadrumo.core.external_constants`` and expose it
-    through the package ``__init__``.
+    The application layer must not define a local copy; every consuming module
+    must import the canonical constant from ``cadrumo.core.external_constants``
+    so the identity check below cannot pass against a shadow.
+
+    The owning package ``__init__`` is deliberately NOT asserted: package
+    namespaces are inert and may not re-export project symbols, so a namespace
+    assertion here would demand exactly what the import-centralization boundary
+    forbids. Consumers are enrolled by their defining module instead.
     """
 
     from ..external_constants import CLASSIFIED_BY_MANUAL
 
     for module_name, message in (
-        ("cadrumo.application.ledger", "cadrumo.application.ledger must expose CLASSIFIED_BY_MANUAL"),
         ("cadrumo.application.ledger.models", "_models must import CLASSIFIED_BY_MANUAL from core"),
         (
             "cadrumo.domain.transactions._service",

@@ -38,6 +38,25 @@ class OperationEffect(StrEnum):
     UNKNOWN = "unknown"
 
 
+EFFECTS_WITHOUT_PARTIAL_COMMIT: frozenset[OperationEffect] = frozenset(
+    {
+        OperationEffect.NONE,
+        OperationEffect.UPDATED,
+        OperationEffect.UNKNOWN,
+    },
+)
+"""Effects declarable by an operation that either does nothing, fully applies,
+or leaves an unknown extent, but never a partially-applied one.
+
+:attr:`OperationEffect.PARTIAL` is excluded deliberately: an operation whose
+sub-steps can fail independently and leave only some of them committed
+declares ``PARTIAL`` explicitly in its own ``permitted_effects`` instead of
+using this set. See
+:mod:`cadrumo.application.live.filed_history_operation`, whose replay
+operation returns :attr:`OperationEffect.PARTIAL` when some sub-operations
+fail, for the contrasting case."""
+
+
 class OperationDurability(StrEnum):
     """Persistence and recovery guarantee declared by an operation definition."""
 

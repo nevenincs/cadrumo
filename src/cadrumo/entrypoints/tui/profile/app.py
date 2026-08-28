@@ -1,11 +1,10 @@
 """The five-stage profile journey shell: Overview, Get data, Required, Review, Ready.
 
-This is presentation state, not a second persisted wizard
-(`2026-08-11-tui-interface-adr` D6): the current stage and body content are
-recomputed from the injected :class:`ProfilePresentationV1` on every
-navigation, and the app itself decides nothing about requiredness,
-applicability, or readiness -- it renders D6's already-classified fields
-through :mod:`journey_status`.
+This is presentation state, not a second persisted wizard: the current
+stage and body content are recomputed from the injected
+:class:`ProfilePresentationV1` on every navigation, and the app itself
+decides nothing about requiredness, applicability, or readiness -- it
+renders those already-classified fields through :mod:`journey_status`.
 
 Only the active stage's body is ever mounted. Moving stages does not hide
 the previous body behind CSS; it removes it from the DOM entirely and
@@ -35,7 +34,7 @@ from .journey_status import ReadyStageBody, compose_required_stage, overview_rea
 
 
 class ProfileJourneyStage(IntEnum):
-    """The five ordered stages of the guided profile journey (D6)."""
+    """The five ordered stages of the guided profile journey."""
 
     OVERVIEW = 0
     GET_DATA = 1

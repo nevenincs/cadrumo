@@ -16,6 +16,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from ...core import BindingSourceKind
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._models import (
@@ -74,12 +75,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
     ),
 )
 
-SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
-    BindingSourceKind.LEDGER_TRANSACTION,
-    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    BindingSourceKind.PAYABLE_INVOICE,
-    BindingSourceKind.COLLECTIBLE_INVOICE,
-)
+SOURCE_KINDS: tuple[BindingSourceKind, ...] = COUNTERPART_SOURCE_KIND_ORDER
 
 SOURCE_KIND_ALIASES: tuple[SourceKindAlias, ...] = (
     SourceKindAlias(alias="lt", canonical=BindingSourceKind.LEDGER_TRANSACTION),

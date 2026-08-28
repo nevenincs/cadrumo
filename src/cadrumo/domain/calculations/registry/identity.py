@@ -5,8 +5,8 @@ in-process cache key, the loader's compiled-artefact key, the validation-verdict
 match, and the release build's stamper. A second derivation of the digest, the
 stamp filename, or the stamp location is what lets a build and a runtime
 disagree about which tree they are looking at, so there is exactly one of each
-and :func:`~domain.calculations.registry.tests.test_registry_identity_enrolment`
-proves no other exists across ``src/`` and ``dev/``.
+and the development test tree's registry-identity enrolment gate proves no
+other exists across the repository.
 
 Identity has two ORIGINS, and the distinction is the whole point:
 

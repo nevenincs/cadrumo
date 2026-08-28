@@ -77,6 +77,7 @@ from typing import TYPE_CHECKING
 from ._classification_rule import LedgerClassificationRule
 from ._dates import transaction_eligible_date_span, transaction_filing_date
 from ._enums import (
+    BUSINESS_BEARING_STATES,
     CLASSIFIED_STATES,
     BusinessClassification,
     SplitRole,
@@ -221,6 +222,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "BUSINESS_BEARING_STATES",
     "CLASSIFIED_STATES",
     "IRPF_CATEGORY_ACTIVIDAD_ECONOMICA",
     "IRPF_CATEGORY_TRABAJO",

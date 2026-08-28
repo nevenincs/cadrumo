@@ -89,7 +89,7 @@ def _source_and_doc_files() -> tuple[Path, ...]:
     """Return cutover-owned source/docs, excluding generated CLI census output."""
     suffixes = {".py", ".rst", ".md", ".json", ".toml"}
     result = subprocess.run(
-        ["git", "ls-files", "-z", "--", "src", "dev", "docs"],  # noqa: S607 - read-only repository inventory
+        ["git", "ls-files", "-z", "--", "src", "docs"],  # noqa: S607 - read-only repository inventory
         cwd=_REPOSITORY_ROOT,
         capture_output=True,
         check=False,
@@ -114,7 +114,7 @@ def _source_and_doc_files() -> tuple[Path, ...]:
         )
 
     paths: list[Path] = []
-    for root in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT / "dev", _REPOSITORY_ROOT / "docs"):
+    for root in (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT / "docs"):
         paths.extend(
             path
             for path in root.rglob("*")

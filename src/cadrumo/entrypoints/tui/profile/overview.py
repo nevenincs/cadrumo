@@ -870,7 +870,6 @@ class ProfileManagerScreen(Screen[None]):
             rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))
 
-    @override
     async def action_quit(self) -> None:
         """Leave the manager, unless a field write is still landing.
 

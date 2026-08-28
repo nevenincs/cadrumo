@@ -64,9 +64,9 @@ class NoticeBand(Vertical, can_focus=False):
 class StageNavigationStrip(Horizontal, can_focus=False):
     """Render-only linear stage strip: which stage is current, done, or ahead.
 
-    Route and focus are presentation state owned by the host screen
-    (`2026-08-11-tui-interface-adr` D6); this widget only shows where the
-    operator currently is in a fixed, ordered sequence of stages. It carries
+    Route and focus are presentation state owned by the host screen; this
+    widget only shows where the operator currently is in a fixed, ordered
+    sequence of stages. It carries
     no navigation of its own and mounts no button -- a host wanting a
     clickable strip composes its own controls around this render.
     """
@@ -121,7 +121,7 @@ class DisclosureGroup(Collapsible):
 
     A thin, named extension of Textual's own `Collapsible` rather than a
     parallel reimplementation: every Cadrumo surface that needs a collapsed
-    optional-detail or completed-group section (D6's `Required` stage task
+    optional-detail or completed-group section (the `Required` stage's task
     sections, `Show optional`, `Show not applicable`) composes this one
     widget instead of each host reaching for `Collapsible` under its own
     title and defaults.

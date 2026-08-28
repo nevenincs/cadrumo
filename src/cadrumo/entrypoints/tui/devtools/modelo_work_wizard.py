@@ -20,7 +20,7 @@ from ....core import Modelo, Period
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 from ..launcher import load_modelo_work_unit_catalogue
 from .fixture import harness_storage, passphrase
 
@@ -137,12 +137,12 @@ def provision_modelo_work_wizard() -> Generator[str]:
                 _ACTIVE_WIZARD.reset(token)
 
 
-def build_modelo_work_wizard() -> FlowTuiApp:
+def build_modelo_work_wizard() -> FlowScreen:
     """Build the installed renderer over the provisioned canonical wizard run."""
     wizard = _ACTIVE_WIZARD.get()
     if wizard is None:
         raise RuntimeError("modelo-work-wizard surface requires its provisioned run")
-    return FlowTuiApp(wizard.definition_for(), mode=FlowMode.CREATE)
+    return FlowScreen(wizard.definition_for(), mode=FlowMode.CREATE)
 
 
 __all__ = ["build_modelo_work_wizard", "provision_modelo_work_wizard"]

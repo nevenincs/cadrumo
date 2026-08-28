@@ -117,7 +117,16 @@ class OperationModalViewModelV1(BaseModel):
             raise ValueError("modal cleanup deadline must mirror the projection's cleanup deadline")
         if self.diagnostic_ref != projection.diagnostic_ref:
             raise ValueError("modal diagnostic reference must mirror the projection's diagnostic reference")
-        expected_kind, expected_ref = _terminal_receipt(projection)
+        # Read the settled reference straight off the projection rather than
+        # through the builder's helper. Sharing that helper would make this
+        # check agree with the builder by construction, so a defect inside
+        # the helper itself would pass unseen.
+        if projection.result_ref is not None:
+            expected_kind, expected_ref = "result", projection.result_ref
+        elif projection.refusal_ref is not None:
+            expected_kind, expected_ref = "refusal", projection.refusal_ref
+        else:
+            expected_kind, expected_ref = None, None
         if self.receipt_kind != expected_kind:
             raise ValueError("modal receipt kind must mirror which settled reference the projection carries")
         if self.receipt_ref != expected_ref:

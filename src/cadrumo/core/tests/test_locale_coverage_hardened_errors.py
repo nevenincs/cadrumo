@@ -80,8 +80,7 @@ def test_hardened_error_keys_resolve_in_catalogues() -> None:
                 failures.append(
                     f"Locale key {key!r} is not set in the {locale!r} catalogue "
                     f"(got self-referencing placeholder {resolved!r}). "
-                    f"Add a real translation via "
-                    f"`python -m dev.locales set {locale} {key!r} <value>`."
+                    f"Add a real translation for {key!r} in the {locale!r} catalogue."
                 )
             if not resolved:
                 failures.append(f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue.")

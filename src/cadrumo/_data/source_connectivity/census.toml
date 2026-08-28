@@ -363,34 +363,34 @@ completion_criterion = "Keep registry_blocked until official M296 bindings and t
 candidate_id = "coverage.remaining-calculation-helpers"
 disposition = "not_applicable"
 owner = "source-connectivity-campaign"
-capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_locators = ["src/cadrumo/domain/calculations/registry/temporal.py:32", "src/cadrumo/domain/portals/errors.py:148"]
 capability_selector = "remaining_calculation_helpers"
 expected_capability_count = 267
 expected_capability_digest = "sha256:cf1081c06fe140c568dd58e6b14bc970ce1929f6c7d3639b39d61e519bd60a18"
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "dev/source_connectivity/discovery.py"
+reference = "src/cadrumo/domain/calculations/registry/temporal.py:32"
 summary = "The frozen remainder contains exported arithmetic, deadline-coordinate, and source-presence validation helpers that neither acquire facts nor resolve a source. S113 reviewed revision_selection_coordinates and portal_integrity_error as structural helpers; inventory and finca source-projection exceptions have explicit rows."
 
 [[entries]]
 candidate_id = "coverage.remaining-ingress-surfaces"
 disposition = "not_applicable"
 owner = "source-connectivity-campaign"
-capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_locators = ["src/cadrumo/application/modelo/_m036_lifecycle.py:345"]
 capability_selector = "remaining_ingress_surfaces"
 expected_capability_digest = "sha256:7fcc37ebb61ac157f8bc7b4cd3bcb52e74a4acfff5e40b14902369fa6f52e435"
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "dev/source_connectivity/discovery.py"
+reference = "src/cadrumo/application/modelo/_m036_lifecycle.py:345"
 summary = "The frozen remainder contains operator transport callbacks, including Modelo 036's human-filing declaration recording, not independent binding sources or resolvers; accepted source-specific ingress is covered by explicit candidate rows."
 
 [[entries]]
 candidate_id = "coverage.remaining-row-assemblers"
 disposition = "duplicate_or_stale"
 owner = "source-connectivity-campaign"
-capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_locators = ["src/cadrumo/application/modelo/calculation_route.py:100"]
 capability_selector = "remaining_row_assemblers"
 expected_capability_digest = "sha256:29367043b2b6a7eea92c952f702e1e6632895b1fce0aba3d69482a884ceeb2e8"
 
@@ -403,7 +403,7 @@ summary = "The frozen remaining assemblers resolve to already-owned atribucion, 
 candidate_id = "coverage.remaining-secure-repositories"
 disposition = "duplicate_or_stale"
 owner = "source-connectivity-campaign"
-capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_locators = ["src/cadrumo/application/modelo/calculation_route.py:100"]
 capability_selector = "remaining_secure_repositories"
 expected_capability_digest = "sha256:d959380f5aeddd9562be35c91e1a20b840dcba58eef6acdd0e67891f87fd355d"
 
@@ -416,7 +416,7 @@ summary = "The frozen remainder is operational secure state or storage behind an
 candidate_id = "coverage.remaining-source-ownership"
 disposition = "duplicate_or_stale"
 owner = "source-connectivity-campaign"
-capability_locators = ["dev/source_connectivity/discovery.py"]
+capability_locators = ["src/cadrumo/application/modelo/calculation_route.py:100"]
 capability_selector = "remaining_source_ownership"
 expected_capability_digest = "sha256:87442b19dc5e68aad02de7f4db20a287a1caf3ba26cb1f8e50706a2cf8093182"
 

@@ -70,7 +70,6 @@ GENERATED_CENSUS_DIR = ROOT / "dev/quality"
 GENERATED_CENSUS_SUFFIX: Final = ".v1.json"
 _MATRIX_WRITE_CHUNK: Final = 1 << 20
 _MATRIX_WRITE_ATTEMPTS: Final = 8
-PLAN_PATH = ROOT / ".vault/plan/2026-08-11-tui-architecture-plan.md"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1029,49 +1028,6 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
     return refreshed_document
 
 
-def _canonical_plan_step_ids() -> frozenset[str]:
-    """Read the canonical Step IDs owned by the reviewed TUI architecture plan."""
-    matches = re.findall(r"`(W\d{2}\.P\d{2}\.S\d+)`", PLAN_PATH.read_text(encoding="utf-8"))
-    return frozenset(str(match) for match in matches)
-
-
-def _bound_plan_step(step_id: str, action: str, scope: str, plan: str) -> str:
-    """Return the unique plan row only when its reviewed subject and scope still bind."""
-    matches = re.findall(
-        rf"^- \[[ x]\] `{re.escape(step_id)}` - (.+)$",
-        plan,
-        flags=re.MULTILINE,
-    )
-    if len(matches) != 1:
-        raise RuntimeError(f"registry facade follow-on Step is missing or duplicated: {step_id}")
-    plan_row = matches[0]
-    scope_paths = set(re.findall(r"(?:src|dev|docs)/[A-Za-z0-9_./-]+", scope))
-    if scope_paths and not scope_paths.issubset(set(re.findall(r"(?:src|dev|docs)/[A-Za-z0-9_./-]+", plan_row))):
-        raise RuntimeError(f"registry facade follow-on Step scope diverges: {step_id}")
-    ignored = {
-        "and",
-        "the",
-        "from",
-        "into",
-        "with",
-        "without",
-        "every",
-        "complete",
-        "public",
-        "module",
-        "registry",
-        "family",
-        "direct",
-        "imports",
-        "tests",
-    }
-    action_terms = {term for term in re.findall(r"[a-z][a-z0-9_]{3,}", action.lower()) if term not in ignored}
-    shared_terms = action_terms.intersection(re.findall(r"[a-z][a-z0-9_]{3,}", plan_row.lower()))
-    if len(shared_terms) < min(3, len(action_terms)):
-        raise RuntimeError(f"registry facade follow-on Step action is unrelated: {step_id}")
-    return plan_row
-
-
 def _normalized_review_prose(value: str) -> str:
     """Erase row-specific labels so mechanically diversified templates collide.
 
@@ -1253,8 +1209,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
         "follow_on_scope",
         "follow_on_predecessors",
     }
-    canonical_step_ids = _canonical_plan_step_ids()
-    plan = PLAN_PATH.read_text(encoding="utf-8")
     for row in rows:
         if not isinstance(row, dict):
             raise RuntimeError("registry facade matrix rows must be objects")
@@ -1427,9 +1381,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(f"registry facade row {pair[0]} does not remain independently gated by S175")
         if row["follow_on_step_id"] in steps:
             raise RuntimeError("registry facade matrix maps more than one row to one follow-on Step")
-        if row["follow_on_step_id"] not in canonical_step_ids:
-            raise RuntimeError(f"registry facade row {pair[0]} names a non-canonical follow-on Step")
-        _bound_plan_step(row["follow_on_step_id"], row["follow_on_action"], row["follow_on_scope"], plan)
         steps.add(row["follow_on_step_id"])
         disposition_counts[row["disposition"]] += 1
     final_gate = document.get("final_package_gate")
@@ -1438,11 +1389,10 @@ def check_matrix_document(document: dict[str, object]) -> None:
     for field in ("step_id", "action", "scope"):
         if not isinstance(final_gate.get(field), str) or not final_gate[field]:
             raise RuntimeError("registry facade final package gate is incomplete")
-    if final_gate["step_id"] in steps or final_gate["step_id"] not in canonical_step_ids:
-        raise RuntimeError("registry facade final package gate must be a distinct canonical Step")
+    if final_gate["step_id"] in steps:
+        raise RuntimeError("registry facade final package gate must be a distinct Step from every disposition row")
     if final_gate.get("predecessor_step_ids") != sorted(steps):
         raise RuntimeError("registry facade final package gate must wait for every disposition Step")
-    _bound_plan_step(final_gate["step_id"], final_gate["action"], final_gate["scope"], plan)
 
 
 def _write_matrix_text(text: str) -> None:

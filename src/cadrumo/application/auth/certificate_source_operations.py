@@ -62,7 +62,7 @@ from .models import (
     CertificateSecretMutationEventKind,
     CertificateSecretMutationIntent,
 )
-from .operator_probes import ProviderProbeResult, probe_certificate_bundle
+from .operator_probes import probe_certificate_bundle
 from .operator_results import (
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
@@ -81,6 +81,7 @@ from .operator_scope import (
     assert_certificate_secret_mutation_not_in_progress,
     auth_mutation_span,
 )
+from .probes import PROBE_RESULTS_NEEDING_ATTENTION
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -397,7 +398,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                 settings=resolved_settings,
                 certificate_credentials=credentials,
             )
-            if outcome.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED):
+            if outcome.result in PROBE_RESULTS_NEEDING_ATTENTION:
                 has_warnings = True
             entries.append(
                 CertificateSourceCheckEntry(

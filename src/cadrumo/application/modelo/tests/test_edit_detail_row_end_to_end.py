@@ -1,4 +1,4 @@
-"""Real-registry end-to-end proof of a detail-row edit through ``apply_modelo_edit`` (S276).
+"""Real-registry end-to-end proof of a detail-row edit through ``apply_modelo_edit``.
 
 Drives a real ADD, UPDATE, and DELETE `Modelo347ContraparteRow` edit against
 a live modelo 347 revision, with real profile setup, through the same
@@ -6,7 +6,7 @@ guarded compare-and-swap executor every scalar/binding edit already uses.
 Proves the reconstructed rows reach the persisted ``CalculationRevision``,
 and that an unknown natural key refuses without writing.
 
-MOVE_ROW is not exercised: it was retired (S288 follow-up) because the
+MOVE_ROW is not exercised: it was later retired, because the
 calculation revision's content address is order-blind, so a pure reorder
 would have been silently absorbed by the guarded duplicate-result branch
 rather than actually persist.

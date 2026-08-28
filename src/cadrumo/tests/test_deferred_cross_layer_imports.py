@@ -87,7 +87,7 @@ _DOCUMENTED_LOADERS: frozenset[tuple[str, str]] = frozenset(
     },
 )
 
-#: Deferrals this campaign made on purpose, each with the reason it exists.
+#: Deliberate deferrals, each with the reason it exists.
 #: Reviewed, unlike the inventory below.
 _DELIBERATE_DEMAND_LOADS: dict[tuple[str, str], str] = {
     ("application/ledger/actions_common.py", "_default_calculation_repository"): (

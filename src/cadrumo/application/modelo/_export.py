@@ -85,9 +85,9 @@ from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
+    SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloError,
     ModeloExportError,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -519,11 +519,7 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
 
 
 def _require_exportable_revision_state(revision: CalculationRevision) -> None:
-    if revision.state not in {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }:
+    if revision.state not in SEALED_REVISION_STATES:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
             context={
