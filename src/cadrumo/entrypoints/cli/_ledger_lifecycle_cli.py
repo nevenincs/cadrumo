@@ -36,7 +36,8 @@ from ...domain.transactions import (
     is_classified,
 )
 from ...llm.suggestions import LLMSplitApplyResult
-from ._common import _bad, _state, _tx_repo, emit_envelope, parse_decimal_amount
+from ._common import _bad, _state, _tx_repo, emit_envelope
+from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
     _emit_update_result,
     _ledger_transaction_validation_no_recovery,

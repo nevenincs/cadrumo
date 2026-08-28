@@ -536,6 +536,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.UNSUPPORTED_PERIOD: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY: OperatorActionAxis.REVIEW_ADVISORY,
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA: (OperatorActionAxis.REVIEW_ADVISORY),
     },

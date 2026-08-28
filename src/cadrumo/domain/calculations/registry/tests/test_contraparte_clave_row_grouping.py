@@ -86,11 +86,20 @@ def _observation(*, party: str, country: str, invoice_total: str, clave: str) ->
 
 
 def test_contraparte_clave_groups_by_country_party_and_clave_summing_invoice_totals() -> None:
+    """Amounts are above the RD 1065/2007 art. 31 declaration floor on purpose.
+
+    A total at or below :data:`~core.M347_THRESHOLD_EUR` now correctly
+    produces no row (see ``test_declaration_floor_...`` in this module and
+    the real-resolver proof in
+    ``test_modelo_347_contraparte_export_parity.py``); this test's own
+    subject is the GROUPING behaviour, so its fixtures must clear the floor
+    or they would assert nothing about grouping at all.
+    """
     revision = _synthetic_revision()
     observations = (
-        _observation(party="B12345674", country="ES", invoice_total="1000.00", clave="B"),
+        _observation(party="B12345674", country="ES", invoice_total="4000.00", clave="B"),
         _observation(party="B12345674", country="ES", invoice_total="500.00", clave="B"),  # same group, summed
-        _observation(party="A87654321", country="ES", invoice_total="200.00", clave="A"),
+        _observation(party="A87654321", country="ES", invoice_total="3200.00", clave="A"),
     )
 
     resolved = resolve_invoice_binding_row_values(revision, observations)
@@ -99,10 +108,10 @@ def test_contraparte_clave_groups_by_country_party_and_clave_summing_invoice_tot
     assert resolved == {
         ("m347-contraparte-row-nif", 1): "A87654321",
         ("m347-contraparte-row-clave", 1): "A",
-        ("m347-contraparte-row-importe", 1): Decimal("200.00"),
+        ("m347-contraparte-row-importe", 1): Decimal("3200.00"),
         ("m347-contraparte-row-nif", 2): "B12345674",
         ("m347-contraparte-row-clave", 2): "B",
-        ("m347-contraparte-row-importe", 2): Decimal("1500.00"),
+        ("m347-contraparte-row-importe", 2): Decimal("4500.00"),
     }
 
 
@@ -120,7 +129,7 @@ def test_contraparte_clave_ignores_observations_without_an_operation_clave() -> 
             invoice_total_amount=Decimal("300.00"),
             intracommunity_clave="E",
         ),
-        _observation(party="B12345674", country="ES", invoice_total="900.00", clave="B"),
+        _observation(party="B12345674", country="ES", invoice_total="4200.00", clave="B"),
     )
 
     resolved = resolve_invoice_binding_row_values(revision, observations)
@@ -128,5 +137,5 @@ def test_contraparte_clave_ignores_observations_without_an_operation_clave() -> 
     assert resolved == {
         ("m347-contraparte-row-nif", 1): "B12345674",
         ("m347-contraparte-row-clave", 1): "B",
-        ("m347-contraparte-row-importe", 1): Decimal("900.00"),
+        ("m347-contraparte-row-importe", 1): Decimal("4200.00"),
     }

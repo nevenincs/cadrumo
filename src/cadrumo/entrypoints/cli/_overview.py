@@ -47,18 +47,17 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
-    _canonical_period,
     _declared_tax_id,
     _load_drafts,
     _load_invoices,
     _no_active_profile_refusal,
-    _parse_iso_date,
     _profile_to_taxpayer,
     _state,
     _tx_repo,
     activate_subcommand_output_language,
     emit_envelope,
 )
+from ._date_parsing import _parse_iso_date
 from ._overview_evidence import (
     _live_censo_verified_profile_keys,
     _local_calendar_filing_evidence,
@@ -85,6 +84,7 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
+from ._period_parsing import _canonical_period
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence

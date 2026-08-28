@@ -1116,7 +1116,22 @@ def _build_contraparte_clave_rows(
     The quarterly buckets accumulate in the SAME loop that sums
     ``importe_total``, so the annual total is the sum of the four quarters by
     construction, not by a separate reconciling step.
+
+    Applies the RD 1065/2007 art. 31 declaration floor to *this* family
+    before grouping, routed through the one canonical comparison
+    (:func:`_m347_declarable_party_ids`, which delegates to
+    :func:`~._m347_threshold.m347_declarable_party_ids`) rather than a new
+    comparison written out here -- the same function
+    :func:`_resolve_m347_declarante_summary_values` already applies to the
+    summary-totals family. A counterparty's TOTAL across every clave (not
+    per-clave) decides declarability: the floor is strictly exceeded
+    (``>``), never merely reached, so a counterparty landing exactly on the
+    figure produces no row.
     """
+    declarable_party_ids = _m347_declarable_party_ids(observations)
+    observations = tuple(
+        observation for observation in observations if observation.party_tax_id in declarable_party_ids
+    )
     grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
     for observation in observations:
         if observation.operation_clave is None:

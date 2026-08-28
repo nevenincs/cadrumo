@@ -97,6 +97,13 @@ class LedgerPreflightIssueReason(StrEnum):
     UNSUPPORTED_CURRENCY = "unsupported_currency"
     UNSUPPORTED_PERIOD = "unsupported_period"
     CENSO_RATIO_MISMATCH = "censo_ratio_mismatch"
+    # The absence that used to pass silently. A home-office row deducts a
+    # PROPORTION, and art. 30.2.5.b takes that proportion from the taxpayer's own
+    # declared m2. With neither a stored ratio nor censo m2 the row is ineligible
+    # and contributes nothing, which looks identical to having no such expense.
+    # Unlike the mismatch above, nothing here disagrees -- the datum is simply
+    # absent, and the operator is the only one who can supply it.
+    MISSING_HOME_OFFICE_AFECTACION = "missing_home_office_afectacion"
     # Anomaly channel: present-but-suspicious rows (distinct from missing-fact),
     # so an asesor sees real anomalies without first classifying every row.
     ANOMALY_NON_DECLARABLE_IVA_CATEGORY = "anomaly_non_declarable_iva_category"
@@ -183,10 +190,15 @@ def preflight_ledger_tax_readiness(
         )
     transactions = repository.load()
     censo_ratio_mismatch_detail = None
+    missing_home_office_afectacion_detail = None
     if _catalogue_uses_home_office_usage_ratio(period=period, transactions=transactions):
         censo_ratio_mismatch_detail = _censo_ratio_mismatch_detail(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion_ratio,
+            year=period.filing_year,
+        )
+        missing_home_office_afectacion_detail = _missing_home_office_afectacion_detail(
+            bucket_id=bucket_id,
             year=period.filing_year,
         )
     return preflight_transaction_catalogue(
@@ -194,6 +206,7 @@ def preflight_ledger_tax_readiness(
         period=period,
         transactions=transactions,
         censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
+        missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
     )
 
 
@@ -203,6 +216,7 @@ def preflight_transaction_catalogue(
     period: Period,
     transactions: TransactionCatalogue,
     censo_ratio_mismatch_detail: str | None = None,
+    missing_home_office_afectacion_detail: str | None = None,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue.
 
@@ -237,6 +251,7 @@ def preflight_transaction_catalogue(
             _issues_for_transaction(
                 transaction,
                 censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
+                missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
             ),
         )
     return LedgerPreflightReport(
@@ -293,6 +308,44 @@ def _bound_raw_afectacion_ratio(*, bucket_id: str) -> Decimal | None:
     from ..user_profile.censo_sync import CensoSyncService
 
     return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
+
+
+def _missing_home_office_afectacion_detail(*, bucket_id: str, year: int) -> str | None:
+    """Report the absence of any proportion a home-office row could deduct on.
+
+    Asked through the same resolver the calculation uses, so the question is
+    exactly "will this row deduct anything" rather than a second opinion about
+    the profile. Returns ``None`` when a ratio resolves from either source --
+    a stored override, or the censo m2 the resolver derives from.
+
+    The absence used to be silent. A home-office row with no proportion is
+    ineligible and contributes nothing, which on a return looks identical to
+    having had no such expense at all, so the filer under-deducts with no signal.
+    """
+    from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
+
+    ratios = resolve_effective_usage_ratios(bucket_id=bucket_id, year=year)
+    if any(category in ratios for category in _home_office_categories()):
+        return None
+    return (
+        "this period has home-office rows but no afectacion proportion to deduct them on: "
+        "declare the dwelling m2 with 'aeat config profile edit' (vivienda_office.office_m2 "
+        "and vivienda_office.total_m2), or set a ratio with 'aeat app ledger ratios set "
+        "<category-id> <ratio>'. Until then these rows deduct nothing, which LIRPF "
+        "art. 30.2.5.b does not require: the deductible share is 30 per cent of your "
+        "declared proportion"
+    )
+
+
+def _home_office_categories() -> frozenset[SpendingCategory]:
+    """Return every category whose deduction needs a home-office proportion.
+
+    Derived from the module's own ``_HOME_OFFICE_FAMILIES`` rather than restating
+    the pair, so a third home-office family joins this set by construction.
+    """
+    return frozenset(
+        category for category in SpendingCategory if family_for(category) in _HOME_OFFICE_FAMILIES
+    )
 
 
 def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decimal | None, year: int) -> str | None:
@@ -390,6 +443,7 @@ def _issues_for_transaction(
     transaction: Transaction,
     *,
     censo_ratio_mismatch_detail: str | None = None,
+    missing_home_office_afectacion_detail: str | None = None,
 ) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
     common = {"transaction_id": transaction.transaction_id}
@@ -482,6 +536,14 @@ def _issues_for_transaction(
                     "'aeat config profile edit', or unset the HOME_OFFICE ratio before using it in modelo "
                     "calculations"
                 ),
+            ),
+        )
+    if missing_home_office_afectacion_detail is not None and _transaction_takes_home_office_ratio(transaction):
+        issues.append(
+            LedgerPreflightIssue(
+                **common,
+                reason=LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION,
+                detail=missing_home_office_afectacion_detail,
             ),
         )
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an

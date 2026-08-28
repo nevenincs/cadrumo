@@ -31,13 +31,8 @@ from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.invoices import InvoiceValidationError
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
-from ._common import (
-    _bad,
-    attach_cli_policy_verdict,
-    emit_envelope,
-    parse_decimal_amount,
-    parse_optional_decimal_amount,
-)
+from ._common import _bad, attach_cli_policy_verdict, emit_envelope
+from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 
 
 class _TransactionRepo(Protocol):
