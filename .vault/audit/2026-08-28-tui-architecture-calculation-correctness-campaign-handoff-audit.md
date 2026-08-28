@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2c366656da9363d387f82433aeac3884040509d30213bcffceebda2d451aee4'
+body_hash: 'sha256:75a96f69d7e3105e4be7cb5bb586c9e3d7564d7606f05611a71212a54cf986af'
 related: []
 ---
 
@@ -527,3 +527,44 @@ por ciento" and "el 1 por ciento" as readily as digits.
 for a discriminating citation: one `legal_ref` (`ley-37-1992:art-123`), one
 source, and a `required_text` naming the value, the base it applies to, and the
 concept. Copy this shape.
+
+### Correction and the healthy direction: value-vs-corpus enforcement DOES exist, on a spine
+
+The section above says the evidence gate audits rather than enforces. That is true
+of `_validate_evidence.py`, and it was the wrong place to stop looking.
+
+`domain/iva/tests/test_legal_basis_rate_grounding.py` is a purpose-built gate
+that does exactly the comparison declared missing. Its own docstring:
+
+> This test module is the canonical gate that every rate value used by the IVA /
+> IRPF substrate and modelo registry matches its BOE legal authority. For each
+> rate, the chain of references is checked end-to-end: 1. The BOE corpus excerpt
+> contains the operative percentage string (e.g., "21 por ciento" in LIVA art 90).
+> 2. The registry parameter / IVA_RATE_TABLE entry stores the matching numeric
+> value (Decimal "0.21" = 21 %). 3. The substrate's typed enum … 4. The
+> pydantic-typed Python wrapper … returns the same value.
+
+27 tests carry it, and it is bidirectional: `test_liva_art_161_missing_recargo_
+parameter_raises_iva_catalogue_error` deletes `liva-art-161:recargo-rate-tabaco`
+from the catalogue and asserts `IvaCatalogueError`, so the chain is proven to bite
+rather than assumed to.
+
+**Its scope is a spine, not the population.** It covers LIVA art. 90 (21 %), art.
+91 (10 % and 4 %), art. 161 (all four recargo tiers including tabaco at 1,75 %),
+art. 103 (the two prorrata-margin redactions), and LIRPF art. 85 (imputación),
+plus the rate-slot/kind mapping and the zero-rate statutory window — on the order
+of a dozen distinct values, each hand-authored.
+
+So the accurate statement is: **enforcement exists and is exemplary where it
+reaches, and it reaches the IVA rate spine.** It does not reach the IS
+tipo-gravamen family, IRNR rates, the patrimonio scales, the M720/M721 thresholds,
+módulos coefficients, the M360 refund minimums, the autonomic scales, or RIC. For
+those, `required_text` is the only evidence artefact, and it audits without
+enforcing.
+
+That reframes the remediation. The question is not "how do we build value-vs-corpus
+enforcement" — it exists, with a proven anti-tautology test. It is "which further
+rate families earn a chain in this file", which is a prioritisation the owner
+should make on liability exposure. `test_legal_basis_rate_grounding.py` is the
+reference shape for parameter enforcement, as
+`m303-modulos-iva-dificil-justificacion-forfait` is for a discriminating citation.
