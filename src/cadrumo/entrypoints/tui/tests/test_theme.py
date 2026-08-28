@@ -25,12 +25,14 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from textual.containers import Vertical
+from textual.screen import Screen
 from textual.theme import Theme
 
 from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
 from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.secret.credentials import CredentialHostApp, CredentialScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ..components.theme import (
     BASE_CSS,
@@ -211,15 +213,15 @@ def _registration_screen() -> RegistrationScreen:
     return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
 
-def _gutters(app: App[Any]) -> tuple[int, int]:
+def _gutters(active: Screen[Any]) -> tuple[int, int]:
     """Return the cells outside the full-width content column.
 
-    ``App`` is invariant in its return type, so this reads any app rather
-    than ``App[object]`` alone: the measurement touches screen geometry only
-    and never the value the app eventually returns.
+    Read off the mounted screen rather than its host, so one measurement
+    serves a surface opened standalone and the same surface navigated to
+    inside a shell.
     """
-    screen = app.screen.region
-    column = app.query_one(".cadrumo-column", Vertical).region
+    screen = active.region
+    column = active.query_one(".cadrumo-column", Vertical).region
     return (column.x - screen.x, (screen.x + screen.width) - (column.x + column.width))
 
 
@@ -236,13 +238,14 @@ async def test_the_content_column_consumes_the_available_terminal(
     height: int,
 ) -> None:
     """Real mounted surfaces use every cell except an active scrollbar."""
-    app = build()
+    surface = build()
+    app = CredentialHostApp(surface) if isinstance(surface, CredentialScreen) else surface
     async with app.run_test(size=(width, height)) as pilot:
         await pilot.pause()
-        left, right = _gutters(app)
+        left, right = _gutters(pilot.app.screen)
         assert left == 0, f"left gutter at {width}x{height}: {left}"
         assert 0 <= right <= SCROLLBAR_CELLS, f"unused width at {width}x{height}: left={left} right={right}"
-        app.exit(None)
+        pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -255,13 +258,13 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     and it would break on every token rename while a genuinely reserved
     gutter slipped through.
     """
-    app = _registration_screen()
+    app = CredentialHostApp(_registration_screen())
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        scroll = app.screen.query_one(".cadrumo-scroll")
+        scroll = pilot.app.screen.query_one(".cadrumo-scroll")
         assert scroll.styles.scrollbar_size_vertical == SCROLLBAR_CELLS
         assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
-        app.exit(None)
+        pilot.app.exit(None)
 
 
 def test_no_stylesheet_carries_an_unsubstituted_token() -> None:

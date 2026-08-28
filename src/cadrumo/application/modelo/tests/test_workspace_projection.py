@@ -51,9 +51,7 @@ from ...registry.source_connectivity import load_source_connectivity_census
 from ...state_projection import ModeloReadinessRequest, capture_modelo_readiness
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace import (
-    graded_snapshot_closure_limbs,
     graded_snapshot_contributors,
-    graded_snapshot_readiness,
     resolve_graded_snapshot_result,
     resolve_static_inspection_result,
     static_inspection_contributors,
@@ -309,7 +307,17 @@ def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target
         census=census,
         as_of=_CLOSURE_AS_OF,
     )
-    expected = graded_snapshot_closure_limbs(canonical.limbs, target=result.projection.target)
+    # Narrowed HERE, independently of the production selector. Routing this
+    # through ``graded_snapshot_closure_limbs`` would compare the assembler's
+    # output against the same function that produced it, so a selector that
+    # returned nothing would satisfy both sides and the proof would be hollow.
+    target = result.projection.target
+    expected = tuple(
+        limb
+        for limb in canonical.limbs
+        if limb.modelo == target.modelo and limb.revision == target.law_selected_revision_id
+    )
+    assert expected, "the bundled closure report must publish limbs for this target"
 
     assert result.projection.registry_closure_limbs == expected
     # The selection is real: the authority publishes limbs for other revisions
@@ -317,8 +325,7 @@ def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target
     # differ from the asserted value rather than coincide with it.
     assert len(canonical.limbs) > len(expected)
     assert all(
-        limb.modelo == result.projection.target.modelo
-        and limb.revision == result.projection.target.law_selected_revision_id
+        limb.modelo == target.modelo and limb.revision == target.law_selected_revision_id
         for limb in result.projection.registry_closure_limbs
     )
 
@@ -362,7 +369,22 @@ def test_graded_readiness_equals_the_canonical_readiness_producers_report(repos)
         ),
         active_profile_id=target.bucket_id,
     )
-    assert readiness == graded_snapshot_readiness(canonical.reports[0])
+    report = canonical.reports[0]
+    # Axis-by-axis against the canonical REPORT, not against the projector the
+    # assembler used, so a projector that returned nothing cannot satisfy both
+    # sides of this comparison.
+    assert readiness.profile_id == report.profile_id
+    assert readiness.revision_id == report.revision_id
+    assert readiness.filing_year == report.filing_year
+    assert readiness.period == report.period
+    assert readiness.profile_ready == report.profile_ready
+    assert readiness.registry_ready == report.registry_ready
+    assert readiness.binding_ready == report.binding_ready
+    assert readiness.ledger_ready == report.ledger_ready
+    assert readiness.ledger_preflight_required == report.ledger_preflight_required
+    assert readiness.ready == report.ready
+    assert len(readiness.missing) == len(report.missing)
+    assert len(readiness.missing_bindings) == len(report.missing_bindings)
     assert readiness.revision_id == target.law_selected_revision_id
 
 

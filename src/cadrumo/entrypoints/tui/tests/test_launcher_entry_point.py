@@ -26,7 +26,7 @@ def test_entry_point_starts_a_real_session_and_exits_zero() -> None:
     """Running the entry point composes services, mounts the root, and settles."""
     mounted: list[str] = []
 
-    async def observe(pilot: Pilot[None]) -> None:
+    async def observe(pilot: Pilot[object]) -> None:
         mounted.append(type(pilot.app).__name__)
         await pilot.pause()
 
@@ -38,7 +38,7 @@ def test_entry_point_session_renders_the_areas_it_has_not_mounted() -> None:
     """The root states the unmounted condition on screen instead of implying areas exist."""
     rendered: list[str] = []
 
-    async def capture(pilot: Pilot[None]) -> None:
+    async def capture(pilot: Pilot[object]) -> None:
         await pilot.pause()
         rendered.append(str(pilot.app.query_one("#root-no-areas").render()))
         rendered.append(str(pilot.app.query_one("#root-title").render()))
@@ -51,7 +51,7 @@ def test_entry_point_session_mounts_no_area_screen() -> None:
     """No area is joined yet, so the root must carry no area screen at all."""
     screens: list[int] = []
 
-    async def count_screens(pilot: Pilot[None]) -> None:
+    async def count_screens(pilot: Pilot[object]) -> None:
         await pilot.pause()
         screens.append(len(pilot.app.screen_stack))
 
@@ -63,7 +63,7 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
     """The root runs against services composed outside it, never a graph of its own."""
     services: list[object] = []
 
-    async def read_services(pilot: Pilot[None]) -> None:
+    async def read_services(pilot: Pilot[object]) -> None:
         await pilot.pause()
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)

@@ -117,16 +117,17 @@ def test_an_unknown_viewport_refuses_and_names_the_accepted_set() -> None:
 
 
 def test_the_inventory_finds_transitively_derived_interfaces() -> None:
-    """A class reaching ``App`` through a local base is still an interface.
+    """A class reaching a Textual base through a local base is still an interface.
 
-    ``LoginScreen`` extends ``CredentialScreen``, which extends ``App``. A scanner
-    that only matched a direct Textual base would silently drop it, and the
-    surface an operator logs in through would vanish from the inventory.
+    ``LoginScreen`` extends ``CredentialScreen``, which extends ``Screen``. A
+    scanner that only matched a direct Textual base would silently drop it,
+    and the surface an operator logs in through would vanish from the
+    inventory.
     """
     found = {interface.name: interface for interface in _inventory.scan()}
     assert "CredentialScreen" in found
     assert found["CredentialScreen"].is_base
-    assert found["LoginScreen"].kind == "app"
+    assert found["LoginScreen"].kind == "screen"
     assert "CredentialScreen" in found["LoginScreen"].bases
 
 

@@ -57,7 +57,7 @@ def _text(app: RegistrationScreen, selector: str) -> str:
 def _page_copy(app: RegistrationScreen) -> list[str]:
     """The page's words, in the order the operator reads them."""
     return [
-        app.title,
+        str(app.title),
         _text(app, "#registration-banner"),
         _text(app, "#registration-intro"),
         _text(app, "#registration-why"),

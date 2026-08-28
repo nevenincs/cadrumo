@@ -1663,7 +1663,7 @@ def test_graded_snapshot_schema_identity_evidence_horizon_and_contributors_over_
     assert len(evidence_horizon.source_refs) > 0
 
     contributors = graded_snapshot_contributors()
-    assert len(contributors) == 6
+    assert len(contributors) == 8
     contributors_again = graded_snapshot_contributors()
     assert contributors == contributors_again  # deterministic ordering
 

@@ -33,6 +33,7 @@ from ..devtools.fixture import registration_attempt
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerApp
+from ..secret.credentials import CredentialHostApp
 from ..secret.login import LoginScreen
 from ..secret.registration import RecoveryWordsScreen, RegistrationScreen
 
@@ -332,7 +333,7 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
     """Register, unlock, and render an actual encrypted profile through relocated apps."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         registration = RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
-        async with registration.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(registration).run_test(size=_TERMINAL_SIZE) as pilot:
             registration.query_one("#field-username", Input).value = _LABEL
             registration.query_one("#field-password", Input).value = _PASSPHRASE
             registration.query_one("#field-confirm", Input).value = _PASSPHRASE
@@ -358,10 +359,10 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         logout_active_profile()
 
         login = LoginScreen(choices=profile_login_choices(), authenticate=attempt_profile_login)
-        async with login.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with CredentialHostApp(login).run_test(size=_TERMINAL_SIZE) as pilot:
             login.query_one("#field-passphrase", Input).value = _PASSPHRASE
             await pilot.click("#btn-unlock")
-            await login.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert login.outcome is not None

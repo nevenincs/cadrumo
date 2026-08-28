@@ -80,6 +80,7 @@ _PASSPHRASE = "operation-modal-lifecycle-passphrase"  # noqa: S105 - isolated in
 _ACTOR: OperationActorReference = "operator:operation-modal-lifecycle"
 _TERMINAL_POLL_BUDGET = 400
 _POLL_PAUSE_SECONDS = 0.02
+_WORKER_DRAIN_SECONDS = 0.5
 
 
 def _observation() -> CensalObservation:
@@ -316,11 +317,14 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
                     if host.outcome is not None:
                         break
                     await pilot.pause()
-                await host.action_quit()
 
-            assert isinstance(host.outcome, OperationModalDetachedOutcomeV1), (
-                f"detach did not close the modal; last projection {await _project(controller)!r}"
-            )
+            # Let the dismissed modal's polling worker finish its in-flight
+            # journal read before this test reads the same journal: the read
+            # path takes a synchronous OS file lock, so overlapping the two
+            # inside one event loop would stall the loop rather than queue.
+            await asyncio.sleep(_WORKER_DRAIN_SECONDS)
+
+            assert isinstance(host.outcome, OperationModalDetachedOutcomeV1)
             assert host.outcome.operation_id == controller.operation_id
 
             # The modal is gone. The operation must still be live and must
