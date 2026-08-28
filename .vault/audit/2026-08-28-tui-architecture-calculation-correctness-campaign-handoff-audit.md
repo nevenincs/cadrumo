@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef372b831764cc8d98f44174268fed02bf2615008f88a62eae58006a67851cb4'
+body_hash: 'sha256:02b8e5cb43454b22fc7cffd26d27918bed8ba71fa5a11fd6f035ce75d3185708'
 related: []
 ---
 
@@ -868,3 +868,35 @@ document in the chain states the value. The mínimo rows never were.
 The residual `required_text` observation stands as what it is — a reviewability
 nicety, cheap to improve where an article's leading figures are named and its
 later tranches are not — and should not be carried forward as a grounding count.
+
+## Re-verified at HEAD: the liability-critical aggregates still hold
+
+A "checked and sound" verdict decays — this is a shared tree and the checks in
+this audit were made across many days of concurrent commits. The two aggregates
+whose failure would most directly misstate a liability were re-run against
+current HEAD.
+
+**Modelo 303 `cuota-devengada-total`, recargo rung enumeration per design year:**
+
+| revision | recargo rungs summed |
+|---|---|
+| 2022 | 3 — `18`, `21`, `24` |
+| 2023 | 4 — plus `158` |
+| 2024-hasta-08-y-2t | 4 |
+| **2024-desde-09-y-3t** | **5** — plus `170` |
+| 2025 | 5 |
+| 2026-y-siguientes | 5 |
+
+3/4/4/5/5/5, exactly as recorded. And the growth lands where the official design
+grows: casilla `170` enters with the September 2024 design change, which is the
+same boundary that splits the two 2024 revisions. The total enumerates each year's
+actual rungs and no more.
+
+**Modelo 111 casilla 28:** sums nine casillas — `03`, `06`, `09`, `12`, `15`,
+`18`, `21`, `24`, `27`. The revision carries ten casillas with a retención
+semantic role; the tenth is `28` itself, the total. So every contributing box is
+summed and none is dropped, as recorded.
+
+Both verdicts stand. Recording the re-check rather than the verdict alone is the
+point: a handoff list that says "sound" without saying *when* invites the next
+reader to trust a measurement taken against a tree that has since moved.
