@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:445f542b6ad2f48df58ad0343f0aa623cf87e66b2e7d8edce1255aef41b5d346'
+body_hash: 'sha256:241a1833b7ac9ba035694239884caca8db8600e9590a859c922bc7c06cedf786'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -158,6 +158,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P21-S302]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S303]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S304]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S313]]'
   - '[[2026-08-11-tui-architecture-W04-P22-S139]]'
   - '[[2026-08-11-tui-architecture-W04-P22-S140]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
@@ -182,6 +183,7 @@ related:
   - '[[2026-08-11-tui-architecture-W05-P23-S146]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S310]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S311]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S314]]'
   - '[[2026-08-11-tui-architecture-W06-P13-S72]]'
   - '[[2026-08-11-tui-architecture-W06-P14-S157]]'
   - '[[2026-08-11-tui-architecture-W06-P14-S76]]'
@@ -326,6 +328,7 @@ related:
   - '[[2026-08-27-tui-architecture-recargo-tabaco-rung-unreachable-audit]]'
   - '[[2026-08-27-tui-architecture-received-invoice-refusal-direction-audit]]'
   - '[[2026-08-27-tui-architecture-restrictive-default-sweep-audit]]'
+  - '[[2026-08-27-tui-architecture-revision-id-exemption-stale-after-move-audit]]'
   - '[[2026-08-27-tui-architecture-verification-power-coverage-audit]]'
 ---
 
@@ -457,6 +460,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-27-tui-architecture-recargo-tabaco-rung-unreachable-audit` - `tui-architecture` audit: `the recargo tabaco rung has a rate and boxes but no ledger path`
 - `2026-08-27-tui-architecture-received-invoice-refusal-direction-audit` - `tui-architecture` audit: `a purchase-invoice guard refuses citing under-declaration on the over-payment direction`
 - `2026-08-27-tui-architecture-restrictive-default-sweep-audit` - `tui-architecture` audit: `the restrictive-default class swept across the calculation path`
+- `2026-08-27-tui-architecture-revision-id-exemption-stale-after-move-audit` - `tui-architecture` audit: a stale exemption path, not a resolution defect
 - `2026-08-27-tui-architecture-verification-power-coverage-audit` - `tui-architecture` audit: verification power across the registry
 
 ### exec
@@ -643,6 +647,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P21-S302` - Establish whether the modelo 347 declarado provincia and pais field is correctly modelled before giving it a per-row source: the diseño declares positions 77 to 80 as a compound field whose first half is a numeric Spanish province code and whose second half is a two-letter alphabetic country code for non-establishment non-residents, while the export field declares one four-character value with a digit-string policy that cannot render letters at all, so the alphabetic half is unrepresentable as declared; determine whether the field needs splitting or its policy widening, then source the country half from the counterparty country the observation already carries and record the province half as an absent domain fact, and prove a multi-counterparty declaration renders each counterparty's own value rather than the first one's
 - `2026-08-11-tui-architecture-W03-P21-S303` - Give modelo 347 claves F and G a real source: an invoice issued or received by a travel agency acting as intermediary in another's name and account, for the mediated services RD 1619/2012's fourth additional provision enumerates, is declarable under its own clave with the direction already available from the invoice kind, but no fact records that an invoice was issued under that regime; add the closed operation-type classification on the invoice mirroring the intracommunity mechanism the M349 side already uses, ground each clave against the provision's own service enumeration, and prove an agency-mediated invoice declares under F or G by direction while an ordinary invoice of the same amount does not
 - `2026-08-11-tui-architecture-W03-P21-S304` - Stop modelo 347 silently deleting every non-resident counterparty from the declaration: the invoice observation builder refuses any invoice whose counterparty country is not ES and returns nothing, with no comment or citation beside it while the adjacent tax-id skip carries its governing article, so a filer's above-threshold operation with a foreign counterparty is absent from the file with no refusal and no advisory; RD 1065/2007 art. 33.2's exhaustive exclusion list contains no counterparty-residency exclusion, excluding only the filer's own foreign permanent establishment and operations already reported through a coincident informativa, and the diseño's own country slot exists for exactly the non-established non-resident the gate deletes; remove the residency filter, keep only the exclusions the article actually names, and prove an ordinary non-recapitulativa operation with a non-resident counterparty reaches the declaration while an intra-community one still routes to its own informativa
+- `2026-08-11-tui-architecture-W03-P21-S313` - Give modelo 347 claves C, D and E a shared filer-role axis: each gates on the FILER's own institutional role rather than any transaction property, and the populations RD 1065/2007 art. 31.1's last paragraph (Ley 49/1960 propiedad horizontal, LIVA art. 20.tres carácter social entities), art. 31.2 (LGT art. 94.1/2 statutory information-duty entities, and the narrower entidades integradas en Administraciones publicas subset) and art. 31.3 (third-party fee collectors) name are disjoint from each other and from EntityType's tax-selection axis, but no classification for any of them exists anywhere in the profile domain; add one closed role axis in core/ naming each population as its own member, thread TaxpayerProfile access into the shared invoice-observation resolver (precedent: active_taxpayer_profile() in _m303_regimen_simplificado_scope.py), and prove the axis is orthogonal to EntityType by asserting the tax-selection consequence is unchanged (a LEGAL_ENTITY colegio profesional keeps its tax, its modelos and its calendar); S308 and S309 both depend on this Step and do not duplicate the axis
 - `2026-08-11-tui-architecture-W04-P22-S139` - Run the sole Workspace dependency validator against the exact green ModeloWorkspaceC1ExitReceiptV1, accepted Workspace authorities, owner-seam reconciliation, closed Workspace implementation tuple, native-owner and S126 inventories, seam-conformance digest, generated field inventory, current source tree, no-legacy proof, and Vaultspec-RAG-plus-exact duplicate-authority census
 - `2026-08-11-tui-architecture-W04-P22-S140` - Produce and validate the exact clean-commit ModeloWorkspaceC2DependencyReceiptV1 binding the C1 predecessor digest, native-owner surface inventory, Workspace contract and producer fingerprints, captured epoch tuple, process-incarnation refusal proof, seam and projection conformance evidence, current HEAD, and the exact C2 read destinations it opens
 - `2026-08-11-tui-architecture-W05-P23-S144` - Enroll the calculate and recalculate edit family through ModeloEditContractV1 and the transient financial operand handoff, register the typed ModeloWorkspaceRefreshTargetV1 resolver, and ensure frontend entrypoints can submit only typed requests without custody or mutation access
@@ -650,6 +655,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W05-P23-S310` - Make the operations credential-free payload check type-aware so a content digest stops being refused for its name alone: the check matches forbidden tokens in a field name with no knowledge of the field's type, so an optimistic-concurrency content digest is refused while a hex-encoded secret under a benign name would pass, and the edit-contract request cannot be enrolled at all; admit a field only when it is BOTH typed as a content digest AND named with the digest token, keep every other name-matched field refused exactly as today, keep a field matching a second forbidden token refused even when digest-typed, and prove all three directions including a digest-typed field named for a secret
 - `2026-08-11-tui-architecture-W05-P23-S311` - Build the OperationTransientFinancialOperandBroker composing three pieces that already exist rather than a new persistence-backed component: the S142 pure state-machine functions (open_custody, advance_custody, classify_interrupted_custody, reconcile_on_restart in _financial_operand_custody.py), the existing persistence layer (OperationFinancialOperandCustodyRepository protocol at persistence/financial_operand_custody.py:30, its filesystem implementation at adapters/persistence/operations/financial_operand_custody.py:41, already 8 tests deep against real tmp_path storage), and the S141 protocol surface (OperationTransientFinancialOperandProtocolV1) - mirroring EphemeralSecretBroker (secret_submission.py:85) exactly. Then add a financial_operand property to OperationExecutorContext (owner.py:175), thread one broker instance through the supervisor the same way self._ephemeral_secrets is threaded (supervisor.py:135, constructed per-operation into _SupervisorExecutorContext at supervisor.py:1251, mirroring BoundEphemeralSecretAccess at secret_submission.py:194), and prove one real executor calls declare_requirement and receives a granted access for an in-bounds amount and a refusal for one outside the declared bounds - a real executor exercising the broker, not a synthetic protocol-level test
 - `2026-08-11-tui-architecture-W06-P13-S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root
+- `2026-08-11-tui-architecture-W05-P23-S314` - Hard-move the transient financial operand contracts out of their private module into a public defining module, atomically: `OperationTransientFinancialOperandDeclaration`, `OperationFinancialOperandRefusalReason` and their siblings live in `_financial_operand.py`, but are imported cross-package by PRODUCTION code at `adapters/persistence/operations/financial_operand_custody.py` and `application/modelo/operation_definitions.py`, with the custody state machine in `_financial_operand_custody.py` reached the same way -- a contract required outside its package living in a private module, which `dev/tests/test_import_hygiene_gate.py` currently fails on across four assertions; move both modules to public defining names, update every production, test, fixture, annotation and docs-stub consumer, delete the old paths, land it in ONE explicit-path commit with `pytest --collect-only -q` clean immediately before, and prove the hygiene gate green rather than re-baselined
 
 ### plan
 
