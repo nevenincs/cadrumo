@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec1111c5d48b14c19eaab2c7476db0cec0f178723f5c8b31fe9f486c08bd8300'
+body_hash: 'sha256:438a171fd1bc3f269d8f93497f193bb8f638c7b0f4009459a6c7b606f8c66a95'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2335,3 +2335,88 @@ every catalogue.
 Also confirmed this tick: `application/workflow/tests/test_profile_health.py`,
 which the cold-reader defect named as the operator-facing victim, now passes 6
 of 6 -- it was a six-error file in the last sweep.
+
+### Relocation staleness swept systematically, and four dangling claims closed
+
+The write-door gate reported its own defect precisely: "profile-fact write doors
+moved: unenrolled ['application/wizard/commands.py',
+'application/wizard/persistence.py'], vanished ['application/wizard/_commands.py',
+'application/wizard/_persistence.py']". A relocation promoted both modules to
+public names and neither inventory was swept. Its sibling,
+`test_cleared_path_adoption_policy`, keyed its per-module safety REASONS by the
+same two old paths -- the reasons still describe the same code, so only the keys
+moved. 8 tests pass across the two files.
+
+This class has now appeared five times in this campaign (the census row, the
+acceptance-wall catalogue, the custody inventory, the clock-seam allowlist, and
+these two), so it was swept rather than fixed one more time. Scanning every
+quoted repo-relative module path under `src/cadrumo` against the filesystem
+returns 20 dangling literals, and most are deliberately synthetic -- `_rival.py`,
+`_planted.py`, `_synthetic_bypass.py` are negative fixtures whose whole purpose
+is to name a module that does not exist. The sweep is only useful because it
+separates those from the real ones.
+
+The real one was in PRODUCTION data. `core/_storage_taxonomy_locations.py`
+declares a `consumer_module` for each of 52 storage locations, and three named
+modules no longer existed: `adapters/persistence/operations/_journal.py`,
+`application/auth/_acquisition_lock.py` and `application/workflow/_persistence.py`,
+all three promoted to public names. The middle one is the same path an earlier
+tick removed from the clock-seam allowlist for the same reason, which is what
+made a systematic pass worth running.
+
+Repointing them exposed a fourth claim of a different kind, which the taxonomy's
+own gate then reported: `active-profile-pointer` claimed `core/config.py`, a
+module that references the category nowhere. The module that actually resolves
+that location is `core/bucket_pointer.py`, whose `pointer_path()` reads
+`StorageCategory.ACTIVE_PROFILE_POINTER`. Worth noting the gate checks the named
+module REFERENCES the symbol rather than merely existing, so a path that is
+merely plausible does not satisfy it.
+
+133 core taxonomy and storage tests pass, up from 132 passed with 1 failed.
+
+Queue item 3 re-measured while here: `test_catalogue_verification` is 29 passed,
+1 failed, and the single failure remains the Modelo 165 2023-2025
+`layout_authority` gap across its three coordinates -- the only distinct entry in
+`required_gate_failures`, and the same blocker evidenced three separate ways
+earlier.
+
+### A new public module unenrolled, and twelve false credential positives adjudicated
+
+**The defining-identity inventory.** `test_public_definition_identity` compares
+the package's actual public modules against a declared tuple and found
+`usage_ratio_resolution` unenrolled -- added by `845410988d feat(user-profile):
+resolve usage ratios through their own defining module` without the inventory
+sweep. Enrolling it is not a rubber stamp: the same tuple drives the
+parametrised proof that every export is defined locally rather than imported,
+aliased or re-exported, so the module had to satisfy that contract to pass. It
+does. 55 tests pass, up from 53 passed 1 failed.
+
+**The credential gate.** Twelve fields were flagged as "presumed credentials but
+not declared secret", every one matching the keyword `clave`. The trigger is not
+the section presumption -- `_CREDENTIAL_SECTIONS` is `auth` alone -- but the
+keyword list, and `clave` is the ambiguous case: in Spanish it means both
+PASSWORD and CODE, and AEAT uses the second sense throughout.
+
+The gate offers "classify them or record why they are not", and classifying them
+secret would have been the wrong answer twice over -- it would conceal ordinary
+declaration data and, as the existing `auth.dni_nie` entry records from
+experience, mis-classing a field can silently drop the policy rule that actually
+applies to it.
+
+Each was adjudicated against the schema's own description rather than excused in
+bulk, and they split cleanly into the two shapes this file already documents.
+Three carry `clave` in their NAME and are AEAT record classifiers: the Modelo
+184 clave at position 93 (a one-letter enum over A capital mobiliario, C capital
+inmobiliario, D actividades economicas), its numeric subclave at 94-95, and the
+titularidad clave. Nine match only through their DESCRIPTION, which names the
+clave GOVERNING them -- the clave-C inmueble fields (naturaleza, situacion,
+referencia catastral, porcentaje de titularidad, dias de arrendamiento), the
+reduccion, the two estimacion-objetiva rendimientos, and
+`taxpayer_type.declaration_roles`, whose roles each feed a Modelo 347 clave.
+
+None authenticates anything: holding any of them tells you how a declaration
+classifies a row, which the filing publishes to AEAT by design. The two existing
+exemptions in this same section (`participe_clave`, `country_of_residence`) had
+already reasoned exactly this way, and the file's staleness gate removes an
+exemption whose field stops matching, so the list cannot outlive its cause. 7
+tests pass.
