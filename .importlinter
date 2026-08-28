@@ -471,9 +471,9 @@ ignore_imports =
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.observations_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
@@ -613,7 +613,7 @@ ignore_imports =
     # ── arch-remediation-ports-inversion: justificante repository relocated to
     #    adapters.persistence.profile.justificante (no domain port; no domain
     #    caller); application/entrypoint callers import the adapter directly ──
-    cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
+    cadrumo.application.calculations.cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
     # ── application/live, registry and diagnostics narrowed from `adapters.**`
     #    to what each module reaches. This package DRIVES the AEAT Sede and its
     #    authentication: an outbound edge here is the package's purpose, not an
@@ -674,7 +674,7 @@ ignore_imports =
     cadrumo.application.state_projection -> cadrumo.adapters.persistence.**
     # The Sheets parity harness drives the outbound Google client; the export
     # mirror is one-way, so this reaches no persistence at all.
-    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.outbound.google
+    cadrumo.application.storage.calc_sheets.parity_harness -> cadrumo.adapters.outbound.google
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
     # The workflow run-contract surface reports whether a browser session can be
     # established, so it names the outbound browser adapter alongside its
