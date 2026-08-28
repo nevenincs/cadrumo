@@ -8,7 +8,7 @@ related:
   - '[[2026-08-28-test-reconciliation-sweep-adr]]'
 modified: '2026-08-28'
 body_schema: body-v2
-body_hash: 'sha256:7db612a67844e5f5d10c588b6e23c0b0fd325ce5625e97dde99dc3b9836f2db4'
+body_hash: 'sha256:31e4add5dc48b6b96c2dc408b92bd839d30a647007f0fd2aa884da78dda66a72'
 ---
 
 # `test-reconciliation-sweep` plan
@@ -31,6 +31,13 @@ Bring every gate this campaign's renames invalidated back to a truthful green, w
 - [x] `P01.S08` - Govern the four writers this campaign's renames pulled into the coverage predicate; `src/cadrumo/application/repair_integrity.py`.
 - [x] `P01.S09` - Widen the coverage predicate to the post-split transport vocabulary, govern every leaf it newly selects, and delete the stale row in the same change; `src/cadrumo/application/repair_integrity.py`.
 - [x] `P01.S10` - Author a per-modelo requiredness capability so the profile schema can express a modelo-scoped required fact without over-demanding it; `src/cadrumo/application/user_profile/`.
+
+### Phase `P02` - retire abandoned relocation debris in the ledger package
+
+Make the public-module gate complete by construction and repoint every facade import it was flagging
+
+- [x] `P02.S11` - Derive the ledger public-module set from the package instead of a hand-listed tuple that went stale when a peer relocation published two modules; `src/cadrumo/application/ledger/tests/`.
+- [x] `P02.S12` - Repoint every module-object import that reached through the inert ledger namespace to an absolute defining-module import; `src/cadrumo/application/ledger/tests/`.
 
 ## Parallelization
 

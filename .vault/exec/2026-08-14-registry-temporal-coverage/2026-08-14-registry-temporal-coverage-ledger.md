@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:f0c4f658541ed076d785e7befc517f1889a5ab6d7104d2ab135f895899d5cce9'
+body_hash: 'sha256:93229790ae00bae0476708a79f90b64fee196d53ed0d6ccec7e16933c9d90170'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2248,3 +2248,51 @@ parity gate (`test_profile_key_schema_required_parity`, which reports fields
 `attribution_entity_socios.*`) cannot currently be run -- it imports through the
 storage package mid-relocation. It stays the next lead, and the registry domain
 suite was left running to characterise its own failures.
+
+
+### A real operator-facing defect: cold readers could not read the profile-key registry
+
+Two fixes, one of them a genuine product break rather than test drift.
+
+**The schema/wizard parity pin.** `test_profile_key_schema_required_parity`
+named exactly one unpinned field: `attribution_entity_socios.clave`, declared
+required by `a73d644d99 registry(modelo-184): declare the socio clave and
+subclave schema fields`. Checked first that this predated the fixture work of an
+earlier tick -- it fails in the last clean sweep too, so it is not fallout from
+adding a clave fact to a test profile.
+
+The gate offers two remedies, wire it into the wizard or pin it with a cause,
+and its causes are machine-checked rather than asserted in prose. Every sibling
+column of the same section (`nif`, `name`, `share_pct`,
+`base_imponible_assigned`, `participe_clave`) is pinned `REPEATABLE_ROW` -- "one
+column of a declared socio row" -- and that cause is verified against the
+schema's own `repeatable` flag, which this section carries. `clave` is the same
+kind of thing, so it is pinned the same way rather than given a bespoke excuse.
+7 tests pass.
+
+**The cold-reader break.** `test_cold_readers_agree_on_the_registered_key_count`
+ran a fresh interpreter and died on
+`ProfileKeysRegistrationError: profile keys are not registered`. This is not a
+test artefact: reproduced directly in a cold process, both
+`list_profile_key_records()` and `validate_profile_values({})` raised.
+
+`keys_validation._ensure_profile_keys_registered()` imported
+`..wizard.catalogue` for its registration side effect. That side effect has
+moved: `wizard/compiler.py` defines `ensure_profile_keys_registered()` and calls
+it at ITS own import, so importing the catalogue now registers nothing and left
+the registry empty.
+
+The repair is the compiler's own documented entry rather than another import for
+its side effect -- it states it exists for "entrypoint calls at its own
+initialisation" and that "an entrypoint may call this unconditionally without
+ordering knowledge", and it returns early when the compiled tuple already
+matches. The import stays function-local, as the surrounding docstring requires
+for the cycle it breaks.
+
+What makes this worth the words is the failure's shape, which that same
+docstring predicted: "any module that touches the wizard catalogue first repairs
+the import order for everything after it, so the failure only reaches an
+operator through a cold entry point (workflow profile health) that does not."
+In a warm suite it hides; the operator meets it. A cold reader now returns 81
+keys, and the four registration-order tests pass.
+
