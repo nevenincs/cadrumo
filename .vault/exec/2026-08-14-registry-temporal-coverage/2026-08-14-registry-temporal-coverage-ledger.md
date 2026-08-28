@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:93229790ae00bae0476708a79f90b64fee196d53ed0d6ccec7e16933c9d90170'
+body_hash: 'sha256:856878152f86aa27e19bd97e6aa822d6220c519d1662129d9a21395d4aa74d10'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2249,7 +2249,6 @@ parity gate (`test_profile_key_schema_required_parity`, which reports fields
 storage package mid-relocation. It stays the next lead, and the registry domain
 suite was left running to characterise its own failures.
 
-
 ### A real operator-facing defect: cold readers could not read the profile-key registry
 
 Two fixes, one of them a genuine product break rather than test drift.
@@ -2295,4 +2294,3 @@ the import order for everything after it, so the failure only reaches an
 operator through a cold entry point (workflow profile health) that does not."
 In a warm suite it hides; the operator meets it. A cold reader now returns 81
 keys, and the four registration-order tests pass.
-
