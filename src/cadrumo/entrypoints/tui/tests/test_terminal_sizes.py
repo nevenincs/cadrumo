@@ -46,7 +46,7 @@ from ....application.operations.registry import OperationRegistry
 from ....application.user_profile.custody_ports import profile_custody_secure_object_repository
 from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....application.user_profile.login_session import login_profile, logout_active_profile
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import FlowMode
@@ -105,9 +105,7 @@ def _assert_horizontally_contained(app: App[object], size: tuple[int, int], surf
         if widget.region.x < 0 or widget.region.right > width
     ]
     assert not overflowing, f"{surface} overflows a {width}-column terminal: {overflowing}"
-    degenerate = [
-        (type(widget).__name__, widget.id) for widget in controls if widget.region.height <= 0
-    ]
+    degenerate = [(type(widget).__name__, widget.id) for widget in controls if widget.region.height <= 0]
     assert not degenerate, f"{surface} rendered a zero-height control at {size}: {degenerate}"
 
 
@@ -132,11 +130,15 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL)
 
-        def _refuse_write(path: str, value: str) -> object:
-            message = "this layout proof never writes"
+        def _refuse_write(path: str, value: str) -> ProfileOverview:
+            # This proof measures layout, never storage. A write door that
+            # raises makes an accidental mutation a failure rather than a
+            # silent side effect on the fixture profile.
+            del path, value
+            message = "the terminal-size proof never writes"
             raise AssertionError(message)
 
-        app = ProfileManagerApp(overview, persist=_refuse_write)  # type: ignore[arg-type]
+        app = ProfileManagerApp(overview, persist=_refuse_write)
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
             await pilot.pause()
@@ -153,9 +155,7 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
         logout_active_profile()
         screen = LoginScreen(
             choices=[ProfileLoginChoice(profile_id=bucket_id, label=_LABEL)],
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id=profile_id, passphrase=secret
-            ),
+            authenticate=lambda profile_id, secret: attempt_profile_login(profile_id=profile_id, passphrase=secret),
         )
         app = CredentialHostApp(screen)
         async with app.run_test(size=size) as pilot:
@@ -188,6 +188,9 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
             passphrase=_PASSWORD,
         )
         profile_id = UUID(enrolled.profile_id)
+        # Custody resolves the session's real data key; registration closes
+        # its own session, so the profile must be unlocked again first.
+        login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSWORD)
         verify_definition = build_modelo_work_verify_definition()
         registry = OperationRegistry(
             definitions=(verify_definition,),
