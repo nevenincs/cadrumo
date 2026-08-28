@@ -13,12 +13,17 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core import STR_KEYED_MAPPING_ADAPTER, Period
+from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+)
 from ....core.errors import ERROR_REGISTRY
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva import EUMemberState, IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -151,6 +156,8 @@ def _transaction(
     # contract.)
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_category: IvaCategory | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    deduction_locator: str | None = None,
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
@@ -169,6 +176,16 @@ def _transaction(
     }
     if iva_category is not None:
         fields["iva_category"] = iva_category
+    if deduction_fact_kind is not None:
+        # LIVA art. 97: the factura confers the right to deduct, so an input
+        # row only reaches a soportado binding once it carries its
+        # invoice-evidence deduction authority.
+        fields["deduction_fact_kind"] = deduction_fact_kind
+        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=deduction_locator or "invoice:test-purchase",
+            evidence_digest="a" * 64,
+        )
     if counterparty_country is not None:
         fields["counterparty_country"] = counterparty_country
     if counterparty_identification_state is not None:
@@ -616,7 +633,16 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert envelope["error"]["context"]["modelo"] == "115"
     assert envelope["error"]["context"]["period"] == "1T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    assert "--retencion-observation" in envelope["error"]["suggestion"]
+    # The free-text ``suggestion`` field is gone: ``suggestion`` is a reserved
+    # action-context key, and guidance now rides the typed action projection.
+    # Assert that projection rather than prose -- it names the failed condition
+    # exactly, and records that no mechanical recovery exists for it.
+    action = envelope["error"]["action"]
+    assert action["failed_condition_id"] == "aggregation.retenciones.observations.present"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["action"] is None
+    assert "retention observations" in envelope["error"]["message"]
+    assert "115" in envelope["error"]["message"]
 
 
 def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
@@ -677,6 +703,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path)
         amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_locator="invoice:purchase-general-2026-1T",
     )
 
     # Seed ledger data and a zero-amount IVA wallet decision via a live

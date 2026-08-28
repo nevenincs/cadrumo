@@ -26,21 +26,20 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import python_files_under
-from ..identity import (
+from cadrumo.domain.calculations.registry.identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,
     compute_installed_tree_digest,
     compute_walked_tree_digest,
     registry_identity_stamp_location,
 )
+from cadrumo.tests import python_files_under
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+from .._paths import REPO_ROOT as _REPOSITORY_ROOT
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _IDENTITY_MODULE_NAME = "identity.py"
 """The one module permitted to own each derivation below."""
-
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[6]
-"""The checkout root: tests -> registry -> calculations -> domain -> cadrumo -> src -> repo."""
 
 _SCANNED_TREES = ("src", "dev")
 """Every first-party tree. ``dev`` is included because the release stamper lives there."""

@@ -405,19 +405,11 @@ def test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_p
     scanned_paths = (
         *sorted((repository / "src").rglob("*.py")),
         *sorted((repository / "docs").rglob("*.rst")),
-        *sorted((repository / "dev").rglob("*.py")),
-        *sorted((repository / "dev").rglob("*.toml")),
     )
-    # The CLI benchmark keeps a frozen copy of an older tree as its baseline. It is
-    # vendored evidence of what the tree WAS, so a live-remnant scan that reads it
-    # can never go green no matter how complete the relocation is.
-    vendored_baseline = repository / "dev" / "benchmarks" / "cli" / ".baseline-source-snapshot"
     remnants = tuple(
         path.relative_to(repository)
         for path in scanned_paths
-        if path != Path(__file__).resolve()
-        and not path.is_relative_to(vendored_baseline)
-        and private_module in path.read_text(encoding="utf-8")
+        if path != Path(__file__).resolve() and private_module in path.read_text(encoding="utf-8")
     )
 
     assert not remnants

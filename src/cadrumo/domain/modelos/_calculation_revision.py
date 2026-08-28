@@ -119,6 +119,23 @@ class CalculationRevisionState(StrEnum):
     DESCARTADO = "descartado"
 
 
+SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+    },
+)
+"""States in which a revision is no longer a mutable draft, because something
+was verified or filed. :attr:`CalculationRevisionState.BORRADOR` and
+:attr:`CalculationRevisionState.DESCARTADO` are excluded.
+:attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO` IS included -- a
+superseded filing still occurred.
+
+This is NOT the same as the narrower "currently authoritative" set, which
+additionally excludes :attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`."""
+
+
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),

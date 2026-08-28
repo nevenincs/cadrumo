@@ -27,13 +27,13 @@ def test_missing_key_refuses_under_strict_mode() -> None:
 
 
 def test_missing_key_error_names_the_remedy() -> None:
-    """The refusal tells the operator which commands repair the catalogue."""
+    """The refusal tells the operator the catalogue needs a real translation."""
     with pytest.raises(MissingTranslationError) as excinfo:
         tr(_ABSENT_KEY, locale="en")
 
     message = str(excinfo.value)
-    assert "scaffold" in message
-    assert f"set en {_ABSENT_KEY}" in message
+    assert _ABSENT_KEY in message
+    assert "locale catalogues" in message
 
 
 def test_explicit_default_opts_into_the_fallback() -> None:

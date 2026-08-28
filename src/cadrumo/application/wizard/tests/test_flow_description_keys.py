@@ -36,6 +36,6 @@ def test_wizard_flow_description_key_resolves() -> None:
             assert resolved != key, (
                 f"Wizard flow description key {key!r} is absent from the {locale!r} catalogue "
                 f"(resolved to self-referencing placeholder {resolved!r}). "
-                f"Add a translation via `python -m dev.locales set {locale} {key!r} <value>`."
+                f"Add a translation for {key!r} in the {locale!r} catalogue."
             )
             assert resolved, f"Wizard flow description key {key!r} resolved to empty string in {locale!r}."

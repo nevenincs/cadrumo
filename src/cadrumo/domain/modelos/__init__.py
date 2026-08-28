@@ -85,6 +85,7 @@ if TYPE_CHECKING:
     from ._calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
     from ._calculation_revision import (
         M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
+        SEALED_REVISION_STATES,
         CalculationRevision,
         CalculationRevisionAmendmentIdentity,
         CalculationRevisionAmendmentKind,
@@ -292,6 +293,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ModeloVerificationFindingKind": "._verification_report",
     "ModeloVerificationFindingSeverity": "._verification_report",
     "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND": "._verification_report",
+    "SEALED_REVISION_STATES": "._calculation_revision",
     "TransactionParticipationIndexPersistenceError": "._participation_index",
     "TransactionParticipationIndexRepositoryProtocol": "._protocols",
     "TransactionRevisionParticipation": "._participation_index",
@@ -376,6 +378,7 @@ __all__ = (
     "M232_MAX_RELATED_PARTY_ROWS",
     "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
+    "SEALED_REVISION_STATES",
     "CalculationRevision",
     "CalculationRevisionAggregateContext",
     "CalculationRevisionAmendmentIdentity",

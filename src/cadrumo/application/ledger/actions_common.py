@@ -43,6 +43,7 @@ from ...domain.buckets import (
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos import (
+    SEALED_REVISION_STATES,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
 )
@@ -76,13 +77,6 @@ from .models import (
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
 EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
-_REMOVAL_BLOCKING_REVISION_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    },
-)
 # Draft revisions do not block removal (the operator may legitimately prune a row
 # before finalising), but a draft that still cites the removed row will assert an
 # income/expense no longer in the books on the next verify/file. Surfacing a
@@ -242,7 +236,7 @@ def blocking_modelo_references(
     revisions = (calculation_repository or _default_calculation_repository()).load()
     blockers: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
-        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         if not wanted.intersection(revision.source_transaction_ids):
             continue
@@ -341,7 +335,7 @@ def blockers_by_source_transaction_id(
     revisions = (calculation_repository or _default_calculation_repository()).load()
     out: dict[str, list[LedgerRemovalBlocker]] = {}
     for revision in revisions.values():
-        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         work_unit = work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:

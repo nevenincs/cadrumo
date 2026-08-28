@@ -63,8 +63,6 @@ _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
         ('193', '2024', 'Tipo 2 - Registro De Perceptor  Relación De Gastos'),  # 3-record layout
         ('193', '2025-y-siguientes', 'Tipo 2 - Registro De Perceptor'),  # 3-record layout
         ('193', '2025-y-siguientes', 'Tipo 2 - Registro De Perceptor  Relación De Gastos'),  # 3-record layout
-        ('232', '2016-2017', 'DR23200'),  # 2-record layout
-        ('232', '2018-y-siguientes', 'DR23200'),  # 2-record layout
         ('296', '2024-y-siguientes', 'Tipo 2 - Registro De Perceptor'),  # 5-record layout
         ('303', '2022', 'DP30300'),  # 5-record layout
         ('303', '2023', 'DP30300'),  # 6-record layout
@@ -140,6 +138,18 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                                 continue
                             if coverage._join_record(sheet, layout.records) is not None:
                                 continue
+                            if sheet.auxiliary_envelope_header is not None:
+                                # An auxiliary envelope header never reaches the
+                                # weak fallback: the coverage check branches on
+                                # it BEFORE the fallback and attributes its
+                                # prefix extent to the header itself. Counting
+                                # one here would overstate the debt with a sheet
+                                # that gives up no rigor at all -- and the
+                                # coverage module records that the generic
+                                # fallback is "actively wrong" for these,
+                                # because neighbouring records' fields sit at
+                                # the same low offsets.
+                                continue
                             key = (modelo.value, str(revision_id), sheet.name)
                             unjoined.add(key)
                             record_counts[key] = len(layout.records)
@@ -193,4 +203,57 @@ def test_every_inventory_entry_sits_on_a_multi_record_layout() -> None:
         "question as a real join and so gives up nothing:\n  "
         + "\n  ".join(f"{modelo} {revision} {sheet!r}" for modelo, revision, sheet in benign)
         + "\nRemove them; this inventory is for real rigor loss only."
+    )
+
+
+def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
+    """An AUX header is not fallback debt, and pinning one would overstate it.
+
+    The coverage check branches on ``auxiliary_envelope_header`` BEFORE the
+    generic fallback and attributes the header's declared prefix extent to the
+    header itself, so such a sheet never takes the weaker any-record question.
+    The module goes further and records that the fallback is "actively wrong"
+    there, because neighbouring records' fields sit at the same low offsets --
+    Modelo 232 was seen blaming ``dr23201`` fields for writing into
+    ``DR23200``'s administracion bytes.
+
+    This inventory was built from ``_join_record(...) is None`` alone, which is
+    ALSO true of every AUX header, so it carried two Modelo 232 entries that
+    gave up no rigor whatsoever. The sibling multi-record assertion catches one
+    flavour of overstatement; this catches the other.
+    """
+    authority = bundled_authority()
+    source_refs = authority.catalogues.sources
+    source_refs = getattr(source_refs, "entries", None) or source_refs
+    if not hasattr(source_refs, "get"):
+        source_refs = {entry.id: entry for entry in source_refs}
+
+    misfiled: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for modelo in Modelo:
+        for filing_year in range(2008, 2028):
+            for period in ("0A", "1T", "01"):
+                snapshot = _resolve(authority, modelo, filing_year, period)
+                if snapshot is None:
+                    continue
+                revision = snapshot.revision
+                revision_id = str(revision.id)
+                if (modelo.value, revision_id) in seen:
+                    break
+                seen.add((modelo.value, revision_id))
+                for layout in getattr(revision, "export_layouts", ()) or ():
+                    for source in coverage._design_sources(layout, source_refs):
+                        sheets = coverage._read_design_sheets(source)
+                        if isinstance(sheets, str):
+                            continue
+                        for sheet in sheets:
+                            key = (modelo.value, revision_id, sheet.name)
+                            if key in _UNJOINED_DESIGN_SHEETS and sheet.auxiliary_envelope_header is not None:
+                                misfiled.append(f"{key[0]} {key[1]} {key[2]!r}")
+                break
+
+    assert not misfiled, (
+        "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "
+        "their own branch rather than through the weak fallback, so they are not debt: "
+        + ", ".join(sorted(misfiled))
     )

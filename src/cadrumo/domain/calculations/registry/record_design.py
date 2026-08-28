@@ -4022,6 +4022,16 @@ def _position_runs(positions: list[int]) -> str:
     return ", ".join(runs[:6]) + (" and more" if len(runs) > 6 else "")
 
 
+#: A naturaleza column holding only dash/underscore punctuation. AEAT uses it to
+#: mean "no data type", i.e. filler positions.
+_DASH_NATURALEZA_RE = re.compile(r"[-–_]+")
+
+#: The fillers a dash naturaleza may describe. Anchored and word-bounded so
+#: "BLANCOS." and "CEROS." match while a sentence merely opening with a similar
+#: word does not.
+_FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
+
+
 def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
@@ -4050,6 +4060,33 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         return None
 
     naturaleza = _naturaleza_or_none(narrative.group("type"))
+    if (
+        naturaleza is not None
+        and _DASH_NATURALEZA_RE.fullmatch(narrative.group("type") or "")
+        and not _FILLER_DESCRIPTION_RE.match(narrative.group("text").strip())
+    ):
+        # A BARE DASH in the naturaleza column means "no data type -- filler",
+        # so the row's own description says which filler: BLANCOS/BLANCO or
+        # CEROS. When it says anything else the dash is not a naturaleza at all
+        # but the punctuation of an ENUMERATED PROSE ITEM inside a field's
+        # description -- AEAT writes "1 - En el caso de que en el campo Clave
+        # Tipo de Identificacion se haya consignado una 'C'..." -- and reading
+        # that as a row invents a field at position 1.
+        #
+        # That invention is not a lost row, it is a lost RECORD: because the
+        # fabricated offset restarts at 1, the extractor concluded a new record
+        # body began mid-description and reported an unidentified record it
+        # could not name. Modelo 181 lost one that way in each of its three
+        # bundled editions.
+        #
+        # MEASURED before narrowing, across all 102 bundled design PDFs: 183
+        # rows carry a bare-dash naturaleza. Every legitimate one describes
+        # filler -- including eight that declare a SINGLE position rather than a
+        # range (BLANCOS at 58, 81 and 500 across modelos 185, 270, 296 and
+        # 347), which is why the absence of a range is NOT the discriminator and
+        # rejecting on it would have dropped eight real rows. The six that
+        # describe prose are exactly modelo 181's three editions, twice each.
+        return None
     if naturaleza is None:
         # The line has a leading number but the token after it names no
         # naturaleza AEAT uses, so this is prose, not a position row. AEAT
