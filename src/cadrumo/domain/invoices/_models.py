@@ -642,7 +642,23 @@ class Invoice(BaseModel):
     # distinct from ordinary payments. Feeds Modelo 347 clave E, which is
     # additionally exclusive to a PUBLIC_ADMINISTRATION_ENTITY filer
     # (art. 31.2's second paragraph) -- this fact alone never classifies E.
-    is_subvencion_ayuda: bool = False
+    # Tri-state on purpose: ``None`` is UNDECLARED, distinct from ``False``.
+    # A silent ``False`` default would under-declare clave E for every
+    # subvención nobody thought to flag; the resolver surfaces an advisory
+    # for a public-administration filer's invoice left ``None`` rather than
+    # picking a side.
+    is_subvencion_ayuda: bool | None = None
+    # RD 1065/2007 art. 31.1's last paragraph and art. 31.2: an acquisition
+    # made "al margen de las actividades empresariales o profesionales" by a
+    # filer carrying one of clave D's four roles. A mixed-activity filer (a
+    # public university with a cafeteria concession, say) has SOME
+    # acquisitions inside its own economic activity and some outside it, so
+    # this is a per-invoice fact, never inferable from the filer's role
+    # alone. Tri-state for the same reason as ``is_subvencion_ayuda``: a
+    # comunidad de propietarios earning rooftop-antenna income has genuine
+    # business-adjacent acquisitions too, so neither a blanket ``True`` nor
+    # ``False`` default is safe for its population either.
+    outside_economic_activity: bool | None = None
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None

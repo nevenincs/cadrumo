@@ -68,6 +68,18 @@ from ..aggregation import (
     storage_degradation_resolution,
 )
 
+#: Modelo 347 clave D's four disjoint filer-role populations (RD 1065/2007
+#: art. 31.1's last paragraph and art. 31.2). Any ONE of them, combined with
+#: the transaction-level ``outside_economic_activity`` fact, classifies D.
+_M347_CLAVE_D_ROLES: frozenset[ThirdPartyDeclarationRole] = frozenset(
+    {
+        ThirdPartyDeclarationRole.PROPIEDAD_HORIZONTAL_ENTITY,
+        ThirdPartyDeclarationRole.SOCIAL_CHARACTER_ENTITY,
+        ThirdPartyDeclarationRole.STATUTORY_INFORMATION_DUTY_ENTITY,
+        ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY,
+    },
+)
+
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
@@ -250,7 +262,8 @@ class InvoiceCatalogueSourceResolver:
                 )
                 if context.modelo == Modelo.M349.value
                 else ()
-            ),
+            )
+            + _m347_role_fact_advisories(source_invoices, context=context, resolver_id=self.resolver_id),
             provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed),
         )
 
@@ -501,6 +514,68 @@ def _unconverted_foreign_diagnostics(
     )
 
 
+def _m347_role_fact_advisories(
+    invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on a Modelo 347 clave D/E fact left UNDECLARED, rather than silently deciding it.
+
+    Fires only for a filer who actually carries a clave D or E role -- an
+    empty role set (the overwhelming majority of filers) never triggers
+    this, so the advisory is proportionate to the population the roles
+    exist to cover, not every invoice everywhere. Scoped to RECEIVED
+    invoices for clave D, matching the article's own "adquisiciones" text;
+    clave E carries no direction restriction in the article, so every
+    invoice from a public-administration filer is in scope.
+    """
+    if context.modelo != Modelo.M347.value:
+        return ()
+    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
+    if not declaration_roles:
+        return ()
+    clave_d_eligible = bool(declaration_roles & _M347_CLAVE_D_ROLES)
+    clave_e_eligible = ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for invoice in invoices:
+        if (
+            clave_d_eligible
+            and invoice.kind is InvoiceKind.RECEIVED
+            and invoice.outside_economic_activity is None
+        ):
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unclassified_declarant_role_fact",
+                    source_kind=str(_invoice_source_kind(invoice)),
+                    resolver_id=resolver_id,
+                    source_ref=f"invoice:{invoice.invoice_id}",
+                    message=(
+                        f"invoice {invoice.invoice_number!r} is an acquisition from a filer carrying a "
+                        "Modelo 347 clave D role, but whether it is al margen de la actividad "
+                        "empresarial is undeclared, so it is NOT classified as clave D"
+                    ),
+                    remedy="Declare outside_economic_activity on this invoice, then recalculate",
+                ),
+            )
+        if clave_e_eligible and invoice.is_subvencion_ayuda is None:
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unclassified_declarant_role_fact",
+                    source_kind=str(_invoice_source_kind(invoice)),
+                    resolver_id=resolver_id,
+                    source_ref=f"invoice:{invoice.invoice_id}",
+                    message=(
+                        f"invoice {invoice.invoice_number!r} is from a filer carrying the Modelo 347 "
+                        "public-administration role, but whether it is a subvención, auxilio or ayuda "
+                        "is undeclared, so it is NOT classified as clave E"
+                    ),
+                    remedy="Declare is_subvencion_ayuda on this invoice, then recalculate",
+                ),
+            )
+    return tuple(diagnostics)
+
+
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
@@ -692,44 +767,35 @@ def _m347_operation_clave(
     """Classify the M347 clave de operacion for one invoice, or ``None``.
 
     Checks clave C first (RD 1065/2007 art. 31.3: the filer collects this
-    amount on behalf of a socio, asociado or colegiado), then clave E (art.
+    amount on behalf of a socio, asociado or colegiado), then clave D (arts.
+    31.1's last paragraph / 31.2: an acquisition al margen de la actividad
+    empresarial by one of four disjoint filer roles), then clave E (art.
     31.2's second paragraph: a subvención/ayuda from a public-administration
     filer), then the RD 1619/2012 disposición adicional cuarta travel-agency
     mediation fact (claves F/G), then falls back to
     :func:`m347_operation_clave`'s invoice-direction classification (claves
-    A/B). Clave D remains unclassifiable here -- it needs an additional
-    transaction-level fact (whether the acquisition is al margen de la
-    actividad empresarial del filer) that does not exist yet; see the
-    coordinating session's ruling before it is built.
+    A/B).
 
-    Clave C requires BOTH facts together: the filer's own
-    ``THIRD_PARTY_FEE_COLLECTOR`` role AND the invoice's own
-    ``collected_on_behalf_of_tax_id``. Neither alone is sufficient -- a
-    collecting entity's ORDINARY sale is not a clave-C operation, and an
-    invoice carrying a beneficiary fact from a filer who never declared the
-    role would let an unaudited fact silently reclassify a row.
-
-    Clave E requires the same conjunction shape as C: the invoice's own
-    ``is_subvencion_ayuda`` fact AND the filer's ``PUBLIC_ADMINISTRATION_ENTITY``
-    role membership (RD 1065/2007 art. 31.2's second paragraph -- exclusive
-    to this narrower population, unlike clave D which any of the four
-    disjoint filer roles can reach). Neither alone is sufficient: an ordinary
-    payment from a public administration is not clave E, and a subvención
-    fact from a non-public-administration filer does not exist by the
-    article's own text.
-
-    F ("ventas agencia viaje") covers the disposition's FULL listed service
-    set for an ISSUED invoice; G ("compras agencia viaje") covers ONLY air
-    passenger transport for a RECEIVED invoice. A RECEIVED invoice for a
-    non-air mediated service is neither F nor G by the diseño's own text, and
-    falls through to the ordinary A/B classification below.
+    Claves C, D and E all require the SAME conjunction shape: a filer-level
+    role membership AND a transaction-level fact, NEITHER alone sufficient.
+    A collecting entity's ordinary sale is not clave C; a D-role filer's
+    acquisition WITHIN its own economic activity is not clave D; an ordinary
+    payment from a public administration is not clave E. Every fact is
+    checked with ``is True`` rather than truthiness, so an undeclared
+    tri-state ``None`` never silently classifies either way -- it falls
+    through here and is surfaced as an advisory by the caller instead.
     """
     if (
         invoice.collected_on_behalf_of_tax_id is not None
         and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
     ):
         return "C"
-    if invoice.is_subvencion_ayuda and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles:
+    if invoice.outside_economic_activity is True and declaration_roles & _M347_CLAVE_D_ROLES:
+        return "D"
+    if (
+        invoice.is_subvencion_ayuda is True
+        and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    ):
         return "E"
     mediation = invoice.travel_agency_mediation
     if mediation is not None and invoice.kind is InvoiceKind.ISSUED:

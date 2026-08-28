@@ -194,6 +194,15 @@ CalculationSourceDiagnosticReason = Literal[
     # from `unrouted_observation` because the remedy is different: that one
     # needs a binding, this one needs a conversion rate on the record.
     "unconverted_foreign_currency",
+    # A Modelo 347 filer carries a declaring role (art. 31's claves C/D/E
+    # population) whose clave depends on a transaction-level fact this
+    # invoice leaves UNDECLARED (tri-state ``None``, not ``False``): whether
+    # an acquisition is al margen de la actividad empresarial (clave D), or
+    # whether a payment is a subvención/auxilio/ayuda (clave E). Neither a
+    # silent ``False`` (under-declares the population the role exists to
+    # cover) nor a silent ``True`` (over-declares) is acceptable, so an
+    # undeclared fact surfaces here instead of picking a side.
+    "unclassified_declarant_role_fact",
     # An invoice whose declared IVA treatment and whose counterparty contradict
     # each other: an intra-community supply to a third country, or an export to
     # a member state. Routing on the category alone would declare volume the
