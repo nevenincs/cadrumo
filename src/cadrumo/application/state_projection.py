@@ -430,6 +430,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.PREVIOUS_FILING: "cli.app.modelo.bindings.readiness.declaracion_previa",
         BindingSourceKind.RELATION_PREFILL: "cli.app.modelo.bindings.readiness.entrada_relacion",
         BindingSourceKind.MANUAL_INPUT: "cli.app.modelo.bindings.readiness.entrada_manual",
+        BindingSourceKind.DESIGN_CONSTANT: "cli.app.modelo.bindings.readiness.constante_diseno",
         BindingSourceKind.LEDGER_OSS_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_IVA_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (
@@ -482,6 +483,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.PREVIOUS_FILING: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.RELATION_PREFILL: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.MANUAL_INPUT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.DESIGN_CONSTANT: OperatorActionAxis.REVIEW_ADVISORY,
         BindingSourceKind.LEDGER_OSS_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_IVA_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),

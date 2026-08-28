@@ -171,6 +171,7 @@ from ._calculation_source_staging import (
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -499,6 +500,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     snapshot = prepared.snapshot
     _require_m303_regimen_simplificado_annual_summary_handoff(
         revision=snapshot.revision,
+        work_unit=work_unit,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
     _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
@@ -832,6 +834,7 @@ def _resolve_bucket_source_mesh(
                     work_unit_repository=resolved_work_unit_repository,
                     calculation_repository=resolved_calculation_repository,
                     filing_repository=filing_repository,
+                    regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
                 ),
                 stage="conditional",
             ),
@@ -1752,13 +1755,23 @@ def _without_iva_wallet_sources(
 def _require_m303_regimen_simplificado_annual_summary_handoff(
     *,
     revision: ModeloRevision,
+    work_unit: WorkUnit,
     handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
 ) -> None:
-    """Keep the 303/4T annual handoff on its one mesh-owned arrival path."""
+    """Keep the 303/4T annual handoff on its one mesh-owned arrival path.
+
+    The antecedent is declaration AND applicability, never declaration alone.
+    Boxes 74--83 ride on every Modelo 390 form, so every revision declares this
+    family; requiring the handoff on that basis alone routed a regimen general
+    filer through a regimen simplificado source it can never have. This still
+    refuses a missing or unexpected handoff wherever the regime does reach the
+    taxpayer, which is the arrival-path invariant it exists to hold.
+    """
     declares_handoff = any(
         binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in revision.bindings
     )
-    if declares_handoff == (handoff is not None):
+    expects_handoff = declares_handoff and m303_regimen_simplificado_annual_summary_applies(work_unit)
+    if expects_handoff == (handoff is not None):
         return
     raise ModeloAggregationBindingError(
         translated_message="errors.error.error_modelo_aggregation_binding",
@@ -1766,6 +1779,7 @@ def _require_m303_regimen_simplificado_annual_summary_handoff(
             "reason": "m303_regimen_simplificado_annual_summary_handoff_required",
             "revision_id": revision.id,
             "declares_handoff": declares_handoff,
+            "expects_handoff": expects_handoff,
         },
     )
 

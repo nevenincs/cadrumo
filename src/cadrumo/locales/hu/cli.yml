@@ -695,6 +695,7 @@ cli:
           activo_extranjero: külföldi eszköz
           borrador_aeat: AEAT-tervezet
           compensacion_iva_anual: éves IVA-kompenzáció
+          constante_diseno: Rekordterv-állandó
           dato_perfil: profiladat
           datos_libro: főkönyvi adatok
           decision_compensacion_iva: IVA-kompenzációs döntés

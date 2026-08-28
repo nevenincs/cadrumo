@@ -14,7 +14,9 @@ from ..calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    DESIGN_CONSTANT_RESOLVER_ID,
     MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteDesignConstantOwnership,
     CalculationRouteManualOwnership,
     CalculationRouteResolverOwnership,
     validate_calculation_route_resolver_ownership,
@@ -56,6 +58,11 @@ def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_ow
     }
     conditional = tuple(row for row in class_owned if row.stage == "conditional")
     assert tuple(row.resolver_type for row in conditional) == (M303RegimenSimplificadoAnnualSummarySourceResolver,)
+    # The manual stage carries two pseudo-owners with deliberately DISTINCT
+    # types: operator-supplied input, and the diseno-supplied constant that
+    # needs no operator at all. Both are pinned so a third cannot appear
+    # unnoticed, and the type distinction is what keeps the design constant
+    # out of the manual-input owner's single-instance invariant below.
     manual = tuple(row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if row.stage == "manual")
     assert manual == (
         CalculationRouteManualOwnership(
@@ -63,6 +70,12 @@ def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_ow
             resolver_type=None,
             resolver_id=MANUAL_INPUT_RESOLVER_ID,
             owned_sources=(BindingSourceKind.MANUAL_INPUT,),
+        ),
+        CalculationRouteDesignConstantOwnership(
+            stage="manual",
+            resolver_type=None,
+            resolver_id=DESIGN_CONSTANT_RESOLVER_ID,
+            owned_sources=(BindingSourceKind.DESIGN_CONSTANT,),
         ),
     )
 
@@ -113,8 +126,9 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
 
 
 def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
-    manual = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[-1]
-    assert isinstance(manual, CalculationRouteManualOwnership)
+    # Selected by type, never by position: a second manual-stage pseudo-owner
+    # now exists, so an index would silently test the wrong row.
+    manual = next(row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if isinstance(row, CalculationRouteManualOwnership))
     invented_pseudo_owner = replace(manual)
     object.__setattr__(invented_pseudo_owner, "resolver_id", "second-manual-owner")
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):

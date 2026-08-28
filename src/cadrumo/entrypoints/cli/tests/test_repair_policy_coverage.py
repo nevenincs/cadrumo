@@ -223,11 +223,24 @@ def _policy_relevant_command_paths_from_sources() -> set[str]:
 
 def _requires_policy_coverage(command_path: str) -> bool:
     tokens = command_path.split()
+    # The four local-transport tokens plus the remote pair. D2 split transport
+    # verbs by counterparty -- `export`/`import` move data to and from a local
+    # filesystem, `push`/`pull` move it to and from a remote -- so a predicate
+    # naming only the local half governs half the data-movement surface. It
+    # silently dropped `app modelo spreadsheet push`, which writes
+    # SYNC_RUN_RECORDS and WAS governed under its pre-D2 name. The catalogue
+    # governs surfaces that "inspect, repair, import, export, or recover
+    # namespace-owned data", and a remote read persists what it fetches, so the
+    # remote tokens belong here on the same reasoning as the local ones.
     recovery_leaves = {
         "export",
         "import",
         "recover",
         "restore",
+        "push",
+        "push-all",
+        "pull",
+        "pull-all",
     }
     # The custody subgroups are policy-relevant in full: every leaf under them
     # mutates or inspects secure-storage custody. Dormant today (neither family

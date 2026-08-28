@@ -24,6 +24,7 @@ from ..operator_actions import (
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
+    conditionality_for_binding,
     no_action_precondition_verdict,
 )
 
@@ -66,11 +67,7 @@ def calculation_registry_failure_verdict(
             action=ActionReference(action_id="operator.profile.edit"),
             argument_bindings=(binding,),
             missing_argument_names=("profile_name",) if binding.status is ActionArgumentStatus.MISSING else (),
-            conditionality=(
-                ActionConditionality.REQUIRES_ARGUMENTS
-                if binding.status is ActionArgumentStatus.MISSING
-                else ActionConditionality.IMMEDIATE
-            ),
+            conditionality=conditionality_for_binding(binding),
         )
     if failure.condition is RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED:
         modelo = facts.get("modelo")

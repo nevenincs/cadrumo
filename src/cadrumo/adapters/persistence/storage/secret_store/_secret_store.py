@@ -26,6 +26,8 @@ when it is absent.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
@@ -50,7 +52,7 @@ from ..blob_store import (
     BlobReference,
     EncryptedBlobStore,
 )
-from ..crypto import hkdf_hmac_digest
+from ..crypto.aead import derive_key
 from ..envelope import Envelope
 from ..errors import (
     BlobIntegrityError,

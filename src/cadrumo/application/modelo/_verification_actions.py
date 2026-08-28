@@ -200,6 +200,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectWrite
     from ..calculations import IvaWalletDecisionRepository
 
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._verification_predicates import (
     M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
 )
@@ -955,6 +956,7 @@ def verify_modelo_revision_with_preconditions(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=repos.filing,
+        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
     )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 

@@ -19,6 +19,7 @@ from ...core import (
     OperationTerminalCondition,
 )
 from ...core.identity import ContentDigest
+from ...core.operations import LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
 from ...core.time import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
@@ -402,13 +403,7 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("public cleanup deadline and cancellation request must be declared together")
         if self.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not self.cancellation_requested:
             raise ValueError("cancellation-requested lifecycle requires its declared request fact")
-        if self.cancellation_requested and self.lifecycle in {
-            OperationLifecycle.CREATED,
-            OperationLifecycle.QUEUED,
-            OperationLifecycle.RUNNING,
-            OperationLifecycle.WAITING_FOR_INTERACTION,
-            OperationLifecycle.WAITING_FOR_EXTERNAL,
-        }:
+        if self.cancellation_requested and self.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
             raise ValueError("public cancellation request disagrees with the current lifecycle")
         if self.cancellation_acknowledged and not self.cancellation_requested:
             raise ValueError("cancellation acknowledgement requires a cancellation request")
