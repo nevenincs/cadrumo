@@ -16,7 +16,6 @@ from ..quality.registry_facade_family_census import (
     RelocatedFamily,
     _annotation_owners,
     _base_category,
-    _bound_plan_step,
     _definition_lines,
     _dynamic_import_call,
     _evidence_text,
@@ -397,8 +396,8 @@ def test_reviewed_rows_retain_per_row_rag_and_alternative_owner_evidence() -> No
         rationales.add(rationale)
 
 
-def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
-    """The checked-in adjudication remains complete and linked to real plan Steps."""
+def test_reviewed_matrix_passes_its_exact_census_and_one_to_one_step_gate() -> None:
+    """The checked-in adjudication remains complete and maps one row per follow-on Step."""
     check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
 
 
@@ -463,25 +462,6 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
     )
     with pytest.raises(RuntimeError, match=r"normalized rationale template|templated substitutability evidence"):
         check_matrix_document(document)
-
-
-def test_plan_binding_rejects_an_unrelated_step_that_shares_one_broad_path() -> None:
-    """A shared registry path alone cannot make an unrelated plan row authoritative."""
-    plan = (
-        "- [ ] `W03.P20.S999` - Replace the tax calendar renderer and locale labels; "
-        "`src/cadrumo/domain/calculations/registry/authority.py, docs/calendar.md`.\n"
-    )
-
-    with pytest.raises(RuntimeError, match=r"scope diverges|action is unrelated"):
-        _bound_plan_step(
-            "W03.P20.S999",
-            "Harden the authority capture comparison domain and generation lifecycle",
-            (
-                "src/cadrumo/domain/calculations/registry/authority.py, "
-                "dev/tests/test_registry_authority_consumer_census.py"
-            ),
-            plan,
-        )
 
 
 def test_exact_symbol_identity_rejects_wrong_and_ambiguous_definitions() -> None:
