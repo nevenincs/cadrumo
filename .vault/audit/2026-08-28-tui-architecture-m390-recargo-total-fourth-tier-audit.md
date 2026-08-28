@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ad577e13971b4065a3892fecb5fe4c2aacaf51db0ef6162be76abf983086305'
+body_hash: 'sha256:7ade59b4883a8ed552c9947340b92df450efc01ff6d116a15a86d2478d7d1a92'
 related: []
 ---
 
@@ -174,3 +174,33 @@ header predicted in prose — "and therefore from
 read from a comment.
 
 Neither check changes the remediation question, which remains the owner's.
+
+## Structural confirmation: tabaco falls through both categories
+
+A reasonable objection to this finding would be that tabaco's absence from the
+total is just the *same* deliberate exclusion already checked and found sound —
+the one that drops the rate-specific recargo bindings so they do not double count
+against the rate-blind tiers. Enumerating the revision's 24 recargo casillas
+shows it is not.
+
+| group | casillas | `input_kind` |
+|---|---|---|
+| rate-blind tiers **summed by the total** | `recargo.general`, `recargo.reducido`, `recargo.super-reducido` | all **bound** |
+| rate-specific cuotas **excluded as duplicates** | `tipo-5-2`, `tipo-1-4`, `tipo-0-5`, `tipo-0-62`, `tipo-0-26`, `tipo-1` | all **bound** — six, exactly the recorded set |
+| **tabaco** | `tipo-1-75.cuota` | **manual** |
+| zero-rate transitional | `tipo-0.cuota` | manual (a 0 % recargo yields no cuota) |
+
+So the exclusion rationale does not reach tabaco. The six excluded rungs are
+excluded **because they are bound** and would double count the three bound
+rate-blind tiers that the total does sum. `tipo-1-75.cuota` is the only
+rate-specific cuota box that is *not* bound — it has no binding and no ledger
+route, consistent with the separately recorded tabaco-rung finding — so it cannot
+double count anything.
+
+And there is **no rate-blind tabaco tier box** for the total to reach instead.
+LIVA art. 161 has four tiers; M390 carries rate-blind boxes for three of them.
+
+Tabaco therefore falls through both categories: not a bound duplicate to exclude,
+and not one of the three rate-blind tiers to include. Its cuota reaches the annual
+total by no path at all. That is the finding, now confirmed from the casilla
+structure rather than from the formula alone.
