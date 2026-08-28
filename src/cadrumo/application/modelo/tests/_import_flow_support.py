@@ -84,6 +84,10 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+    # carries the row as filer data, so it must be stated rather than assumed.
+    # False is the truthful value for this natural-person filer.
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
 
 

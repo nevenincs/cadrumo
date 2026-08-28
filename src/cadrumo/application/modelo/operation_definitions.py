@@ -35,6 +35,7 @@ from ...core import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    M210PayerMode,
     PaymentElection,
     Period,
     RefundElection,
@@ -48,7 +49,21 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos import CalculationRevisionAmendmentKind, ModeloCode
+from ...domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    M184Clave,
+    M184ClaveDeclarado,
+    M184NaturalezaInmueble,
+    M184SituacionInmueble,
+    M184Subclave,
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloCode,
+)
 from ...domain.modelos._calculation_revision_amendment import M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -1038,6 +1053,258 @@ def _amount_within_declared_operand_bounds(value: _ModeloEditApplyScalarValue) -
     except InvalidOperation:
         return True
     return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(amount)
+
+
+_WIRE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+type _WireAmount = Annotated[str, Field(min_length=1, max_length=40)]
+"""One decimal amount as the exact characters submitted.
+
+``Decimal`` validates from a number or a string but always serializes to a
+string, so a ``Decimal`` field fails the operations payload-graph gate's
+validation/serialization schema-identity check. Carrying the characters
+verbatim also keeps translation honest: the real row type parses them with the
+same code the CLI path uses, so an amount the CLI would refuse is refused here
+too rather than being pre-normalised into acceptability.
+"""
+
+type _WireOptionalAmount = _WireAmount | None
+
+type _WireCode = Annotated[str, Field(max_length=40)]
+"""One registry code exactly as supplied, left unhydrated on purpose.
+
+The M232 row type hydrates its own codes through ``BeforeValidator`` metadata.
+Mirroring a hydrated enum here would put a second hydration on the wire path,
+free to drift until the wire accepts a code the CLI refuses. Carrying the raw
+characters instead means translation hands them to the row type's own
+constructor and the existing hydration runs unchanged - not a delegating copy,
+no copy at all.
+"""
+
+
+def _optional_decimal(value: str | None) -> Decimal | None:
+    """Parse one optional wire amount, leaving an absent value absent."""
+    return None if value is None else Decimal(value)
+
+
+class ModeloEditApply184MemberRowV1(BaseModel):
+    """Wire mirror of Modelo184MemberRow with decimal amounts as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["miembro"] = "miembro"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    pais: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+    porcentaje: _WireAmount
+    importe: _WireAmount
+    clave: M184Clave
+    subclave: M184Subclave | None = None
+    codigo_provincia: Annotated[str, Field(max_length=2)] | None = None
+    miembro_a_31_diciembre: bool | None = None
+    dias_miembro: Annotated[int, Field(ge=0, le=366)] | None = None
+    domicilio_fiscal: Annotated[str, Field(max_length=40)] | None = None
+    naturaleza_inmueble: M184NaturalezaInmueble | None = None
+    situacion_inmueble: M184SituacionInmueble | None = None
+    referencia_catastral: Annotated[str, Field(max_length=20)] | None = None
+    clave_declarado: M184ClaveDeclarado | None = None
+    porcentaje_titularidad_inmueble: _WireOptionalAmount = None
+    dias_arrendamiento: Annotated[int, Field(ge=0, le=366)] | None = None
+    reduccion: _WireOptionalAmount = None
+    rendimiento_neto_previo_eo: _WireOptionalAmount = None
+    rendimiento_neto_minorado_agricola_eo: _WireOptionalAmount = None
+
+    def to_row(self) -> Modelo184MemberRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo184MemberRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            pais=self.pais,
+            porcentaje=Decimal(self.porcentaje),
+            importe=Decimal(self.importe),
+            clave=self.clave,
+            subclave=self.subclave,
+            codigo_provincia=self.codigo_provincia,
+            miembro_a_31_diciembre=self.miembro_a_31_diciembre,
+            dias_miembro=self.dias_miembro,
+            domicilio_fiscal=self.domicilio_fiscal,
+            naturaleza_inmueble=self.naturaleza_inmueble,
+            situacion_inmueble=self.situacion_inmueble,
+            referencia_catastral=self.referencia_catastral,
+            clave_declarado=self.clave_declarado,
+            porcentaje_titularidad_inmueble=_optional_decimal(self.porcentaje_titularidad_inmueble),
+            dias_arrendamiento=self.dias_arrendamiento,
+            reduccion=_optional_decimal(self.reduccion),
+            rendimiento_neto_previo_eo=_optional_decimal(self.rendimiento_neto_previo_eo),
+            rendimiento_neto_minorado_agricola_eo=_optional_decimal(self.rendimiento_neto_minorado_agricola_eo),
+        )
+
+
+class ModeloEditApply232VinculadaRowV1(BaseModel):
+    """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["vinculada"] = "vinculada"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    pais: Annotated[str, Field(min_length=2, max_length=2)]
+    tipo_vinculacion: _WireCode = ""
+    tipo_operacion: _WireCode = ""
+    metodo: _WireCode = ""
+    importe: _WireAmount
+
+    def to_row(self) -> Modelo232VinculadaRow:
+        """Translate back through the row type's own code hydration."""
+        return Modelo232VinculadaRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            pais=self.pais,
+            tipo_vinculacion=self.tipo_vinculacion,
+            tipo_operacion=self.tipo_operacion,
+            metodo=self.metodo,
+            importe=Decimal(self.importe),
+        )
+
+
+class ModeloEditApply349OperadorRowV1(BaseModel):
+    """Wire mirror of Modelo349OperadorRow with its importe as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["operador"] = "operador"
+    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    importe: _WireAmount
+
+    def to_row(self) -> Modelo349OperadorRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo349OperadorRow(
+            codigo_pais=self.codigo_pais,
+            nif_comunitario=self.nif_comunitario,
+            razon_social=self.razon_social,
+            clave_operacion=self.clave_operacion,
+            importe=Decimal(self.importe),
+        )
+
+
+class ModeloEditApply349RectificacionRowV1(BaseModel):
+    """Wire mirror of Modelo349RectificacionRow with its bases as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["rectificacion"] = "rectificacion"
+    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
+    razon_social: Annotated[str, Field(min_length=1, max_length=200)]
+    clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
+    ejercicio: Annotated[str, Field(min_length=4, max_length=4)]
+    periodo: Annotated[str, Field(min_length=1, max_length=2)]
+    base_rectificada: _WireAmount
+    base_anterior: _WireAmount
+
+    def to_row(self) -> Modelo349RectificacionRow:
+        """Translate back through the row type's own periodo normalisation."""
+        return Modelo349RectificacionRow(
+            codigo_pais=self.codigo_pais,
+            nif_comunitario=self.nif_comunitario,
+            razon_social=self.razon_social,
+            clave_operacion=self.clave_operacion,
+            ejercicio=self.ejercicio,
+            periodo=self.periodo,
+            base_rectificada=Decimal(self.base_rectificada),
+            base_anterior=Decimal(self.base_anterior),
+        )
+
+
+class ModeloEditApply347ContraparteRowV1(BaseModel):
+    """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["contraparte"] = "contraparte"
+    nif: Annotated[str, Field(min_length=1, max_length=20)]
+    nombre: Annotated[str, Field(max_length=200)] = ""
+    importe_Q1: _WireAmount = "0"
+    importe_Q2: _WireAmount = "0"
+    importe_Q3: _WireAmount = "0"
+    importe_Q4: _WireAmount = "0"
+    clave_operacion: Literal["A", "B", "C", "D", "E", "F", "G"] = "A"
+    pais_codigo: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+
+    def to_row(self) -> Modelo347ContraparteRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo347ContraparteRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            importe_Q1=Decimal(self.importe_Q1),
+            importe_Q2=Decimal(self.importe_Q2),
+            importe_Q3=Decimal(self.importe_Q3),
+            importe_Q4=Decimal(self.importe_Q4),
+            clave_operacion=self.clave_operacion,
+            pais_codigo=self.pais_codigo,
+        )
+
+
+class ModeloEditApply210AgrupacionRentaRowV1(BaseModel):
+    """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
+
+    model_config = _WIRE_CONFIG
+
+    row_type: Literal["agrupacion_renta"] = "agrupacion_renta"
+    source_id: Annotated[str, Field(min_length=1, max_length=200)]
+    tipo_renta_code: Annotated[str, Field(min_length=2, max_length=2)]
+    importe: _WireAmount
+    tipo_gravamen: _WireAmount
+    pagador_mode: M210PayerMode
+    pagador_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    deriva_de_bien_derecho: bool
+    bien_derecho_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+
+    def to_row(self) -> Modelo210AgrupacionRentaRow:
+        """Translate back to the real, fully re-validated domain row."""
+        return Modelo210AgrupacionRentaRow(
+            source_id=self.source_id,
+            tipo_renta_code=self.tipo_renta_code,
+            importe=Decimal(self.importe),
+            tipo_gravamen=Decimal(self.tipo_gravamen),
+            pagador_mode=self.pagador_mode,
+            pagador_id=self.pagador_id,
+            deriva_de_bien_derecho=self.deriva_de_bien_derecho,
+            bien_derecho_id=self.bien_derecho_id,
+        )
+
+
+type ModeloEditApplyDetailRowV1 = Annotated[
+    ModeloEditApply184MemberRowV1
+    | ModeloEditApply232VinculadaRowV1
+    | ModeloEditApply349OperadorRowV1
+    | ModeloEditApply349RectificacionRowV1
+    | ModeloEditApply347ContraparteRowV1
+    | ModeloEditApply210AgrupacionRentaRowV1,
+    Field(discriminator="row_type"),
+]
+"""The wire mirror of the per-modelo detail-row union, discriminated as it is."""
+
+
+class ModeloEditApplyDetailRowIntentV1(BaseModel):
+    """Wire mirror of ModeloDetailRowEditIntentV1 with a payload-safe row."""
+
+    model_config = _WIRE_CONFIG
+
+    address: ModeloEditDetailRowAddressV1
+    kind: ModeloEditDetailRowIntentKind
+    row: ModeloEditApplyDetailRowV1 | None = None
+
+    def to_intent(self) -> ModeloDetailRowEditIntentV1:
+        """Translate back to the real, fully re-validated domain intent."""
+        return ModeloDetailRowEditIntentV1(
+            address=self.address,
+            kind=self.kind,
+            row=None if self.row is None else self.row.to_row(),
+        )
 
 
 class ModeloEditApplySubmissionV1(BaseModel):
