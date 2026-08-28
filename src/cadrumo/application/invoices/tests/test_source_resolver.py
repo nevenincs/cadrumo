@@ -1462,6 +1462,115 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
     assert observation.party_tax_id == "C3333333G"
 
 
+def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="Q1234567D"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY.value,
+        ),
+    )
+
+
+def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinary_payment_does_not(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave E production reachability, proven in both directions.
+
+    A PUBLIC_ADMINISTRATION_ENTITY filer's subvención/ayuda declares clave E
+    (RD 1065/2007 art. 31.2's second paragraph). An ORDINARY payment from the
+    SAME filer of the identical amount, carrying no subvención fact, must
+    NOT become clave E -- it falls through to the ordinary clave A/B
+    classification, proving the role alone is not sufficient.
+    """
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_public_administration_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+    subvencion_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-SUBVENCION-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    subvencion_invoice = subvencion_invoice.model_copy(update={"is_subvencion_ayuda": True})
+    ordinary_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-PAGO-ORDINARIO-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    assert ordinary_invoice.is_subvencion_ayuda is False
+
+    subvencion_observation = _m347_invoice_observation(subvencion_invoice, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_invoice, context=context)
+
+    assert subvencion_observation is not None
+    assert subvencion_observation.operation_clave == "E"
+    assert subvencion_observation.party_tax_id == "C3333333G"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+
+
+def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_alone_is_not_enough(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The other half of the AND: a subvención fact without the public-administration role does not declare E."""
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    subvencion_shaped_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-SUBVENCION-2026-002",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    subvencion_shaped_invoice = subvencion_shaped_invoice.model_copy(update={"is_subvencion_ayuda": True})
+
+    observation = _m347_invoice_observation(subvencion_shaped_invoice, context=context)
+
+    assert observation is not None
+    assert observation.operation_clave == "B"
+    assert observation.party_tax_id == "C3333333G"
+
+
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
 def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, period: str) -> None:
     """Scope guard, and the honest form of the M303/M390 criterion.

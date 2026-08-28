@@ -637,6 +637,12 @@ class Invoice(BaseModel):
     # NOT a third-party collection -- the ordinary counterparty declares.
     collected_on_behalf_of_tax_id: TaxIdIdentityToken | None = None
     collected_on_behalf_of_name: str | None = Field(default=None, min_length=1)
+    # RD 1065/2007 art. 33.1: "las subvenciones, auxilios o ayudas no
+    # reintegrables que puedan otorgar o recibir" are declarable operations
+    # distinct from ordinary payments. Feeds Modelo 347 clave E, which is
+    # additionally exclusive to a PUBLIC_ADMINISTRATION_ENTITY filer
+    # (art. 31.2's second paragraph) -- this fact alone never classifies E.
+    is_subvencion_ayuda: bool = False
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None

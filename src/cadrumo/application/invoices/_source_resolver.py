@@ -692,12 +692,15 @@ def _m347_operation_clave(
     """Classify the M347 clave de operacion for one invoice, or ``None``.
 
     Checks clave C first (RD 1065/2007 art. 31.3: the filer collects this
-    amount on behalf of a socio, asociado or colegiado), then the RD
-    1619/2012 disposición adicional cuarta travel-agency mediation fact
-    (claves F/G), then falls back to :func:`m347_operation_clave`'s
-    invoice-direction classification (claves A/B). Claves D and E remain
-    unclassifiable here -- each needs the FILER's own entity type, wired in
-    S309.
+    amount on behalf of a socio, asociado or colegiado), then clave E (art.
+    31.2's second paragraph: a subvención/ayuda from a public-administration
+    filer), then the RD 1619/2012 disposición adicional cuarta travel-agency
+    mediation fact (claves F/G), then falls back to
+    :func:`m347_operation_clave`'s invoice-direction classification (claves
+    A/B). Clave D remains unclassifiable here -- it needs an additional
+    transaction-level fact (whether the acquisition is al margen de la
+    actividad empresarial del filer) that does not exist yet; see the
+    coordinating session's ruling before it is built.
 
     Clave C requires BOTH facts together: the filer's own
     ``THIRD_PARTY_FEE_COLLECTOR`` role AND the invoice's own
@@ -705,6 +708,15 @@ def _m347_operation_clave(
     collecting entity's ORDINARY sale is not a clave-C operation, and an
     invoice carrying a beneficiary fact from a filer who never declared the
     role would let an unaudited fact silently reclassify a row.
+
+    Clave E requires the same conjunction shape as C: the invoice's own
+    ``is_subvencion_ayuda`` fact AND the filer's ``PUBLIC_ADMINISTRATION_ENTITY``
+    role membership (RD 1065/2007 art. 31.2's second paragraph -- exclusive
+    to this narrower population, unlike clave D which any of the four
+    disjoint filer roles can reach). Neither alone is sufficient: an ordinary
+    payment from a public administration is not clave E, and a subvención
+    fact from a non-public-administration filer does not exist by the
+    article's own text.
 
     F ("ventas agencia viaje") covers the disposition's FULL listed service
     set for an ISSUED invoice; G ("compras agencia viaje") covers ONLY air
@@ -717,6 +729,8 @@ def _m347_operation_clave(
         and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
     ):
         return "C"
+    if invoice.is_subvencion_ayuda and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles:
+        return "E"
     mediation = invoice.travel_agency_mediation
     if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
         return "F"

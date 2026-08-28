@@ -12,7 +12,8 @@ already exercises the plain domestic-invoice shape, including a populated
 coverage gap: every optional :class:`Invoice` (and :class:`InvoiceLine`)
 field that fixture still leaves at its default (``bucket_id``,
 ``iva_category``, ``operation_type``, ``travel_agency_mediation``,
-``collected_on_behalf_of_tax_id``, ``collected_on_behalf_of_name``, ``oss_ioss_regime``,
+``collected_on_behalf_of_tax_id``, ``collected_on_behalf_of_name``,
+``is_subvencion_ayuda``, ``oss_ioss_regime``,
 ``oss_transaction_kind``, ``oss_rate_kind``, ``retention_rate``,
 ``retention_amount``, ``payment_id``) is populated with a non-default value
 here, split across a domestic professional invoice (retention-bearing) and a
@@ -123,6 +124,7 @@ def _domestic_retention_invoice() -> Invoice:
             "travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE,
             "collected_on_behalf_of_tax_id": "A87654321",
             "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+            "is_subvencion_ayuda": True,
         },
     )
 
@@ -196,6 +198,7 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert domestic.travel_agency_mediation is TravelAgencyMediationType.MEDIATED_SERVICE
     assert domestic.collected_on_behalf_of_tax_id == "A87654321"
     assert domestic.collected_on_behalf_of_name == "Colegiado Beneficiario SL"
+    assert domestic.is_subvencion_ayuda is True
     assert domestic.oss_ioss_regime is None
     assert domestic.oss_transaction_kind is None
     assert domestic.invoice_class is InvoiceClass.RECTIFICATIVA
