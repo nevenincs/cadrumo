@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:12396675e5ece9d654331ed8054710ecf391d07893ad6f4497ec60afd16b39b8'
+body_hash: 'sha256:7abb38f21acc3b2a98394ddfe119fa615877248d221742d835c7d2ef3aff74d3'
 related: []
 ---
 
@@ -776,3 +776,54 @@ whose evidence genuinely says nothing (the Modelo 200 tipo-gravamen rows), and
 large tariff tables where per-value pinning was never the convention. Only the
 first kind is a candidate for repair, and separating them is the next step for
 anyone acting on this list.
+
+#### Correction: 204 was inflated four-fold — the legal catalogue was never read
+
+The measurement above swept `source_citations` across each **revision** —
+parameters, bindings, casillas, constructs. It never read
+`registry/aeat/legal/*.toml`, which sits outside `modelos/*/revisions/` and is
+**where the BOE-side evidence lives**. Including it changes the result
+substantially:
+
+| of 437 value-bearing parameter rows | before | corrected |
+|---|---|---|
+| pinned by the parameter's own `required_text` | 101 | 101 |
+| pinned elsewhere in the evidence | 132 | **288** |
+| pinned nowhere | **204** | **48** |
+
+The mínimo personal y familiar rows, which dominated the previous repair list, are
+the clearest example of what was missed. `ley-35-2006:art-57` resolves to a
+**874-byte per-article excerpt** whose `required_text` pins `"5.550 euros
+anuales"` and `"1.150 euros anuales"`; art. 58 pins `"2.400 euros"` and `"2.700
+euros"`; art. 59 pins `"1.150 euros"`. Those are exemplary citations — tight
+corpus, digits pinned — and the sweep called their parameters unanchored purely
+because it looked in the wrong file.
+
+Verified independently: LIRPF art. 57 reads *"El mínimo del contribuyente será,
+con carácter general, de 5.550 euros anuales. 2. Cuando el contribuyente tenga una
+edad superior a 65 años, el mínimo se aumentará en 1.150 euros anuales. Si la edad
+es superior a 75 años… adicionalmente en 1.400 euros anuales."* The registry's
+5550 is right.
+
+### What the surviving 48 actually are
+
+Mostly **specific tranches whose article's citation pins only the leading
+figures**. `art-57`'s `required_text` names 5.550 and 1.150 but not the 1.400 for
+over-75s; `art-58` names 2.400 and 2.700 but not the 4.000, 4.500 or 2.800. So the
+parameters for those tranches — `minimo-contribuyente-edad-75`,
+`minimo-descendientes-tercer-hijo`, `-cuarto-y-siguientes`, `-menor-tres-anos`,
+and their ascendientes counterparts — are the ones nothing names, in 2020 and 2021
+revisions.
+
+That is a real and small gap with a cheap fix: extend the existing catalogue
+entries' `required_text` to cover the remaining tranches of the article they
+already cite tightly. No new corpus, no new citation.
+
+### The lesson about these counts
+
+This is the fourth time a count in this audit moved because the sweep's **scope**
+was wrong rather than its question. Parameter-only missed bindings; revision-only
+missed the legal catalogue; digit-matching missed words; row-counting
+double-counted revisions. The question — "is this value named in evidence a reader
+can reach" — has been right throughout. **Treat every count here as scoped until
+its scope is stated, and state it.**
