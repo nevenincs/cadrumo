@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3893766217ca0a8fd6d9a63f49851b53be04b74e039581bf2a8a521079568561'
+body_hash: 'sha256:81ae94380dcae8e3d222fe5532030114a2104976ec1da6062a418be8a4fdc372'
 related: []
 ---
 
@@ -698,3 +698,35 @@ binding — the binding is where a figure meets a declared taxpayer fact, and it
 where the AEAT manual, rather than the BOE, is the natural source. The rental-tier
 binding cites the manual with `"90 por 100"` in the manual's own idiom, while its
 parameters cite the law.
+
+#### Measured: how much of the parameter-side gap the binding evidence closes
+
+Widening the question from the parameter to its **revision** — does any
+`required_text` anywhere in that revision, on a parameter, binding, casilla or
+construct, state the value? — gives the split the parameter-only sweep could not:
+
+| of 437 value-bearing parameter rows | count |
+|---|---|
+| pinned by the parameter's **own** `required_text` | 101 |
+| pinned only **elsewhere** in the revision's evidence | 132 |
+| pinned **nowhere** in the revision | **204** |
+
+So roughly a third of what a parameter-scoped sweep calls unanchored is in fact
+named somewhere a reader can reach — which is the rental-tier pattern generalised,
+and the reason the earlier counts overstated the gap.
+
+**The 132 is an upper bound on anchoring, not a clearance.** A phrase pinning
+"50" somewhere in a revision may be about an entirely different quantity; this
+test cannot tell. Its value is to shrink the candidate list from 336 to 204, not
+to certify any row.
+
+**The 204 is the solid set**: nothing in the whole revision's evidence names those
+values. It is the list worth reading, and it is dominated by two families already
+recorded here — the Modelo 200 `tipo-gravamen` rows, whose cited LIS art. 29
+states the steady-state rates rather than the phased ones, and the Modelo 131
+módulos coefficient tables. `irpf.urban_rental_withholding_rate` sits there too.
+
+Both families are the same shape and neither is a wrong value: the figures are
+correct and the evidence record simply does not carry them. That is consistent
+with everything this campaign found — the weakness is in what the record says
+about a value, not in the values.
