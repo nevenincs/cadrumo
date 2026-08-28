@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b213701009b249b64f8d82e7b44d060799cc744e2ce519040483a401806e6a0'
+body_hash: 'sha256:ff10658a0ced439e84013595b9ab64044eca56022d7ef10d1dbece98c812e6b2'
 related: []
 ---
 
@@ -63,9 +63,23 @@ below are sorted on that axis because it is the axis with no coverage.
 
 ## Open, under-declaration direction
 
-4. **Recargo tabaco rung unreachable**: the 1,75 % rate has a validated parameter
-   and boxes on Modelo 303 and Modelo 390, but no `IvaCategory` can route a supply
-   to it.
+4. **Recargo tabaco rung unreachable** — re-verified at HEAD, still open, but the
+   state has improved and the description is updated accordingly.
+
+   The domain plumbing now exists and is self-documenting: `domain/iva/
+   _recargo_equivalencia.py` loads all four LIVA art. 161 rates through the
+   validated registry catalogue into a typed `LivaArt161RecargoRates`, with
+   `tabaco_rate` covered by its own tests. Both the rate table and the lookup
+   function declare *why* tabaco sits outside the rate-keyed axis — "it attaches
+   to a product rather than to an accompanying IVA rate, and is read from
+   `LIVA_ART_161_RECARGO.tabaco_rate`" — which is the honest form.
+
+   What is still missing is the routing. `IvaCategory` has 21 members and none is
+   tabaco, and no production caller reads `.tabaco_rate`; only tests do. So a
+   supply of labores del tabaco cannot be classified into the rung, and the
+   1,75 % recargo can never be charged.
+
+   Direction unchanged: a recargo not charged is under-declaration.
 
 ## Open, correctness of record rather than of computation
 
