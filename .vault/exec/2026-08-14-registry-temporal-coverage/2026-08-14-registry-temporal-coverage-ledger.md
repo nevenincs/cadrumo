@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:688d34d71726e44ceadc6a0a6906fc9cfba3ff9b215aab979ec23a28ed14f8a9'
+body_hash: 'sha256:01486ad9708517ffc7401571d0950bbe680feb5e24d7c63eb6cb14a8b12ad793'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1945,3 +1945,54 @@ profile rather than in what passes.
 11 tests in the file pass, up from 9 passed 2 failed. The one remaining
 readiness failure, `test_local_filed_303_compensation_updates_wallet_balance...`,
 is M303 wallet and stays with the export-fragment campaign.
+
+
+### A test guarding a registry that no longer exists, and where the guard actually lives
+
+`test_emit_operator_json_success_refuses_an_unregistered_command` asserted that
+the operator funnel refuses a command key with no registered schema, matching
+"has no registered output schema". That string appears NOWHERE in production --
+only in the test asserting it.
+
+`validate_registered_result` consults no registry at all. It checks the result
+is an `OutputSchema`/`OutputRootSchema` instance and revalidates it against
+`type(result)` -- its OWN class. The `command` argument reaches only the error
+messages. So a well-formed result emits under any key whatsoever.
+
+The removal was structural, not an oversight, and the evidence is explicit:
+commit `4b78f996de` retired the `SCHEMA_REGISTRY` mapping in
+`core.json_contract`, and `test_json_schema_conformance`'s own docstring records
+that "registry was retired and schema identity now lives on the command specs".
+The binding cannot be re-checked at emit time without inverting the hexagonal
+direction: `emit_operator_json_success` is in the application layer,
+`COMMAND_SPECS` and `ResultSchemaSpec` are in `entrypoints`.
+
+This is where the blast-radius rule mattered in the other direction. The
+tempting reading was "a guard was lost, restore it" -- and restoring it means a
+core or application module importing entrypoints, which the architecture
+forbids and which no amount of test-greenness would justify. Measuring where the
+binding is enforced BEFORE writing anything found it already enforced, statically,
+by the conformance gate walking `COMMAND_SPECS`.
+
+So the test now records the boundary as it actually stands: an unregistered key
+with a well-formed result emits, the envelope carries that key, and the
+command-to-schema binding is named as the static gate's responsibility. Written
+down rather than deleted, so the stale expectation is not re-added by someone
+reading the funnel and assuming it validates more than it does.
+
+Also in this pass: `test_secure_objects_for_application_filing_bucket_refuses_`
+`unready_runtime` carried the same three-way prose alternation
+(`storage runtime is not ready|no active bucket session|route does not match`)
+fixed earlier in a sibling file, and now asserts
+`errors.storage.runtime.not_ready`. And the operator-output schema case matches
+the live wording plus the command it names, since `OutputSchemaError` carries no
+key or context to assert instead.
+
+`test_operator_output` 8 pass; `test_runtime_repository` 5 pass.
+
+The tree was unrunnable for part of this tick -- a peer had added a
+`BUSINESS_BEARING_STATES` re-export to `domain/transactions/__init__.py` before
+the constant existed, which broke every import of that package and with it the
+whole suite. HEAD was healthy throughout; it was two uncommitted lines, and it
+settled on its own.
+
