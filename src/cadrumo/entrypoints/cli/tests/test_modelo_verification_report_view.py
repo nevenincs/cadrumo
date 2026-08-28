@@ -372,3 +372,87 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     message = str(raised.value)
     assert "resolved_casillas" in message
     assert "missing_required_casillas" in message
+
+
+def _blocked_report() -> object:
+    """Build one real, fully-validated canonical report to project."""
+    from datetime import UTC, datetime
+
+    from ....domain.modelos import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+        VerificationCompletenessStatus,
+        VerificationReport,
+        derive_verification_report_id,
+    )
+
+    calculation_revision_id = "a" * 64
+    findings = (
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
+            legal_refs=_TEST_FINDING_LEGAL_REFS,
+        ),
+    )
+    return VerificationReport(
+        verification_report_id=derive_verification_report_id(
+            calculation_revision_id=calculation_revision_id,
+            completeness_status=VerificationCompletenessStatus.BLOCKED,
+            findings=findings,
+            verified_by="test-actor",
+        ),
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=findings,
+        run_at=datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC),
+        verified_by="test-actor",
+        granted_verificado_completo=False,
+    )
+
+
+def test_the_projected_completeness_status_is_the_canonical_enum_not_a_free_string() -> None:
+    """The projection carries the closed value the report holds, not a lookalike.
+
+    A bare string admits ``"complete"`` misspelled, translated, or invented,
+    and the one field an operator reads to decide whether a revision earned
+    verificado-completo is the last place a lookalike should pass.
+    """
+    from ....domain.modelos import VerificationCompletenessStatus
+    from .._modelo_rendering import verification_report_payload
+
+    payload = verification_report_payload(_blocked_report())
+
+    assert payload.completeness_status is VerificationCompletenessStatus.BLOCKED
+
+
+def test_a_completeness_status_outside_the_closed_set_is_refused() -> None:
+    """Anti-vacuity: the narrowing rejects a value the bare string accepted."""
+    from .._modelo_payloads import (
+        VerificationReportPayload,
+        VerificationReportShowResult,
+        WorkVerifyResult,
+    )
+    from .._modelo_rendering import verification_report_payload
+
+    fields = verification_report_payload(_blocked_report()).model_dump(mode="python")
+
+    for schema in (VerificationReportPayload, VerificationReportShowResult, WorkVerifyResult):
+        with pytest.raises(ValidationError):
+            schema.model_validate({**fields, "completeness_status": "verificado_completo"})
+
+
+def test_narrowing_the_status_left_the_json_wire_form_untouched() -> None:
+    """The published value is still the enum's own token, byte for byte.
+
+    A projection may tighten what it accepts; it may not quietly restate what
+    it emits, because a machine consumer is reading the emitted token.
+    """
+    from .._modelo_rendering import verification_report_payload
+
+    wire = verification_report_payload(_blocked_report()).model_dump(mode="json")
+
+    assert wire["completeness_status"] == "blocked"
+    assert wire["run_at"] == "2026-05-27T10:00:00+00:00"

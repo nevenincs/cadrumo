@@ -1030,7 +1030,7 @@ def verification_report_payload(
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,
         calculation_revision_id=report.calculation_revision_id,
-        completeness_status=report.completeness_status.value,
+        completeness_status=report.completeness_status,
         granted_verificado_completo=report.granted_verificado_completo,
         resolved_casilla_ids=list(report.resolved_casilla_ids),
         missing_required_casilla_ids=list(report.missing_required_casilla_ids),
