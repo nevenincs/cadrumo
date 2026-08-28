@@ -72,7 +72,15 @@ def _check_inputs(tmp_path: Path, snapshot):
 #: Substring of the registry's filing-grade review refusal. ``check_generated_export_tree``
 #: selects a filing-grade snapshot partway through, so an unreviewed target revision raises
 #: the same exception type these cases expect, before the comparison under test ever runs.
-_REVIEW_GATE_REFUSAL = "filing-grade snapshot requires operator_reviewed"
+#: Substring of the registry's filing-grade review refusal. Pinned to the
+#: message the refusal ACTUALLY raises: it once read "requires
+#: operator_reviewed" and was relaxed to admit any reviewed status, agent or
+#: operator, because demanding the operator stamp made a filing-grade
+#: snapshot unreachable by construction. This pin was not swept with it, so
+#: the guard below matched nothing and silently stopped distinguishing a
+#: review-gate refusal from the injected defect -- an anti-tautology check
+#: that cannot fire is worse than none, because it reads as coverage.
+_REVIEW_GATE_REFUSAL = "filing-grade snapshot requires a reviewed revision"
 
 
 def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None:
