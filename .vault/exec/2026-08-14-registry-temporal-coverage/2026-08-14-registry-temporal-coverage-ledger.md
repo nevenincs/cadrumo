@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:86de0969a08569041dcc4ecb5c747af6a5f5570ffd5ca2789cdf0875ab03926e'
+body_hash: 'sha256:642a078076ae1823bcd5f3cc84a82542f17767fbf8f0fb865d96afc13ce16eeb'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1822,3 +1822,51 @@ non-existent identifier being corrected to an existing one, it is a VALUE that
 flows into the fichero bytes their export e2e tests assert. Changing it edits
 the expected output of another campaign's suite. Correcting a dangling reference
 is safe; changing a value under someone else's assertions is not.
+
+
+### One synthetic registry, four stacked defects, and a 553-site sweep declined
+
+`test_binding_readiness` builds a synthetic modelo-999 registry to make two
+revisions cover one year, so a year-only readiness query meets an ambiguous
+boundary. Its two failures were four defects stacked, each only visible once the
+one above it cleared.
+
+**1. `review_status = "reviewed"` on a legal entry.** The registry has TWO
+review vocabularies: `LegalReviewStatus` (`pending_review`, `agent_reviewed`,
+`operator_reviewed`) for legal references, and a separate
+`ReviewStatus = Literal["reviewed"]` "retained for official sources and legal
+parameters". The fixture used the source token inside a `[legal."..."]` block.
+
+This is where the tick nearly went wrong. `review_status = "reviewed"` appears
+**553 times across 64 files**, including the shipped registry legal catalogue,
+which loads fine -- because in almost every one of those it sits in a
+`[sources...]` or parameters block where it is the CORRECT token. Within this
+one fixture, three occurrences: line 30 in a legal block (wrong), lines 44 and
+55 in source blocks (right). A pattern sweep would have corrupted 551 valid
+declarations to fix one. Corrected to `agent_reviewed`, which is also the honest
+stamp for machine-authored fixture data -- `operator_reviewed` would assert a
+human review nobody performed.
+
+**2. No `supported_filing_years` declaration.** The loader now requires the
+registry-wide declaration this campaign's opening brief established. Added,
+admitting 2025 (the fixture's selectors) and 2026 (the year its readiness call
+asks about).
+
+**3. No `authority_grade`.** The validator's refusal is unusually explicit that
+the rung must be declared by INTENT and "DO NOT pick the rung by looking at
+which families this revision currently has", because a grade read off content
+agrees with the content by construction and the check goes inert. The fixture
+carries casillas and workbook-parity refs, which would have suggested a higher
+rung; its INTENT is only ever to answer which revision applies, so
+`applicability` is what it declares.
+
+**4. A caller asking for more than the fixture claims.** With the grade declared
+honestly, `authority.snapshot(...)` refused -- it defaults to `FILING`. Raising
+the fixture's declared grade would have silenced that, and would have been
+exactly the move the validator forbids: picking the rung to match a caller
+instead of the revision's purpose. The two assertions are about which revision
+SELECTION lands on, so they now request
+`grade=RegistryAuthorityGrade.APPLICABILITY` -- the rung they actually need.
+
+5 tests in the file pass.
+
