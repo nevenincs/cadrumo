@@ -1,6 +1,6 @@
 """Pilot-driven behaviour tests for the full-screen flow frontend.
 
-Every test drives the real :class:`FlowTuiApp` through Textual's headless
+Every test drives the real :class:`FlowScreen` through Textual's headless
 Pilot over a real :class:`FlowDefinition` built from the substrate's own
 public models, and asserts against widget ids, engine state, and
 ``PageStatus`` / ``CheckpointAvailability`` members — never rendered
@@ -54,13 +54,14 @@ from ....core.i18n import (
 )
 from ....tests.env_scope import activate_output_language, output_language_scope
 from ....tests.locales_root_fixture import locales_root_scope
+from ..components.host import ScreenHostApp
 from ..components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
     install_cadrumo_themes,
 )
 from ..components.widgets import ContentScroll
-from ..flows.app import FlowTuiApp, run_flow_tui
+from ..flows.app import FlowScreen, run_flow_tui
 
 pytestmark = [
     pytest.mark.unit,
@@ -205,8 +206,8 @@ def _app(
     *,
     mode: FlowMode = FlowMode.MODIFY,
     checkpoint_store: _JsonFileCheckpointStore | None = None,
-) -> FlowTuiApp:
-    return FlowTuiApp(
+) -> FlowScreen:
+    return FlowScreen(
         _definition(),
         mode=mode,
         checkpoint_store=checkpoint_store,
@@ -214,14 +215,14 @@ def _app(
     )
 
 
-def _on_review(app: FlowTuiApp) -> bool:
+def _on_review(host: ScreenHostApp[None]) -> bool:
     """Whether the review screen (its data table) is the active screen."""
-    return bool(app.screen.query("#review-table"))
+    return bool(host.screen.query("#review-table"))
 
 
-def _review_rows(app: FlowTuiApp) -> dict[str, list[str]]:
+def _review_rows(host: ScreenHostApp[None]) -> dict[str, list[str]]:
     """The review table's rendered cells keyed by page key (section headings skipped)."""
-    table = app.screen.query_one("#review-table", DataTable)
+    table = host.screen.query_one("#review-table", DataTable)
     return {
         str(row_key.value): [str(cell) for cell in table.get_row(row_key)]
         for row_key in table.rows
@@ -229,7 +230,7 @@ def _review_rows(app: FlowTuiApp) -> dict[str, list[str]]:
     }
 
 
-async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
+async def _answer_all_required(pilot: Pilot[None], app: FlowScreen) -> None:
     """Walk the flow answering both required pages through the widgets."""
     await pilot.press(*"ada")
     await pilot.click("#btn-next")
@@ -244,11 +245,12 @@ async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
 @pytest.mark.asyncio
 async def test_question_header_renders_the_flow_title_not_its_internal_id() -> None:
     definition = _definition().model_copy(update={"title": _copy("flows.test.title")})
-    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values=_REGISTERED_VALUES)
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(definition, mode=FlowMode.MODIFY, registered_values=_REGISTERED_VALUES)
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        header = app.screen.query_one("#flow-header", Static)
-        progress = app.screen.query_one("#flow-progress", ProgressBar)
+        header = host.screen.query_one("#flow-header", Static)
+        progress = host.screen.query_one("#flow-progress", ProgressBar)
         rendered = str(header.content)
 
         assert "FLOW-TITLE" in rendered
@@ -259,10 +261,11 @@ async def test_question_header_renders_the_flow_title_not_its_internal_id() -> N
 @pytest.mark.asyncio
 async def test_next_button_commits_the_pending_input_before_advancing() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         # The page under test is an Input page, so 'next' must take the
         # commit-then-advance arm rather than the committed-widget arm.
-        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+        assert host.screen.query_one("#widget-area").query_one(Input).value == ""
 
         await pilot.press(*"ada")
         assert app.state.answers.get("p_name") is None  # uncommitted keystrokes
@@ -276,7 +279,8 @@ async def test_next_button_commits_the_pending_input_before_advancing() -> None:
 @pytest.mark.asyncio
 async def test_next_button_holds_the_page_when_the_commit_is_invalid() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.click("#btn-next")  # blank on an unconditionally required page
 
         assert "p_name" not in app.state.answers
@@ -287,7 +291,8 @@ async def test_next_button_holds_the_page_when_the_commit_is_invalid() -> None:
 @pytest.mark.asyncio
 async def test_back_button_returns_the_cursor_to_the_previous_page() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         assert app.state.cursor == "p_kind"
@@ -300,12 +305,13 @@ async def test_back_button_returns_the_cursor_to_the_previous_page() -> None:
 @pytest.mark.asyncio
 async def test_review_button_opens_the_review_screen() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        assert not _on_review(app)
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
+        assert not _on_review(host)
 
         await pilot.click("#btn-review")
 
-        assert _on_review(app)
+        assert _on_review(host)
 
 
 # ── the review table ────────────────────────────────────────────────────────
@@ -314,11 +320,12 @@ async def test_review_button_opens_the_review_screen() -> None:
 @pytest.mark.asyncio
 async def test_review_table_renders_the_registered_value_beside_the_answer() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
 
-        rows = _review_rows(app)
+        rows = _review_rows(host)
 
         assert set(rows) == {"p_name", "p_kind", "p_note"}
         assert rows["p_name"][2] == app.state.answers["p_name"]
@@ -333,11 +340,12 @@ async def test_review_table_renders_the_registered_value_beside_the_answer() -> 
 @pytest.mark.asyncio
 async def test_closed_choice_answer_renders_its_label_not_its_storage_token() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
 
-        answer_cell = _review_rows(app)["p_kind"][2]
+        answer_cell = _review_rows(host)["p_kind"][2]
         assert answer_cell == tr(_COPY_REF)
         assert app.state.answers["p_kind"] == "alpha", "the positive control must store a distinct token"
         assert "alpha" not in answer_cell
@@ -346,11 +354,12 @@ async def test_closed_choice_answer_renders_its_label_not_its_storage_token() ->
 @pytest.mark.asyncio
 async def test_review_table_status_glyph_is_a_function_of_page_status() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
 
-        rows = _review_rows(app)
+        rows = _review_rows(host)
         glyph_by_key = {key: cells[0] for key, cells in rows.items()}
         status_by_key = {key: page_status(app.state, key) for key in rows}
 
@@ -363,17 +372,18 @@ async def test_review_table_status_glyph_is_a_function_of_page_status() -> None:
 @pytest.mark.asyncio
 async def test_review_row_selection_jumps_the_cursor_to_that_page() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
-        assert _on_review(app)
+        assert _on_review(host)
 
-        table = app.screen.query_one("#review-table", DataTable)
+        table = host.screen.query_one("#review-table", DataTable)
         table.move_cursor(row=table.get_row_index("p_note"))
         await pilot.press("enter")
 
         assert app.state.cursor == "p_note"
-        assert not _on_review(app)
+        assert not _on_review(host)
 
 
 def _two_section_definition() -> FlowDefinition:
@@ -406,9 +416,9 @@ def _two_section_definition() -> FlowDefinition:
     )
 
 
-def _heading_rows(app: FlowTuiApp) -> list[str]:
+def _heading_rows(host: ScreenHostApp[None]) -> list[str]:
     """The section-heading rows' rendered titles, in table order."""
-    table = app.screen.query_one("#review-table", DataTable)
+    table = host.screen.query_one("#review-table", DataTable)
     return [
         str(table.get_row(row_key)[1])
         for row_key in table.rows
@@ -428,22 +438,24 @@ async def test_review_table_omits_the_heading_row_when_the_flow_has_one_section(
     table looking exactly like a question row with no status glyph.
     """
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press("f2")
 
-        assert _heading_rows(app) == []
-        table = app.screen.query_one("#review-table", DataTable)
+        assert _heading_rows(host) == []
+        table = host.screen.query_one("#review-table", DataTable)
         assert table.row_count == 3, "every real page must still be a row; only the heading is omitted"
 
 
 @pytest.mark.asyncio
 async def test_review_table_still_groups_multiple_sections_by_heading() -> None:
     """A genuinely multi-section flow keeps its per-section heading rows."""
-    app = FlowTuiApp(_two_section_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_two_section_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press("f2")
 
-        assert _heading_rows(app) == [tr("wizard.section.one"), tr("wizard.section.two")]
+        assert _heading_rows(host) == [tr("wizard.section.one"), tr("wizard.section.two")]
 
 
 # ── submit gating ───────────────────────────────────────────────────────────
@@ -452,27 +464,29 @@ async def test_review_table_still_groups_multiple_sections_by_heading() -> None:
 @pytest.mark.asyncio
 async def test_submit_is_disabled_and_inert_while_a_required_page_is_unanswered() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press("f2")
 
-        assert app.screen.query_one("#btn-submit", Button).disabled is True
+        assert host.screen.query_one("#btn-submit", Button).disabled is True
 
         await pilot.press("s")  # the review screen's submit binding
         await pilot.pause()
 
         assert app.final_state is None
         assert app.final_projection is None
-        assert _on_review(app)
+        assert _on_review(host)
 
 
 @pytest.mark.asyncio
 async def test_submit_enabled_once_eligible_exits_with_the_final_projection() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
 
-        assert app.screen.query_one("#btn-submit", Button).disabled is False
+        assert host.screen.query_one("#btn-submit", Button).disabled is False
 
         await pilot.click("#btn-submit")
         await pilot.pause()
@@ -490,7 +504,8 @@ async def test_submit_enabled_once_eligible_exits_with_the_final_projection() ->
 @pytest.mark.asyncio
 async def test_escape_routes_to_the_back_intent() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
 
@@ -502,19 +517,21 @@ async def test_escape_routes_to_the_back_intent() -> None:
 @pytest.mark.asyncio
 async def test_f2_routes_to_the_review_intent_and_escape_leaves_it() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press("f2")
-        assert _on_review(app)
+        assert _on_review(host)
 
         await pilot.press("escape")
 
-        assert not _on_review(app)
+        assert not _on_review(host)
 
 
 @pytest.mark.asyncio
 async def test_ctrl_r_resets_the_cursor_page_answer() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         await pilot.press("escape")
@@ -537,7 +554,8 @@ async def test_ctrl_n_asks_before_restarting_and_leaves_answers_alone_until_conf
     answer with nothing to undo. The dialog is what discharges it.
     """
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         answers_before = dict(app.state.answers)
         assert answers_before
@@ -547,7 +565,7 @@ async def test_ctrl_n_asks_before_restarting_and_leaves_answers_alone_until_conf
 
         # The engine state is untouched while the dialog is open.
         assert app.state.answers == answers_before
-        assert app.screen.query_one("#confirm-title")
+        assert host.screen.query_one("#confirm-title")
 
         await pilot.click("#btn-confirm-cancel")
         await pilot.pause()
@@ -559,7 +577,8 @@ async def test_ctrl_n_asks_before_restarting_and_leaves_answers_alone_until_conf
 @pytest.mark.asyncio
 async def test_ctrl_n_restarts_the_flow_from_the_first_page_once_confirmed() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         assert app.state.answers
 
@@ -570,7 +589,7 @@ async def test_ctrl_n_restarts_the_flow_from_the_first_page_once_confirmed() -> 
 
         assert app.state.answers == {}
         assert app.state.cursor == "p_name"
-        assert not _on_review(app)
+        assert not _on_review(host)
 
 
 @pytest.mark.asyncio
@@ -580,18 +599,19 @@ async def test_ctrl_n_on_the_review_screen_also_asks_before_restarting() -> None
     may have just reached the end of a long walk. The guard must not be
     only on the question screen."""
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         await pilot.press("f2")
         await pilot.pause()
-        assert _on_review(app)
+        assert _on_review(host)
         answers_before = dict(app.state.answers)
 
         await pilot.press("ctrl+n")
         await pilot.pause()
 
         assert app.state.answers == answers_before
-        assert app.screen.query_one("#confirm-title")
+        assert host.screen.query_one("#confirm-title")
 
         await pilot.click("#btn-confirm-accept")
         await pilot.pause()
@@ -603,7 +623,8 @@ async def test_ctrl_n_on_the_review_screen_also_asks_before_restarting() -> None
 async def test_ctrl_s_persists_through_the_checkpoint_store_and_exits(tmp_path: Path) -> None:
     store = _JsonFileCheckpointStore(tmp_path)
     app = _app(mode=FlowMode.CREATE, checkpoint_store=store)
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
 
@@ -620,7 +641,8 @@ async def test_ctrl_s_persists_through_the_checkpoint_store_and_exits(tmp_path: 
 async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp_path: Path) -> None:
     store = _JsonFileCheckpointStore(tmp_path)
     app = _app(mode=FlowMode.MODIFY, checkpoint_store=store)
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
 
@@ -630,7 +652,7 @@ async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp
         assert store.load("flows.test.tui") is None
         assert app.saved_and_exited is False
         assert app.final_state is None
-        assert app.is_running
+        assert host.is_running
 
 
 # ── checkpoint honesty and abandoned runs ───────────────────────────────────
@@ -639,7 +661,7 @@ async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp
 def test_declared_checkpointing_without_a_store_refuses_at_construction() -> None:
     definition = _definition()
     with pytest.raises(FlowCheckpointError) as excinfo:
-        FlowTuiApp(_definition(), mode=FlowMode.CREATE)
+        FlowScreen(_definition(), mode=FlowMode.CREATE)
 
     assert excinfo.value.context == {
         "flow_id": tr(str(definition.title.ref)),
@@ -655,7 +677,7 @@ def test_declared_checkpointing_without_a_store_refuses_before_the_run_starts() 
 
 
 def test_a_mode_declaring_checkpointing_unavailable_constructs_without_a_store() -> None:
-    app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY)
+    app = FlowScreen(_definition(), mode=FlowMode.MODIFY)
 
     assert app.state.mode is FlowMode.MODIFY
 
@@ -758,8 +780,9 @@ def _gate_definition() -> FlowDefinition:
 
 @pytest.mark.asyncio
 async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
-    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         # Digit keys toggle the numbered rows of the checkbox list.
         await pilot.press("1")  # toggle the first choice
@@ -770,7 +793,7 @@ async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
         # advance on a toggle — staging, not commit-then-move.
         assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
         assert app.state.cursor == "p_multi"
-        assert not _on_review(app)
+        assert not _on_review(host)
 
 
 @pytest.mark.asyncio
@@ -780,19 +803,20 @@ async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> Non
     # column must mask it exactly as the answer column masks the in-flow
     # answer, through the same widget-kind lookup, not a second authority.
     registered_secret = "vault-stored-token"  # noqa: S105 - test fixture value, not a credential
-    app = FlowTuiApp(
+    app = FlowScreen(
         _secret_definition(),
         mode=FlowMode.MODIFY,
         registered_values={"p_secret": registered_secret},
     )
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"hunter2")
         await pilot.click("#btn-next")  # commit the secret, advance to p_after
         await pilot.click("#btn-back")  # back to p_secret so its echo re-renders
 
         assert app.state.answers["p_secret"] == "hunter2"  # noqa: S105 - test fixture secret, not a credential
         masked = tr("flows.progress.current_answer_secret")
-        echo = str(app.screen.query_one("#answer-echo", Static).render())
+        echo = str(host.screen.query_one("#answer-echo", Static).render())
         # Pair the assertion: first prove the echo zone actually rendered the
         # masked marker (a non-empty, correct surface), THEN prove the raw
         # secret is absent — an absence check is only meaningful against a
@@ -801,10 +825,10 @@ async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> Non
         assert masked in echo
         assert "hunter2" not in echo
         # The re-mounted secret Input is blank, never pre-filled with the secret.
-        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+        assert host.screen.query_one("#widget-area").query_one(Input).value == ""
 
         await pilot.press("f2")
-        rows = _review_rows(app)
+        rows = _review_rows(host)
         # The secret's review row genuinely rendered (present with a status
         # glyph), its answer column carries the masked marker, and only then
         # is the raw secret asserted absent.
@@ -830,19 +854,20 @@ async def test_stale_orphan_reset_arm_of_edit_from_review_clears_the_answer() ->
     stale = answer(definition, stale, "p_gate", "beta")
     assert "p_dep" in stale.stale
 
-    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, resume_state=stale, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(definition, mode=FlowMode.MODIFY, resume_state=stale, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press("f2")
-        assert _on_review(app)
+        assert _on_review(host)
 
-        table = app.screen.query_one("#review-table", DataTable)
+        table = host.screen.query_one("#review-table", DataTable)
         table.move_cursor(row=table.get_row_index("p_dep"))
         await pilot.press("enter")  # select the stale orphan -> confirmed reset arm
         await pilot.pause()
 
         assert "p_dep" not in app.state.answers
         assert "p_dep" not in app.state.stale
-        assert _on_review(app)  # the reset resolves the row in place
+        assert _on_review(host)  # the reset resolves the row in place
 
 
 def _legal_definition() -> FlowDefinition:
@@ -885,7 +910,7 @@ def test_run_flow_tui_hands_the_constructed_app_to_on_app_ready() -> None:
     reads ``final_state`` from — not a second app the caller builds itself,
     which would duplicate the abandoned-run guard. The callback aborts with
     a sentinel so the assertion runs before ``app.run()`` opens a terminal:
-    the handle is a fully-constructed :class:`FlowTuiApp` for the definition,
+    the handle is a fully-constructed :class:`FlowScreen` for the definition,
     whose ``final_state`` is still ``None`` because the run has not started —
     proving the pre-run passthrough of the runner's own single app instance.
     """
@@ -893,9 +918,9 @@ def test_run_flow_tui_hands_the_constructed_app_to_on_app_ready() -> None:
     class _AbortRunError(Exception):
         """Sentinel raised from the hook to abort before the interactive run."""
 
-    captured: dict[str, FlowTuiApp] = {}
+    captured: dict[str, FlowScreen] = {}
 
-    def _capture(app: FlowTuiApp) -> None:
+    def _capture(app: FlowScreen) -> None:
         captured["ready"] = app
         raise _AbortRunError
 
@@ -904,11 +929,11 @@ def test_run_flow_tui_hands_the_constructed_app_to_on_app_ready() -> None:
             _definition(),
             mode=FlowMode.MODIFY,
             registered_values=_REGISTERED_VALUES,
-            on_app_ready=_capture,
+            on_screen_ready=_capture,
         )
 
     ready = captured["ready"]
-    assert isinstance(ready, FlowTuiApp)
+    assert isinstance(ready, FlowScreen)
     assert ready.definition.id == "flows.test.tui"
     # The hook fires after construction and before the run, so the runner has
     # not yet produced (or read) a final_state on this very instance.
@@ -938,16 +963,17 @@ def _date_definition() -> FlowDefinition:
 
 @pytest.mark.asyncio
 async def test_date_page_live_validation_flags_a_bad_date_then_clears_on_a_good_one() -> None:
-    app = FlowTuiApp(_date_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_date_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         # A DATE page mounts a single-line Input (tier-one live validation runs
         # per keystroke through the same widget-shape validator the commit uses).
-        field = app.screen.query_one("#widget-area").query_one(Input)
+        field = host.screen.query_one("#widget-area").query_one(Input)
 
         await pilot.press(*"2026-13-01")  # an impossible month: fails the ISO shape
         await pilot.pause()
-        bad_hint = str(app.screen.query_one("#live-validation", Static).render())
+        bad_hint = str(host.screen.query_one("#live-validation", Static).render())
         assert bad_hint.startswith("✗")  # the shape error is shown live, non-blocking
 
         field.value = "2026-01-05"  # replace with a valid ISO date
@@ -955,30 +981,32 @@ async def test_date_page_live_validation_flags_a_bad_date_then_clears_on_a_good_
 
         # The live line clears the moment the shape passes; the answer is still
         # uncommitted (live validation never writes engine state).
-        assert str(app.screen.query_one("#live-validation", Static).render()) == ""
+        assert str(host.screen.query_one("#live-validation", Static).render()) == ""
         assert "p_date" not in app.state.answers
 
 
 @pytest.mark.asyncio
 async def test_progress_bar_tracks_the_visible_position() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        bar = app.screen.query_one("#flow-progress", ProgressBar)
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
+        bar = host.screen.query_one("#flow-progress", ProgressBar)
         assert bar.total == 3  # the definition has three visible pages
         assert bar.progress == 1  # cursor on the first page
 
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
 
-        assert app.screen.query_one("#flow-progress", ProgressBar).progress == 2
+        assert host.screen.query_one("#flow-progress", ProgressBar).progress == 2
 
 
 @pytest.mark.asyncio
 async def test_legal_zone_renders_the_citations_in_the_question_panel() -> None:
-    app = FlowTuiApp(_legal_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_legal_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        zone = app.screen.query_one("#page-legal-zone", Static)
+        zone = host.screen.query_one("#page-legal-zone", Static)
         content = str(zone.render())
 
         # The zone is shown and carries both citation ref tokens (data,
@@ -991,11 +1019,12 @@ async def test_legal_zone_renders_the_citations_in_the_question_panel() -> None:
 @pytest.mark.asyncio
 async def test_legal_zone_is_hidden_when_the_page_declares_none() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         # The three-page definition declares no legal zone, so the zone is
         # collapsed rather than framing an empty gap.
-        assert app.screen.query_one("#page-legal-zone", Static).display is False
+        assert host.screen.query_one("#page-legal-zone", Static).display is False
 
 
 def _described_choice(value: str, *, provenance: bool = False) -> FlowChoice:
@@ -1038,18 +1067,19 @@ def _choice_definition(widget: FlowWidgetKind, *, provenance: bool = False) -> F
     )
 
 
-def _option_prompts(app: FlowTuiApp) -> str:
+def _option_prompts(host: ScreenHostApp[None]) -> str:
     """The rendered prompt text of every option in the mounted choice list."""
-    option_list = app.screen.query_one("#widget-area").query_one(OptionList)
+    option_list = host.screen.query_one("#widget-area").query_one(OptionList)
     return "\n".join(str(option_list.get_option_at_index(index).prompt) for index in range(option_list.option_count))
 
 
 @pytest.mark.asyncio
 async def test_select_renders_a_numbered_list_with_descriptions() -> None:
-    app = FlowTuiApp(_choice_definition(FlowWidgetKind.SELECT), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_choice_definition(FlowWidgetKind.SELECT), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
 
         # Numbered single-choice rows (unselected radio glyph) with the
         # domain description on the reserved second line.
@@ -1060,10 +1090,11 @@ async def test_select_renders_a_numbered_list_with_descriptions() -> None:
 
 @pytest.mark.asyncio
 async def test_checkbox_renders_a_numbered_list_with_descriptions() -> None:
-    app = FlowTuiApp(_choice_definition(FlowWidgetKind.CHECKBOX), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_choice_definition(FlowWidgetKind.CHECKBOX), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
 
         # Numbered multi-select rows carry the checkbox glyph, unticked.
         assert "1. [ ] " in text
@@ -1073,14 +1104,15 @@ async def test_checkbox_renders_a_numbered_list_with_descriptions() -> None:
 
 @pytest.mark.asyncio
 async def test_compare_select_renders_provenance_and_a_final_defer_row() -> None:
-    app = FlowTuiApp(
+    app = FlowScreen(
         _choice_definition(FlowWidgetKind.COMPARE_SELECT, provenance=True),
         mode=FlowMode.MODIFY,
         registered_values={},
     )
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
 
         # Provenance is the reason COMPARE_SELECT exists; it and the
         # description reach the numbered candidate rows, and the defer arm is
@@ -1100,10 +1132,11 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
 
     with output_language_scope(OutputLanguage.EN), locales_root_scope(root):
-        app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = FlowScreen(_definition(), mode=FlowMode.MODIFY, registered_values={})
+        host = ScreenHostApp(app)
+        async with host.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+            assert "en-copy" in str(host.screen.query_one("#page-prompt", Label).render())
 
             activate_output_language(OutputLanguage.ES)
             app.rebuild_for_locale()
@@ -1111,19 +1144,20 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
 
             # The engine state is untouched; every zone re-assembles, so the
             # prompt re-resolves under the newly-activated language.
-            assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+            assert "es-copy" in str(host.screen.query_one("#page-prompt", Label).render())
 
 
 @pytest.mark.asyncio
 async def test_on_answer_committed_receives_the_page_key_and_committed_value() -> None:
     received: list[tuple[str, str]] = []
-    app = FlowTuiApp(
+    app = FlowScreen(
         _definition(),
         mode=FlowMode.MODIFY,
         registered_values={},
         on_answer_committed=lambda key, value: received.append((key, value)),
     )
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         await pilot.pause()
@@ -1140,7 +1174,7 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
         payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
 
-    holder: dict[str, FlowTuiApp] = {}
+    holder: dict[str, FlowScreen] = {}
 
     def _switch_to_spanish(page_key: str, _value: str) -> None:
         if page_key == "p_name":
@@ -1153,16 +1187,17 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
             holder["app"].rebuild_for_locale()
 
     with output_language_scope(OutputLanguage.EN), locales_root_scope(root):
-        app = FlowTuiApp(
+        app = FlowScreen(
             _definition(),
             mode=FlowMode.MODIFY,
             registered_values={},
             on_answer_committed=_switch_to_spanish,
         )
         holder["app"] = app
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        host = ScreenHostApp(app)
+        async with host.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+            assert "en-copy" in str(host.screen.query_one("#page-prompt", Label).render())
 
             await pilot.press(*"ada")
             await pilot.click("#btn-next")
@@ -1173,47 +1208,49 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
             # activated language — the mid-walk language switch the
             # operator's language-first feature needs.
             assert app.state.cursor == "p_kind"
-            assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+            assert "es-copy" in str(host.screen.query_one("#page-prompt", Label).render())
 
 
 @pytest.mark.asyncio
 async def test_reentering_an_answered_select_from_review_does_not_auto_advance() -> None:
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         before = app.state.answers["p_kind"]
         await pilot.press("f2")
 
-        table = app.screen.query_one("#review-table", DataTable)
+        table = host.screen.query_one("#review-table", DataTable)
         table.move_cursor(row=table.get_row_index("p_kind"))
         await pilot.press("enter")  # jump back into the answered SELECT page
         await pilot.pause()
 
         # The OptionList fires no selection on mount, so re-entering an
         # answered SELECT neither re-commits nor auto-advances past it.
-        assert not _on_review(app)
+        assert not _on_review(host)
         assert app.state.cursor == "p_kind"
         assert app.state.answers["p_kind"] == before
 
 
 @pytest.mark.asyncio
 async def test_checkbox_digit_toggle_updates_the_glyph_in_place() -> None:
-    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
         assert "1. [ ] " in text  # both unticked to start
         assert "2. [ ] " in text
 
         await pilot.press("1")  # toggle row 1 on
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
         assert "1. [x] " in text  # row 1 glyph flipped in place
         assert "2. [ ] " in text  # row 2 untouched
 
         await pilot.press("2")  # toggle row 2 on
         await pilot.pause()
-        text = _option_prompts(app)
+        text = _option_prompts(host)
         assert "1. [x] " in text  # row 1 still ticked
         assert "2. [x] " in text  # row 2 flipped in place
         assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
@@ -1325,17 +1362,18 @@ async def test_flow_mounts_and_activates_the_configured_appearance(
     satisfy every rule the flow surfaces declare.
     """
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        install_cadrumo_themes(app, appearance=appearance)
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
+        install_cadrumo_themes(host, appearance=appearance)
         await pilot.pause()
-        assert app.theme == expected_theme
+        assert host.theme == expected_theme
         # The body lives on the pushed QuestionScreen, not the default
         # screen. Scrolling and the bordered box are two widgets, not one:
         # the ContentScroll host is what scrolls, and #page-body is the
         # panel inside it. Collapsing them gave the panel `height: auto`,
         # which cannot scroll and pushed the overflow onto the Screen.
-        assert app.screen.query_one("#page-scroll", ContentScroll)
-        assert app.screen.query_one("#page-body", Vertical)
+        assert host.screen.query_one("#page-scroll", ContentScroll)
+        assert host.screen.query_one("#page-body", Vertical)
 
 
 @pytest.mark.asyncio
@@ -1347,8 +1385,9 @@ async def test_f3_toggles_the_appearance_and_leaves_the_flow_state_untouched() -
     committed answers across the switch.
     """
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        install_cadrumo_themes(app, appearance=TuiAppearance.DARK)
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
+        install_cadrumo_themes(host, appearance=TuiAppearance.DARK)
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         cursor_before = app.state.cursor
@@ -1356,12 +1395,12 @@ async def test_f3_toggles_the_appearance_and_leaves_the_flow_state_untouched() -
 
         await pilot.press("f3")
         await pilot.pause()
-        assert app.theme == CADRUMO_LIGHT_THEME_NAME
+        assert host.theme == CADRUMO_LIGHT_THEME_NAME
 
         await pilot.press("f3")
         await pilot.pause()
-        assert app.theme == CADRUMO_DARK_THEME_NAME
+        assert host.theme == CADRUMO_DARK_THEME_NAME
 
         assert app.state.cursor == cursor_before
         assert dict(app.state.answers) == answers_before
-        assert not _on_review(app), "F3 must not trigger the F2 review intent"
+        assert not _on_review(host), "F3 must not trigger the F2 review intent"

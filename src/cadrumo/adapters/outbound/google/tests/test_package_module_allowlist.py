@@ -51,6 +51,9 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_records.py",
         "session_store.py",
         "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
+        "test_auth_preconditions.py",  # contract: every Google-auth refusal producer states its terminal precondition
+        "test_calc_sheets_typed_outcomes.py",  # contract: the calculation-sheet adapters return typed terminal outcomes
+        "test_preconditions_structure.py",  # contract: terminal-precondition transport stays owned by its declaring module
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_api_typeddicts.py",  # contract: API response TypedDicts declare their required keys

@@ -11,7 +11,7 @@ or opened alone.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 from textual.app import App
 
@@ -36,7 +36,6 @@ class ScreenHostApp[ResultT](App[ResultT | None]):
         """The screen under this host, for a caller that addresses it directly."""
         return self._hosted_screen
 
-    @override
     async def on_mount(self) -> None:
         """Mount the screen and exit when it dismisses.
 

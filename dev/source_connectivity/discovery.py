@@ -688,7 +688,7 @@ def discover_source_readiness(repo_root: Path) -> tuple[SourceReadinessCapabilit
 
 def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ...]:
     """Derive row-grouping dispatch to typed assembler records from its canonical module."""
-    path = repo_root / "src" / "cadrumo" / "application" / "calculations" / "_row_set_assembly.py"
+    path = repo_root / "src" / "cadrumo" / "application" / "calculations" / "row_set_assembly.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     dispatch_assignment = next(
         node

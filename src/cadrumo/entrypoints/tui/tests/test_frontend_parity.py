@@ -10,7 +10,7 @@ each of the three real frontends and asserts they converge:
   queue;
 * the line-mode frontend (:class:`LineFlowFrontend`) over real
   ``prompt_toolkit`` pipe keystrokes into an in-memory output;
-* the full-screen :class:`FlowTuiApp` over Textual's headless ``Pilot``.
+* the full-screen :class:`FlowScreen` over Textual's headless ``Pilot``.
 
 No frontend is mocked and no engine transition is stubbed: the scripted
 and line runs execute synchronously (each managing its own prompt event
@@ -47,7 +47,8 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.i18n import tr
-from ....entrypoints.tui.flows.app import FlowTuiApp
+from ....entrypoints.tui.components.host import ScreenHostApp
+from ....entrypoints.tui.flows.app import FlowScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -144,8 +145,9 @@ def _run_line(
 
 async def _drive_tui_full_run(definition: FlowDefinition) -> tuple[FlowState | None, ReviewProjection | None]:
     """Answer every page through the full-screen widgets, then submit."""
-    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.press("enter")  # commit p_text, advance to p_int
         await pilot.pause()
@@ -166,8 +168,9 @@ async def _drive_tui_full_run(definition: FlowDefinition) -> tuple[FlowState | N
 
 async def _drive_tui_invalid_integer(definition: FlowDefinition) -> str | None:
     """Feed a bad integer and return the verdict key the page holds in state."""
-    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"ada")
         await pilot.press("enter")  # commit p_text, advance to p_int
         await pilot.pause()
@@ -241,10 +244,11 @@ def test_three_frontends_report_the_same_invalid_token_verdict_key() -> None:
 
 async def _tui_section_group_box_title(definition: FlowDefinition) -> str:
     """Read the question panel's group-box title on the first page."""
-    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    app = FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        return str(app.screen.query_one("#page-body", Vertical).border_title)
+        return str(host.screen.query_one("#page-body", Vertical).border_title)
 
 
 def test_no_frontend_renders_a_section_slug_as_operator_facing_copy() -> None:

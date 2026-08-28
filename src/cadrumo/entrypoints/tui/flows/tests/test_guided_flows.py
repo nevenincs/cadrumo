@@ -1,6 +1,6 @@
 """Real proofs that the guided-flow shell renders section stages honestly.
 
-Every test drives the real `FlowTuiApp` through Textual's headless Pilot
+Every test drives the real `FlowScreen` through Textual's headless Pilot
 over a real multi-section `FlowDefinition`. The load-bearing claim is D6's
 own boundary for this Wave: the stage strip renders exactly the sections
 `FlowDefinition` declares, in the definition's own order, and advances
@@ -20,7 +20,8 @@ from .....application.flows.definition import CopyRef, FlowChoice, FlowDefinitio
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from .....tests.locales_root_fixture import locales_root_scope
-from ..app import FlowTuiApp
+from ...components.host import ScreenHostApp
+from ..app import FlowScreen
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -114,67 +115,71 @@ def _two_section_definition() -> FlowDefinition:
     )
 
 
-def _app() -> FlowTuiApp:
-    return FlowTuiApp(_two_section_definition(), mode=FlowMode.MODIFY)
+def _app() -> FlowScreen:
+    return FlowScreen(_two_section_definition(), mode=FlowMode.MODIFY)
 
 
-def _rendered_stage(app: FlowTuiApp, index: int) -> str:
+def _rendered_stage(host: ScreenHostApp[None], index: int) -> str:
     from textual.widgets import Static
 
-    return str(app.screen.query_one(f"#stage-{index}", Static).render())
+    return str(host.screen.query_one(f"#stage-{index}", Static).render())
 
 
 @pytest.mark.asyncio
 async def test_the_strip_declares_one_stage_per_section_in_declared_order(tmp_path: Path) -> None:
     del tmp_path
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        assert "First stage" in _rendered_stage(app, 0)
-        assert "Second stage" in _rendered_stage(app, 1)
+        assert "First stage" in _rendered_stage(host, 0)
+        assert "Second stage" in _rendered_stage(host, 1)
 
 
 @pytest.mark.asyncio
 async def test_the_strip_advances_only_when_the_real_engine_cursor_crosses_a_section(tmp_path: Path) -> None:
     del tmp_path
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        assert _rendered_stage(app, 0).startswith("▸")
-        assert _rendered_stage(app, 1).startswith("·")
+        assert _rendered_stage(host, 0).startswith("▸")
+        assert _rendered_stage(host, 1).startswith("·")
 
         # p1 is a required TEXT page; answering and advancing crosses into s2.
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         await pilot.pause()
 
-        assert _rendered_stage(app, 0).startswith("✓")
-        assert _rendered_stage(app, 1).startswith("▸")
+        assert _rendered_stage(host, 0).startswith("✓")
+        assert _rendered_stage(host, 1).startswith("▸")
 
 
 @pytest.mark.asyncio
 async def test_going_back_returns_the_strip_to_the_prior_section(tmp_path: Path) -> None:
     del tmp_path
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
         await pilot.pause()
-        assert _rendered_stage(app, 1).startswith("▸")
+        assert _rendered_stage(host, 1).startswith("▸")
 
         await pilot.press("escape")
         await pilot.pause()
 
-        assert _rendered_stage(app, 0).startswith("▸")
-        assert _rendered_stage(app, 1).startswith("·")
+        assert _rendered_stage(host, 0).startswith("▸")
+        assert _rendered_stage(host, 1).startswith("·")
 
 
 @pytest.mark.asyncio
 async def test_the_review_screen_shows_every_section_plus_review_as_the_final_stage(tmp_path: Path) -> None:
     del tmp_path
     app = _app()
-    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+    host = ScreenHostApp(app)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.press(*"ada")
         await pilot.click("#btn-next")
@@ -182,8 +187,8 @@ async def test_the_review_screen_shows_every_section_plus_review_as_the_final_st
         await pilot.press("1")
         await pilot.pause()
 
-        assert app.screen.query("#review-table")
-        assert _rendered_stage(app, 0).startswith("✓")
-        assert _rendered_stage(app, 1).startswith("✓")
-        assert _rendered_stage(app, 2).startswith("▸")
-        assert "Review" in _rendered_stage(app, 2)
+        assert host.screen.query("#review-table")
+        assert _rendered_stage(host, 0).startswith("✓")
+        assert _rendered_stage(host, 1).startswith("✓")
+        assert _rendered_stage(host, 2).startswith("▸")
+        assert "Review" in _rendered_stage(host, 2)

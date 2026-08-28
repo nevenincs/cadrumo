@@ -119,7 +119,9 @@ def _status() -> App[Any]:
 
 def _modelo_work_wizard() -> App[Any]:
     """Render the canonical Modelo wizard definition over its live work unit."""
-    return build_modelo_work_wizard()
+    from ....entrypoints.tui.components.host import ScreenHostApp
+
+    return ScreenHostApp(build_modelo_work_wizard())
 
 
 def _form() -> App[Any]:

@@ -17,11 +17,11 @@ review screen.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, Protocol, override
 
 from pydantic import TypeAdapter, ValidationError
 from rich.text import Text
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding, BindingsMap
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
@@ -71,6 +71,7 @@ from ....core.flows import (
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
+from ..components.host import ScreenHostApp
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 
@@ -94,10 +95,96 @@ def _operator_flow_context(definition: FlowDefinition, mode: FlowMode) -> dict[s
     }
 
 
-class FlowTuiApp(App[None]):
-    """Full-screen projection of one flow run."""
+class FlowPresenter(Protocol):
+    """What a flow page needs from whatever is driving the flow.
 
-    CSS = tokenised(
+    The two page screens once took the concrete application as a constructor
+    argument and reached back into it fifty-seven times, which pinned them to
+    the one host that owned them. This protocol is that reach, written down:
+    engine state to render, and the closed intent set to route. Nothing here
+    is a Textual concept, so a page can be mounted by any host that can drive
+    a flow -- and the protocol failing to grow is the signal that the pages
+    have stayed host-agnostic.
+    """
+
+    @property
+    def definition(self) -> FlowDefinition:
+        """The flow being run."""
+        ...
+
+    @property
+    def state(self) -> FlowState:
+        """Current engine state, replaced wholesale on every transition."""
+        ...
+
+    @property
+    def registered_values(self) -> Mapping[str, str]:
+        """Domain-supplied display values already on record, keyed by page key."""
+        ...
+
+    def cursor_entry(self) -> VisiblePage | None:
+        """The visible-sequence entry the engine cursor addresses, if any."""
+        ...
+
+    def is_secret_page(self, page_key: str) -> bool:
+        """Whether the page a key addresses collects a secret answer."""
+        ...
+
+    def commit_answer(self, raw: str, *, advance: bool = True) -> None:
+        """Commit the cursor page's answer, optionally advancing afterwards."""
+        ...
+
+    def navigate_back(self) -> None:
+        """Move the cursor to the previous visible page."""
+        ...
+
+    def action_next(self) -> None:
+        """Advance from the current page."""
+        ...
+
+    def action_go_review(self) -> None:
+        """Open the review surface."""
+        ...
+
+    def action_leave_review(self) -> None:
+        """Return from the review surface to the question surface."""
+        ...
+
+    def action_reset_current(self) -> None:
+        """Clear the cursor page's answer."""
+        ...
+
+    def action_restart(self) -> None:
+        """Restart the flow from its first page."""
+        ...
+
+    def action_submit(self) -> None:
+        """Submit the flow when it is eligible."""
+        ...
+
+    def action_save_exit(self) -> None:
+        """Checkpoint the run and leave."""
+        ...
+
+    def edit_from_review(self, page_key: str) -> None:
+        """Jump back to one page addressed from the review table."""
+        ...
+
+
+class FlowScreen(Screen[None]):
+    """Full-screen projection of one flow run, mountable by any host.
+
+    ``DEFAULT_CSS`` rather than ``CSS``: Textual applies a screen
+    subclass's ``DEFAULT_CSS`` and ignores ``CSS`` entirely, so declaring
+    the stylesheet under the wrong name drops it silently while almost
+    every test still passes and only a geometry assertion notices.
+    ``SCOPED_CSS`` is off because these rules address the page screens
+    this surface opens, which are siblings on the screen stack rather
+    than descendants of this DOM.
+    """
+
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + """
     #flow-top {
@@ -193,14 +280,6 @@ class FlowTuiApp(App[None]):
     """
     )
 
-    BINDINGS: ClassVar = [
-        # F2 is the review intent on the question screen; F3 is free across
-        # every surface. Hidden, and description-free: an app-level BINDINGS
-        # list resolves at import time, so a ``tr`` call here would freeze the
-        # import-time language into the footer the screens deliberately defer.
-        Binding("f3", "toggle_appearance", "", show=False),
-    ]
-
     def __init__(
         self,
         definition: FlowDefinition,
@@ -243,17 +322,8 @@ class FlowTuiApp(App[None]):
 
     def on_mount(self) -> None:
         """Install shared appearance support and open the current question page."""
-        install_cadrumo_themes(self)
-        self.push_screen(QuestionScreen(self))
-
-    def action_toggle_appearance(self) -> None:
-        """Flip between the light and dark appearance without leaving the flow.
-
-        The engine state is appearance-blind, so nothing re-renders beyond
-        the stylesheet: the operator keeps their cursor, answers, and
-        scroll position across the switch.
-        """
-        toggle_appearance(self)
+        install_cadrumo_themes(self.app)
+        self.app.push_screen(QuestionScreen(self))
 
     # ── engine access for screens ───────────────────────────────────────
 
@@ -327,7 +397,7 @@ class FlowTuiApp(App[None]):
         natural click-next expectation); committed-widget pages simply
         advance — their answers already landed on selection.
         """
-        screen = self.screen
+        screen = self.app.screen
         if isinstance(screen, QuestionScreen):
             pending = screen.current_input_value()
             if pending is not None:
@@ -343,13 +413,13 @@ class FlowTuiApp(App[None]):
 
     def action_go_review(self) -> None:
         """Open the summary projection unless it is already the active screen."""
-        if not isinstance(self.screen, ReviewScreen):
-            self.push_screen(ReviewScreen(self))
+        if not isinstance(self.app.screen, ReviewScreen):
+            self.app.push_screen(ReviewScreen(self))
 
     def action_leave_review(self) -> None:
         """Return from the summary projection to the current question."""
-        if isinstance(self.screen, ReviewScreen):
-            self.pop_screen()
+        if isinstance(self.app.screen, ReviewScreen):
+            self.app.pop_screen()
             self._rerender_question()
 
     def edit_from_review(self, page_key: str) -> None:
@@ -377,8 +447,8 @@ class FlowTuiApp(App[None]):
     def action_restart(self) -> None:
         """Restart the engine flow after the screen has confirmed that intent."""
         self.state = restart_flow(self.definition, self.state)
-        if isinstance(self.screen, ReviewScreen):
-            self.pop_screen()
+        if isinstance(self.app.screen, ReviewScreen):
+            self.app.pop_screen()
         self._rerender_question()
 
     def action_submit(self) -> None:
@@ -389,7 +459,7 @@ class FlowTuiApp(App[None]):
             return
         self.final_projection = assert_submit_eligible(self.definition, self.state)
         self.final_state = self.state
-        self.exit()
+        self.dismiss(None)
 
     def action_save_exit(self) -> None:
         """Persist the current checkpoint when the definition makes it available."""
@@ -411,7 +481,7 @@ class FlowTuiApp(App[None]):
         self.final_state = self.state
         self.final_projection = review(self.definition, self.state)
         self.saved_and_exited = True
-        self.exit()
+        self.dismiss(None)
 
     def rebuild_for_locale(self) -> None:
         """Re-render every screen under the newly-activated output language.
@@ -433,9 +503,9 @@ class FlowTuiApp(App[None]):
         self.call_after_refresh(self._rebuild_screens_for_locale)
 
     def _rebuild_screens_for_locale(self) -> None:
-        while len(self.screen_stack) > 1:
-            self.pop_screen()
-        self.push_screen(QuestionScreen(self))
+        while len(self.app.screen_stack) > 1:
+            self.app.pop_screen()
+        self.app.push_screen(QuestionScreen(self))
 
     # ── rendering plumbing ──────────────────────────────────────────────
 
@@ -444,17 +514,17 @@ class FlowTuiApp(App[None]):
         return bool(sequence) and sequence[-1].key == self.state.cursor
 
     def _rerender_question(self) -> None:
-        screen = self.screen
+        screen = self.app.screen
         if isinstance(screen, QuestionScreen):
             screen.render_page()
 
     def _refresh_answer_zones(self) -> None:
-        screen = self.screen
+        screen = self.app.screen
         if isinstance(screen, QuestionScreen):
             screen.refresh_answer_zones()
 
     def _rerender_review(self) -> None:
-        screen = self.screen
+        screen = self.app.screen
         if isinstance(screen, ReviewScreen):
             screen.render_review()
 
@@ -480,7 +550,7 @@ def run_flow_tui(
     resume_state: FlowState | None = None,
     registered_values: Mapping[str, str] | None = None,
     on_answer_committed: Callable[[str, str], None] | None = None,
-    on_app_ready: Callable[[FlowTuiApp], None] | None = None,
+    on_screen_ready: Callable[[FlowScreen], None] | None = None,
 ) -> tuple[FlowState, ReviewProjection]:
     """Run the full-screen frontend to completion and return the outcome.
 
@@ -488,17 +558,21 @@ def run_flow_tui(
     save-and-exit; a run abandoned without either raises so callers
     never mistake an aborted flow for a completed one.
 
-    ``on_app_ready`` is invoked with the constructed :class:`FlowTuiApp`
-    after construction and before :func:`~textual.app.App.run`, so a caller can
-    capture the app handle to drive a frontend affordance — the locale
-    rebuild (:meth:`FlowTuiApp.rebuild_for_locale`) from inside its
-    ``on_answer_committed`` hook — without constructing the app itself and
+    ``on_screen_ready`` is invoked with the constructed :class:`FlowScreen`
+    after construction and before the host runs, so a caller can capture the
+    screen handle to drive a frontend affordance — the locale rebuild
+    (:meth:`FlowScreen.rebuild_for_locale`) from inside its
+    ``on_answer_committed`` hook — without constructing the surface itself and
     thereby duplicating this runner's abandoned-run guard. The handle is
     for presentation affordances only: a caller MUST NOT drive the engine
     (commit answers, navigate, submit) through it; the runner retains sole
     ownership of the run lifecycle and the abandonment refusal.
+
+    The surface is a screen, so a standalone run mounts it in the shared
+    host rather than being an application itself. A root shell navigating to
+    the flow pushes the same screen and never reaches this runner.
     """
-    app = FlowTuiApp(
+    screen = FlowScreen(
         definition,
         mode=mode,
         checkpoint_store=checkpoint_store,
@@ -506,15 +580,15 @@ def run_flow_tui(
         registered_values=registered_values,
         on_answer_committed=on_answer_committed,
     )
-    if on_app_ready is not None:
-        on_app_ready(app)
-    app.run()
-    if app.final_state is None or app.final_projection is None:
+    if on_screen_ready is not None:
+        on_screen_ready(screen)
+    ScreenHostApp(screen).run()
+    if screen.final_state is None or screen.final_projection is None:
         raise FlowCheckpointError(
             translated_message="flows.errors.tui_abandoned",
             context=_operator_flow_context(definition, mode),
         )
-    return app.final_state, app.final_projection
+    return screen.final_state, screen.final_projection
 
 
 _TEXTUAL_INPUT_WIDGETS = frozenset(
@@ -608,10 +682,24 @@ def _confirm_restart_dialog() -> ConfirmScreen:
     )
 
 
+_APPEARANCE_BINDING = Binding("f3", "toggle_appearance", "", show=False)
+"""Appearance toggle, declared on each page surface rather than on the flow.
+
+F2 is the review intent on the question page; F3 is free across every
+surface. It sits on the pages because they are the screens the operator is
+looking at -- the flow surface opens them as siblings on the screen stack,
+so it is never the active screen and a binding declared there would never
+resolve. Hidden and description-free: a BINDINGS list resolves at import
+time, so a ``tr`` call here would freeze the import-time language into the
+footer the pages deliberately defer.
+"""
+
+
 class QuestionScreen(Screen[None]):
     """Render the cursor page and forward answer intents to the flow app."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar = [
+        _APPEARANCE_BINDING,
         Binding("escape", "go_back", ""),
         Binding("f2", "go_review", ""),
         Binding("ctrl+r", "reset_page", ""),
@@ -619,9 +707,18 @@ class QuestionScreen(Screen[None]):
         Binding("ctrl+s", "save_exit", ""),
     ]
 
-    def __init__(self, flow_app: FlowTuiApp) -> None:
+    def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance without leaving the flow.
+
+        The engine state is appearance-blind, so nothing re-renders beyond
+        the stylesheet: the operator keeps their cursor, answers, and
+        scroll position across the switch.
+        """
+        toggle_appearance(self.app)
+
+    def __init__(self, presenter: FlowPresenter) -> None:
         super().__init__()
-        self._flow_app = flow_app
+        self._presenter = presenter
 
     def _build_stage_strip(self, *, current_index: int = 0) -> StageNavigationStrip:
         """Build the section-level stage strip from the flow's own titles.
@@ -631,8 +728,8 @@ class QuestionScreen(Screen[None]):
         the sections are; it introduces no section ordering or grouping
         of its own.
         """
-        titles = assemble_section_titles(self._flow_app.definition)
-        stages = [titles.get(section.id, section.id) for section in self._flow_app.definition.sections]
+        titles = assemble_section_titles(self._presenter.definition)
+        stages = [titles.get(section.id, section.id) for section in self._presenter.definition.sections]
         return StageNavigationStrip(stages, current_index=current_index, id="flow-stage-strip")
 
     @override
@@ -670,6 +767,10 @@ class QuestionScreen(Screen[None]):
     def _localize_bindings(self) -> None:
         self._bindings = BindingsMap(
             [
+                # Rebuilt wholesale at mount, so the appearance binding has to
+                # be listed here too: a class-level entry alone would be
+                # discarded by this map and F3 would silently stop working.
+                _APPEARANCE_BINDING,
                 Binding("escape", "go_back", tr("flows.tui.binding_back")),
                 Binding("f2", "go_review", tr("flows.tui.binding_review")),
                 Binding("ctrl+r", "reset_page", tr("flows.tui.binding_reset")),
@@ -680,29 +781,29 @@ class QuestionScreen(Screen[None]):
         self.refresh_bindings()
 
     @property
-    def flow_app(self) -> FlowTuiApp:
+    def presenter(self) -> FlowPresenter:
         """Return the typed flow application that owns this projection."""
-        return self._flow_app
+        return self._presenter
 
     def render_page(self) -> None:
         """Render every zone for the page the engine cursor addresses."""
-        app = self.flow_app
-        entry = app.cursor_entry()
+        presenter = self.presenter
+        entry = presenter.cursor_entry()
         if entry is None:
-            app.action_go_review()
+            presenter.action_go_review()
             return
         copy = assemble_page_copy(entry.page)
-        self._render_header(app, entry)
-        self._render_body(app, entry, copy)
-        self._mount_widget(app, entry, copy)
+        self._render_header(presenter, entry)
+        self._render_body(presenter, entry, copy)
+        self._mount_widget(presenter, entry, copy)
 
-    def _render_header(self, app: FlowTuiApp, entry: VisiblePage) -> None:
-        sequence = visible_sequence(app.definition, app.state)
+    def _render_header(self, presenter: FlowPresenter, entry: VisiblePage) -> None:
+        sequence = visible_sequence(presenter.definition, presenter.state)
         position = next((index for index, item in enumerate(sequence) if item.key == entry.key), 0)
-        section_title = assemble_section_titles(app.definition).get(entry.section_id)
+        section_title = assemble_section_titles(presenter.definition).get(entry.section_id)
         if section_title is None:
             section_title = tr("flows.tui.section_unavailable")
-        flow_title = resolve_copy(app.definition.title)
+        flow_title = resolve_copy(presenter.definition.title)
         if section_title == flow_title:
             header = tr(
                 "flows.tui.header_single_section",
@@ -722,12 +823,12 @@ class QuestionScreen(Screen[None]):
         self.query_one("#flow-progress", ProgressBar).update(total=len(sequence), progress=position + 1)
         self.query_one("#page-body", Vertical).border_title = section_title
         section_index = next(
-            (index for index, section in enumerate(app.definition.sections) if section.id == entry.section_id),
+            (index for index, section in enumerate(presenter.definition.sections) if section.id == entry.section_id),
             0,
         )
         self.query_one("#flow-stage-strip", StageNavigationStrip).set_current_index(section_index)
 
-    def _render_body(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
+    def _render_body(self, presenter: FlowPresenter, entry: VisiblePage, copy: PageCopy) -> None:
         self.query_one("#page-prompt", Label).update(copy.prompt)
         badge_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
         self.query_one("#page-badge", Static).update(tr(badge_key))
@@ -744,8 +845,8 @@ class QuestionScreen(Screen[None]):
             "#page-legal-zone",
             "\n".join(f"{ref.ref} — {ref.label}" if ref.label else ref.ref for ref in copy.legal_zone),
         )
-        self.query_one("#answer-echo", Static).update(self._answer_echo_text(app, entry))
-        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(app, entry))
+        self.query_one("#answer-echo", Static).update(self._answer_echo_text(presenter, entry))
+        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(presenter, entry))
         self.query_one("#live-validation", Static).update("")
 
     def _set_zone(self, selector: str, content: str) -> None:
@@ -754,8 +855,8 @@ class QuestionScreen(Screen[None]):
         zone.display = bool(content)
 
     @staticmethod
-    def _answer_echo_text(app: FlowTuiApp, entry: VisiblePage) -> str:
-        current = app.state.answers.get(entry.key)
+    def _answer_echo_text(presenter: FlowPresenter, entry: VisiblePage) -> str:
+        current = presenter.state.answers.get(entry.key)
         if not current:
             return ""
         marker = (
@@ -766,12 +867,12 @@ class QuestionScreen(Screen[None]):
         return f"✓ {marker}"
 
     @staticmethod
-    def _commit_verdicts_text(app: FlowTuiApp, entry: VisiblePage) -> str:
-        verdicts = app.state.verdicts.get(entry.key, ())
+    def _commit_verdicts_text(presenter: FlowPresenter, entry: VisiblePage) -> str:
+        verdicts = presenter.state.verdicts.get(entry.key, ())
         copy = assemble_page_copy(entry.page)
         prompts = {
             visible.key: assemble_page_copy(visible.page).prompt
-            for visible in visible_sequence(app.definition, app.state)
+            for visible in visible_sequence(presenter.definition, presenter.state)
         }
         choices = {choice.value: choice.label for choice in copy.choices}
         return "\n".join(
@@ -787,19 +888,19 @@ class QuestionScreen(Screen[None]):
 
     def refresh_answer_zones(self) -> None:
         """Refresh derived answer zones without remounting the input widget."""
-        app = self.flow_app
-        entry = app.cursor_entry()
+        presenter = self.presenter
+        entry = presenter.cursor_entry()
         if entry is None:
             return
-        self.query_one("#answer-echo", Static).update(self._answer_echo_text(app, entry))
-        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(app, entry))
+        self.query_one("#answer-echo", Static).update(self._answer_echo_text(presenter, entry))
+        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(presenter, entry))
         self.query_one("#live-validation", Static).update("")
 
-    def _mount_widget(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
+    def _mount_widget(self, presenter: FlowPresenter, entry: VisiblePage, copy: PageCopy) -> None:
         area = self.query_one("#widget-area", Vertical)
         area.remove_children()
         widget_kind = entry.page.widget
-        current = app.state.answers.get(entry.key) or entry.page.default or ""
+        current = presenter.state.answers.get(entry.key) or entry.page.default or ""
         if widget_kind in _TEXTUAL_INPUT_WIDGETS:
             field = Input(
                 value="" if widget_kind is FlowWidgetKind.SECRET else current,
@@ -856,8 +957,8 @@ class QuestionScreen(Screen[None]):
         return text
 
     def on_input_changed(self, event: Input.Changed) -> None:
-        app = self.flow_app
-        entry = app.cursor_entry()
+        presenter = self.presenter
+        entry = presenter.cursor_entry()
         if entry is None:
             return
         _canonical, verdict = validate_widget_shape(entry.page, event.value)
@@ -876,11 +977,11 @@ class QuestionScreen(Screen[None]):
         self.query_one("#live-validation", Static).update(hint)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        self.flow_app.commit_answer(event.value)
+        self.presenter.commit_answer(event.value)
 
     def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
         if event.pressed.name:
-            self.flow_app.commit_answer(event.pressed.name)
+            self.presenter.commit_answer(event.pressed.name)
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         if event.option.id is not None:
@@ -901,22 +1002,22 @@ class QuestionScreen(Screen[None]):
                 self._activate_choice(option_id)
 
     def _activate_choice(self, value: str) -> None:
-        entry = self.flow_app.cursor_entry()
+        entry = self.presenter.cursor_entry()
         if entry is None:
             return
         if entry.page.widget is FlowWidgetKind.CHECKBOX:
             copy = assemble_page_copy(entry.page)
-            selected = {token for token in self.flow_app.state.answers.get(entry.key, "").split(",") if token}
+            selected = {token for token in self.presenter.state.answers.get(entry.key, "").split(",") if token}
             selected.symmetric_difference_update({value})
             ordered = ",".join(choice.value for choice in copy.choices if choice.value in selected)
-            self.flow_app.commit_answer(ordered, advance=False)
+            self.presenter.commit_answer(ordered, advance=False)
             self._refresh_checkbox_glyphs(entry, copy)
             return
-        self.flow_app.commit_answer(value)
+        self.presenter.commit_answer(value)
 
     def _refresh_checkbox_glyphs(self, entry: VisiblePage, copy: PageCopy) -> None:
         option_list = self.query_one("#widget-area", Vertical).query_one(OptionList)
-        selected = {token for token in self.flow_app.state.answers.get(entry.key, "").split(",") if token}
+        selected = {token for token in self.presenter.state.answers.get(entry.key, "").split(",") if token}
         for index, choice in enumerate(copy.choices, start=1):
             option_list.replace_option_prompt_at_index(
                 index - 1,
@@ -925,34 +1026,34 @@ class QuestionScreen(Screen[None]):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-back":
-            self.flow_app.navigate_back()
+            self.presenter.navigate_back()
         elif event.button.id == "btn-next":
-            self.flow_app.action_next()
+            self.presenter.action_next()
         elif event.button.id == "btn-review":
-            self.flow_app.action_go_review()
+            self.presenter.action_go_review()
 
     def current_input_value(self) -> str | None:
         inputs = self.query_one("#widget-area", Vertical).query(Input)
         return inputs.first().value if inputs else None
 
     def action_go_back(self) -> None:
-        self.flow_app.navigate_back()
+        self.presenter.navigate_back()
 
     def action_go_review(self) -> None:
-        self.flow_app.action_go_review()
+        self.presenter.action_go_review()
 
     def action_reset_page(self) -> None:
-        self.flow_app.action_reset_current()
+        self.presenter.action_reset_current()
 
     def action_restart_flow(self) -> None:
-        self.flow_app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
+        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
     def _apply_restart_decision(self, confirmed: bool | None) -> None:
         if confirmed:
-            self.flow_app.action_restart()
+            self.presenter.action_restart()
 
     def action_save_exit(self) -> None:
-        self.flow_app.action_save_exit()
+        self.presenter.action_save_exit()
 
 
 _STATUS_GLYPHS: dict[PageStatus, str] = {
@@ -973,21 +1074,31 @@ class _ReviewTable(DataTable[str]):
 class ReviewScreen(Screen[None]):
     """Render a clickable summary of every question in the flow."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar = [
+        _APPEARANCE_BINDING,
         Binding("escape", "back_to_question", ""),
         Binding("s", "submit_flow", ""),
         Binding("ctrl+s", "save_exit", ""),
         Binding("ctrl+n", "restart_flow", ""),
     ]
 
-    def __init__(self, flow_app: FlowTuiApp) -> None:
+    def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance without leaving the flow.
+
+        The engine state is appearance-blind, so nothing re-renders beyond
+        the stylesheet: the operator keeps their cursor, answers, and
+        scroll position across the switch.
+        """
+        toggle_appearance(self.app)
+
+    def __init__(self, presenter: FlowPresenter) -> None:
         super().__init__()
-        self._flow_app = flow_app
+        self._presenter = presenter
 
     @override
     def compose(self) -> ComposeResult:
-        titles = assemble_section_titles(self._flow_app.definition)
-        stages = [titles.get(section.id, section.id) for section in self._flow_app.definition.sections]
+        titles = assemble_section_titles(self._presenter.definition)
+        stages = [titles.get(section.id, section.id) for section in self._presenter.definition.sections]
         stages.append(tr("flows.review.header_tui_stage_label"))
         yield StageNavigationStrip(stages, current_index=len(stages) - 1, id="flow-stage-strip")
         yield Static(id="review-header")
@@ -1013,6 +1124,7 @@ class ReviewScreen(Screen[None]):
     def _localize_bindings(self) -> None:
         self._bindings = BindingsMap(
             [
+                _APPEARANCE_BINDING,
                 Binding("escape", "back_to_question", tr("flows.tui.binding_return")),
                 Binding("s", "submit_flow", tr("flows.tui.binding_submit")),
                 Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
@@ -1022,15 +1134,15 @@ class ReviewScreen(Screen[None]):
         self.refresh_bindings()
 
     @property
-    def flow_app(self) -> FlowTuiApp:
+    def presenter(self) -> FlowPresenter:
         """Return the typed flow application that owns this projection."""
-        return self._flow_app
+        return self._presenter
 
     def render_review(self) -> None:
         """Project the engine review into the table, notices, and submit control."""
-        app = self.flow_app
-        projection = review(app.definition, app.state)
-        prompts = self._prompts_by_key(app)
+        presenter = self.presenter
+        projection = review(presenter.definition, presenter.state)
+        prompts = self._prompts_by_key(presenter)
         self.query_one("#review-header", Static).update(
             tr(
                 "flows.review.header_tui",
@@ -1041,10 +1153,10 @@ class ReviewScreen(Screen[None]):
         )
         table = self.query_one("#review-table", _ReviewTable)
         table.clear()
-        self._fill_table(table, app, projection, prompts)
+        self._fill_table(table, presenter, projection, prompts)
         choice_labels = {
             choice.value: choice.label
-            for entry in visible_sequence(app.definition, app.state)
+            for entry in visible_sequence(presenter.definition, presenter.state)
             for choice in assemble_page_copy(entry.page).choices
         }
         blocking_text = "\n".join(
@@ -1060,11 +1172,11 @@ class ReviewScreen(Screen[None]):
         blocking = self.query_one("#review-blocking", Static)
         blocking.update(blocking_text)
         blocking.display = bool(blocking_text)
-        if checkpoint_available(app.definition, app.state.mode):
+        if checkpoint_available(presenter.definition, presenter.state.mode):
             save_note = ""
         else:
             mode_label = tr(
-                "flows.review.mode_create" if app.state.mode is FlowMode.CREATE else "flows.review.mode_modify",
+                "flows.review.mode_create" if presenter.state.mode is FlowMode.CREATE else "flows.review.mode_modify",
             )
             save_note = tr("flows.review.save_unavailable", mode=mode_label)
         self.query_one("#review-save-note", Static).update(save_note)
@@ -1074,12 +1186,12 @@ class ReviewScreen(Screen[None]):
     def _fill_table(
         self,
         table: _ReviewTable,
-        app: FlowTuiApp,
+        presenter: FlowPresenter,
         projection: ReviewProjection,
         prompts: dict[str, str],
     ) -> None:
         """Add each reviewed page under a section heading when useful."""
-        section_titles = self._section_titles(app)
+        section_titles = self._section_titles(presenter)
         multi_section = len({row.section_id for row in projection.rows}) > 1
         current_section: str | None = None
         for row in projection.rows:
@@ -1095,8 +1207,8 @@ class ReviewScreen(Screen[None]):
             table.add_row(
                 _STATUS_GLYPHS.get(row.status, "?"),
                 self._prompt_cell(row, prompts),
-                self._answer_cell(app, row.key),
-                self._registered_cell(app, row.key),
+                self._answer_cell(presenter, row.key),
+                self._registered_cell(presenter, row.key),
                 key=row.key,
             )
 
@@ -1110,55 +1222,60 @@ class ReviewScreen(Screen[None]):
         return prompt
 
     @staticmethod
-    def _answer_cell(app: FlowTuiApp, page_key: str) -> str:
-        answer_value = app.state.answers.get(page_key, "")
-        if answer_value and app.is_secret_page(page_key):
+    def _answer_cell(presenter: FlowPresenter, page_key: str) -> str:
+        answer_value = presenter.state.answers.get(page_key, "")
+        if answer_value and presenter.is_secret_page(page_key):
             return tr("flows.progress.current_answer_secret")
-        entry = next((item for item in visible_sequence(app.definition, app.state) if item.key == page_key), None)
+        entry = next(
+            (item for item in visible_sequence(presenter.definition, presenter.state) if item.key == page_key), None
+        )
         return answer_value if entry is None else _operator_answer(entry.page, answer_value)
 
     @staticmethod
-    def _registered_cell(app: FlowTuiApp, page_key: str) -> str:
-        registered = app.registered_values.get(page_key, "")
-        if registered and app.is_secret_page(page_key):
+    def _registered_cell(presenter: FlowPresenter, page_key: str) -> str:
+        registered = presenter.registered_values.get(page_key, "")
+        if registered and presenter.is_secret_page(page_key):
             return tr("flows.progress.current_answer_secret")
-        entry = next((item for item in visible_sequence(app.definition, app.state) if item.key == page_key), None)
+        entry = next(
+            (item for item in visible_sequence(presenter.definition, presenter.state) if item.key == page_key), None
+        )
         return registered if entry is None else _operator_answer(entry.page, registered)
 
-    def _prompts_by_key(self, app: FlowTuiApp) -> dict[str, str]:
+    def _prompts_by_key(self, presenter: FlowPresenter) -> dict[str, str]:
         return {
-            entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(app.definition, app.state)
+            entry.key: assemble_page_copy(entry.page).prompt
+            for entry in visible_sequence(presenter.definition, presenter.state)
         }
 
     @staticmethod
-    def _section_titles(app: FlowTuiApp) -> dict[str, str]:
-        return assemble_section_titles(app.definition)
+    def _section_titles(presenter: FlowPresenter) -> dict[str, str]:
+        return assemble_section_titles(presenter.definition)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         page_key = event.row_key.value
         if page_key is None or page_key.startswith(_SECTION_HEADING_PREFIX):
             return
-        self.flow_app.edit_from_review(page_key)
+        self.presenter.edit_from_review(page_key)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-submit":
-            self.flow_app.action_submit()
+            self.presenter.action_submit()
 
     def action_back_to_question(self) -> None:
-        self.flow_app.action_leave_review()
+        self.presenter.action_leave_review()
 
     def action_submit_flow(self) -> None:
-        self.flow_app.action_submit()
+        self.presenter.action_submit()
 
     def action_save_exit(self) -> None:
-        self.flow_app.action_save_exit()
+        self.presenter.action_save_exit()
 
     def action_restart_flow(self) -> None:
-        self.flow_app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
+        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
     def _apply_restart_decision(self, confirmed: bool | None) -> None:
         if confirmed:
-            self.flow_app.action_restart()
+            self.presenter.action_restart()
 
 
 def select_flow_frontend(
@@ -1169,14 +1286,14 @@ def select_flow_frontend(
     checkpoint_store: CheckpointStore | None = None,
     resume_state: FlowState | None = None,
     registered_values: Mapping[str, str] | None = None,
-) -> FlowTuiApp | LineFlowFrontend:
+) -> FlowScreen | LineFlowFrontend:
     """Construct the one frontend supported by the classified host."""
     if capability is FrontendCapability.NON_INTERACTIVE:
         raise FlowUnsupportedConsoleError(
             translated_message="flows.errors.unsupported_console",
         )
     if capability is FrontendCapability.FULL_SCREEN:
-        return FlowTuiApp(
+        return FlowScreen(
             definition,
             mode=mode,
             checkpoint_store=checkpoint_store,
@@ -1186,4 +1303,4 @@ def select_flow_frontend(
     return LineFlowFrontend(definition, checkpoint_store=checkpoint_store)
 
 
-__all__ = ["FlowTuiApp", "run_flow_tui", "select_flow_frontend"]
+__all__ = ["FlowPresenter", "FlowScreen", "run_flow_tui", "select_flow_frontend"]

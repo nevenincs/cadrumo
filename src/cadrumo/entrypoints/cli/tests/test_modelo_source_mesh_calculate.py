@@ -37,6 +37,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
+from ._m303_filing_evidence_support import write_m303_filing_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -646,11 +647,15 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     assert "--retencion-observation" in envelope["error"]["message"]
 
 
-def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
+def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
     # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
@@ -716,6 +721,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -814,7 +821,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(decision)
 
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(tmp_path: Path) -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -830,6 +837,10 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -880,6 +891,8 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -901,13 +914,15 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert text_result.exit_code == 0, text_result.output
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -919,6 +934,10 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -945,6 +964,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -961,6 +982,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert text_result.exit_code == 0, text_result.output

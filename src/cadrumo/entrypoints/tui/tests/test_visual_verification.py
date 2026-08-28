@@ -46,12 +46,13 @@ from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.form_screen import FormApp
+from ..components.host import ScreenHostApp
 from ..components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ..components.widgets import ContentScroll
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 
 pytestmark = [
     pytest.mark.integration,
@@ -286,7 +287,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
 
 
 @contextmanager
-def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
+def _question(tmp_path: Path) -> Iterator[FlowScreen]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
     Enrolled here because it is the surface the operator sees on every page
@@ -297,7 +298,7 @@ def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
     as a dead stop — the exact two defects the gates below already pin on
     every other surface.
     """
-    del tmp_path  # unused: a bare FlowTuiApp holds no storage of its own
+    del tmp_path  # unused: a bare flow screen holds no storage of its own
     copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="wizard.setup.title")
     page = FlowPage(
         id="p0",
@@ -318,10 +319,10 @@ def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    yield FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    yield FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
-def _many_page_flow() -> FlowTuiApp:
+def _many_page_flow() -> FlowScreen:
     """A flow long enough that both the question page and the review table
     overflow their container at every size in ``_SIZES``.
 
@@ -357,7 +358,7 @@ def _many_page_flow() -> FlowTuiApp:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    return FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    return FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
 _SURFACES = [
@@ -749,13 +750,14 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
     would pass with the defect present and prove nothing; the precondition
     is asserted below rather than assumed.
     """
-    app = _many_page_flow()
-    async with app.run_test(size=(width, height)) as pilot:
+    flow = _many_page_flow()
+    host = ScreenHostApp(flow)
+    async with host.run_test(size=(width, height)) as pilot:
         await pilot.pause()
         if review:
             await pilot.press("f2")
             await pilot.pause()
-        screen = app.screen
+        screen = host.screen
 
         # Positive control: the surface must actually have more content
         # than the viewport, or "the Screen does not scroll" is vacuous.
@@ -789,4 +791,4 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
             f"expected one visible vertical scroll owner at {width}x{height}, got "
             f"{[type(widget).__name__ for widget in visible_owners]}"
         )
-        app.exit(None)
+        host.exit(None)

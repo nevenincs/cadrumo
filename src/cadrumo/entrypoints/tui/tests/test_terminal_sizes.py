@@ -55,7 +55,7 @@ from ....domain.auth import load_default_catalogue
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
 from ..profile.overview import ProfileManagerScreen
@@ -90,7 +90,7 @@ def _reachable_controls(app: App[object]) -> list[Widget]:
     """Every displayed interactive control currently mounted on the screen."""
     return [
         widget
-        for widget in app.screen.query(Widget)
+        for widget in app.app.screen.query(Widget)
         if isinstance(widget, _INTERACTIVE) and widget.display and widget.region.width > 0
     ]
 
@@ -144,7 +144,7 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
             await pilot.pause()
             await pilot.pause()
             _assert_horizontally_contained(cast(App[object], app), size, "profile manager")
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.parametrize("size", _SIZES)
@@ -163,7 +163,7 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
             await pilot.pause()
             await pilot.pause()
             _assert_horizontally_contained(cast(App[object], app), size, "login screen")
-            app.exit(None)
+            app.app.exit(None)
 
 
 @pytest.mark.parametrize("size", _SIZES)
@@ -171,12 +171,13 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
 async def test_the_flow_surface_fits_every_terminal_width(size: tuple[int, int]) -> None:
     """The guided-flow surface keeps its answer controls inside the terminal."""
     definition = build_apoderado_flow_definition(load_default_catalogue())
-    app = FlowTuiApp(definition, mode=FlowMode.CREATE, registered_values={})
-    async with app.run_test(size=size) as pilot:
+    flow = FlowScreen(definition, mode=FlowMode.CREATE, registered_values={})
+    host = ScreenHostApp(flow)
+    async with host.run_test(size=size) as pilot:
         await pilot.pause()
         await pilot.pause()
-        _assert_horizontally_contained(cast(App[object], app), size, "guided flow")
-        app.exit(None)
+        _assert_horizontally_contained(cast(App[object], host), size, "guided flow")
+        host.exit(None)
 
 
 @contextmanager
