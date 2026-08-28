@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:65e94e397f2d9285824bdad076e4b0a45b31bff0e4322892458d9cc908358979'
+body_hash: 'sha256:1114b54f2f4bd0ed274aaf5c8e5c70571c0abd91eddbbe968c2ac9199f394aac'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1114,3 +1114,51 @@ first time exercises a REAL bucket mismatch rather than a malformed id -- and a
 new test proves the normalisation contract positively: a padded row is stored,
 loaded and resolves to the same bucket. An accidental pass became two honest
 assertions.
+
+
+### Localized refusals: five tests matching prose that is now a translation key
+
+Two sweep clusters were checked and left alone as another campaign's, with the
+evidence for saying so.
+
+The 24 `NoRevisionForPeriodError` are 14 Modelo 390 and 8 Modelo 303 -- both
+export-fragment trees this loop is barred from -- plus two 2010 filing years
+outside the supported window. The 21
+`CalculationRevision ... requires context-bound aggregate validation` come from
+`b66bc26f05 feat(m303): bind rectificativa motive authority [W04.P07.S92]`,
+which is a CLOSED row in the export-fragment plan (its `W04.P07.S84` is the row
+still open). Attributing the failing tests by the log's own test headers rather
+than by a grep window showed all 16 are `cancel_or_modify`,
+`rectificativa_nota_three` or `prior_domiciliation` -- that campaign's feature.
+An earlier read had mistaken an adjacent header (a Modelo 184 test) for one of
+them.
+
+The 19 `Regex pattern did not match` failures are a different thing and were
+fixable. Errors across filing, storage and ledger have moved from English prose
+to typed translation keys, and these assertions still matched the old sentence:
+`'not present in the calculation registry'` now raises
+`application.filing.runtime.errors.modelo_not_in_registry`,
+`'no active bucket session|route does not match'` raises
+`errors.storage.runtime.not_ready`, `'missing requested modelo definitions'`
+raises `application.filing.runtime.errors.registry_missing_requested_modelos`.
+
+Fixed to the convention the codebase already uses in 574 files --
+`assert excinfo.value.translated_message == "<key>"` -- in
+`test_schema_completeness`, `test_review_runtime_storage`,
+`test_testing_registry` and `test_evidence_storage_errors`. 25 tests across the
+four files pass. Matching rendered prose tracked the locale catalogue's wording
+rather than the contract, which is why a reword silently broke them.
+
+One of these needed more than a key swap. Both purchase-invoice evidence-input
+refusals -- unreadable file and unsupported extension -- now carry the SAME key
+`errors.refused.refused_ledger_evidence_input`, so asserting the key alone would
+have let the extension test pass on an unreadable-file failure. The
+unreadable-file test already discriminated on
+`terminal_precondition_verdict.failed_condition_id`; the extension test now does
+too, against `EVIDENCE_FILE_EXTENSION_SUPPORTED`. Swapping prose for a shared
+key without that would have quietly widened what the test accepts.
+
+The remaining regex failures in this cluster are M303 carry, IVA-wallet and
+M303-exonerado-390 messages, left to the campaign that owns them, plus two
+genuine rewordings rather than key migrations.
+
