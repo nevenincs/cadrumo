@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8949d08e4c44f6c1677a0142646307a5afffe2eb37fc8ced24ce504c9850265e'
+body_hash: 'sha256:506192de0bb07cbe1fb4ad500ec7f9c4146ffee04c31bd1ee6cf1638edae560c'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1599,3 +1599,150 @@ classify a row as unowned and pass. Its one entry resolves: Modelo 130
 So the two fixtures already corrected were the whole of this defect class in the
 test tree, which is the useful result -- the sweep was worth running to learn
 that rather than to assume it.
+
+### The export-layout kerfuffle: the refusal was the stale part, not the layout
+
+Operator asked for the export-layout situation to be resolved. It inverts a
+conclusion recorded two ticks earlier, so the correction comes first.
+
+**Tick 20 recorded that acceptance wall #423 had genuinely lost its guard** --
+that its capability, "quickfile all the way to an exported fichero", was
+unguarded because the surviving quickfile tests stop at a REFUSED export. That
+was read off those tests' docstrings rather than off the product. It is wrong.
+
+Run today, `test_quickfile_m115_reaches_granted_verify_before_withdrawn_export`
+FAILS, and it fails because the chain now SUCCEEDS: exit code 0 where it expects
+1, `"completed": true` where it expects false, `stopped_at_stage: null` where it
+expects `"export"`, and a populated `export` payload where it expects `None`.
+
+The layout is present and renderable. Modelo 115's `2019-y-siguientes` revision
+carries `modelo-115-fichero-boe`, fixed-width with 2 records, which is exactly
+what `export_layout_renderability_reason_code` requires to return None. So does
+Modelo 130 and Modelo 111. The refusal path
+(`_select_export_layout` -> `subview.export_layout_ids`) is reached only when
+there is nothing to select, and there is something to select.
+
+A directory listing nearly produced a second wrong answer here. 66 revisions
+ship an `export_layouts` fragment directory, which looks like proof that
+exporting works -- but Modelo 115 had that directory throughout the period when
+its export legitimately refused. `aeat-registry-authority-flow` says to assess
+from the LOADED SNAPSHOT and never a directory listing, and this is why: the
+directory says a fragment exists, not that the layout is complete.
+
+Git confirms the shape of the drift rather than my inferring it.
+`test_quickfile_runs_full_chain_to_exported_fichero` existed before
+`fb5b2fc6ea S58: close immutable filing evidence lifecycle` and was replaced in
+that commit by the two `..._before_withdrawn_export` variants. Wall #423 still
+cites the original name, which is why it reads as REOPENED. The wall was never
+wrong; the test was inverted around it while layouts were unavailable, and the
+catalogue kept pointing at the capability everyone intended to restore.
+
+So the guard was restored rather than repointed: the M115 case asserts the
+completing chain again (every stage ok, export ok, payload present) and carries
+the original name. It also now asserts the fichero's BYTES, not just the stage
+status -- an export reported ok that wrote nothing would satisfy every other
+check in the test.
+
+**Not yet verified, and not claimed:** the run could not be completed. A peer is
+mid-relocation in the working tree -- `_parity_harness.py` deleted with an
+untracked `parity_harness.py` beside it, `__init__.py` already importing
+`.row_set_assembly` while the file on disk is still `_row_set_assembly.py` -- so
+`cadrumo.application.storage.calc_sheets` does not import and every CLI test
+errors on it. That is their atomic relocation in flight and must not be touched.
+The payload facts above were observed BEFORE the tree entered that state; the
+two file-bytes assertions are reasoned, not run, and need a green run next tick
+before this is called done.
+
+The in-flight sweep reached 99% and may be tainted for the same reason; its
+totals need reading with that in mind.
+
+
+### Export-layout kerfuffle closed, and a live crash on `ledger classify`
+
+**The export guard is restored and VERIFIED.** The earlier note flagged two
+file-bytes assertions as reasoned but unrun; the peer's relocation settled and
+`test_quickfile_runs_full_chain_to_exported_fichero` now passes, fichero bytes
+included. Independently confirmed the product fact without the CLI:
+`export_layout_renderability_reason_code` returns None for
+`modelo-115-fichero-boe`, so the layout is renderable and the refusal the old
+test asserted cannot occur. Acceptance wall #423 resolves against the restored
+name.
+
+**Fresh full sweep** (1h19m): 452 failed, 28107 passed, 4 errors, against the
+earlier 475 failed / 27952 passed / ~70 errors. The error collapse is the
+wizard `_SETUP_OPTION_INFOS` import fix -- that 80-failure cluster is gone from
+the signature table entirely. The 4 remaining errors are M303 IVA-wallet
+provenance, the export-fragment campaign's.
+
+**A live production crash, found via the walls.** Three walls (#217, #223, #253)
+had started failing, and it was NOT fallout from my changes:
+`aeat app ledger classify` was returning an internal-error envelope because
+`actions_manual.py` raised `NameError: name 'format_decimal' is not defined` at
+`_event_payload`. The module used the symbol three times and imported only
+`Decimal`. Its sibling `actions_common.py` in the same package shows the
+canonical spelling, `from ...core.decimal import format_decimal`; added it
+there. The file was mid-edit in the working tree, but no plausible intent leaves
+three uses of an unimported name, and the verb was broken for every operator
+meanwhile.
+
+**The stale `review <id>` verb again, and a sweep that would have been wrong.**
+19 sites call `app ledger review` with a following argument, which looks like a
+systematic rename to apply everywhere. It is not: 14 pass `--filter` or
+`--help`, which is exactly right for the interactive list surface. Only 5 pass a
+bare positional id. Fixed the two in this file to `view`, whose help declares it
+takes "Id de la transacción (o prefijo no ambiguo)" -- so prefix resolution,
+which is what those two tests are named for, is preserved. Their assertions then
+needed the uniform single-transaction key: `LedgerViewResult` carries
+`transaction_id`, not the list row's bare `id`. 14 tests in the file pass.
+
+Three remaining positional-id sites live in `test_cli_surface.py`, one of which
+mixes an id AND `--filter` flags -- an intent that neither verb has, so it needs
+reading rather than mechanical replacement. Left for its own pass.
+
+Acceptance wall catalogue: **28 passing, up from 23** when this sweep of it
+began. Of the 4 remaining, #419 is the export campaign's M303 rectificativa, the
+gate's own mutation harness needs the design decision already recorded, and two
+are the persona walls that did not reproduce across the first sweep's two
+concurrent runs -- flaky-under-load rather than newly broken, and worth
+confirming sequentially before treating as defects.
+
+
+### A crash, not a refusal: the optional `pais` validator called `.upper()` on None
+
+The fresh sweep surfaced a signature the earlier one did not have in its top
+clusters: 25 failures reading
+`AttributeError: 'NoneType' object has no attribute 'upper'`. Every one of them
+lands on the same line -- `domain/modelos/_row_models.py:165`, in
+`Modelo184MemberRow._pais_uppercase_alpha` -- across 21 distinct tests spanning
+row models, the M184 socio handoff, multi-clave export parity, secure-envelope
+decoding and the M210 agrupación e2e.
+
+The field is `pais: _IsoCountryCode | None = None` and the validator was typed
+`(value: str) -> str`, so the absent case reached `value.upper()` and raised.
+Its immediate sibling, `_porcentaje_titularidad_within_bounds`, guards
+`value is not None` correctly -- the inconsistency was within one class.
+
+Whether `None` is legitimate had to be settled before guarding it, because a
+guard on a genuinely required field would silently accept a missing country
+rather than refuse it. Two pieces of the model's own prose disagree at first
+reading: the docstring maps `pais -> country_code (required; never inferred)`,
+which describes the DISEÑO's requirement, while the comment on the field itself
+records the model's position explicitly -- "Absent rather than required because
+the profile-driven producer has no country to supply ... Recording the socio's
+country on the profile is the fix that would let this be required."
+
+So the absent case is a declared, reasoned state with its own future remedy, and
+the validator's job is to check the SHAPE of a value that is present. Guarded on
+that basis, with the reason recorded at the validator so the next reader does
+not re-litigate the same apparent contradiction. Nothing changes for a present
+value; the same refusal fires on a malformed code.
+
+A crash is also not a refusal in the sense this repo cares about: an
+AttributeError carries no typed error, no translated message and no precondition
+verdict, so an operator hitting it got an internal-error envelope where the
+model intended either acceptance or a named validation failure.
+
+Verified across the affected areas rather than the one file: 39 row-model tests,
+3 M184 handoff-notice tests, 12 M184 multi-clave export-parity tests and 7
+Modelo 210 agrupación e2e tests all pass.
+

@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-08-27-registry-dated-validity-adr]]'
   - '[[2026-08-27-registry-dated-validity-research]]'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: body-v2
-body_hash: 'sha256:777ac91317bff7aa8cbdf6ed7b1cde23f2b109501a43e3ec116a9f112ef77968'
+body_hash: 'sha256:cb40262526a9540be784c289a021fbed9816d2141fd9da2ed0aa2bd10f5bb3c3'
 ---
 
 <!-- RETIRED: S01 -->
@@ -66,6 +66,7 @@ Turn the hunt's findings into product behaviour. Each fix reuses the mechanism t
 - [x] `P05.S21` - Wire the LIRPF art. 30.2.5.a insured-person counts into the shipped aggregation so both cap limbs reach production; `src/cadrumo/application/aggregation/tests/test_seguro_enfermedad_cap_reaches_production.py`.
 - [x] `P05.S22` - Ground every category citation on inline corpus text with a declared verified, refused or not-bundled state; `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`.
 - [x] `P05.S23` - Retire the fabricated home-office usage-ratio default so a suministro deduction requires the taxpayer's own declared proportion; `src/cadrumo/domain/usage_ratios/tests/test_model.py`.
+- [x] `P05.S24` - Carry the censo-declared dwelling area into the deduction and centralise the home-office grouping; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 
 ## Parallelization
 

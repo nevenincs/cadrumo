@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f7b58860c75d6c13e6b9faadd4d4cee97a717db661753721adce0c704490c5b'
+body_hash: 'sha256:9e1814ed56470f06e518dff707201d71ec672c8c2c3a44188351a506c85902da'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -90,6 +90,8 @@ related:
 - `S50` `T` `src/cadrumo/locales/en/modelo/schema/347.yml`
 - `S50` `T` `src/cadrumo/locales/ca/modelo/schema/347.yml`
 - `S50` `T` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+
+- `S53` `T` `src/cadrumo/tests/test_docstring_core_struct_links.py`
 
 ## Notes
 

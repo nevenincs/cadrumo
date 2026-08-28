@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-dated-validity'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:34cc7d07195e9c95eb0423186dd6e86ab4b49822b513084f71b687836695df84'
+body_hash: 'sha256:4ef291ee70e3ae146c754f28772f43d194a4c873164c4fbf1b6ff3ba861b793c'
 related: []
 ---
 
@@ -643,3 +643,52 @@ as consistent. A product of two factors where one is a taxpayer measurement is w
 checking wherever it appears: the code cannot know the second factor, so any value
 sitting in its place was authored, and an authored figure in that slot is a defect
 whatever its magnitude.
+
+## The censo-to-deduction chain, and what carrying it revealed
+
+The operator asked whether the 036-declared dwelling area is actually connected to the
+deduction. It was not. Every link existed and one join was missing:
+`bound_raw_afectacion_ratio` computed office_m2/total_m2 from the profile facts,
+`derive_home_office_ratios_from_censo` applied the art. 30.2.5.b thirty per cent, the
+censo guard compared a stored ratio against the derived one, and a mismatch blocked
+calculation. But nothing DERIVED and used the ratio: the operator had to retype it
+through `ledger ratios set`, and the guard returns early when no override is persisted,
+so a filer who declared their m2 and never retyped them deducted nothing on utilities,
+with no preflight reason for that case.
+
+**This is the shape the previous finding left behind, and it is worth stating plainly.**
+Step P05.S23 removed the fabricated `default_ratio`, which was right -- it invented the
+taxpayer's second factor. But it moved the failure from over-deduction (a flat thirty
+per cent) to under-deduction (zero), when the correct figure was computable from data
+already on the profile. Under this project's own "watch the unwatched direction"
+mandate, a silent zero is the over-payment direction and nothing was watching it.
+Removing an invented number is only half a fix when a real one is derivable.
+
+Closed in Step P05.S24. Deriving is not new policy: because the guard demands the
+stored ratio equal the derived one exactly, the stored value carried no information the
+censo did not already have, so filling an absent one produces the number the guard
+would have insisted on. The escape clause finding above is the reason that equality is
+itself contestable, and the two interlock: today a proven percentage is unrepresentable,
+which is what makes the stored value redundant.
+
+### The duplication the same question exposed
+
+Asked to integrate rather than invent, a semantic sweep found the home-office family
+grouping declared FOUR times across `domain/usage_ratios`, `adapters/persistence`,
+`application/ledger/ratios` and `application/ledger/preflight` -- two as tuples, two as
+frozensets -- with two of those modules also each carrying their own function unioning
+the pair's members. A fifth copy was written and removed inside the same Step, which is
+the strongest evidence that the grouping was easy to re-derive locally and nothing
+objected.
+
+That is not cosmetic here. Art. 30.2.5.b applies the statutory thirty per cent to the
+SUMINISTROS family only, while the OWNERSHIP costs deduct at the raw proportion under
+art. 29.2. A copy that drifts by one member moves a category across that line and
+changes what a taxpayer deducts. The grouping now lives once beside the membership
+table it derives from, and a gate reds on any module referencing both members in code.
+
+The gate's first version read raw source text and flagged two docstrings that
+legitimately explain the difference between the families. Reading the AST instead
+separates prose about a rule from a copy of it -- a distinction worth keeping in any
+duplication gate, because the text-level version would have taught its readers to
+delete accurate documentation to go green.
