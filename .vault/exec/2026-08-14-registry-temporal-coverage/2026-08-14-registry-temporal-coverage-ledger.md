@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ae010007c4bcc740a3e94c56c9607533f6be800351baa9b46d97a57bc525936'
+body_hash: 'sha256:8278b4f2674728d1b2a4886bdcec49a9b85016a13f01c0b7948a24dc959e40fe'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1333,3 +1333,49 @@ already required.
 
 `test_e2e_ledger_m130_quarters_to_m100_annual` still has 2 failures on a
 separate cause, left for its own tick.
+
+
+### Justificante CSV shape, a deeper key migration, and a fixture that rotted
+
+Three distinct defects closed two files.
+
+**The justificante CSV shape.** Fixtures built the reference id as
+`f"JUST-130-{year}-{period}-AUTONOMA-C19"`, but that id IS the justificante
+CSV and `Justificante.csv` pins `^[A-Z0-9]{8,32}$`. A codigo seguro de
+verificacion is uppercase alphanumeric, so the readable hyphenated spelling was
+a shape AEAT never issues and could not survive the pattern. Rewritten without
+separators in `test_e2e_ledger_m130_quarters_to_m100_annual` and
+`test_verificado_completo_regression`. Checked that `ExternalEvidence.
+reference_id` carries no such pattern, so the hyphenated ids in
+`test_external_evidence` and `test_modelo_filing_record` are legitimate and were
+left alone -- both files are green.
+
+**The key migration went one level deeper.** An aux-block assertion already
+anticipated a localized wrapper and read `__cause__` for the structural detail,
+but the CAUSE is localized too now, so `"aux_version" in str(cause)` matched a
+translation key. The refusal carries `undeclared_fields` in its context, so the
+assertion now reads that plus the cause's own key -- strictly stronger than the
+substring match it replaces, because it reads the structured field the refusal
+exists to name rather than hoping the rendered sentence spells it.
+
+**A fixture that rotted, and looked like a production bug.**
+`test_tampered_revision_raises_drift_error` failed
+`AttributeError: 'CalculationRevision' object has no attribute
+'source_provenance'`, raised INSIDE
+`calculation_revision_identity_inputs_from_revision` -- which reads like a
+production defect in the integrity check. It is not: the model declares the
+field. The fixture built its tampered revision with `model_construct` and a
+hand-enumerated field list, and `model_construct` neither validates NOR
+populates unlisted fields, so every field added to `CalculationRevision` after
+the list was written was simply absent from the object. The test then failed on
+a missing attribute instead of on the drift it exists to prove -- the guard was
+never reached.
+
+Rebuilt with `model_copy(update=...)`, which also bypasses the validators (the
+property the test needs, so the hash mismatch is not caught at build time) while
+carrying every other field from the original. It cannot rot the same way again.
+The test now genuinely raises `StoredCalculationDriftError`.
+
+`test_e2e_ledger_m130_quarters_to_m100_annual` is fully green at 5 passed (4
+sweep failures), and `test_verificado_completo_regression` at 3 passed (2).
+
