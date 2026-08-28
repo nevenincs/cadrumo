@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b91b514cbe7e39ada4fcf70069f04de0bf3cc0528b5d4e3d09470e7b90355e7'
+body_hash: 'sha256:0235b32c1b6e2979b808152aff7cc992e1831178bfe8c67aa07e0ef5a2107b44'
 related: []
 ---
 
@@ -141,3 +141,51 @@ Python constant — a regulatory magnitude inlined in a feature module — is no
 covered here. `aeat-registry-authority-flow` forbids that placement and an AST
 gate enforces the modelo-identifier case, but the annual-figure case has not been
 checked from the Python side.
+
+## The Python side of the same class, and what its gate actually covers
+
+Last section left a residual: the same undated-constant shape in a Python
+constant rather than a registry row. Taking it up.
+
+The repository already owns a fold for this —
+`core/tests/test_external_constants_centralisation_part{1,2}.py` — so it was run
+rather than reimplemented. 48 passed, 1 failed (see below).
+
+**Its coverage is narrower than its name suggests.** It pins exactly four Decimal
+constants by name: `M347_THRESHOLD_EUR` (3005.06), `ART_7P_EXEMPTION_CAP_EUR`
+(60100), `MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR` (1500) and
+`WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR` (22000). Its AST scan catches those
+four literals being *re-introduced* outside the canonical module. It does not
+scan for a NEW regulatory magnitude inlined somewhere it should not be.
+
+So "regulatory constants are centralised" is enforced as a whitelist of four, not
+as a property. Worth knowing before citing the gate as broad protection.
+
+### The declaration-threshold family is sound, and correctly dated
+
+The two obligation-to-declare thresholds are the ones a reform law does move, so
+they were checked against the bundled consolidated LIRPF art. 96:
+
+| constant | value | corpus |
+|---|---|---|
+| general work-income ceiling | 22.000 | "con el límite de 22.000 euros anuales" |
+| reduced ceiling, multiple pagadores, 2024-2026 | 15.876 | "será de 15.876 euros" |
+| secondary-pagador trigger | 1.500 | "1.500 euros anuales" |
+
+All three present verbatim. The module had already applied the discipline this
+class is about: the year-varying ceiling is a dated map
+(14.000 for 2019-2022, 15.000 for 2023 per Ley 31/2022, 15.876 for 2024-2026 per
+RD-Ley 4/2024), while the two stable figures are flat AND annotated
+"year-stable" in their own comments.
+
+Direction, for the record: a declaration ceiling set too HIGH tells a taxpayer
+they need not file when they must — under-declaration. Too LOW over-obliges. The
+figures are right, so neither applies.
+
+### One unrelated red in that module, not mine
+
+`test_test_suite_aeat_route_literals_are_centralized_or_declared` fails on a
+hardcoded sede URL at
+`application/live/tests/test_iva_remote_state_acquisition.py:83`. A test-suite
+route literal, not a regulatory magnitude, in a package this campaign has not
+touched.
