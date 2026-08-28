@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:54d8165b09da9911feae30a8562a1afa5b9d1eb71df76f5526a2b3fa71fd2ea6'
+body_hash: 'sha256:7520f6cb4f68b9a39b5254285f534d5dfc4f259a31dbacb4c21ad0f9b9a53213'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1946,7 +1946,6 @@ profile rather than in what passes.
 readiness failure, `test_local_filed_303_compensation_updates_wallet_balance...`,
 is M303 wallet and stays with the export-fragment campaign.
 
-
 ### A test guarding a registry that no longer exists, and where the guard actually lives
 
 `test_emit_operator_json_success_refuses_an_unregistered_command` asserted that
@@ -1996,7 +1995,6 @@ the constant existed, which broke every import of that package and with it the
 whole suite. HEAD was healthy throughout; it was two uncommitted lines, and it
 settled on its own.
 
-
 ### Text-casilla routing: one key for many rejections, and a casilla the registry deleted on purpose
 
 **Two period_code cases.** Both matched prose (`period_code value 'T1'`,
@@ -2036,3 +2034,76 @@ errors.identity.nif_check_letter_mismatch`.
 
 4 tests in the file pass.
 
+### Long-tail triage: where the remaining failures actually live
+
+A third full sweep is in flight. While it ran, the previous log was triaged
+read-only rather than editing under a measurement, since several gates AST-scan
+source from disk.
+
+By area, the 452 failures concentrate hard: `application/modelo` 157,
+`application/filing` 38, `domain/calculations/registry` 22, `entrypoints/cli`
+20, `application/calculations` 19, then a long thin tail. Within
+`application/modelo` the largest files are `test_prior_domiciliation_election`
+(12), `test_export_output_paths` (10), `test_inventory_source_ownership` (7),
+`test_m303_filing_evidence_validation` (6), `test_m184_multi_clave_export_parity`
+(6), `test_export_iva_wallet` (6), `test_amend_kind_resolution` (6). Three of
+those are already fixed in later ticks and several of the rest are M303 wallet
+and domiciliation, the export-fragment campaign's.
+
+Diagnosed ahead of the fixes, so the next passes are one edit each:
+
+- `test_verification_m123_advisory` (4 failures) is NOT the stale-revision class
+  -- `2024-y-siguientes` genuinely exists for Modelo 123. The predicate ID was
+  renamed: the test looks for
+  `modelo-123-2024-base-total-implica-retenciones-total` while the revision
+  ships `modelo-123-2024-y-siguientes-base-total-implica-retenciones-total`.
+  `next()` carries no default, so the miss surfaces as a bare `StopIteration`
+  naming nothing -- worth giving a real message while fixing the id.
+- `test_profile_export_values` fails on `KeyError: 'DP_APENOM_D'`, a missing
+  export field key, plus a readiness refusal that may already be closed by the
+  colegio-concertado and clave fixes.
+- `test_amend_kind_resolution` mixes an M303-side amendment-evidence refusal
+  with a real domain assertion --
+  `Art109ActivityIncomeCoverageStatus.INSUFFICIENT is not PROVEN` -- which is a
+  substantive coverage verdict rather than message drift.
+- `test_export_output_paths` is half M303 prior-domiciliation (theirs) and half
+  the `NoneType ... upper` crash already fixed in the Modelo 184 row validator,
+  so its count should fall on its own.
+- `test_modelo_202_modality_lifecycle` mixes a Modelo 202 required-bindings
+  refusal with a Modelo 303 2020 revision miss.
+
+The honest read: the clusters still standing that this campaign can touch are
+now small and specific, and the bulk of what remains is either the
+export-fragment campaign's M303/M390 surface or the Modelo 200 authority-grade
+block already evidenced three times.
+
+### A renamed predicate id, and a lookup that reported nothing when it missed
+
+The Modelo 123 advisory tests failed with a bare `StopIteration` -- four of
+them, naming neither what was sought nor what exists. The cause was a rename:
+the test sought `modelo-123-2024-base-total-implica-retenciones-total` while the
+revision ships `modelo-123-2024-y-siguientes-base-total-implica-retenciones-total`,
+the id carrying the full revision stem.
+
+The id was corrected against what the revision actually declares. The more
+useful change is the second one: `next(...)` carried no default, so a missed
+lookup raised `StopIteration` with no message at all. It now takes a default and
+asserts, naming the revision, the id it wanted and the ids the revision declares
+-- which is the difference between a diagnosis and a puzzle. Had that message
+existed, this would have been a one-line read rather than an investigation.
+
+The pattern was then measured rather than swept. Eleven test files use the same
+defaultless `next(... verification_predicates ...)` lookup. Of those, the only
+ones that had actually drifted are the three already fixed in this campaign
+(Modelos 123, 151, 390); the remaining eight pass, meaning their ids are correct
+today. Hardening all eleven would be defensive churn across passing files with
+no failing gate to prove the change, so it was not done -- the two files this
+campaign had already opened (M151, M390) were brought into line with M123 for
+consistency, and the rest were left alone.
+
+M123 4 pass; M151 and M390 7 pass together.
+
+Measurement note: the third sweep was running during these edits. Its totals
+therefore reflect a mixed tree and should be read as a floor, not a snapshot;
+every fix in this campaign is established by running its own file, which is what
+the per-fix runs above record.
