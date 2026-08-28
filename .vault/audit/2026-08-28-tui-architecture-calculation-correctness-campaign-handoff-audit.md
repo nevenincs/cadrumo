@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d3dd53c68c158b1643ef42e8cce29cc47315906c239fb04af97657a744b67b3'
+body_hash: 'sha256:f34db63f8e962c6623cffe600ad4ecb975beefb5f69fc6730bfcb64f2e19c80f'
 related: []
 ---
 
@@ -245,6 +245,21 @@ annual/quarterly reconciliation pairs; the tier and category completeness of eve
 IVA total; the undated-constant-for-an-annual-figure class (one historical
 instance, already repaired); and the tautology hunt, which found no individually
 bad calculation test.
+
+**Modelo 390's recargo exclusion, re-verified with a mechanical proof.** The
+annual devengada total sums the three tier bindings and excludes the
+rate-specific ones. That is correct, and the reason is visible in the selectors:
+`...-reducido-cuota` carries `applied_rates = None` — rate-blind, so it sums
+every reducido-tier recargo — while `...-tipo-1-4-cuota` and
+`...-tipo-0-62-cuota` carry byte-identical selectors narrowed to `0.10` and
+`0.05`. The tier binding is a strict superset of both, so including all three
+would double count, and the 2023-2024 transitional 5 % recargo IS captured by the
+tier row. Verified 2023, 2024 and 2025.
+
+One correction to how this was recorded: the excluded set is **not always six**.
+2024 and 2025 exclude six; 2023 excludes four, because that revision declares
+seven recargo casillas rather than nine. The invariant is the superset relation,
+not the count.
 
 Two reference shapes worth copying.
 `test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` derives its wiring
