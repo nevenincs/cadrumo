@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:2af84d1501c1f16fcba0b1abe5f108e508249cb15ce61c9282583fc9106002e1'
+body_hash: 'sha256:3ce18a124d903e44b24c0af9a0b3acf6d63369a2e6fe49d84428e27f24e929be'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2160,3 +2160,54 @@ member names something the operator must DO, and a design constant's value rides
 on the binding selector -- the operator does nothing. Enrolling it under any
 existing axis would hand operators a false instruction to satisfy a gate, so the
 choice belongs to whoever is adding the kind.
+
+### A blocked tree, a corrected over-claim, and a vocabulary gate honoured properly
+
+**The tree is blocked by a peer's in-flight work, and completing it would be
+wrong.** `src/cadrumo/core/aggregation.py` is modified in the working tree
+adding `BindingSourceKind.DESIGN_CONSTANT`, unenrolled in the
+source-kind-to-`OperatorActionAxis` map, so `application/state_projection`
+raises at import and takes collection down across much of the suite.
+
+The temptation is a one-line enrolment. The family's own docstring forbids it:
+a record-design constant is "fixed by AEAT's own diseño de registro rather than
+supplied by the taxpayer", and routing such a run through `manual_input`
+"asked the operator to type AEAT's record format" and could "emit blanks behind
+a valid digest, producing a file AEAT cannot parse" -- the exact defect this
+family was created to remove. Every `OperatorActionAxis` member names something
+the operator must DO, so ANY enrolment reintroduces that defect to satisfy a
+gate. The kind needs either a no-action axis or an exemption, which is the
+author's design call.
+
+**An over-claim caught before it was made.** Three candidates in a row resolved
+as owned or blocked -- `test_amend_kind_resolution` refuses only
+`if work_unit.modelo == Modelo.M303.value`, and
+`test_modelo_202_modality_lifecycle` fails on the Modelo 200 authority-grade
+block already evidenced three times -- and the shape of that suggested the
+accessible work was exhausted. Measured instead of asserted: 238 distinct files
+fail in the last clean sweep and only 27 carry an M303/M390/wallet name. The
+filename heuristic is weak in both directions, but the conclusion is not:
+substantial accessible work remains, and sampling untouched files immediately
+found some.
+
+**Fixed from that sample.** `test_session_vocabulary_custody_split` declared
+`application/auth/_sessions.py` in its custody inventory; a relocation promoted
+that module to the public `sessions.py` and the declaration was not swept, so
+the inventory named a file the tree does not carry. Every other declared path
+was verified present before repointing it.
+
+The file's second failure was the vocabulary gate proper: `_login_sessions` in
+`login_session.py` is a bare session noun on the acceleration-receipt side,
+where "session" means the live bucket session and nothing else. The gate accepts
+qualifiers `profile, bucket, auth, browser, aeat, provider`, and the function
+returns a `ProfileLoginSessionPort` -- so `profile` is both the accurate word
+and an accepted one. Renamed to `_profile_login_sessions` across its 33
+file-local references rather than widening the qualifier list, which would have
+weakened the gate to fit the name instead of fixing the ambiguity. 10 tests
+pass.
+
+A lead for the next pass, surfaced while verifying: the `user_profile` suite
+carries 16 failures asserting that fields "required by the profile schema but
+not by the wizard key space" are unpinned, naming `attribution_entity_socios.*`
+among them -- a required schema field with no wizard question is one an operator
+cannot satisfy.
