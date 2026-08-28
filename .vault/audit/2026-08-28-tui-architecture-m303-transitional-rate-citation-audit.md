@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:45536531bec3764772234d2d1a2d72e544f7a163416f5f7370fdfa177b57f800'
+body_hash: 'sha256:922f138ea351c15ccdce2ad0671911e4e8a4d14ed0de5ff635dcc0f4d49975f5'
 related:
   - "[[2026-08-28-tui-architecture-m390-recargo-total-fourth-tier-audit]]"
 ---
@@ -98,3 +98,55 @@ correct the stale test docstring. This is a citation change on rate rows, so it 
 a tax review, and no value may move.
 
 No production code, registry data or test was changed by this audit.
+
+## Correction: half of this remediation would also be refused
+
+Applying the devengo test that overturned the companion M200 recommendation, this
+audit's own proposal splits.
+
+The catalogue records both instruments' windows precisely, matching their corpus
+text:
+
+| entry | `effective_from` | `effective_to` |
+|---|---|---|
+| `real-decreto-ley-20-2022:art-72` | 2023-01-01 | **2024-06-30** |
+| `real-decreto-ley-4-2024:art-1` | 2024-07-01 | 2024-12-31 |
+
+And the two M303 revisions anchor their devengo at:
+
+| revision | devengo (`valid_to`) |
+|---|---|
+| `2024-hasta-08-y-2t` | 2024-08-31 |
+| `2024-desde-09-y-3t` | 2024-12-31 |
+
+So:
+
+- **`real-decreto-ley-4-2024:art-1` can be cited on both 2024 revisions.** Both
+  devengos fall inside its window. That half of the recommendation stands.
+- **`real-decreto-ley-20-2022:art-72` can be cited on neither.** This audit said
+  to add it "only to the early-2024 revision"; that is wrong. The early revision's
+  devengo is 31 August 2024, two months after the provision ceased. The window
+  gate would refuse it, correctly.
+
+## The structural point underneath
+
+`2024-hasta-08-y-2t` covers filing periods from January to August 2024, a span
+that crosses the 30 June handover from RD-ley 20/2022 to RD-ley 4/2024. Its
+grounding is anchored at one instant — the devengo, 31 August — so it can only
+cite the instrument in force at that instant.
+
+The consequence is that the provision genuinely governing the first half of its
+own span is **structurally uncitable there**. No edit fixes it: a citation would be
+refused, and the revision cannot be grounded for January-to-June except by
+splitting it at the legal boundary the way the September split already
+distinguishes the 5 %/7,5 % change.
+
+No liability follows. Both instruments set the same 5 % through 30 September, and
+the encoded value is 5 % across that whole span, so the taxpayer's figure is
+right either way. What is incomplete is the grounding record, and the reason is
+the same one that produced the M200 finding: a devengo-anchored rule cannot
+express authority that changed mid-span.
+
+That is the second instance of this shape found by the same lens, which makes it
+a pattern rather than an accident: **where a revision spans a legal handover, its
+citation set can be correct only for the tail of its own period.**
