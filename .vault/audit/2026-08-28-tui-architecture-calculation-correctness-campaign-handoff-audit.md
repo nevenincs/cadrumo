@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4d41779752646db7be18db53a3fc2441ab96f941dbd59a5fbe67862bbc13e0c'
+body_hash: 'sha256:b2212a1d5084e69f5191332b4273e9557e50e94e7750ae923adf5d884971d6f5'
 related: []
 ---
 
@@ -118,6 +118,35 @@ below are sorted on that axis because it is the axis with no coverage.
    parameter's name and unit claim. That is a semantic judgement, and keyword
    intersection does not approximate it. Treat the two as verified individual
    findings, not as evidence of a population.
+
+## One root cause behind two of the citation findings
+
+The 90 autonomic scale tables citing the delegating LIRPF art. 74, and the 2022
+Madrid mínimos pinned to a single corpus_ref, are not two problems. They are one:
+
+**The registry bundles no autonomous-community normative text at all.**
+
+Every autonomic value is grounded one of two ways. The scale tables cite the
+*state* article that delegates the scale to the Comunidad rather than the regional
+norm that sets it. The Madrid entries — `madrid-dl-1-2010:art-2`, `:art-4`,
+`:art-18`, which are **all three** of the autonomous-community entries in the
+catalogue — carry `evidence_tier = legal_authority` and
+`kind = real_decreto_legislativo`, yet their `corpus_ref` points at an AEAT
+*manual* PDF extraction rather than the BOCM text of the DL. All three are
+honestly marked `agent_reviewed`, not operator-reviewed.
+
+`madrid-dl-1-2010:art-2`'s own note documents three distinct amount regimes —
+2020-2021, 2022 under Ley 8/2022, and 2023 onward under Ley 13/2023 — while the
+entry itself is a single undated provision whose corpus states only the latest
+figures. Neither amending law is catalogued; both appear only in that prose.
+
+This is why neither finding is repairable the way Modelo 347's and Modelo 232's
+were: there, the establishing article was already catalogued and merely uncited.
+Here there is no regional corpus to point at, for any region.
+
+What is NOT wrong: the figures. Each affected parameter carries
+`source_citations` against the correct filing year's AEAT manual, so the amounts
+are cross-checked even where the legal chain is not. The defect is the chain.
 
 ## Open, correctness of record rather than of computation
 
