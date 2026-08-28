@@ -340,11 +340,20 @@ class VerificationReportPayload(OutputSchema):
     explain whether the selected
     :class:`CalculationRevision` earned the
     verified-complete transition.
+
+    The report's own invariants — the content-addressed id derivation, the
+    bidirectional ``granted_verificado_completo`` rule, and the aware-instant
+    check on ``run_at`` — are enforced on
+    :class:`VerificationReport` and are not
+    restated here. They cannot be: this projection renders each finding into
+    localised prose, and the derivation hashes the locale-neutral finding
+    identity that rendering replaces, so a payload could not recompute the id
+    it carries even if it tried.
     """
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
@@ -656,7 +665,7 @@ class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
@@ -815,7 +824,7 @@ class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
