@@ -50,95 +50,6 @@ from ._capsule_data import (
 from ._capsule_data import (
     write_posix_data_files as _write_posix_data_files,
 )
-from ._capsule_discovery import (
-    AnchoredCurrentCapsuleCommit,
-    anchored_current_capsule_commits,
-    refuse_retired_profile_custody_paths,
-)
-from ._capsule_records import (
-    PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-    PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION,
-    PROFILE_CUSTODY_DELETION_FILENAME,
-    PROFILE_CUSTODY_LABEL_FILENAME,
-    PROFILE_CUSTODY_LABEL_MAX_BYTES,
-    PROFILE_CUSTODY_LAYOUT_VERSION,
-    ProfileCustodyCapsuleLabel,
-    ProfileCustodyCommit,
-    ProfileCustodyDeletionMarker,
-    ProfileCustodyPasswordMaterial,
-    parse_profile_custody_capsule_label,
-    parse_profile_custody_commit,
-)
-from ._capsule_records import (
-    parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
-)
-from ._filesystem import (
-    PROFILE_CUSTODY_COMMIT_FILENAME,
-    ProfileCustodyPasswordReadOperation,
-)
-from ._filesystem import (
-    anchor_directory as _anchor_directory,
-)
-from ._filesystem import (
-    ensure_real_directory as _ensure_real_directory,
-)
-from ._filesystem import (
-    fsync_directory as _fsync_directory,
-)
-from ._filesystem import (
-    fsync_windows_published_commit as _fsync_windows_published_commit,
-)
-from ._filesystem import (
-    lexists as _lexists,
-)
-from ._filesystem import (
-    posix_child_exists as _posix_child_exists,
-)
-from ._filesystem import (
-    posix_directory_fd as _posix_directory_fd,
-)
-from ._filesystem import (
-    posix_mkdir_child_directory as _posix_mkdir_child_directory,
-)
-from ._filesystem import (
-    posix_open_child_directory as _posix_open_child_directory,
-)
-from ._filesystem import (
-    read_regular_file as _read_regular_file,
-)
-from ._filesystem import (
-    read_regular_file_fd as _read_regular_file_fd,
-)
-from ._filesystem import (
-    remove_posix_staging_if_same as _remove_posix_staging_if_same,
-)
-from ._filesystem import (
-    remove_posix_tree as _remove_posix_tree,
-)
-from ._filesystem import (
-    remove_windows_unpublished_staging as _remove_windows_unpublished_staging,
-)
-from ._filesystem import (
-    rename_directory_noreplace as _rename_directory_noreplace,
-)
-from ._filesystem import (
-    rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
-)
-from ._filesystem import (
-    renameat2_noreplace as _renameat2_noreplace,
-)
-from ._filesystem import (
-    windows_stage_snapshot as _windows_stage_snapshot,
-)
-from ._filesystem import (
-    write_exclusive_fsynced as _write_exclusive_fsynced,
-)
-from ._filesystem import (
-    write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
-)
-from ._filesystem import (
-    write_through_windows_publication_fence as _write_through_windows_publication_fence,
-)
 from ._inventory import (
     PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES as _INVENTORY_MAX_ENTRIES,
 )
@@ -154,20 +65,109 @@ from ._inventory import (
 from ._inventory import (
     inventory_profile_custody_capsule as _inventory_profile_custody_capsule,
 )
-from ._paths import profile_custody_path
-from ._records import (
+from .capsule_discovery import (
+    AnchoredCurrentCapsuleCommit,
+    anchored_current_capsule_commits,
+    refuse_retired_profile_custody_paths,
+)
+from .capsule_records import (
+    PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+    PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION,
+    PROFILE_CUSTODY_DELETION_FILENAME,
+    PROFILE_CUSTODY_LABEL_FILENAME,
+    PROFILE_CUSTODY_LABEL_MAX_BYTES,
+    PROFILE_CUSTODY_LAYOUT_VERSION,
+    ProfileCustodyCapsuleLabel,
+    ProfileCustodyCommit,
+    ProfileCustodyDeletionMarker,
+    ProfileCustodyPasswordMaterial,
+    parse_profile_custody_capsule_label,
+    parse_profile_custody_commit,
+)
+from .capsule_records import (
+    parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
+)
+from .errors import ProfileCustodyConcurrentCapsuleChangeError, ProfileCustodyRecordError
+from .filesystem import (
+    PROFILE_CUSTODY_COMMIT_FILENAME,
+    ProfileCustodyPasswordReadOperation,
+)
+from .filesystem import (
+    anchor_directory as _anchor_directory,
+)
+from .filesystem import (
+    ensure_real_directory as _ensure_real_directory,
+)
+from .filesystem import (
+    fsync_directory as _fsync_directory,
+)
+from .filesystem import (
+    fsync_windows_published_commit as _fsync_windows_published_commit,
+)
+from .filesystem import (
+    lexists as _lexists,
+)
+from .filesystem import (
+    posix_child_exists as _posix_child_exists,
+)
+from .filesystem import (
+    posix_directory_fd as _posix_directory_fd,
+)
+from .filesystem import (
+    posix_mkdir_child_directory as _posix_mkdir_child_directory,
+)
+from .filesystem import (
+    posix_open_child_directory as _posix_open_child_directory,
+)
+from .filesystem import (
+    read_regular_file as _read_regular_file,
+)
+from .filesystem import (
+    read_regular_file_fd as _read_regular_file_fd,
+)
+from .filesystem import (
+    remove_posix_staging_if_same as _remove_posix_staging_if_same,
+)
+from .filesystem import (
+    remove_posix_tree as _remove_posix_tree,
+)
+from .filesystem import (
+    remove_windows_unpublished_staging as _remove_windows_unpublished_staging,
+)
+from .filesystem import (
+    rename_directory_noreplace as _rename_directory_noreplace,
+)
+from .filesystem import (
+    rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
+)
+from .filesystem import (
+    renameat2_noreplace as _renameat2_noreplace,
+)
+from .filesystem import (
+    windows_stage_snapshot as _windows_stage_snapshot,
+)
+from .filesystem import (
+    write_exclusive_fsynced as _write_exclusive_fsynced,
+)
+from .filesystem import (
+    write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
+)
+from .filesystem import (
+    write_through_windows_publication_fence as _write_through_windows_publication_fence,
+)
+from .paths import profile_custody_path
+from .records import (
     PROFILE_CUSTODY_ENVELOPE_FILENAME,
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
     ProfileCustodyEnvelope,
     parse_profile_custody_envelope,
 )
-from ._recovery import (
+from .recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
     ProfileCustodyRecoveryEnvelope,
 )
-from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
-from ._sentinel_contract import ProfileCustodySentinelRecord
-from .errors import ProfileCustodyConcurrentCapsuleChangeError, ProfileCustodyRecordError
+from .sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
+from .sentinel_contract import ProfileCustodySentinelRecord
 
 if TYPE_CHECKING:
     from .....core.config import Settings

@@ -272,47 +272,47 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     # write is ciphertext, custody metadata, or nothing at all in the cases
     # that open a descriptor purely to hold an identity.
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_fsync_directory",
         "os.open",
     ): "opens a directory descriptor to fsync it; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_fsync_windows_published_commit",
         "os.open",
     ): "opens the published commit file to fsync it; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_posix_open_exclusive_file",
         "os.open",
     ): "O_EXCL create of one capsule file, the publish-once primitive the capsule contract rests on",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_profile_custody_posix_lock",
         "os.open",
     ): "custody transaction lock file; carries no data, only exclusion",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_read_regular_file_open",
         "os.open",
     ): "read path; opened O_RDONLY with a regular-file identity check, writes nothing",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_write_descriptor_fsynced",
         "os.write",
     ): "writes custody record bytes to a descriptor the caller already created O_EXCL, then fsyncs",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "_write_windows_local_stage",
         "os.open",
     ): "Windows staging create for the local custody record, published by rename",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "clear_profile_custody_local_record",
         "os.open",
     ): "opens the local custody record to truncate it under a held lock; clears custody state, stores none",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
         "write_profile_custody_local_record",
         "os.open",
     ): "creates the local custody record, which holds capsule pointers and no financial data",
@@ -352,43 +352,43 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "writes to the supervised KDF child's PIPE descriptor, never to a file",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py",
+        "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
         "profile_kdf_lease",
         "os.open",
     ): "the OS-released KDF permit lock file; an abnormal death releases it at the kernel boundary",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py",
+        "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
         "profile_kdf_lease",
         "os.write",
     ): "writes the permit holder marker into that lock file; carries no secret and no financial data",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py",
         "_posix_external_directory_fd",
         "os.open",
     ): "anchors the operator-chosen export parent so the write cannot be redirected after the checks; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py",
         "_read_posix_regular_file",
         "os.open",
     ): "read path for importing a recovery artifact back; writes nothing",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py",
         "_write_export_descriptor",
         "os.write",
     ): "the one sanctioned external export; writes the wrapped recovery artifact the operator explicitly requested, "
     "gated by the store-separately refusal that keeps it out of the storage root",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py",
         "_write_external_exclusive",
         "os.open",
     ): "O_EXCL create for that same export, so it can never silently overwrite an existing artifact",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
+        "src/cadrumo/adapters/persistence/storage/custody/sentinel.py",
         "_write_exclusive_fsynced",
         "os.open",
     ): "O_EXCL create of the DEK sentinel, which proves a key without storing one",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
+        "src/cadrumo/adapters/persistence/storage/custody/sentinel.py",
         "_write_exclusive_fsynced",
         "os.write",
     ): "writes those sentinel proof bytes; the sentinel is a verifier, never key material",

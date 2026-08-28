@@ -49,7 +49,7 @@ from ._kdf_process import (
 )
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
-from ._records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 KDF_CALIBRATED_FRAME: Final = b"cadrumo-profile-kdf-calibrated-v1"
 KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"

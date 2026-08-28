@@ -16,11 +16,7 @@ from .....tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
-from ..custody import (
-    PROFILE_SESSION_KEYCHAIN_SERVICE,
-    mint_profile_session,
-    profile_session_path,
-)
+from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
 from ..master_key import has_active_bucket_session
 from ..sql.engine import get_engine
 

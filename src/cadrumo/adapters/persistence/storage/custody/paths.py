@@ -33,7 +33,7 @@ def profile_custody_directory_name(profile_id: object) -> str:
 
     This is where a profile identity becomes a filesystem name, so the value is
     treated as untrusted here regardless of what the calling signature claims --
-    the same posture :func:`~._zeroise.zeroise` takes at the wipe boundary, and
+    the same posture :func:`~.zeroise.zeroise` takes at the wipe boundary, and
     for the same reason: the damage of an unchecked value is silent. A bucket
     identity is a plain string in much of the system and its accepted set
     includes system-scoped sentinels that are not profile UUIDs at all, so a

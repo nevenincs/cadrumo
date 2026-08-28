@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.identity import PrefixedContentDigest
-from ._capsule_records import ProfileCustodyCapsuleLabel
+from .capsule_records import ProfileCustodyCapsuleLabel
 from .errors import ProfileCustodyRecordError
 
 LABEL_HEAD_MAX_BYTES = 4 * 1024

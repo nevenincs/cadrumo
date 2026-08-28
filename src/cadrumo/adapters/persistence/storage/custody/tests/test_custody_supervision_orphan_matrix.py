@@ -32,11 +32,9 @@ from ......application.user_profile.custody_ports import create_profile_custody_
 from ......core import pid_is_alive
 from ......core.config import Settings
 from ......core.hashing import canonical_json_bytes
-from .. import (
-    ProfileCustodyEnvelope,
-    ProfileCustodySentinelRecord,
-    unlock_profile_custody,
-)
+from ..kdf_supervision import unlock_profile_custody
+from ..records import ProfileCustodyEnvelope
+from ..sentinel_contract import ProfileCustodySentinelRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -48,7 +46,7 @@ import sys
 import time
 from pathlib import Path
 
-from cadrumo.adapters.persistence.storage.custody import parse_profile_custody_envelope
+from cadrumo.adapters.persistence.storage.custody.records import parse_profile_custody_envelope
 from cadrumo.adapters.persistence.storage.custody._kdf_supervision import (
     _SupervisedKdfWorker,
     profile_kdf_lease,

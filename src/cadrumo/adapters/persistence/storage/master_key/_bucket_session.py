@@ -31,7 +31,7 @@ from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from ..bucket import BucketLockedError
 from ..crypto.aead import KEY_SIZE
-from ..custody import zeroise as _zeroise
+from ..custody.zeroise import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )

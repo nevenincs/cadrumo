@@ -10,15 +10,15 @@ from pydantic import ValidationError
 
 from .....core import StorageCategory, storage_location
 from .....core.paths import effective_storage_root
-from ._capsule_records import ProfileCustodyCapsuleLabel
-from ._filesystem import (
+from .capsule_records import ProfileCustodyCapsuleLabel
+from .errors import ProfileCustodyRecordError
+from .filesystem import (
     clear_profile_custody_local_record,
     ensure_profile_custody_local_directory,
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
-from ._label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadPendingAdvance
-from .errors import ProfileCustodyRecordError
+from .label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadPendingAdvance
 
 
 def _read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str) -> bytes:

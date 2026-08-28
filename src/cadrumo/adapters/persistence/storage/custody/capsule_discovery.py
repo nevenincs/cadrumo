@@ -24,7 +24,13 @@ from typing import Protocol
 from uuid import UUID
 
 from .....core import StorageCategory, storage_location
-from ._filesystem import (
+from .errors import (
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
+from .filesystem import (
     anchor_directory,
     lexists,
     posix_child_exists,
@@ -33,13 +39,7 @@ from ._filesystem import (
     read_regular_file,
     read_regular_file_fd,
 )
-from ._paths import profile_custody_directory_name
-from .errors import (
-    ProfileCustodyRecordError,
-    ProfileCustodyRecoveryGuidance,
-    ProfileCustodyRefusal,
-    ProfileCustodyRefusedError,
-)
+from .paths import profile_custody_directory_name
 
 
 class _CommitIdentity(Protocol):

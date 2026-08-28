@@ -20,8 +20,8 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     decode_canonical_b64 as _decode_canonical_b64,
 )
-from ._records import ProfileCustodyEnvelope
 from .errors import ProfileCustodyRecordError
+from .records import ProfileCustodyEnvelope
 
 _PROFILE_CUSTODY_DATA_FORMAT_VERSION: Final = 1
 _PROFILE_CUSTODY_SENTINEL_PURPOSE: Final = "profile-dek-sentinel/v1"

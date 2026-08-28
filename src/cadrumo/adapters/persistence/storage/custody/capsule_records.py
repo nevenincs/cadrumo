@@ -22,10 +22,10 @@ from .....core.hashing import (
 )
 from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
 from .....core.time import now as _now
-from ._filesystem import ProfileCustodyPasswordReadOperation
-from ._records import ProfileCustodyEnvelope
-from ._sentinel_contract import ProfileCustodySentinelRecord
 from .errors import ProfileCustodyRecordError
+from .filesystem import ProfileCustodyPasswordReadOperation
+from .records import ProfileCustodyEnvelope
+from .sentinel_contract import ProfileCustodySentinelRecord
 
 if TYPE_CHECKING:
     pass

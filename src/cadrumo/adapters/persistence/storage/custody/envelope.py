@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ._kdf_supervision import profile_password_wrap_aad, wrap_profile_custody_password_material
-from ._records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters
+from .kdf_supervision import profile_password_wrap_aad, wrap_profile_custody_password_material
+from .records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters
 
 if TYPE_CHECKING:
     from .....core.config import Settings

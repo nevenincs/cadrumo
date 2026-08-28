@@ -23,9 +23,8 @@ import pytest
 
 from ......core import StorageCategory
 from ...errors import PathContainmentError
-from .. import profile_custody_path
-from .._capsule_discovery import _canonical_profile_id
-from .._paths import profile_custody_directory_name
+from ..capsule_discovery import _canonical_profile_id
+from ..paths import profile_custody_directory_name, profile_custody_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

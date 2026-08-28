@@ -50,7 +50,15 @@ from ._kdf_codec import (
 )
 from ._kdf_windows_job import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
 from ._kdf_worker_supervision import _SupervisedKdfWorker
-from ._records import (
+from ._recovery_secret_codec import encode_recovery_secret
+from .errors import (
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
+from .records import (
     PROFILE_CUSTODY_KDF_ITERATIONS,
     PROFILE_CUSTODY_KDF_MEMORY_MIB,
     PROFILE_CUSTODY_KDF_PARALLELISM,
@@ -59,15 +67,7 @@ from ._records import (
     ProfileCustodyWrappedDek,
     _encode_profile_password,
 )
-from ._recovery_secret_codec import encode_recovery_secret
-from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
-from .errors import (
-    ProfileCustodyPasswordError,
-    ProfileCustodyRecordError,
-    ProfileCustodyRecoverySecretError,
-    ProfileCustodyRefusal,
-    ProfileCustodyRefusedError,
-)
+from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
 if TYPE_CHECKING:
     from .....core.config import Settings

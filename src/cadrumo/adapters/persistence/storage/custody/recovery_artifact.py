@@ -30,17 +30,18 @@ from ._filesystem_primitives import (
     windows_directory_anchor,
     windows_file_information_type,
 )
-from ._kdf_supervision import (
+from .errors import ProfileCustodyRecordError
+from .kdf_supervision import (
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,
 )
-from ._records import (
+from .records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
 )
-from ._recovery import (
+from .recovery import (
     PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
     ProfileCustodyRecoveryAad,
     ProfileCustodyRecoveryEnvelope,
@@ -48,8 +49,7 @@ from ._recovery import (
     profile_custody_recovery_aad_for,
     validate_profile_custody_dek_epoch,
 )
-from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
-from .errors import ProfileCustodyRecordError
+from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
 if TYPE_CHECKING:
     from .....core.config import Settings

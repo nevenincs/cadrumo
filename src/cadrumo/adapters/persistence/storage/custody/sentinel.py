@@ -9,14 +9,14 @@ from typing import Final
 
 from ..crypto.aead import GCM_TAG_SIZE, encrypt_record
 from ._filesystem_primitives import is_real_directory
-from ._records import ProfileCustodyEnvelope
-from ._sentinel_contract import (
+from .errors import ProfileCustodyRecordError
+from .records import ProfileCustodyEnvelope
+from .sentinel_contract import (
     ProfileCustodySentinelRecord,
     parse_profile_custody_sentinel_record,
     profile_custody_sentinel_aad,
     profile_custody_sentinel_plaintext,
 )
-from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_SENTINEL_FILENAME: Final = "dek.sentinel.v1.json"
 PROFILE_CUSTODY_SENTINEL_MAX_BYTES: Final = 8 * 1024

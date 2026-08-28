@@ -28,12 +28,12 @@ from ._kdf_worker_supervision import (
     KDF_CALIBRATED_FRAME,
     KDF_FAILED_FRAME,
 )
-from ._records import (
+from ._recovery_secret_codec import decode_recovery_secret
+from .records import (
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
     _decode_profile_password,
 )
-from ._recovery_secret_codec import decode_recovery_secret
 
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
 
