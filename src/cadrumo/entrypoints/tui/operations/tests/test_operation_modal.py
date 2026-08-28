@@ -645,7 +645,7 @@ def test_a_derived_field_that_disagrees_with_its_projection_is_refused(tmp_path:
             for field, value in divergences.items():
                 assert base[field] != value, f"{field} must actually diverge, or this proves nothing"
                 with pytest.raises(ValidationError):
-                    OperationModalViewModelV1(**(base | {field: value}))
+                    OperationModalViewModelV1.model_validate(base | {field: value})
 
         asyncio.run(run())
 
