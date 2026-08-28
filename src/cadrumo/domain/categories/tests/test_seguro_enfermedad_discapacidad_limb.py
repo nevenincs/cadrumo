@@ -28,7 +28,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-
 from .._proportionality import (
     ProportionalityKind,
     ProportionalityRule,

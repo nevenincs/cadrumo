@@ -168,8 +168,6 @@ __all__ = [
     "SupportedFilingYearsCatalogue",
 ]
 
-from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
-
 from .convenio import ConvenioAuthority
 from .modelo_localization import resolve_modelo_localization
 from .schema_base import (
@@ -190,6 +188,7 @@ from .schema_base import (
     manifest_only_fields,
     schema_family_fields,
 )
+from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_formula import (
     FormulaExpression,

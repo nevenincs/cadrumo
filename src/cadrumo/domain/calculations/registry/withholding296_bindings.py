@@ -91,7 +91,10 @@ class Withholding296Observation(BaseModel):
     fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
     naturaleza: str = Field(default="D", pattern=r"^[DE]$")
     clave: str = Field(default="01", pattern=r"^\d{2}$")
-    subclave: str = Field(default="", pattern=r"^\d{2}$")
+    # The official 296 perceptor record declares subclave as a non-required
+    # two-character slot, so an undeclared subclave is a legitimate empty
+    # value rather than a code this model may invent one for.
+    subclave: str = Field(default="", pattern=r"^(\d{2})?$")
     base_retenciones: Decimal = Decimal("0")
     porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
     retencion_practicada: Decimal = Decimal("0")
