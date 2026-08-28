@@ -71,12 +71,14 @@ type OperationModalOutcomeV1 = OperationModalSettledOutcomeV1 | OperationModalDe
 _ACTION_MIN_COLUMN_WIDTH = 16
 """Narrowest column the modal action row will lay a button into.
 
-Sized from the widest translated action label rather than the English one:
-the Spanish set needs sixty-eight columns laid in a single row, against a
-modal body that is sixty-four columns wide on the eighty-column floor, so a
-row that fits in one language still overflows in another. Wrapping at this
-width keeps every action inside the body in all four catalogues, and the
-grid collapses back to a single row wherever the body is wide enough.
+Equal to Textual's own ``Button`` minimum width, so a column never asks a
+button to render below the size it will claim anyway. That minimum is what
+makes the single row impossible rather than merely tight: five buttons hold
+at least eighty columns between them in EVERY catalogue, before gutters,
+against a modal body sixty-four columns wide on the eighty-column floor.
+Label length is therefore not the binding constraint and no language is a
+special case. Wrapping at this width keeps every action inside the body, and
+the grid collapses back to a single row wherever the body is wide enough.
 """
 
 

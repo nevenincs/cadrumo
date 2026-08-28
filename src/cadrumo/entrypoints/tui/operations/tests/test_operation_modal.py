@@ -775,12 +775,16 @@ def test_every_action_is_reachable_on_an_eighty_column_terminal(tmp_path: Path, 
     policy demands a cancel request, so an operator whose Detach and Close
     have left the screen has no in-interface way out of a live operation.
 
-    Every catalogue is exercised because the constraint is locale-bound: laid
-    in a single row the Spanish labels need sixty-eight columns against a
-    sixty-four column body, so a row that fits in English still overflows in
-    Spanish. The language is switched through the real settings override the
-    application reads, not by passing a locale to the widgets, so the labels
-    under measurement are the ones an operator in that language would see.
+    Five buttons hold at least eighty columns between them before gutters,
+    because Textual gives every button a sixteen-column minimum, against a
+    body sixty-four columns wide. So the single row overflowed in every
+    language rather than only the wordiest one, and the fix has to hold in
+    every language too. Each catalogue is exercised rather than trusting the
+    ambient one, which guards the layout against a future label long enough
+    to push past that minimum and change how the row wraps. The language is
+    switched through the real settings override the application reads, not by
+    passing a locale to the widgets, so the labels under measurement are the
+    ones an operator in that language would actually see.
     """
     with _runtime(tmp_path) as (services, _registry, profile_id):
 
