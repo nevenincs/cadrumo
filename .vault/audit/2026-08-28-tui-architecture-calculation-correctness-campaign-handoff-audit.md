@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:f34db63f8e962c6623cffe600ad4ecb975beefb5f69fc6730bfcb64f2e19c80f'
+body_hash: 'sha256:c2396a0c3eef6f7ae0d9033685ab51ac4a5d02dd9a3485c981f937c806197650'
 related: []
 ---
 
@@ -260,6 +260,25 @@ One correction to how this was recorded: the excluded set is **not always six**.
 2024 and 2025 exclude six; 2023 excludes four, because that revision declares
 seven recargo casillas rather than nine. The invariant is the superset relation,
 not the count.
+
+**The five annual/quarterly reconciliation pairs, re-verified at HEAD.** All five
+declare `annual_summary` relations from the quarterly modelo, and every pair
+reconciles both an amount measure and a tax measure:
+
+| pair | relations |
+|---|---|
+| M190 ← M111 | 10: nine per-block *importe* boxes (02, 05, 08, 11, 14, 17, 20, 23, 26) plus the retenciones aggregate 28 |
+| M180 ← M115 | 2: base 02, retenciones 03 |
+| M193 ← M123 | 2: base 06, retenciones 09 |
+| M296 ← M216 | 2: base 10, retenciones 13 |
+| M390 ← M303 | 3: cuota devengada total, cuota deducible total, resultado régimen general |
+
+Two wording refinements, neither a substantive change. The pairs were recorded as
+reconciling "base and retenciones": true for four of them, but M390 ← M303
+reconciles the IVA-appropriate measures instead — devengada, deducible and
+resultado — since an IVA return has no retenciones. And the M190 shape settles an
+earlier confusion of mine: the nine per-block rows are *importe* boxes, while the
+retenciones side reconciles at the aggregate casilla 28, exactly as recorded.
 
 Two reference shapes worth copying.
 `test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` derives its wiring
