@@ -122,7 +122,7 @@ class ReviewKindReservedError(ReviewError):
     """Raised when the CLI receives a reserved kind token.
 
     Carries the blocking reason returned by
-    :func:`cadrumo.application.review._enums.reserved_kind_reason`.
+    :func:`cadrumo.application.review.enums.reserved_kind_reason`.
 
     Attributes:
         token: The ``--kind`` value supplied by the user.

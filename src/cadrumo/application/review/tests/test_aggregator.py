@@ -37,12 +37,8 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import (
-    ReviewItemKind,
-    ReviewQueue,
-    ReviewSeverity,
-    ReviewState,
-)
+from .._aggregator import ReviewQueue
+from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")

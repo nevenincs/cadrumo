@@ -412,7 +412,7 @@ def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
 
 def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
     """_operator._ACCEPTED_KIND_TO_INTERNAL must use BindingSourceKind for the four aggregation kinds."""
-    from ...review._operator import _ACCEPTED_KIND_TO_INTERNAL
+    from ...review.operator import _ACCEPTED_KIND_TO_INTERNAL
 
     aggregation_keys = {
         BindingSourceKind.LEDGER_TRANSACTION,

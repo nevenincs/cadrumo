@@ -1,4 +1,4 @@
-"""Focused unit tests for review._filter private validation helpers.
+"""Focused unit tests for review.filter private validation helpers.
 
 Three private helpers gate the per-scope ``--filter`` specs:
 
@@ -30,7 +30,8 @@ from __future__ import annotations
 import pytest
 
 from ....domain.iva import InvoiceKind
-from .._filter import (
+from ..errors import FilterParseError
+from ..filter import (
     FilterClause,
     InvoiceReviewFilterKey,
     LedgerReviewFilterKey,
@@ -39,7 +40,6 @@ from .._filter import (
     _ensure_unique_keys,
     _enum_value_or_raise,
 )
-from ..errors import FilterParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

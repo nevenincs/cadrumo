@@ -149,9 +149,16 @@ def _ensure_profile_keys_registered() -> None:
     import graph, which is exactly why a graph-based check will keep declaring
     the hoist safe.
     """
-    from ..wizard.catalogue import WIZARD_FLOWS
+    # Importing the CATALOGUE no longer registers anything: the compiled keys
+    # are pushed by `wizard.compiler`, which calls
+    # `ensure_profile_keys_registered()` at its own import. Importing
+    # `catalogue` therefore left the registry empty and every cold reader
+    # raised `ProfileKeysRegistrationError`. Calling the compiler's own
+    # idempotent entry is what it documents itself for -- "an entrypoint may
+    # call this unconditionally without ordering knowledge".
+    from ..wizard.compiler import ensure_profile_keys_registered
 
-    _ = WIZARD_FLOWS
+    ensure_profile_keys_registered()
 
 
 __all__ = [

@@ -89,6 +89,12 @@ class RegistrationRefusal:
         return tr(self.message_key, locale=locale, **dict(self.context))
 
 
+#: Poll interval for the pre-publication recovery handoff. This paces the
+#: liveness check only; it is never a deadline on the operator, who may take
+#: as long as copying down a mnemonic actually requires.
+_RECOVERY_HANDOFF_POLL_SECONDS = 0.1
+
+
 class RecoveryHandoverCancelledError(Exception):
     """The operator declined the one-time recovery possession gate."""
 
@@ -466,9 +472,16 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
 
         try:
             self.app.call_from_thread(_show)
-            # Shutdown explicitly releases this event in ``on_unmount``; the
-            # bound is a final guard for a failed message-loop lifecycle.
-            if not resolved.wait(timeout=30.0) or supplied_proof is None:
+            # The operator is copying down a mnemonic, so elapsed time is not a
+            # failure condition and a wall-clock bound only races a slow machine.
+            # The one real failure is a message loop that stopped without
+            # releasing this handoff through ``on_unmount``, so wait on that
+            # condition instead: poll the event, and give up only once the app
+            # is no longer running.
+            while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
+                if not self.app.is_running:
+                    break
+            if supplied_proof is None:
                 raise RecoveryHandoverCancelledError
             return supplied_proof
         finally:

@@ -488,11 +488,18 @@ def _seed_official_303_source_filings(
         ):
             default_source_kind = ObservationSourceKind.AEAT_CSV_REGISTER.value
             default_source_metadata["external_evidence_reference_id"] = evidence_reference_id
+            # VIGENTE only: a work unit can own several records because an
+            # amended filing supersedes rather than replaces, and superseded
+            # records are retained for audit. The checker compares against the
+            # record it resolved as current, so an unfiltered first-match would
+            # disagree with it intermittently, by dictionary order -- the worst
+            # shape, because it reads as flake and invites a retry.
             imported_record = next(
                 (
                     record
                     for record in ModeloRecordCatalogueRepository().load().records.values()
                     if record.work_unit_id == work_unit.work_unit_id
+                    and record.status is ModeloRecordStatus.VIGENTE
                 ),
                 None,
             )
