@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7116ae2d0d35a44cf72c68dad9f16591c43bd4f26d31063aafd8de4f33872ae6'
+body_hash: 'sha256:e1be89ea9f2c2a84dde2d5eb5a91c0b738f6e5a0441501d1fc90fa373b1dfd53'
 step_id: 'S308'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -41,3 +41,13 @@ exactly as before. This Step's own beneficiary-identity fact
 (`_m347_row_family_threshold_filter`) are specific to clave C and are not
 reused by D/E, whose facts (the filer's own entity type, and a subvención
 transaction-level fact for E) are unrelated.
+
+## Provenance
+
+Most of this Step's code (Invoice model, source resolver, threshold
+module, invoice_bindings.py, roundtrip and source-resolver tests) landed
+captured inside a peer commit, `566c7527c0 fix(invoices): tighten the M347
+threshold and source resolver bindings`, committed between this Step's
+edits and this Step's own commit attempt. Only the export-parity test file
+landed in this Step's own commit, `87d4e40124`. Content confirmed correct
+and complete at HEAD by test run, not by diffing local edit history.
