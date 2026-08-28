@@ -24,7 +24,6 @@ def _entry(action_id: str, *, argument_name: str = "profile_name") -> ActionCata
     return ActionCatalogueEntry(
         action_id=action_id,
         target_command_key="config.profile.create",
-        canonical_cli_path=("config", "profile", "create"),
         argument_specifications=(
             ActionArgumentBindingSpecification(
                 argument_name=argument_name,
@@ -148,7 +147,6 @@ def test_catalogue_rejects_duplicate_action_and_source_declarations() -> None:
     alternative_source_entry = ActionCatalogueEntry(
         action_id="operator.profile.create",
         target_command_key="config.profile.create",
-        canonical_cli_path=("config", "profile", "create"),
         argument_specifications=(
             ActionArgumentBindingSpecification(
                 argument_name="profile_name",
@@ -168,7 +166,6 @@ def test_catalogue_rejects_duplicate_action_and_source_declarations() -> None:
         ActionCatalogueEntry(
             action_id="operator.profile.create",
             target_command_key="config.profile.create",
-            canonical_cli_path=("config", "profile", "create"),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="profile_name",
@@ -237,7 +234,6 @@ def test_catalogue_rejects_noncanonical_action_and_argument_identifiers() -> Non
         ActionCatalogueEntry(
             action_id="operator profile create",
             target_command_key="config.profile.create",
-            canonical_cli_path=("config", "profile", "create"),
         )
 
     with pytest.raises(ValidationError, match="argument_name"):
@@ -255,7 +251,6 @@ def test_catalogue_rejects_noncanonical_action_and_argument_identifiers() -> Non
             lambda: ActionCatalogueEntry(
                 action_id="operator.profile.create",
                 target_command_key="config profile create",
-                canonical_cli_path=("config", "profile", "create"),
             ),
             "target_command_key",
             id="target-command-key",
