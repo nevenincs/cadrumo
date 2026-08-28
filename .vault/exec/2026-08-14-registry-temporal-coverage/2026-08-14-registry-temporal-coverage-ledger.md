@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f4aac243ae9123ace3e34999b530ef8cee0f73444ba2620590939d9f8e49756'
+body_hash: 'sha256:31114066edbb1ff6202b9aa8805460d39b4354362316530534da28cc008fcd9f'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1296,4 +1296,46 @@ were left for their own tick rather than swept blind: each needs its scenario
 exclusions read before the literal set is replaced, and
 `test_pulled_history_reaches_calculate` is green today, so rewriting it would be
 churn with no failing gate to prove the change.
+
+
+### A guard test that had been silently disarmed by a refactor
+
+Deriving the locked-source set (previous note) was applied to the two remaining
+failing files that carried the same hand-listed shape,
+`test_derived_aggregate_override_real_path` and
+`test_e2e_ledger_m130_quarters_to_m100_annual`. Their combined sweep failures
+fell from 8 to 4: the binding-lock cause cleared, and what remained was a
+different defect underneath.
+
+That remainder is worth recording on its own.
+`test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path` and
+`test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value` were
+failing `DID NOT RAISE ProfileSchemaValidationError`. Both exist to pin a real
+defect: casilla 0513 carries the computed Art. 58 aggregate, and a stored
+profile value at the derived path would displace the law.
+
+The production guard turned out to be INTACT. The schema declares
+`renta_family.descendientes_minimos_aggregate_{filing_year}` as a derived
+selector and `derived_selector_for_path` resolves it for the test's 2024 year.
+What had gone was the test's reach to it: the probe called
+`set_active_test_profile_facts`, described in the test as "the real single-field
+operator write door", but that function is a SEEDING helper -- its own docstring
+calls it "the successor to the retired application-side plural fact command" --
+and it merges facts onto the record without judging them. The probe therefore
+exercised no guard at all, and the test asserted a refusal that could not fire.
+
+This is the more dangerous shape of a red test: it reads as protecting the
+override channel while protecting nothing. Had it been "fixed" by relaxing the
+assertion, the channel would have looked closed and been open.
+
+Repointed at `reject_invalid_profile_facts`, which
+`application/user_profile/fact_write.py` names as the shared authority --
+"what is shared is not the door but the JUDGE: every one of them refuses
+through" it, registration, the wizard's fact patch and the cotejo censal alike.
+Proving the judge refuses a derived path binds every door rather than one
+surface. Both tests pass, and the refusal names the derived path as the test
+already required.
+
+`test_e2e_ledger_m130_quarters_to_m100_annual` still has 2 failures on a
+separate cause, left for its own tick.
 
