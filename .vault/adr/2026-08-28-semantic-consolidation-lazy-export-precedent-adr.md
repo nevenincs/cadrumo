@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:d52805ed5b98d160dd3409c1bd5c4794af968af661afd0f13eb717cb926bc839'
+body_hash: 'sha256:ae274f6c74a0bd1cccb2fd71930199ff5c32c4308c826052c95d419a1b935879'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -112,11 +112,31 @@ this decision restates it as a rule rather than an aside.
 
 ## Implementation
 
-Retirement is by package, smallest production blast radius first, one package per
-commit, never a tree-wide sweep. `custody` and `crypto` lead: both are over 80 per cent
-test-only consumers, so their symbol counts overstate their production reach.
-`application/registry` (8 importing modules) is the smallest and is the natural first
-proof of the mechanics.
+Retirement is by package, one package per commit, never a tree-wide sweep. But the nine
+are NOT one population, and a survey of their `__init__.py` files found the split that
+decides the sequencing:
+
+SEVEN ARE TRUE FACADES -- the module contains the lazy hooks and nothing else, so
+retiring the map IS the whole job: `crypto` (135 lines), `tests` (207), `review` (249),
+`domain/modelos` (499), `custody` (522), `storage` (908), `core` (1233). Length varies
+with the size of the export map, not with logic.
+
+TWO ARE MODULES IN DISGUISE. `application/registry/__init__.py` is 840 lines defining
+five pydantic models (`RegistryTreeReport`, `RegistryRevisionDetailReport`,
+`RegistryWorkbookParityDetailReport`, `FiledStateVerificationReport`), a NamedTuple and
+several public functions. `application/filing/__init__.py` is 1464 lines with 36
+top-level definitions. For these, retiring the lazy map is the SMALLER half: their
+namespaces hold production code that must first be relocated to real defining modules,
+because a namespace containing classes cannot be made inert by deleting a dict.
+
+`crypto` leads: a true facade, 18 symbols over two owning submodules, 14 importing
+modules of which over 80 per cent are tests. It is the smallest honest proof of the
+mechanics.
+
+`application/registry` was named the first slice in an earlier draft of this decision, on
+the strength of its 8 importing modules. That was wrong and the survey corrected it: a
+low importer count made it look cheap while its namespace is a module. The two disguised
+packages are sequenced LAST and are scoped as relocations, not retirements.
 
 `core` is its own phase and does not begin until the other eight are closed. Before it
 starts, its cold-start justification is RE-MEASURED rather than assumed: if importing
