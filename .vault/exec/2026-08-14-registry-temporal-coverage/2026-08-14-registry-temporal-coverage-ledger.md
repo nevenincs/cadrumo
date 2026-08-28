@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:31114066edbb1ff6202b9aa8805460d39b4354362316530534da28cc008fcd9f'
+body_hash: 'sha256:7ae010007c4bcc740a3e94c56c9607533f6be800351baa9b46d97a57bc525936'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1115,7 +1115,6 @@ new test proves the normalisation contract positively: a padded row is stored,
 loaded and resolves to the same bucket. An accidental pass became two honest
 assertions.
 
-
 ### Localized refusals: five tests matching prose that is now a translation key
 
 Two sweep clusters were checked and left alone as another campaign's, with the
@@ -1162,7 +1161,6 @@ The remaining regex failures in this cluster are M303 carry, IVA-wallet and
 M303-exonerado-390 messages, left to the campaign that owns them, plus two
 genuine rewordings rather than key migrations.
 
-
 ### Ledger confirm tests: the fixture invoice named no role, so direction blocked
 
 Nine `TestConfirmInvoiceDraftFromEvidence` cases failed with
@@ -1202,7 +1200,6 @@ own 16 selected tests still pass.
 The constants are file-local: `entrypoints/cli/tests/`
 `test_ledger_evidence_extract_cli.py` defines its own same-named
 `_FULL_INVOICE_LINES`, which this change does not touch.
-
 
 ### Modelo 111 colegio-concertado: an undeclarable fact the fixtures never stated
 
@@ -1253,7 +1250,6 @@ the renta fold-ins now stop at `ModeloAggregationBindingError` over rejected
 `renta-2025-inventory-activity-*` bindings, which is the separate seven-count
 cluster, and the M303 wallet cases belong to the export-fragment campaign.
 
-
 ### A hand-listed locked-source set went stale the moment `inventory` enrolled
 
 The failures tick 13 uncovered were `ModeloAggregationBindingError` with
@@ -1297,7 +1293,6 @@ exclusions read before the literal set is replaced, and
 `test_pulled_history_reaches_calculate` is green today, so rewriting it would be
 churn with no failing gate to prove the change.
 
-
 ### A guard test that had been silently disarmed by a refactor
 
 Deriving the locked-source set (previous note) was applied to the two remaining
@@ -1338,4 +1333,3 @@ already required.
 
 `test_e2e_ledger_m130_quarters_to_m100_annual` still has 2 failures on a
 separate cause, left for its own tick.
-
