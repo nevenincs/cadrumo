@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:f9af0fd6b86fa9bf400c4c61e130e1506b0b9b0d359b280b069d6ba132c37d30'
+body_hash: 'sha256:377516b66a7ab1355003d01d41572a94165bfed1dd5b7e9676fde13aa070fa44'
 related: []
 ---
 
@@ -287,3 +287,28 @@ raises confidence that both are real rather than probe artefacts.
 
 Of 58 percent parameters judged against excerpt-tier citations, 54 state every
 encoded value. The four that do not are these three M200 rows and the M303 pair.
+
+## A fourth row, and two of the flagged values were never real
+
+Re-running the excerpt-tier sweep with bracket values included (`marginal_rate`
+and `fixed_addition`, not only scalar `value`) completes the picture.
+
+**A fourth row carries the same gap.** `is.modelo-200.cuota-integra-bracket-erd-art101`
+is a bracket table whose every row has `fixed_addition = 0`, so its flagged
+0,21 / 0,22 / 0,24 are pure marginal rates. It encodes the same 2024→2029 descent
+as `tipo-gravamen-erd-art101` — 25, 24, 23, 22, 21, 20 percent — and cites
+`art-29`, `art-30`, `art-101` with no `dt-44`. So the 2024 revision omits the
+disposición on **four** rows, not three.
+
+**Two of the values flagged on `tipo-gravamen-pyme` are derived, not cited.** Its
+9.500 and 10.500 are `fixed_addition` entries:
+
+- 50.000 × 0,21 = **10.500** (2025)
+- 50.000 × 0,19 = **9.500** (2026)
+
+They are the accumulated cuota at the 50.000 tranche boundary, which LIS states
+nowhere because it states rates and thresholds, not the accumulated column. Their
+absence from art. 29 is arithmetic, not an omission.
+
+The finding is unaffected: the rates 0,19 / 0,21 / 0,22 remain genuinely absent
+from the cited articles, and `dt-44` remains the provision that establishes them.

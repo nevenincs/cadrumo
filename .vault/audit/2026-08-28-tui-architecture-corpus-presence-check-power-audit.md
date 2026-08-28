@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:63f12fc5b8fddc72c8010fbe3d2c43352c0ab7aac0777502ef70364d8cb30679'
+body_hash: 'sha256:b99a308724f69e975c8f95b4e5586d7df11df7b7535aeffe1df3e0b8bc4d06f0'
 related:
   - "[[2026-08-28-tui-architecture-corpus-anchor-resolvability-audit]]"
 ---
@@ -80,3 +80,29 @@ oracle, or leaving the row explicitly unverified — never a clean report from a
 powerless check.
 
 No production code, registry data or test was changed by this audit.
+
+## A second false-positive class: derived accumulated cuota
+
+Separate from the power problem, and easier to fix. A bracket table's
+`fixed_addition` beyond the first row is **arithmetic**, not a legislated figure:
+the law states rates and tranche boundaries, and the accumulated column follows
+from them. A presence check that extracts it will always report it missing.
+
+Worked example — modelo 151's régimen especial scale, citing LIRPF art. 93:
+
+| lower | upper | fixed_addition | rate |
+|---|---|---|---|
+| 0 | 600.000 | 0 | 0,24 |
+| 600.000 | — | **144.000** | 0,47 |
+
+`600.000 × 0,24 = 144.000` exactly. Art. 93 prints the 24 % and 47 % rates and the
+600.000 threshold; it has no reason to print their product. The row was flagged
+solely for that, and it is not a defect.
+
+The same artefact contributed two of the five values flagged on modelo 200's
+`tipo-gravamen-pyme` (9.500 and 10.500, being 50.000 × 0,19 and × 0,21).
+
+**So a presence check must extract rates and boundaries and skip
+`fixed_addition`.** Including it manufactures a miss on every multi-tranche scale
+in the registry — and this is precisely the column the accumulated-cuota gate
+already verifies by arithmetic, which is the right tool for it.
