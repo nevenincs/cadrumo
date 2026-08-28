@@ -36,7 +36,7 @@ from cadrumo.tests import python_files_under
 
 from .._paths import REPO_ROOT as _REPOSITORY_ROOT
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IDENTITY_MODULE_NAME = "identity.py"
 """The one module permitted to own each derivation below."""

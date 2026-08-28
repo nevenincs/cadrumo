@@ -49,19 +49,22 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 
 
-def _create_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="operator",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-        },
-    )
+def _create_profile(**extra_facts: str) -> None:
+    """Register the profile through the shared CLI registration door.
+
+    ``extra_facts`` carries per-modelo attestations that readiness demands of
+    that modelo alone, so the shared profile stays minimal.
+    """
+    facts = {
+        "identity.tax_id": "12345678Z",
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Operator",
+        "identity.surnames": "Operator",
+        "activities.description": "design",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
+    }
+    facts.update(extra_facts)
+    register_cli_profile(label="operator", facts=facts)
 
 
 def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
@@ -550,7 +553,11 @@ def test_work_calculate_modelo_100_autonoma_visible_target_uses_registered_error
 def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
     """A no-observation M111 quarter is not filed blank; the CLI names the attestation path."""
 
-    _create_profile()
+    # Modelo 111 readiness demands an explicit colegio-concertado attestation
+    # (preflight.py:280), and the export producer refuses without it
+    # (_producer_snapshot.py:1548). Declare it so the run reaches the
+    # no-retenciones attestation path this test is about.
+    _create_profile(**{"withholding.colegio_concertado": "false"})
     _create_111_work_unit()
 
     calculated = invoke_cached_cli(
