@@ -16,17 +16,20 @@ if __package__ in {None, ""} and sys.path and sys.path[0].replace("\\", "/").end
 
 import argparse
 import ast
+import io
 import json
 import os
 import re
 import subprocess
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 RELOCATION_COMMIT: Final = "c94133f29516b12e3529f3d154c31592562f6198"
+EVIDENCE_COMMIT: Final = "aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8"
 REGISTRY_PATH: Final = "src/cadrumo/domain/calculations/registry"
 MATRIX_VERSION: Final = 2
 DISPOSITIONS: Final = (
@@ -120,6 +123,16 @@ def _git(*arguments: str) -> str:
     ).stdout
 
 
+def _git_bytes(*arguments: str) -> bytes:
+    """Run a fixed repository-local git query that returns raw object bytes."""
+    return subprocess.run(  # noqa: S603  # fixed read-only git subcommand assembled only by this module
+        ("git", *arguments),  # noqa: S607  # repository tool is fixed; only literal call sites supply arguments
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    ).stdout
+
+
 def _module_name(path: str) -> str:
     """Convert a source path under ``src/`` to its importable Python name."""
     if not path.startswith("src/") or not path.endswith(".py"):
@@ -179,7 +192,14 @@ def _historic_facade_exports() -> dict[str, tuple[str, ...]]:
         if name == "__all__":
             public_names = set(ast.literal_eval(value))
         elif name == "_LAZY_EXPORTS":
-            lazy_exports = ast.literal_eval(value)
+            evaluated_exports = ast.literal_eval(value)
+            if not isinstance(evaluated_exports, dict):
+                raise RuntimeError("c941-parent registry facade has a non-string lazy export")
+            lazy_exports = {}
+            for exported_name, module_name in evaluated_exports.items():
+                if not isinstance(exported_name, str) or not isinstance(module_name, str):
+                    raise RuntimeError("c941-parent registry facade has a non-string lazy export")
+                lazy_exports[exported_name] = module_name
     if public_names is None:
         raise RuntimeError("c941-parent registry facade has no literal __all__")
     exports: dict[str, list[str]] = defaultdict(list)
@@ -723,11 +743,13 @@ def _definition_lines(path: str, symbol: str) -> frozenset[int]:
     type_alias = getattr(ast, "TypeAlias", None)
     lines: set[int] = set()
     for node in tree.body:
-        names: set[str] = set()
-        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            names.add(node.name)
+        bindings: list[tuple[str, str]] = []
+        if isinstance(node, ast.ClassDef):
+            bindings.append((node.name, "class_definition"))
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            bindings.append((node.name, "function_definition"))
         elif isinstance(node, ast.Assign):
-            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            bindings.extend((target.id, "assignment") for target in node.targets if isinstance(target, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
         elif type_alias is not None and isinstance(node, type_alias):
@@ -816,6 +838,91 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
     return locations
 
 
+def _evidence_symbol_locator_details(
+    candidate: RelocatedFamily, symbols: tuple[str, ...]
+) -> dict[str, list[dict[str, object]]]:
+    """Read current-module binding evidence only from the reviewed commit."""
+    return _top_level_binding_details(candidate.new_path, _evidence_text(candidate.new_path), set(symbols))
+
+
+def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
+    """Return the compact locator arrays stored in the checked matrix."""
+    details = _evidence_symbol_locator_details(candidate, symbols)
+    return {symbol: [f"{detail['path']}:{detail['line']}" for detail in details[symbol]] for symbol in sorted(symbols)}
+
+
+def _all_symbol_definition_sites(
+    candidates: tuple[RelocatedFamily, ...],
+    symbols: set[str],
+) -> dict[str, list[dict[str, object]]]:
+    """Census competing definitions/imports across all 78 c941 destinations.
+
+    The semantic question is whether another mechanically-relocated registry
+    family member can substitute for a reviewed owner. Restricting this census
+    to the complete candidate family avoids treating ordinary third-party names
+    as architectural alternatives while preserving every in-family locator.
+    """
+    sites: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in sorted(symbols)}
+    for candidate in candidates:
+        details = _top_level_binding_details(candidate.new_path, _evidence_text(candidate.new_path), symbols)
+        for symbol, values in details.items():
+            sites[symbol].extend(values)
+    return {symbol: sorted(sites[symbol], key=_definition_site_sort_key) for symbol in sorted(sites)}
+
+
+def _definition_site_sort_key(item: dict[str, object]) -> tuple[str, int, str, str]:
+    """Return a total checked ordering key for one structured locator."""
+    path = item.get("path")
+    line = item.get("line")
+    node_type = item.get("node_type")
+    symbol = item.get("symbol")
+    if (
+        not isinstance(path, str)
+        or not isinstance(line, int)
+        or not isinstance(node_type, str)
+        or not isinstance(symbol, str)
+    ):
+        raise RuntimeError("structured definition site has no complete ordering anchor")
+    return path, line, node_type, symbol
+
+
+def _structured_semantic_evidence(
+    candidate: RelocatedFamily,
+    *,
+    locator_details: dict[str, list[dict[str, object]]],
+    definition_sites: dict[str, list[dict[str, object]]],
+) -> dict[str, object]:
+    """Record falsifiable owner, competing-site, and substitutability evidence."""
+    owner_definition_locators = sorted(
+        (detail for symbol in sorted(locator_details) for detail in locator_details[symbol]),
+        key=_definition_site_sort_key,
+    )
+    competing_site_census = {
+        symbol: [detail for detail in definition_sites[symbol] if detail["path"] != candidate.new_path]
+        for symbol in sorted(locator_details)
+        if any(detail["path"] != candidate.new_path for detail in definition_sites[symbol])
+    }
+    competing_count = sum(len(values) for values in competing_site_census.values())
+    return {
+        "owner_definition_locators": owner_definition_locators,
+        "competing_site_census": competing_site_census,
+        "substitutability": {
+            "result": "candidate_owner_not_substitutable",
+            "rationale": (
+                f"{candidate.old_path} maps one-to-one to {candidate.new_path} in c941; "
+                f"{len(owner_definition_locators)} reviewed owner bindings and {competing_count} competing bindings "
+                "were measured from immutable AST evidence. Same-name bindings are not substitutes "
+                "for the reviewed owner."
+            ),
+        },
+        "anchors": {
+            "evidence_commit": EVIDENCE_COMMIT,
+            "relocation_pair": [candidate.old_path, candidate.new_path],
+            "competing_site_scope": "all_78_c941_destination_modules",
+        },
+    }
+
+
 def generated_rows() -> list[dict[str, object]]:
     """Produce the exact c941 family rows without inventing their adjudications."""
     candidates = exact_relocation_candidates()
@@ -854,6 +961,7 @@ def matrix_document() -> dict[str, object]:
     return {
         "schema_version": MATRIX_VERSION,
         "relocation_commit": RELOCATION_COMMIT,
+        "evidence_commit": EVIDENCE_COMMIT,
         "consumer_categories": list(CONSUMER_CATEGORIES),
         "dynamic_imports": _evidence_census().dynamic_imports,
         "evidence_measurements": _evidence_census().measurements,
@@ -982,6 +1090,7 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         "facade_exported_symbols",
         "current_symbol_locators",
         "consumers",
+        "semantic_evidence",
     }
     reviewed_fields = REVIEWED_ROW_FIELDS
     for generated in expected:
@@ -1191,6 +1300,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
     required_document_fields = {
         "schema_version",
         "relocation_commit",
+        "evidence_commit",
         "consumer_categories",
         "dynamic_imports",
         "evidence_measurements",
@@ -1200,8 +1310,14 @@ def check_matrix_document(document: dict[str, object]) -> None:
     }
     if set(document) != required_document_fields:
         raise RuntimeError("registry facade matrix document schema is incomplete or has unrelated fields")
-    if document.get("schema_version") != MATRIX_VERSION or document.get("relocation_commit") != RELOCATION_COMMIT:
-        raise RuntimeError("registry facade matrix has the wrong schema or relocation commit")
+    if (
+        document.get("schema_version") != MATRIX_VERSION
+        or document.get("relocation_commit") != RELOCATION_COMMIT
+        or document.get("evidence_commit") != EVIDENCE_COMMIT
+    ):
+        raise RuntimeError(
+            "registry facade matrix has the wrong schema, relocation commit, or immutable evidence commit"
+        )
     if document.get("consumer_categories") != list(CONSUMER_CATEGORIES):
         raise RuntimeError("registry facade matrix consumer-category schema drifted")
     if document.get("review_status") != REVIEW_STATUS:
@@ -1498,12 +1614,79 @@ def _refuse_template_over_reviewed_matrix() -> None:
         )
 
 
+def current_terminal_state_report(
+    document: dict[str, object],
+    *,
+    exists: Callable[[str], bool] | None = None,
+) -> dict[str, object]:
+    """Report current disposition progress without dereferencing historic evidence.
+
+    Unlike the immutable evidence check, this operates against the current tree
+    so future hard moves, privatizations, and deletions can be observed. Missing
+    retired paths are valid terminal candidates, never a reason to recreate a
+    facade alias, forwarding module, or re-export.
+    """
+    rows = document.get("rows")
+    if not isinstance(rows, list):
+        raise RuntimeError("current terminal report requires matrix rows")
+    path_exists = exists or (lambda path: (ROOT / path).is_file())
+    row_states: list[dict[str, object]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise RuntimeError("current terminal report requires object rows")
+        destinations = row.get("terminal_destinations")
+        if not isinstance(destinations, list):
+            raise RuntimeError("current terminal report requires terminal destinations")
+        observed: list[dict[str, object]] = []
+        for destination in destinations:
+            if (
+                not isinstance(destination, dict)
+                or not isinstance(destination.get("path"), str)
+                or not isinstance(destination.get("role"), str)
+                or not isinstance(destination.get("allowed_absence"), bool)
+            ):
+                raise RuntimeError(f"current terminal report has malformed destinations for {row.get('old_path')}")
+            observed.append(
+                {
+                    "path": destination["path"],
+                    "role": destination["role"],
+                    "exists": path_exists(destination["path"]),
+                    "allowed_absence": destination["allowed_absence"],
+                }
+            )
+        absent_allowed = any(not item["exists"] and item["allowed_absence"] for item in observed)
+        missing_owner = any(not item["exists"] and item["role"] == "defining_owner" for item in observed)
+        status = (
+            "terminal_candidate_absent_pending_step_proof"
+            if absent_allowed
+            else "terminal_destination_missing_pending_step"
+            if missing_owner
+            else "disposition_open_pending_step_proof"
+        )
+        row_states.append(
+            {
+                "row_id": row.get("row_id"),
+                "step_id": row.get("follow_on_step_id"),
+                "status": status,
+                "destinations": observed,
+            }
+        )
+    return {
+        "current_state_root": "working_tree",
+        "evidence_commit": document.get("evidence_commit"),
+        "review_status": document.get("review_status"),
+        "open_disposition_step_ids": [state["step_id"] for state in row_states],
+        "rows": row_states,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the deterministic template or verify a fully reviewed matrix."""
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--write-template", action="store_true")
     parser.add_argument("--refresh-reviewed", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check-current-terminal", action="store_true")
     args = parser.parse_args(argv)
     if args.write_template:
         _refuse_template_over_reviewed_matrix()
@@ -1513,7 +1696,11 @@ def main(argv: list[str] | None = None) -> int:
         _write_matrix_text(json.dumps(refresh_reviewed_matrix_document(reviewed), indent=2, sort_keys=True) + "\n")
     if args.check:
         check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
-    if not args.write_template and not args.refresh_reviewed and not args.check:
+    if args.check_current_terminal:
+        document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+        check_matrix_document(document)
+        print(json.dumps(current_terminal_state_report(document), indent=2, sort_keys=True))
+    if not args.write_template and not args.refresh_reviewed and not args.check and not args.check_current_terminal:
         print(json.dumps(matrix_document(), indent=2, sort_keys=True))
     return 0
 
