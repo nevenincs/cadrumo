@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:506192de0bb07cbe1fb4ad500ec7f9c4146ffee04c31bd1ee6cf1638edae560c'
+body_hash: 'sha256:9d04cff141970afb74c6788b5546fe5720271d41005ee695a413b7ff15a3b286'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1656,7 +1656,6 @@ before this is called done.
 The in-flight sweep reached 99% and may be tainted for the same reason; its
 totals need reading with that in mind.
 
-
 ### Export-layout kerfuffle closed, and a live crash on `ledger classify`
 
 **The export guard is restored and VERIFIED.** The earlier note flagged two
@@ -1706,7 +1705,6 @@ are the persona walls that did not reproduce across the first sweep's two
 concurrent runs -- flaky-under-load rather than newly broken, and worth
 confirming sequentially before treating as defects.
 
-
 ### A crash, not a refusal: the optional `pais` validator called `.upper()` on None
 
 The fresh sweep surfaced a signature the earlier one did not have in its top
@@ -1746,3 +1744,41 @@ Verified across the affected areas rather than the one file: 39 row-model tests,
 3 M184 handoff-notice tests, 12 M184 multi-clave export-parity tests and 7
 Modelo 210 agrupación e2e tests all pass.
 
+### The stale-revision class had a second shape, and my first sweep was blind to it
+
+The `KeyError: '...-y-siguientes'` cluster is the same defect already fixed for
+Modelos 190 and 390 -- a fixture naming a revision the registry does not ship --
+but reached through a DICT SUBSCRIPT rather than a `revision=` argument. The
+earlier sweep only matched the argument form, so it reported the class closed
+when it was not.
+
+Modelo 151: `validate_modelo("151").revisions["2015-y-siguientes"]`. That window
+was split into `2015-2022` and `2025-y-siguientes`, so the subscript raised
+before the test reached any assertion. Both surviving revisions carry the
+predicate under test with an identical expression, so the choice was not forced
+by content -- it was resolved by LAW instead: the helper now reads the master
+`supported-filing-years` declaration, takes its latest year, and asks the
+authority for the governing revision. A future split moves it automatically. (Its
+successor's name understates its reach: `2025-y-siguientes` opens on 2023-01-01.)
+
+**The sweep's own flaw, worth recording.** The modelo-blind version compared
+each literal against the UNION of every modelo's revision ids, so Modelo 390's
+`2010-y-siguientes` passed silently -- because Modelo 360 genuinely ships a
+revision by that name. A detector that pools identifiers across owners cannot
+see a valid id used against the wrong owner. Re-run modelo-aware, matching
+`validate_modelo("X").revisions["Y"]` and checking Y against X's own set, it
+found exactly that one.
+
+Modelo 390 ships 2021 through 2025 and the helper named `2010-y-siguientes`, so
+every test routed through it died on a KeyError. The file carries no ejercicio
+of its own -- it asserts shipped predicate definitions -- so the helper now
+selects the modelo's current revision by `max(valid_from)` rather than any
+literal. Same ownership reasoning as the earlier Modelo 390 constant: this is a
+test helper, not `_data/registry/aeat/modelos/390/`, so it is outside the tree
+the export-fragment campaign holds.
+
+The only other subscript the sweep flags is a synthetic modelo-999 registry
+built in `tmp_path` by `test_catalogue_verification`, where a fabricated
+revision id is the fixture. Correctly flagged, correctly left alone.
+
+M151: 4 tests pass. M390: 3 tests pass.
