@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfdace5532cd58e00982714a31d5acf6c02c9a25377cb1cc6c4e207f05de76ea'
+body_hash: 'sha256:3893766217ca0a8fd6d9a63f49851b53be04b74e039581bf2a8a521079568561'
 related: []
 ---
 
@@ -652,3 +652,49 @@ legitimate claim.
 
 That makes M360 the priority for the promotion question posed above, ahead of the
 literal-pinned families, because those at least fail on drift.
+
+### Scope qualification: the evidence for a value may live on the BINDING, not the parameter
+
+Every `required_text` measurement in this audit — the recorded count, and the
+value-aware re-measurement that replaced it — scanned **parameters**. Bindings
+carry `source_citations` too, and they are instrumented differently:
+
+| artefact | carrying a `required_text` | of those, pinning a digit |
+|---|---|---|
+| parameters (under `modelos/*/revisions/*/parameters/`) | 382 | ~22 % |
+| bindings (under `modelos/*/revisions/*/bindings/`) | 1.222 of 9.230 | **1.005 (82 %)** |
+
+The ratio is inverted. Where a binding declares evidence at all it almost always
+pins a number, which is the opposite of the parameter population this audit
+measured.
+
+**Worked example, the Ley 12/2023 rental reduction.** The four tier parameters
+`renta-2024-rental-reduccion-rate-tier-{50,60,70,90}` each cite
+`ley-35-2006:art-23` with no `required_text` naming any tier. The binding that
+selects among them, `renta-2024-rental-reduccion-art-23-2-tier`, declares:
+
+```toml
+required_text = ("90 por 100", "70 por 100", "60 por 100", "50 por 100")
+```
+
+against the AEAT Renta 2024 manual. So all four values *are* anchored in the
+evidence record — on the binding, where a parameter-scoped sweep never looks.
+
+### What this does and does not change
+
+It does **not** rehabilitate the parameter population: most bindings (8.008 of
+9.230) declare no `required_text` at all, and not every parameter has a binding
+that grounds it. A parameter with a blind citation and no binding evidence is
+still unanchored, and the Modelo 360 case remains exactly that.
+
+What it changes is the unit of the question. "Is this value anchored?" cannot be
+answered by looking at the parameter alone; it needs the parameter *and* any
+binding that carries it. Every count in this audit is therefore a **parameter-side
+count**, not a per-value verdict, and should be read as such.
+
+That also explains a healthy pattern worth naming: the registry tends to put the
+legal reference on the parameter and the *operator-facing evidence* on the
+binding — the binding is where a figure meets a declared taxpayer fact, and it is
+where the AEAT manual, rather than the BOE, is the natural source. The rental-tier
+binding cites the manual with `"90 por 100"` in the manual's own idiom, while its
+parameters cite the law.
