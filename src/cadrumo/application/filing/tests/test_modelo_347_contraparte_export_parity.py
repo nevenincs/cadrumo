@@ -175,6 +175,57 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id: str) -> None:
+    """RD 1065/2007 arts. 32.c/33.4's 300,51 EUR clave-C floor, through the real resolver.
+
+    A beneficiary below the clave-C floor produces no row even though the
+    amount would clear nothing at all; a beneficiary above it does. A THIRD
+    party -- the SAME tax id as the below-floor clave-C beneficiary -- also
+    carries an ORDINARY (clave B) operation above the clave-C floor but below
+    the GENERAL floor: it must still produce no row, proving the two floors
+    are judged independently rather than the lower one leaking into the
+    general comparison.
+    """
+    revision = _revision(revision_id)
+    observations = (
+        _observation(
+            invoice_id="inv-c-below",
+            party_tax_id="B11111112",
+            party_legal_name="Colegiado Bajo Umbral SL",
+            transaction_date=date(2025, 2, 10),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR - Decimal("0.01")),
+            operation_clave="C",
+        ),
+        _observation(
+            invoice_id="inv-c-above",
+            party_tax_id="C22222229",
+            party_legal_name="Colegiado Sobre Umbral SA",
+            transaction_date=date(2025, 6, 15),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("0.01")),
+            operation_clave="C",
+        ),
+        _observation(
+            invoice_id="inv-b-below-general",
+            party_tax_id="B11111112",
+            party_legal_name="Colegiado Bajo Umbral SL",
+            transaction_date=date(2025, 3, 1),
+            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("100.00")),
+            operation_clave="B",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved_values = set(resolved.values())
+
+    # Only the above-clave-C-floor beneficiary produces a row.
+    assert "C22222229" in resolved_values
+    # The below-clave-C-floor beneficiary produces no clave-C row, AND its
+    # unrelated clave-B operation (above the clave-C floor, below the
+    # general one) produces no row either -- the two floors do not leak.
+    assert "B11111112" not in resolved_values
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_id: str) -> None:
     """The renderer itself, not just the resolver, emits every distinct counterparty row."""
     from .._record_renderer import _record_render_rows
