@@ -1239,8 +1239,8 @@ application:
         conté %{casilla_value} EUR de renda atribuïda sense registrar.
       attribution_received_unfolded: La renda atribuïda de %{filing_year} per %{total_base}
         EUR no s'integra a la casella %{casilla_id}.
-      cross_casilla_invariant_violated: S'incompleix un invariant entre caselles declarat
-        pel registre en aquesta revisió.
+      cross_casilla_invariant_violated: S'incompleix l'invariant entre caselles %{predicate_id}
+        declarat pel registre en aquesta revisió.
       cross_period_activity_start_missing: El model %{target_modelo} %{target_filing_year}
         %{target_period} necessita una data d'inici d'activitat declarada.
       cross_period_dependency_unclean: 'El model origen %{source_modelo} %{source_filing_year}
@@ -1301,13 +1301,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: S'ha activat un predicat consultiu del registre
         per a aquesta revisió.
-      registry_authority_grade_insufficient: La revisio del registre d'aquest model
-        declara autoritat %{declared_grade} i no pot donar suport a una presentacio,
-        que exigeix autoritat %{requested_grade}. La revisio es resol correctament;
-        no esta acreditada al nivell que exigeix una presentacio, de manera que aquest
-        objectiu de treball encara no es pot verificar per presentar.
+      registry_authority_grade_insufficient: La revisió del registre per al model
+        %{modelo} %{filing_year} %{period} declara autoritat %{declared_grade} i la
+        presentació exigeix autoritat %{requested_grade}.
       registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
-        per a aquest objectiu de treball.
+        per al model %{modelo} %{filing_year} %{period}.
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna
         rendiments del capital mobiliari de l'estalvi però no acredita cap retenció
         suportada. Introdueixi l'import del certificat de retencions i ingressos a

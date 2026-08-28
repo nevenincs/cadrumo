@@ -1240,8 +1240,8 @@ application:
         contiene %{casilla_value} EUR de renta atribuida sin registrar.
       attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
         EUR no se integra en la casilla %{casilla_id}.
-      cross_casilla_invariant_violated: Se incumple un invariante entre casillas declarado
-        por el registro en esta revisión.
+      cross_casilla_invariant_violated: Se incumple el invariante entre casillas %{predicate_id}
+        declarado por el registro en esta revisión.
       cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
         %{target_period} necesita una fecha de inicio de actividad declarada.
       cross_period_dependency_unclean: 'El modelo origen %{source_modelo} %{source_filing_year}
@@ -1305,13 +1305,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: Se ha activado un predicado consultivo del
         registro para esta revisión.
-      registry_authority_grade_insufficient: La revision del registro de este modelo
-        declara autoridad %{declared_grade} y no puede respaldar una presentacion,
-        que exige autoridad %{requested_grade}. La revision se resuelve correctamente;
-        no esta acreditada al nivel que exige una presentacion, por lo que este objetivo
-        de trabajo aun no puede verificarse para presentar.
+      registry_authority_grade_insufficient: La revisión del registro para el modelo
+        %{modelo} %{filing_year} %{period} declara autoridad %{declared_grade} y la
+        presentación exige autoridad %{requested_grade}.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
-        para este objetivo de trabajo.
+        para el modelo %{modelo} %{filing_year} %{period}.
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
         rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
         soportada. Introduzca el importe del certificado de retenciones e ingresos

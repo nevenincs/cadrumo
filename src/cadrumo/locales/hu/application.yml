@@ -1177,8 +1177,8 @@ application:
         %{casilla_value} EUR rögzítetlen hozzárendelt jövedelmet tartalmaz.
       attribution_received_unfolded: A(z) %{filing_year} évi %{total_base} EUR hozzárendelt
         jövedelem nem épül be a(z) %{casilla_id} rovatba.
-      cross_casilla_invariant_violated: A nyilvántartás által deklarált rovatközi
-        invariáns sérül ebben a revízióban.
+      cross_casilla_invariant_violated: A nyilvántartás által deklarált %{predicate_id}
+        rovatközi invariáns sérül ebben a revízióban.
       cross_period_activity_start_missing: A(z) %{target_modelo} %{target_filing_year}
         %{target_period} modelóhoz bejelentett tevékenységkezdési dátum szükséges.
       cross_period_dependency_unclean: 'A(z) %{source_modelo} %{source_filing_year}
@@ -1241,13 +1241,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: A nyilvántartás tanácsadó predikátuma aktiválódott
         ehhez a revízióhoz.
-      registry_authority_grade_insufficient: Ennek a modelonak a registry-revizioja
-        %{declared_grade} szintu jogosultsagot deklaral, es nem tud bevallast alatamasztani,
-        amihez %{requested_grade} szintu jogosultsag szukseges. A revizio helyesen
-        feloldodik, de nincs a bevalláshoz szukseges szinten igazolva, ezert ez a
-        munkacel meg nem ellenorizheto bevallashoz.
-      registry_snapshot_unresolved: Nem sikerült feloldani a nyilvántartási pillanatképet
-        ehhez a munkacélhoz.
+      registry_authority_grade_insufficient: A(z) %{modelo} %{filing_year} %{period}
+        modelo registry-revíziója %{declared_grade} szintű jogosultságot deklarál,
+        a bevalláshoz pedig %{requested_grade} szintű jogosultság szükséges.
+      registry_snapshot_unresolved: A(z) %{modelo} %{filing_year} %{period} modelóhoz
+        tartozó nyilvántartási pillanatképet nem sikerült feloldani.
       suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarítási
         tőkejövedelmet tartalmaz, de nem számol el levont forrásadót. Adja meg az
         összeget a kifizető igazolásából (certificado de retenciones e ingresos a

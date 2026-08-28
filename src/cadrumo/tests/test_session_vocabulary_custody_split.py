@@ -43,7 +43,10 @@ ACCELERATION_RECEIPT_PATHS: tuple[str, ...] = (
 AUTHORITY_SESSION_PATHS: tuple[str, ...] = (
     "adapters/outbound/aeat/auth/session_store.py",
     "adapters/outbound/aeat/auth/_session_probe.py",
-    "application/auth/_sessions.py",
+    # Promoted from `_sessions.py` to a public defining module; the private
+    # spelling this replaced no longer exists, so the inventory named a file the
+    # tree does not carry.
+    "application/auth/sessions.py",
 )
 """Modules owning the bucket-resident AEAT authority session."""
 

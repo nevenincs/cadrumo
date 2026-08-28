@@ -110,8 +110,12 @@ def _dependency_inventory_item_payload(
                 filing_year=requirement.filing_year,
                 period=requirement.period,
                 source_casilla_ids=requirement.source_casilla_ids,
+                required_source_casilla_ids=requirement.required_source_casilla_ids,
+                source_presence_groups=requirement.source_presence_groups,
                 origin=requirement.origin.value,
                 origin_ids=requirement.origin_ids,
+                legal_refs=requirement.legal_refs,
+                source_refs=requirement.source_refs,
                 requires_member_fan_in=requirement.requires_member_fan_in,
             )
             for requirement in item.dependencies

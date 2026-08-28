@@ -378,24 +378,24 @@ def test_accepted_source_kinds_covers_all_four_members() -> None:
 
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
-    """_counterpart._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._counterpart import _CANONICAL_SOURCE_KINDS as counterpart_kinds
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as counterpart_kinds
 
     assert len(counterpart_kinds) == 4
     for kind in counterpart_kinds:
         assert isinstance(kind, BindingSourceKind), (
-            f"_counterpart._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+            f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
         )
 
 
 def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
-    """_retenciones._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._retenciones import _CANONICAL_SOURCE_KINDS as retenciones_kinds
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as retenciones_kinds
 
     assert len(retenciones_kinds) == 4
     for kind in retenciones_kinds:
         assert isinstance(kind, BindingSourceKind), (
-            f"_retenciones._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+            f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
         )
 
 

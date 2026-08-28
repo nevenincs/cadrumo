@@ -14,6 +14,7 @@ second part is blank -- which a captured profile cannot.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 
@@ -104,15 +105,25 @@ def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
     values = _resolve(
         *_DECLARANTE,
         _fact("renta_taxpayer.sex", "M"),
-        _fact("tax_residence.ccaa", "10"),
+        # A REAL ccaa value. The schema declares this enum over community NAMES
+        # (`madrid`, `andalucia`, ...), never numeric codes, so the "10" this
+        # replaced was not a value the field can hold.
+        _fact("tax_residence.ccaa", "madrid"),
         _fact("renta_filing.declaration_type", "1"),
     )
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
     assert values["DPNIF_D"] == "12345678Z"
     assert values["SEXO_D"] == "M"
-    assert values["ZCCAD"] == "10"
-    assert values["TIPOTRIBUTACION"] == "1"
+    assert values["ZCCAD"] == "madrid"
+    # Decimal, not "1", and deliberately so. `UserProfileFact` runs
+    # `_coerce_profile_fact_value`, which restores the Decimal and date types
+    # JSON drops on persistence -- a stored "1" is indistinguishable from a
+    # round-tripped Decimal(1), and the model resolves that ambiguity towards
+    # Decimal. Values with an insignificant leading zero (postcodes) are
+    # carved out and stay str. The resolver then preserves the concrete type,
+    # because the renderer branches on it.
+    assert values["TIPOTRIBUTACION"] == Decimal("1")
 
 
 def test_an_individual_filing_writes_no_spouse_row() -> None:

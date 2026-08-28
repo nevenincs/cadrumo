@@ -1127,8 +1127,8 @@ application:
         %{casilla_value} EUR of attributed income that is not captured.
       attribution_received_unfolded: Attributed income for %{filing_year} totalling
         %{total_base} EUR is not folded into casilla %{casilla_id}.
-      cross_casilla_invariant_violated: A cross-casilla invariant declared by the
-        registry is violated in this revision.
+      cross_casilla_invariant_violated: The cross-casilla invariant %{predicate_id}
+        declared by the registry is violated in this revision.
       cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
         %{target_period} needs a declared activity start date.
       cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
@@ -1187,12 +1187,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: A registry advisory predicate fired for this
         revision.
-      registry_authority_grade_insufficient: This modelo's registry revision declares
-        %{declared_grade} authority and cannot back a filing, which requires %{requested_grade}
-        authority. The revision resolves correctly; it is not attested to the level
-        a filing needs, so this work target cannot be verified for filing yet.
-      registry_snapshot_unresolved: The registry snapshot for this work target could
-        not be resolved.
+      registry_authority_grade_insufficient: The registry revision for modelo %{modelo}
+        %{filing_year} %{period} declares %{declared_grade} authority, and filing
+        requires %{requested_grade} authority.
+      registry_snapshot_unresolved: The registry snapshot for modelo %{modelo} %{filing_year}
+        %{period} could not be resolved.
       suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
         del capital mobiliario del ahorro but credits no suffered retención. Enter
         the amount from the payer's certificado de retenciones e ingresos a cuenta;

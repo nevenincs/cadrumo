@@ -228,11 +228,11 @@ def _filed_390_observation(
 ) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo="390",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "0A"),
+        ejercicio=2025,
+        period=Period.from_year_and_code(2025, "0A"),
         expediente_id="200039000000001Z",
         status="filed",
-        presented_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        presented_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
         authenticated_identity=_TAXPAYER_REF,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -241,7 +241,7 @@ def _filed_390_observation(
                 content_type="text/plain",
                 byte_count=0,
                 sha256="b" * 64,
-                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+                captured_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
             ),
         ),
         casillas=(

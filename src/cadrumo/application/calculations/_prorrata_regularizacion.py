@@ -54,6 +54,7 @@ from ...core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
+    regime_apportions_deduction,
     validated_casilla_id,
 )
 from ...core.json_contract import Notice, NoticeSeverity
@@ -265,7 +266,7 @@ def derive_prorrata_applicability(
         raise ValueError("declared_volume_total and declared_volume_con_derecho must be supplied together")
 
     entries = tuple(register_entries)
-    register_active = any(entry.regime is not ProrrataRegisterRegime.NINGUNA for entry in entries)
+    register_active = any(regime_apportions_deduction(entry.regime) for entry in entries)
     declared_volume_sin_derecho = (
         Decimal("0")
         if declared_volume_total is None or declared_volume_con_derecho is None
