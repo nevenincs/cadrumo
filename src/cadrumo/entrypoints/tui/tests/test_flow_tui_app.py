@@ -242,9 +242,11 @@ async def _settled_cursor(pilot: Pilot[None], flow: FlowScreen, expected: str) -
     """
     for _ in range(50):
         if flow.state.cursor == expected:
-            return flow.state.cursor
+            break
         await pilot.pause()
-    return flow.state.cursor
+    cursor = flow.state.cursor
+    assert cursor is not None, "a started flow always carries a cursor onto a visible page"
+    return cursor
 
 
 async def _answer_all_required(pilot: Pilot[None], app: FlowScreen) -> None:
