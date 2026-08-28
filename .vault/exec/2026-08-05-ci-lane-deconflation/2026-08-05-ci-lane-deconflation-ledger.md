@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-26'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:388125a49d524c182c993a0b997597670f05a35a0b1aecdee4d9d5158383290d'
+body_hash: 'sha256:4f7b58860c75d6c13e6b9faadd4d4cee97a717db661753721adce0c704490c5b'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -79,3 +79,38 @@ related:
 - `S47` `T` `.github/workflows/packaging-quick.yml and dev/packaging/tests/test_packaging_quick_workflow.py`
 - `S48` `T` `dev/ci/tests/test_ci_workflow.py and justfile`
 - `S49` `T` `.github/workflows/ci.yml and dev/ci/tests/test_ci_workflow.py`
+
+- `S41` `T` `src/cadrumo/entrypoints/cli/_common.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_period_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_date_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_decimal_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py`
+- `S41` `T` `dev/quality/import_hygiene_test_debt.json`
+- `S50` `T` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+
+## Notes
+
+`S41` is RECORDED BUT NOT COMPLETE and its checkbox stays open. The row's own
+`_common` half landed -- 1714 to 1160 lines across four new modules, under the
+1250 ceiling with no pin, no `--accept-growth` and no carveout -- but the flip
+the row exists to perform did not, because its premise that `_common` was the
+sole remaining module-size offender is false at HEAD. These lines record the
+code that moved so the decomposition is not invisible; they do not claim the
+Step is done. `S51` through `S55` carry the populations that gate it.
+
+The `import_hygiene_test_debt.json` line is collateral of the decomposition
+rather than separate work: the debt entry for
+`test_period_boundary_authority.py` recorded its reach against `cli._common`,
+and repointing the import left that entry answering nothing while creating an
+undocumented reach at `cli._period_parsing`. Both halves were corrected in the
+same change, because a spare debt slot silently widens the ratchet.
+
+The lane was measured twice, 192F/98E then 184F/75E, and NEITHER run is a
+faithful reproduction of the CI step: `just docs` fails on 21 cli-sequence
+golden divergences, so the terminology gates that P01.S04 ordered above this
+step never received their artefact and 57 of the 75 errors are collection
+failures of unknown verdict rather than measured backlog. The true failure
+count is not knowable until `S55` lands.
