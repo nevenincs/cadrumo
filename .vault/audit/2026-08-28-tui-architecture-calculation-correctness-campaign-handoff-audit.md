@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa1f8bb2d80fbd5a1e32c93989945395990c339df9dab1cb51eaf2aa1777f156'
+body_hash: 'sha256:e2c366656da9363d387f82433aeac3884040509d30213bcffceebda2d451aee4'
 related: []
 ---
 
@@ -477,3 +477,53 @@ This row is also the worked example of the two citation defects compounding: its
 `required_text` is the bare phrase `"tipo de gravamen"`, which pins no value. So
 nothing in the record identifies which provision governs, and nothing would fail
 if the 25 were wrong.
+
+## Sharpening: the evidence gate is an auditability device, never an enforcement one
+
+This audit's `required_text` finding, and the remediation proposed for Modelo 360,
+both need refining. The gate does less than either assumed.
+
+`registry/_validate_evidence.py` performs exactly one comparison:
+
+```python
+for required in citation.required_text:
+    if _normalise_required_text(required) not in source_text:
+        failures.append(... missing text ...)
+```
+
+It asks whether the **declared phrase appears in the cited source**. It never
+reads the parameter's `value`. The two are never compared.
+
+The consequence changes the shape of the finding:
+
+- A `required_text` that states no value — `"modelo 303"`, `"operaciones
+  vinculadas"`, `"tipo de gravamen"` — tells a reader nothing about the number.
+- But a `required_text` that **does** state the value is not enforced either.
+  `m303-modulos-iva-dificil-justificacion-forfait` carries the best phrase in the
+  registry: *"será deducible el 1 por ciento del importe de la cuota devengada por
+  operaciones corrientes, en concepto de cuotas soportadas de difícil
+  justificación"* — value, base and concept all named. Change its `value` from `1`
+  to `2` and the phrase still says "el 1 por ciento", still appears verbatim in the
+  Orden, and the gate stays green.
+
+So `required_text` buys **auditability, not enforcement**, in both cases. The
+difference between a phrase that states the value and one that does not is whether
+a human reading the row could see the mismatch — never whether the build would
+fail.
+
+This corrects the Modelo 360 remediation step that proposed replacing its
+`required_text` with a phrase pinning the digits "so the cross-check can fail".
+That step is still worth doing — it makes the row reviewable, and it is what
+distinguishes the M303 forfait row from the M360 one — but it does **not** create a
+bite. Stated plainly so no one implements it expecting one.
+
+Enforcement would need a different mechanism: extracting the figure from the
+cited source text and comparing it as a `Decimal` against the encoded value. That
+is a design decision, not a wording fix, and it is not adjudicated here. Note that
+it would have to handle values spelled in words, since the corpus writes "ochenta
+por ciento" and "el 1 por ciento" as readily as digits.
+
+**Reference shape.** `m303-modulos-iva-dificil-justificacion-forfait` is the model
+for a discriminating citation: one `legal_ref` (`ley-37-1992:art-123`), one
+source, and a `required_text` naming the value, the base it applies to, and the
+concept. Copy this shape.
