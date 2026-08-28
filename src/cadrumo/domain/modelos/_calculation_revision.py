@@ -136,6 +136,32 @@ This is NOT the same as the narrower "currently authoritative" set, which
 additionally excludes :attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`."""
 
 
+CURRENT_SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+    },
+)
+"""A revision an operator-facing action may select as the CURRENT result --
+sealed AND not superseded.
+
+This is :data:`SEALED_REVISION_STATES` minus
+:attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`. The two must never be
+substituted for one another: this narrower set is for surfaces that hand a
+revision to an operator or a third party as the current state of a filing,
+while the broader :data:`SEALED_REVISION_STATES` remains correct for surfaces
+that need every sealed revision including superseded ones.
+
+The operations replay path (``application.modelo.operation_definitions``'s
+export operation) deliberately uses the broader :data:`SEALED_REVISION_STATES`
+instead of this set, because a journalled export replay must reproduce its
+own history even after the revision it names has been superseded. This
+narrower set exists for the operator-facing surfaces that must not do that --
+as one of them puts it, "a superseded revision is stale and must not be
+handed to an accountant as current" (see
+:mod:`application.modelo._review_package`)."""
+
+
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),

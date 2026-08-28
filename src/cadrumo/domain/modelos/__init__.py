@@ -84,6 +84,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ._calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
     from ._calculation_revision import (
+        CURRENT_SEALED_REVISION_STATES,
         M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
         SEALED_REVISION_STATES,
         CalculationRevision,
@@ -223,6 +224,7 @@ if TYPE_CHECKING:
 
 _LAZY_EXPORTS: dict[str, str] = {
     "CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY": "._calculation_revision_aggregate",
+    "CURRENT_SEALED_REVISION_STATES": "._calculation_revision",
     "CalculationRevision": "._calculation_revision",
     "CalculationRevisionAggregateContext": "._calculation_revision_aggregate",
     "CalculationRevisionAmendmentIdentity": "._calculation_revision",
@@ -375,6 +377,7 @@ def __dir__() -> list[str]:
 
 __all__ = (
     "CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY",
+    "CURRENT_SEALED_REVISION_STATES",
     "M232_MAX_RELATED_PARTY_ROWS",
     "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
