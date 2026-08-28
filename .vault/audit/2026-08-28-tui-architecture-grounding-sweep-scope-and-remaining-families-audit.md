@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:7373a23fa767dcd97080d6d4b660f22efe9855c0f58a3036a2fda457cc737604'
+body_hash: 'sha256:d05f8a055d7fbf837c71e5917b39e1265df0668344eb0f591755a9907c1247d7'
 related: []
 ---
 
@@ -71,3 +71,42 @@ Sweep the eight unscanned subtrees for regulatory values, starting with
 `categories/` and `treaties/` (treaty withholding caps are rate-shaped and
 liability-bearing). A shape-agnostic probe is needed: collect any row carrying a
 percentage or money field, whatever the table is called.
+
+## Follow-up: the unscanned subtrees are grounded
+
+The eight subtrees named above were swept with a shape-agnostic probe — any row
+carrying a rate, percentage or money field, whatever the table is called.
+
+Only three hold regulatory magnitudes at all:
+
+| subtree | numeric rows | grounding |
+|---|---|---|
+| `treaties/` | 16 | 16 carry `legal_refs` |
+| `iva/` | 68 | 12 `legal_refs` (Spanish), 56 `source_refs` (EU tables) |
+| `categories/` | 5 | parent-block `citations`, see below |
+
+`calendars/`, `apoderamientos/`, `authorization.d/`, `m303_orden_anual/`,
+`territories` and `topics/` yielded no rows matching the numeric field set.
+
+The five `categories/profiles.toml` rows first read as declaring neither channel.
+They are grounded: the `[profiles.proportionality]` block carries a `citations`
+list — `ley-35-2006:art-30` (LIRPF art. 30.2.1.ª) plus the Manual práctico Renta
+and the AEAT help page. The probe looked for `legal_refs` / `source_refs` on the
+ROW; the citation sits on the parent block. Checking the wrong scope, not a gap.
+
+Those rows are the RETA cuota-máxima cap schedule, and their test module is worth
+reading as a model. It states the direction in its own docstring: the registry
+previously shipped a flat 15000 that "matches no ejercicio at all", every real
+year is higher, so it "under-stated the allowance and cost the taxpayer
+deduction" — and "nothing in this repository watches over-payment... A gate that
+only watches under-declaration would never have found it." Its expected values are
+declared as "the amounts AEAT prints in the Manual practico Renta for each
+ejercicio... external authority, not values re-derived from the code under test."
+
+That is both the reference shape for a non-tautological registry test and an
+independent confirmation of this campaign's organising question, arrived at by
+someone else.
+
+So grounding across the registry is now swept, with the scope caveat above
+retired: the modelo and legal subtrees by the numeric probe, and the remaining
+three by this one.
