@@ -27,7 +27,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.i18n import Translatable as tr
+from ....core.i18n import Translatable as tr
 
 from .._proportionality import (
     ProportionalityKind,

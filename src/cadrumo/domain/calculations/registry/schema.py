@@ -168,10 +168,7 @@ __all__ = [
     "SupportedFilingYearsCatalogue",
 ]
 
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportLayoutDefinition,
-    ProjectionEndpointDeclaration,
-)
+from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 
 from .convenio import ConvenioAuthority
 from .modelo_localization import resolve_modelo_localization

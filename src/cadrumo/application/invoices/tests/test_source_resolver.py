@@ -14,7 +14,14 @@ from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period, TravelAgencyMediationType
+from ....core import (
+    M347_THRESHOLD_EUR,
+    BindingSourceKind,
+    IntracomOperationType,
+    Period,
+    ThirdPartyDeclarationRole,
+    TravelAgencyMediationType,
+)
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -23,6 +30,8 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349CountryPrefixContextError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
@@ -1265,6 +1274,46 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
     reaches claves A, B, F and G, and simply carries no C/D/E eligibility.
     """
     assert _m347_filer_declaration_roles(secure_profile.bucket_id) == frozenset()
+
+
+def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_path(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The role set must be reachable from a REAL persisted profile, not only a test object.
+
+    S313 built the axis and a fail-closed loader but left `declaration_roles`
+    with no operator-input path -- `taxpayer_profile_from_mapping` never read
+    or wrote it, so no real persisted profile could ever carry a non-empty
+    value. This seeds a real `UserProfileRecord` (the wizard-facts shape) and
+    proves the SAME loader the M347 resolver calls resolves a non-empty role
+    set through the real projection, not a directly-constructed
+    `TaxpayerProfile`.
+    """
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+        ),
+    )
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=facts,
+        ),
+    )
+
+    roles = _m347_filer_declaration_roles(secure_profile.bucket_id)
+
+    assert roles == frozenset({ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR})
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
