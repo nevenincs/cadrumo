@@ -62,7 +62,10 @@ _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
 _PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo.M130.value, Modelo.M303.value})
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id",)
 _PROFILE_ACTIVITY_DESCRIPTION_PATH = "activities.description"
-_BLOCKING_APPLICABILITY_VERDICTS = frozenset(
+#: Shared with :mod:`._work_create_policy`, which runs the same applicability
+#: block ahead of work-unit provisioning; kept public so that cross-module use
+#: is a declared contract rather than a private-symbol reach.
+BLOCKING_APPLICABILITY_VERDICTS = frozenset(
     {
         ApplicabilityVerdict.NOT_APPLICABLE,
         ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
@@ -393,7 +396,7 @@ def modelo_applicability_refusal(
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record)
     applicability = derive_modelo_applicability(profile, modelo_code, authority=authority)
-    if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
+    if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
         f"Modelo {modelo_code} is not applicable to the active profile: {applicability.reason}",
@@ -693,6 +696,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicab
 
 
 __all__ = [
+    "BLOCKING_APPLICABILITY_VERDICTS",
     "modelo_applicability_refusal",
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
