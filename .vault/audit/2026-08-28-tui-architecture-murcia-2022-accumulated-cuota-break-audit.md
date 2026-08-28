@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:775d5469a79734debdd33ec1766cbddf1780a9d6ef187463f6d57aa962006076'
+body_hash: 'sha256:6b3a828efe623db5b30cefbaa6be7fdf19116c0e02e1285c4a16553cc1c0a9ef'
 related:
   - "[[2026-08-28-tui-architecture-m210-pension-scale-corpus-row-audit]]"
 ---
@@ -123,3 +123,50 @@ clean — **570 exact, 106 within half a cent, 6 at a one-cent rounding conventi
 and exactly one gap above 1,5 cents**, which is this row at 90,83 €.
 
 No production code, registry data or test was changed by this audit.
+
+## The break is a cliff at the boundary, not a gentle drift
+
+`_resolve_bracket_entry` returns the first bracket, in ascending `lower_bound`
+order, satisfying `lower_bound <= base <= upper_bound`. Both ends are inclusive,
+so at an exact boundary two brackets match and the **lower** one wins. Across
+Murcia 2022's top boundary:
+
+| base | cuota | bracket |
+|---|---|---|
+| 59.999,99 | 8.625,8314 | row 4 |
+| 60.000,00 | 8.625,8332 | row 4 |
+| **60.000,01** | **8.716,6723** | row 5 |
+
+**One cent of extra base costs 90,84 €.** A contiguous progressive scale must be
+continuous at its boundaries; this one steps.
+
+That also explains why the inclusive-inclusive overlap at every boundary in the
+registry is harmless *everywhere else*: when accumulated-cuota continuity holds,
+the two matching brackets return the identical value, so which one wins cannot
+matter. Continuity is what makes the selection rule safe, and Murcia 2022 is the
+single row where it does not hold.
+
+## The structural axes are clean, which narrows where a bracket defect can hide
+
+The same sweep checked three further properties over the same 126 multi-row
+groups. All are clean:
+
+| property | if violated | count |
+|---|---|---|
+| gap between brackets | base in the gap raises `bracket_no_coverage` — fail-closed, loud | **0** |
+| real overlap (`upper[i] > lower[i+1]`) | lowest bracket silently wins → under-charge | **0** |
+| closed top bracket | base above it raises — fail-closed, loud | **0** |
+| non-monotonic rates | a progressive scale that falls back | **0** |
+
+Not vacuous: 683 bracket rows carry an `upper_bound` and every one chains exactly
+to the next row's `lower_bound`; the 148 without one are the open top rows. The
+checks had something to compare.
+
+So bracket-table structure is sound registry-wide, and the two failure modes that
+would have been *silent* — a real overlap, and a wrong accumulated cuota — are now
+both measured. Only the second has an instance, and this audit is it.
+
+Note the asymmetry worth keeping: the structural failures are all fail-closed and
+loud, while the accumulated-cuota column has no guard at all. The registry is well
+defended against the errors that would refuse a filing and undefended against the
+one that quietly changes the amount.
