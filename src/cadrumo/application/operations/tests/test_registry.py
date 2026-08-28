@@ -10,6 +10,7 @@ import pytest
 from pydantic import (
     BaseModel,
     BeforeValidator,
+    ConfigDict,
     Field,
     GetCoreSchemaHandler,
     GetJsonSchemaHandler,
@@ -218,10 +219,23 @@ class ComputedPayload(BaseModel):
         return self.value
 
 
+#: Strict and frozen like the shared constant, but deliberately WITHOUT
+#: ``validate_default``. The witness below needs to hold a default its own field
+#: would reject; the shared constant now validates defaults, which makes that
+#: violation inexpressible and leaves the gate with nothing to refuse.
+_UNVALIDATED_DEFAULT_WITNESS_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
 class InvalidDefaultPayload(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _UNVALIDATED_DEFAULT_WITNESS_CONFIG
 
     value: int = cast(int, "not-an-integer")  # intentional admission witness
+
+
+class ValidatedDefaultPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int = 0
 
 
 class FieldSerializerPayload(BaseModel):
@@ -888,12 +902,27 @@ def test_public_schema_identity_refuses_computed_fields_absent_from_validation_s
 
 
 def test_public_schema_identity_refuses_unvalidated_typed_defaults() -> None:
+    assert InvalidDefaultPayload.model_config.get("validate_default") is not True, (
+        "the witness must omit validate_default, or it cannot express the violation this gate hunts"
+    )
+
     with pytest.raises(ValueError, match="defaults must set validate_default=True"):
         OperationSchemaIdentityV1.from_model(
             schema_id="profile.sync.invalid-default",
             schema_version=1,
             model_type=InvalidDefaultPayload,
         )
+
+
+def test_public_schema_identity_admits_a_validated_typed_default() -> None:
+    """The refusal above must be about the missing validation, not about carrying a default at all."""
+    identity = OperationSchemaIdentityV1.from_model(
+        schema_id="profile.sync.validated-default",
+        schema_version=1,
+        model_type=ValidatedDefaultPayload,
+    )
+
+    assert identity.schema_id == "profile.sync.validated-default"
 
 
 @pytest.mark.parametrize("model_type", [FieldSerializerPayload, ModelSerializerPayload])

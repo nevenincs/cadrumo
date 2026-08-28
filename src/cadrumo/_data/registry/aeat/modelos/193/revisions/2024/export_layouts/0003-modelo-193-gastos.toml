@@ -9,6 +9,12 @@ line_ending = "none"
 required = false
 repeat = "binding_rows"
 binding_record = "gastos"
+# The two Tipo-2 sub-shapes share every leading literal, so the record-type
+# marker cannot tell them apart. AEAT separates them by what occupies the
+# tail: the gastos sheet declares 208-500 as one BLANCOS run, while the
+# perceptor sheet carries NATURALEZA DEL DECLARANTE, the prestamo fechas,
+# COMPENSACIONES and GARANTIAS across it.
+discriminator = { offset = 208, length = 293, requires = "blank" }
 
 [revisions."2024".export_layouts.records.row_field_casilla_ids]
 contributor_tax_id = "gasto.nif"

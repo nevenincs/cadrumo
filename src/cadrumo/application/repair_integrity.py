@@ -50,6 +50,7 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     SYNC_RUN_RECORDS_NAMESPACE,
+    USER_PROFILE_VALUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
     SecureObjectNamespaceIntegrity,
@@ -845,6 +846,33 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             command_family="recovery",
             owner_domains=("google_sync",),
             namespace_policies=(_secure_object_policy(SYNC_RUN_RECORDS_NAMESPACE),),
+        ),
+        # `censo file` and `profile restore` were renamed to `censo import` and
+        # `archive import`, which ends both paths in a token the coverage
+        # predicate selects. They write, so they need governing rows.
+        _surface(
+            "config profile censo import",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_secure_object_policy(USER_PROFILE_VALUE_NAMESPACE),),
+        ),
+        _surface(
+            "config profile archive import",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "config profile archive export",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "app modelo reconcile import",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
         ),
     )
 
