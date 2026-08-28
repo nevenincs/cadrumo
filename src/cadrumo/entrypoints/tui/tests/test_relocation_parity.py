@@ -339,13 +339,13 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
             registration.query_one("#field-confirm", Input).value = _PASSPHRASE
             await pilot.click("#btn-create")
             for _ in range(100):
-                if isinstance(registration.screen, RecoveryWordsScreen):
-                    candidate = registration.screen
+                if isinstance(pilot.app.screen, RecoveryWordsScreen):
+                    candidate = pilot.app.screen
                     if candidate.query("#words-value") and candidate.query("#btn-confirm-words"):
                         break
                 await pilot.pause(0.1)
-            assert isinstance(registration.screen, RecoveryWordsScreen)
-            recovery = registration.screen
+            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
+            recovery = pilot.app.screen
             words = recovery.query_one("#words-value", Static)
             assert str(words.render())
             recovery.query_one("#field-recovery-verification", Input).value = str(words.render())

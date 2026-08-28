@@ -29,6 +29,7 @@ def test_entry_point_starts_a_real_session_and_exits_zero() -> None:
     async def observe(pilot: Pilot[object]) -> None:
         mounted.append(type(pilot.app).__name__)
         await pilot.pause()
+        pilot.app.exit()
 
     assert main(headless=True, auto_pilot=observe) == 0
     assert mounted == [CadrumoTuiApp.__name__]
@@ -42,6 +43,7 @@ def test_entry_point_session_renders_the_areas_it_has_not_mounted() -> None:
         await pilot.pause()
         rendered.append(str(pilot.app.query_one("#root-no-areas").render()))
         rendered.append(str(pilot.app.query_one("#root-title").render()))
+        pilot.app.exit()
 
     assert main(headless=True, auto_pilot=capture) == 0
     assert rendered == [tr("tui.root.no_areas"), tr("tui.root.title")]
@@ -54,6 +56,7 @@ def test_entry_point_session_mounts_no_area_screen() -> None:
     async def count_screens(pilot: Pilot[object]) -> None:
         await pilot.pause()
         screens.append(len(pilot.app.screen_stack))
+        pilot.app.exit()
 
     assert main(headless=True, auto_pilot=count_screens) == 0
     assert screens == [1]
@@ -68,6 +71,7 @@ def test_entry_point_hands_the_session_its_composed_services() -> None:
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
         services.append(app.services.submission)
+        pilot.app.exit()
 
     assert main(headless=True, auto_pilot=read_services) == 0
     assert services and services[0] is not None
