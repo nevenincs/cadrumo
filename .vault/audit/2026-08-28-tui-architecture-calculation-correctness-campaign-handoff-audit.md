@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7daa034a5e8e2a2a7852ca5ec2d95255ccf80c32f1b46c6e5540dfd806bf924'
+body_hash: 'sha256:dfdace5532cd58e00982714a31d5acf6c02c9a25377cb1cc6c4e207f05de76ea'
 related: []
 ---
 
@@ -611,3 +611,44 @@ BOE". The prioritisation question for the owner is therefore narrower than state
 above: **which literal-pinned families should be promoted to corpus-text
 verification**, given that the mechanism and its anti-tautology proof already
 exist in `test_legal_basis_rate_grounding.py`.
+
+#### The verified coverage map, replacing the asserted gap list
+
+Searched by concept across `src` and `dev` — not by owning package, and not by
+parameter id alone — for every family the earlier list named. The result retires
+the list and identifies one priority.
+
+| family | coverage | tier |
+|---|---|---|
+| IVA rates (LIVA 90, 91, 161, 103; LIRPF 85) | `test_legal_basis_rate_grounding.py`, 27 tests | corpus-text verified |
+| M714 patrimonio escala | `test_modelo_714_cuota_integra_escala_matches_boe_table`, parametrised | BOE-table verified |
+| IS tipo-gravamen | `test_modelo_200_tipo_gravamen_dispatch.py` | literal-pinned + one corpus link |
+| Autonomic escalas | 9 tests incl. `test_m100_2021_cuotas_integras_escala_aragon_manual_worked_example.py` | manual worked example |
+| Módulos coefficients | 4 tests incl. the 2024 engine backfill | scenario/engine |
+| M720 / M721 thresholds | 1 test each, prior-year baseline fidelity | scenario |
+| RIC 80 % | `test_modelo_100_drift_detection.py` only | drift detection; parameter unconsumed |
+| **M360 refund minimums 400 / 50** | **none** | **none** |
+
+**M714 was wrongly listed as a gap.** Its escala is verified against the BOE
+table, at the strongest tier available. The earlier "zero tests" reading came from
+grepping the *parameter id*; the test reaches the escala through its formula and a
+parametrised base-liquidable → expected-cuota table. **Grepping a parameter id is
+a weak proxy for coverage** — a parameter exercised through its formula shows as
+uncovered.
+
+Worth recording as good practice: `test_modelo_714_patrimonio_baseline_fidelity.py`
+prevents exactly that misreading, stating in its own docstring that its cuota
+figure "is a roundtrip-fidelity input, not an oracle for the art. 30 escala; the
+escala is verified by the dedicated M714 registry calculation tests." A fixture
+that declares what it is *not* evidence of, and points at what is.
+
+**M360 is the one family uncovered on both axes**, and that convergence is the
+finding. Its citation points at the plazo article, which states no threshold, and
+the Orden states neither 400 nor 50 anywhere (see the dedicated M360 audit); and
+no test asserts either value — the only near-matches are unrelated row amounts.
+So nothing in the record establishes these figures, and nothing would notice if
+they changed. Direction is over-payment: a wrong refund threshold suppresses a
+legitimate claim.
+
+That makes M360 the priority for the promotion question posed above, ahead of the
+literal-pinned families, because those at least fail on drift.
