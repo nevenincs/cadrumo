@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d04cff141970afb74c6788b5546fe5720271d41005ee695a413b7ff15a3b286'
+body_hash: 'sha256:86de0969a08569041dcc4ecb5c747af6a5f5570ffd5ca2789cdf0875ab03926e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1782,3 +1782,43 @@ built in `tmp_path` by `test_catalogue_verification`, where a fabricated
 revision id is the fixture. Correctly flagged, correctly left alone.
 
 M151: 4 tests pass. M390: 3 tests pass.
+
+### An invalid NIE refused for the wrong reason, and a sweep that must NOT be run
+
+The `Justificante` validation cluster resolved into three unrelated fixture
+defects rather than one class. One was mine.
+
+`Y7654321Z` is the "wrong taxpayer" fixture in the overview calendar evidence
+tests -- the value that is supposed to differ from the filer's own `X1234567L`
+so the evidence is rejected as belonging to someone else. It never got that far:
+the NIE control letter is wrong, so `validate_spanish_tax_id` refused it as
+MALFORMED before any identity comparison happened. The test passed or failed on
+the wrong question entirely.
+
+The validator names the remedy in its own message -- "expected check letter 'G'"
+-- and `Y7654321G` validates cleanly while remaining obviously a different
+taxpayer from `X1234567L`. Corrected at all three sites across two files; 8
+tests pass, and the refusal under test is now an identity mismatch rather than a
+checksum failure.
+
+**The sweep that follows must not be applied.** Scanning test fixtures for
+Spanish-tax-id-shaped literals that fail the real validator returns 63 distinct
+ids. That looks like a systematic defect and is the opposite: the great majority
+live in `test_nif_data_type`, `test_validators`, `test_unsecured_nif_canary`,
+`test_censal_datos` and similar, where an INVALID identifier is the fixture --
+these tests exist to prove the validator refuses. Mass-correcting them would
+delete the coverage they provide.
+
+Scoped instead to what actually fails: the whole sweep log contains exactly two
+tax-id failures. The NIE above, and `'TAXPAYERDEFAULT' must be exactly 9
+characters, got 15` from the `taxpayer_tax_id` default in
+`_export_modelo_303_support.py`.
+
+That second one is left alone, and the reason is a distinction worth keeping.
+Earlier ticks DID correct Modelo 390 test helpers that named revisions the
+registry never shipped, on the ground that a test helper is not
+`_data/registry/aeat/modelos/390/`. This is different in kind: a NIF is not a
+non-existent identifier being corrected to an existing one, it is a VALUE that
+flows into the fichero bytes their export e2e tests assert. Changing it edits
+the expected output of another campaign's suite. Correcting a dangling reference
+is safe; changing a value under someone else's assertions is not.
