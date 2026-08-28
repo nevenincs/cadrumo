@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff10658a0ced439e84013595b9ab64044eca56022d7ef10d1dbece98c812e6b2'
+body_hash: 'sha256:f949c124b37c3f78fd8b4dc230497f9f090a01d34790a68a87b34ab92cfecd90'
 related: []
 ---
 
@@ -80,6 +80,28 @@ below are sorted on that axis because it is the axis with no coverage.
    1,75 % recargo can never be charged.
 
    Direction unchanged: a recargo not charged is under-declaration.
+
+5. **The RIC 80 % is named for a different operation than its article states** —
+   latent, and the risk is created by the deferral rather than removed by it.
+
+   `renta-2025-ric-reduccion-rate-maximo` carries `value = 80`, `unit = percent`,
+   and a `required_text` pinning "rendimiento neto". Ley 19/1994 art. 27.15 says
+   something else: the deducción "se calculará aplicando el tipo medio de gravamen
+   a las dotaciones anuales a la reserva y tendrá como límite **el ochenta por
+   ciento de la parte de la cuota íntegra** que proporcionalmente corresponda" to
+   the Canarias rendimientos netos. The 80 % is a CAP ON THE DEDUCCIÓN in the
+   cuota íntegra, not a reduction rate applied to rendimiento neto.
+
+   The figure is right; the framing is wrong. Re-verified at HEAD: the parameter is
+   unchanged, and it is consumed by nothing — it sits in the drift gate's
+   `_PRE_STAGED_PARAMETERS` allow-list, so the unconsumed half is a *declared
+   deferral*, not an orphan.
+
+   That is precisely why the naming matters. Whoever later wires this parameter
+   will read its name. Applying 80 % as a reduction to rendimiento neto would cut
+   the taxable base by four fifths of net income — a large **under-declaration**.
+   Nothing watches a parameter's name, and the deferral guarantees the misreading
+   happens later, when the reasoning is no longer to hand.
 
 ## Open, correctness of record rather than of computation
 
