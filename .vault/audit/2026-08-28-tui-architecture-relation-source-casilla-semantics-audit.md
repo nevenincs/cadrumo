@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:29d010425a73ebdb955a5251ebcdf6c33e5132cee9d2667fdda90d015f12ad73'
+body_hash: 'sha256:6c4f26c4886ad1635c8c6aa1a0fdcc4620ba75187d6951be9dfcb170b600c599'
 related: []
 ---
 
@@ -151,3 +151,62 @@ meaning-change confined to a year the consumer does not cover is invisible to it
 which is the same circumstantial-safety point the finding makes, not a separate
 gap. It also compares `semantic_role` strings, so a role name retained while its
 meaning drifted would pass. Neither weakens the negative result for the live tree.
+
+## Closing the sweep's blind spot, and correcting this audit's risk ranking
+
+The sweep above compared source and consumer only in years where both resolve,
+and flagged that as its blind spot. Closing it changes two of this audit's own
+conclusions.
+
+Method: resolve each exposed numeric id against **every** source-modelo revision
+for filing years 2019-2026, independent of whether any consumer covers that year.
+
+### M123 is the only unstable source, and all three folded ids move
+
+| source | id | meaning |
+|---|---|---|
+| M111 | `02` `05` `08` `11` `14` `17` `20` `23` `26` `28` | stable 2019-2026 |
+| M115 | `02` `03` | stable 2019-2026 |
+| M216 | `10` `13` | stable 2024-2026 |
+| M130 | `19` | stable 2019-2026 |
+| M131 | `01` `15` | stable 2019-2026 |
+| M100 | `0435` `0460` `0545` `0546` | **stable 2020-2025** |
+| M123 | `03` | `retenciones_ingresos_a_cuenta` (2019-2023) → `numero_rentas_total` (2024-2026) |
+| M123 | `06` | `suma_retenciones_regularizacion` → `base_rentas_total` |
+| M123 | `09` | absent → `retenciones_ingresos_a_cuenta` |
+
+`[03]` is the sharpest of the three: it carries a retenciones **amount** before
+2024 and a **count of rentas** afterwards. Folding it across that boundary would
+put a row count into a money slot.
+
+### Correction: M714 is not the largest exposure
+
+This audit asserted that M714's dependence on four M100 box numbers was "the
+largest single exposure, M100 being the most frequently renumbered design in the
+tree". That was inference from M100's general renumbering habit, not measurement.
+Measured, `0435`, `0460`, `0545` and `0546` are stable across every M100 revision
+from 2020 to 2025. The claim is withdrawn. M123 is the only source that moves.
+
+### Correction: the M100 ← M123 join is deliberate, not circumstantial
+
+This audit concluded that today's correctness "rests on no relation happening to
+span a renumbering". That is true of M193, whose earliest revision is 2024. It is
+**not** true of M100, which does span the boundary and handles it correctly:
+
+| M100 revision | folds | M123 revision | that id's meaning |
+|---|---|---|---|
+| 2020-2023 | M123 `[03]` | `2019-2023` | `retenciones_ingresos_a_cuenta` |
+| 2024, 2025 | M123 `[09]` | `2024-y-siguientes` | `retenciones_ingresos_a_cuenta` |
+
+Each year's relation targets `renta-<year>-modelo-123-retenciones-periodicas` and
+pins the id that carries retenciones **in that year's source revision**. The
+authors re-pinned `03` → `09` at exactly the renumbering boundary. That is the
+correct handling, done deliberately, and it is evidence the per-revision relation
+model works as intended when exercised.
+
+The finding survives both corrections, in narrowed form: the re-pin is a manual
+discipline that no validator checks. A future renumbering whose re-pin is
+forgotten would produce a silently wrong fold, and M123 `[03]` proves ids on this
+axis do move. What changes is the urgency and the target — this is a
+maintainability guard for one known-unstable source, not a latent defect spread
+across the relation layer.
