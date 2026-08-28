@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ce18a124d903e44b24c0af9a0b3acf6d63369a2e6fe49d84428e27f24e929be'
+body_hash: 'sha256:f0c4f658541ed076d785e7befc517f1889a5ab6d7104d2ab135f895899d5cce9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2211,3 +2211,40 @@ carries 16 failures asserting that fields "required by the profile schema but
 not by the wizard key space" are unpinned, naming `attribution_entity_socios.*`
 among them -- a required schema field with no wizard question is one an operator
 cannot satisfy.
+
+### Measured: the worktree is under continuous concurrent modification
+
+Four separate peer relocations broke imports across the last few ticks --
+`BUSINESS_BEARING_STATES` re-exported before it existed, `row_set_assembly`
+promoted in `__init__` before the file was renamed, `DESIGN_CONSTANT` added
+without its `OperatorActionAxis` enrolment, and now `KEY_SIZE` moved into
+`crypto/aead.py` and `crypto/_crypto.py` while the package stopped re-exporting
+it. Each took collection down across a wide slice of the suite.
+
+Quantified rather than complained about: **59 files under `src` and `dev` are
+modified and uncommitted right now**, and commits are landing every one to eight
+minutes (16:01, 16:03, 16:04, 16:04, 16:04, 16:09). This is not a quiet tree
+being hardened; it is a tree being actively rebuilt by several workers at once.
+
+That bears directly on what "everything green" can mean here. A meaningful share
+of any sweep's redness at a given instant is another worker's half-landed
+relocation, not a standing defect -- which is why every fix in this campaign is
+established by running its own file, and why the three whole-suite sweeps have
+been read as floors rather than snapshots.
+
+**The restraint was vindicated.** Last tick declined to enrol
+`BindingSourceKind.DESIGN_CONSTANT` under an `OperatorActionAxis`, on the ground
+that every axis names an operator action while a design constant is fixed by
+AEAT's diseño and asks the operator for nothing -- so any enrolment would have
+reintroduced the precise defect that family was created to remove. Commit
+`ce7ed9c74e feat(registry): add the design_constant binding source and its
+narrow mechanism` landed about thirty minutes later and the import now resolves.
+The author completed their own design decision; guessing it would have written a
+false operator instruction into the tree and then had to be unpicked.
+
+Work this tick was blocked rather than productive: the schema-versus-wizard
+parity gate (`test_profile_key_schema_required_parity`, which reports fields
+"required by the profile schema but not by the wizard key space", naming
+`attribution_entity_socios.*`) cannot currently be run -- it imports through the
+storage package mid-relocation. It stays the next lead, and the registry domain
+suite was left running to characterise its own failures.

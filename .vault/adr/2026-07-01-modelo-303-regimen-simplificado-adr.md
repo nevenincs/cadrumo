@@ -5,8 +5,8 @@ tags:
 date: '2026-07-01'
 related:
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-modified: '2026-08-15'
-body_hash: 'sha256:813e8bafc2d1478c5e9889b4a36f0851b35d75e42881b5ddb11a937c2584bd1d'
+modified: '2026-08-28'
+body_hash: 'sha256:6aba295285d5e88a85bd35c193ebdafc1164b11ca44da433029770413bd09380'
 ---
 # `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `accepted`)
 
@@ -224,3 +224,17 @@ Modelo 390 projection is selection-only. It selects the ten typed handoff member
 The replacement is atomic. The scalar relation `modelo-390-rel-303-cuota-devengada-simplificado`, binding `modelo-390-prev-303-cuota-devengada-simplificado`, relation declaration, binding declaration, box-79 binding edge, construct and dependency references, scalar-fold tests, manual binding overrides, and fixtures that seed or preserve the scalar path are deleted in the same change that admits all ten typed values. Box 79 itself, its canonical continuity identity, completeness membership, and official Modelo 390 meaning remain and are retargeted to the typed handoff together with boxes 74-78 and 80-83. Structural gates reject both retired identifiers and any equivalent Modelo-303-box-54 scalar relation. No alias, compatibility reader, dual arrival path, or temporary box-79 bridge survives.
 
 This amendment refines this accepted record because it owns the one simplified-regime calculation result and its downstream value arrival. The generator-authority ADR continues to own source coordinates, semantic maps, render profiles, and emitted wire composition; it requires no amendment for this application value-arrival contract. A sibling ADR would split one calculation decision and is rejected.
+
+## Amendment (2026-08-28): the annual-summary handoff is conditional on the regime reaching the taxpayer
+
+S84 established the immutable Modelo 390 annual-summary handoff and its arrival path. It did not settle WHO the handoff is required of, and the omission had teeth: applicability was keyed on the registry revision alone, so the annual-summary requirement projected non-empty whenever the binding family was declared, the resolver then demanded exactly one filed same-bucket Modelo 303 `4T` work unit, and the calculate-path guard enforced a strict biconditional between declaration and handoff presence. Boxes 74-83 ride on EVERY Modelo 390 form, so every epoch declares the family, and the deleted `2010-y-siguientes` revision declared it too. The effect was that a regimen general filer was routed through a regimen simplificado source it can never possess -- and Modelo 390 is the IVA resumen anual, whose majority population is exactly that filer.
+
+LIVA art. 122 Uno, read in the bundled consolidated corpus, states that the regime `se aplicara a los sujetos pasivos ... que reunan los siguientes requisitos` and then lists three: personas fisicas or entidades en regimen de atribucion de rentas whose members are all personas fisicas, activities determined by regulation, and a prior-year volume-of-operations limit. Applicability is therefore a taxpayer fact, not a form fact. A revision declaring the family says what the FORM carries, never that the regime reaches this filer.
+
+This record already owns the vocabulary that expresses the judgement, and this amendment only enrolls its last call site. The closed scope carries not-claimed and evidence-required; the composition mapping sends GENERAL to not-claimed and SIMPLIFIED and MIXED to evidence-required, refusing an unknown composition rather than defaulting. Four production sites already gated on not-claimed while the annual-summary requirement consulted none of it. Not-claimed remains neutral: it rejects Orden and module rows, and it now equally withholds the annual-summary handoff.
+
+The derivation is single-homed beside the other scope derivations and is SUPPLIED to its consumers rather than reached for, because the closed vocabulary lives in the modelo package and the annual-summary resolver does not: the resolver receives an applicability flag exactly as the simplificado calculation surface already receives its scope decision, adding no cross-package edge. Four sites consult that one derivation. The resolver returns an empty resolution when the regime does not reach the filer. The calculate guard's antecedent widens from declaration to declaration AND applicability, carrying both facts into its refusal context so a diagnostic says which half failed. The persisted-target validator treats inapplicable exactly as undeclared, since neither state can produce a handoff, making an absent handoff correct and a persisted one equally anomalous. Verification passes the same derivation.
+
+The arrival-path invariant S84 established is unchanged, and is not what moved. A missing, unexpected, stale, divergent, or superseded handoff is still refused wherever the regime does reach the taxpayer; the biconditional still binds, on a corrected antecedent. Widening it to admit a handoff that arrived by some other route would have been the loosening this decision refuses.
+
+One question is deliberately left open and must not be silently folded into this one. A Modelo 390 calculation still hard-requires a filed Modelo 303 `4T` work unit wherever the family applies, and it is defensible that an annual resumen presupposes the year's quarterly autoliquidaciones. What this amendment settles is only that the SIMPLIFICADO resolver must not be the mechanism enforcing that presupposition against a taxpayer the regime does not reach. A general prerequisite on the quarterly chain needs its own decision and its own owner.
