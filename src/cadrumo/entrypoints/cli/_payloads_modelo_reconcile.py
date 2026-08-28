@@ -29,6 +29,7 @@ from ...application.modelo.reconciliation_records import (
 from ...core import Modelo
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ._decimal_wire import DecimalWireText
 
 
@@ -44,8 +45,18 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     carries the reconciling expectation's ``legal_refs`` / ``source_refs``.
     Individual casilla declaration diffs require the modelo-specific
     declaration parser (``diff_kind = casilla`` is reserved). ``legal_refs`` /
-    ``source_refs`` stay unconstrained tuples, exactly as the canonical diff
-    declares: a ``header_field`` diff carries none by design.
+    ``source_refs`` carry the registry ref types the canonical diff declares,
+    so the published contract states the citation shape an operator is meant
+    to resolve rather than promising bare text.
+
+    That a ``total`` or ``casilla`` diff must actually CARRY grounding — and
+    that a ``header_field`` diff carries none, comparing filing identity rather
+    than a regulated amount — is enforced on
+    :class:`ModeloReconciliationDiff` and is
+    deliberately not restated here. Unlike the shapes above, that rule governs
+    what the reconciler may record, not what this transport may emit: every row
+    is projected field-by-field from a diff that has already satisfied it, and
+    a second copy could only drift from the registry reason behind it.
     """
 
     field_name: str = Field(min_length=1)
@@ -53,8 +64,8 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     evidence_value: str = ""
     kind: str = Field(min_length=1)
     diff_kind: ModeloReconciliationDiffKind = ModeloReconciliationDiffKind.HEADER_FIELD
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
 
 
 class ModeloReconcileResult(OutputSchema):
