@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e44dfc9c4352700be2af50643229d0ff9d6486a2f2e823d3c18ba59704d0bd6'
+body_hash: 'sha256:f9af0fd6b86fa9bf400c4c61e130e1506b0b9b0d359b280b069d6ba132c37d30'
 related: []
 ---
 
@@ -241,3 +241,49 @@ proposing one would send an implementer into a build failure with no explanation
 The window rule is doing useful work here, and in the Modelo 100 savings-scale case
 recorded separately it is the same rule that leaves no satisfiable citation at all
 — worth holding both facts about it at once.
+
+## The gap is three rows, not one
+
+This audit originally named `is.modelo-200.tipo-gravamen-pyme`. An independent
+sweep — every `unit = "percent"` parameter whose citations all resolve to
+provision excerpts, checked for whether the cited text states the encoded value —
+found the same omission on two further rows of the same revision.
+
+Modelo 200, revision **2024**:
+
+| row | `legal_refs` | encoded values | `dt-44` |
+|---|---|---|---|
+| `tipo-gravamen-pyme` | `art-29` | (windowed) | **missing** |
+| `tipo-gravamen-pyme-display` | `art-29`, `ley-31-2022:art-39` | 23 / 21 / 19 | **missing** |
+| `tipo-gravamen-erd-art101` | `art-29`, `art-101` | 25 / 24 / 23 / 22 / 21 / 20 | **missing** |
+
+Revision **2025-y-siguientes** carries `ley-27-2014:dt-44` on **all three**.
+
+So this is not three independent oversights. The citation set was corrected once,
+on the later revision, and never backported to 2024. That is a tighter and more
+actionable statement than the original single-row finding, and it means a fix
+should sweep the revision rather than the row.
+
+## The values remain correct
+
+The sweep's complaint is that 19, 21, 22 and 24 do not appear in the cited
+articles, which is true: LIS art. 29 states the steady state and art. 101 defines
+the ERD scope, while the phased schedule those numbers come from is DT 44ª. The
+encoded ramps match that disposición — 23/21/19 for the pyme display and the
+25-to-20 ERD descent — so once again the number is right and the citation is
+incomplete.
+
+`is.modelo-200.tipo-gravamen-erd-art101` is worth calling out separately: its six
+dated windows run to 2029, so it is the longest forward schedule in the registry
+resting on a provision it does not cite.
+
+## Cross-check with the M303 finding
+
+The same sweep independently re-derived the recorded M303 transitional-rate
+omission — `m303-dr303-154-transitional-rate-percent`, with 7,50 absent from its
+four cited articles. That finding was reached originally by reading the file's
+comment; reaching it again from a numeric corpus comparison, by a different route,
+raises confidence that both are real rather than probe artefacts.
+
+Of 58 percent parameters judged against excerpt-tier citations, 54 state every
+encoded value. The four that do not are these three M200 rows and the M303 pair.
