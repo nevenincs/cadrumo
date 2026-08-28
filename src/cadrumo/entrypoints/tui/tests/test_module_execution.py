@@ -46,7 +46,7 @@ def _run_module(*, timeout: float) -> tuple[int | None, bytes]:
         process.kill()
         output, _ = process.communicate()
         return None, output
-    return process.returncode, output
+    return int(process.returncode), output
 
 
 def test_module_execution_starts_a_session_rather_than_raising() -> None:
