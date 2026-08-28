@@ -67,7 +67,21 @@ def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backen
         notice for notice in _notices(result.output) if notice["code"].startswith("overview.prepare.next_step.")
     ]
     assert preparation_notices
-    assert all(notice["action"] is None for notice in preparation_notices)
+    # A notice carries an action exactly when its step can name an executable
+    # one. The blanket "every notice carries none" this replaced held only
+    # while no step did; asserting it now would forbid the surface from
+    # offering the operator the command it already resolved.
+    notices_by_code = {notice["code"]: notice for notice in preparation_notices}
+    actionable = notices_by_code["overview.prepare.next_step.start_modelo_work"]
+    assert actionable["action"] == work_action, (
+        "the notice must offer the same executable action as its step row, not a second spelling of it"
+    )
+    for code, notice in notices_by_code.items():
+        if code == "overview.prepare.next_step.start_modelo_work":
+            continue
+        assert notice["action"] is None, (
+            f"{code} carries an action, but its step cannot resolve one without operator input"
+        )
 
 
 def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:

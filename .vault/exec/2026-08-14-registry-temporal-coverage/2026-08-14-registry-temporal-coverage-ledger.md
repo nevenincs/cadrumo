@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ea23752e0b8db1b7bf9d55e382cfdcc94c6f8887a536d41a991fa7633c8d1f8'
+body_hash: 'sha256:368775f8c9a752d2013353c0dbd9e0688890980dc30c54fdc44c6fc7adae9ab4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1476,4 +1476,40 @@ refusal's own code. The first guess at that code was wrong and the run said so
 -- the real one is `REFUSED_MODELO_CALCULATE_DECIMAL_INPUT`, which names the
 decimal-shape refusal more precisely than the sentence did. All 7 tests in the
 file pass.
+
+
+### Acceptance wall #260: a flattened payload and a blanket assertion that outlived its premise
+
+Wall #260's guarding test, `test_prepare_shows_import_step_pending_on_fresh_`
+`profile`, failed on `KeyError: 'action'` at
+`work_action["action"]["action"]["action_id"]`. Probed the live payload with an
+out-of-repo pytest plugin: `next_action` carries ONE `action` level
+(`{"action": {"action_id", "target_command_key", "cli_path"},
+"argument_bindings": [...]}`), and the very next line in the same test already
+used the correct depth for `cli_path`, so the double-nesting was stale rather
+than a shape disagreement.
+
+The repo-wide sweep was checked before touching anything: 19 sites spell
+`["action"]["action"]`, but only two are `next_action` payloads, both in this
+file. The other 17 sit on ERROR envelopes, where `error["action"]["action"]` is
+legitimately two levels deep -- an ActionRecovery wrapping an action. Rewriting
+them by pattern would have broken seventeen passing tests to fix two.
+
+The second failure in the file was more interesting.
+`assert all(notice["action"] is None for notice in preparation_notices)` now
+fails because one of the five preparation notices carries an action. Probing
+showed which: four are null, and `overview.prepare.next_step.start_modelo_work`
+carries exactly the action its own step row carries. That is coherent -- a step
+that can resolve an executable action offers it, and the ones that cannot are
+the ones this same test already documents as unable to ("Importing needs a
+statement file and a provider this read model cannot know, so the row carries no
+executable action rather than a placeholder").
+
+So the blanket assertion was true only while no step carried an action, and
+keeping it would forbid the surface from handing the operator a command it had
+already resolved. Replaced with the discriminating property: the actionable
+notice must carry the SAME action as its step row (not a second spelling of it),
+and every other notice must carry none, named in the failure message. Five tests
+in the file pass, and the wall catalogue is at 25 passing, up from 23 when this
+sweep of it started.
 
