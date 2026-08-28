@@ -18,7 +18,7 @@ import pytest
 
 from ....application.user_profile.overview import ProfileFieldChoice, ProfileFieldView
 from ....domain.user_profile.values import ProfileSetupState
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 
 pytestmark = [
     pytest.mark.unit,
@@ -40,7 +40,7 @@ def _row(**overrides: object) -> ProfileFieldView:
 
 
 def test_an_instance_row_is_named_by_its_instance() -> None:
-    _state, label, value = ProfileManagerApp._rendered_row(_row(row_index="0"))
+    _state, label, value = ProfileManagerScreen._rendered_row(_row(row_index="0"))
 
     assert label.startswith("0")
     assert label.endswith("NIF")
@@ -50,8 +50,8 @@ def test_an_instance_row_is_named_by_its_instance() -> None:
 def test_two_instances_of_one_field_render_distinguishable_labels() -> None:
     """The point of the whole exercise, asserted as inequality."""
 
-    first = ProfileManagerApp._rendered_row(_row(row_index="0"))[1]
-    second = ProfileManagerApp._rendered_row(_row(row_index="1"))[1]
+    first = ProfileManagerScreen._rendered_row(_row(row_index="0"))[1]
+    second = ProfileManagerScreen._rendered_row(_row(row_index="1"))[1]
 
     assert first != second
 
@@ -59,7 +59,7 @@ def test_two_instances_of_one_field_render_distinguishable_labels() -> None:
 def test_an_ordinary_row_is_labelled_exactly_as_before() -> None:
     """No instance, no decoration: every unrepeated field must read unchanged."""
 
-    _state, label, _value = ProfileManagerApp._rendered_row(
+    _state, label, _value = ProfileManagerScreen._rendered_row(
         _row(path="identity.tax_id", label="NIF"),
     )
 
@@ -69,7 +69,7 @@ def test_an_ordinary_row_is_labelled_exactly_as_before() -> None:
 def test_a_required_instance_row_keeps_its_required_mark() -> None:
     """Both decorations are additive; neither may displace the other."""
 
-    _state, label, _value = ProfileManagerApp._rendered_row(
+    _state, label, _value = ProfileManagerScreen._rendered_row(
         _row(row_index="2", required=True),
     )
 
@@ -80,7 +80,7 @@ def test_a_required_instance_row_keeps_its_required_mark() -> None:
 def test_a_closed_choice_row_renders_its_operator_label_not_its_token() -> None:
     storage_value = "app_request"
     operator_label = "Request in app"
-    _state, _label, rendered = ProfileManagerApp._rendered_row(
+    _state, _label, rendered = ProfileManagerScreen._rendered_row(
         _row(
             path="auth.clave_movil_route",
             label="Cl@ve Móvil route",
@@ -109,6 +109,6 @@ def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
         field for section in overview.sections for field in section.fields if field.path == "auth.clave_movil_route"
     )
 
-    rendered = ProfileManagerApp._rendered_row(route)[2]
+    rendered = ProfileManagerScreen._rendered_row(route)[2]
     assert rendered == tr("flows.manager.action.auth_clave_movil_route_app_request")
     assert storage_value not in rendered

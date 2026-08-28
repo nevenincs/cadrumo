@@ -728,6 +728,13 @@ operation:
       close: Cerrar
       detach: Desvincular
       reject: Rechazar
+    detail:
+      cleanup_deadline: Plazo de cierre
+      diagnostic: Diagnóstico
+      execution_deadline: Plazo de ejecución
+      phase: Fase
+      receipt_refusal: Rechazo
+      receipt_result: Resultado
     status:
       running: En curso
 overview:

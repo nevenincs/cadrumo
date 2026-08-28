@@ -54,10 +54,11 @@ from ....core.time import now
 from ....domain.auth import load_default_catalogue
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..flows.app import FlowTuiApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 from ..secret.credentials import CredentialHostApp
 from ..secret.login import LoginScreen
 
@@ -138,8 +139,8 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
             message = "the terminal-size proof never writes"
             raise AssertionError(message)
 
-        app = ProfileManagerApp(overview, persist=_refuse_write)
-        async with app.run_test(size=size) as pilot:
+        app = ProfileManagerScreen(overview, persist=_refuse_write)
+        async with ScreenHostApp(app).run_test(size=size) as pilot:
             await pilot.pause()
             await pilot.pause()
             _assert_horizontally_contained(cast(App[object], app), size, "profile manager")

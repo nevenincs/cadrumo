@@ -718,6 +718,13 @@ operation:
       close: Tanca
       detach: Desvincula
       reject: Rebutja
+    detail:
+      cleanup_deadline: Termini de tancament
+      diagnostic: Diagnòstic
+      execution_deadline: Termini d'execució
+      phase: Fase
+      receipt_refusal: Rebuig
+      receipt_result: Resultat
     status:
       running: En curs
 overview:

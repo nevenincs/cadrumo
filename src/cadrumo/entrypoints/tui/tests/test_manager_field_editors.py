@@ -29,7 +29,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.overview import FieldEditScreen, ProfileManagerApp
+from ..profile.overview import FieldEditScreen, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -88,16 +88,16 @@ def _stored() -> dict[str, object | None]:
     return {fact.path: fact.value for fact in reloaded.facts}
 
 
-def _manager() -> ProfileManagerApp:
+def _manager() -> ProfileManagerScreen:
     """The manager wired exactly as the entry point wires it.
 
     The judge is injected in production, so a test that left it out would be
     exercising a screen the operator never meets.
     """
-    return ProfileManagerApp(_live_overview(), persist=_persist)
+    return ProfileManagerScreen(_live_overview(), persist=_persist)
 
 
-def _open(app: ProfileManagerApp, path: str) -> None:
+def _open(app: ProfileManagerScreen, path: str) -> None:
     field = app._field_by_key[path]
     app.push_screen(
         FieldEditScreen(field, validate=app._validator_for(field)),

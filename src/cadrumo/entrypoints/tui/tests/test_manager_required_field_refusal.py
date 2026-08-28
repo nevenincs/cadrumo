@@ -24,8 +24,9 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.bucket_pointer import require_active_bucket_id
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -77,7 +78,7 @@ def _stored() -> dict[str, object | None]:
     return {fact.path: fact.value for fact in reloaded.facts}
 
 
-def _notice(app: ProfileManagerApp) -> str:
+def _notice(app: ProfileManagerScreen) -> str:
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
@@ -103,8 +104,8 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
         _persist(_REQUIRED_PATH, "12345678Z")
         assert _stored().get(_REQUIRED_PATH) == "12345678Z", "fixture must start with a value to lose"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _REQUIRED_PATH, "")
             assert _notice(app), "the operator must be told why nothing happened"
@@ -122,8 +123,8 @@ async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_i
         )
         _persist(_REQUIRED_PATH, "12345678Z")
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _REQUIRED_PATH, "   ")
             app.exit(None)
@@ -146,8 +147,8 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
         _persist(_OPTIONAL_PATH, "Ada Lovelace")
         assert _stored().get(_OPTIONAL_PATH) == "Ada Lovelace"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _OPTIONAL_PATH, "")
             await wait_until_settled(app, pilot)
@@ -172,8 +173,8 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             app._persist(_MALFORMED_PATH, "not-a-date")
             # The write runs on a worker thread and the refusal reaches the

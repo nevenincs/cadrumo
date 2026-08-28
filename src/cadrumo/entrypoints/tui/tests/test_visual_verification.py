@@ -39,8 +39,8 @@ from ....application.user_profile.status_projection import StatusFactRow, Status
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.presentation import FormField, FormPage
-from ....entrypoints.tui.profile.overview import ProfileManagerApp
-from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.profile.overview import ProfileManagerScreen
+from ....entrypoints.tui.profile.status import StatusScreen
 from ....entrypoints.tui.secret.login import LoginScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
@@ -110,9 +110,9 @@ def _form(tmp_path: Path) -> Iterator[FormApp]:
 
 
 @contextmanager
-def _status(tmp_path: Path) -> Iterator[StatusApp]:
+def _status(tmp_path: Path) -> Iterator[StatusScreen]:
     del tmp_path  # unused: the projection is hand-built, matching this file's existing status fixture
-    yield StatusApp(
+    yield StatusScreen(
         StatusPageData(
             active_profile_label="Subject",
             facts=(StatusFactRow(label="Field", value="Value"),),
@@ -121,7 +121,7 @@ def _status(tmp_path: Path) -> Iterator[StatusApp]:
 
 
 @contextmanager
-def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+def _manager(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
     """The manager, composed the way ``present_profile_manager`` composes it.
 
     ``manager`` was absent from every gate in this module -- the geometry
@@ -159,7 +159,7 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
             del source
 
-        yield ProfileManagerApp(
+        yield ProfileManagerScreen(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
             launch_source=launch_source,
@@ -202,7 +202,7 @@ def _login(tmp_path: Path) -> Iterator[LoginScreen]:
 
 
 @contextmanager
-def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
+def _status_populated(tmp_path: Path) -> Iterator[StatusScreen]:
     """The status page with its NOTICES region genuinely populated.
 
     Built through the real production door, ``build_status_page_data()``,
@@ -228,11 +228,11 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
             label=_VISUAL_LABEL,
             passphrase=_VISUAL_PASSWORD,
         )
-        yield StatusApp(build_status_page_data())
+        yield StatusScreen(build_status_page_data())
 
 
 @contextmanager
-def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
     """The manager with a REPEATABLE section's row count grown past one.
 
     ``manager`` (:func:`_manager`) always renders its full declared field
@@ -278,7 +278,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
             del source
 
-        yield ProfileManagerApp(
+        yield ProfileManagerScreen(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
             launch_source=launch_source,

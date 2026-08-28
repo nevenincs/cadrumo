@@ -31,8 +31,8 @@ RENDERED_BY: Final[dict[str, tuple[str, ...]]] = {
         "cadrumo.entrypoints.tui.secret.login.LoginScreen",
         "cadrumo.entrypoints.tui.secret.credentials.CredentialScreen",
     ),
-    "manager": ("cadrumo.entrypoints.tui.profile.overview.ProfileManagerApp",),
-    "status": ("cadrumo.entrypoints.tui.profile.status.StatusApp",),
+    "manager": ("cadrumo.entrypoints.tui.profile.overview.ProfileManagerScreen",),
+    "status": ("cadrumo.entrypoints.tui.profile.status.StatusScreen",),
     "form": (
         "cadrumo.entrypoints.tui.components.form_screen.FormApp",
         "cadrumo.entrypoints.tui.components.form_screen.FormScreen",

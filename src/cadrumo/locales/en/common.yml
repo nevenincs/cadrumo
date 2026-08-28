@@ -699,6 +699,13 @@ operation:
       close: Close
       detach: Detach
       reject: Reject
+    detail:
+      cleanup_deadline: Cleanup deadline
+      diagnostic: Diagnostic
+      execution_deadline: Execution deadline
+      phase: Phase
+      receipt_refusal: Refusal
+      receipt_result: Result
     status:
       running: Running
 overview:

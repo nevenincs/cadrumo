@@ -18,7 +18,7 @@ from typing import ClassVar, Literal, override
 from pydantic import BaseModel, ConfigDict
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import ItemGrid, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
@@ -68,6 +68,18 @@ class OperationModalDetachedOutcomeV1(BaseModel):
 type OperationModalOutcomeV1 = OperationModalSettledOutcomeV1 | OperationModalDetachedOutcomeV1
 
 
+_ACTION_MIN_COLUMN_WIDTH = 16
+"""Narrowest column the modal action row will lay a button into.
+
+Sized from the widest translated action label rather than the English one:
+the Spanish set needs sixty-eight columns laid in a single row, against a
+modal body that is sixty-four columns wide on the eighty-column floor, so a
+row that fits in one language still overflows in another. Wrapping at this
+width keeps every action inside the body in all four catalogues, and the
+grid collapses back to a single row wherever the body is wide enough.
+"""
+
+
 class OperationModal(ModalScreen[OperationModalOutcomeV1]):
     """Generic modal presenting one supervised operation until it settles."""
 
@@ -88,10 +100,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
     #operation-modal-log { color: $text-muted; height: auto; max-height: $cadrumo-log-max-height; overflow-y: auto; }
     #operation-modal-actions {
         height: auto;
-        align-horizontal: right;
+        grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
         margin: $cadrumo-stack $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0;
     }
-    #operation-modal-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
+    #operation-modal-actions Button { width: 1fr; margin: $cadrumo-space-0; }
     """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 
@@ -108,9 +120,13 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
     def compose(self) -> ComposeResult:
         with Vertical(id="operation-modal-body"):
             yield Static("", id="operation-modal-status")
+            yield Static("", id="operation-modal-phase")
+            yield Static("", id="operation-modal-deadlines")
+            yield Static("", id="operation-modal-diagnostic")
+            yield Static("", id="operation-modal-receipt")
             yield Static("", id="operation-modal-review")
             yield Static("", id="operation-modal-log")
-            with Horizontal(id="operation-modal-actions"):
+            with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
                 yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject")
                 yield Button(tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary")
                 yield Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel")
@@ -153,6 +169,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
             status.update(tr("operation.modal.status.running"))
         else:
             status.update("")
+        self._refresh_detail_rows(view_model)
         review = self.query_one("#operation-modal-review", Static)
         interaction = self._interaction
         if isinstance(interaction, OperationModalReviewInteractionV1):
@@ -168,6 +185,44 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         self.query_one("#btn-operation-apply", Button).disabled = not apply_enabled
         self.query_one("#btn-operation-reject", Button).disabled = not reject_enabled
         self.query_one("#btn-operation-close", Button).disabled = view_model.spinner_visible
+
+    def _refresh_detail_rows(self, view_model: OperationModalViewModelV1) -> None:
+        """Draw the phase, deadline, diagnostic and receipt facts.
+
+        Each row is written from the derived view model alone, and each is
+        blanked when its fact is absent rather than left holding the last
+        value it had: a stale deadline or a receipt belonging to a previous
+        revision is worse than no row at all.
+        """
+        phase = view_model.phase_code
+        self.query_one("#operation-modal-phase", Static).update(
+            f"{tr('operation.modal.detail.phase')}: {tr(phase)}" if phase is not None else ""
+        )
+        # Every locale key below is spelled as a literal argument to `tr`.
+        # The catalogue tooling reads those literals to know a key is live,
+        # so a key assembled from a variable is invisible to it and drifts
+        # out of the catalogues on the next scaffold.
+        deadlines: list[str] = []
+        if view_model.execution_deadline_at is not None:
+            deadlines.append(
+                f"{tr('operation.modal.detail.execution_deadline')}: {view_model.execution_deadline_at.isoformat()}"
+            )
+        if view_model.cleanup_deadline_at is not None:
+            deadlines.append(
+                f"{tr('operation.modal.detail.cleanup_deadline')}: {view_model.cleanup_deadline_at.isoformat()}"
+            )
+        self.query_one("#operation-modal-deadlines", Static).update("  ".join(deadlines))
+        diagnostic = view_model.diagnostic_ref
+        self.query_one("#operation-modal-diagnostic", Static).update(
+            f"{tr('operation.modal.detail.diagnostic')}: {diagnostic}" if diagnostic is not None else ""
+        )
+        receipt = self.query_one("#operation-modal-receipt", Static)
+        if view_model.receipt_kind == "result":
+            receipt.update(f"{tr('operation.modal.detail.receipt_result')}: {view_model.receipt_ref}")
+        elif view_model.receipt_kind == "refusal":
+            receipt.update(f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}")
+        else:
+            receipt.update("")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch one operator action through the bound controller only."""

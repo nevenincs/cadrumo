@@ -1,7 +1,7 @@
 """Real proofs for provenance, conflict, and exact apply-or-reject rendering.
 
 Drives a real registered profile record and the real Textual
-`CensalFieldReviewScreen`/`ProfileManagerApp` -- no mocks, no synthetic
+`CensalFieldReviewScreen`/`ProfileManagerScreen` -- no mocks, no synthetic
 schema. `test_census_sync_review.py` already proves the full operation
 round-trip; this file proves the narrower D6 surface `W03.P06` adds:
 provenance is read through the settled classification authority (never a
@@ -38,7 +38,8 @@ from .....application.user_profile.profile_record_repository import ProfileRecor
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
-from ..overview import ProfileManagerApp
+from ...components.host import ScreenHostApp
+from ..overview import ProfileManagerScreen
 from ..sync_review import (
     CensalFieldReviewRowV1,
     CensalFieldReviewScreen,
@@ -215,8 +216,8 @@ async def test_source_action_launches_only_through_the_injected_door_never_impli
     async def _launch(source: ProfileAcquisitionSourceV1) -> None:
         launched.append(source.key.value)
 
-    app = ProfileManagerApp(overview, persist=_persist_not_exercised, launch_source=_launch)
-    async with app.run_test(size=(120, 40)) as pilot:
+    app = ProfileManagerScreen(overview, persist=_persist_not_exercised, launch_source=_launch)
+    async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         card = app.query_one("#source-censal_review")
         await pilot.click(card.query_one(Button))
@@ -230,8 +231,8 @@ async def test_source_action_is_disabled_not_silently_inert_with_no_launch_door(
     record = _real_record(tmp_path, facts=())
     overview = build_profile_overview(record)
 
-    app = ProfileManagerApp(overview, persist=_persist_not_exercised)
-    async with app.run_test(size=(120, 40)) as pilot:
+    app = ProfileManagerScreen(overview, persist=_persist_not_exercised)
+    async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         card = app.query_one("#source-censal_review")
         assert card.query_one(Button).disabled is True

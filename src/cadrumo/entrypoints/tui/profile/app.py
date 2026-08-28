@@ -20,9 +20,10 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import ClassVar, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Static
 
@@ -54,10 +55,11 @@ _STAGE_LABEL_LOCALE_KEYS: dict[ProfileJourneyStage, str] = {
 _LAST_STAGE = max(ProfileJourneyStage)
 
 
-class ProfileJourneyApp(App[None]):
+class ProfileJourneyScreen(Screen[None]):
     """Compose the guided five-stage journey with only the active body mounted."""
 
-    CSS = tokenised(
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + """
     #journey-actions {
@@ -93,14 +95,14 @@ class ProfileJourneyApp(App[None]):
 
     def on_mount(self) -> None:
         """Install the shared theme and mount the first stage's body."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         body = self.query_one("#journey-body", Vertical)
         body.mount_all(self._stage_widgets())
         self._sync_actions()
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
-        toggle_appearance(self)
+        toggle_appearance(self.app)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Move exactly one stage per press, never past either end."""
@@ -144,4 +146,4 @@ class ProfileJourneyApp(App[None]):
         return [ReadyStageBody(self._presentation, id="ready-stage-body")]
 
 
-__all__ = ["ProfileJourneyApp", "ProfileJourneyStage"]
+__all__ = ["ProfileJourneyScreen", "ProfileJourneyStage"]

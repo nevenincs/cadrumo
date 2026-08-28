@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..profile.overview import ProfileManagerApp
+    from ..profile.overview import ProfileManagerScreen
 
 __all__ = ["wait_until_settled"]
 
@@ -43,7 +43,7 @@ than about the machine's speed.
 """
 
 
-async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
+async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
     """Drain the page's messages until no background work is left in flight.
 
     Waits on the page's own state — that it holds no unfinished write —

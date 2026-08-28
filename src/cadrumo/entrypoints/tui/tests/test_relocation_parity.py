@@ -29,10 +29,11 @@ from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWi
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..devtools.fixture import registration_attempt
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 from ..secret.credentials import CredentialHostApp
 from ..secret.login import LoginScreen
 from ..secret.registration import RecoveryWordsScreen, RegistrationScreen
@@ -44,8 +45,8 @@ _LABEL = "Relocation parity operator"
 _PASSPHRASE = "relocation-parity-operator-secret"  # noqa: S105 - synthetic test fixture
 
 _CANONICAL_DEFINITIONS = (
-    ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerApp"),
-    ("cadrumo.entrypoints.tui.profile.status", "StatusApp"),
+    ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerScreen"),
+    ("cadrumo.entrypoints.tui.profile.status", "StatusScreen"),
     ("cadrumo.entrypoints.tui.secret.login", "LoginScreen"),
     ("cadrumo.entrypoints.tui.secret.registration", "RegistrationScreen"),
     ("cadrumo.entrypoints.tui.secret.registration", "RecoveryWordsScreen"),
@@ -380,8 +381,8 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_LABEL)
 
-        manager = ProfileManagerApp(overview, persist=persist)
-        async with manager.run_test(size=_TERMINAL_SIZE) as pilot:
+        manager = ProfileManagerScreen(overview, persist=persist)
+        async with ScreenHostApp(manager).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered_rows = sum(table.row_count for table in manager.query(DataTable))
             assert rendered_rows == overview.total_count

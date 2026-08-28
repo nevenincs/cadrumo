@@ -24,8 +24,9 @@ from .....application.user_profile.profile_record_repository import ProfileRecor
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_profile_storage_root
+from ...components.host import ScreenHostApp
 from ...components.widgets import DisclosureGroup, RequirementBadge
-from ..app import ProfileJourneyApp, ProfileJourneyStage
+from ..app import ProfileJourneyScreen, ProfileJourneyStage
 from ..journey_status import overview_readiness_summary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -53,8 +54,8 @@ def _real_presentation(tmp_path: Path):
 async def test_only_the_active_stage_body_is_mounted_never_only_hidden(tmp_path: Path) -> None:
     """Moving off Overview must remove its body from the DOM, not merely style it away."""
     presentation = _real_presentation(tmp_path)
-    app = ProfileJourneyApp(presentation)
-    async with app.run_test(size=_SIZE) as pilot:
+    app = ProfileJourneyScreen(presentation)
+    async with ScreenHostApp(app).run_test(size=_SIZE) as pilot:
         await pilot.pause()
         assert app.query("#overview-summary")
         assert not app.query("#get-data-placeholder")
@@ -69,8 +70,8 @@ async def test_only_the_active_stage_body_is_mounted_never_only_hidden(tmp_path:
 @pytest.mark.asyncio
 async def test_navigation_is_linear_and_bounded_at_both_ends(tmp_path: Path) -> None:
     presentation = _real_presentation(tmp_path)
-    app = ProfileJourneyApp(presentation)
-    async with app.run_test(size=_SIZE) as pilot:
+    app = ProfileJourneyScreen(presentation)
+    async with ScreenHostApp(app).run_test(size=_SIZE) as pilot:
         await pilot.pause()
         previous = app.query_one("#btn-journey-previous", Button)
         next_button = app.query_one("#btn-journey-next", Button)
@@ -93,8 +94,8 @@ async def test_navigation_is_linear_and_bounded_at_both_ends(tmp_path: Path) -> 
 @pytest.mark.asyncio
 async def test_stage_strip_advances_with_navigation(tmp_path: Path) -> None:
     presentation = _real_presentation(tmp_path)
-    app = ProfileJourneyApp(presentation)
-    async with app.run_test(size=_SIZE) as pilot:
+    app = ProfileJourneyScreen(presentation)
+    async with ScreenHostApp(app).run_test(size=_SIZE) as pilot:
         await pilot.pause()
         assert str(app.query_one("#stage-0").render()).startswith("\u25b8")
 
@@ -121,8 +122,8 @@ async def test_required_stage_groups_by_the_applications_own_classification_neve
     }
     assert needs_applicability_paths, "a freshly registered profile must have at least one unassessed trigger"
 
-    app = ProfileJourneyApp(presentation)
-    async with app.run_test(size=_SIZE) as pilot:
+    app = ProfileJourneyScreen(presentation)
+    async with ScreenHostApp(app).run_test(size=_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-journey-next")
         await pilot.pause(0.1)
@@ -144,8 +145,8 @@ async def test_required_stage_groups_by_the_applications_own_classification_neve
 @pytest.mark.asyncio
 async def test_ready_stage_readiness_line_matches_the_applications_own_ready_fact(tmp_path: Path) -> None:
     presentation = _real_presentation(tmp_path)
-    app = ProfileJourneyApp(presentation)
-    async with app.run_test(size=_SIZE) as pilot:
+    app = ProfileJourneyScreen(presentation)
+    async with ScreenHostApp(app).run_test(size=_SIZE) as pilot:
         await pilot.pause()
         for _ in range(len(ProfileJourneyStage) - 1):
             await pilot.click("#btn-journey-next")

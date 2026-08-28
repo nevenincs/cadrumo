@@ -710,6 +710,13 @@ operation:
       close: Bezár
       detach: Leválaszt
       reject: Elutasit
+    detail:
+      cleanup_deadline: Lezárási határidő
+      diagnostic: Diagnosztika
+      execution_deadline: Végrehajtási határidő
+      phase: Fázis
+      receipt_refusal: Elutasítás
+      receipt_result: Eredmény
     status:
       running: Folyamatban
 overview:

@@ -10,7 +10,7 @@ These tests drive the real production chain end to end: a real profile, a
 real (or absent) persisted calculation observation, the real
 :func:`~cadrumo.application.overview.no_aeat_history_notice` producer, the
 real :func:`~cadrumo.application.user_profile.status_projection.build_status_page_data`
-builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
+builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusScreen`
 surface. No mock, stub, or reimplementation of what the wiring should do.
 """
 
@@ -25,7 +25,8 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....application.user_profile.status_projection import build_status_page_data
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.status import StatusApp
+from ..components.host import ScreenHostApp
+from ..profile.status import StatusScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,7 +99,7 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
     """The last mile: what the application layer raised is what the screen shows.
 
     Builds the page from the real producer chain, then runs the REAL
-    ``StatusApp`` against it and reads the rendered widget back — proving
+    ``StatusScreen`` against it and reads the rendered widget back — proving
     the notice is not merely present on the view-model but actually
     reaches a painted cell, which is the gap this fix closes.
     """
@@ -110,8 +111,8 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
         expected_action_target = data.notices[0].action_target
         assert expected_action_target is not None
 
-        app = StatusApp(data)
-        async with app.run_test(size=_TERMINAL_SIZE):
+        app = StatusScreen(data)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
             rendered_message = str(app.query_one("#notice-0", Static).content)
             assert expected_message in rendered_message
             rendered_action = str(app.query_one("#notice-0-action", Static).content)

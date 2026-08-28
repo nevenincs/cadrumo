@@ -31,7 +31,7 @@ from textual.theme import Theme
 from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
-from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.profile.status import StatusScreen
 from ....entrypoints.tui.secret.credentials import CredentialHostApp, CredentialScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ..components.theme import (
@@ -229,7 +229,7 @@ def _gutters(active: Screen[Any]) -> tuple[int, int]:
 @pytest.mark.parametrize(("width", "height"), _GEOMETRY_SIZES)
 @pytest.mark.parametrize(
     "build",
-    [_registration_screen, lambda: StatusApp(StatusPageData())],
+    [_registration_screen, lambda: StatusScreen(StatusPageData())],
     ids=["registration", "status"],
 )
 async def test_the_content_column_consumes_the_available_terminal(

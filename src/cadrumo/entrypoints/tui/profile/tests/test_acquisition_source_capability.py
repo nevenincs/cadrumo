@@ -1,6 +1,6 @@
 """Real proofs that the source-action panel renders credential posture honestly.
 
-Drives the real `ProfileManagerApp` with a real registered profile. The
+Drives the real `ProfileManagerScreen` with a real registered profile. The
 posture rendered is built by the real `resolve_acquisition_source_credential_
 postures` against a real `AuthState`, never a value invented in the test or
 in the screen -- the screen only classifies what a `RequirementBadge` glyph
@@ -21,7 +21,8 @@ from .....application.user_profile.overview import ProfileOverview, build_profil
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....entrypoints.tui.components.widgets import RequirementBadge, RequirementStatus
 from .....tests.secure_sql import isolated_profile_storage_root
-from ..overview import ProfileManagerApp
+from ...components.host import ScreenHostApp
+from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -60,13 +61,13 @@ def _register():
 async def test_with_no_aeat_credential_every_source_shows_missing_and_is_disabled(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         postures = resolve_acquisition_source_credential_postures(AuthState())
-        app = ProfileManagerApp(
+        app = ProfileManagerScreen(
             _build_overview(),
             persist=_persist_not_exercised,
             launch_source=_launch_not_exercised,
             credential_postures=postures,
         )
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             card = app.query_one("#source-censal_review")
             badge = card.query_one("#source-credential-requirement", RequirementBadge)
@@ -79,13 +80,13 @@ async def test_with_an_aeat_credential_on_file_every_source_shows_held_and_is_en
     with isolated_profile_storage_root(tmp_path=tmp_path):
         auth = AuthState(provider="certificate", authenticated_at=datetime.now(UTC))
         postures = resolve_acquisition_source_credential_postures(auth)
-        app = ProfileManagerApp(
+        app = ProfileManagerScreen(
             _build_overview(),
             persist=_persist_not_exercised,
             launch_source=_launch_not_exercised,
             credential_postures=postures,
         )
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             card = app.query_one("#source-filed_history")
             badge = card.query_one("#source-credential-requirement", RequirementBadge)
@@ -99,12 +100,12 @@ async def test_a_held_credential_does_not_override_a_missing_launch_door(tmp_pat
     with isolated_profile_storage_root(tmp_path=tmp_path):
         auth = AuthState(provider="certificate", authenticated_at=datetime.now(UTC))
         postures = resolve_acquisition_source_credential_postures(auth)
-        app = ProfileManagerApp(
+        app = ProfileManagerScreen(
             _build_overview(),
             persist=_persist_not_exercised,
             credential_postures=postures,
         )
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             card = app.query_one("#source-censal_review")
             assert card.query_one(Button).disabled is True
@@ -114,12 +115,12 @@ async def test_a_held_credential_does_not_override_a_missing_launch_door(tmp_pat
 async def test_with_no_posture_supplied_the_panel_renders_no_credential_claim(tmp_path: Path) -> None:
     """Unknown posture is not the same claim as "missing" -- no badge is rendered at all."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        app = ProfileManagerApp(
+        app = ProfileManagerScreen(
             _build_overview(),
             persist=_persist_not_exercised,
             launch_source=_launch_not_exercised,
         )
-        async with app.run_test(size=(120, 40)) as pilot:
+        async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             card = app.query_one("#source-censal_review")
             assert len(card.query(RequirementBadge)) == 0

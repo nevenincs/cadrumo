@@ -38,8 +38,9 @@ from ....core.classification import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import FieldEditScreen, ProfileManagerApp
+from ..profile.overview import FieldEditScreen, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -93,7 +94,7 @@ def _stored() -> dict[str, object | None]:
     return {fact.path: fact.value for fact in reloaded.facts}
 
 
-def _notice(app: ProfileManagerApp) -> str:
+def _notice(app: ProfileManagerScreen) -> str:
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
@@ -172,8 +173,8 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=True), "")
             assert not _notice(app), f"keeping the value is not a refusal, but reported {_notice(app)!r}"
@@ -198,8 +199,8 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             app.push_screen(FieldEditScreen(_view(required=True, present=True)))
@@ -235,8 +236,8 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
         )
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "")
             assert _notice(app), "the operator must be told why saving an empty required field did nothing"
@@ -253,8 +254,8 @@ async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "   ")
             assert _notice(app), "a whitespace-only submission must be refused like any other blank"
@@ -276,8 +277,8 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), _MASKED_VALUE)
             app.exit(None)
@@ -305,8 +306,8 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=False, present=False), "")
             assert not _notice(app), f"an optional blank must draw no complaint, but reported {_notice(app)!r}"
@@ -345,8 +346,8 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             app.push_screen(FieldEditScreen(_view(required=True, present=True)))
             await pilot.pause()
