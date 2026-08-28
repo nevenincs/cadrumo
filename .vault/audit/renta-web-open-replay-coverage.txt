@@ -1,6 +1,0 @@
-scenarios_total: 0
-scenarios_with_payload: 0
-scenarios_uncovered: 0
-coverage_pct: 0.0
-uncovered_ids:
-  (none)
