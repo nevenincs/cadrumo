@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae274f6c74a0bd1cccb2fd71930199ff5c32c4308c826052c95d419a1b935879'
+body_hash: 'sha256:736574420f4488714efd2dd02b058764d8cd1afe1264bf4353f29a2db2d6b37e'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -138,11 +138,44 @@ the strength of its 8 importing modules. That was wrong and the survey corrected
 low importer count made it look cheap while its namespace is a module. The two disguised
 packages are sequenced LAST and are scoped as relocations, not retirements.
 
-`core` is its own phase and does not begin until the other eight are closed. Before it
-starts, its cold-start justification is RE-MEASURED rather than assumed: if importing
-`cadrumo.core` eagerly is cheap today, the original reason has lapsed and retirement is
-mechanical; if it is expensive, retirement needs a different shape and that shape is
-decided then, on the numbers, not now.
+`core` is its own phase and does not begin until the other eight are closed. Its
+cold-start justification has now been MEASURED rather than assumed, three runs per arm,
+fresh interpreter each time:
+
+| | modules in `sys.modules` | wall time |
+|---|---|---|
+| `import cadrumo.core` as shipped | +6 | 5.6-6.9 ms |
+| same, then eagerly importing all 100 lazy targets | +416 | 719-781 ms |
+
+So a naive retirement -- rewriting the map as 354 plain imports -- would add roughly
+three quarters of a second to EVERY process that imports `cadrumo.core`, which is every
+`aeat` invocation. The justification has not lapsed. It is real and it is large.
+
+But the measurement also shows the weight is not diffuse. THREE submodules carry 311 of
+the 416 modules, about 75 per cent: `_action_argument_resolution` (+135),
+`_foreign_asset_obligation` (+130), `_config_state_root` (+46). Most of the other 97
+targets cost nought to two modules each.
+
+That decides the shape, and it is the shape this decision already sanctions rather than a
+new exception. `core` retires its WHOLE-NAMESPACE MAP like the other eight, and keeps a
+PEP 562 guard for the two or three named heavy symbols -- which is precisely "a named
+symbol whose deferral is justified by a recorded measurement of import weight" and
+nothing more. The measurement above is that record.
+
+This is the outcome the Consequences section anticipated as a risk, and it arrived as the
+better case: `core` does not keep the mechanism the other eight lost, it keeps the
+BOUNDED exception the original ADR always described, now grounded in numbers rather than
+inherited as a habit. The remaining question -- whether those three submodules are heavy
+for a good reason or are themselves carrying an avoidable dependency -- is worth asking
+before the guard is written, because a fixed root cause would shrink the exception
+further.
+
+The 2229-importing-module figure also survived a precise re-count. An AST walk resolving
+every relative import found 2542 `from cadrumo.core import` statements across 2278 files
+carrying 5552 symbol references, of which 5501 (99.1 per cent) are lazy-map symbols.
+`core/__init__.py` defines NO public symbols of its own -- the 51 non-lazy references are
+submodule imports that bypass `__getattr__` entirely. So unlike `application/registry`,
+`core` has no second uncounted population: retiring its map is the whole job.
 
 Each package's locally-defined `__init__.py` exports are counted alongside its lazy map
 before that package is called done, because retiring the map alone leaves the namespace
