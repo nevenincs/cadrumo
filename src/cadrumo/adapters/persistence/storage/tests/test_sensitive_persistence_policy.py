@@ -203,7 +203,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
-        "src/cadrumo/application/registry/_source_connectivity_authority.py",
+        "src/cadrumo/application/registry/source_connectivity_authority.py",
         "digest",
         "os.open",
     ): "READ-ONLY evidence-descriptor verification, captured because this inventory catalogues "
@@ -371,6 +371,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_read_posix_regular_file",
         "os.open",
     ): "read path for importing a recovery artifact back; writes nothing",
+    (
+        "src/cadrumo/core/bucket_pointer.py",
+        "read_once",
+        "os.open",
+    ): "read path for the active-profile pointer, opened O_RDONLY|O_NOFOLLOW behind a link-like "
+    "refusal and a bounded-regular-file check; writes nothing",
     (
         "src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py",
         "_write_export_descriptor",
