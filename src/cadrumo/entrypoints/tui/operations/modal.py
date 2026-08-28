@@ -153,7 +153,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
             else:
                 cursor = self._log_view.next_cursor
             self._view_model = build_operation_modal_view_model(observed.projection)
-            self._interaction = await resolve_modal_interaction_state(self._controller, observed.projection)
+            self._interaction = await resolve_modal_interaction_state(
+                self._controller, observed.projection, current=self._interaction
+            )
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))

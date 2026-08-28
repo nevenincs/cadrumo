@@ -87,14 +87,31 @@ type OperationModalInteractionStateV1[ReviewProjectionT: BaseModel] = (
 async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     controller: OperationController,
     projection: OperationPublicProjectionV1,
+    *,
+    current: OperationModalInteractionStateV1[ReviewProjectionT] | None = None,
 ) -> OperationModalInteractionStateV1[ReviewProjectionT]:
-    """Resolve the exact modal interaction state for the current projection."""
+    """Resolve the exact modal interaction state for the current projection.
+
+    ``current`` is the state a repeating caller already holds. When the same
+    REVIEW is still pending at the same revision it is returned unchanged,
+    because the response capability behind it is single-use: binding a second
+    control for an interaction already bound consumes the authority and every
+    later availability check refuses, which switches the operator's APPLY and
+    REJECT controls off while the operation is still waiting for exactly that
+    answer. A caller that polls therefore MUST pass what it holds.
+    """
     pending = projection.pending_interaction
     if isinstance(pending, OperationNoPendingInteractionV1):
         return OperationModalNoInteractionV1()
     if isinstance(pending, OperationUnsupportedInteractionV1):
         return OperationModalUnsupportedInteractionV1(interaction=pending)
     assert isinstance(pending, OperationReviewAvailableInteractionV1)
+    if (
+        isinstance(current, OperationModalReviewInteractionV1)
+        and current.interaction.interaction_id == pending.interaction_id
+        and current.interaction.revision == pending.revision
+    ):
+        return current
     resolved: OperationReviewProjectionResultV1[ReviewProjectionT] = await controller.resolve_review(
         pending.review_reference
     )
