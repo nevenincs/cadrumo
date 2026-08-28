@@ -83,6 +83,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
+from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations import CalculationObservationRepository
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
@@ -108,6 +109,18 @@ _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+
+#: Sources the caller must not supply. The bucket-locked half is DERIVED from the
+#: caller-override ladder rather than hand-listed: a literal copy is correct only
+#: until the next resolver is enrolled, and omitting `inventory` is what made the
+#: lock reject this calculation outright.
+_MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
+    {
+        # Mesh-resolved rather than locked.
+        "profile",
+        _RELATION_PREFILL_SOURCE,
+    },
+) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
 _M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
 
@@ -519,17 +532,7 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id != _M100_SALARY_CERT_RETENCIONES_BINDING
-        if binding.source
-        not in (
-            "profile",
-            _RELATION_PREFILL_SOURCE,
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_estimacion_directa_aggregation",
-            "ledger_iva_aggregation",
-            "ledger_oss_aggregation",
-            "collectible_invoice",
-            "payable_invoice",
-        )
+        if binding.source not in _MESH_RESOLVED_OR_LOCKED_SOURCES
     }
     values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
