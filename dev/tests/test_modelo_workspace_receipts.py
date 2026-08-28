@@ -52,7 +52,7 @@ def _not_applicable(code: str) -> ModeloWorkspaceReceiptProofV1:
         not_applicable_code=code,
         owning_authority="tui-architecture",
         reason=f"{code} is out of scope for this cohort",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="a future accepted amendment enrolls this axis",
     )
 

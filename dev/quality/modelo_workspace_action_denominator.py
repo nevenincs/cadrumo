@@ -145,7 +145,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.audit.check": _classification(
@@ -157,7 +157,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.audit.export": _classification(
@@ -169,7 +169,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.audit.view": _classification(
@@ -181,7 +181,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.bindings.list": _classification(
@@ -193,7 +193,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.bindings.resolve": _classification(
@@ -205,7 +205,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.casilla": _classification(
@@ -217,7 +217,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.casillas": _classification(
@@ -229,7 +229,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.compare": _classification(
@@ -241,7 +241,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.describe": _classification(
@@ -253,7 +253,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.export": _classification(
@@ -265,7 +265,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.filing_record.import": _classification(
@@ -277,7 +277,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.filing_record.list": _classification(
@@ -289,7 +289,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.filing_record.observe_local": _classification(
@@ -301,7 +301,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.filing_record.view": _classification(
@@ -313,7 +313,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.formulas": _classification(
@@ -325,7 +325,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.history": _classification(
@@ -337,7 +337,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.iva_wallet.balance": _classification(
@@ -349,7 +349,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.iva_wallet.correct": _classification(
@@ -361,7 +361,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.iva_wallet.override": _classification(
@@ -373,7 +373,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.iva_wallet.seed": _classification(
@@ -385,7 +385,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.list": _classification(
@@ -397,7 +397,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.m036.alta": _classification(
@@ -409,7 +409,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m036.baja": _classification(
@@ -421,7 +421,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m036.list": _classification(
@@ -433,7 +433,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.m036.modificacion": _classification(
@@ -445,7 +445,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m036.view": _classification(
@@ -457,7 +457,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.m145.create": _classification(
@@ -469,7 +469,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m145.export": _classification(
@@ -481,7 +481,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m145.mark_delivered_to_payer": _classification(
@@ -493,7 +493,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m145.mark_locally_completed": _classification(
@@ -505,7 +505,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.m145.validate": _classification(
@@ -517,7 +517,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.project": _classification(
@@ -529,7 +529,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.readiness": _classification(
@@ -541,7 +541,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.reconcile.list": _classification(
@@ -553,7 +553,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.reconcile.import": _classification(
@@ -565,7 +565,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.reconcile.pull": _classification(
@@ -577,7 +577,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.requires": _classification(
@@ -589,7 +589,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.review_package.build": _classification(
@@ -601,7 +601,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.counter_sign": _classification(
@@ -613,7 +613,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.decrypt": _classification(
@@ -625,7 +625,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.encrypt_feedback": _classification(
@@ -637,7 +637,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.review_package.encrypt_for_recipient": _classification(
@@ -649,7 +649,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.review_package.import_feedback": _classification(
@@ -661,7 +661,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.sign": _classification(
@@ -673,7 +673,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.verify": _classification(
@@ -685,7 +685,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.review_package.verify_receipt": _classification(
@@ -697,7 +697,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.review_package.verify_signature": _classification(
@@ -709,7 +709,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.spreadsheet.calculate": _classification(
@@ -721,7 +721,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.spreadsheet.pull": _classification(
@@ -733,7 +733,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.spreadsheet.push": _classification(
@@ -745,7 +745,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.spreadsheet.verify": _classification(
@@ -757,7 +757,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.support_matrix": _classification(
@@ -769,7 +769,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.verification_report.list": _classification(
@@ -781,7 +781,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.verification_report.view": _classification(
@@ -793,7 +793,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.amend": _classification(
@@ -805,7 +805,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.amend_wizard": _classification(
@@ -817,7 +817,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-architecture guided flows",
         reason="guided-wizard command; owned by a flow renderer, not a Workspace destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens only if C4 assigns this wizard a distinct disposition",
     ),
     "modelo.work.calculate": _classification(
@@ -829,7 +829,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.compare_taxation": _classification(
@@ -841,7 +841,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.create": _classification(
@@ -865,7 +865,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.discard": _classification(
@@ -877,7 +877,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.file": _classification(
@@ -889,7 +889,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.history": _classification(
@@ -901,7 +901,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.list": _classification(
@@ -913,7 +913,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.observations": _classification(
@@ -925,7 +925,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.preview_maritime_exemption": _classification(
@@ -937,7 +937,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.rename": _classification(
@@ -949,7 +949,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.resume": _classification(
@@ -961,7 +961,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.review": _classification(
@@ -997,7 +997,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.revisions": _classification(
@@ -1009,7 +1009,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.run": _classification(
@@ -1021,7 +1021,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.run_details": _classification(
@@ -1033,7 +1033,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.runs": _classification(
@@ -1045,7 +1045,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.status": _classification(
@@ -1057,7 +1057,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W05.P10/W05.P11",
         reason="read-only query, not yet migrated to a C1 or C2 destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),
     "modelo.work.verify": _classification(
@@ -1069,7 +1069,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=True,
         owning_authority="tui-interface W06.P12c",
         reason="direct-effect mutation; no lifecycle control before C3/C4 receipts are green",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens once C3/C4 receipts are green and this is enrolled as a C4 action",
     ),
     "modelo.work.wizard": _classification(
@@ -1081,7 +1081,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         has_action_catalogue_entry=False,
         owning_authority="tui-architecture guided flows",
         reason="guided-wizard command; owned by a flow renderer, not a Workspace destination",
-        evidence_reference="the accepted Modelo Workspace interface architecture decision's staged C1-C4 cohort disposition framing",
+        evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens only if C4 assigns this wizard a distinct disposition",
     ),
 }
