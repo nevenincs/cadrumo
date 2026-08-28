@@ -7,9 +7,9 @@ tier: L3
 related:
   - '[[2026-08-26-cli-root-verb-homes-adr]]'
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: body-v2
-body_hash: 'sha256:0f87b510abef5866001327babe211830534a53c2cbc8bddcddb93e27c4f61712'
+body_hash: 'sha256:24a27b9e78cf4e98b2294658766c387e09c3cdcc07ecb9e9ce96019c069a4433'
 ---
 
 # `cli-root-verb-homes` plan
@@ -46,7 +46,7 @@ Execute D1's two refusals: the workbook subject moves to app, the one-verb maint
 Move config google sync calc to app modelo spreadsheet, renaming export to push and compute to calculate, adopting canonical defining-module imports on the way.
 
 - [x] `W02.P03.S06` - Move the four sync calc leaves to app modelo spreadsheet with push and calculate renames; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P03.S07` - Replace facade imports with canonical defining-module imports in the moved handlers; `src/cadrumo/entrypoints/cli/`.
+- [x] `W02.P03.S07` - Replace facade imports with canonical defining-module imports in the moved handlers; `src/cadrumo/entrypoints/cli/`.
 - [x] `W02.P03.S08` - Re-key the four envelope command identifiers and their result schemas; `src/cadrumo/entrypoints/cli/`.
 - [x] `W02.P03.S09` - Move the sync calc locale keys to the new namespace in all four catalogues; `src/cadrumo/locales/`.
 
