@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:81ae94380dcae8e3d222fe5532030114a2104976ec1da6062a418be8a4fdc372'
+body_hash: 'sha256:12396675e5ece9d654331ed8054710ecf391d07893ad6f4497ec60afd16b39b8'
 related: []
 ---
 
@@ -730,3 +730,49 @@ Both families are the same shape and neither is a wrong value: the figures are
 correct and the evidence record simply does not carry them. That is consistent
 with everything this campaign found — the weakness is in what the record says
 about a value, not in the values.
+
+#### Refinement: the 204 includes large keyed tables where per-value pinning is impractical
+
+Reading the second family in that list — the Modelo 131 módulos coefficients —
+changes how the number should be read again.
+
+`m131-modulos-coeficientes-2025` is a **273-entry** keyed table mapping
+`<epígrafe IAE>:<módulo>` to the rendimiento anual per unit, from Orden
+HAC/1347/2024 Anexo II. Pinning 273 values in a `required_text` is not a thing
+anyone would do; the row's declared phrase is necessarily generic. So its
+appearance in the pinned-nowhere set reflects the **shape of the artefact**, not
+neglect — a scalar rate and a 273-row tariff table cannot be held to the same
+evidence convention.
+
+The file states its own grounding discipline instead:
+
+> Incrementally authored dataset: only activities grounded and cross-checked
+> against the bundled corpus are tabled here; the ~80+-activity Orden Anexo II is
+> authored over time.
+
+**And the incompleteness is watched, in the right direction.** The same comment:
+
+> An epígrafe absent from this table is NOT computed by the engine; casilla 01
+> stays reachable as a manual operator input and the
+> `modelo-131-2025-modulos-computed-diverges-de-c01` advisory fires instead of a
+> silent zero.
+
+That advisory is real, not aspirational — a declared verification predicate,
+`advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])`,
+`finding_kind = "ADVISORY"`, grounded on LIRPF art. 31 and the Orden. It compares
+the operator's manual casilla 01 against the engine's computed rendimiento and
+flags divergence **either way**, so it watches the over- and under-declaration
+sides alike. Its own note explains the choice not to block:
+
+> This is deliberately a note and not a gate — refusing the binding outright would
+> also refuse it once the inputs are per-activity, which is the state we want to
+> reach.
+
+So an un-tabled epígrafe cannot silently zero a rendimiento: the manual value
+stands and divergence is surfaced. **Add to checked and sound.**
+
+The general point for the count: **204 is a mixed set.** It contains scalar rates
+whose evidence genuinely says nothing (the Modelo 200 tipo-gravamen rows), and
+large tariff tables where per-value pinning was never the convention. Only the
+first kind is a candidate for repair, and separating them is the next step for
+anyone acting on this list.
