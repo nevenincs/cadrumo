@@ -6,7 +6,7 @@ prerequisites"). Like its C3 sibling (`test_edit_dependency_receipt.py`), this
 reads the current tree rather than a recorded claim: every proof below is
 derived from real production code and real behavior, never a caller-declared
 assertion. Minting the durable
-`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
+`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt-reference.md`
 artifact was originally deferred to the C1 handoff phase (S131/S139); S140
 mints it for real, over the exact clean commit this module was proven
 against, once every predecessor and proof genuinely reads PASSED.
@@ -23,13 +23,15 @@ from __future__ import annotations
 import ast
 import inspect
 import subprocess
+from enum import Enum
 from pathlib import Path
 from types import ModuleType
-from typing import Annotated, Literal
+from typing import Annotated, Literal, get_args
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from ...registry.closure import RegistryClosureLimb
 from .. import workspace, workspace_manifest, workspace_models, workspace_producers
 from ..workspace_producers import (
     MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1,
@@ -306,16 +308,78 @@ def _assert_no_legacy_identifier(module: ModuleType) -> None:
             assert marker not in lowered, f"{module.__name__} declares identifier {name!r} carrying {marker!r}"
 
 
-_CLEAN_COMMIT_PATHS: tuple[str, ...] = (
+#: Evidence this receipt reads directly rather than through the fingerprint:
+#: the two entry-point modules it names as read destinations, and the vault
+#: records it quotes status and body hashes from. These cannot be reached by
+#: walking a model graph, so they are named. The FINGERPRINT inputs are never
+#: named here -- see the derivation below.
+_CLEAN_COMMIT_EVIDENCE_PATHS: tuple[str, ...] = (
     "src/cadrumo/application/modelo/workspace.py",
-    "src/cadrumo/application/modelo/workspace_models.py",
-    "src/cadrumo/application/modelo/workspace_producers.py",
     "src/cadrumo/application/modelo/workspace_manifest.py",
     ".vault/adr/2026-08-24-tui-registry-api-gate-adr.md",
     ".vault/adr/2026-08-24-tui-modelo-workspace-interface-adr.md",
     ".vault/audit/2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit.md",
     ".vault/audit/2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit.md",
 )
+
+#: The exact types this receipt fingerprints. The clean-commit scope is walked
+#: from these at mint time, so a model added anywhere in either graph widens
+#: the scope automatically.
+_FINGERPRINTED_ROOT_TYPES: tuple[type[BaseModel], ...] = (
+    workspace_models.ModeloWorkspaceProjectionV1,
+    workspace_producers.ModeloWorkspaceEpochV1,
+)
+
+
+def _referenced_types(annotation: object) -> list[type]:
+    """Collect every model and enum type an annotation reaches, including generics."""
+    found: list[type] = []
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel | Enum):
+        found.append(annotation)
+    for argument in get_args(annotation):
+        found.extend(_referenced_types(argument))
+    return found
+
+
+def _fingerprint_input_types() -> frozenset[type]:
+    """Walk the fingerprinted graphs to every model and enum they transitively reach."""
+    seen: set[type] = set()
+    pending: list[type] = list(_FINGERPRINTED_ROOT_TYPES)
+    while pending:
+        current = pending.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        if issubclass(current, BaseModel):
+            for field in current.model_fields.values():
+                pending.extend(_referenced_types(field.annotation))
+    return frozenset(seen)
+
+
+def _fingerprint_input_paths() -> tuple[str, ...]:
+    """Derive the defining source files of every fingerprint input, at mint time.
+
+    Derived rather than hand-listed on purpose. A hand-maintained inventory is
+    the same construct as a conformance matrix that silently stops covering
+    part of what it claims to: it falls behind the thing it describes, and a
+    clean-commit gate that has fallen behind attests cleanliness over a set
+    that no longer matches what it fingerprints. That is a false green, which
+    is worse than the gap it replaces. The drift this replaces entered through
+    a transitively-reached enum nineteen files outside the old hand-listed set.
+    """
+    paths: set[str] = set()
+    for entry in _fingerprint_input_types():
+        try:
+            source = Path(inspect.getfile(entry)).resolve()
+        except (TypeError, OSError):  # pragma: no cover - builtin or dynamic type
+            continue
+        paths.add(source.relative_to(_ROOT).as_posix())
+    return tuple(sorted(paths))
+
+
+def _clean_commit_paths() -> tuple[str, ...]:
+    """The full mint-time scope: derived fingerprint inputs plus named evidence."""
+    return tuple(sorted({*_fingerprint_input_paths(), *_CLEAN_COMMIT_EVIDENCE_PATHS}))
 
 
 def _assert_clean_commit() -> None:
@@ -331,7 +395,7 @@ def _assert_clean_commit() -> None:
     does not actually contain, and minting must refuse rather than proceed.
     """
     status = subprocess.run(  # noqa: S603
-        ("git", "status", "--porcelain", "--", *_CLEAN_COMMIT_PATHS),  # noqa: S607
+        ("git", "status", "--porcelain", "--", *_clean_commit_paths()),  # noqa: S607
         capture_output=True,
         check=True,
         cwd=_ROOT,
@@ -344,7 +408,11 @@ def validate_modelo_workspace_c2_dependency_receipt() -> ModeloWorkspaceC2Depend
     """Derive the C2 receipt fresh from the current tree; mint nothing durable."""
     _assert_clean_commit()
     clean_commit = ModeloWorkspaceC2PassedProofV1(
-        evidence=f"git status --porcelain reports zero changes across {len(_CLEAN_COMMIT_PATHS)} dependency paths"
+        evidence=(
+            f"git status --porcelain reports zero changes across {len(_clean_commit_paths())} "
+            f"dependency paths, {len(_fingerprint_input_paths())} of them derived from the "
+            f"fingerprinted model graph at mint time"
+        )
     )
 
     gate_heading = _status_heading(_GATE_ADR)
@@ -641,7 +709,7 @@ def test_clean_commit_proof_refuses_when_a_dependency_path_is_dirty(
     """S140: a receipt cannot be minted over an uncommitted change to something it depends on."""
     # Real git status against a real dirty file, never a fabricated refusal:
     # touch a tracked dependency path and prove _assert_clean_commit refuses.
-    target = _ROOT / _CLEAN_COMMIT_PATHS[0]
+    target = _ROOT / _clean_commit_paths()[0]
     original = target.read_bytes()
     try:
         target.write_bytes(original + b"\n# S140 clean-commit proof canary\n")
@@ -761,7 +829,7 @@ def test_minted_c2_receipt_reproduces_every_field_except_the_moving_commit_stamp
     this test fail on the very next unrelated commit rather than on a
     genuine drift in what the receipt actually attests.
     """
-    minted_path = _ROOT / ".vault" / "reference" / "2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md"
+    minted_path = _ROOT / ".vault" / "reference" / "2026-08-24-tui-registry-api-gate-c2-dependency-receipt-reference.md"
     assert minted_path.is_file(), minted_path
     import json
 
@@ -777,3 +845,57 @@ def test_minted_c2_receipt_reproduces_every_field_except_the_moving_commit_stamp
     current_dump.pop("current_head_commit")
     current_dump.pop("predecessors")
     assert minted_receipt == current_dump
+
+
+def test_clean_commit_scope_is_derived_from_the_fingerprinted_graph() -> None:
+    """Every fingerprint input is in scope, including the one that drifted silently.
+
+    The drift this replaces entered through a ledger preflight enum reached
+    transitively, nineteen files outside the old hand-listed set. Asserting
+    that specific file is in scope pins the exact blind spot that existed.
+    """
+    derived = _fingerprint_input_paths()
+    scope = _clean_commit_paths()
+
+    assert "src/cadrumo/application/ledger/preflight.py" in derived
+    assert "src/cadrumo/application/modelo/workspace_models.py" in derived
+    assert "src/cadrumo/application/modelo/workspace_producers.py" in derived
+    assert set(derived) <= set(scope)
+    assert set(_CLEAN_COMMIT_EVIDENCE_PATHS) <= set(scope)
+
+    for path in scope:
+        assert (_ROOT / path).is_file(), path
+
+
+def test_every_fingerprinted_type_has_its_defining_file_in_scope() -> None:
+    """The invariant the derivation exists to hold, asserted independently."""
+    scope = set(_clean_commit_paths())
+    for entry in _fingerprint_input_types():
+        source = Path(inspect.getfile(entry)).resolve().relative_to(_ROOT).as_posix()
+        assert source in scope, f"{entry.__name__} defined outside the clean-commit scope: {source}"
+
+
+def test_scope_widens_when_the_fingerprinted_graph_reaches_a_new_file() -> None:
+    """A model added to the graph must widen the scope, never leave it stale.
+
+    This is what a hand-listed inventory cannot do, and the reason the scope
+    is walked rather than written down.
+    """
+    baseline = set(_fingerprint_input_paths())
+
+    class _ProbeReach(BaseModel):
+        model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+        disposition: RegistryClosureLimb
+
+    class _ProbeRoot(BaseModel):
+        model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+        reached: _ProbeReach
+
+    widened = {
+        Path(inspect.getfile(entry)).resolve().relative_to(_ROOT).as_posix()
+        for entry in (*_fingerprint_input_types(), _ProbeRoot, _ProbeReach)
+        if not entry.__module__.startswith("cadrumo.application.modelo.tests")
+    }
+    assert baseline <= widened
