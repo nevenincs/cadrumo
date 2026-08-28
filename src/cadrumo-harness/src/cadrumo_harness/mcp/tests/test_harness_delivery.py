@@ -25,10 +25,10 @@ import anyio
 import pytest
 
 from cadrumo.adapters.persistence.storage import master_key
-from cadrumo.adapters.persistence.storage.custody import (
+from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
-    unlock_profile_custody,
 )
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.application.user_profile.login_session_port import profile_bind_bucket_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
