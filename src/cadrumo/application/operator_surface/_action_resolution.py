@@ -74,6 +74,7 @@ def resolve_notice_action(
         action=ResolvedActionReference(
             action_id=declaration.action_id,
             target_command_key=declaration.target_command_key,
+            cli_path=declaration.canonical_cli_path,
         ),
         argument_bindings=argument_bindings,
     )

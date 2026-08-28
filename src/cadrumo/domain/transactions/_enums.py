@@ -124,6 +124,19 @@ CLASSIFIED_STATES: frozenset[BusinessClassification] = frozenset(
 classified outcomes for downstream rollups."""
 
 
+BUSINESS_BEARING_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.MIXED,
+    },
+)
+"""Classifications that carry a deductible or declarable business economic
+role -- :data:`CLASSIFIED_STATES` minus :attr:`BusinessClassification.PERSONAL`.
+``PERSONAL`` is excluded because it carries no business component: a
+personal-only transaction has been classified, but nothing about it belongs
+in a business calculation."""
+
+
 def is_classified(state: BusinessClassification) -> bool:
     """Return ``True`` when the pipeline has produced a classified outcome.
 

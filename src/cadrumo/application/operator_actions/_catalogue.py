@@ -61,7 +61,25 @@ class ActionCatalogueEntry(BaseModel):
 
     action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
     target_command_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    canonical_cli_path: tuple[str, ...] = Field(min_length=1)
+    """The live command path an operator types to reach this action.
+
+    Declared rather than derived from ``target_command_key``. The keys are not
+    uniformly shaped -- some carry the root segment and some do not, and both
+    forms resolve -- so a transformation that satisfies one action silently
+    fabricates a command for another. A gate joins every entry here to the
+    live operator surface and refuses on divergence, so a renamed verb fails
+    loudly instead of leaving the operator an instruction that no longer
+    resolves.
+    """
     argument_specifications: tuple[ActionArgumentBindingSpecification, ...] = ()
+
+    @field_validator("canonical_cli_path")
+    @classmethod
+    def _path_tokens_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not token or token != token.strip() or token.startswith("-") for token in value):
+            raise ValueError("operator action requires canonical CLI path tokens")
+        return value
 
     @field_validator("argument_specifications")
     @classmethod
@@ -133,6 +151,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.auth.configure",
             target_command_key="config.auth.configure",
+            canonical_cli_path=("config", "auth", "configure",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="provider",
@@ -149,6 +168,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.auth.login",
             target_command_key="config.auth.login",
+            canonical_cli_path=("config", "auth", "login",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="provider",
@@ -160,6 +180,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.diagnostics.secure_objects.quarantine",
             target_command_key="config.repair.quarantine",
+            canonical_cli_path=("config", "repair", "quarantine",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="yes",
@@ -171,10 +192,12 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.diagnostics.repair",
             target_command_key="config.repair",
+            canonical_cli_path=("config", "repair",),
         ),
         ActionCatalogueEntry(
             action_id="operator.diagnostics.workflow.reset_progress",
             target_command_key="config.repair.reset_progress",
+            canonical_cli_path=("config", "repair", "reset-progress",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="yes",
@@ -186,10 +209,12 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.descendiente",
             target_command_key="config.profile.descendiente.list",
+            canonical_cli_path=("config", "profile", "descendiente", "list",),
         ),
         ActionCatalogueEntry(
             action_id="operator.profile.create",
             target_command_key="config.profile.create",
+            canonical_cli_path=("config", "profile", "create",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="profile_name",
@@ -201,6 +226,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.login",
             target_command_key="config.login",
+            canonical_cli_path=("config", "login",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="name",
@@ -212,6 +238,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.repair_clear_active",
             target_command_key="config.repair.profile",
+            canonical_cli_path=("config", "repair", "profile",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="clear_active",
@@ -233,6 +260,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.repair_active_pointer",
             target_command_key="config.repair.profile",
+            canonical_cli_path=("config", "repair", "profile",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="clear_active",
@@ -249,6 +277,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.edit",
             target_command_key="config.profile.edit",
+            canonical_cli_path=("config", "profile", "edit",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="profile_name",
@@ -260,14 +289,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.list",
             target_command_key="config.profile.list",
+            canonical_cli_path=("config", "profile", "list",),
         ),
         ActionCatalogueEntry(
             action_id="operator.profile.status",
             target_command_key="config.profile.status",
+            canonical_cli_path=("config", "profile", "status",),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.link",
             target_command_key="ledger.link",
+            canonical_cli_path=("app", "ledger", "link",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="transaction_id",
@@ -284,18 +316,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
+            canonical_cli_path=("app", "ledger", "evidence", "review", "list",),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.classify",
             target_command_key="ledger.classify",
+            canonical_cli_path=("app", "ledger", "classify",),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.review",
             target_command_key="ledger.review",
+            canonical_cli_path=("app", "ledger", "review",),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.preflight",
             target_command_key="ledger.preflight",
+            canonical_cli_path=("app", "ledger", "preflight",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="period",
@@ -312,6 +348,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.live.filed.pull",
             target_command_key="app.live.filed.pull",
+            canonical_cli_path=("app", "live", "filed", "pull",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelos",
@@ -333,6 +370,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.filing_record.list",
             target_command_key="modelo.filing_record.list",
+            canonical_cli_path=("app", "modelo", "filing-record", "list",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",
@@ -344,10 +382,12 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.list",
             target_command_key="modelo.work.list",
+            canonical_cli_path=("app", "modelo", "work", "list",),
         ),
         ActionCatalogueEntry(
             action_id="operator.modelo.work.create",
             target_command_key="modelo.work.create",
+            canonical_cli_path=("app", "modelo", "work", "create",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",
@@ -369,6 +409,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.file",
             target_command_key="modelo.work.file",
+            canonical_cli_path=("app", "modelo", "work", "file",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
@@ -380,6 +421,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.revisions",
             target_command_key="modelo.work.revisions",
+            canonical_cli_path=("app", "modelo", "work", "revisions",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
@@ -391,22 +433,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.live.filed.pull_all",
             target_command_key="app.live.filed.pull_all",
+            canonical_cli_path=("app", "live", "filed", "pull-all",),
         ),
         ActionCatalogueEntry(
             action_id="operator.live.notifications.list",
             target_command_key="app.live.notifications.list",
+            canonical_cli_path=("app", "live", "notifications", "list",),
         ),
         ActionCatalogueEntry(
             action_id="operator.storage.init",
             target_command_key="config.storage.init",
+            canonical_cli_path=("config", "storage", "init",),
         ),
         ActionCatalogueEntry(
             action_id="operator.overview.status",
             target_command_key="overview.status",
+            canonical_cli_path=("app", "overview", "status",),
         ),
         ActionCatalogueEntry(
             action_id="operator.overview.explain",
             target_command_key="overview.explain",
+            canonical_cli_path=("app", "overview", "explain",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",
@@ -423,6 +470,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.bindings.list",
             target_command_key="modelo.bindings.list",
+            canonical_cli_path=("app", "modelo", "bindings", "list",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",
@@ -444,6 +492,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.describe",
             target_command_key="modelo.describe",
+            canonical_cli_path=("app", "modelo", "describe",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",
@@ -455,6 +504,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.calculate",
             target_command_key="modelo.work.calculate",
+            canonical_cli_path=("app", "modelo", "work", "calculate",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
@@ -472,6 +522,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.verify",
             target_command_key="modelo.work.verify",
+            canonical_cli_path=("app", "modelo", "work", "verify",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
@@ -483,6 +534,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.status",
             target_command_key="modelo.work.status",
+            canonical_cli_path=("app", "modelo", "work", "status",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
@@ -494,10 +546,12 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.registry.verify",
             target_command_key="registry.verify",
+            canonical_cli_path=("app", "registry", "verify",),
         ),
         ActionCatalogueEntry(
             action_id="operator.modelo.verification_report.list",
             target_command_key="modelo.verification_report.list",
+            canonical_cli_path=("app", "modelo", "verification-report", "list",),
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="calculation_revision_id",
@@ -510,6 +564,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.profile.archive.reconcile",
             target_command_key="config.profile.archive.reconcile",
+            canonical_cli_path=("config", "profile", "archive", "reconcile",),
         ),
     ),
 )
@@ -561,6 +616,7 @@ def next_action(action_id: str) -> ResolvedNoticeAction:
         action=ResolvedActionReference(
             action_id=entry.action_id,
             target_command_key=entry.target_command_key,
+            cli_path=entry.canonical_cli_path,
         ),
     )
 

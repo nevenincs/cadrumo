@@ -28,6 +28,7 @@ from ...core import (
     ServiceCapability,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import (
@@ -408,7 +409,7 @@ def build_google_sheets_export_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

@@ -83,9 +83,12 @@ def test_resolve_application_filing_bucket_id_rejects_missing_bucket(
 def test_secure_objects_for_application_filing_bucket_refuses_unready_runtime(tmp_path: Path) -> None:
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
-        pytest.raises(
-            StorageValidationError,
-            match=r"storage runtime is not ready|no active bucket session|route does not match",
-        ),
+        pytest.raises(StorageValidationError) as refusal,
     ):
         secure_objects_for_application_filing_bucket(_ACTIVE_BUCKET_ID)
+
+    # The key, not the rendered sentence. The three-way prose alternation this
+    # replaced named older wordings and matched none of them once the refusal
+    # was localized -- it would have gone on passing only while the message
+    # happened to be English.
+    assert refusal.value.translated_message == "errors.storage.runtime.not_ready"

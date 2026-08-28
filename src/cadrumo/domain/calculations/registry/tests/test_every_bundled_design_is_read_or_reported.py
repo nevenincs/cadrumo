@@ -295,6 +295,35 @@ def _covered_positions_from_skip_reasons(extraction: object) -> int:
     return covered
 
 
+def _provenance_only_design_names() -> frozenset[str]:
+    """Design filenames the REGISTRY itself declares non-authoritative for layout.
+
+    ``SourceReference.design_authority == "provenance_only"`` is an adjudication
+    already recorded in registry data: the document is the BOE orden that
+    APPROVES a modelo, carrying its design as an annex, kept for provenance
+    rather than as the layout authority. No export layout cites one -- Modelo
+    184's layouts cite their ``aeat-dr-184-*`` counterparts, which open at wire
+    position 1 and parse cleanly -- and the owning registry test states the
+    parser refusal on these is "intentional and load-bearing".
+
+    Derived from the catalogue rather than listed here, so it is the registry's
+    declaration that governs and a hand-maintained second copy cannot drift from
+    it. This is the same discipline the fixture-provenance gates follow: read the
+    declaration, never hardcode a per-file exception.
+    """
+    from ..authority import bundled_authority
+
+    sources = bundled_authority().catalogues.sources
+    sources = getattr(sources, "entries", None) or sources
+    if not hasattr(sources, "values"):
+        sources = {entry.id: entry for entry in sources}
+    return frozenset(
+        Path(source.corpus_path).name
+        for source in sources.values()
+        if getattr(source, "design_authority", "authoritative") == "provenance_only"
+    )
+
+
 def _outcomes() -> tuple[_Outcome, ...]:
     return tuple(_classify(path) for path in _bundled_designs())
 
@@ -393,8 +422,17 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
     or narrow its enumeration to shorten the list.
     """
     outcomes = _outcomes()
+    # A provenance-only design is excluded from the WORKLIST, never from the
+    # enumeration: it is still parsed and still classified above, so the
+    # "never silence" property holds over the whole corpus. What it is not is
+    # work -- the registry has already adjudicated it as not a layout
+    # authority, and a companion test below keeps that exclusion honest by
+    # failing if one of them ever parses cleanly.
+    provenance_only = _provenance_only_design_names()
     grouped: dict[str, list[str]] = defaultdict(list)
     for outcome in outcomes:
+        if outcome.design in provenance_only:
+            continue
         # A "corrected" design is READ -- not a refusal or a partial read -- so
         # it belongs off this worklist exactly like "complete". Its visibility
         # lives in a dedicated test below, never here, because folding it into
@@ -415,7 +453,11 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
         f"  [{len(entries)}] {label}\n" + "\n".join(f"      {entry}" for entry in sorted(entries))
         for label, entries in sorted(grouped.items())
     )
-    readable = sum(1 for outcome in outcomes if outcome.kind in {"complete", "corrected"})
+    readable = sum(
+        1
+        for outcome in outcomes
+        if outcome.kind in {"complete", "corrected"} or outcome.design in provenance_only
+    )
     assert not grouped, (
         f"{len(outcomes) - readable} of {len(outcomes)} bundled designs are not fully read. Each is "
         "a parser gap or a corpus defect and either way it is work; the grouping is by the class a "
@@ -467,3 +509,44 @@ def test_every_correction_is_visibly_distinct_from_complete_and_carries_its_grou
             assert correction.reason.strip(), (
                 f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} states no reason"
             )
+
+
+def test_every_provenance_only_design_still_refuses_and_is_a_promotion_candidate() -> None:
+    """The exclusion above must stay earned, in both directions.
+
+    An exemption that outlives its reason is the failure the fixture-provenance
+    rule exists to prevent, so this asserts the two things that make it true:
+
+    * The set is NON-EMPTY. If ``design_authority`` stops being declared, or the
+      catalogue lookup silently returns nothing, the worklist exclusion would
+      quietly become a no-op filter that removes nothing while looking rigorous.
+    * Every member STILL refuses to parse. The owning registry test names the
+      promotion criterion exactly -- "reconsider promotion only when strict
+      parsing produces complete records starting at position 1" -- so a
+      provenance-only design that begins parsing cleanly is no longer merely
+      provenance, and leaving it excluded would hide a design the project could
+      now hold as authoritative.
+
+    This is deliberately not the worklist's job: the worklist asks what is
+    broken, and this asks whether the reason for not listing it still holds.
+    """
+    provenance_only = _provenance_only_design_names()
+
+    assert provenance_only, (
+        "no design is declared design_authority='provenance_only', so the worklist exclusion "
+        "removes nothing. Either the declaration was dropped from the catalogue or the lookup "
+        "stopped resolving -- both make the exclusion a rigorous-looking no-op."
+    )
+
+    promotable = sorted(
+        outcome.design
+        for outcome in _outcomes()
+        if outcome.design in provenance_only and outcome.kind in {"complete", "corrected"}
+    )
+
+    assert not promotable, (
+        "provenance-only design(s) now parse cleanly, which is the stated promotion criterion: "
+        "strict parsing producing complete records from wire position 1. Re-adjudicate whether "
+        "they are layout authorities and set design_authority accordingly, rather than leaving "
+        "them excluded from the worklist: " + ", ".join(promotable)
+    )

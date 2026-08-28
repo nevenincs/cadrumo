@@ -43,20 +43,11 @@ from ...domain.iva import (
     is_devengada_flow,
 )
 from ...domain.transactions import (
-    BusinessClassification,
     Transaction,
     TransactionLifecycleState,
 )
 from ._invoice_kind import invoice_kind_for_direction
 from ._source_mesh import CalculationSourceDiagnostic
-
-#: Business classifications that carry a deductible / declarable economic role.
-_EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    },
-)
 
 #: Diagnostic ``source_kind`` for missing supplier evidence on positive
 #: deductible input IVA. Verification treats this as filing-grade blocking.
@@ -159,7 +150,7 @@ def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirec
     """
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return None
-    if transaction.business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
+    if transaction.business_classification not in BUSINESS_BEARING_STATES:
         return None
     if not _positive_iva_quota(transaction):
         return None
