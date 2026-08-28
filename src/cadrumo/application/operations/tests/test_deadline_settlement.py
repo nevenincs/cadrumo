@@ -71,9 +71,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _DEFINITION_ID = "operation.supervisor.deadline"
 _PHASE = "operation.phase.work"
 
-#: Aggregate window. Short enough to elapse promptly against real time, and
-#: the executor is held open afterwards, so nothing races the assertions.
-_EXECUTION_WINDOW = timedelta(milliseconds=50)
+#: Aggregate window. It must NOT be able to expire before the executor has
+#: entered: a window that does turns this into a proof about pre-entry refusal
+#: rather than about outrunning live execution, and on a loaded machine that is
+#: exactly what a few-millisecond window does. Entry takes milliseconds, so a
+#: window of seconds cannot lose that race, while the executor is held open
+#: afterwards so the window still expires underneath it for certain.
+_EXECUTION_WINDOW = timedelta(seconds=2)
 
 #: Cleanup window for the case that must outrun a held-open close. It has to
 #: survive long enough for settlement to actually begin the close -- a window
@@ -176,7 +180,7 @@ class HeldExecutor:
         self.started.set()
 
         while not context.cancellation.cancellation_requested:
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.005)
         self.cancellation_observed.set()
 
         if self._hold_before_acknowledge:
