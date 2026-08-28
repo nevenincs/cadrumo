@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2396a0c3eef6f7ae0d9033685ab51ac4a5d02dd9a3485c981f937c806197650'
+body_hash: 'sha256:030dab8aaecc369dad5c60c4fca23633ce6598fd93c8fdc71d8c8aed1330092a'
 related: []
 ---
 
@@ -279,6 +279,27 @@ reconciles the IVA-appropriate measures instead — devengada, deducible and
 resultado — since an IVA return has no retenciones. And the M190 shape settles an
 earlier confusion of mine: the nine per-block rows are *importe* boxes, while the
 retenciones side reconciles at the aggregate casilla 28, exactly as recorded.
+
+**The Modelo 303 [158]/[170] allocation, re-verified — and a second worked
+example of why ids must never be joined across years.** Tracing the binding
+`modelo-303-recargo-equivalencia-super-reducido-cuota` through every revision:
+
+| revision | box carrying it |
+|---|---|
+| 2022 | none — the rung is not declared that year |
+| 2023, 2024 | casilla **18** |
+| 2025, 2026 | casilla **170** |
+
+Modelo 303 was renumbered between 2024 and 2025 and the registry follows the
+*concept*, not the box: no binding is attached to more than one casilla in any
+revision, so nothing is double counted. Casilla 18 still exists in 2025 and 2026
+carrying something else entirely.
+
+That is the same hazard as Modelo 123's 8-to-14-box renumbering, now confirmed in
+a second modelo — and in one this campaign actively edited, since the aggregation
+fixture's casilla-18 override was written against the 2024 numbering. Anyone
+comparing Modelo 303 casilla 18 across the 2024/2025 boundary compares unrelated
+boxes.
 
 Two reference shapes worth copying.
 `test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` derives its wiring
