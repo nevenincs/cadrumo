@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b3a828efe623db5b30cefbaa6be7fdf19116c0e02e1285c4a16553cc1c0a9ef'
+body_hash: 'sha256:ceaf4ea2af167798ef34b5ff0c477e1399623fba26a4263a64ea78bfea351592'
 related:
   - "[[2026-08-28-tui-architecture-m210-pension-scale-corpus-row-audit]]"
 ---
@@ -170,3 +170,42 @@ Note the asymmetry worth keeping: the structural failures are all fail-closed an
 loud, while the accumulated-cuota column has no guard at all. The registry is well
 defended against the errors that would refuse a filing and undefended against the
 one that quietly changes the amount.
+
+## The finding survives an independent formulation of the invariant
+
+The gate compares each row against its immediate predecessor's *encoded*
+`fixed_addition`. That inherits whatever rounding the predecessor carries, so it
+is worth asking whether the one break is an artefact of that choice. It is not.
+
+Recomputing every table by accumulating **exactly from the first row**, never
+re-reading a rounded value, gives the same single answer:
+
+| | incremental (shipped gate) | exact-from-zero |
+|---|---|---|
+| exact match | 570 | 479 |
+| within half a cent | 106 | 165 |
+| 0,5 – 2 cents | 6 | 38 |
+| **beyond 2 cents** | **1** | **1** |
+| the break | Murcia 2022, 90,8368 | Murcia 2022, 90,8285 |
+
+Neither formulation is uniquely correct — the two disagree on 32 rows in the
+sub-cent bands because regions were authored under different rounding
+conventions, some rounding the accumulated total once and some carrying rounded
+tranches forward. What matters is that both agree on the only figure large enough
+to be a defect, and they agree on its size to within a hundredth of a cent.
+
+The shipped gate keeps the incremental form because it produces the tighter
+distribution against this registry's actual authoring (6 rows in the sub-cent
+band rather than 38), so its two-cent tolerance sits further from real data.
+
+## What the sub-cent band actually contains
+
+All six rows inside the shipped gate's band are the **same row** — the Asturias
+70.000 rung — across filing years 2020 to 2025, each 0,008 € high. That is a
+convention, not drift: the encoded values are the exact accumulation from zero
+rounded once, so comparing against a rounded predecessor loses the fraction the
+predecessor discarded.
+
+Checked rather than waved through, because a tolerance is only honest if what it
+absorbs has been looked at. Nothing in the band is a defect, and no row in it is
+within two orders of magnitude of the Murcia break.
