@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b55d4b20bd6f4688552e32fbfb1c3b7a027be23a4d8751a9386a63e195503238'
+body_hash: 'sha256:2edeb2f3ca42359f130a19a82d9000664eacb6c9ad66a8225b1c5f544e4382c1'
 related: []
 ---
 
@@ -116,3 +116,50 @@ the public one lacks, that content moved nowhere and the diff is the record of
 what a plain deletion would lose.
 
 No production code, registry data or test was changed by this audit.
+
+## The diff is done: the public module is a strict superset
+
+The remediation above asked for a diff before deletion, on the grounds that
+anything unique to the private copy would be content that moved nowhere. That
+check is now complete, and the answer is unambiguous.
+
+**Zero lines are unique to `_calculation_revision.py`.** Eighteen are unique to
+`calculation_revision.py`, and all eighteen are docstrings — return descriptions
+on the revision-catalogue accessors:
+
+> Return the revision under this id, or ``None`` when the catalogue holds none. …
+> Return a view of every revision in the catalogue. … Return how many revisions the
+> catalogue holds. … Report catalogue membership for a revision record or a bare
+> revision id.
+
+So the public module carries the same code plus documentation. Deleting the
+private module loses nothing.
+
+### The apparent 1662-versus-1680 whole-file difference is line endings
+
+A plain `diff` reports every line changed, which reads like two genuinely
+divergent files. It is not: `_calculation_revision.py` is **CRLF** throughout
+(1662 CRLF, 0 bare LF) and `calculation_revision.py` is **LF** throughout (0 CRLF,
+1680 LF). Normalising with `tr -d '\r'` reduces the difference to the eighteen
+docstring lines.
+
+This matters beyond this audit. In a CRLF working tree a raw `diff` between a
+pre-relocation file and its post-relocation copy will always look total, which
+hides whether any content was actually lost. **Normalise line endings before
+concluding two files differ**, or a relocation's diff is unreadable and the
+"is anything unique to the old copy" question cannot be answered.
+
+### What this changes for the remediation
+
+Step 2 is now unblocked and its risk is measured rather than assumed: deleting
+`_calculation_revision.py` is a pure removal of a duplicate, not a merge. It still
+needs the relocation discipline — `pytest --collect-only -q` clean immediately
+before and after, one explicit-path commit — because the module is referenced by
+name in a `CORE_STRUCTS` map and possibly by string elsewhere, and because the
+tree is shared.
+
+Step 1 is partly done: the two CLI `DeferredTarget`s were repointed at
+`cadrumo.domain.modelos._calculation_revision_amendment`, the module that actually
+defines both enums. Neither `calculation_revision` module defines them — both
+import and re-export them — so repointing at the public module would have been a
+second re-export hop rather than a fix. The `CORE_STRUCTS` entry remains.
