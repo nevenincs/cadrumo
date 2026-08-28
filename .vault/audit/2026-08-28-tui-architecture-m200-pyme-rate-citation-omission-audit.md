@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:325f7ad2de1d30662cf3b160f4622817a06c19c0d3ee4caec1c54a47662b56ab'
+body_hash: 'sha256:4e44dfc9c4352700be2af50643229d0ff9d6486a2f2e823d3c18ba59704d0bd6'
 related: []
 ---
 
@@ -188,3 +188,56 @@ It also bounds the exercise. The same sweep cannot be run over the whole-law-cit
 population at all, so this result covers 181 of roughly 458 parameters; the rest
 remain uncheckable until either their citations move to excerpts or an anchored
 reader exists.
+
+## Correction to the remediation: the windows constrain which citation is addable
+
+Both remediations above said "add the establishing citation" as though the choice
+were free. The catalogue windows constrain it, and checking them changes the
+advice.
+
+| provision | window |
+|---|---|
+| `ley-31-2022:art-39` | 2023-01-01 → open |
+| `ley-27-2014:dt-44` | **2025-01-01** → open |
+| `real-decreto-ley-20-2022:art-72` | 2023-01-01 → **2024-06-30** |
+| `real-decreto-ley-4-2024:art-1` | **2024-07-01** → 2024-12-31 |
+
+### M200 — half the advice was wrong
+
+Adding `ley-31-2022:art-39` to the 2024 row is sound; its window covers the 2024
+devengo. Adding `ley-27-2014:dt-44` is **not**: DT 44ª enters force on 2025-01-01,
+so the revision-scoped window check would refuse it for a 2024 revision.
+
+That is not a defect in the window rule — it is the rule working. It does mean the
+2024 revision's forward brackets for 2025 and 2026 are **ungroundable within that
+revision**, which strengthens the earlier observation that they are inert
+documentation. The honest remediation is to add art. 39 and leave the forward
+brackets uncited, or to remove them as documentation the revision cannot support.
+
+### M303 — each 2024 revision has a different citable RD-ley
+
+The two 2024 revisions serve different quarters, and the RD-leyes tile the year at
+30 June:
+
+| revision | periods, devengo | citable RD-ley |
+|---|---|---|
+| `2024-hasta-08-y-2t` | 1T (31 Mar), 2T (30 Jun) | **RD-ley 20/2022 art. 72** |
+| `2024-desde-09-y-3t` | 3T (30 Sep), 4T (31 Dec) | **RD-ley 4/2024 art. 1** |
+
+So the earlier statement that "the citation is available today:
+`real-decreto-ley-4-2024:art-1`" is right for the `desde-09` revision and wrong
+for `hasta-08`, whose periods close before RD-ley 4/2024 takes effect and whose
+correct citation is the RD-ley 20/2022 article the 2023 revision already carries.
+
+This sharpens the finding rather than weakening it: **each 2024 revision dropped
+precisely the RD-ley its own periods make citable**, and a different one in each
+case. Neither is a copy-forward of the other's mistake.
+
+### The general point
+
+Before recommending a citation repair, check the target provision's window against
+the revision's devengo. A citation that cannot be added is not a remediation, and
+proposing one would send an implementer into a build failure with no explanation.
+The window rule is doing useful work here, and in the Modelo 100 savings-scale case
+recorded separately it is the same rule that leaves no satisfiable citation at all
+— worth holding both facts about it at once.
