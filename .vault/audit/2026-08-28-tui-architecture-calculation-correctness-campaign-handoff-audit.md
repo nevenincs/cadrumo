@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:f949c124b37c3f78fd8b4dc230497f9f090a01d34790a68a87b34ab92cfecd90'
+body_hash: 'sha256:5bc9a919030ac423939dee73eb8b54b14307a97f1e5f505c19e469ea3df204ce'
 related: []
 ---
 
@@ -105,20 +105,20 @@ below are sorted on that axis because it is the axis with no coverage.
 
 ## Open, correctness of record rather than of computation
 
-5. **Verification power**: independent AEAT oracle grounding covers **12 of 128**
+6. **Verification power**: independent AEAT oracle grounding covers **12 of 128**
    registry revisions; 116 have none, and Modelo 100 peaks at 15.5 %. The oracle
    gate holds the relation at zero in both directions but asserts only
    non-emptiness on coverage, so verification power can fall silently. A raw count
    floor is forbidden by the no-tally rule, which makes the ratchet shape a design
    decision rather than an obvious fix.
-6. **Citation defects over verified figures** — kept distinct from wrong numbers
+7. **Citation defects over verified figures** — kept distinct from wrong numbers
    throughout: 90 autonomic scale tables cite the delegating article; Modelo 100's
    2024 savings scale cites a redaction stating a different rate, where two gates
    conflict and neither available citation satisfies both; the 2022 Madrid mínimos
    pin one `corpus_ref` across six years of differing amounts; Modelo 232's
    threshold cites the framework documentation article; and 99 parameters carry a
    `required_text` pinning no number.
-7. **Modelo 303 to Modelo 390 handoff**: five tests across two modules need
+8. **Modelo 303 to Modelo 390 handoff**: five tests across two modules need
    genuinely filed quarters. No production defect — the guards are right and the
    tests predate the filing contract.
 
