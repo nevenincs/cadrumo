@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2212a1d5084e69f5191332b4273e9557e50e94e7750ae923adf5d884971d6f5'
+body_hash: 'sha256:5729e5b68b72c5d806bf9b3bb2457a1b64994d957351c02242d4e0121b8edf1d'
 related: []
 ---
 
@@ -119,6 +119,28 @@ below are sorted on that axis because it is the axis with no coverage.
    intersection does not approximate it. Treat the two as verified individual
    findings, not as evidence of a population.
 
+### Downgraded on re-verification: the Modelo 100 2024 savings scale
+
+Originally recorded as a two-gate conflict with no citation satisfying both. Both
+halves still hold mechanically — the 2024 parameters encode a 0.14 top tranche
+while citing `ley-35-2006:art-66` / `:art-76`, whose corpus states 15, and the
+redaction that states 14 closes 2024-12-21, nine days before the IRPF devengo, so
+the revision-scoped window check refuses it.
+
+But the registry is not silent about this, and my original entry implied it was.
+Both cited entries carry the explanation in their own notes, verbatim at HEAD:
+"The selected BOE redaction is published 2024-12-21 and in force from 2024-12-22;
+**the source note states effects from 2025-01-01 for the Ley 7/2024 change**."
+
+So a reader who follows the citation finds why the encoded 14 differs from the
+article's current 15. What is missing is only the mechanical link: nothing
+connects "this parameter encodes 14" to "the cited corpus says 15, and the cited
+entry's note says why". Ley 7/2024 itself has no catalogued entry — it appears
+only in prose in three files — so there is still nothing to cite as the
+effect-date provision.
+
+Downgrade this from a contradiction to a documented-but-unmechanised divergence.
+
 ## One root cause behind two of the citation findings
 
 The 90 autonomic scale tables citing the delegating LIRPF art. 74, and the 2022
@@ -157,9 +179,8 @@ are cross-checked even where the legal chain is not. The defect is the chain.
    floor is forbidden by the no-tally rule, which makes the ratchet shape a design
    decision rather than an obvious fix.
 7. **Citation defects over verified figures** — kept distinct from wrong numbers
-   throughout: 90 autonomic scale tables cite the delegating article; Modelo 100's
-   2024 savings scale cites a redaction stating a different rate, where two gates
-   conflict and neither available citation satisfies both; the 2022 Madrid mínimos
+   throughout: 90 autonomic scale tables cite the delegating article; the 2022
+   Madrid mínimos
    pin one `corpus_ref` across six years of differing amounts; and 99 parameters
    carry a `required_text` pinning no number.
 
