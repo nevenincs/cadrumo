@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8e9a683ca0a9ff593940f58058b666767cdbe305ce4055c8184a6ae0097fbd0'
+body_hash: 'sha256:c4d41779752646db7be18db53a3fc2441ab96f941dbd59a5fbe67862bbc13e0c'
 related: []
 ---
 
@@ -102,6 +102,22 @@ below are sorted on that axis because it is the axis with no coverage.
    the taxable base by four fifths of net income — a large **under-declaration**.
    Nothing watches a parameter's name, and the deferral guarantees the misreading
    happens later, when the reasoning is no longer to hand.
+
+   **Is this a class? Not demonstrated.** With this instance and the Modelo 232
+   one below, an attempt was made to detect the shape mechanically by comparing
+   the operation word in a parameter's id against the operation words in its
+   cited provision's note. It reported 130 mismatches across 468 parameters,
+   which is an artefact, not a finding: `escala` and `tipo` name the same thing,
+   `tarifa` is a synonym of `escala`, a provision note describes a whole article
+   and so mentions several operations at once, and — the decisive flaw — the
+   notes are written in mixed Spanish and English, so LIRPF art. 23's "deductible
+   expenses and **reductions**" failed to match an id saying `reduccion`. The
+   probe measures language mixture.
+
+   Both real instances were found by reading the article text against what the
+   parameter's name and unit claim. That is a semantic judgement, and keyword
+   intersection does not approximate it. Treat the two as verified individual
+   findings, not as evidence of a population.
 
 ## Open, correctness of record rather than of computation
 
