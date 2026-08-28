@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8278b4f2674728d1b2a4886bdcec49a9b85016a13f01c0b7948a24dc959e40fe'
+body_hash: 'sha256:caecea31b35491db55bdfb034e63814c60f0d679ea1aca0d6ff903925766080e'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1378,4 +1378,54 @@ The test now genuinely raises `StoredCalculationDriftError`.
 
 `test_e2e_ledger_m130_quarters_to_m100_annual` is fully green at 5 passed (4
 sweep failures), and `test_verificado_completo_regression` at 3 passed (2).
+
+
+### Acceptance wall: a stale CLI verb fixed, and the mutation harness diagnosed
+
+The wall catalogue was 18 failures in the sweep and is 8 now, most of the
+reduction being fallout from earlier ticks rather than work aimed at it.
+
+**Fixed: a stale verb in the ledger-exclude wall.**
+`test_ledger_exclude_journey` read a single row back with
+`app ledger review <transaction_id>`, and the CLI refused with "Got unexpected
+extra argument(s)", exit 2. `review` is the INTERACTIVE list surface and takes
+no positional id (only `--filter`); the single-subject read verb is
+`app ledger view <transaction_id>`, whose id is a positional argument exactly as
+`aeat-cli-contract` requires. Repointed; both tests in the file pass in the
+integration lane, and the catalogue gained a passing wall.
+
+Worth noting how it hid: the file is integration-marked, so running it in the
+default unit lane reports "NOTHING RAN ... 2 deselected", which reads as green.
+The lane banner naming the deselection is what prevented calling it fixed.
+
+**Diagnosed, not patched: the gate's own anti-tautology proof.**
+`test_a_regressed_wall_assertion_is_caught_by_the_gate` mutates the
+ledger-exclude wall, writes the mutated module into `tmp_path`, and runs it in a
+subprocess rooted there. The subprocess correctly forces `-m integration` and
+`-n0`, so the lane is not the problem. The problem is location: a module written
+outside the repository never picks up the conftest chain it depends on, so setup
+dies on `LookupError: ContextVar 'cadrumo_profile_custody_port'` and the mutated
+assertion is never reached. The wall test itself is healthy -- it passes in its
+own lane -- so only the mutation harness is broken.
+
+Not patched deliberately. The obvious fix, writing the mutated module beside the
+original so conftests apply, means creating a deliberately-FAILING test file
+inside `src/`. Peers commit this working tree continuously (four times this
+session), so a swept mutation file would land a permanently red test in the
+repo. Replicating the conftest chain into `tmp_path` is the alternative and is
+fragile. This needs a design decision rather than a quick edit.
+
+**The remaining walls are not this campaign's.** Their refusals are two: Modelo
+303 external import requiring complete typed filing-instance evidence, which is
+the export-fragment campaign's surface; and `requested registry revision '2024'
+is not the law-determined revision for this filing target. The law-determined
+revision is '2025-y-siguientes'` on the Modelo 200 micro-empresa cuota wall.
+
+That second one is a grounded-calculation question, not a fixture typo. The wall
+asserts a cuota integra against the AEAT Manual Practico rate, so which revision
+applies decides which ejercicio's rate is used -- and
+`aeat-registry-authority-flow` is explicit that a requested revision may only be
+ASSERTED equal to the law-determined one, never injected. Choosing the pinned
+value to make the refusal stop would be choosing which year's law to compute
+under. Left for a tick that can ground it against the manual's ejercicio.
 
