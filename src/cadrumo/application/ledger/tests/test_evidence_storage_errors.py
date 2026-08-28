@@ -47,7 +47,7 @@ class TestEvidenceErrorPaths:
         tmp_path: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="does not resolve to a readable file") as exc_info:
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
             svc.add(bucket_id=_BUCKET_ID, source_path=tmp_path / "ghost.pdf")
         assert exc_info.value.terminal_precondition_verdict is not None
         assert exc_info.value.terminal_precondition_verdict.failed_condition_id == (
@@ -63,8 +63,17 @@ class TestEvidenceErrorPaths:
         txt_file = tmp_path / "note.txt"
         txt_file.write_text("hello")
         svc = _make_svc(isolated_settings, secure_objects)
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="unsupported extension"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
             svc.add(bucket_id=_BUCKET_ID, source_path=txt_file)
+
+        # Both evidence-input refusals now share one translated key, so the key
+        # alone no longer tells the two apart -- an unreadable file would satisfy
+        # it just as well. The failed condition is what still discriminates.
+        assert exc_info.value.translated_message == "errors.refused.refused_ledger_evidence_input"
+        assert exc_info.value.terminal_precondition_verdict is not None
+        assert exc_info.value.terminal_precondition_verdict.failed_condition_id == (
+            LedgerPreconditionCondition.EVIDENCE_FILE_EXTENSION_SUPPORTED.value
+        )
 
     def test_update_raises_on_missing_id(
         self,
