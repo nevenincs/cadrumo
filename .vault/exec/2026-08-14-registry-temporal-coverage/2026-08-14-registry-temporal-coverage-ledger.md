@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:01486ad9708517ffc7401571d0950bbe680feb5e24d7c63eb6cb14a8b12ad793'
+body_hash: 'sha256:54d8165b09da9911feae30a8562a1afa5b9d1eb71df76f5526a2b3fa71fd2ea6'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1995,4 +1995,44 @@ The tree was unrunnable for part of this tick -- a peer had added a
 the constant existed, which broke every import of that package and with it the
 whole suite. HEAD was healthy throughout; it was two uncommitted lines, and it
 settled on its own.
+
+
+### Text-casilla routing: one key for many rejections, and a casilla the registry deleted on purpose
+
+**Two period_code cases.** Both matched prose (`period_code value 'T1'`,
+`period_code value '1' does not match`) that is now the shared key
+`application.filing.build_draft.errors.text_casilla_invalid`. Asserting the key
+alone would have been a real loss: ONE key serves every text-casilla rejection,
+so it cannot tell a malformed period token from any other bad scalar. Probed the
+live refusal instead -- the context carries `casilla_id` and `data_type`, and
+the wrapped registry error still carries the value verbatim
+(`period_code value 'T1' does not match a supported filing-period form`). Both
+cases now assert key, casilla, declared data_type AND the cause's value, which
+is strictly more than the prose match they replace.
+
+**A casilla deleted for a documented reason.** The third failure was
+`input_key_unknown` on `tipo2.miembro-nif`, and the registry explains its own
+deletion in a comment beside the replacement: "no such field exists at those
+positions in any record of either bundled design epoch... Left in place it bound
+a casilla named for the member to the bytes carrying the DECLARANTE's NIF." The
+casilla was not renamed, it was WRONG -- it read the declarante's identifier
+under a member's name.
+
+The obvious repair, pointing the test at `tipo3.miembro-nif` (the member's real
+NIF), was measured and rejected. That casilla is declared `text`, not `nif`, so
+an invalid identifier passes it and the test's second half -- the whole point of
+the case -- would have stopped asserting anything while looking green. The
+`text` typing also looks deliberate rather than a gap: an atribución member may
+be non-resident and carry a foreign identifier, which Spanish NIF validation
+would wrongly refuse, and the row model carries `country_of_residence` for
+exactly that population.
+
+So the case was retargeted to `decl.representante-nif`, the casilla the registry
+DOES declare as `nif`, which preserves the property it exists to prove -- a
+nif-typed casilla reaches its scalar validator rather than Decimal parsing.
+Verified by probe before editing: `12345678Z` is accepted and `12345678A` is
+refused with `invalid NIF / NIE / CIF identifier:
+errors.identity.nif_check_letter_mismatch`.
+
+4 tests in the file pass.
 
