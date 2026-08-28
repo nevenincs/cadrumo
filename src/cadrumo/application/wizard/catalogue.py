@@ -565,7 +565,7 @@ _ACTIVIDAD_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
-            id="third-party-declaration-roles",
+            id="declaration-roles",
             profile_key="taxpayer_type.declaration_roles",
             widget=WizardWidget.CHECKBOX,
             prompt=tr("wizard.setup.taxpayer-type.declaration-roles.prompt"),
