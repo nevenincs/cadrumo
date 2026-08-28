@@ -5,146 +5,97 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b53ce8deef0e66cafa087a60d3d43f333f9338f5cc7a7e268d77ea3b45d14a5e'
+body_hash: 'sha256:ae1fe91e8c336aef90db4691b9ff83d0e40354b2f9bff75841450a759da91f3c'
 related: []
 ---
 
 # `tui-architecture` audit: `M210 IRNR: the art 25.1.a EU/EEA reduced rate is unreachable for canones and inmobiliaria`
 
-## Finding
+## Correction
 
-The TRLIRNR art. 25.1.a reduced rate of 19 % for EU/EEA residents is unreachable
-for a filer who declares `canones` or `inmobiliaria`, and reachable for a filer
-declaring general rendimientos only by discarding the income category. The
-domestic baseline is charged at 24 % instead. The error direction is
-**over-payment**, and nothing in the engine watches it.
+**The over-payment claim this audit originally made is WITHDRAWN.** It was
+authored from reading the resolver and the parameter table, without driving the
+engine. Driving the engine refutes it. The corrected finding is narrower and is
+a naming/modelling defect, not a liability defect. The original text is
+superseded in full by what follows; nothing was changed in production code,
+registry data or tests at any point.
 
-### The provision has two axes; the registry key has one
+## What was claimed, and what the engine actually does
 
-The bundled consolidated text at
-`src/cadrumo/_data/corpus/normatives/html/trlirnr-rdleg-5-2004.html` states
-art. 25.1.a verbatim:
+The claim was that an EU/EEA-resident filer declaring `canones` or
+`inmobiliaria` is silently charged the 24 % general rate where TRLIRNR art.
+25.1.a entitles them to 19 %, in the over-payment direction, with nothing
+watching.
 
-> a) Con caracter general, el 24 por ciento. No obstante, el tipo de gravamen
-> sera el 19 por ciento cuando se trate de contribuyentes residentes en otro
-> Estado miembro de la Union Europea o del Espacio Economico Europeo con el que
-> exista un efectivo intercambio de informacion tributaria.
+Driven against the real snapshot (`bundled_authority().snapshot('210',
+filing_year=2025, period='0A')`, 10.000 EUR rendimientos, devengo 2025-12-31,
+via `calculate_registry_snapshot`):
 
-The 19 % is a proviso *to letter a)*. Its condition is the contributor's
-**residence**, not the income type, so it reaches every income letter a) taxes —
-general rendimientos, and (per the registry's own reasoning) canones and
-inmobiliaria, neither of which has a specific letter in the consolidated art. 25.1.
+| `tipo_renta` | country | resolved rate | outcome |
+|---|---|---|---|
+| `canones` | IE | — | `M210_CONVENIO_RATE_MISSING` |
+| `canones` | IT | — | `M210_CONVENIO_RATE_MISSING` |
+| `canones` | DE | 0 | treaty exemption applied |
+| `general` | IE / IT / DE | — | `M210_CONVENIO_RATE_MISSING` |
+| `ue_residente` | IE / IT / DE | — | `M210_CONVENIO_RATE_MISSING` |
 
-The registry collapses both axes into one lookup key. In
-`src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0001-m210-tipo-gravamen-2025.toml`
-(and byte-identically in `2026-y-siguientes/`), residence appears as a *value* of
-the income-type table:
+No configuration produced a silent 24 % charge on a declared EU/EEA resident.
 
-| key | value |
-|---|---|
-| `general` | 0.24 |
-| `ue_residente` | 0.19 |
-| `canones` | 0.24 |
-| `inmobiliaria` | 0.24 |
+The reason is in `_formula_runtime_irnr.py:92` `evaluate_irnr_resolve_tipo_gravamen`:
+the domestic baseline is returned **only** under `if not country:`. Once a
+fiscal-residence country is declared, a missing treaty row raises
+`UnresolvedFormulaOutcomeError(M210_CONVENIO_RATE_MISSING)` rather than falling
+back to the baseline, and the modelo verification workflow converts that into an
+operator-facing finding post-engine. An empty country string never reaches the
+branch either — the binding validator rejects it ("enum_binding
+'m210-2025-profile-country-of-fiscal-residence' must be a non-empty string").
 
-The file states the consequence in its own comment, for `canones`:
+So the 24 % baseline is reachable only when no fiscal residence is declared at
+all — precisely the filer who is not evidenced as an EU/EEA resident, for whom
+the art. 25.1.a general rate is the correct charge. This is the
+`no-silent-under-declaration` "typed unresolved outcome" design working as
+intended, in the direction the original finding claimed was unwatched.
 
-> La reduccion al 19% para residentes UE/EEE del art 25.1.a se alcanza por el
-> concepto `ue_residente`
+`canones` + DE resolving to 0 is likewise correct: the ES-DE convenio exempts
+royalties at source, and the `ceiling` / `flat` override machinery applied it.
 
-That is the defect, written down as the design: the reduction is reachable only
-by electing a *different* value of the same enum, which erases the income
-classification the box exists to record. A filer cannot be both `canones` and
-`ue_residente`.
+## What survives: a misleading model, not a wrong number
 
-### The rate resolver never consults residence
+Two things in the original reading remain true and are worth recording, neither
+of which changes a computed liability:
 
-`src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py:92`
-(`evaluate_irnr_resolve_tipo_gravamen`) resolves the domestic baseline as:
+- The parameter table at
+  `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0001-m210-tipo-gravamen-2025.toml`
+  (byte-identical in `2026-y-siguientes/`, correctly so — art. 25 is year-stable)
+  carries `ue_residente` as a *value* of an income-type enum, beside `canones`,
+  `inmobiliaria` and `general`. Residence and income type are two axes of art.
+  25.1.a collapsed into one lookup key.
+- That file's own comment for `canones` — "La reduccion al 19% para residentes
+  UE/EEE del art 25.1.a se alcanza por el concepto `ue_residente`" — describes a
+  path that, as the table above shows, does not actually reach 19 % either: a
+  declared country sends every `tipo_renta` through the convenio branch. The
+  comment describes an election that the resolver does not honour in the way the
+  prose implies.
 
-```python
-baseline_rate = _resolve_keyed_bracket(baseline_param, key=tipo_renta, filing_year=ctx.filing_year)
-country = ctx.enum_binding_values.get(args.country_binding) or ""
-override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
-```
+The practical consequence is confined to filers resident in an EU/EEA state whose
+convenio is **not bundled** (only AR, BE, DE, FR, GB, MA, NL, PT, US ship). Those
+filers receive a finding rather than a figure. That is the safe direction, and it
+is the same gap already recorded for M360 (LIVA art. 119 not catalogued) —
+missing bundled treaty and directive text, not a defective calculation.
 
-`country` enters only through `_resolve_convenio_override` — the bilateral treaty
-(CDI) mechanism, which is a different rule from the domestic art. 25.1.a
-proviso. The domestic baseline is keyed on `tipo_renta` alone.
+## Method note
 
-A treaty does not repair this. The `ceiling` override computes
-`min(domestic, treaty)`; with the domestic side pinned at 0.24 rather than 0.19,
-an EU/EEA resident whose treaty rate sits between the two (or who has no matching
-override row) is charged the higher figure.
+This is the second instance in this campaign of the same error shape: calling a
+registry state a defect from a static reading. The first was the M100 2025
+relief casillas (reverted in `8258892c64`, audit corrected in `d35d2894ca`). The
+standing lesson was "grep the tests for the casilla id before calling a registry
+state a defect". It generalises, and the generalisation is the durable one:
 
-The residence signal is not missing from the engine. The same module already
-reads it for a different purpose at
-`_formula_runtime_irnr.py:472`:
+**Before asserting a computed-liability defect, DRIVE THE ENGINE and read the
+`unresolved_outcomes`.** A resolver that appears to fall back to a restrictive
+default may instead raise a typed unresolved outcome one branch further down. A
+static reading cannot see which branch is live; three lines of
+`calculate_registry_snapshot` can.
 
-```python
-def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
-    return tipo_renta == "ue_residente" or country_code in UE_EEA_COUNTRY_CODES
-```
-
-So the art. 24.6 **expense** path honours a country code independently of
-`tipo_renta`, while the art. 25.1.a **rate** path does not.
-
-### The guard that exists watches only the other direction
-
-`src/cadrumo/domain/calculations/registry/schema_verification.py:626` documents
-the `casilla_equals_implies_profile_flag` operator, authored for this very axis:
-
-> Authored for the M210 IRNR `tipo_renta="ue_residente"` reduced-rate election
-> (TRLIRNR Art 25.1.a): the categorical rate choice was not cross-checked against
-> the declared `country_of_fiscal_residence`, so a non-EU/EEA filer could
-> self-declare the reduced 19% rate reserved for EU/EEE residents.
-
-That is the under-declaration direction — a filer claiming 19 % without
-entitlement. The symmetric case, an EU/EEA resident charged 24 % on `canones` or
-`inmobiliaria` when art. 25.1.a entitles them to 19 %, has no predicate, no
-advisory and no finding. `ue_eee_status` is already a derived `TaxpayerProfile`
-property and is already enrolled in `KNOWN_PROFILE_FLAG_ADVISORY_FIELDS`
-(`schema_verification.py:560`), so the signal needed to detect the over-payment is
-present and consumed — on one side only.
-
-This is the structural tell named in `no-silent-under-declaration`: a restrictive
-provision (the 24 % general rate) used as a default, producing valid output, no
-refusal and no signal, in the direction nothing watches.
-
-## Scope
-
-Both live M210 revisions (`2025`, `2026-y-siguientes`); the two revisions'
-parameter files are byte-identical modulo the revision token, which is correct —
-art. 25 is year-stable — so the finding applies equally to both.
-
-Not affected: `pension` (art. 25.1.b progressive tariff, resolved through
-`m210-pension-tarifa-2025`), `ganancia_patrimonial`, `interest` and `dividend`
-(art. 25.1.f, 19 % unconditionally for every non-resident, correctly modelled and
-documented as such in the parameter file).
-
-## Remediation — owner's decision, not taken here
-
-The reduction is a second axis, so the fix is a schema question rather than a
-value correction, and it is not adjudicated in this audit. The two shapes:
-
-- **Split the axes.** Resolve the domestic baseline from
-  `(tipo_renta, ue_eee_status)` rather than `tipo_renta` alone, so letter a)'s
-  proviso applies to every income it governs. This is the faithful model of the
-  provision and it retires the `ue_residente` enum value, whose only job today is
-  to smuggle residence through the income key. It touches
-  `evaluate_irnr_resolve_tipo_gravamen`, the keyed-bracket parameter shape, and
-  the `ue_residente` verification predicate.
-- **Watch the direction.** Leave the rate model and add an ADVISORY predicate
-  firing when `tipo_renta` is a letter-a) category, `ue_eee_status` is true, and
-  the resolved rate is 0.24 — the mirror of the existing
-  `casilla_equals_implies_profile_flag`. Cheaper, and it makes the over-payment
-  visible to the operator rather than silent, but it leaves the engine computing
-  a figure the operator must then correct outside the application.
-
-Note that art. 25.1.a's condition is narrower than EU/EEA membership alone: it
-also requires "un efectivo intercambio de informacion tributaria". Any fix must
-honour that qualifier rather than treating every EEA code as eligible;
-`UE_EEA_COUNTRY_CODES` should be checked against it before being reused for the
-rate axis.
-
-No production code, registry data or test was changed by this audit.
+The `no-silent-under-declaration` organising question stays sound — the answer
+here was simply that something *does* watch that direction.
