@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb4fb8c11ac6aa3edb0cbb8b936599021ee63087be6e6e7a65543e6103e776b8'
+body_hash: 'sha256:156fec10e0410b715379a1337f6ffe174e42ef9684223fa5abe14db7e2a1bb73'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -184,6 +184,29 @@ So `cadrumo/tests` KEEPS its `__getattr__`. It is not an unmeasured whole-namesp
 map; it is the bounded exception, applied correctly, and the table above is the record it
 was missing. The retirement population is EIGHT packages and 1112 symbols, not nine and
 1114.
+
+A DEFERRAL IS ONLY REAL IF SOMETHING REALISES IT, and that turns out to decide package
+disposition more than the paper figure does. A module-level `__getattr__` defers only when a
+caller imports the MODULE and never touches an attribute; `from X import Y` fires it at
+import time and pays for Y's owner immediately. So the honest measurement is not "what does
+the map defer" but "what does a real consumer pay".
+
+Measured that way, two packages answer oppositely:
+
+| package | eager | one real symbol | verdict |
+|---|---|---|---|
+| `domain/modelos` | 625 | 605 | deferral realised by nobody -- RETIRE |
+| `application/filing` | 1271 | 749 | saves 522 -- KEEP a bounded guard |
+
+`domain/modelos` has zero plain `import` statements tree-wide and its cheapest owner alone
+drags 167 modules, so its twenty owners share a heavy floor no bounded guard can protect.
+`application/filing` has no such floor: `._complementaria` (+259) and `._export` (+152) are
+79 per cent of its weight, and a `build_draft` consumer genuinely avoids both.
+
+`domain/modelos` also names a trap worth recording: the naive middle path -- keep the
+facade, make `__init__` eager -- would REGRESS the 64 consumers that touch only cheap owners
+from ~236 modules to 625, while full retirement improves them to ~168. Retirement dominates,
+but only the repoint-and-delete kind, never the make-it-eager kind.
 
 This is worth stating plainly because the campaign nearly deleted the one instance that was
 right. The nine were assembled by searching for a MECHANISM -- `_LAZY_EXPORTS` -- and a
