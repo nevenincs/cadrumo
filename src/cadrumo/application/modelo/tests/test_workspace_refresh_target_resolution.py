@@ -40,7 +40,7 @@ from ...operations.projection_services import OperationWorkspaceRefreshTargetSer
 from ...operations.registry import OperationRegistry, OperationRequestStoragePolicy
 from ..operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID,
+    MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
     ModeloWorkRenameRequest,
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
@@ -208,7 +208,7 @@ def test_a_subject_that_is_not_a_work_unit_refuses_rather_than_resolving(tmp_pat
 
 
 def test_every_shipped_modelo_enrolment_declares_the_one_shared_refresh_schema() -> None:
-    """One canonical refresh target across the family, never a per-definition copy."""
+    """One canonical target model across the family, under per-enrolment schema ids."""
     registry = _registry()
     declared = {
         registration.contract.definition_id: registration.contract.workspace_refresh_target_schema
@@ -217,7 +217,10 @@ def test_every_shipped_modelo_enrolment_declares_the_one_shared_refresh_schema()
     assert declared, "no Modelo enrolment was composed"
     for definition_id, schema in declared.items():
         assert schema is not None, f"{definition_id} declares no workspace refresh target"
-        assert schema.schema_id == MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID, definition_id
+        assert schema.schema_id == f"{definition_id}.{MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX}", definition_id
+
+    schema_ids = [schema.schema_id for schema in declared.values() if schema is not None]
+    assert len(set(schema_ids)) == len(schema_ids), schema_ids
 
     fingerprints = {schema.schema_fingerprint for schema in declared.values() if schema is not None}
     assert len(fingerprints) == 1, fingerprints

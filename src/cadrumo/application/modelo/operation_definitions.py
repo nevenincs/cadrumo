@@ -134,7 +134,12 @@ MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
 _WORK_UNIT_NAME = Annotated[str, Field(min_length=1, max_length=200)]
 
-MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID = "modelo.workspace.refresh_target"
+#: Suffix appended to a definition id to name that enrolment's refresh-target
+#: schema. Every Modelo enrolment binds the SAME target model, but each needs
+#: its own schema identity: the registry resolves a schema binding by scanning
+#: every registration and taking the first identity match, so one id shared
+#: across enrolments would stop that lookup being definition-scoped.
+MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX = "workspace_refresh_target"
 
 
 class _WorkUnitSubject(BaseModel):
@@ -163,10 +168,10 @@ def resolve_modelo_work_unit_refresh_target(
     )
 
 
-def _modelo_workspace_refresh_target_binding() -> OperationSchemaBindingV1:
-    """Bind the one shared refresh-target schema every Modelo enrolment uses."""
+def _modelo_workspace_refresh_target_binding(definition_id: str) -> OperationSchemaBindingV1:
+    """Bind one enrolment's refresh-target schema to the shared target model."""
     return OperationSchemaBindingV1.bind(
-        schema_id=MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_ID,
+        schema_id=f"{definition_id}.{MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX}",
         schema_version=1,
         model_type=ModeloWorkspaceRefreshTargetV1,
     )
@@ -355,7 +360,7 @@ def build_modelo_work_discard_registration(
             schema_version=1,
             model_type=ModeloWorkDiscardPublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -511,7 +516,7 @@ def build_modelo_work_verify_registration(
             schema_version=1,
             model_type=ModeloWorkVerifyPublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -657,7 +662,7 @@ def build_modelo_work_file_registration(
             schema_version=1,
             model_type=ModeloWorkFilePublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -798,7 +803,7 @@ def build_modelo_export_registration(
             schema_version=1,
             model_type=ModeloExportPublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -955,7 +960,7 @@ def build_modelo_work_amend_registration(
             schema_version=1,
             model_type=ModeloWorkAmendPublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -1597,7 +1602,7 @@ def build_modelo_edit_apply_registration(
             schema_version=1,
             model_type=ModeloEditApplyPublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
@@ -1653,7 +1658,7 @@ def build_modelo_work_rename_registration(
             schema_version=1,
             model_type=ModeloWorkRenamePublicResultV1,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
     )
 
