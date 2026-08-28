@@ -5,7 +5,7 @@
   "validation_result": "PASSED",
   "receipt": {
     "schema_version": 1,
-    "current_head_commit": "e4e3f1fbc486f10cf4e28cbbfb12f630693e42c7",
+    "current_head_commit": "b5ba5a54d25bc48994901d4473394de9cdc83c0b",
     "predecessors": {
       "gate_adr": {
         "stem": "2026-08-24-tui-registry-api-gate-adr",
@@ -18,7 +18,7 @@
         "body_hash": "sha256:0394ec857bf50e11fc9015e7d28baf0dc7adf5c5e668a817359b0e2e87cfd29c"
       },
       "c1_exit_receipt": {
-        "path": ".vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt-reference.md",
+        "path": ".vault\\reference\\2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt-reference.md",
         "validation_result": "PASSED",
         "artifact_digest": "sha256:612d61d48b3142751c87dc2ee33e10d776efa004923117634c3a8f800d5d38fa"
       },
@@ -29,7 +29,7 @@
       },
       "native_owner_inventory": {
         "inventory_schema_version": 1,
-        "artifact_digest": "3b1a6e2853c3c3d78622f8140a38f79e119720eeb5690c2a29317c52c1f2cb85"
+        "artifact_digest": "e52b0985030e77f0cdc026bcca33021e40966a6a857cc4a2f5705215e24f88c7"
       }
     },
     "native_owner_surfaces": [
@@ -77,13 +77,13 @@
         "contributor_kind": "readiness",
         "owner": "application.state_projection",
         "producer": "modelo_readiness",
-        "contract_digest": "ed9c089e18a9d379843dcebc9e9ece844bbee07abd48640a958140c377201e08"
+        "contract_digest": "f94d1a326b57b3f36a4a8cfd26e05891b804addfeb627439581e531525239903"
       },
       {
         "contributor_kind": "registry",
         "owner": "domain.calculations.registry",
         "producer": "validated_registry_projection",
-        "contract_digest": "cd78268d71c9a5db17c345f13192ec17f2c708a58f74a70389b524cd6dfb0f78"
+        "contract_digest": "b99fc9f691cf5a4ec15a8eb0fb983def4f3d1041a4b5e8add654d650328304c6"
       },
       {
         "contributor_kind": "work",
@@ -92,16 +92,39 @@
         "contract_digest": "b28b58df29456cfc2e7e9b841b2a267622feec22ca58212331ce972bdecd5544"
       }
     ],
-    "epoch_schema_digest": "1bbb9042f178e4c67106495f0ca7bef24e5cc01194455f77ef752da308dce762",
-    "workspace_schema_fingerprint": "8bace39ef8de432687951c1292ceec4a70af780efd71371d02040cfe4a630c75",
+    "epoch_tuple": {
+      "digest": "1bbb9042f178e4c67106495f0ca7bef24e5cc01194455f77ef752da308dce762",
+      "covered_surfaces": [
+        "locale_catalogue",
+        "field_manifest",
+        "readiness",
+        "closure"
+      ],
+      "excluded_surfaces": [
+        "work",
+        "registry",
+        "calculation",
+        "bounded_review"
+      ],
+      "exclusion_reason": "WORK, REGISTRY, CALCULATION, and BOUNDED_REVIEW each require a work-unit/modelo/period or registry-snapshot coordinate; the C2 gate authorizes the CAPABILITY, not one target's read, so it names no coordinate for these four rather than fabricate one"
+    },
+    "workspace_schema_fingerprint": "418eff485552f4fc5e29430601b85199a7696d1235b581247cd6a108d1b5b909",
     "field_manifest_digest": "46fdefd980676d1656a047377bea71d174a46b79a7f84f214ffa3c5e5eadf22e",
     "read_destinations": [
-      "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
-      "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result"
+      {
+        "qualified_name": "cadrumo.application.modelo.workspace.resolve_static_inspection_result",
+        "route_level": "function",
+        "route_level_rationale": "no frontend/interface consumer exists yet (S129 census); the function IS the route"
+      },
+      {
+        "qualified_name": "cadrumo.application.modelo.workspace.resolve_graded_snapshot_result",
+        "route_level": "function",
+        "route_level_rationale": "no frontend/interface consumer exists yet (S129 census); the function IS the route"
+      }
     ],
     "clean_commit_proof": {
       "outcome": "passed",
-      "evidence": "git status --porcelain reports zero changes across 8 dependency paths"
+      "evidence": "git status --porcelain reports zero changes across 27 dependency paths, 21 of them derived from the fingerprinted model graph at mint time"
     },
     "adr_status_proof": {
       "outcome": "passed",
@@ -129,7 +152,7 @@
     },
     "producer_inventory_proof": {
       "outcome": "passed",
-      "evidence": "inventory_version=1 digest=3b1a6e2853c3c3d7"
+      "evidence": "inventory_version=1 digest=e52b0985030e77f0"
     },
     "field_denominator_proof": {
       "outcome": "passed",
