@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:fccfcc30bd18fdae33381c6d97debde559e9c815ffee2240189dacb6aafeb153'
+body_hash: 'sha256:325f7ad2de1d30662cf3b160f4622817a06c19c0d3ee4caec1c54a47662b56ab'
 related: []
 ---
 
@@ -147,3 +147,44 @@ because they are stable and generic — and they are the ones that state nothing
 Direction is unchanged: values correct, grounding weaker than the record implies.
 Remediation for both is additive — restore the establishing citation, change no
 value.
+
+## The sweep is fully triaged: two actionable items out of 181 rows
+
+`tight_match` judged 181 parameter rows — every one of whose citations resolves to
+a provision excerpt — and 169 had every encoded value stated in the cited text.
+All twelve misses have now been read by hand and resolve to five causes:
+
+| rows | parameter | verdict |
+|---|---|---|
+| 2 | `renta-2024/2025-imputacion-inmobiliaria-year-days`, 365 absent | **sound** — a day-count convention; LIRPF art. 85 states no denominator. Already checked and sound; do not "fix" |
+| 4 | `is.modelo-200.tipo-gravamen-pyme` and siblings | **actionable** — citation omission, this audit |
+| 2 | `m303-dr303-154/-166`, 7,50 absent | **actionable** — citation omission, this audit |
+| 2 | `m210-pension-tarifa-2025`, 0,08 absent | **sound** — see below |
+| 2 | `modelo-360-*-refund-threshold-eur`, 400 and 50 absent | **already recorded** — the probe independently rediscovered the M360 finding established by hand |
+
+### The M210 pension tranche is a derived rate, correctly
+
+TRLIRNR art. 25.1.b states the pension scale as cuotas, not as a first-tranche
+percentage:
+
+> Importe anual pensión hasta 12.000 euros, **cuota 960 euros**, resto pensión
+> hasta 6.700 euros, tipo aplicable 30 por ciento; importe anual pensión hasta
+> 18.700 euros, cuota 2.970 euros, resto pensión en adelante, tipo aplicable 40
+> por ciento.
+
+The registry's `0.08` is 960 ÷ 12.000. The law never writes "8 por ciento", so the
+absence is real and correct, and the row's `required_text` — which pins 12.000, 30
+and 40 — pins everything the text actually states. This is the "value may be
+derived" case the probe's own docstring anticipates.
+
+### What the triage is worth
+
+Two actionable items from 181 rows, both additive citation repairs, and no wrong
+value anywhere in the excerpt-tier population. That is a useful negative: the
+grounding weakness this campaign has documented is concentrated in *what the
+record says about a value*, not in the values themselves.
+
+It also bounds the exercise. The same sweep cannot be run over the whole-law-cited
+population at all, so this result covers 181 of roughly 458 parameters; the rest
+remain uncheckable until either their citations move to excerpts or an anchored
+reader exists.
