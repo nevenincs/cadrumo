@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:fea9d38f2c8782bc7317a5af48104d4808ec27a0c5dba1ca54cc65e621e2be01'
+body_hash: 'sha256:3b213701009b249b64f8d82e7b44d060799cc744e2ce519040483a401806e6a0'
 related: []
 ---
 
@@ -44,9 +44,22 @@ below are sorted on that axis because it is the axis with no coverage.
    art. 95 reduced 7 % retención for specific collectives. The M200 ERD parameter
    is well grounded — a test pins its 23 % value, data type, unit and both
    `legal_refs` — it is *consumption* that nothing asserts.
-3. **The received-invoice refusal direction**: a guard refuses a whole filing
-   citing under-declaration over a population where the error direction is
-   over-payment. The origin of this campaign's question.
+3. ~~**The received-invoice refusal direction**~~ — **RESOLVED at HEAD, closed.**
+   The guard that started this campaign no longer refuses over the whole
+   received-invoice population. `_raise_if_screened_invoice_iva_would_be_silent`
+   now fires only when `uncovered_authority_evidence > 0`, i.e. when invoice IVA
+   would EXCEED the transaction-ledger cuota — which is genuinely the
+   under-declaration direction. Its comment states the reasoning: "An unlinked
+   purchase invoice whose cuota the ledger already carries is corroborating
+   evidence of an operation that IS declared, so refusing there blocks a filing
+   whose totals are correct. It stays withheld ... and the operator is told
+   through the diagnostic channel instead."
+
+   Fixed by another author, not this campaign. Re-verified by reading the site at
+   HEAD rather than trusting the probe: `tmp/direction_audit.py` STILL flags this
+   function, because it keyword-matches under-declaration language beside
+   input-side markers. That is now a known false positive — do not re-open the
+   finding on the probe's say-so.
 
 ## Open, under-declaration direction
 
