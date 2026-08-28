@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:caecea31b35491db55bdfb034e63814c60f0d679ea1aca0d6ff903925766080e'
+body_hash: 'sha256:3ea23752e0b8db1b7bf9d55e382cfdcc94c6f8887a536d41a991fa7633c8d1f8'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -1428,4 +1428,52 @@ applies decides which ejercicio's rate is used -- and
 ASSERTED equal to the law-determined one, never injected. Choosing the pinned
 value to make the refusal stop would be choosing which year's law to compute
 under. Left for a tick that can ground it against the manual's ejercicio.
+
+
+### Modelo 200 micro-empresa wall: the revision guard caught a real wrong-year computation
+
+The wall refused with `requested registry revision '2024' is not the
+law-determined revision for this filing target. The law-determined revision is
+'2025-y-siguientes'`, and the guard was right in a way worth recording.
+
+The test passes `filing_year=2025` and pins `revision="2024"`. Modelo 200's
+`2024` revision closes at 2024-12-31; 2025 resolves to `2025-y-siguientes`. Had
+the pin been honoured, ejercicio 2025 would have been computed under the 2024
+flat 23 % rate -- 23.000,00 EUR instead of 21.500,00 -- which is precisely the
+defect class `aeat-registry-authority-flow` describes when it says a stored or
+operator-supplied revision may only be ASSERTED equal to the law-determined one,
+never injected as the selector. This is that rule earning its keep on a live
+case, not a hypothetical.
+
+The file contradicted itself, which is what made the pin look defensible. The
+docstring says ejercicio 2025, grounds on LIS DT 44ª (Ley 7/2024) at 21 %/22 %,
+and expects 21.500,00. The comment block ABOVE it described a different
+scenario entirely -- ejercicio 2024, flat 23 %, cuota 23.000,00 -- and asserted
+that the two-tranche scale is 17 %/20 % for ejercicios iniciados en 2025.
+
+Adjudicated against the registry rather than either prose block. The
+`is.modelo-200.tipo-gravamen-pyme` bracket table, keyed on `filing_period` and
+cited to `ley-27-2014:art-29` and `ley-27-2014:dt-44`, encodes 23 % flat for
+2024, 21 %/22 % for 2025 (fixed addition 10.500 above 50.000) and 19 %/21 % for
+2026, and says in terms that "The final LIS art. 29.1 17 % / 20 % scale is not
+the 2025 window". So the docstring and the expected 21.500,00 are correct
+(10.500 + 50.000 x 22 %), and the header comment was stale AND wrong on the
+rate. It was rewritten to the grounded schedule rather than deleted: left
+standing, it would have led the next reader to "correct" the expected value to a
+figure no ejercicio carries.
+
+The pin is now `2025-y-siguientes`, which NAMES the law-determined revision
+rather than selecting a different one. Test passes.
+
+The test's own name still says `_2024` while it covers ejercicio 2025. Left
+alone: the acceptance-wall catalogue addresses it by node id, so a rename is its
+own change, and the name is cosmetic where the pin and the comment were not.
+
+Also fixed in the same file: `test_modelo_130_malformed_numeric_binding_refuses_`
+`not_reclassified` asserted the English prose "is not a decimal" against an
+envelope that comes back localized ("no es decimal"). Replaced with the
+refusal's own code. The first guess at that code was wrong and the run said so
+-- the real one is `REFUSED_MODELO_CALCULATE_DECIMAL_INPUT`, which names the
+decimal-shape refusal more precisely than the sentence did. All 7 tests in the
+file pass.
 
