@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:3cd0b4d5c494dec34cad3fcab994f79779ef6bb6828d771aed003826a95068fa'
+body_hash: 'sha256:42e7e7d1c1ce51a039a98a837e853936d54beee299d3416809a93f93b24be705'
 related:
   - "[[2026-08-28-tui-architecture-orden-kind-temporal-carveout-population-audit]]"
 ---
@@ -91,3 +91,49 @@ is a design question the exemption deliberately leaves open. Recording the
 population is the deliverable; narrowing the exemption is an owner's ruling.
 
 No production code, registry data or test was changed by this audit.
+
+## Resolved: the 2025 question is the declared 0150 deferral, not a gap
+
+The open question above — why the 2025 revision carries the four rental tiers with
+no consumer — is answered, and the answer is that the state is deliberate and
+guarded.
+
+| revision | casilla 0150 | producer |
+|---|---|---|
+| 2024 | `computed` | `renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2` |
+| 2025 | `manual` | none |
+
+Casilla 0150 is *reducción por arrendamiento de vivienda*, and its 2024 producer
+is the only formula in either revision that consumes a `rental-*` parameter. In
+2025 the casilla is operator-input and the producer is absent.
+
+That absence is declared. `test_modelo_100_2025_semantic_boundaries.py` names
+`("0150", "formula")` among its focus rows and states the rule in its own
+docstring:
+
+> The 2025 declarations for casillas 0150, 0613, and 1481 are measured
+> cross-revision divergences. They must not acquire a prior-year producer until
+> their row-specific legal, input-contract, and independent-value evidence has
+> been accepted. These tests exercise the loaded registry graph so an accidental
+> formula, profile binding, or Modelo 131 relation cannot be added silently.
+
+The 2024 formula is exactly the prior-year producer that guard forbids inheriting.
+
+So the four unconsumed 2025 tier parameters are not orphaned data: they are the
+**data half of a producer being deliberately withheld** pending evidence. The
+registry holds the coefficients ready and refuses to wire them until the row's
+legal and value evidence is accepted.
+
+**This is not a new finding.** It resolves into the already-open M100 2025 relief
+deferral evidence bar. A 2025 filer receives no automatically computed rental
+reduction and must supply casilla 0150 as manual input — which is the over-payment
+direction, and is precisely the cost the deferral consciously accepts until the
+evidence bar is met.
+
+Worth recording for its own sake: this is the second time an investigation has
+arrived at M100/2025 casilla 0150 looking like a missing relief. The first time it
+was characterised as a regression and wired to compute, breaking 39 registry tests.
+This time the guard was read before anything was concluded. The rule that prevents
+the repeat — grep the tests for the casilla id before calling a registry state a
+defect — did its job on a row reached from an entirely different direction, which
+is the strongest evidence available that it is worth keeping.
