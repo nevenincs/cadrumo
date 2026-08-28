@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:736574420f4488714efd2dd02b058764d8cd1afe1264bf4353f29a2db2d6b37e'
+body_hash: 'sha256:9834b204956301c2fe02a0d9c591906a091c853b5b1de4c80bf1400ba6529157'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -112,9 +112,37 @@ this decision restates it as a rule rather than an aside.
 
 ## Implementation
 
-Retirement is by package, one package per commit, never a tree-wide sweep. But the nine
-are NOT one population, and a survey of their `__init__.py` files found the split that
-decides the sequencing:
+Retirement is by package, one package per commit, never a tree-wide sweep -- with one
+structural qualification found the hard way, stated first because it changes the unit of
+work.
+
+ONE OF THE NINE RE-EXPORTS FROM THREE OTHERS. A census of all nine `_LAZY_EXPORTS` maps
+for entries naming another package on the list returns exactly one row:
+
+| package | symbols | entries naming another of the nine |
+|---|---|---|
+| `storage` | 257 | `core` 21, `custody` 17, `crypto` 11 |
+
+The other eight name nothing on the list. So `storage` is an ANCESTOR whose map re-exports
+its own descendants' surfaces, and retiring a descendant leaves those entries dangling:
+emptying `crypto/__init__.py` broke runtime access to `KEY_SIZE` and ten siblings from
+modules that never imported the crypto package at all, because they reached the symbols
+through `storage`.
+
+THE CONSEQUENCE FOR THE UNIT OF WORK: a package's consumer population is NOT its direct
+importers. An AST census of `crypto` found 56 importing files; the module that actually
+broke was in none of them. So retiring a package MUST, in the same commit, repoint every
+ancestor-map entry naming it. That is a mechanical step, not a judgement -- but it is
+invisible unless looked for, which is why it is recorded here rather than left to the
+executor.
+
+It does NOT force the nine into one commit. Eight are independent and retire in any order.
+`storage` retires LAST of its subtree, after `crypto` (done) and `custody`, and its 21
+`core`-facing entries repoint at core's owning submodules directly, which works whether or
+not `core` still has a map. So `storage` does not have to wait for `core`.
+
+With that qualification, the nine still split by shape, and a survey of their `__init__.py`
+files found the split that decides the rest of the sequencing:
 
 SEVEN ARE TRUE FACADES -- the module contains the lazy hooks and nothing else, so
 retiring the map IS the whole job: `crypto` (135 lines), `tests` (207), `review` (249),
