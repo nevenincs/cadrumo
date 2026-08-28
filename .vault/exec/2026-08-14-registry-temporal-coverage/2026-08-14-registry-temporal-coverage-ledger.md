@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:856878152f86aa27e19bd97e6aa822d6220c519d1662129d9a21395d4aa74d10'
+body_hash: 'sha256:ec1111c5d48b14c19eaab2c7476db0cec0f178723f5c8b31fe9f486c08bd8300'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -2294,3 +2294,44 @@ the import order for everything after it, so the failure only reaches an
 operator through a cold entry point (workflow profile health) that does not."
 In a warm suite it hides; the operator meets it. A cold reader now returns 81
 keys, and the four registration-order tests pass.
+
+### An unlabelled field, and the exemption list that was the wrong remedy
+
+Two localization gates failed on the same field:
+`taxpayer_type.declaration_roles` -- "field labels identical under en and es
+without an exemption", and its companion demanding the identical-by-nature
+exemption list match exactly.
+
+The second gate's wording invites the wrong fix. Adding the field to the
+identical-by-nature exemptions would have turned both green in one line, and
+`aeat-locales-cli` names that move specifically: the allowlist is "for
+deliberately-identical strings with a stated reason, not a mute button" for a
+string nobody translated.
+
+It was not a deliberately-identical label. The field carried NO label entry in
+any of the four catalogues -- en and es matched because both fell through to the
+same derived default. The field is the filer's Modelo 347 declaring role, which
+is ordinary translatable prose, so it was translated in all four rather than
+exempted anywhere.
+
+One detour worth recording, because it produced a wrong key that had to be
+unpicked. The label key is built by `profile_field_label_key` as
+`profile.schema` + `field` + section + field + `label`; reading the YAML nesting
+alone suggested `profile.schema.<section>.<field>.label` and four values were
+set there first. The gate stayed red -- correctly, since nothing reads that key
+-- and the four stray entries were removed with `dev.locales remove` before
+setting the real `profile.schema.field.taxpayer_type.declaration_roles.label`.
+Asking the code for the key rather than inferring it from the file shape would
+have skipped both steps.
+
+8 tests in the file pass.
+
+The locale suite's own remaining failures are not this: `es is missing 17
+codebase keys`, all of them the `cli.*.view_help` and
+`cli.app.modelo.reconcile.*` family from another worker's new verbs, plus an em
+dash in a Hungarian value. The four `declaration_roles` labels are present in
+every catalogue.
+
+Also confirmed this tick: `application/workflow/tests/test_profile_health.py`,
+which the cold-reader defect named as the operator-facing victim, now passes 6
+of 6 -- it was a six-error file in the last sweep.
