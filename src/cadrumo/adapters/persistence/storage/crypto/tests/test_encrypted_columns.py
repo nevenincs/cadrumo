@@ -19,9 +19,16 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, StorageValidationError
-from .. import EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
-from .._crypto import encrypt_record
-from .._encrypted_columns import _AAD_JSON, _AAD_STRING
+from ..aead import encrypt_record
+from ..encrypted_columns import (
+    _AAD_JSON,
+    _AAD_STRING,
+    EncryptedBytes,
+    EncryptedJSON,
+    EncryptedPayload,
+    EncryptedString,
+    HashedLookup,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
