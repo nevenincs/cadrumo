@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:86b808116ec3993b6e65d9e74777fa0e7f50b821ed89e7bce89a89cf5c5309b4'
+body_hash: 'sha256:fccfcc30bd18fdae33381c6d97debde559e9c815ffee2240189dacb6aafeb153'
 related: []
 ---
 
@@ -102,3 +102,48 @@ sweep over all citations, because most of the population cites whole consolidate
 laws where every numeral occurs somewhere.
 
 No production code, registry data or test was changed by this audit.
+
+## Second instance, different modelo: M303's transitional rates lost their RD-ley
+
+The same omission appears on Modelo 303, and there it is unambiguous because an
+adjacent revision does it correctly.
+
+`m303-dr303-154-transitional-rate-percent` and its `-166` sibling carry the
+RD-ley 4/2024 foodstuffs steps — 5,00 → **7,50** and 0,00 → **2,00**, verified
+correct against the law and against the companion `iva/recargo-rates.toml`.
+
+| revision | `legal_refs` |
+|---|---|
+| `2023` | LIVA 88, LIVA 91, RD 1624/1992 art. 71, Orden EHA/3786/2008 art. 1, **`real-decreto-ley-20-2022:art-72`** |
+| `2024-hasta-08-y-2t` | the four framework refs only |
+| `2024-desde-09-y-3t` | the four framework refs only |
+
+The 2023 revision cites the RD-ley that opened its 5 % window. Both 2024
+revisions dropped the RD-ley entirely — and they are the revisions carrying the
+7,50 and 2,00 values that **RD-ley 4/2024** established. Their four remaining refs
+are the IVA framework (repercusión, tipos, reglamento, the form's Orden); none
+states a transitional rate.
+
+The citation is available today: `real-decreto-ley-4-2024:art-1` is in the
+catalogue, and its corpus states **"7,5 por ciento"** and **"2 por ciento"**
+verbatim. `real-decreto-ley-20-2022:art-72` is an excerpt-tier entry, which is why
+the 2023 row passes the tight sweep while the 2024 rows do not.
+
+### What the pair of instances shows
+
+Both are omissions of the *establishing* provision while the *framework* refs are
+kept, and in both the correct citation exists in the tree:
+
+- M200 2024 pyme — the establishing provisions are named in a code comment.
+- M303 2024 transitional — the establishing provision is cited by the **previous
+  revision** of the same parameter.
+
+So neither is a gap in knowledge or in the corpus. The recurring shape is that
+citations are **carried forward across revisions and then edited**, and the
+provision that makes a value true is the one most easily lost, because it is the
+one that changes when the value changes. The framework refs survive precisely
+because they are stable and generic — and they are the ones that state nothing.
+
+Direction is unchanged: values correct, grounding weaker than the record implies.
+Remediation for both is additive — restore the establishing citation, change no
+value.
