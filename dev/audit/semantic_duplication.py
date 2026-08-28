@@ -278,6 +278,66 @@ def detect_call_fingerprint(modules: Sequence[Module]) -> list[Candidate]:
     ]
 
 
+def _normalised_expression(node: ast.AST) -> str | None:
+    """Return a naming-blind fingerprint of one expression, or ``None`` if trivial.
+
+    Identifiers are erased and only STRUCTURE plus the closed-value members and
+    literals survive, so two authors who spell the same derivation with different
+    variable names produce the same fingerprint. A ternary choosing between two
+    enum members on a comparison is the shape this exists to catch.
+    """
+    marks: list[str] = []
+    for inner in ast.walk(node):
+        if isinstance(inner, ast.Attribute) and inner.attr.isupper():
+            marks.append(f"member:{inner.attr}")
+        elif isinstance(inner, ast.Constant) and isinstance(inner.value, int | float | str):
+            if inner.value not in _TRIVIAL_LITERALS and not isinstance(inner.value, bool):
+                marks.append(f"lit:{inner.value!r}")
+        elif isinstance(inner, ast.Compare):
+            marks.extend(f"cmp:{type(op).__name__}" for op in inner.ops)
+        elif isinstance(inner, ast.IfExp):
+            marks.append("ternary")
+        elif isinstance(inner, ast.BoolOp):
+            marks.append(f"bool:{type(inner.op).__name__}")
+    members = [mark for mark in marks if mark.startswith("member:")]
+    if len(members) < 2:
+        return None
+    return " ".join(sorted(marks))
+
+
+def detect_duplicated_derivation(modules: Sequence[Module]) -> list[Candidate]:
+    """Identical DERIVATIONS over the same closed-value members, in different modules.
+
+    The enum_subset detector only sees members gathered into a COLLECTION. A ternary
+    that chooses between two members on a comparison states a rule just as firmly and
+    is invisible to it -- the members never meet in a set. Three verbatim copies of one
+    IVA flow-direction derivation were found by hand for exactly this reason, and the
+    hand-find is what motivated this detector.
+
+    Fingerprinting is naming-blind: variable names, parameter names and the enclosing
+    function's own name are all erased, because those are precisely the axes a second
+    author spells differently while writing the same rule.
+    """
+    by_shape: dict[str, list[str]] = collections.defaultdict(list)
+    for module in modules:
+        for node in ast.walk(module.tree):
+            if not isinstance(node, ast.IfExp | ast.Compare):
+                continue
+            shape = _normalised_expression(node)
+            if shape is not None:
+                by_shape[shape].append(f"{module.relative}:{node.lineno}")
+    return [
+        Candidate(
+            detector="duplicated_derivation",
+            fingerprint=shape,
+            sites=tuple(sorted(sites)),
+            weight=len(shape.split()) * len(sites),
+        )
+        for shape, sites in by_shape.items()
+        if len({site.split(":")[0] for site in sites}) > 1
+    ]
+
+
 def detect_field_set(modules: Sequence[Module]) -> list[Candidate]:
     """Record types in different modules declaring an identical field set.
 
@@ -385,6 +445,7 @@ _DETECTORS = {
     "enum_subset": detect_enum_subset,
     "scarce_literal": detect_scarce_literal,
     "call_fingerprint": detect_call_fingerprint,
+    "duplicated_derivation": detect_duplicated_derivation,
     "field_set": detect_field_set,
     "import_overlap": detect_import_overlap,
     "package_overlap": detect_package_overlap,

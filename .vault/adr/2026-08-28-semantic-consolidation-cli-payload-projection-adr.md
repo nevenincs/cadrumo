@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:d989fbe8319b7e4da7b09c8c7ca19afce5d46cf0dfdfc726a957f587dd418181'
+body_hash: 'sha256:581b36684c958c81d7284a372a33435faf870d6044a37decb84467fc4d5c56b4'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -68,8 +68,44 @@ and not reducible to a single added `Field` constraint. Confirmed instances incl
 `_overview_payloads.py:87`, `:132`, `:231`, `:296`, `:392`,
 `_config_descendiente_payloads.py`, `_modelo_payloads.py:396` and `:852`, and
 `_config/_check_payloads.py:92`. These are the sharpest form of the CLI owning business
-logic, and they are unmeasured -- the field-set detector cannot see them, because a
-reimplemented validator does not change the field set.
+logic, and no detector can see them, because a reimplemented validator does not change
+the field set.
+
+A sweep of all 53 CLI validator declarations found that this population contains
+something worse than duplication. THREE RULES EXIST ONLY IN THE CLI.
+`ObligationCoveragePayload._require_disjoint_dispositions` forbids a modelo being
+classified into two dispositions at once, while the canonical `ObligationCoverageReport`
+carries no validator -- and that model's own docstring states the invariant as its
+defining property ("Total partition ... Every code lands in exactly one of the four
+tuples"). It declares a partition and enforces nothing.
+`NotificationDocumentPayload` requires exactly one of sancion or parse_refusal, while
+`NotificationDocumentRecord` has zero validators and can be persisted with both or
+neither; the payload also carries a `sancion_parsed` field the backend record does not
+have at all, so the CLI invented a FIELD and then a rule over it.
+`ObservationPayload` asserts operand-provenance completeness that the formula runtime
+holds only by construction and never checks.
+
+Two partial mirrors were also found, and they run in OPPOSITE directions.
+`_modelo_payloads.py:396` omits the canonical's `period.filing_year == filing_year`
+cross-check and its content-addressed id re-derivation; the second is not reproducible at
+all, because `ModeloRecordPayload` carries no `member_nif` field and that value is one of
+the four inputs the derivation hashes. Both omissions are REDUNDANT rather than
+dangerous: every production path funnels through
+`_modelo_rendering.py:830 filing_record_payload(record: ModeloRecord)`, and a
+`ModeloRecord` cannot exist without its own validator having passed.
+`_overview_payloads.py:132` diverges the other way and OVER-REJECTS: its canonical base
+`_CalendarJustificanteStateInvariant` carries an early return that unconditionally
+passes when both `aeat_submission_state` and `justificante_verified` are None, and the
+CLI mirror has no equivalent, so it refuses a shape the canonical explicitly allows.
+Reachability of that shape on a production path is unconfirmed.
+
+A retraction belongs in the record. The filing-record mirror was FIRST reported as having
+dropped the canonical's `superseded_at >= filed_at` check. That was wrong -- the check is
+present at :406 and has been since 2026-08-06. The false finding came from comparing two
+multi-branch validators by eye; the true divergences above emerged only when the same
+validators were compared by tracing their truth tables. Eyeball comparison of branching
+validators is not evidence, and this decision's own findings were corrected by that
+lesson before they were acted on.
 
 ## Constraints
 
