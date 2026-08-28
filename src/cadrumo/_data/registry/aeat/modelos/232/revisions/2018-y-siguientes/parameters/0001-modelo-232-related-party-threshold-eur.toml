@@ -2,7 +2,7 @@
 id = "modelo-232-related-party-threshold-eur"
 data_type = "money"
 unit = "EUR"
-legal_refs = ["rd-634-2015:art-13"]
+legal_refs = ["orden-hfp-816-2017:art-2", "rd-634-2015:art-13"]
 source_refs = ["aeat-modelo-232-procedure"]
 
 [[revisions."2018-y-siguientes".parameters.source_citations]]
