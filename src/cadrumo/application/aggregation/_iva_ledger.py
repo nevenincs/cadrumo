@@ -54,6 +54,7 @@ from ...core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
+    regime_apportions_deduction,
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
@@ -72,7 +73,6 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
-    InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -85,6 +85,7 @@ from ...domain.iva import (
     ProrrataReference,
     StatedCountryCodeStatus,
     deductible_percentage_for,
+    flow_direction_for_invoice_kind,
     rate_kinds_for_declared_rate,
     stated_country_code_status,
     territorial_scope_for_country,
@@ -1303,7 +1304,7 @@ def _active_prorrata_apportionment(
                     t("aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
                     context=facts,
                 )
-            if entry.interrupted or entry.regime is ProrrataRegisterRegime.NINGUNA:
+            if entry.interrupted or not regime_apportions_deduction(entry.regime):
                 raise AggregationValidationError(
                     t("aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year"),
                     context=facts,
@@ -1335,10 +1336,7 @@ def _sector_scoped_apportionment(
     interrupted / absent) or no provisional percentage is resolvable.
     """
     entry = register.entry_for(ejercicio, sector_id=sector_id)
-    if entry is None or entry.regime not in (
-        ProrrataRegisterRegime.GENERAL,
-        ProrrataRegisterRegime.ESPECIAL,
-    ):
+    if entry is None or not regime_apportions_deduction(entry.regime):
         return None
     resolution = register.resolve_provisional(ejercicio, sector_id=sector_id)
     if resolution.percentage is None or resolution.provenance is None:
@@ -1657,7 +1655,7 @@ def flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | No
     invoice_kind = invoice_kind_for_direction(direction)
     if invoice_kind is None:
         return None
-    return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+    return flow_direction_for_invoice_kind(invoice_kind)
 
 
 def business_proportionality_for(transaction: Transaction) -> Decimal | None:

@@ -35,10 +35,10 @@ from decimal import Decimal
 
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
-    InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     derive_flow_for_classification,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
     is_devengada_flow,
 )
@@ -129,7 +129,7 @@ def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
     if invoice_kind is None:
         return None
     if transaction.iva_category is None:
-        return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+        return flow_direction_for_invoice_kind(invoice_kind)
     if not _is_cuota_bearing_iva_category(transaction.iva_category):
         return None
     return derive_flow_for_classification(

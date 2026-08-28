@@ -14,10 +14,10 @@ from typing import cast
 from ...core import ActionEvidenceProvenance
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
-    InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     derive_flow_for_classification,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
 )
 from ...domain.modelos import CalculationRevision, LedgerEvidenceRow, ModeloError
@@ -101,7 +101,7 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
         return None
     category = _enum_or_none(IvaCategory, row.iva_category)
     if category is None:
-        return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+        return flow_direction_for_invoice_kind(invoice_kind)
     if category in EVIDENCE_EXEMPT_IVA_CATEGORIES:
         return None
     return derive_flow_for_classification(

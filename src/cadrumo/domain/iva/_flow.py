@@ -133,6 +133,21 @@ class IvaFlowDirection(StrEnum):
     OPERACION_CON_INVERSION = "operacion_con_inversion"
 
 
+def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirection:
+    """Return the IVA flow direction an invoice's issuance side settles as.
+
+    This is the base rule the tax itself states: an invoice the autónomo
+    ISSUED charges output IVA onward (:attr:`IvaFlowDirection.REPERCUTIDO`);
+    one it RECEIVED bears input IVA (:attr:`IvaFlowDirection.SOPORTADO`).
+    :func:`derive_flow_for_classification` and
+    :func:`~cadrumo.domain.iva.classify_invoice_line_for_iva` both call this
+    for their standard-case resolution and OVERRIDE it for the special
+    regimes (reverse charge, intra-community) that route the same members
+    differently.
+    """
+    return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+
+
 _RECIPIENT_ONLY_REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -206,9 +221,7 @@ def derive_flow_for_classification(
         if invoice_direction is InvoiceKind.ISSUED:
             return IvaFlowDirection.OPERACION_CON_INVERSION
         return IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    if invoice_direction is InvoiceKind.ISSUED:
-        return IvaFlowDirection.REPERCUTIDO
-    return IvaFlowDirection.SOPORTADO
+    return flow_direction_for_invoice_kind(invoice_direction)
 
 
 class IvaSettlementSide(StrEnum):
@@ -338,6 +351,7 @@ __all__ = [
     "IvaFlowDirection",
     "IvaSettlementSide",
     "derive_flow_for_classification",
+    "flow_direction_for_invoice_kind",
     "is_deducible_flow",
     "is_devengada_flow",
     "settlement_sides_for_flow",
