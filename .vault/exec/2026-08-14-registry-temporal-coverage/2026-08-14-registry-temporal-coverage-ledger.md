@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-27'
+modified: '2026-08-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac9219a3b7e95e27b8a9db224b00f526cc12ba7a0137e05a370bf37fb7084e27'
+body_hash: 'sha256:6f80b0db89f54991012a4afecab8ab31e3937c92e2967274c4dda74ec66770d6'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -959,4 +959,120 @@ Peer sweep, again: tick 4's work was committed by a peer as `4cd0abf4c9 test:
 count every name a module binds when proving decimal string uniqueness`, taking
 both the canonical-decimal fix and the irreducible-refusal gate. Only the
 subsequent `pairwise`/format polish remains uncommitted.
+
+
+### src/cadrumo sweep: 475 reproducible failures, one root cause worth 80
+
+The sweep capture was botched and then salvaged. The first launch combined
+`nohup ... &` with the harness's own backgrounding, so the wrapper exited while
+the process survived; the relaunch truncated the same log path and BOTH runs
+wrote into it. Two full suites therefore ran concurrently on a share this repo
+documents as failing under concurrent I/O.
+
+Rather than discard it, the two runs were compared: 952 FAILED lines, 477
+distinct ids, 475 of them present in BOTH runs and only 2 in one. Two
+independent runs reproducing the same 475 failures is strong evidence they are
+deterministic rather than I/O noise, so the numbers were kept. The 2
+non-reproducing ids are both `test_acceptance_wall_catalogue` cases -- the
+actual concurrency casualties.
+
+Clustering by exception signature (not by FAILED line, which under `-q` carries
+no message and only counts parametrised cases) put ONE cause far ahead: 80
+failures plus a share of the 71 collection errors, all
+`AssertionError: _SETUP_OPTION_INFOS is missing entries for catalogue question
+ids: ['third-party-declaration-roles']`.
+
+`application/wizard/commands.py:608` asserts AT IMPORT that every catalogue
+question id has a `typer.Option` entry. Commit `5ad0f86a75` -- the same
+relocation that swept tick 6's work -- added the catalogue question and its
+`wizard.setup.taxpayer-type.declaration-roles.*` locale keys but no option
+entry, so importing the wizard module raised and every test reaching it died.
+
+The first fix was incomplete and said so under test. Adding the option made
+typer pass `third_party_declaration_roles` into `SetupAnswers`, which forbids
+extras: `Extra inputs are not permitted`. The field already exists -- as
+`declaration_roles`. Field name is `question.id.replace("-", "_")`
+(`commands.py:950`), so the id must be `declaration-roles` to reach it, and
+every other surface already agrees: the `SetupFieldSpec` key
+(`core/setup_answers.py:236`), the profile_key `taxpayer_type.declaration_roles`,
+the validator, and the locale key family. The question `id=` was the lone
+outlier. Renaming the FIELD instead would have rippled through the profile
+schema; renaming the id is the minimal coherent fix.
+
+Landed: catalogue id and option both `declaration-roles`, choice values derived
+from `ThirdPartyDeclarationRole` in the established
+`_taxpayer_type_choice_values` pattern so the flag cannot drift from the enum,
+and `wizard.setup.flags.declaration-roles.help` added to all four catalogues
+through `dev.locales set` with real translations -- no self-referencing
+placeholder, no `_intentional_identical` entry. The mistaken
+`third-party-declaration-roles` help key was removed from all four.
+
+Wizard suite: from every test erroring at import to 299 passed, 4 failed.
+
+Three of the four remaining are `test_scripted_parity`, and they were NOT
+papered over. The rejection lands on page `tax-residence-jurisdiction-scope`,
+not on the new page -- a token-ALIGNMENT shift, where the new always-visible
+optional CHECKBOX displaces every later token by one. That points at
+`_project_scripted_answers` and `run_scripted_flow` disagreeing about the new
+page, which is an engine question. Adding a fixture answer would have turned
+those three green while hiding that asymmetry, so it was left for a focused
+pass. The fourth, `test_every_cli_translation_resolves_in_every_locale`, is
+pre-existing and not mine: it and `test_parity` fail on 15 `cli.*.view_help`
+keys from another peer's new `view` verbs, none of them declaration-roles.
+
+
+### Correction: the executable-parity gaps DO have teeth, via filing_eligible
+
+Tick 3 concluded that the queue's "executable_parity_evidence gaps on Modelos
+714 and 200" premise was wrong because the single blocking
+`required_gate_failures` entry is Modelo 165. That was right about
+`RegistryCoverageAudit.ok` and INCOMPLETE about everything else, and the
+second-largest failure cluster in the sweep is what exposed it.
+
+52 failures are `RegistryValidationError: ... declares '<grade>' authority
+grade, which cannot satisfy the requested 'filing' snapshot authority`. Grouped:
+Modelo 200 43, Modelo 390 5, Modelo 038 2, Modelos 721 and 036 one each. The
+Modelo 390 five belong to the export-fragment campaign.
+
+Modelo 200 is not a recent downgrade -- both its 2024 and 2025-y-siguientes
+revisions have declared `calculation` since the revision split in
+`1d1b203114`, and record designs exist through `aeat-dr-200-2025`. Measured
+directly: all three Modelo 200 coverage ledger rows report
+`filing_eligible = False`, and the ONLY gapped tier on each is
+`executable_parity_evidence`.
+
+So the causal chain is: no executable parity evidence -> not filing-eligible ->
+the revision honestly declares `calculation` -> every test requesting a filing
+snapshot for Modelo 200 fails. The advisory gaps do not fail `audit.ok`, but
+they are load-bearing one layer down. Both statements are true and the earlier
+note only carried the first.
+
+What closing it would take, measured rather than assumed. The gate
+(`coverage.py:_executable_parity_gate`) accepts a tier source ref, a live
+cross-reference decision, or a workbook parity ref whose `coverage_kinds` is
+`formula_form`. `WorkbookParityReference` validates that `formula_form` REQUIRES
+`runner_required = True`, and the tier is meant to carry `output_cells` and a
+fixture -- it asserts an executable check, not a declaration.
+
+Corpus-wide there are 112 distinct workbook parity references: 72
+`record_design_layout`, 40 `static_layout`, and **zero `formula_form`**, every
+one `runner_required = False`. Modelo 200's own two refs are
+`record_design_layout` pointing at `aeat-dr-200-2025` with empty `output_cells`.
+Its 2025 formula workbook IS present in the corpus
+(`01-200-ejercicio-2025-10-9-mb-xls.xlsx`; ten sibling sidecars have had their
+sources pruned).
+
+So executable parity is UNBUILT INFRASTRUCTURE rather than a missing datum for
+one modelo. Enrolling the present workbook as `formula_form` would be a
+fabricated grounding claim without a runner that actually evaluates it and
+grounded output cells -- and `no-silent-under-declaration` is explicit that the
+oracle must follow the fix, never precede it. Writing one to turn 43 tests
+green would convert a live gap into verified behaviour behind an AEAT-branded
+name.
+
+Item 3 therefore stands blocked, now with a sharper boundary than "needs an
+artefact": it needs a workbook formula-parity runner plus grounded output
+cells, which is feature work, and even then raising the authority grade is the
+`S17` operator attestation that no program may perform on its own. The 764
+advisory `executable_parity_gaps` are the same absence counted per coordinate.
 
