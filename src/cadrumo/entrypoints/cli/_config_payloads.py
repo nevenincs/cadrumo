@@ -122,10 +122,10 @@ class ConfigRepairRegistryPayload(OutputSchema):
 
     available: bool
     registry_root: str
-    modelo_count: int = Field(ge=0)
-    revision_count: int = Field(ge=0)
-    casilla_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
+    modelo_count: int
+    revision_count: int
+    casilla_count: int
+    formula_count: int
     revision_ids: list[str]
     error: str | None = None
 

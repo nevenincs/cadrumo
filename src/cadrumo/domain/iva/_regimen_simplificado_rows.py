@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
+from ...core import M303_MESA_FACTS, M303_REPEATING_FACTS, STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ..filing_evidence import FilingEvidenceReference
 from ._schema import validate_orden_module_identities
 from .errors import IvaValidationError
@@ -230,18 +230,9 @@ class HechoActividadSimplificado(BaseModel):
 
     @model_validator(mode="after")
     def _require_closed_fact_multiplicity(self) -> HechoActividadSimplificado:
-        mesa_facts = {
-            M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
-            M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
-            M303RegimenSimplificadoFact.MESAS_NUMERO,
-        }
-        repeating_facts = mesa_facts | {
-            M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE,
-            M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE,
-        }
-        if self.fact in mesa_facts and self.sub_index is None:
+        if self.fact in M303_MESA_FACTS and self.sub_index is None:
             raise IvaValidationError("a Mesa simplified-regime fact requires sub_index")
-        if self.fact not in repeating_facts and self.sub_index is not None:
+        if self.fact not in M303_REPEATING_FACTS and self.sub_index is not None:
             raise IvaValidationError("a singleton simplified-regime fact must not carry sub_index")
         return self
 

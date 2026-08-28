@@ -585,10 +585,14 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     assert envelope["error"]["context"]["modelo"] == "111"
     assert envelope["error"]["context"]["period"] == "2T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    suggestion = envelope["error"]["suggestion"]
-    assert "--retencion-observation" in suggestion
-    assert "do not file an all-blank Modelo 111" in suggestion
-    assert "--modelo-111-no-retenciones-periods 2025:2T" in suggestion
+    # The free-text ``suggestion`` field is gone -- ``suggestion`` is a reserved
+    # action-context key. The attestation steer now rides the localised message,
+    # following the Modelo 180 precedent, because the wizard setup command
+    # projects no inputs for the typed action channel to bind against.
+    message = envelope["error"]["message"]
+    assert "--retencion-observation" in message
+    assert "all-blank Modelo 111" in message
+    assert "--modelo-111-no-retenciones-periods 2025:2T" in message
 
     attested = invoke_cached_cli(
         [

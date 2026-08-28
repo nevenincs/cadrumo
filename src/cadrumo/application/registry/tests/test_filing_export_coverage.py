@@ -42,7 +42,7 @@ def test_generation_proof_refuses_a_manifest_without_generated_fragments() -> No
     """A manifest digest alone cannot stand in for verified generated output files."""
     with pytest.raises(ValidationError, match="at least one emitted TOML fragment"):
         FilingExportGenerationProof(
-            authority="dev.registry.pipeline.verify_export_fragment_provenance_manifest",
+            authority="generated_export_fragment_provenance_manifest",
             manifest_locator="registry/aeat/modelos/111/revisions/2019-y-siguientes/export/_generation.provenance.json",
             manifest_sha256=_DIGEST,
             semantic_map_sha256=_DIGEST,

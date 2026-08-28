@@ -122,15 +122,26 @@ class M303RegimenSimplificadoFact(StrEnum):
     SUPERFICIE_HORNO_CUARTO_TRIMESTRE = "superficie_horno_cuarto_trimestre"
 
 
-_M303_REGIMEN_SIMPLIFICADO_REPEATING_FACTS = frozenset(
+M303_MESA_FACTS: frozenset[M303RegimenSimplificadoFact] = frozenset(
     {
         M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
         M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
         M303RegimenSimplificadoFact.MESAS_NUMERO,
+    },
+)
+"""Facts that repeat once per mesa (table). A mesa fact therefore REQUIRES a
+``sub_index`` identifying which mesa it describes."""
+
+
+M303_REPEATING_FACTS: frozenset[M303RegimenSimplificadoFact] = M303_MESA_FACTS | frozenset(
+    {
         M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE,
         M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE,
     },
 )
+"""Every fact that repeats per unit at all -- :data:`M303_MESA_FACTS` plus the
+horno (oven) facts, which repeat per horno rather than per mesa. A fact
+outside this set is a singleton and must NOT carry a ``sub_index``."""
 
 
 class M303Exonerado390ActivityField(StrEnum):
@@ -203,17 +214,9 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
 
     @model_validator(mode="after")
     def _require_the_closed_multiplicity_axis(self) -> M303RegimenSimplificadoFactProjectionRef:
-        if self.fact not in _M303_REGIMEN_SIMPLIFICADO_REPEATING_FACTS and self.sub_index is not None:
+        if self.fact not in M303_REPEATING_FACTS and self.sub_index is not None:
             raise ValueError("a singleton simplified-regime fact must not carry sub_index")
-        if (
-            self.fact
-            in {
-                M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
-                M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
-                M303RegimenSimplificadoFact.MESAS_NUMERO,
-            }
-            and self.sub_index is None
-        ):
+        if self.fact in M303_MESA_FACTS and self.sub_index is None:
             raise ValueError("a Mesa simplified-regime fact requires sub_index")
         return self
 

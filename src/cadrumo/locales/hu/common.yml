@@ -141,6 +141,12 @@ aggregation:
       invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
         levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
         is irányította; az összesítés előtt szüntesse meg a duplikációt.
+      m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
+        levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
+        teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes
+        időszakról a `aeat config profile complete setup --modelo-111-no-retenciones-periods
+        %{attestation_period}` paranccsal, vagy rögzítsd a perceptor-sorokat az `aeat
+        app modelo aggregate --retencion-observation` paranccsal.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás

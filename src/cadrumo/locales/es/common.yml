@@ -156,6 +156,11 @@ aggregation:
       invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
         %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retencion;
         elimine el duplicado antes de agregar.
+      m111_no_retenciones_attestation_missing: 'No existen observaciones de retención
+        por perceptor para el modelo 111 %{filing_year} %{period}. No presentes un
+        Modelo 111 en blanco: declara el trimestre como periodo sin retenciones con
+        `aeat config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
+        o registra las filas de perceptor con `aeat app modelo aggregate --retencion-observation`.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}

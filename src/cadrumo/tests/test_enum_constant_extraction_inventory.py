@@ -95,8 +95,8 @@ _RE_XLS_BARE = re.compile(r'"\.xls"')
 # The one authorised escape was the workbook-parity Literal alias: ``Literal[...]``
 # accepts only literal forms, never a ``Final[Literal[...]]`` constant, so that
 # static extension type alias could not route through XLS_EXTENSION. The module
-# carrying it has since moved out of the package into dev/registry/parity/, and
-# this scan reads src/cadrumo/ only, so the escape excluded a path the scan can
+# carrying it has since moved out of the product package entirely, and this
+# scan reads src/cadrumo/ only, so the escape excluded a path the scan can
 # no longer reach. Its guard said what to do when the justifying construct went
 # away -- remove the escape -- so there is no exclusion left to justify, and the
 # gate scans production whole.

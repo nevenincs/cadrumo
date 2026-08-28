@@ -63,6 +63,7 @@ from ..record_design_schema import (
     RecordDesignCorrection,
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
+    RecordDesignRangeStartCorrection,
     RecordDesignSinglePositionCorrection,
 )
 
@@ -126,6 +127,11 @@ def _correction_locus(item: RecordDesignCorrection) -> str:
         return f"{item.sheet!r} header row {item.header_row} col {item.column_index} ({item.column_role})"
     if isinstance(item, RecordDesignSinglePositionCorrection):
         return f"{item.sheet!r} position {item.position}"
+    if isinstance(item, RecordDesignRangeStartCorrection):
+        # A range-start correction addresses a RUN, so its locus is the movement
+        # rather than a single coordinate: the start AEAT printed and the start
+        # the sibling editions publish are both needed to recognise it.
+        return f"{item.sheet!r} run start {item.declared_start} -> {item.corrected_start}"
     raise AssertionError(
         f"correction kind {getattr(item, 'kind', type(item).__name__)!r} has no locus branch here; "
         "add one rather than letting this gate error on a shape it cannot describe"

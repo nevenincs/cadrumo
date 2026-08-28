@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -21,7 +22,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitNotFoundError
-from .._history import assemble_work_unit_history
+from .._history import WorkUnitHistoryEvent, assemble_work_unit_history
 from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
@@ -356,3 +357,92 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     assert len(history.events) == 1
     assert history.events[0].object_id == target.work_unit_id
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
+
+
+# ── The projection admits exactly what the event it projects admits ────────
+
+
+def _projected_event_fields() -> dict[str, object]:
+    """Return one well-formed projected row, for the refusals to vary from."""
+    return {
+        "event_id": "a" * 64,
+        "occurred_at": datetime(2026, 1, 15, 12, 0, tzinfo=UTC),
+        "event_type": BucketEventType.MODELO_WORK_UNIT_CREATED,
+        "object_type": BucketEventObjectType.WORK_UNIT,
+        "object_id": "b" * 64,
+        "actor": "operator@example.test",
+        "payload": {},
+    }
+
+
+def test_the_projection_accepts_a_well_formed_row() -> None:
+    """Anti-vacuity: the refusals below reject values, not the row shape."""
+    event = WorkUnitHistoryEvent(**_projected_event_fields())
+
+    assert event.actor == "operator@example.test"
+    assert event.event_id == "a" * 64
+
+
+def test_the_projection_refuses_an_actorless_event() -> None:
+    """An event nobody emitted cannot be projected, because none can be emitted.
+
+    ``BucketEvent`` types its actor as a non-empty label, so an empty actor
+    names no row in the event log. Admitting one here would let the operator's
+    timeline attribute an act to nobody.
+    """
+    with pytest.raises(ValidationError):
+        WorkUnitHistoryEvent(**{**_projected_event_fields(), "actor": ""})
+
+
+def test_the_projection_refuses_an_actor_longer_than_the_log_records() -> None:
+    """A label past the bound would be a value the event log could never hold."""
+    with pytest.raises(ValidationError):
+        WorkUnitHistoryEvent(**{**_projected_event_fields(), "actor": "x" * 65})
+
+
+def test_the_projection_refuses_an_event_id_that_is_not_a_content_address() -> None:
+    """``event_id`` is derived from the event body, so a free string is not one."""
+    with pytest.raises(ValidationError):
+        WorkUnitHistoryEvent(**{**_projected_event_fields(), "event_id": "not-a-digest"})
+
+
+def test_the_projection_refuses_an_object_id_past_the_event_log_bound() -> None:
+    """The projected object id is bounded exactly where the event's own id is."""
+    with pytest.raises(ValidationError):
+        WorkUnitHistoryEvent(**{**_projected_event_fields(), "object_id": "c" * 129})
+
+
+def test_a_real_assembled_row_satisfies_the_tightened_identities(repos: _Repos) -> None:
+    """The live path already produces what the tightened types require.
+
+    This is the proof that the tightening describes reality rather than
+    imposing on it: the row comes off the real assembler over a real emitted
+    event, and its identity is a content address and its actor a real label.
+    """
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2019-y-siguientes",
+        actor="operator@example.test",
+        repository=wu_repo,
+        bucket_event_repository=bv_repo,
+        clock=datetime(2026, 1, 15, 12, 0, tzinfo=UTC),
+    )
+
+    history = assemble_work_unit_history(
+        work_unit.work_unit_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+    )
+
+    event = history.events[0]
+    assert len(event.event_id) == 64
+    assert event.event_id == event.event_id.lower()
+    assert int(event.event_id, 16) >= 0
+    assert event.actor == "operator@example.test"

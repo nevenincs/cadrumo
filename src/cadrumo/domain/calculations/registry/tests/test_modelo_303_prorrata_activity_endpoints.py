@@ -57,10 +57,9 @@ _NUMBERED_PROJECTION_ENDPOINTS = _ENDPOINTS | frozenset(str(number) for number i
 #: `m303_regimen_simplificado_fact` is deliberately NOT here: it is the one kind
 #: that tracks the design epoch (38, 96, 100, 106 and 108 across the six
 #: revisions), because AEAT's simplified-regime fact rows change with the form.
-#: Its per-epoch count is pinned where it belongs -- the semantic-map census in
-#: `dev/registry/analysis/m303_semantic_census.py` states it for each epoch
-#: against that epoch's own map -- so repeating a single number here could only
-#: be wrong for five of the six.
+#: Its per-epoch count is pinned where it belongs -- the semantic-map census
+#: states it for each epoch against that epoch's own map -- so repeating a
+#: single number here could only be wrong for five of the six.
 _INVARIANT_PROJECTION_KIND_COUNTS = {
     "m303_prorrata_activity": 25,
     "m303_differentiated_deduction": 36,
