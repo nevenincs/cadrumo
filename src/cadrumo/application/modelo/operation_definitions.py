@@ -29,13 +29,13 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    M210PayerMode,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    M210PayerMode,
     PaymentElection,
     Period,
     RefundElection,
@@ -87,11 +87,14 @@ from ._amendment_actions import amend_modelo_revision
 from ._edit_execution import apply_modelo_edit
 from ._edit_models import (
     ModeloBindingEditIntentV1,
+    ModeloDetailRowEditIntentV1,
     ModeloEditApplyRequestV1,
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
     ModeloEditCompatibilityTupleV1,
+    ModeloEditDetailRowAddressV1,
+    ModeloEditDetailRowIntentKind,
     ModeloEditExecutionNoEffectV1,
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
@@ -1319,15 +1322,25 @@ class ModeloEditApplySubmissionV1(BaseModel):
     payload-safe and carried through unchanged. This is a total translation:
     every field of every mirrored intent converts, nothing is dropped.
 
-    ``detail_row_intents`` is deliberately ABSENT from this wire type, not
-    silently emptied: ``ModeloDetailRow`` (the per-modelo M184/M232/M349/
-    M347/M210 row union) embeds coercive ``BeforeValidator`` code-hydration
-    on many fields - built for CLI ``--row key=value`` parsing, not a static
-    wire shape - and the payload-graph gate refuses that structurally,
-    regardless of whether any row is actually submitted. Mirroring all six
-    row types field-by-field is real, sizeable, per-modelo work belonging to
-    its own Step. This operation cannot carry a detail-row edit yet; that is
-    loud (the type cannot be constructed with one at all), not silent.
+    ``detail_row_intents`` is still ABSENT from this wire type, and no longer
+    for the reason the six row mirrors below were built to solve. Every one
+    of those six is now admitted by the payload-graph gate: each carries its
+    ``Decimal`` fields as the exact characters submitted, and the two that
+    hydrate registry codes carry them raw so the real row type runs its own
+    hydration during translation - one hydration shared with the CLI
+    ``--row key=value`` path, not a second copy free to drift.
+
+    What blocks the field is elsewhere and is not a property of the rows at
+    all: ``ModeloEditDetailRowAddressV1.natural_key`` is refused by the
+    credential-free field-name check, which matches the token ``key`` in a
+    field name with no knowledge of the field's type. The value is a row's
+    own business identity - a NIF, or ``nif_comunitario|clave_operacion`` -
+    and carries no credential meaning. Mirroring the address under a
+    different field name would clear the gate while changing nothing about
+    what crosses it, so that is deliberately not done here: it would hide
+    the construct from the matcher rather than resolve it. Admitting this
+    family needs either a type-aware carve-out for a natural key, as already
+    exists for a content digest, or a rename of the domain field itself.
 
     The mirrored payload is INPUT, not authority: ``apply_modelo_edit``
     re-resolves and independently re-validates every coordinate at the
@@ -1367,9 +1380,9 @@ class ModeloEditApplySubmissionV1(BaseModel):
     def to_submission(self) -> ModeloEditSubmissionV1:
         """Translate back to the real, fully re-validated domain submission.
 
-        ``detail_row_intents`` is always empty: this wire type structurally
-        cannot carry one (see the class docstring), so there is nothing to
-        translate for that family yet.
+        ``detail_row_intents`` is always empty: this wire type cannot carry
+        one yet (see the class docstring), so there is nothing to translate
+        for that family.
         """
         return ModeloEditSubmissionV1(
             baseline=self.baseline.to_baseline(),

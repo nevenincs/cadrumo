@@ -795,6 +795,11 @@ convention = "google"
 # domain model preserves the canonical AEAT casing so the registry-binding mapping
 # stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.
 "src/cadrumo/domain/modelos/_row_models.py" = ["N815"]
+# The wire mirrors of those same row models carry the field names verbatim so the
+# mirror stays 1:1 with the type it mirrors; renaming them here would put a casing
+# translation between the wire and the domain row for no gain. Same AEAT casing,
+# same mis-flag, same reason as the domain module above.
+"src/cadrumo/application/modelo/operation_definitions.py" = ["N815"]
 # Tests alias the canonical private constant into a per-scenario local name; N811's
 # constant-aliased-as-non-constant heuristic mis-flags the rebinding.
 "src/cadrumo/application/aggregation/tests/test_service.py" = ["N811"]
