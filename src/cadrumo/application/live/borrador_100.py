@@ -34,6 +34,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, SnapshotId
 from ...domain.calculations.registry.ids import BindingId
@@ -68,7 +69,7 @@ class Borrador100Snapshot(BaseModel):
     snapshot_id: SnapshotId
     bucket_id: BucketId
     modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: Period
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)

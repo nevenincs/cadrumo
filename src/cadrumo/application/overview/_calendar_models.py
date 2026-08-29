@@ -28,6 +28,7 @@ from ...core import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core.filing_year import FilingYear
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
@@ -205,7 +206,7 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     model_config = _STRICT_FROZEN
 
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
-    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
     local_filing_record_id: FilingRecordId | None = None
@@ -247,7 +248,7 @@ class OverviewCalendarEntry(BaseModel):
     user_state: OverviewPeriodState
     recovery: _Recovery | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True)
-    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    filing_year: FilingYear | None = None
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
     source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
@@ -339,7 +340,7 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     reference_id: str = Field(min_length=1, max_length=128)
     snapshot_id: SnapshotId | None = None
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
-    filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     status: str | None = Field(default=None, max_length=64)
     source_url: str | None = Field(default=None, max_length=512)

@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest, TransactionId
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
@@ -702,7 +703,7 @@ class RelationValue(BaseModel):
     dependency_treatment: str = ""
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] = "operator_manual"
     source_modelo: ModeloId | None = None
-    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_filing_year: FilingYear | None = None
     source_periods: tuple[str, ...] = ()
     source_casilla_ids: tuple[CasillaId, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -756,7 +757,7 @@ class SheetExportMetadata(BaseModel):
 
     modelo_id: str = Field(min_length=1)
     revision_id: RevisionId
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     engine_version: str = Field(min_length=1)
     registry_sha: str = Field(min_length=8, max_length=64, pattern=r"^[0-9a-f]+$")

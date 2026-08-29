@@ -29,6 +29,7 @@ from ...core import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityProofAuthority,
 )
+from ...core.filing_year import FilingYear
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import casillas_by_binding
@@ -124,7 +125,7 @@ class RegistryDestinationCandidate(BaseModel):
     kind: RegistryDestinationCandidateKind
     modelo_id: ModeloId
     revision_id: RevisionId
-    filing_year: int = Field(ge=1980, le=2200)
+    filing_year: FilingYear
     period: RegistryDestinationPeriod
     semantic_role: str | None = Field(default=None, min_length=1, max_length=256)
     source_kind: BindingSourceKind | None = None

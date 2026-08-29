@@ -73,6 +73,7 @@ from ....application.storage.calc_sheets import (
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
+from ....core.filing_year import FilingYear
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
@@ -235,7 +236,7 @@ class RelationEdit(BaseModel):
     value: Decimal | None = None
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
     source_modelo: ModeloId | None = None
-    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_filing_year: FilingYear | None = None
     source_periods: tuple[str, ...] = ()
     source_casilla_ids: tuple[CasillaId, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = ()

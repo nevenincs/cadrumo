@@ -31,6 +31,7 @@ from typing import Annotated, cast, override
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, WorkUnitId
 from ..calculations.registry.ids import RevisionId
@@ -155,7 +156,7 @@ class WorkUnit(BaseModel):
     work_unit_id: WorkUnitId
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    filing_year: FilingYear
     period: Period
     revision_id: _RevisionId
     name: _DisplayName

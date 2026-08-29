@@ -77,6 +77,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, normalise_aeat_csv
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import AeatCsv, AeatExpedienteId, BucketId, ContentDigest, SnapshotId, tax_id_identity_token
 from ...core.time import now
@@ -124,7 +125,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     snapshot_id: SnapshotId
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: Period
     expediente_id: AeatExpedienteId
     csv: AeatCsv

@@ -16,7 +16,6 @@ these split schemas so modelo emitters keep one payload import surface.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated
 
 from pydantic import Field
 
@@ -27,6 +26,7 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
 )
 from ...core import Modelo
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
@@ -107,7 +107,7 @@ class WorkCompareTaxationResult(OutputSchema):
     operation: str = "modelo.work.compare_taxation"
     # Same bound the canonical :class:`~domain.modelos.WorkUnit` declares, so a
     # transport row cannot carry a filing year the work unit itself refuses.
-    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    filing_year: FilingYear
     modelo: Modelo
     revision: str = Field(min_length=1)
     conjunta_cuota_resultante: DecimalWireText

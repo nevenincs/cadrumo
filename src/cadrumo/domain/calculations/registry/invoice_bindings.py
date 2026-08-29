@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
 from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
@@ -109,7 +110,7 @@ class InvoiceObservation(BaseModel):
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
-    rectified_year: int | None = Field(default=None, ge=2000, le=2099)
+    rectified_year: FilingYear | None = None
     rectified_period: str | None = Field(default=None, max_length=8)
     rectified_base_previous: Decimal | None = None
     party_legal_name: str | None = Field(default=None, max_length=200)

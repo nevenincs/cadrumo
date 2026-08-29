@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period, PeriodError
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
@@ -49,7 +50,7 @@ class TemplateRevision(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    año: int = Field(ge=2000, le=2099)
+    año: FilingYear
     revision: str = Field(min_length=1, max_length=32)
     detected_from: Literal["header", "footer", "filename", "explicit_override"] = "header"
 

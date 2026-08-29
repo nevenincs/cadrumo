@@ -15,6 +15,7 @@ from typing import Final
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.filing_year import FilingYear
 from ._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
@@ -28,7 +29,7 @@ class IvaWalletBalanceReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    as_of_year: int = Field(ge=2000, le=2099)
+    as_of_year: FilingYear
     total_balance: Decimal = Field(ge=Decimal("0"))
     active_balance: Decimal = Field(ge=Decimal("0"))
     expired_balance: Decimal = Field(ge=Decimal("0"))

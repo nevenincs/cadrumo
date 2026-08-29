@@ -42,9 +42,10 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, BeforeValidator, ConfigDict, TypeAdapter, ValidationError
 
 from .errors import CadrumoError
+from .filing_year import FilingYear
 
 
 class StandardPeriodCode(StrEnum):
@@ -377,7 +378,7 @@ class Period(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    filing_year: int = Field(ge=1980, le=2200)
+    filing_year: FilingYear
     code: FilingPeriodCode
 
     @classmethod

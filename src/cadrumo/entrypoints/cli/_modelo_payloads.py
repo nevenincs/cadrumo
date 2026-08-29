@@ -47,6 +47,7 @@ from ...core import (
     RefundElection,
     ResultDisposition,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -410,7 +411,7 @@ class ModeloRecordPayload(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     filed_at: datetime
     filed_by: str = Field(min_length=1, max_length=500)
@@ -1180,7 +1181,7 @@ class ModeloHistoryResult(OutputSchema):
 
     operation: str = "modelo.history"
     modelo: str = Field(min_length=1)
-    year: int | None = Field(default=None, ge=2000, le=2099)
+    year: FilingYear | None = None
     period: str | None = Field(default=None, min_length=1)
     count: int = Field(ge=0)
     events: list[ModeloLifecycleEventPayload]

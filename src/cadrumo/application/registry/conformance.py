@@ -113,6 +113,7 @@ from ...core import ExportLayoutFormat as _ExportLayoutFormat
 from ...core import Modelo as _Modelo
 from ...core import RevisionReviewStatus as _RevisionReviewStatus
 from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
+from ...core.filing_year import FilingYear
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.classification_coherence import DeclaredAxisUsage as _DeclaredAxisUsage
@@ -268,7 +269,7 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
     """
 
     modelo: _ModeloId
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str
     law_selected_revision: _RevisionId
     identity_measurement: _MeasurementStatus

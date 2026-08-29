@@ -40,6 +40,7 @@ from ...core import (
     RefundElection,
 )
 from ...core.errors import CadrumoError
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -1001,8 +1002,8 @@ class ModeloEditApplyBaselineV1(BaseModel):
     compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
     modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^\d{3}$")]
-    filing_year: Annotated[int, Field(ge=2000, le=2100)]
-    period_filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    filing_year: FilingYear
+    period_filing_year: FilingYear
     period_code: Annotated[str, Field(min_length=1, max_length=16)]
     work_unit_id: WorkUnitId
     work_catalogue_revision: ContentDigest

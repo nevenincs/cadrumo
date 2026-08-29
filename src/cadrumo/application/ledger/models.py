@@ -19,6 +19,7 @@ from ...core.external_constants import (
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 from ...domain.iva import (
@@ -641,7 +642,7 @@ class LedgerRemovalBlocker(BaseModel):
     calculation_revision_id: CalculationRevisionId
     revision_state: str = Field(min_length=1)
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
 
 

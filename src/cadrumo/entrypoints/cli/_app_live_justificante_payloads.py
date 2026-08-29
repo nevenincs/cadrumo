@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
-
 from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...core import Modelo
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     AeatCsv,
     AeatExpedienteId,
@@ -36,7 +35,7 @@ class JustificanteCaptureResult(OutputSchema):
     bucket_id: BucketId
     snapshot_id: SnapshotId
     modelo: Modelo
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: JustificantePeriodToken
     expediente_id: AeatExpedienteId
     csv: AeatCsv
@@ -60,7 +59,7 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
 
     snapshot_id: SnapshotId
     modelo: Modelo
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: JustificantePeriodToken
     pdf_sha256: ContentDigest
     state: SnapshotLifecycleState
@@ -94,7 +93,7 @@ class JustificanteViewResult(OutputSchema):
     bucket_id: BucketId
     snapshot_id: SnapshotId
     modelo: Modelo
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: JustificantePeriodToken
     expediente_id: AeatExpedienteId
     csv: AeatCsv

@@ -58,6 +58,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
+from ...core.filing_year import FilingYear
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._observation_window import hashed_tax_id_token, replace_observation_window
@@ -108,7 +109,7 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     observation: WithholdingObservation
     captured_at: UtcInstant

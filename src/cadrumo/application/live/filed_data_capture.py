@@ -62,6 +62,7 @@ from ...core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Pe
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import load_settings
 from ...core.errors import CadrumoError
+from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
@@ -1320,7 +1321,7 @@ class FiledHistoryDiscoveryPair(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
 
     @field_validator("signals")
@@ -1492,7 +1493,7 @@ class FiledPeriodSelectionRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     period: str = Field(min_length=1, max_length=8)
     raw_row_count: int = Field(ge=0)
     selected_count: int = Field(ge=0)
@@ -1758,7 +1759,7 @@ class FiledHistoryPairOutcome(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
     row_count: int = Field(default=0, ge=0)
     captured_count: int = Field(default=0, ge=0)

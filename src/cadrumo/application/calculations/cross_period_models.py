@@ -10,6 +10,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis, Period
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
@@ -246,7 +247,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     required_source_casilla_ids: tuple[CasillaId, ...] | None = None
@@ -289,7 +290,7 @@ class CrossPeriodExpectedMemberSet(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
 
@@ -311,7 +312,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
 
     target_modelo: str = Field(min_length=1, max_length=8)
     target_revision_id: RevisionId = Field(min_length=1)
-    target_filing_year: int = Field(ge=2000, le=2099)
+    target_filing_year: FilingYear
     target_period: Period
     dependencies: tuple[CrossPeriodDependencyRequirement, ...] = Field(min_length=1)
 
@@ -335,7 +336,7 @@ class CrossPeriodDependencyInventory(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     items: tuple[CrossPeriodDependencyInventoryItem, ...] = ()
 
     @property
@@ -503,7 +504,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     bucket_id: BucketId
     target_modelo: str = Field(min_length=1, max_length=8)
-    target_filing_year: int = Field(ge=2000, le=2099)
+    target_filing_year: FilingYear
     target_period: Period
     dependencies: tuple[CrossPeriodDependencyEvidence, ...] = ()
 

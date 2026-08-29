@@ -65,6 +65,7 @@ from ...core import (
     ResultDisposition,
 )
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
 from ...core.time import now as _utc_now
@@ -265,7 +266,7 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
     decision_ref: _Sha256Ref
     selected_authority: str = Field(min_length=1, max_length=64)
     divergence: str = Field(min_length=1, max_length=64)
-    target_year: int = Field(ge=2000, le=2099)
+    target_year: FilingYear
     target_period: Period
     authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
     authority_source_refs: tuple[_Sha256Ref, ...] = Field(default_factory=tuple)
@@ -403,7 +404,7 @@ class ModeloExportResult(BaseModel):
     work_unit_id: WorkUnitId
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1990, le=2200)
+    filing_year: FilingYear
     period: Period
     output_path: Path
     byte_size: int = Field(ge=0)

@@ -10,6 +10,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     SnapshotId,
@@ -29,7 +30,7 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     """
 
     snapshot_id: SnapshotId
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: str
     captured_at: str
     source_url: str = Field(min_length=1, max_length=2048)
@@ -92,7 +93,7 @@ class Borrador100LatestResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     snapshot_id: SnapshotId | None
     captured_at: str | None = None
     period: str | None = None

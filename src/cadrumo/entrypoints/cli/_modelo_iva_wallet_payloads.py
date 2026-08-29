@@ -31,6 +31,7 @@ from pydantic import Field, field_validator
 
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.decimal import try_parse_canonical_decimal
+from ...core.filing_year import FilingYear
 from ...core.json_contract import OutputSchema
 
 
@@ -51,7 +52,7 @@ class IvaWalletBalanceResult(OutputSchema):
     """
 
     operation: str = "modelo.iva_wallet.balance"
-    as_of_year: int = Field(ge=2000, le=2099)
+    as_of_year: FilingYear
     total_balance: str
     active_balance: str
     expired_balance: str

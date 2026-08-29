@@ -17,6 +17,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
@@ -59,7 +60,7 @@ class FilingRetentionFact(BaseModel):
 
     filing_record_id: FilingRecordId
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     filed_at: datetime
 
     @model_validator(mode="after")

@@ -16,7 +16,6 @@ catalogue metadata; this module only pins CLI transport shapes.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Annotated
 
 from pydantic import Field
 
@@ -29,6 +28,7 @@ from ...application.workflow.run_models import (
 )
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...domain.buckets import (
@@ -301,7 +301,7 @@ class ModeloDescribeResult(OutputSchema):
     cadence: str
     jurisdiction: str
     revision: str
-    filing_year: Annotated[int, Field(ge=1980, le=2200)] | None = None
+    filing_year: FilingYear | None = None
     filing_period: Period | None = None
     period: str | None = None
     revision_ids: list[str]

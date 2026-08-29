@@ -31,6 +31,7 @@ from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import SubjectTaxId
 from ...core.time import validate_utc_aware
 from ..contribuyente import (
@@ -521,7 +522,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     model_config = _STRICT_FROZEN
 
     source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo.M322
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     member_nifs: tuple[SubjectTaxId, ...] = Field(min_length=1)
 

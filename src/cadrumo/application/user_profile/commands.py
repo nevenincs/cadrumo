@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, Hex64Str, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.filing_year import FilingYear
 from ...core.identity import ProfileId
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
@@ -85,7 +86,7 @@ class ProfilePreflightReport(BaseModel):
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
+    filing_year: FilingYear
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     ready: bool
@@ -120,7 +121,7 @@ class ProfileSnapshot(BaseModel):
     schema_version: int = Field(ge=1)
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
+    filing_year: FilingYear
     period: Period
     canonical_hash: Hex64Str
     created_at: datetime

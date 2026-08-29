@@ -21,6 +21,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
+from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ..categories import (
     CategoryCitation,
@@ -84,7 +85,7 @@ class _RentaStrictFrozenModel(BaseModel):
 class RentaDeductibilityContext(_RentaStrictFrozenModel):
     """Inputs that affect proportionality but are not ledger facts."""
 
-    profile_year: int = Field(ge=2000, le=2099)
+    profile_year: FilingYear
     usage_ratios: dict[SpendingCategory, Decimal] = Field(default_factory=dict)
     statutory_cap_days: Decimal | None = Field(default=None, gt=Decimal("0"))
     statutory_cap_variant_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -216,7 +217,7 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
     invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
     category: SpendingCategory
     category_family: SpendingCategoryFamily
-    profile_year: int = Field(ge=2000, le=2099)
+    profile_year: FilingYear
     proportionality_kind: ProportionalityKind
     status: RentaDeductibilityStatus
     reason: str = Field(min_length=1, max_length=256)
@@ -250,7 +251,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     )
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
-    tax_year: int = Field(ge=2000, le=2099)
+    tax_year: FilingYear
     activity_key: str = Field(min_length=1, max_length=128)
     target_casilla_id: CasillaId
     transaction_id: TransactionId
@@ -271,7 +272,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     sign: Literal[-1, 1]
     category: SpendingCategory
     category_family: SpendingCategoryFamily
-    profile_year: int = Field(ge=2000, le=2099)
+    profile_year: FilingYear
     proportionality_kind: ProportionalityKind
     applied_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
     invoice_evidence_status: RentaInvoiceEvidenceStatus

@@ -34,6 +34,7 @@ from typing import Annotated, Self, override
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ._codes import ModeloCode
@@ -184,7 +185,7 @@ class ModeloRecord(BaseModel):
     calculation_revision_id: CalculationRevisionId
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    filing_year: FilingYear
     period: Period
     member_nif: _MemberNif | None = None
     filed_at: datetime

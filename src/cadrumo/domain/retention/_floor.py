@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.calendar_shift import shift_by_calendar_years
+from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
@@ -85,7 +86,7 @@ class RetentionBlockingRecord(BaseModel):
 
     filing_record_id: FilingRecordId
     modelo: str = Field(min_length=1)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     filed_at: datetime
     earliest_safe_erase_date: datetime
 

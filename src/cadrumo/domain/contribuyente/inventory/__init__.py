@@ -31,6 +31,7 @@ from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
@@ -391,7 +392,7 @@ class PhysicalClosingObservation(BaseModel):
     observed_on: date
     as_of_date: date
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     closing_value: Decimal = Field(ge=_ZERO)
     valuation_basis: InventoryClosingValuationBasis
     evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
@@ -462,7 +463,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
 
     decision_id: str = Field(min_length=1, max_length=128)
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     authority: InventoryClosingAuthority
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
@@ -538,7 +539,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
 
     actividad_id: str = Field(min_length=1)
     current_filing_year: int = Field(ge=1901)
-    prior_filing_year: int = Field(ge=1900)
+    prior_filing_year: FilingYear
     prior_authoritative_closing_value: Decimal = Field(ge=_ZERO)
     current_opening_value: Decimal = Field(ge=_ZERO)
     prior_authoritative_source_fingerprint: ContentDigest
@@ -601,7 +602,7 @@ class InventoryClosingConflictDiagnostic(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     movement_derived_value: Decimal = Field(ge=_ZERO)
     physical_observed_value: Decimal = Field(ge=_ZERO)
     physical_observation_fingerprint: ContentDigest
@@ -618,7 +619,7 @@ class InventoryClosingResolution(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     authority: InventoryClosingAuthority
     authoritative_value: Decimal = Field(ge=_ZERO)
     movement_derived_value: Decimal = Field(ge=_ZERO)

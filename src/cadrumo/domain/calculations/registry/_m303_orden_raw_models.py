@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from ....domain.iva import IaeEpigrafe
 from ._m303_orden_constants import (
@@ -112,7 +113,7 @@ class M303AnnualOrdenRawLorca2022Reduction(RegistryModel):
 class M303AnnualOrdenSourceCensus(RegistryModel):
     """Complete, digest-bound extraction of one official annual Orden source."""
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     source_ref: SourceRefId
     source_content_digest: ContentDigest
     extractor_version: str = Field(min_length=1)

@@ -36,10 +36,11 @@ from secrets import token_bytes
 from threading import RLock
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, StringConstraints, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
@@ -127,7 +128,7 @@ class ModeloWorkUnitCandidate(BaseModel):
     short_work_unit_id: str
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    filing_year: FilingYear
     period: Period
     revision_id: _RevisionId
     state: WorkUnitState
@@ -188,7 +189,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloCode | None = None
-    filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
+    filing_year: FilingYear | None = None
     period: Period | None = None
     revision_id: _RevisionId | None = None
     bucket_id: BucketId | None = None
@@ -228,7 +229,7 @@ class ModeloWorkResolution(BaseModel):
     state: ModeloWorkSelectorState
     bucket_id: BucketId
     modelo: ModeloCode | None = None
-    filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
+    filing_year: FilingYear | None = None
     period: Period | None = None
     requested_revision_id: _RevisionId | None = None
     work_unit: WorkUnit | None = None

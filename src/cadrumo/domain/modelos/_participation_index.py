@@ -32,9 +32,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, ValidationError, model_validator
 
 from ...core import Period
+from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ._codes import ModeloCode
 from .errors import ModeloError, ModeloValidationError
@@ -82,7 +83,7 @@ class TransactionRevisionParticipation(BaseModel):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    filing_year: FilingYear
     period: Period
     revision_state: _RevisionState
     filing_record_id: FilingRecordId | None = None

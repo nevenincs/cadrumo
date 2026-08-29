@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.filing_year import FilingYear
 from ...core.time import now
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
@@ -110,7 +111,7 @@ class IvaCompensationAuthoritySource(BaseModel):
     source_locator: str = Field(min_length=1, max_length=1024)
     captured_at: datetime | None = None
     source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
-    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_filing_year: FilingYear | None = None
     source_periods: tuple[Period, ...] = ()
 
     @model_validator(mode="after")
@@ -135,7 +136,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
     model_config = _STRICT_FROZEN
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
-    target_year: int = Field(ge=2000, le=2099)
+    target_year: FilingYear
     target_period: Period
     selected_authority: IvaCompensationAuthority
     selected_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
