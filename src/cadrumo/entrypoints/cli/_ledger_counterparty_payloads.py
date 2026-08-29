@@ -28,6 +28,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...core import ClassifierInputSource
+from ...core.identity import ContentDigest
 from ...core.json_contract import OutputSchema
 from ...domain.iva import EUMemberState, IvaTerritorialScope
 
@@ -46,7 +47,7 @@ class CounterpartyEstablishmentPayload(OutputSchema):
     every retry, which is what makes the verb safe for an agent that retries.
     """
 
-    counterparty_key: str = Field(min_length=1)
+    counterparty_key: ContentDigest
     canonical_tax_identifier: str = Field(min_length=1)
     territorial_scope: IvaTerritorialScope | None = None
     # Emitted always, `None` included: a caller has to be able to tell an

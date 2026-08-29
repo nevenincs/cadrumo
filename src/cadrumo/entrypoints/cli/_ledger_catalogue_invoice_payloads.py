@@ -25,6 +25,7 @@ from typing import Self
 from pydantic import Field, model_validator
 
 from ...core import IntracomOperationType
+from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
 from ...domain.invoices import PaymentStatus, validate_country_code, validate_iva_number
@@ -54,7 +55,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     issued_at: date
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: TaxIdIdentityToken | None = None
-    counterparty_country: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    counterparty_country: CountryCodeAlpha2
     base_total: Decimal = Field(ge=Decimal("0"))
     iva_total: Decimal = Field(ge=Decimal("0"))
     grand_total: Decimal = Field(ge=Decimal("0"))
