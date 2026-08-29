@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.identity import TaxIdIdentityToken
+from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -402,7 +403,7 @@ class WithholdingObservation(BaseModel):
     base_retenciones: Decimal = Decimal("0")
     """Modelo 193 base de retenciones e ingresos a cuenta (positions 152-164);
     the design's own zeros when no content."""
-    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
+    porcentaje_retencion: Percentage = PERCENTAGE_MIN
     """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
     165-168), generally 19 with the design's clave-naturaleza specific rates;
     the last percentage applied when several were used."""

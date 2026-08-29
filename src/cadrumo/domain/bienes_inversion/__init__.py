@@ -69,6 +69,7 @@ from ...core.external_constants import (
     IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS as _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
 )
 from ...core.money import round_to_cents as _quantize
+from ...core.percentage import Percentage
 
 
 class BienInversionRecordError(_CadrumoError):
@@ -181,7 +182,7 @@ class BienInversionIvaRecord(BaseModel):
     description: str = Field(min_length=1)
     acquisition_year: int = Field(ge=_MIN_ACQUISITION_YEAR, le=2099)
     cuota_soportada: Decimal = Field(gt=Decimal("0"))
-    prorrata_inicial_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    prorrata_inicial_pct: Percentage
     kind: BienInversionKind
     art108_elegible: bool = True
     asset_record_ref: str | None = Field(default=None, min_length=1)

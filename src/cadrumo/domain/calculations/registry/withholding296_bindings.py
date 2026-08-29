@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
+from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -96,7 +97,7 @@ class Withholding296Observation(BaseModel):
     # value rather than a code this model may invent one for.
     subclave: str = Field(default="", pattern=r"^(\d{2})?$")
     base_retenciones: Decimal = Decimal("0")
-    porcentaje_retencion: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), le=Decimal("100"))
+    porcentaje_retencion: Percentage = PERCENTAGE_MIN
     retencion_practicada: Decimal = Decimal("0")
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     codigo: str | None = Field(default=None, max_length=1)

@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
+from ....core.percentage import Percentage
 from ....domain.iva import (
     ActividadOrdenAnual,
     ActividadOrdenAnualId,
@@ -72,7 +73,7 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     non_agricultural_ingreso_a_cuenta_row_count: int = Field(ge=1)
     seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
     seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
-    difficult_justification_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    difficult_justification_pct: Percentage
     lorca_2022_reduction_pct: Decimal | None = None
 
     @model_validator(mode="after")

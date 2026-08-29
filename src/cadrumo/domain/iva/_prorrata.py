@@ -99,6 +99,7 @@ from ...core.external_constants import (
     PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
 )
 from ...core.money import round_to_cents as _round_to_cents
+from ...core.percentage import Percentage
 from .errors import ProrrataInputError, ProrrataSectorError
 
 
@@ -301,7 +302,7 @@ class ProrrataInputDeduction(_ProrrataStrictFrozen):
 
     classification: InputClassification
     input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
-    deductible_percentage: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
+    deductible_percentage: Percentage
     deductible_amount: Decimal = Field(..., ge=Decimal("0"))
 
 
@@ -626,8 +627,8 @@ class RegularizacionProrrataResult(_ProrrataStrictFrozen):
     """
 
     cuotas_soportadas_deducibles: Decimal = Field(..., ge=Decimal("0"))
-    prorrata_provisional_pct: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
-    prorrata_definitiva_pct: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
+    prorrata_provisional_pct: Percentage
+    prorrata_definitiva_pct: Percentage
     deduccion_provisional: Decimal
     deduccion_definitiva: Decimal
     importe: Decimal

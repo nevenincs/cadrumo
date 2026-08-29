@@ -35,6 +35,7 @@ from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
+from ....core.percentage import Percentage
 from ....core.unit_proportion import UnitProportion
 from ...filing_evidence import FilingEvidenceReference
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
@@ -733,7 +734,7 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_rate: Decimal = Field(default=_DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Percentage = _DEFAULT_IVA_GENERAL_RATE_PCT
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: UnitProportion = Decimal("1.00")
     acquisition_cost: InventoryAcquisitionCost | None = None
