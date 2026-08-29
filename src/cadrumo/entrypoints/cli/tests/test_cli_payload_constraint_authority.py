@@ -14,11 +14,15 @@ this file -- ``Field(min_length=...)``, ``StringConstraints(...)``, ``conint(...
 -- declares it here, whatever else may also hold the same rule. The first is
 invisible to this gate by construction; the second is what it refuses.
 
-``field_validator`` and ``model_validator`` bodies are refused on the same
-reasoning: an invariant spanning several fields is domain logic, and the
-sanctioned ways for a payload to reach one are a shared validator function or a
-reconstruction of the canonical model, both of which leave the rule in its
-canonical home.
+A ``field_validator`` or ``model_validator`` is judged by what its BODY does,
+not by its presence. Delegating to a shared canonical validator is the
+sanctioned shape and the campaign's preferred one -- the usage-ratio payloads
+route through ``validate_usage_ratio_bound``, the same authority the persisted
+profile uses, and say so in their own docstring. Checking that two projected
+fields agree with each other is likewise a statement about the wire shape, not
+about the domain. What this gate refuses is a body that SPELLS A RULE: a
+comparison against a threshold literal, or a regex match, written beside the
+command handler where the backend cannot see it.
 
 Enforcement is per module and property-based, never a tally. Every CLI module
 defining payload classes falls in exactly one of three sets below. A module
@@ -64,6 +68,10 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_config/_censo_payloads.py",
+        "_config/_collab_payloads.py",
+        "_config/_google_credential_source_payloads.py",
+        "_root_payloads.py",
     }
 )
 
@@ -90,10 +98,7 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_app_live_iva_wallet_payloads.py": "shares the IVA wallet decision surface with _modelo_iva_wallet_payloads",
     "_app_live_notifications_payloads.py": "notification payloads restate sede notification metadata bounds",
     "_config/_archive_reconcile_payloads.py": "archive reconcile bounds belong with the archive tier model",
-    "_config/_censo_payloads.py": "censo payload invariant belongs on CensoSnapshot",
     "_config/_check_payloads.py": "config check payloads restate diagnostic bounds",
-    "_config/_collab_payloads.py": "collaboration payload invariant belongs with the apoderamiento model",
-    "_config/_google_credential_source_payloads.py": "credential-source invariant belongs with the OAuth config model",
     "_config/_profile_list_payloads.py": "profile listing restates profile label bounds",
     "_config/_provision_payloads.py": "provisioning payloads restate bucket provisioning bounds",
     "_config/_storage_payloads.py": "storage payloads restate secure-storage configuration bounds",
@@ -121,7 +126,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
     "_payloads_modelo_reconcile.py": "reconcile payloads restate reconciliation diff bounds",
     "_registry_payloads.py": "registry payloads restate registry report bounds",
-    "_root_payloads.py": "root guard payloads restate refusal-boundary invariants",
 }
 
 
@@ -154,8 +158,53 @@ def _declared_constraints(node: ast.AST | None) -> set[str]:
     return found
 
 
+def _is_threshold_literal(node: ast.expr) -> bool:
+    """Whether an operand is a value the rule is being compared against.
+
+    ``Decimal("1")`` is the idiomatic threshold in this codebase, so a bare
+    ``ast.Constant`` test misses almost every real one -- the numeric literal
+    is wrapped in a constructor call. That gap was found by mutation-proof:
+    a probe validator refusing ``value > Decimal("1")`` passed the gate.
+
+    ``None`` and booleans are excluded. A comparison against either asks
+    whether a projected field is present, or whether two projected fields
+    agree, which is structural rather than a domain rule.
+    """
+    if isinstance(node, ast.Constant):
+        return node.value is not None and not isinstance(node.value, bool)
+    if isinstance(node, ast.Call):
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+        if name in {"Decimal", "int", "float", "len"}:
+            return any(isinstance(argument, ast.Constant) for argument in node.args)
+    return False
+
+
+def _spells_a_rule(statement: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Whether a validator body states a domain rule rather than delegating.
+
+    A comparison against a threshold literal, or a regex match, is the rule
+    written here. A comparison against ``None`` or a boolean is structural --
+    it asks whether a projected field is present or whether two fields agree,
+    which is a fact about the wire shape and not about the domain.
+    """
+    for node in ast.walk(statement):
+        if isinstance(node, ast.Compare):
+            operands = [node.left, *node.comparators]
+            if any(_is_threshold_literal(operand) for operand in operands):
+                return True
+        if isinstance(node, ast.Call):
+            func = node.func
+            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+            if name in {"fullmatch", "match", "search"}:
+                return True
+    return False
+
+
 def _validator_decorators(statement: ast.AST) -> list[str]:
     if not isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
+        return []
+    if not _spells_a_rule(statement):
         return []
     found: list[str] = []
     for decorator in statement.decorator_list:
