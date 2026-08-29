@@ -38,6 +38,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets.event import BucketObjectId
 
 
 class BucketHistoryEventPayload(OutputSchema):
@@ -57,7 +58,7 @@ class BucketHistoryEventPayload(OutputSchema):
     occurred_at: datetime
     actor: BucketActorLabel
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     payload_version: PositiveCount
     payload: dict[str, str] = {}
 

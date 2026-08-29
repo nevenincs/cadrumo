@@ -80,7 +80,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._event import (
+from .event import (
     BUCKET_ACTOR_LABEL_MAX_LENGTH,
     BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
     BucketActorLabel,

@@ -39,6 +39,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.query_reports import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -75,7 +76,7 @@ class EvidenceRecordRefPayload(OutputSchema):
     """
 
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     content_sha256: ContentDigest
     payload_size_bytes: NonNegativeInt
 
@@ -137,7 +138,7 @@ class WorkUnitHistoryEventPayload(OutputSchema):
     occurred_at: datetime
     event_type: BucketEventType
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     actor: BucketActorLabel
     payload: dict[str, str]
 

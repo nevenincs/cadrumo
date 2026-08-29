@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from ._event import (
+from .event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventObjectType,

@@ -54,7 +54,7 @@ whitespace is stripped at validation time. Typical values are the CLI
 command path (``"cadrumo.app.modelo.calculate"``) or an automated-agent
 slug (``"censo.sync"``).
 """
-_ObjectId = Annotated[
+BucketObjectId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
@@ -402,7 +402,7 @@ class BucketEvent(BaseModel):
     occurred_at: UtcInstant
     actor: BucketActorLabel
     object_type: BucketEventObjectType
-    object_id: _ObjectId
+    object_id: BucketObjectId
     payload_version: int = Field(ge=1)
     payload: Mapping[_PayloadKey, _PayloadValue] = Field(default_factory=dict)
 

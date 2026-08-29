@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ....core import Hex64Str
 from ....tests.fixtures.identity_holder import single_field_holder
-from .._event import BucketEventId
+from ..event import BucketEventId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

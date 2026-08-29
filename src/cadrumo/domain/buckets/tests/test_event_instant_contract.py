@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors import CoreValidationError
-from .._event import (
+from ..event import (
     BucketEvent,
     BucketEventObjectType,
     BucketEventType,

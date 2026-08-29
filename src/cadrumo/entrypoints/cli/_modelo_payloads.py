@@ -65,6 +65,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -1169,7 +1170,7 @@ class ModeloLifecycleEventPayload(OutputSchema):
     occurred_at: datetime
     actor: BucketActorLabel
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     payload: dict[str, str]
 
 

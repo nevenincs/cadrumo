@@ -68,6 +68,7 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_modelo_amend_wizard_payloads.py",
         "_modelo_bindings_payloads.py",
         "_modelo_revision_payload_parts.py",
         "_modelo_spreadsheet_payloads.py",
@@ -119,7 +120,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
     "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
     "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
-    "_modelo_amend_wizard_payloads.py": "amendment_reason restates the canonical discard/amendment reason alias",
     "_modelo_aux_payloads.py": "workflow-run payloads restate the locale-key grammar",
     "_modelo_iva_wallet_payloads.py": "IVA wallet payloads restate the wallet decision invariant",
     "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
