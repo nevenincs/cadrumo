@@ -214,7 +214,7 @@ class ProfileCustodyInventoryWitness(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    digest: str = Field(min_length=71, max_length=71)
+    digest: PrefixedContentDigest
     file_count: int = Field(ge=1, le=2048)
     total_bytes: int = Field(ge=1, le=512 * 1024 * 1024)
 
@@ -240,7 +240,7 @@ class ProfileCustodyDeleteConfirmation(BaseModel):
 
     transaction_id: UUID
     profile_id: UUID
-    inventory_digest: str = Field(min_length=71, max_length=71)
+    inventory_digest: PrefixedContentDigest
     challenge: str = Field(min_length=64, max_length=64)
 
 
@@ -258,13 +258,13 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     started_at: datetime
     updated_at: datetime
     pointer_before: BucketPointer
-    expected_custody_digest: str | None = Field(default=None, min_length=71, max_length=71)
-    proposed_custody_digest: str | None = Field(default=None, min_length=71, max_length=71)
+    expected_custody_digest: PrefixedContentDigest | None = None
+    proposed_custody_digest: PrefixedContentDigest | None = None
     proposed_generation: int | None = Field(default=None, ge=1)
     label: str | None = Field(default=None, min_length=1, max_length=160)
     label_revision: int | None = Field(default=None, ge=1)
     label_content_digest: PrefixedContentDigest | None = None
-    label_self_digest: str | None = Field(default=None, min_length=71, max_length=71)
+    label_self_digest: PrefixedContentDigest | None = None
     staged_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     inventory: ProfileCustodyInventoryWitness | None = None
     hold_assessment: ProfileCustodyHoldAssessment | None = None
@@ -279,7 +279,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     requires_inactive_target: bool = False
     confirmation_challenge: str | None = Field(default=None, min_length=64, max_length=64)
     tombstone_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @field_validator(
         "expected_custody_digest",
@@ -405,7 +405,7 @@ class ProfileCustodyTransactionReceipt(CustodyDigestModel):
     pointer_cleared: bool
     pointer_published: bool = False
     retained_external_state: tuple[str, ...] = _EXTERNAL_STATE_RETAINED
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
     def _validate_receipt(self) -> ProfileCustodyTransactionReceipt:
@@ -440,7 +440,7 @@ class ProfileCustodyOwnerReceipt(CustodyDigestModel):
     owner: Literal["process-secret-revocation", "local-session-acceleration"]
     effect: Literal["revoked", "removed", "verified_absent"]
     completed_at: datetime
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
     def _validate_receipt(self) -> ProfileCustodyOwnerReceipt:

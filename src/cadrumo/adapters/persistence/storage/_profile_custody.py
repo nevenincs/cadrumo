@@ -74,7 +74,6 @@ from . import (
     PersistenceError,
     SecureObjectRepository,
     bucket,
-    crypto,
     generate_recovery_key,
     master_key,
     secure_object_repository_for_active_bucket,
@@ -82,6 +81,7 @@ from . import (
     secure_object_repository_for_staged_bucket,
 )
 from ._kdf_salt import KDF_SALT_BYTES
+from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from .custody._filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.capsule import (
     inventory_committed_profile_custody_capsule,
@@ -370,7 +370,7 @@ class _PersistenceProfileRecordCrypto:
         associated_data: bytes | None = None,
     ) -> ProfileRecordEncryptedBlob:
         try:
-            blob = crypto.encrypt_record(plaintext, key=key, associated_data=associated_data)
+            blob = encrypt_record(plaintext, key=key, associated_data=associated_data)
             return ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record encryption failed") from exc
@@ -383,8 +383,8 @@ class _PersistenceProfileRecordCrypto:
         associated_data: bytes | None = None,
     ) -> bytes:
         try:
-            adapter_blob = crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
-            return crypto.decrypt_record(adapter_blob, key=key, associated_data=associated_data)
+            adapter_blob = EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
+            return decrypt_record(adapter_blob, key=key, associated_data=associated_data)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record decryption failed") from exc
 
@@ -404,7 +404,7 @@ class _PersistenceProfileRecordCrypto:
                 time_cost=parameters.time_cost,
                 parallelism=parameters.parallelism,
             )
-            blob = crypto.encrypt_record(
+            blob = encrypt_record(
                 plaintext,
                 key=sealing_key,
                 associated_data=associated_data,
@@ -446,8 +446,8 @@ class _PersistenceProfileRecordCrypto:
                 time_cost=parameters.time_cost,
                 parallelism=parameters.parallelism,
             )
-            return crypto.decrypt_record(
-                crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
+            return decrypt_record(
+                EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
                 key=sealing_key,
                 associated_data=associated_data,
             )
@@ -852,9 +852,7 @@ class _PersistenceProfileCustody:
             export_profile_custody_recovery_artifact(
                 _substrate_handle(recovery_envelope, ProfileCustodyRecoveryEnvelope, "recovery envelope"),
                 current_password=current_password,
-                password_envelope=_substrate_handle(
-                    password_envelope, ProfileCustodyEnvelope, "password envelope"
-                ),
+                password_envelope=_substrate_handle(password_envelope, ProfileCustodyEnvelope, "password envelope"),
                 sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
                 target=target,
             )

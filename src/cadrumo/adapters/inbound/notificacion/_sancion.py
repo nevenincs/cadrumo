@@ -46,7 +46,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from typing import Final, Literal
 
 from pydantic import BaseModel
@@ -54,6 +54,7 @@ from pydantic import BaseModel
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.decimal import is_aeat_printed_money
 from ....core.i18n import tr
+from ....core.money import round_to_cents
 from ....domain.notifications import SancionLiquidacion
 from ..pdf import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
@@ -272,7 +273,7 @@ def _parse_money(raw: str) -> Decimal:
     parsed = parse_spanish_decimal(cleaned)
     if parsed is None:  # pragma: no cover - the anchored shape check precedes this
         raise SancionParseError(f"money token failed decimal conversion: {raw!r}", malformed=("amount",))
-    return parsed.quantize(_CENT)
+    return round_to_cents(parsed)
 
 
 def _parse_percentage(raw: str) -> Decimal:
@@ -494,10 +495,7 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
     the cent. A wider tolerance would start absorbing real mis-bindings, which
     is the entire failure this refuses.
     """
-    expected_sancion = (record.base_sancion * record.porcentaje_minimo / Decimal("100")).quantize(
-        _CENT,
-        rounding=ROUND_HALF_UP,
-    )
+    expected_sancion = round_to_cents(record.base_sancion * record.porcentaje_minimo / Decimal("100"))
     if abs(expected_sancion - record.sancion_resultante) > _CENT:
         raise SancionArithmeticError(
             "AEAT sanción document does not reconcile: base times porcentaje does not reproduce the printed "

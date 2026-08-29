@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import PrefixedContentDigest
 from ...core.time import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 
@@ -83,7 +84,7 @@ class ProfileCustodyHoldAssessment(BaseModel):
     filing_hold: bool
     assessed_at: datetime
     assessor: Literal["application-custody-hold-owner"] = "application-custody-hold-owner"
-    evidence_digest: str = Field(min_length=71, max_length=71)
+    evidence_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
     def _validate_assessed_at(self) -> ProfileCustodyHoldAssessment:
@@ -149,10 +150,10 @@ class ProfileCustodyHoldEvidence(BaseModel):
     profile_id: UUID
     disposition: Literal["cleared", "held"]
     source_record_id: str = Field(min_length=3, max_length=256)
-    source_record_digest: str = Field(min_length=71, max_length=71)
+    source_record_digest: PrefixedContentDigest
     assessed_at: datetime
     authority: Literal["application-legal-hold-owner", "application-filing-hold-owner"]
-    evidence_digest: str = Field(min_length=71, max_length=71)
+    evidence_digest: PrefixedContentDigest
 
     @field_validator("source_record_id")
     @classmethod

@@ -66,6 +66,7 @@ from ...core import (
 )
 from ...core.atomic_write import atomic_write_bytes
 from ...core.hashing import hash_file, sha256_file, sha256_hex
+from ...core.identity import ContentDigest
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.export_field_kind import CasillaFieldKind
@@ -193,7 +194,7 @@ class FilingEnvelopeOccurrence(BaseModel):
     record_id: RecordId
     occurrence: int = Field(gt=0)
     payload: bytes = Field(min_length=1)
-    payload_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    payload_sha256: ContentDigest
 
     @model_validator(mode="after")
     def _require_payload_digest(self) -> FilingEnvelopeOccurrence:
@@ -342,7 +343,7 @@ class FilingEnvelopeRenderResult(BaseModel):
     prefix: bytes = Field(min_length=1)
     closer: bytes = Field(min_length=1)
     payload: bytes = Field(min_length=1)
-    payload_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    payload_sha256: ContentDigest
     total_length: int = Field(gt=0)
 
     @model_validator(mode="after")
@@ -441,7 +442,7 @@ class DeclaracionExportResult(BaseModel):
     format: DeclaracionExportFormat
     output_path: Path
     byte_size: int = Field(ge=0)
-    file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    file_sha256: ContentDigest
     exported_at: datetime
     narrative: str
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
@@ -469,7 +470,7 @@ class FilingExportConsumedResult(BaseModel):
     period: Period
     format: DeclaracionExportFormat
     byte_size: int = Field(gt=0)
-    file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    file_sha256: ContentDigest
     exported_at: datetime
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
 

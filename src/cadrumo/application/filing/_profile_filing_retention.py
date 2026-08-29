@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.filing_year import FilingYear
-from ...core.identity import FilingRecordId
+from ...core.identity import FilingRecordId, PrefixedContentDigest
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
 from ...domain.modelos import ModeloRecord
@@ -78,7 +78,7 @@ class FilingRetentionSnapshot(BaseModel):
     profile_id: UUID
     filing_records: tuple[FilingRetentionFact, ...]
     observed_at: datetime
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @field_validator("filing_records")
     @classmethod
