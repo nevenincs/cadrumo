@@ -13,7 +13,7 @@ them here at the boundary.
 
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ....application.storage_management import (
     StorageAreaDisposition,
@@ -30,7 +30,7 @@ class StorageAreaPayload(OutputSchema):
     area: StorageArea
     occupancy: StorageOccupancy
     disposition: StorageAreaDisposition
-    resolved_paths: int = Field(ge=0)
+    resolved_paths: NonNegativeInt
     entry_count: int = Field(default=0, ge=0)
     footprint_bytes: int = Field(default=0, ge=0)
     reclaimable: bool
@@ -74,7 +74,7 @@ class ConfigStorageCheckResult(OutputSchema):
     storage_root: str = Field(min_length=1)
     healthy: bool
     root_mode_enforced: bool
-    checked_areas: int = Field(ge=0)
+    checked_areas: NonNegativeInt
     issues: list[StorageAreaIssuePayload] = []
 
 
@@ -100,8 +100,8 @@ class ConfigStorageReclaimResult(OutputSchema):
     """
 
     area: StorageArea
-    target_count: int = Field(ge=0)
-    removed_entries: int = Field(ge=0)
+    target_count: NonNegativeInt
+    removed_entries: NonNegativeInt
     retained_entries: int = Field(default=0, ge=0)
 
 

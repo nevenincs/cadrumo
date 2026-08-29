@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
@@ -118,7 +118,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
     verdict: ModeloReconciliationVerdict
-    diff_count: int = Field(ge=0)
+    diff_count: NonNegativeInt
     actor: str = Field(min_length=1, max_length=64)
     reconciled_at: datetime
 
@@ -134,7 +134,7 @@ class ModeloReconciliationHistoryResult(OutputSchema):
     operation: str = "modelo.reconcile.list"
     bucket_id: BucketId
     work_unit_id: WorkUnitId | None = None
-    reconciliation_count: int = Field(ge=0)
+    reconciliation_count: NonNegativeInt
     reconciliations: list[ModeloReconciliationHistoryRowPayload]
 
 

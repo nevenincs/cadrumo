@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, NonNegativeInt, field_validator, model_validator
 
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
@@ -83,7 +83,7 @@ class WorkflowFingerprintPayload(OutputSchema):
 
     schema_version: int | None = Field(default=None, ge=1)
     written_at: datetime | None = None
-    byte_length: int | None = Field(default=None, ge=0)
+    byte_length: NonNegativeInt | None = None
     reason_class: str = Field(min_length=1, max_length=64)
     recovered_bucket_id: BucketId | None = None
 
@@ -139,8 +139,8 @@ class ConfigRepairSetupPayload(OutputSchema):
     enrolment_ready: bool
     missing_required: list[str]
     missing_enrolment: list[str]
-    profile_present_keys: int = Field(ge=0)
-    profile_total_keys: int = Field(ge=0)
+    profile_present_keys: NonNegativeInt
+    profile_total_keys: NonNegativeInt
     auth_provider: str
     login_ready: bool
 
@@ -149,16 +149,16 @@ class ConfigRepairNamespacePayload(OutputSchema):
     """One secure-object namespace row in the config-repair report."""
 
     namespace: str = Field(min_length=1)
-    readable: int = Field(ge=0)
-    unreadable: int = Field(ge=0)
+    readable: NonNegativeInt
+    unreadable: NonNegativeInt
 
 
 class ConfigRepairSecureObjectsPayload(OutputSchema):
     """JSON-safe projection of secure-object integrity totals."""
 
     namespaces: list[ConfigRepairNamespacePayload]
-    readable_total: int = Field(ge=0)
-    unreadable_total: int = Field(ge=0)
+    readable_total: NonNegativeInt
+    unreadable_total: NonNegativeInt
 
 
 class ConfigRepairFindingPayload(OutputSchema):
@@ -431,7 +431,7 @@ class ConfigProfileAddRowResult(OutputSchema):
 
     profile_id: ProfileId
     section: str = Field(min_length=1)
-    row_index: int = Field(ge=0)
+    row_index: NonNegativeInt
     record_revision: int = Field(ge=1)
     content_digest: str = Field(min_length=1)
 
@@ -504,10 +504,10 @@ class ConfigResetTargetPayload(OutputSchema):
 class ConfigResetSummaryPayload(OutputSchema):
     """Reconciled completion counts for one reset operation."""
 
-    target_count: int = Field(ge=0)
-    deleted_count: int = Field(ge=0)
-    already_absent_count: int = Field(ge=0)
-    retention_override_count: int = Field(ge=0)
+    target_count: NonNegativeInt
+    deleted_count: NonNegativeInt
+    already_absent_count: NonNegativeInt
+    retention_override_count: NonNegativeInt
     completed_at: str
 
     @model_validator(mode="after")
@@ -907,7 +907,7 @@ class ConfigProfileDeleteResult(OutputSchema):
     display_name: str = Field(min_length=1, max_length=160)
     deleted: bool
     fingerprint: BucketDeletionFingerprint | None = None
-    retained_record_count: int = Field(ge=0)
+    retained_record_count: NonNegativeInt
     earliest_safe_erase_date: str | None = None
     completed_at: str | None = None
 
@@ -1076,8 +1076,8 @@ class RepairIntegrityObjectsResult(OutputSchema):
     """
 
     namespaces: list[ConfigRepairNamespacePayload]
-    readable_total: int = Field(ge=0)
-    unreadable_total: int = Field(ge=0)
+    readable_total: NonNegativeInt
+    unreadable_total: NonNegativeInt
     check: RepairIntegrityCheckPayload
 
 

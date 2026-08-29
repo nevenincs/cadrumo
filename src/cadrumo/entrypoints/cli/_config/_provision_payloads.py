@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ....core import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
@@ -35,7 +35,7 @@ class ProvisionContentionPayload(OutputSchema):
     model: str = Field(min_length=1)
     admitted: bool
     causes: list[ContentionCause] = []
-    required_bytes: int = Field(ge=0)
+    required_bytes: NonNegativeInt
     free_vram_bytes: int | None = None
     free_system_memory_bytes: int | None = None
     shortfall_bytes: int | None = None

@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import Field, NonNegativeInt, field_validator
 
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.decimal import try_parse_canonical_decimal
@@ -56,7 +56,7 @@ class IvaWalletBalanceResult(OutputSchema):
     total_balance: str
     active_balance: str
     expired_balance: str
-    lot_count: int = Field(ge=0)
+    lot_count: NonNegativeInt
     next_expiry_year: int | None = Field(default=None, ge=2000, le=2200)
     unallocated_applied_amount: str
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ...application.evidence import BundleVerificationState
 from ...application.workflow.run_models import (
@@ -59,7 +59,7 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     """
 
     clave: RetencionClave
-    percepcion_count: int = Field(ge=0)
+    percepcion_count: NonNegativeInt
     percibido_total: NonNegativeDecimalWireText
     retencion_total: NonNegativeDecimalWireText
 
@@ -76,7 +76,7 @@ class EvidenceRecordRefPayload(OutputSchema):
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
     content_sha256: ContentDigest
-    payload_size_bytes: int = Field(ge=0)
+    payload_size_bytes: NonNegativeInt
 
 
 class EvidenceBundleCheckFindingPayload(OutputSchema):
@@ -126,7 +126,7 @@ class ModeloAuditExportResult(OutputSchema):
     bundle_id: Hex64Str
     output: str = Field(min_length=1)
     verification_state: BundleVerificationState
-    records: int = Field(ge=0)
+    records: NonNegativeInt
 
 
 class WorkUnitHistoryEventPayload(OutputSchema):
@@ -297,12 +297,12 @@ class ModeloDescribeResult(OutputSchema):
     periods: list[str]
     valid_from: date
     valid_to: date | None = None
-    casilla_count: int = Field(ge=0)
-    manual_casilla_count: int = Field(ge=0)
-    bound_casilla_count: int = Field(ge=0)
-    computed_casilla_count: int = Field(ge=0)
-    binding_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
+    casilla_count: NonNegativeInt
+    manual_casilla_count: NonNegativeInt
+    bound_casilla_count: NonNegativeInt
+    computed_casilla_count: NonNegativeInt
+    binding_count: NonNegativeInt
+    formula_count: NonNegativeInt
     legal_refs: list[LegalRefId] = Field(default_factory=list)
     source_refs: list[SourceRefId] = Field(default_factory=list)
 

@@ -22,7 +22,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, NonNegativeInt, model_validator
 
 from ...core import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
@@ -161,7 +161,7 @@ class CatalogueInvoiceListResult(OutputSchema):
 
     bucket_id: BucketId
     rows: list[CatalogueInvoiceRecordPayload]
-    count: int = Field(ge=0)
+    count: NonNegativeInt
 
 
 class BulkInvoiceImportRowFailurePayload(OutputSchema):
@@ -185,9 +185,9 @@ class CatalogueInvoiceImportResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    rows: int = Field(ge=0)
-    created: int = Field(ge=0)
-    skipped_duplicate: int = Field(ge=0)
+    rows: NonNegativeInt
+    created: NonNegativeInt
+    skipped_duplicate: NonNegativeInt
     refused: list[BulkInvoiceImportRowFailurePayload] = []
     created_invoice_ids: list[InvoiceId] = Field(default_factory=list)
 

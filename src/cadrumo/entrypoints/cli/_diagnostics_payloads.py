@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
@@ -58,9 +58,9 @@ class LlmRunProviderPayload(OutputSchema):
     """
 
     provider: str = Field(min_length=1)
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
@@ -79,9 +79,9 @@ class RunHealthResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     llm_providers: list[LlmRunProviderPayload]
-    total_runs: int = Field(ge=0)
-    total_succeeded: int = Field(ge=0)
-    total_failed: int = Field(ge=0)
+    total_runs: NonNegativeInt
+    total_succeeded: NonNegativeInt
+    total_failed: NonNegativeInt
 
     @model_validator(mode="after")
     def _window_is_not_empty(self) -> RunHealthResult:
@@ -117,7 +117,7 @@ class RunRecordPayload(OutputSchema):
     # `model` and `error_kind` stay unbounded: the canonical RunRecordView
     # defaults both to the empty string, so a blank is representable.
     model: str
-    duration_ms: int = Field(ge=0)
+    duration_ms: NonNegativeInt
     succeeded: bool
     error_kind: str
     started_at: datetime
@@ -232,8 +232,8 @@ class ErrorsBreakdownResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     provider: str | None = None
-    total_runs: int = Field(ge=0)
-    total_failed: int = Field(ge=0)
+    total_runs: NonNegativeInt
+    total_failed: NonNegativeInt
     by_error_kind: list[ErrorKindCountPayload]
     has_failures: bool
 
@@ -259,9 +259,9 @@ class LlmUsageModelPayload(OutputSchema):
     # `model` stays unbounded: the canonical LlmUsageModelMetrics defaults it
     # to the empty string.
     model: str
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
@@ -281,9 +281,9 @@ class LlmRunHealthProviderPayload(OutputSchema):
     """
 
     provider: str = Field(min_length=1)
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
