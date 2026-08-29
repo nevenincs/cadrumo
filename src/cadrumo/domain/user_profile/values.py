@@ -144,6 +144,11 @@ def _coerce_profile_fact_value(value: object) -> object:
     return value
 
 
+
+PayloadSchemaVersion = Annotated[int, Field(ge=1)]
+"""Which version of a persisted payload schema a record was written against."""
+
+
 class ProfileSetupState(StrEnum):
     """The only current fact-record readiness state."""
 
@@ -265,7 +270,7 @@ class UserProfileRecord(BaseModel):
     # default is a second authority for the schema's own version, and the
     # moment it falls behind, every record written without an explicit version
     # is itself a pre-current payload the identity guard has to refuse.
-    schema_version: int = Field(default_factory=_canonical_payload_schema_version, ge=1)
+    schema_version: PayloadSchemaVersion = Field(default_factory=_canonical_payload_schema_version)
     profile_id: _ProfileId
     facts: tuple[UserProfileFact, ...] = Field(default=())
     setup_state: ProfileSetupState

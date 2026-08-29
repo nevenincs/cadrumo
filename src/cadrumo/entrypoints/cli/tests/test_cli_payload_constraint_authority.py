@@ -68,6 +68,8 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_app_live_borrador_payloads.py",
+        "_app_live_notifications_payloads.py",
         "_config/_profile_list_payloads.py",
         "_config_bucket_history_payloads.py",
         "_diagnostics_payloads.py",
@@ -113,8 +115,6 @@ EXEMPT_MODULES: dict[str, str] = {
 # the semantic-consolidation campaign. Each entry is asserted to STILL declare
 # something, so a reconciled module cannot be left behind here.
 OUTSTANDING_MODULES: dict[str, str] = {
-    "_app_live_borrador_payloads.py": "borrador capture payloads await sede-evidence model reconciliation",
-    "_app_live_notifications_payloads.py": "notification payloads restate sede notification metadata bounds",
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",

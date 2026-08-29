@@ -6,11 +6,11 @@ from datetime import datetime
 from typing import Literal
 
 from pydantic import (
-    Field,
     NonNegativeInt,
     model_validator,
 )
 
+from ...application.live.notification_documents import NotificationParseRefusal
 from ...core.identity import (
     AeatCertificadoId,
     AeatClaveLiquidacion,
@@ -182,7 +182,7 @@ class NotificationDocumentPayload(OutputSchema):
     fetched_at: datetime
     sancion_parsed: bool
     sancion: SancionReadingPayload | None = None
-    parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
+    parse_refusal: NotificationParseRefusal | None = None
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")

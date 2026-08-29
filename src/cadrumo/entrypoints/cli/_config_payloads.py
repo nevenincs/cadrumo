@@ -41,7 +41,7 @@ from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_utc_aware
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
-from ...domain.user_profile.values import ProfileSetupState
+from ...domain.user_profile.values import PayloadSchemaVersion, ProfileSetupState
 
 # The two wizard-owned profile result schemas are deferred public targets owned
 # by their production CommandSpec declarations, NOT here: the `config` group imports this
@@ -83,7 +83,7 @@ class WorkflowFingerprintPayload(OutputSchema):
     serialising the :class:`WorkflowState` plaintext.
     """
 
-    schema_version: int | None = Field(default=None, ge=1)
+    schema_version: PayloadSchemaVersion | None = None
     written_at: datetime | None = None
     byte_length: NonNegativeInt | None = None
     reason_class: str = Field(min_length=1, max_length=64)
@@ -413,7 +413,7 @@ class ConfigProfileViewResult(OutputSchema):
     setup_state: ProfileSetupState | None = None
     status: Literal["profile_record_unreadable"] | None = None
     valid: bool | None = None
-    schema_version: int | None = Field(default=None, ge=1)
+    schema_version: PayloadSchemaVersion | None = None
     issues: list[ProfileIssuePayload] | None = None
     facts: list[ProfileFactPayload] | None = None
     # Error / readiness branches
