@@ -43,14 +43,13 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, TypedDict, override
+from typing import Literal, TypedDict, override
 
 from pydantic import (
     BaseModel,
     Field,
     SerializationInfo,
     SerializerFunctionWrapHandler,
-    StringConstraints,
     TypeAdapter,
     ValidationError,
     ValidationInfo,
@@ -107,6 +106,7 @@ from ._row_models import (
     ModeloDetailRow,
 )
 from .errors import ModeloError, ModeloValidationError
+from .filing_text import ModeloActorLabel, OperatorReason
 
 
 class CalculationRevisionState(StrEnum):
@@ -162,14 +162,6 @@ handed to an accountant as current" (see
 :mod:`application.modelo._review_package`)."""
 
 
-ModeloActorLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
-]
-_DiscardReason = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[RelationId] = TypeAdapter(RelationId)
 
@@ -1232,9 +1224,9 @@ class CalculationRevision(BaseModel):
     superseded_at: datetime | None = None
     discarded_at: datetime | None = None
     discarded_by: ModeloActorLabel | None = None
-    discard_reason: _DiscardReason | None = None
+    discard_reason: OperatorReason | None = None
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None
-    amendment_reason: _DiscardReason | None = None
+    amendment_reason: OperatorReason | None = None
 
     @field_validator(
         "created_at",

@@ -37,6 +37,7 @@ from ..calculations.registry.ids import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from .errors import ModeloValidationError
+from .filing_text import ModeloActorLabel, OperatorReason
 
 
 class WorkUnitState(StrEnum):
@@ -55,14 +56,6 @@ class WorkUnitState(StrEnum):
     DESCARTADO = "descartado"
 
 
-ModeloActorLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
-]
-_DiscardReason = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
 _RevisionId = RevisionId
 """The canonical registry revision-id type, not a second local constraint.
 
@@ -171,7 +164,7 @@ class WorkUnit(BaseModel):
     state: WorkUnitState = WorkUnitState.BORRADOR
     discarded_at: datetime | None = None
     discarded_by: ModeloActorLabel | None = None
-    discard_reason: _DiscardReason | None = None
+    discard_reason: OperatorReason | None = None
     current_calculation_revision_id: Hex64Str | None = None
     filed_calculation_revision_id: Hex64Str | None = None
     current_filing_record_id: Hex64Str | None = None

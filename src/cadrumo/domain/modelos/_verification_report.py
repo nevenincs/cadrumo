@@ -36,11 +36,8 @@ from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from .errors import ModeloValidationError
+from .filing_text import ModeloActorLabel
 
-ModeloActorLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
-]
 """Validated string identifying the operator who triggered a verification run.
 
 Strips surrounding whitespace; must be 1–64 characters after stripping.

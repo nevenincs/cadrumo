@@ -38,11 +38,8 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ._codes import ModeloCode
 from .errors import ModeloValidationError
+from .filing_text import EvidenceReference, ModeloActorLabel
 
-ModeloActorLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
-]
 """Validated string identifying the operator who filed or triggered a filing event.
 
 Strips surrounding whitespace; must be 1–64 characters after stripping.
@@ -115,12 +112,6 @@ def is_receipt_bound_external_evidence(kind: ExternalEvidenceKind) -> bool:
     )
 
 
-_EvidenceReference = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
-
-
 class ExternalEvidence(BaseModel):
     """Imported-evidence metadata for an externally-filed return.
 
@@ -134,7 +125,7 @@ class ExternalEvidence(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: ExternalEvidenceKind
-    reference_id: _EvidenceReference
+    reference_id: EvidenceReference
     imported_at: datetime
 
 
