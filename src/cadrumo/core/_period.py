@@ -42,10 +42,9 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, TypeAdapter, ValidationError
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
 
 from .errors import CadrumoError
-from .filing_year import FilingYear
 
 
 class StandardPeriodCode(StrEnum):
@@ -378,7 +377,15 @@ class Period(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    filing_year: FilingYear
+    filing_year: int = Field(ge=1980, le=2200)
+    """Deliberately wider than the registry's authored filing-year window.
+
+    A period is a calendar span, not a claim that a revision exists for it. It
+    must be able to EXPRESS a year the registry cannot serve -- a pre-1995
+    IVA regime under Ley 41/1994, or a 1999 coordinate whose refusal is the
+    behaviour under test -- so narrowing it to the filing-year axis would make
+    those cases unrepresentable rather than refusable.
+    """
     code: FilingPeriodCode
 
     @classmethod

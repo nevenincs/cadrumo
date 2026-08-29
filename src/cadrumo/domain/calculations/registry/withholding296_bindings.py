@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
+from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
@@ -121,8 +122,8 @@ class Withholding296Observation(BaseModel):
     nif_pais_residencia: str | None = Field(default=None, max_length=20)
     fecha_nacimiento: str | None = Field(default=None, pattern=r"^\d{8}$")
     ciudad_nacimiento: str | None = Field(default=None, max_length=35)
-    codigo_pais: str | None = Field(default=None, min_length=2, max_length=2)
-    pais_residencia_fiscal: str | None = Field(default=None, min_length=2, max_length=2)
+    codigo_pais: CountryCodeAlpha2 | None = None
+    pais_residencia_fiscal: CountryCodeAlpha2 | None = None
     transaction_date: date
 
 

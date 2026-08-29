@@ -11,6 +11,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.country_code import CountryCodeAlpha2
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.identity import TaxIdIdentityToken
 from .binding_aggregation import binding_aggregation_op
@@ -127,7 +128,7 @@ class RelatedPartyOperationObservation(BaseModel):
     # as domestic on exactly that axis. The operator-supplied row carrying the
     # same operation is required for the same reason; this is the registry-side
     # representation of it, and the two must agree.
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     transaction_date: date
     operation_kind_code: Annotated[TipoOperacionVinculada, BeforeValidator(_hydrate_operation_kind_code)]
     transfer_pricing_method_code: Annotated[
@@ -272,7 +273,7 @@ class Modelo720RowObservation(BaseModel):
 
     source_id: str = Field(min_length=1, max_length=128)
     asset_class_code: M720AssetClassCode
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     asset_identifier: str = Field(default="", max_length=128)
     acquisition_date: date
@@ -458,7 +459,7 @@ class AtributionMemberObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     member_tax_id: TaxIdIdentityToken
     member_legal_name: str = Field(default="", max_length=200)
-    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
     Nullable rather than defaulted to ``ES``, because these forms carry the
@@ -637,7 +638,7 @@ class RefundOperationObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    member_state_code: str = Field(min_length=2, max_length=2)
+    member_state_code: CountryCodeAlpha2
     operation_kind_code: str = Field(min_length=1, max_length=4)
     operation_date: date
     supplier_tax_id: TaxIdIdentityToken

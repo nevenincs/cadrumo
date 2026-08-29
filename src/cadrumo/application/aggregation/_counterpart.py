@@ -28,6 +28,7 @@ from ...core.aggregation import (
     OperationKind349,
     counterpart_source_kind,
 )
+from ...core.country_code import CountryCodeAlpha2
 from ...core.parsing import IsoDateString
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
@@ -127,7 +128,7 @@ class CounterpartObservation(_CounterpartBoundaryModel):
     # consumer here has to branch on the country: an optional field would move
     # the same guess into each of them, and the shape of the mistake would
     # survive the fix.
-    counterparty_country: str = Field(min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2
     operation_kind: str = Field(min_length=1)
     operation_period: FilingPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))
@@ -143,7 +144,7 @@ class CounterpartRollup(_CounterpartBoundaryModel):
     source_kind: CounterpartSourceKind
     counterparty_nif: str = Field(min_length=1, max_length=20)
     counterparty_name: str = Field(default="", max_length=200)
-    counterparty_country: str = Field(min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2
     operation_kind: str = Field(min_length=1)
     observations_count: int = Field(ge=0)
     total_taxable_base: Decimal = Field(ge=Decimal("0"))

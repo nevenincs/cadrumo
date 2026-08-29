@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, M210PayerMode, Modelo, Period, validated_casilla_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n import tr
 from ...core.identity import TransactionId
 from ...core.unit_proportion import UnitProportion
@@ -98,7 +99,7 @@ class IrnrIncomeObservation(BaseModel):
     payer_id: str | None = None
     asset_or_right_id: str | None = None
     filing_date: date
-    source_jurisdiction: str = Field(min_length=2, max_length=2)
+    source_jurisdiction: CountryCodeAlpha2
 
 
 class IrnrIncomeLedgerAggregation(LedgerAggregationResultBase[IrnrIncomeObservation, IrnrIncomeLedgerAggregationIssue]):

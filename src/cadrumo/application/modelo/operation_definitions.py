@@ -39,6 +39,7 @@ from ...core import (
     Period,
     RefundElection,
 )
+from ...core.country_code import CountryCodeAlpha2
 from ...core.errors import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.identity import (
@@ -1152,7 +1153,7 @@ class ModeloEditApply184MemberRowV1(BaseModel):
     row_type: Literal["miembro"] = "miembro"
     nif: Annotated[str, Field(min_length=1, max_length=20)]
     nombre: Annotated[str, Field(max_length=200)] = ""
-    pais: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+    pais: CountryCodeAlpha2 | None = None
     porcentaje: _WireAmount
     importe: _WireAmount
     clave: M184Clave
@@ -1230,7 +1231,7 @@ class ModeloEditApply349OperadorRowV1(BaseModel):
     model_config = _WIRE_CONFIG
 
     row_type: Literal["operador"] = "operador"
-    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    codigo_pais: CountryCodeAlpha2
     nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
     razon_social: Annotated[str, Field(min_length=1, max_length=200)]
     clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
@@ -1253,7 +1254,7 @@ class ModeloEditApply349RectificacionRowV1(BaseModel):
     model_config = _WIRE_CONFIG
 
     row_type: Literal["rectificacion"] = "rectificacion"
-    codigo_pais: Annotated[str, Field(min_length=2, max_length=2)]
+    codigo_pais: CountryCodeAlpha2
     nif_comunitario: Annotated[str, Field(min_length=1, max_length=20)]
     razon_social: Annotated[str, Field(min_length=1, max_length=200)]
     clave_operacion: Literal["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"]
@@ -1289,7 +1290,7 @@ class ModeloEditApply347ContraparteRowV1(BaseModel):
     importe_Q3: _WireAmount = "0"
     importe_Q4: _WireAmount = "0"
     clave_operacion: Literal["A", "B", "C", "D", "E", "F", "G"] = "A"
-    pais_codigo: Annotated[str, Field(min_length=2, max_length=2)] | None = None
+    pais_codigo: CountryCodeAlpha2 | None = None
 
     def to_row(self) -> Modelo347ContraparteRow:
         """Translate back to the real, fully re-validated domain row."""

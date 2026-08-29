@@ -27,6 +27,7 @@ from ...core import (
     TravelAgencyMediationType,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -581,7 +582,7 @@ class Invoice(BaseModel):
     operation_date_role: InvoiceOperationDateRole | None = None
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: TaxIdIdentityToken | None = None
-    counterparty_country: str = Field(min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2
     # Which Member State IVA-IDENTIFIES the counterparty, read from the prefix
     # of the IVA number the document printed. A DIFFERENT fact from
     # `counterparty_country` above, which is an address -- establishment -- and

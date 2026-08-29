@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
+from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
@@ -176,7 +177,7 @@ class WithholdingObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
     perceptor_legal_name: str = Field(default="", max_length=200)
-    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2 | None = None
     """The party's country, or ``None`` when the source stated none.
 
     Nullable rather than defaulted to ``ES``, because these forms carry the

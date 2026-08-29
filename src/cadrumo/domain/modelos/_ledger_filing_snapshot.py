@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId
+from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
 from ...core.unit_proportion import UnitProportion
@@ -164,14 +165,14 @@ class LedgerEvidenceRow(BaseModel):
     iva_category: str | None = None
     category_id: str | None = None
     irpf_category: str | None = None
-    source_jurisdiction: str | None = Field(default=None, min_length=2, max_length=2)
+    source_jurisdiction: CountryCodeAlpha2 | None = None
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
     m210_gross_income_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     m210_applicable_rate: UnitProportion | None = None
     m210_payer_mode: str | None = None
     m210_payer_id: str | None = None
     m210_asset_or_right_id: str | None = None
-    counterparty_country: str | None = Field(default=None, min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2 | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     lifecycle_state: str = Field(min_length=1)

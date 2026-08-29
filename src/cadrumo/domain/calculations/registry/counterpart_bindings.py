@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
+from ....core.country_code import CountryCodeAlpha2
 from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
 from ._m347_threshold import m347_declarable_party_ids
@@ -68,7 +69,7 @@ class CounterpartAggregationObservation(BaseModel):
     )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: TaxIdIdentityToken
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     transaction_date: date
     base_amount: Decimal
     invoice_total_amount: Decimal | None = None

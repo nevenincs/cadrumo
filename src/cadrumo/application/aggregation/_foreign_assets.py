@@ -34,6 +34,7 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
+from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import content_hash_hex
 from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
@@ -112,7 +113,7 @@ class ForeignAssetIngestObservation(BaseModel):
     source_object_id: str = Field(min_length=1)
     asset_class: ForeignAssetClass
     asset_external_id: str = Field(min_length=1, max_length=128)
-    country: str = Field(min_length=2, max_length=2)
+    country: CountryCodeAlpha2
     issuer_or_institution: str = Field(default="", max_length=200)
     valuation_eur: Decimal = Field(ge=Decimal("0"))
     acquisition_date: IsoDateString = Field(min_length=10, max_length=10)
