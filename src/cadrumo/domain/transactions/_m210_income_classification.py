@@ -14,6 +14,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210PayerMode
+from ...core.unit_proportion import UnitProportion
 from .errors import TransactionValidationError
 
 
@@ -30,7 +31,7 @@ class M210IncomeClassification(BaseModel):
 
     official_tipo_renta_code: str = Field(min_length=2, max_length=2)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
-    applicable_rate: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    applicable_rate: UnitProportion
     payer_mode: M210PayerMode = M210PayerMode.SINGLE_PAYER
     payer_id: str | None = Field(default=None, min_length=1, max_length=128)
     asset_or_right_id: str | None = Field(default=None, min_length=1, max_length=128)

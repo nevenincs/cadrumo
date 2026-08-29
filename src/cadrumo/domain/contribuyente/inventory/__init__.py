@@ -31,9 +31,13 @@ from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
+from ....core.percentage import Percentage
+from ....core.time import UtcInstant
+from ....core.unit_proportion import UnitProportion
 from ...filing_evidence import FilingEvidenceReference
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 
@@ -391,7 +395,7 @@ class PhysicalClosingObservation(BaseModel):
     observed_on: date
     as_of_date: date
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     closing_value: Decimal = Field(ge=_ZERO)
     valuation_basis: InventoryClosingValuationBasis
     evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
@@ -462,14 +466,14 @@ class InventoryClosingAuthorityDecision(BaseModel):
 
     decision_id: str = Field(min_length=1, max_length=128)
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     authority: InventoryClosingAuthority
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
     reason: str = Field(min_length=1, max_length=512)
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
-    decided_at: datetime
+    decided_at: UtcInstant
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
 
     @field_validator("evidence")
@@ -538,7 +542,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
 
     actividad_id: str = Field(min_length=1)
     current_filing_year: int = Field(ge=1901)
-    prior_filing_year: int = Field(ge=1900)
+    prior_filing_year: FilingYear
     prior_authoritative_closing_value: Decimal = Field(ge=_ZERO)
     current_opening_value: Decimal = Field(ge=_ZERO)
     prior_authoritative_source_fingerprint: ContentDigest
@@ -601,7 +605,7 @@ class InventoryClosingConflictDiagnostic(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     movement_derived_value: Decimal = Field(ge=_ZERO)
     physical_observed_value: Decimal = Field(ge=_ZERO)
     physical_observation_fingerprint: ContentDigest
@@ -618,7 +622,7 @@ class InventoryClosingResolution(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=1900)
+    filing_year: FilingYear
     authority: InventoryClosingAuthority
     authoritative_value: Decimal = Field(ge=_ZERO)
     movement_derived_value: Decimal = Field(ge=_ZERO)
@@ -731,9 +735,9 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_rate: Decimal = Field(default=_DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Percentage = _DEFAULT_IVA_GENERAL_RATE_PCT
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    deductible_iva_ratio: UnitProportion = Decimal("1.00")
     acquisition_cost: InventoryAcquisitionCost | None = None
     schema_version: str = INVENTORY_SCHEMA_VERSION
 

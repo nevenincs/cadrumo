@@ -43,6 +43,7 @@ from ...core import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
+from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
@@ -504,7 +505,7 @@ class CalculationSourceContext(BaseModel):
     # incomplete context rather than select by coordinate alone.
     work_unit_id: WorkUnitId | None = None
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     revision: ModeloRevision
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
@@ -731,7 +732,7 @@ class CalculationSourceProvenance(BaseModel):
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
     relation_id: RelationId | None = None
     source_modelo: ModeloId | None = None
-    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_filing_year: FilingYear | None = None
     source_periods: tuple[str, ...] = ()
     source_casilla_ids: tuple[CasillaId, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = ()

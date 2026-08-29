@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
@@ -160,7 +161,7 @@ class BulkInvoiceImportRow(BaseModel):
     # country per row makes the operator declare one for the whole import
     # instead; the inference is then theirs and explicit, never ours and
     # silent.
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     notes: str = ""
 
 

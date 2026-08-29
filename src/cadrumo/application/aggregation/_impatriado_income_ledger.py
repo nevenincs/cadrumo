@@ -50,6 +50,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, validated_casilla_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import TransactionId
 from ...domain.transactions import (
     BusinessClassification,
@@ -145,7 +146,7 @@ class ImpatriadoIncomeObservation(BaseModel):
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     filing_date: date
-    source_jurisdiction: str = Field(min_length=2, max_length=2)
+    source_jurisdiction: CountryCodeAlpha2
 
 
 class ImpatriadoIncomeLedgerAggregation(

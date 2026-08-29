@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR
+from ...core.filing_year import FilingYear
 
 
 class Modelo840IaeExemptionStatus(StrEnum):
@@ -40,7 +41,7 @@ class Modelo840IaeExemptionAssessment(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     importe_neto_cifra_negocios_eur: Decimal = Field(ge=Decimal("0"))
     threshold_eur: Decimal = Field(
         default=MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR,

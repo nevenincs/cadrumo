@@ -14,6 +14,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import M303_MESA_FACTS, M303_REPEATING_FACTS, STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
+from ...core.filing_year import FilingYear
 from ..filing_evidence import FilingEvidenceReference
 from ._schema import validate_orden_module_identities
 from .errors import IvaValidationError
@@ -59,7 +60,7 @@ class ActividadOrdenAnual(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     orden_id: ActividadOrdenAnualId
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     kind: Literal["agricola", "no_agricola"]
     activity_code: _Token
     iae_epigrafe: IaeEpigrafe | None = None
@@ -263,7 +264,7 @@ class ActividadAgricolaSimplificado(BaseModel):
 
     kind: Literal["agricola"] = "agricola"
     orden_id: ActividadOrdenAnualId
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     activity_id: _Token
     activity_code: _Token
     facts: tuple[HechoActividadSimplificado, ...] = Field(min_length=1)
@@ -282,7 +283,7 @@ class ActividadNoAgricolaSimplificado(BaseModel):
 
     kind: Literal["no_agricola"] = "no_agricola"
     orden_id: ActividadOrdenAnualId
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     activity_id: _Token
     iae_epigrafe: IaeEpigrafe
     auxiliary_activity_indicator: IndicadorAuxiliarActividad | None
@@ -311,7 +312,7 @@ class RegimenSimplificadoFilingRows(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     activities: tuple[RegimenSimplificadoActivity, ...] = Field(max_length=12)
 
     @model_validator(mode="after")

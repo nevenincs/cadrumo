@@ -8,7 +8,9 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
+from ....core.percentage import Percentage
 from ....domain.iva import IaeEpigrafe
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
@@ -41,7 +43,7 @@ class M303AnnualOrdenRawActivity(RegistryModel):
     activity_name: str = Field(min_length=1)
     iae_epigrafe: IaeEpigrafe
     modules: tuple[M303AnnualOrdenRawModule, ...] = Field(min_length=1, max_length=7)
-    cuota_minima_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    cuota_minima_pct: Percentage
     required_text: tuple[str, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -65,7 +67,7 @@ class M303AnnualOrdenRawIngresoACuenta(RegistryModel):
 
     iae_epigrafe: IaeEpigrafe
     activity_name: str = Field(min_length=1)
-    percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    percentage: Percentage
     required_text: str = Field(min_length=1)
 
 
@@ -74,7 +76,7 @@ class M303AnnualOrdenRawAgriculturalIngresoACuenta(RegistryModel):
 
     annex_heading: Literal["ANEXO I"]
     activity_name: str = Field(min_length=1)
-    percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    percentage: Percentage
     required_text: tuple[str, ...] = Field(min_length=1)
 
 
@@ -96,7 +98,7 @@ class M303AnnualOrdenRawSeasonalIndex(RegistryModel):
 class M303AnnualOrdenRawDifficultJustification(RegistryModel):
     """The matching Annex-I and Annex-II difficult-justification clauses."""
 
-    percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    percentage: Percentage
     agricultural_required_text: str = Field(min_length=1)
     non_agricultural_required_text: str = Field(min_length=1)
 
@@ -112,7 +114,7 @@ class M303AnnualOrdenRawLorca2022Reduction(RegistryModel):
 class M303AnnualOrdenSourceCensus(RegistryModel):
     """Complete, digest-bound extraction of one official annual Orden source."""
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     source_ref: SourceRefId
     source_content_digest: ContentDigest
     extractor_version: str = Field(min_length=1)

@@ -162,8 +162,7 @@ def test_every_design_constant_carries_a_value_that_fills_its_run() -> None:
                 offenders.append(f"{binding_id}: value={value!r} declared length={length!r}")
 
     assert not offenders, (
-        "design-constant binding(s) carry a value that does not fill the declared run:\n  "
-        + "\n  ".join(offenders)
+        "design-constant binding(s) carry a value that does not fill the declared run:\n  " + "\n  ".join(offenders)
     )
 
 

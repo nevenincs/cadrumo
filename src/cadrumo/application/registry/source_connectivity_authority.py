@@ -29,7 +29,9 @@ from ..modelo.calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    DESIGN_CONSTANT_RESOLVER_ID,
     MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteDesignConstantOwnership,
     CalculationRouteManualOwnership,
 )
 from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
@@ -59,15 +61,41 @@ class CalculationRouteManualSourceOwnership(BaseModel):
     owner_id: Literal["manual_input"]
 
 
-type CalculationRouteSourceOwnership = CalculationRouteResolverSourceOwnership | CalculationRouteManualSourceOwnership
+class CalculationRouteDesignConstantSourceOwnership(BaseModel):
+    """The sole typed design-constant pseudo-owner on the production route.
+
+    A SIBLING of :class:`CalculationRouteManualSourceOwnership`, projecting the
+    sibling the route itself declares. Admitting the design constant by relaxing
+    the manual row's ``Literal`` pins would have been the widen-the-matcher move
+    the route's own owner refuses, and it would have made the two pseudo-owners
+    indistinguishable at exactly the boundary that has to tell them apart: a
+    manual value arrives from the operator, a design constant is already carried
+    on its binding selector because AEAT's diseno fixes it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    route_id: ModeloCalculationRouteId
+    stage: Literal["manual"]
+    source_kind: Literal[BindingSourceKind.DESIGN_CONSTANT]
+    owner_id: Literal["design_constant"]
+
+
+type CalculationRouteSourceOwnership = (
+    CalculationRouteResolverSourceOwnership
+    | CalculationRouteManualSourceOwnership
+    | CalculationRouteDesignConstantSourceOwnership
+)
 
 
 def _canonical_route_source_ownership() -> tuple[
     tuple[CalculationRouteResolverSourceOwnership, ...],
     CalculationRouteManualSourceOwnership,
+    CalculationRouteDesignConstantSourceOwnership,
 ]:
     resolver_rows: list[CalculationRouteResolverSourceOwnership] = []
     manual_rows: list[CalculationRouteManualSourceOwnership] = []
+    design_constant_rows: list[CalculationRouteDesignConstantSourceOwnership] = []
     for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP:
         if isinstance(owner, CalculationRouteManualOwnership):
             source_kind = owner.owned_sources[0]
@@ -79,6 +107,19 @@ def _canonical_route_source_ownership() -> tuple[
                     stage="manual",
                     source_kind=source_kind,
                     owner_id=MANUAL_INPUT_RESOLVER_ID,
+                ),
+            )
+            continue
+        if isinstance(owner, CalculationRouteDesignConstantOwnership):
+            source_kind = owner.owned_sources[0]
+            if CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind] is not BindingSourceDisposition.ENROLLED:
+                raise RuntimeError(f"calculation route owns non-enrolled source {source_kind.value!r}")
+            design_constant_rows.append(
+                CalculationRouteDesignConstantSourceOwnership(
+                    route_id=CALCULATION_ROUTE_ID,
+                    stage="manual",
+                    source_kind=source_kind,
+                    owner_id=DESIGN_CONSTANT_RESOLVER_ID,
                 ),
             )
             continue
@@ -95,7 +136,13 @@ def _canonical_route_source_ownership() -> tuple[
             )
     if len(manual_rows) != 1:
         raise RuntimeError("calculation route requires exactly one manual-input pseudo-owner")
-    return tuple(sorted(resolver_rows, key=lambda row: row.source_kind.value)), manual_rows[0]
+    if len(design_constant_rows) != 1:
+        raise RuntimeError("calculation route requires exactly one design-constant pseudo-owner")
+    return (
+        tuple(sorted(resolver_rows, key=lambda row: row.source_kind.value)),
+        manual_rows[0],
+        design_constant_rows[0],
+    )
 
 
 class CalculationRouteSourceOwnershipCatalogue(BaseModel):
@@ -105,11 +152,16 @@ class CalculationRouteSourceOwnershipCatalogue(BaseModel):
 
     resolver_sources: tuple[CalculationRouteResolverSourceOwnership, ...] = Field(min_length=1)
     manual_input: CalculationRouteManualSourceOwnership
+    design_constant: CalculationRouteDesignConstantSourceOwnership
 
     @model_validator(mode="after")
     def _require_exact_canonical_projection(self) -> CalculationRouteSourceOwnershipCatalogue:
-        expected_resolvers, expected_manual = _canonical_route_source_ownership()
-        if self.resolver_sources != expected_resolvers or self.manual_input != expected_manual:
+        expected_resolvers, expected_manual, expected_design_constant = _canonical_route_source_ownership()
+        if (
+            self.resolver_sources != expected_resolvers
+            or self.manual_input != expected_manual
+            or self.design_constant != expected_design_constant
+        ):
             raise ValueError("source ownership catalogue must exactly project the canonical calculation route")
         return self
 
@@ -117,15 +169,18 @@ class CalculationRouteSourceOwnershipCatalogue(BaseModel):
         """Return the exact canonical route owner for one enrolled source."""
         if source_kind is BindingSourceKind.MANUAL_INPUT:
             return self.manual_input
+        if source_kind is BindingSourceKind.DESIGN_CONSTANT:
+            return self.design_constant
         return next((row for row in self.resolver_sources if row.source_kind is source_kind), None)
 
 
 def build_calculation_route_source_ownership_catalogue() -> CalculationRouteSourceOwnershipCatalogue:
     """Project complete source ownership from the validated production route."""
-    resolver_sources, manual_input = _canonical_route_source_ownership()
+    resolver_sources, manual_input, design_constant = _canonical_route_source_ownership()
     return CalculationRouteSourceOwnershipCatalogue(
         resolver_sources=resolver_sources,
         manual_input=manual_input,
+        design_constant=design_constant,
     )
 
 
@@ -387,6 +442,7 @@ class LiveSourceConnectivityProofAuthority:
 
 
 __all__ = [
+    "CalculationRouteDesignConstantSourceOwnership",
     "CalculationRouteManualSourceOwnership",
     "CalculationRouteResolverSourceOwnership",
     "CalculationRouteSourceOwnershipCatalogue",

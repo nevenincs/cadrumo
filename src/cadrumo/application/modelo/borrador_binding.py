@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, BindingSourceKind, CalculationSourceLineageRole, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry.authority import bundled_authority
@@ -78,7 +79,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
 
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     caller_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)

@@ -66,6 +66,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
 from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
+from ...core.identity import ContentDigest
 from ...core.time import now
 from ...domain.iva import EUMemberState, IvaTerritorialScope
 from .classification_assembly import DeclaredFact
@@ -192,7 +193,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    counterparty_key: str = Field(min_length=_COUNTERPARTY_KEY_LENGTH, max_length=_COUNTERPARTY_KEY_LENGTH)
+    counterparty_key: ContentDigest
     canonical_tax_identifier: str = Field(min_length=1)
     territorial_scope: IvaTerritorialScope | None = None
     identification_state: EUMemberState | None = None
@@ -365,7 +366,7 @@ class CounterpartyEstablishmentContradiction(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    counterparty_key: str = Field(min_length=_COUNTERPARTY_KEY_LENGTH, max_length=_COUNTERPARTY_KEY_LENGTH)
+    counterparty_key: ContentDigest
     canonical_tax_identifier: str = Field(min_length=1)
     confirmed_scope: IvaTerritorialScope
     evidenced_scope: IvaTerritorialScope

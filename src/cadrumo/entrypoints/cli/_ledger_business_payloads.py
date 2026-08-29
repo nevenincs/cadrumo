@@ -28,7 +28,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, Field, NonNegativeInt
 
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
@@ -89,7 +89,7 @@ class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    component_count: int = Field(ge=0)
+    component_count: NonNegativeInt
     evidence_count: int = Field(ge=1)
     complete: bool
 

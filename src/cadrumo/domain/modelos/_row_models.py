@@ -53,6 +53,7 @@ from ...core import (
 )
 from ...core.errors import CadrumoError
 from ...core.identity import nif_iva_format_for_country
+from ...core.unit_proportion import UnitProportion
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -777,9 +778,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
     source_id: _RequiredNameStr
     tipo_renta_code: _M210OfficialTipoRentaCode
     importe: Decimal = Field(ge=Decimal("0"), description="Non-negative individual renta amount in EUR")
-    tipo_gravamen: Decimal = Field(
-        ge=Decimal("0"),
-        le=Decimal("1"),
+    tipo_gravamen: UnitProportion = Field(
         description="Applicable tax-rate fraction (for example, 0.24 for 24%)",
     )
     pagador_mode: M210PayerMode

@@ -23,7 +23,6 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
@@ -34,7 +33,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from .errors import SubmissionValidationError
 
 _SUBMISSION_ID_LENGTH = 16
@@ -111,8 +110,8 @@ class SubmissionAttempt(BaseModel):
     model_config = _STRICT_FROZEN
 
     attempt_id: SubmissionAttemptId
-    started_at: datetime
-    ended_at: datetime
+    started_at: UtcInstant
+    ended_at: UtcInstant
     status: SubmissionStatus
     error_code: str | None = None
     error_message: str | None = None
@@ -192,8 +191,8 @@ class ModeloPresentado(BaseModel):
     status: SubmissionStatus
     justificante_csv: AeatCsv | None = None
     justificante_pdf_path: Path | None = None
-    submitted_at: datetime
-    acknowledged_at: datetime | None = None
+    submitted_at: UtcInstant
+    acknowledged_at: UtcInstant | None = None
     attempts: tuple[SubmissionAttempt, ...] = Field(min_length=1)
 
     @field_validator("modelo", mode="before")

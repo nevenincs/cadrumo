@@ -19,8 +19,10 @@ from ...core.external_constants import (
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.unit_proportion import is_unit_proportion
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
@@ -188,7 +190,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
         if self.business_classification is BusinessClassification.MIXED:
             if self.business_pct is None:
                 raise TransactionValidationError("business_pct is required when classification is MIXED")
-            if not Decimal("0") <= self.business_pct <= Decimal("1"):
+            if not is_unit_proportion(self.business_pct):
                 raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
             return self
         if self.business_pct is not None:
@@ -641,7 +643,7 @@ class LedgerRemovalBlocker(BaseModel):
     calculation_revision_id: CalculationRevisionId
     revision_state: str = Field(min_length=1)
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
 
 

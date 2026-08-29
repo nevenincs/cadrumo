@@ -20,6 +20,7 @@ from ....core.external_constants import (
     XLSM_EXTENSION,
     XLSX_EXTENSION,
 )
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
@@ -113,7 +114,7 @@ class RegistrySnapshotRef(RegistryModel):
 
     modelo: ModeloId
     revision_id: RevisionId
-    modelo_year: int = Field(ge=2000, le=2099)
+    modelo_year: FilingYear
     period: RegistryPeriodCode
 
 

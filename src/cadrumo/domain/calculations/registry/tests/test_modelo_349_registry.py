@@ -603,7 +603,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
 
     submitted_profile = profiles_by_id["modelo-349-submitted-file"]
     assert submitted_profile.surface == "export_record"
-    assert submitted_profile.parser == "cadrumo.domain.calculations.registry.parse_export_payload"
+    assert submitted_profile.parser == "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
     assert submitted_profile.confidence == "strict"
     declarant_casilla_ids = {casilla.id for casilla in revision.casillas if casilla.section[0] == "declarante"}
     assert {t.casilla_id for t in submitted_profile.target_casillas} == declarant_casilla_ids

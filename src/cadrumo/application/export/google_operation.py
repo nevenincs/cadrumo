@@ -28,6 +28,7 @@ from ...core import (
     ServiceCapability,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority
@@ -110,7 +111,7 @@ class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     modelo: ModeloId
-    filing_year: int = Field(ge=1980, le=2200)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=32)
     prefill_relations: bool = False
     dry_run: bool = False

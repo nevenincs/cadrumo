@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.calendar_shift import shift_by_calendar_years
+from ...core.filing_year import FilingYear
 from ...core.time import now, today_madrid
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -129,7 +130,7 @@ class OverviewExplain(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    year: int = Field(ge=1990, le=2200)
+    year: FilingYear
     applicable: bool
     verdict: ApplicabilityVerdict
     rationale: str = Field(min_length=1)

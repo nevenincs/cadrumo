@@ -18,6 +18,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ...core.identity import PrefixedContentDigest
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
@@ -59,7 +60,7 @@ class LegalHoldCaseSnapshot(BaseModel):
     profile_id: UUID
     open_case_ids: tuple[str, ...]
     observed_at: datetime
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @field_validator("open_case_ids")
     @classmethod

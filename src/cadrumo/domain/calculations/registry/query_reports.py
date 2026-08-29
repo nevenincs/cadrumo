@@ -33,11 +33,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Annotated, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import BindingSourceKind, CasillaId, Period, RegistrySelectorPeriodCode
+from ....core.filing_year import FilingYear
 from ....core.identity import AeatBoxNumber
 from .binding_selector_utils import BooleanBindingEncodedValue
 from .ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
@@ -85,7 +86,7 @@ class ModeloDescribeReport(BaseModel):
     jurisdiction: str
     revision: str
     revision_ids: tuple[str, ...]
-    filing_year: Annotated[int, Field(ge=1980, le=2200)] | None
+    filing_year: FilingYear | None
     filing_period: Period | None = None
     period: RegistrySelectorPeriodCode | None
     valid_from: date

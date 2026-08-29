@@ -84,7 +84,7 @@ class ProfileLabelHead(_CustodyDigestModel):
     label_self_digest: str
     source_witness: str
     previous_head_digest: str | None = None
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @field_validator(
         "label_content_digest",
@@ -199,7 +199,7 @@ class ProfileLabelHeadPendingAdvance(_CustodyDigestModel):
     expected_label: ProfileCustodyCapsuleLabel
     replacement_label: ProfileCustodyCapsuleLabel
     replacement_head: ProfileLabelHead
-    self_digest: str = Field(min_length=71, max_length=71)
+    self_digest: PrefixedContentDigest
 
     @field_validator("expected_head_digest")
     @classmethod

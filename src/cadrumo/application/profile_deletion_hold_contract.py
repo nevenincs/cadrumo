@@ -14,6 +14,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG
+from ..core.identity import PrefixedContentDigest
 from ..core.time import validate_utc_aware
 
 
@@ -26,7 +27,7 @@ class ProfileDeletionHoldOwnerProjection(BaseModel):
     profile_id: UUID
     blocks_local_deletion: bool
     source_record_id: str = Field(min_length=3, max_length=256)
-    source_record_digest: str = Field(min_length=71, max_length=71)
+    source_record_digest: PrefixedContentDigest
     assessed_at: datetime
 
     @field_validator("source_record_id")

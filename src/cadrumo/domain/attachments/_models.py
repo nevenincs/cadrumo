@@ -19,7 +19,7 @@ from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Hex64Str
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest
-from ...core.time import parse_iso_datetime, validate_utc_aware
+from ...core.time import UtcInstant, parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from .errors import AttachmentValidationError
 
@@ -135,7 +135,7 @@ class Attachment(BaseModel):
     sha256: ContentDigest
     mime_type: str = Field(min_length=1)
     bytes_size: int = Field(ge=0)
-    captured_at: datetime
+    captured_at: UtcInstant
     linked_transaction_ids: tuple[str, ...] = ()
     linked_invoice_ids: tuple[str, ...] = ()
     bucket_id: BucketId | None = None

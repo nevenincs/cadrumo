@@ -383,9 +383,7 @@ def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
 
     assert len(counterpart_kinds) == 4
     for kind in counterpart_kinds:
-        assert isinstance(kind, BindingSourceKind), (
-            f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
-        )
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
@@ -394,9 +392,7 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
     assert len(retenciones_kinds) == 4
     for kind in retenciones_kinds:
-        assert isinstance(kind, BindingSourceKind), (
-            f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
-        )
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:

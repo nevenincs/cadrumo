@@ -41,6 +41,7 @@ from ...core import (
     PeriodKind,
     regime_apportions_deduction,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -194,7 +195,7 @@ class RentaLedgerExpenseAggregation(
     :class:`~._models.LedgerAggregationResultBase`).
     """
 
-    profile_year: int = Field(ge=2000, le=2099)
+    profile_year: FilingYear
 
     @property
     def casilla_values(self) -> Mapping[CasillaId, Decimal]:

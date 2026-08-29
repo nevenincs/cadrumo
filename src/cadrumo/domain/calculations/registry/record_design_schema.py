@@ -165,6 +165,7 @@ def _auxiliary_header_constant(value: str | None) -> str | None:
         return None
     return _AUXILIARY_ENVELOPE_HEADER_CONSTANT_PREFIX_RE.sub("", value.strip()).strip()
 
+
 #: Slots AEAT footnotes rather than fills: the filing year and the two entidad
 #: desarrolladora identity positions. Modelo 390 writes the marker IN the
 #: Contenido cell ("Nota 2", "Nota 1"); Modelo 232 leaves the cell empty and
@@ -261,8 +262,7 @@ def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]
             period_constant = _auxiliary_header_constant(value)
             if period_constant is None or not _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(period_constant):
                 raise ValueError(
-                    "auxiliary envelope header does not declare a period token or range at its period "
-                    f"slot: {value!r}",
+                    f"auxiliary envelope header does not declare a period token or range at its period slot: {value!r}",
                 )
             continue
         if index in _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES:

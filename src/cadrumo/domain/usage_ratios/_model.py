@@ -24,6 +24,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.unit_proportion import is_unit_proportion
 from ..categories import (
     ProportionalityKind,
     SpendingCategory,
@@ -60,7 +61,7 @@ def validate_usage_ratio_bound(ratio: Decimal, *, label: str) -> Decimal:
     Raises:
         UsageRatioValidationError: When ``ratio`` falls outside ``[0, 1]``.
     """
-    if not (Decimal("0") <= ratio <= Decimal("1")):
+    if not is_unit_proportion(ratio):
         raise UsageRatioValidationError(f"usage ratio for {label!r} must be in [0, 1] (got {ratio})")
     return ratio
 

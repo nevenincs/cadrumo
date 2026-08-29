@@ -111,9 +111,7 @@ def test_temporal_coverage_expands_open_selectors_through_the_supported_horizon(
     # 2016-y-siguientes open -- and dictionary order yields the CLOSED one
     # first, so this test was exercising a bounded selector while its name and
     # docstring both claim it proves an OPEN selector expands to the horizon.
-    revision = next(
-        candidate for candidate in modelo.revisions.values() if candidate.period_selector.year_to is None
-    )
+    revision = next(candidate for candidate in modelo.revisions.values() if candidate.period_selector.year_to is None)
     # Compose the authority from the OPEN revision alone. The assertions below
     # compare every report row against this one revision's coordinates, which
     # is only meaningful when it is the only revision composed -- modelo 341's

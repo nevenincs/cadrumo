@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import (
     Field,
+    NonNegativeInt,
     model_validator,
 )
 
@@ -55,7 +56,7 @@ class NotificationSnapshotListingPayload(OutputSchema):
 
     snapshot_id: SnapshotId
     captured_at: datetime
-    row_count: int = Field(ge=0)
+    row_count: NonNegativeInt
 
 
 class NotificationsCaptureResult(OutputSchema):
@@ -71,7 +72,7 @@ class NotificationsCaptureResult(OutputSchema):
     snapshot_id: SnapshotId
     captured_at: datetime
     persisted_at: datetime
-    row_count: int = Field(ge=0)
+    row_count: NonNegativeInt
     source_url: str = Field(min_length=1)
 
 
@@ -84,7 +85,7 @@ class NotificationsListResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    count: int = Field(ge=0)
+    count: NonNegativeInt
     rows: list[NotificationSnapshotListingPayload]
 
 
@@ -102,7 +103,7 @@ class NotificationsViewResult(OutputSchema):
     snapshot_id: SnapshotId
     captured_at: datetime
     source_url: str = Field(min_length=1)
-    row_count: int = Field(ge=0)
+    row_count: NonNegativeInt
     rows: list[NotificationRowPayload]
 
 
@@ -120,7 +121,7 @@ class NotificationsLatestResult(OutputSchema):
     snapshot_id: SnapshotId | None
     captured_at: datetime | None = None
     source_url: str | None = None
-    row_count: int | None = Field(default=None, ge=0)
+    row_count: NonNegativeInt | None = None
 
 
 class SancionReadingPayload(OutputSchema):
@@ -233,7 +234,7 @@ class NotificationDocumentHistoryResult(OutputSchema):
     """Parsed notification documents held by this profile, without a total."""
 
     bucket_id: BucketId
-    count: int = Field(ge=0)
+    count: NonNegativeInt
     documents: list[NotificationDocumentHistoryEntry]
 
 

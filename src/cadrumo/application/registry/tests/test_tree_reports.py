@@ -104,6 +104,8 @@ def test_workbook_parity_detail_report_rejects_invalid_registry_ref_ids() -> Non
         field_name = next(iter(field_update))
         with pytest.raises(ValidationError, match=field_name):
             _workbook_parity_report(**field_update)
+
+
 _NEGATIVE_REVISION_COUNT_FIELDS = (
     "export_layout_count",
     "export_record_count",
@@ -146,6 +148,8 @@ def test_zero_is_accepted_as_a_real_inventory_count() -> None:
     assert report.deadline_window_count == 0
     assert report.relation_count == 0
     assert report.filing_schedule_count == 0
+
+
 _TREE_INVENTORY_COUNT_FIELDS = (
     "modelo_count",
     "revision_count",

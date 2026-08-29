@@ -82,6 +82,7 @@ from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.filing_year import FilingYear
 from ....core.resources import bundled_path
 from .errors import RegistryValidationError
 from .ids import ModeloId, RevisionId
@@ -308,7 +309,7 @@ class ManualWorkedExamplePayload(BundledOraclePayload):
     """
 
     modelo: ModeloId
-    filing_year: int = Field(ge=1979, le=2999)
+    filing_year: FilingYear
     source_kind: ExternalOracleCorpusValue
     scenario_id: str = Field(min_length=1, max_length=255)
     notes: str = Field(min_length=1, max_length=16384)
@@ -331,7 +332,7 @@ class RentaWebOpenReplayPayload(BundledOraclePayload):
     """
 
     modelo: ModeloId | None = None
-    filing_year: int | None = Field(default=None, ge=1979, le=2999)
+    filing_year: FilingYear | None = None
     source_kind: ExternalOracleCorpusValue | None = None
     scenario_id: str | None = Field(default=None, min_length=1, max_length=255)
     expected: Mapping[str, str]
@@ -362,7 +363,7 @@ class ExternalOracleEvidence(ExternalGroundingModel):
     corpus: ExternalOracleCorpus
     payload_name: str = Field(min_length=1, max_length=255)
     modelo: ModeloId
-    filing_year: int = Field(ge=1979, le=2999)
+    filing_year: FilingYear
     period: RegistrySelectorPeriodCode | None = None
     casilla_ids: tuple[CasillaId, ...]
 

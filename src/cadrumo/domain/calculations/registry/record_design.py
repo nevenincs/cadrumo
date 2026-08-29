@@ -3993,11 +3993,7 @@ def _apply_range_start_corrections(
         return sheets
     corrected: list[RecordDesignSheet] = []
     for sheet in sheets:
-        applicable = {
-            start: correction
-            for (name, start), correction in corrections.items()
-            if name == sheet.name
-        }
+        applicable = {start: correction for (name, start), correction in corrections.items() if name == sheet.name}
         if not applicable:
             corrected.append(sheet)
             continue

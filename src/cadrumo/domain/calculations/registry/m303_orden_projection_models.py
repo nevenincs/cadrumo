@@ -7,7 +7,9 @@ from decimal import Decimal
 
 from pydantic import Field, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
+from ....core.percentage import Percentage
 from ....domain.iva import (
     ActividadOrdenAnual,
     ActividadOrdenAnualId,
@@ -51,7 +53,7 @@ class ActividadOrdenAnualRef(RegistryModel):
     """Immutable reference to one source-pinned annual-Orden activity row."""
 
     orden_id: ActividadOrdenAnualId
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
@@ -60,7 +62,7 @@ class ActividadOrdenAnualRef(RegistryModel):
 class M303AnnualOrdenGeneratedSource(RegistryModel):
     """One source-level invariant emitted by the annual Orden generator."""
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     source_ref: SourceRefId
     source_content_digest: ContentDigest
     activity_table_count: int = Field(ge=1)
@@ -71,7 +73,7 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     non_agricultural_ingreso_a_cuenta_row_count: int = Field(ge=1)
     seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
     seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
-    difficult_justification_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("100"))
+    difficult_justification_pct: Percentage
     lorca_2022_reduction_pct: Decimal | None = None
 
     @model_validator(mode="after")
@@ -114,7 +116,7 @@ class M303AnnualOrdenCompilation(RegistryModel):
 class M303AnnualOrdenProjection(RegistryModel):
     """Immutable taxonomy for one Modelo 303 year/revision/source coordinate."""
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
@@ -251,7 +253,7 @@ class M303AnnualOrdenAuthority(RegistryModel):
 class M303AnnualOrdenSnapshot(RegistryModel):
     """The source-bound annual Orden resolved for one filing snapshot."""
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
@@ -352,7 +354,7 @@ def _validate_snapshot_lorca_2022_reduction(snapshot: M303AnnualOrdenSnapshot) -
 class M303RegimenSimplificadoSnapshot(RegistryModel):
     """One resolved M303 annual-Orden, scope, and record-design coordinate."""
 
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     registry_revision_id: RevisionId
     scope_decision: M303RegimenSimplificadoScopeDecision
     orden: M303AnnualOrdenSnapshot

@@ -41,6 +41,7 @@ from ....core import (
     RegistryPeriodCode,
 )
 from ....core.aggregation import BindingSourceKind
+from ....core.filing_year import FilingYear
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -287,7 +288,7 @@ class RegistryModeloObservation(BaseModel):
 
     modelo: ModeloId
     filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     #: A registry coordinate, not necessarily a period a taxpayer files in:
     #: a non-filing modelo such as the censal 036 is addressed by its event
     #: (alta, modificacion, baja) rather than by a calendar period. The

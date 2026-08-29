@@ -14,6 +14,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, RegistrySelectorPeriodCode
+from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -52,7 +53,7 @@ class TemporalRevisionCoverage(BaseModel):
 
     modelo: ModeloId
     revision: RevisionId
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: RegistrySelectorPeriodCode
     selected_revision: RevisionId | None = None
     declared_authority_grade: RegistryAuthorityGrade | None = None

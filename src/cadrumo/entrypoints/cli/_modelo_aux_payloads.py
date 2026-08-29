@@ -16,9 +16,8 @@ catalogue metadata; this module only pins CLI transport shapes.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ...application.evidence import BundleVerificationState
 from ...application.workflow.run_models import (
@@ -29,6 +28,8 @@ from ...application.workflow.run_models import (
 )
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
+from ...core.filing_year import FilingYear
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...domain.buckets import (
@@ -58,7 +59,7 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     """
 
     clave: RetencionClave
-    percepcion_count: int = Field(ge=0)
+    percepcion_count: NonNegativeInt
     percibido_total: NonNegativeDecimalWireText
     retencion_total: NonNegativeDecimalWireText
 
@@ -75,7 +76,7 @@ class EvidenceRecordRefPayload(OutputSchema):
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
     content_sha256: ContentDigest
-    payload_size_bytes: int = Field(ge=0)
+    payload_size_bytes: NonNegativeInt
 
 
 class EvidenceBundleCheckFindingPayload(OutputSchema):
@@ -125,7 +126,7 @@ class ModeloAuditExportResult(OutputSchema):
     bundle_id: Hex64Str
     output: str = Field(min_length=1)
     verification_state: BundleVerificationState
-    records: int = Field(ge=0)
+    records: NonNegativeInt
 
 
 class WorkUnitHistoryEventPayload(OutputSchema):
@@ -180,11 +181,7 @@ class WorkflowRunPayload(WorkflowRunSummaryPayload):
     started_at: str
     obligation: WorkflowObligationFacts | None
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     summary_details: WorkflowStepDetails | None = None
     site_health_alert: SiteHealthAlert | None = None
     summary: str
@@ -222,11 +219,7 @@ class WorkRunResult(OutputSchema):
     obligation_closes_on: str | None = None
     obligation_status: str | None = None
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     site_health_stage: str | None = None
     site_health_state: str | None = None
     site_health_observed_at: str | None = None
@@ -247,11 +240,7 @@ class WorkRunDetailsResult(OutputSchema):
     operation: str = "modelo.work.run_details"
     run_id: str
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     summary_detail_kind: str | None = None
     summary_detail_facts: dict[str, str | int | bool | list[str] | None] | None = None
 
@@ -301,19 +290,19 @@ class ModeloDescribeResult(OutputSchema):
     cadence: str
     jurisdiction: str
     revision: str
-    filing_year: Annotated[int, Field(ge=1980, le=2200)] | None = None
+    filing_year: FilingYear | None = None
     filing_period: Period | None = None
     period: str | None = None
     revision_ids: list[str]
     periods: list[str]
     valid_from: date
     valid_to: date | None = None
-    casilla_count: int = Field(ge=0)
-    manual_casilla_count: int = Field(ge=0)
-    bound_casilla_count: int = Field(ge=0)
-    computed_casilla_count: int = Field(ge=0)
-    binding_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
+    casilla_count: NonNegativeInt
+    manual_casilla_count: NonNegativeInt
+    bound_casilla_count: NonNegativeInt
+    computed_casilla_count: NonNegativeInt
+    binding_count: NonNegativeInt
+    formula_count: NonNegativeInt
     legal_refs: list[LegalRefId] = Field(default_factory=list)
     source_refs: list[SourceRefId] = Field(default_factory=list)
 

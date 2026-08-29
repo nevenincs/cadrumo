@@ -57,6 +57,7 @@ from ...core.corpus_manifest import (
 )
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import now as _utc_now
 from ...domain.modelos import WorkUnit
@@ -122,7 +123,7 @@ class ReviewPackageManifest(BaseModel):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1990, le=2200)
+    filing_year: FilingYear
     period: Period
     revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool

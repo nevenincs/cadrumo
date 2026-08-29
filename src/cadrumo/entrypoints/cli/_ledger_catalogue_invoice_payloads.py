@@ -22,9 +22,10 @@ from datetime import date
 from decimal import Decimal
 from typing import Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, NonNegativeInt, model_validator
 
 from ...core import IntracomOperationType
+from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
 from ...domain.invoices import PaymentStatus, validate_country_code, validate_iva_number
@@ -54,7 +55,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     issued_at: date
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: TaxIdIdentityToken | None = None
-    counterparty_country: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    counterparty_country: CountryCodeAlpha2
     base_total: Decimal = Field(ge=Decimal("0"))
     iva_total: Decimal = Field(ge=Decimal("0"))
     grand_total: Decimal = Field(ge=Decimal("0"))
@@ -160,7 +161,7 @@ class CatalogueInvoiceListResult(OutputSchema):
 
     bucket_id: BucketId
     rows: list[CatalogueInvoiceRecordPayload]
-    count: int = Field(ge=0)
+    count: NonNegativeInt
 
 
 class BulkInvoiceImportRowFailurePayload(OutputSchema):
@@ -184,9 +185,9 @@ class CatalogueInvoiceImportResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    rows: int = Field(ge=0)
-    created: int = Field(ge=0)
-    skipped_duplicate: int = Field(ge=0)
+    rows: NonNegativeInt
+    created: NonNegativeInt
+    skipped_duplicate: NonNegativeInt
     refused: list[BulkInvoiceImportRowFailurePayload] = []
     created_invoice_ids: list[InvoiceId] = Field(default_factory=list)
 

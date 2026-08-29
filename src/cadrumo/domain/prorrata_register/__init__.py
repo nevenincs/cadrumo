@@ -64,6 +64,7 @@ from ...core import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
 from ...core.errors import CadrumoError as _CadrumoError
+from ...core.filing_year import FilingYear
 from ._protocols import ProrrataRegisterRepositoryProtocol
 
 
@@ -190,7 +191,7 @@ class ProrrataActivityRow(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
+    ejercicio: FilingYear
     activity_id: str = Field(min_length=1, max_length=128)
     slot: int = Field(ge=1, le=5)
     cnae_code: str = Field(min_length=3, max_length=4, pattern=r"^\d{3,4}$")
@@ -268,7 +269,7 @@ class ProrrataRegisterEntry(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
+    ejercicio: FilingYear
     regime: _ProrrataRegisterRegime
     especial_transition: ProrrataEspecialTransitionEvidence | None
     sector_id: str | None = Field(default=None, min_length=1, max_length=64)

@@ -36,6 +36,7 @@ from .schema_surfaces import RelationDefinition
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation
+from ....core.filing_year import FilingYear
 
 __all__ = [
     "RegistryFoldRequirement",
@@ -89,7 +90,7 @@ class RegistryFoldRequirement(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: ModeloId
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)

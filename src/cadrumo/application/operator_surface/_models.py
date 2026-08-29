@@ -28,10 +28,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...core import BindingSourceKind, NoRecoveryOutcome
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
+from ...core.identifier_grammar import NamespacedId
 from ...core.logging import LogExtra
 from ..operator_actions import ActionReference
-
-_NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 
 class RootSurfaceName(StrEnum):
@@ -243,9 +242,9 @@ class ManifestActionProfile(BaseModel):
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-    subject_leaf_key: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    scenario_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    subject_leaf_key: NamespacedId
+    condition_id: NamespacedId
+    scenario_id: NamespacedId
     action: ActionReference | None = None
     no_recovery_outcome: NoRecoveryOutcome | None = None
 

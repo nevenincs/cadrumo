@@ -20,6 +20,7 @@ from ...core import (
     Period,
     PriorDomiciliationElection,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.calculations.registry.ids import (
@@ -136,7 +137,7 @@ class FilingExportConformanceVectorEvidence(BaseModel):
 
     authority_id: _Token
     coordinate: FilingExportProofCoordinate
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     mechanism_source_ref: _Token
     mechanism_source_sha256: ContentDigest
@@ -155,7 +156,7 @@ class FilingExportConformanceRenderInputs(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     coordinate: FilingExportProofCoordinate
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     draft: ModeloDraft
     producer_snapshot: FilingProducerSnapshot

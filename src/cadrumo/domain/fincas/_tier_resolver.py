@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.logging import get_logger
+from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId
 from ._enums import ReduccionTier, UseType
 from ._models import Arrendamiento, Finca
@@ -107,8 +108,8 @@ class TierResolution(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     tier: ReduccionTier
-    reduccion_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
-    qualifying_share: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    reduccion_pct: UnitProportion
+    qualifying_share: UnitProportion
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 

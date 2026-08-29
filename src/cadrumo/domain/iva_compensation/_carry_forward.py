@@ -11,7 +11,6 @@ these pure pieces to persistence live in the application layer.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -19,7 +18,9 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IvaCompensationStateProvenance, Period, PeriodKind, StandardPeriodCode
+from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
+from ...core.time import UtcInstant
 from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -66,7 +67,7 @@ class IvaCompensationPeriodState(BaseModel):
             "or live-history consumers as if it identified the subject."
         ),
     )
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     provenance: IvaCompensationStateProvenance = Field(
         description=(
@@ -102,7 +103,7 @@ class IvaCompensationPeriodState(BaseModel):
             "the same literal. Provenance now has its own typed field."
         ),
     )
-    presented_at: datetime
+    presented_at: UtcInstant
     prior_pending_amount: Decimal | None = None
     applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     pending_for_later_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -165,7 +166,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
             ":class:`IvaCompensationPeriodState`)."
         ),
     )
-    source_filing_year: int = Field(ge=2000, le=2099)
+    source_filing_year: FilingYear
     source_period: Period
     generated_amount: Decimal = Field(ge=_ZERO)
     applied_amount: Decimal = Field(ge=_ZERO)
@@ -188,7 +189,7 @@ class IvaCompensationCarryForwardReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    as_of_year: int = Field(ge=2000, le=2099)
+    as_of_year: FilingYear
     lots: tuple[IvaCompensationCarryForwardLot, ...]
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
 
@@ -342,7 +343,7 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     last_period_amount: Decimal = Field(ge=_ZERO)
     generated_not_in_last_amount: Decimal = Field(ge=_ZERO)
     total_year_remaining_amount: Decimal = Field(ge=_ZERO)

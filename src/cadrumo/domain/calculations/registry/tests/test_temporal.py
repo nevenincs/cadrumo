@@ -242,17 +242,30 @@ def test_revision_validation_accepts_disjoint_windows_with_shared_period_selecto
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[4]
 
-#: Production modules sanctioned to pass ``revision_id`` INTO ``select_revision``.
-#: Both do so as a narrowing assertion alongside the law-determined
-#: ``filing_year``/``period`` axes, never as the sole selector: ``_snapshot`` is
-#: the resolver internal that funnels every snapshot, and ``work_addressing``
-#: is the creation-time assertion path that accepts an explicit ``--revision``
-#: only when it equals the law-determined pick (per the
-#: aeat-registry-authority-flow discipline).
+#: The ONE production module sanctioned to pass ``revision_id`` INTO
+#: ``select_revision``. ``_snapshot_internals`` is the resolver internal that
+#: funnels every snapshot, and it passes the id as a narrowing assertion
+#: alongside the law-determined ``filing_year``/``period`` axes, never as the
+#: sole selector: ``select_revision`` resolves from the axes and then refuses on
+#: ``revision.id != revision_id``.
+#:
+#: THIS SET IS KEYED BY PATH, so a relocation invalidates it silently in BOTH
+#: directions, and it has, twice. The snapshot resolver was ``_snapshot.py``, was
+#: promoted to ``snapshot.py``, and then had ``_build_validated_snapshot`` split
+#: into ``_snapshot_internals.py`` -- the moved call then read as a brand-new
+#: unsanctioned injection while the entry left behind defended a file with no
+#: such call in it. Separately, ``application/modelo/work_addressing.py`` was
+#: sanctioned here and has since stopped needing it: that path no longer feeds
+#: any id into resolution, taking ONE
+#: :class:`RegistryAuthorityCapture` and asserting both the requested and stored
+#: axes against it in ``assert_work_target_revision``. That is strictly stronger
+#: than a narrowing argument, so the entry was dropped rather than re-pointed --
+#: a sanction outliving its need is standing permission for whatever gets written
+#: into that path next. The liveness test below is what makes both halves fail
+#: instead of rotting quietly.
 _SANCTIONED_REVISION_ID_SITES = frozenset(
     {
-        "domain/calculations/registry/snapshot.py",
-        "application/modelo/work_addressing.py",
+        "domain/calculations/registry/_snapshot_internals.py",
     },
 )
 
@@ -333,6 +346,26 @@ def test_every_production_select_revision_call_is_law_determined() -> None:
         "new production site(s) pass revision_id into select_revision resolution; prove they "
         "only assert-equal against the law-determined pick (never inject) and, if so, enroll "
         f"them in _SANCTIONED_REVISION_ID_SITES: {unsanctioned}"
+    )
+
+
+def test_every_sanctioned_revision_id_site_still_passes_a_revision_id() -> None:
+    """A sanction that no longer names a real site is slack, not permission.
+
+    The set is keyed by PATH, so a rename or a module split invalidates an entry
+    without any error: the file simply stops containing the call it was trusted
+    for. The gate above only measures the direction where a call appears somewhere
+    UNSANCTIONED. This measures the other direction, so a stale entry cannot sit
+    there quietly pre-authorising whatever is written into that path next.
+    """
+    sites_with_revision_id = {
+        relpath for relpath, _lineno, keywords in _production_select_revision_calls() if "revision_id" in keywords
+    }
+    stale = sorted(_SANCTIONED_REVISION_ID_SITES - sites_with_revision_id)
+
+    assert not stale, (
+        "sanctioned select_revision site(s) no longer pass a revision_id; the call was "
+        f"renamed, moved or removed, so re-point or drop the entry: {stale}"
     )
 
 

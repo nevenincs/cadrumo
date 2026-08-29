@@ -15,15 +15,17 @@ free of the ledger-read dependency, per the hexagonal boundary.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId
+from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
+from ...core.time import UtcInstant
+from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 
 
@@ -62,7 +64,7 @@ class LedgerFilingSnapshot(BaseModel):
 
     rows: tuple[LedgerRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
-    captured_at: datetime
+    captured_at: UtcInstant
 
 
 class LedgerFilingStalenessVerdict(BaseModel):
@@ -163,14 +165,14 @@ class LedgerEvidenceRow(BaseModel):
     iva_category: str | None = None
     category_id: str | None = None
     irpf_category: str | None = None
-    source_jurisdiction: str | None = Field(default=None, min_length=2, max_length=2)
+    source_jurisdiction: CountryCodeAlpha2 | None = None
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
     m210_gross_income_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    m210_applicable_rate: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    m210_applicable_rate: UnitProportion | None = None
     m210_payer_mode: str | None = None
     m210_payer_id: str | None = None
     m210_asset_or_right_id: str | None = None
-    counterparty_country: str | None = Field(default=None, min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2 | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     lifecycle_state: str = Field(min_length=1)
@@ -243,7 +245,7 @@ class LedgerFilingEvidence(BaseModel):
     snapshot_fingerprint: SnapshotId
     rows: tuple[LedgerEvidenceRow, ...] = ()
     manual_entries: tuple[ManualFactBasisEntry, ...] = ()
-    captured_at: datetime
+    captured_at: UtcInstant
 
 
 __all__ = [

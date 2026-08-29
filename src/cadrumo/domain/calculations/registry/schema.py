@@ -168,6 +168,7 @@ __all__ = [
     "SupportedFilingYearsCatalogue",
 ]
 
+from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .modelo_localization import resolve_modelo_localization
 from .schema_base import (
@@ -479,7 +480,7 @@ class DeadlineWindowDefinition(RegistryModel):
     """Declare the applicable opening, closing, and payment dates for a filing."""
 
     id: DeadlineWindowId
-    filing_year: int = Field(ge=1900, le=2999)
+    filing_year: FilingYear
     period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
     opens_on: date
@@ -1424,7 +1425,7 @@ class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
     filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     # Accepts normal period codes and declared event-period names; upstream
     # PeriodSelector + ModeloScheduleDefinition constrain the token set.
     period: RegistrySelectorPeriodCode

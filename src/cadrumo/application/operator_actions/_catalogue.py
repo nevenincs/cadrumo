@@ -16,10 +16,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionArgumentSource
+from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
-
-_NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
-_FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
 
 
 class ActionArgumentBindingSpecification(BaseModel):
@@ -33,15 +31,10 @@ class ActionArgumentBindingSpecification(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    argument_name: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=120)
     source: ActionArgumentSource
-    source_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
-    source_evidence_id: str | None = Field(
-        default=None,
-        pattern=_NAMESPACED_ID_PATTERN,
-        min_length=3,
-        max_length=160,
-    )
+    source_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_evidence_id: NamespacedId | None = None
 
     @model_validator(mode="after")
     def _validate_evidence_requirement(self) -> ActionArgumentBindingSpecification:
@@ -59,8 +52,8 @@ class ActionCatalogueEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    target_command_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    action_id: NamespacedId
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
     argument_specifications: tuple[ActionArgumentBindingSpecification, ...] = ()
 
     @field_validator("argument_specifications")

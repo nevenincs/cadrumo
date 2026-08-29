@@ -2702,9 +2702,7 @@ class RetencionesAggregationSourceResolver:
                 "source_kind": "retenciones_aggregation",
             }
             if is_m111:
-                refusal_context["attestation_period"] = (
-                    f"{context.filing_year}:{context.period.registry_token}"
-                )
+                refusal_context["attestation_period"] = f"{context.filing_year}:{context.period.registry_token}"
             raise AggregationValidationError(
                 message,
                 context=refusal_context,

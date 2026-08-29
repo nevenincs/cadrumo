@@ -31,6 +31,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...core import HEX_PATTERN_64, Period
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 
@@ -49,7 +50,7 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1990, le=2200)
+    filing_year: FilingYear
     period: Period
     revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool
@@ -81,7 +82,7 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1990, le=2200)
+    filing_year: FilingYear
     period: Period
     revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool

@@ -96,6 +96,7 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     # was prepended to this layout: index 0 became the envelope while casilla 03
     # still lives on the data page, which is what this tripwire is about.
     assert record.record_type == "page_1"
+
     # A field offset is RECORD-relative, so it must be rebased onto the record's
     # own start in the payload. Slicing the file at field.offset - 1 silently
     # assumed this record opens the file, which stopped being true the moment an
@@ -105,9 +106,7 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     def _record_extent(candidate: object) -> int:
         return max(item.offset - 1 + item.length for item in candidate.fields)
 
-    record_start = sum(
-        _record_extent(earlier) for earlier in layout.records if earlier.order < record.order
-    )
+    record_start = sum(_record_extent(earlier) for earlier in layout.records if earlier.order < record.order)
     start = record_start + field.offset - 1
     end = start + field.length
     original = payload[start:end]
@@ -126,9 +125,7 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     # context and survives translation.
     with pytest.raises(FilingExportError) as refusal:
         _verify_written_export(draft, file_path=output_path, schema_provider=provider)
-    assert refusal.value.translated_message == (
-        "application.filing.export.errors.post_write_verification_refused"
-    )
+    assert refusal.value.translated_message == ("application.filing.export.errors.post_write_verification_refused")
     assert refusal.value.context["mismatched_casilla_ids"] == ("03",)
 
     assert output_path.read_bytes() != payload

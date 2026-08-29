@@ -52,12 +52,12 @@ from pydantic import (
 from ._action_argument_resolution import ActionArgumentResolution
 from ._operator_action_enums import ActionArgumentStatus
 from ._precondition_action_invariants import (
-    FIELD_KEY_PATTERN,
     PreconditionActionIdentity,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
 from .errors import CadrumoError
+from .identifier_grammar import FIELD_KEY_PATTERN
 from .logging import get_logger
 from .output_rendering import jsonable_output_payload
 from .redaction import redact_structured_for_cli_output

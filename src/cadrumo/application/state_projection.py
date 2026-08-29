@@ -94,6 +94,7 @@ from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Peri
 from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
+from ..core.filing_year import FilingYear
 from ..core.hashing import content_hash_hex
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -388,7 +389,7 @@ class ModeloReadinessRequest(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
+    filing_year: FilingYear
     period: Period | None = None
 
 
@@ -641,7 +642,7 @@ class ProjectionModeloReadiness(BaseModel):
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: int = Field(ge=2000, le=2100)
+    filing_year: FilingYear
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     profile_ready: bool

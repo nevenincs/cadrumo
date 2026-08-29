@@ -10,8 +10,10 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import RECORD_DESIGN_EPOCH_PATTERN, STRICT_FROZEN_CONFIG, CasillaId, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
+from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
 from .errors import ModeloValidationError
@@ -153,7 +155,7 @@ class M303DANA2024ReductionResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     eligible: bool
-    rate: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    rate: UnitProportion
     amount: Decimal = Field(ge=Decimal("0"))
     evidence_reference: FilingEvidenceReference
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -205,7 +207,7 @@ class M303RegimenSimplificadoCalculationResult(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     registry_revision_id: RevisionId
     period: Period
     orden_source_ref: SourceRefId

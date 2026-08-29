@@ -58,6 +58,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import CasillaId
 from ....core.remote_authority import first_aeat_host
+from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from .errors import RegistryValidationError
 from .ids import (
     CrossReferenceId,
@@ -426,7 +427,7 @@ class VerificationExpectationDefinition(RegistryModel):
     )
     tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue
-    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
+    min_coverage: Annotated[DecimalValue, Field(ge=UNIT_PROPORTION_MIN, le=UNIT_PROPORTION_MAX)]
     discrepancy_causes: tuple[DiscrepancyCauseValue, ...] = Field(min_length=1)
     legal_refs: LegalRefs
     source_refs: SourceRefs

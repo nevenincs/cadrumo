@@ -17,6 +17,7 @@ from ...core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
 from ...domain.calculations.registry.ids import (
     ApplicabilityRuleId,
@@ -262,7 +263,7 @@ class ModeloWorkspaceResolvedTargetV1(_WorkspaceModel):
 
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    filing_year: FilingYear
     period: Period
     law_selected_revision_id: RevisionId
     review_status: RevisionReviewStatus
@@ -936,7 +937,7 @@ class ModeloWorkspaceReadinessV1(_WorkspaceModel):
     profile_id: ProfileId
     modelo: ModeloCode
     revision_id: RevisionId
-    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    filing_year: FilingYear
     period: Period
     missing: Annotated[tuple[ModeloWorkspaceProfileRequirementV1, ...], Field(max_length=128)] = ()
     profile_ready: bool

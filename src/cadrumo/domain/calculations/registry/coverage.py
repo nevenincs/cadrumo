@@ -51,6 +51,7 @@ from typing import Literal
 from pydantic import Field, PrivateAttr, computed_field, model_validator
 
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, RevisionReviewStatus
+from ....core.filing_year import FilingYear
 from ._schema_family_coverage import (
     CoverageModel,
 )
@@ -119,7 +120,7 @@ class ModelLawCoverageLedger(CoverageModel):
 
     modelo: str
     revision: str
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: RegistrySelectorPeriodCode
     gates: tuple[EvidenceTierCoverageGate, ...]
     authority_scope: CoverageAuthorityScope = "filing"

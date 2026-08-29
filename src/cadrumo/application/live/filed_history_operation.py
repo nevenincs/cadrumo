@@ -19,6 +19,7 @@ from ...core import (
     RegisterScopingSignal,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
@@ -219,7 +220,7 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
     row_count: int = Field(ge=0)
     captured_count: int = Field(ge=0)
@@ -247,7 +248,7 @@ class FiledPeriodSelectionPublicRowV1(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     period: str = Field(min_length=1, max_length=8)
     raw_row_count: int = Field(ge=0)
     selected_count: int = Field(ge=0)

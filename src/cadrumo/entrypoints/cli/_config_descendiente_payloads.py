@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field, StringConstraints, field_validator, model_validator
+from pydantic import Field, NonNegativeInt, StringConstraints, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
@@ -61,7 +61,7 @@ class GuarderiaMonthSpendPayload(OutputSchema):
     """
 
     month: int = Field(ge=1, le=12)
-    amount_euros: int = Field(ge=0)
+    amount_euros: NonNegativeInt
 
 
 class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
@@ -72,7 +72,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     assigns, the same index ``descendiente remove`` addresses.
     """
 
-    index: int = Field(ge=0)
+    index: NonNegativeInt
     convive_con_contribuyente: bool
     custodia_compartida: bool
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
@@ -180,15 +180,15 @@ class ConfigProfileDescendienteAddResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente add``."""
 
     profile: str
-    added: int = Field(ge=0)
-    total: int = Field(ge=0)
+    added: NonNegativeInt
+    total: NonNegativeInt
 
 
 class ConfigProfileDescendienteListResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente list``."""
 
     profile: str
-    total: int = Field(ge=0)
+    total: NonNegativeInt
     descendientes: list[ProfileDescendientePayload] = []
 
 
@@ -196,5 +196,5 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente remove``."""
 
     profile: str
-    removed_index: int = Field(ge=0)
-    total: int = Field(ge=0)
+    removed_index: NonNegativeInt
+    total: NonNegativeInt

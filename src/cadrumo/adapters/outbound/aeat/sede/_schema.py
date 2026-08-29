@@ -76,6 +76,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
 from .....core.decimal import coerce_decimal_strict
+from .....core.filing_year import FilingYear
 from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId
 from .....core.time import UtcInstant
 from .errors import SedeValidationError
@@ -114,7 +115,7 @@ class Expediente(BaseModel):
 
     expediente_id: AeatExpedienteId
     modelo: str | None = Field(default=None, max_length=8)
-    ejercicio: int | None = Field(default=None, ge=2000, le=2099)
+    ejercicio: FilingYear | None = None
     category_path: tuple[str, ...] = Field(min_length=1)
     detail_url: AnyHttpUrl
     mode: Literal["read"] = "read"
@@ -312,7 +313,7 @@ class IvaCompensationWalletRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    generation_year: int = Field(ge=2000, le=2099)
+    generation_year: FilingYear
     generation_period: Period
     generated_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -335,7 +336,7 @@ class IvaCompensationWalletObservation(BaseModel):
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
     target_modelo: Literal[Modelo.M303] = Modelo.M303
-    target_year: int = Field(ge=2000, le=2099)
+    target_year: FilingYear
     target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()
     total_pending: Decimal = Field(ge=Decimal("0"))
@@ -434,7 +435,7 @@ class FiledDeclaracionObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: int = Field(ge=2000, le=2099)
+    ejercicio: FilingYear
     period: Period
     expediente_id: AeatExpedienteId
     status: str = Field(min_length=1, max_length=32)

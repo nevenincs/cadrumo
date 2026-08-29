@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors import CoreValidationError
+from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import bundled_authority
 
 if TYPE_CHECKING:
@@ -115,7 +116,7 @@ class EnrollmentYearObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     calculation_mode: bool
     produced_value_count: int = Field(ge=0, default=0)
     context_label: str = Field(max_length=128, default="")

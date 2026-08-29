@@ -77,7 +77,7 @@ class CarriedSecureObject(BaseModel):
     object_key: str = Field(min_length=1)
     classification: SensitivityClass
     schema_version: int = Field(ge=1)
-    written_at: datetime
+    written_at: UtcInstant
     payload_b64: str = Field(min_length=1)
 
     @field_validator("written_at")

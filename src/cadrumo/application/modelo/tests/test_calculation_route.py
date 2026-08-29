@@ -128,7 +128,9 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
 def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     # Selected by type, never by position: a second manual-stage pseudo-owner
     # now exists, so an index would silently test the wrong row.
-    manual = next(row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if isinstance(row, CalculationRouteManualOwnership))
+    manual = next(
+        row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if isinstance(row, CalculationRouteManualOwnership)
+    )
     invented_pseudo_owner = replace(manual)
     object.__setattr__(invented_pseudo_owner, "resolver_id", "second-manual-owner")
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
@@ -147,9 +149,7 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     # leave a duplicate id, so the refusal under test would never be reached.
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
-            tuple(
-                typed_manual_owner if row is manual else row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
-            ),
+            tuple(typed_manual_owner if row is manual else row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP),
         )
 
 

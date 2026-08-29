@@ -50,6 +50,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger
+from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..categories import SpendingCategory, resolve_category_profiles
 from ..iva import IvaCategory
 from ._enums import BusinessClassification
@@ -59,8 +60,6 @@ from .errors import LLMClassifierError, TransactionValidationError
 
 _logger = get_logger(__name__)
 
-_CONFIDENCE_MIN = Decimal("0")
-_CONFIDENCE_MAX = Decimal("1")
 _DEFAULT_TIMEOUT_SECONDS = 120.0
 _REASON_MAX_LENGTH = 2048
 
@@ -90,7 +89,7 @@ class LLMClassificationResponse(BaseModel):
     @classmethod
     def _check_confidence_range(cls, value: Decimal) -> Decimal:
         """Restrict confidence to the inclusive 0..1 range."""
-        if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+        if not is_unit_proportion(value):
             raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
         return value
 
@@ -103,7 +102,7 @@ class LLMClassificationResponse(BaseModel):
         non-regulated hint the operator confirms. ``None`` is the common case
         (BUSINESS / PERSONAL suggestions carry no percentage).
         """
-        if value is not None and not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+        if value is not None and not is_unit_proportion(value):
             raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
         return value
 
@@ -138,7 +137,7 @@ class LLMSplitChild(BaseModel):
     @classmethod
     def _check_proportion(cls, value: Decimal) -> Decimal:
         """Restrict each child proportion to the half-open (0, 1] range."""
-        if not (_CONFIDENCE_MIN < value <= _CONFIDENCE_MAX):
+        if not (UNIT_PROPORTION_MIN < value <= UNIT_PROPORTION_MAX):
             raise TransactionValidationError("each split child proportion must be within (0, 1]")
         return value
 
@@ -174,7 +173,7 @@ class LLMSplitResponse(BaseModel):
         if not value:
             raise TransactionValidationError("a split proposal must carry at least one child")
         total = sum((child.proportion for child in value), Decimal("0"))
-        if abs(total - _CONFIDENCE_MAX) > Decimal("0.01"):
+        if abs(total - UNIT_PROPORTION_MAX) > Decimal("0.01"):
             raise TransactionValidationError("split child proportions must sum to approximately 1.0")
         return value
 

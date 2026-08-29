@@ -6,10 +6,12 @@ from typing import Literal
 
 from pydantic import (
     Field,
+    NonNegativeInt,
     field_validator,
     model_validator,
 )
 
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     SnapshotId,
@@ -29,11 +31,11 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     """
 
     snapshot_id: SnapshotId
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: str
     captured_at: str
     source_url: str = Field(min_length=1, max_length=2048)
-    binding_count: int = Field(ge=0)
+    binding_count: NonNegativeInt
     state: Literal["active", "superseded", "discarded"]
 
     @field_validator("period")
@@ -56,7 +58,7 @@ class Borrador100ListResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    count: int = Field(ge=0)
+    count: NonNegativeInt
     rows: list[Borrador100SnapshotSummaryPayload]
 
     @model_validator(mode="after")
@@ -92,12 +94,12 @@ class Borrador100LatestResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     snapshot_id: SnapshotId | None
     captured_at: str | None = None
     period: str | None = None
     source_url: str | None = Field(default=None, min_length=1, max_length=2048)
-    binding_count: int | None = Field(default=None, ge=0)
+    binding_count: NonNegativeInt | None = None
     state: Literal["active"] | None = None
 
     @field_validator("period")

@@ -37,8 +37,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from ...adapters.outbound.llm import UsageRecorder
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -71,6 +72,9 @@ _LLM_PROVENANCE_PREFIX = "llm:"
 _MEAN_QUANTUM = Decimal("0.0001")
 
 
+LlmProviderName = Annotated[str, StringConstraints(min_length=1)]
+"""The LLM provider a diagnostics row is attributed to."""
+
 class LlmUsageCostProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.
 
@@ -81,7 +85,7 @@ class LlmUsageCostProviderMetrics(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: str = Field(min_length=1)
+    provider: LlmProviderName
     calls: int = Field(ge=0)
     cache_hits: int = Field(ge=0)
     input_tokens: int = Field(ge=0)
@@ -105,7 +109,7 @@ class LlmConfidenceProviderMetrics(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: str = Field(min_length=1)
+    provider: LlmProviderName
     classified_count: int = Field(ge=0)
     low_confidence_count: int = Field(ge=0)
     high_confidence_count: int = Field(ge=0)

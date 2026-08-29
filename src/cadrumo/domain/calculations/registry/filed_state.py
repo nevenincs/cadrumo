@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
+from ....core.filing_year import FilingYear
 from .bindings import CasillaObservation, RegistryModeloObservation
 from .errors import RegistryValidationError
 from .formula_runtime import RegistryCalculationResult
@@ -48,7 +49,7 @@ class RegistryFiledStateComparison(BaseModel):
     modelo: ModeloId
     revision: str = Field(min_length=1)
     filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: FilingPeriodCode
     status: Literal["satisfied", "failed"]
     compared_casilla_ids: tuple[CasillaId, ...]

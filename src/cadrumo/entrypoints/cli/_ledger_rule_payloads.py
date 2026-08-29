@@ -17,12 +17,14 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, model_validator
+from pydantic import NonNegativeInt, model_validator
 
+from ...application.ledger.llm_diagnostics import LlmProviderName
 from ...core import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
+from ...domain.transactions.classification_rule import RuleActor, RuleDescriptionPattern, RulePriority
 from ._decimal_wire import DecimalWireText
 
 
@@ -40,11 +42,11 @@ class ClassificationRulePayload(OutputSchema):
     """
 
     rule_id: Hex64Str
-    description_pattern: str = Field(min_length=1)
+    description_pattern: RuleDescriptionPattern
     classification: BusinessClassification
     category_id: str | None = None
-    priority: int = Field(ge=1)
-    actor: str = Field(min_length=1)
+    priority: RulePriority
+    actor: RuleActor
     created_at: datetime
 
     @model_validator(mode="after")
@@ -151,18 +153,18 @@ class LlmUsageCostProviderPayload(OutputSchema):
     (cache hits included); ``cost_estimate_usd`` is the summed estimate.
     """
 
-    provider: str = Field(min_length=1)
-    calls: int = Field(ge=0)
-    cache_hits: int = Field(ge=0)
+    provider: LlmProviderName
+    calls: NonNegativeInt
+    cache_hits: NonNegativeInt
     # unpriced_calls is unbounded here: the canonical LlmUsageCostProviderMetrics
     # (application/ledger/llm_diagnostics.py) now declares `Field(default=0, ge=0)`
     # itself, and this payload is built only from an already-validated instance of
     # it (entrypoints/cli/_ledger_rule_payloads.py's sole producer dumps a real
     # LlmUsageCostProviderMetrics), so restating the bound here would be redundant.
     unpriced_calls: int = 0
-    input_tokens: int = Field(ge=0)
-    output_tokens: int = Field(ge=0)
-    total_tokens: int = Field(ge=0)
+    input_tokens: NonNegativeInt
+    output_tokens: NonNegativeInt
+    total_tokens: NonNegativeInt
     # The canonical LlmUsageCostProviderMetrics declares this a plain Decimal with
     # no bound, so the transport asserts the decimal grammar only.
     cost_estimate_usd: DecimalWireText | None
@@ -178,11 +180,11 @@ class LlmConfidenceProviderPayload(OutputSchema):
     distribution buckets.
     """
 
-    provider: str = Field(min_length=1)
-    classified_count: int = Field(ge=0)
-    low_confidence_count: int = Field(ge=0)
-    high_confidence_count: int = Field(ge=0)
-    medium_confidence_count: int = Field(ge=0)
+    provider: LlmProviderName
+    classified_count: NonNegativeInt
+    low_confidence_count: NonNegativeInt
+    high_confidence_count: NonNegativeInt
+    medium_confidence_count: NonNegativeInt
     # Unbounded on purpose: the canonical LlmConfidenceProviderMetrics carries
     # these as `Decimal | None` with no range, so the transport mirrors that
     # rather than inventing a [0, 1] bound the contract does not state.
@@ -208,10 +210,10 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     until: str | None = None
     low_confidence_threshold: DecimalWireText
     usage_providers: list[LlmUsageCostProviderPayload]
-    total_calls: int = Field(ge=0)
-    total_cache_hits: int = Field(ge=0)
-    total_input_tokens: int = Field(ge=0)
-    total_output_tokens: int = Field(ge=0)
+    total_calls: NonNegativeInt
+    total_cache_hits: NonNegativeInt
+    total_input_tokens: NonNegativeInt
+    total_output_tokens: NonNegativeInt
     total_cost_estimate_usd: DecimalWireText | None
     # Unbounded for the same reason as LlmUsageCostProviderPayload.unpriced_calls
     # above: the canonical LlmDiagnosticsReport.total_unpriced_calls now carries
@@ -220,6 +222,6 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     # from an already-validated `LlmDiagnosticsReport` instance.
     total_unpriced_calls: int = 0
     confidence_providers: list[LlmConfidenceProviderPayload]
-    total_classified: int = Field(ge=0)
-    total_low_confidence: int = Field(ge=0)
+    total_classified: NonNegativeInt
+    total_low_confidence: NonNegativeInt
     has_data: bool

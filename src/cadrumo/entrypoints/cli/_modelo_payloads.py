@@ -23,7 +23,7 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, NonNegativeInt, field_validator, model_validator
 
 from ...application.aggregation import (
     PerModeloAggregationContributor,
@@ -47,6 +47,7 @@ from ...core import (
     RefundElection,
     ResultDisposition,
 )
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -410,7 +411,7 @@ class ModeloRecordPayload(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     period: Period
     filed_at: datetime
     filed_by: str = Field(min_length=1, max_length=500)
@@ -716,10 +717,10 @@ class WorkReviewPayload(OutputSchema):
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
     progress: ModeloWorkProgress
-    casilla_count: int = Field(ge=0)
+    casilla_count: NonNegativeInt
     findings: tuple[ModeloVerificationFinding, ...]
     blockers: tuple[BlockerRef, ...]
-    row_source_fingerprint_count: int = Field(ge=0)
+    row_source_fingerprint_count: NonNegativeInt
 
     @classmethod
     def from_review(cls, review: ModeloWorkReview) -> WorkReviewPayload:
@@ -913,7 +914,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     observation_key: str
     source_kind: ObservationSourceKind
     casilla_values: dict[CasillaId, DecimalWireText]
-    casilla_count: int = Field(ge=0)
+    casilla_count: NonNegativeInt
     captured_at: datetime
     captured_by: str = Field(min_length=1)
     official_evidence: Literal[False] = False
@@ -1180,9 +1181,9 @@ class ModeloHistoryResult(OutputSchema):
 
     operation: str = "modelo.history"
     modelo: str = Field(min_length=1)
-    year: int | None = Field(default=None, ge=2000, le=2099)
+    year: FilingYear | None = None
     period: str | None = Field(default=None, min_length=1)
-    count: int = Field(ge=0)
+    count: NonNegativeInt
     events: list[ModeloLifecycleEventPayload]
 
 
@@ -1363,9 +1364,9 @@ class ModeloAggregateResult(OutputSchema):
     modelo: str = Field(min_length=1, max_length=16)
     period: Period
     provider: PerModeloAggregationContributor
-    observation_count: int = Field(ge=0)
+    observation_count: NonNegativeInt
     source_kinds: list[BindingSourceKind] = Field(default_factory=list)
-    result_row_count: int = Field(ge=0)
+    result_row_count: NonNegativeInt
     clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
 
     @field_validator("provider", mode="before")

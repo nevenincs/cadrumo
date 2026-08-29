@@ -7,9 +7,10 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import Final, Literal, Self
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
 from ..calculations.registry.ids import RevisionId
@@ -68,7 +69,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     source_work_unit_id: WorkUnitId
     source_calculation_revision_id: CalculationRevisionId
     source_registry_revision_id: RevisionId
-    source_filing_year: int = Field(ge=2000, le=2099)
+    source_filing_year: FilingYear
     source_period: Period
     source_result_digest: ContentDigest
     # An exact empty tuple is meaningful when the immutable, filed 303 evidence
@@ -80,7 +81,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     target_modelo: Literal["390"] = "390"
     target_work_unit_id: WorkUnitId
     target_registry_revision_id: RevisionId
-    target_filing_year: int = Field(ge=2000, le=2099)
+    target_filing_year: FilingYear
     target_period: Period
     values: Mapping[CasillaId, Decimal]
     target_calculation_revision_id: CalculationRevisionId | None = None

@@ -22,7 +22,7 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, NonNegativeInt
 
 from ....application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ....core import Hex64Str
@@ -54,8 +54,8 @@ class UnreconciledProfileExportPayload(OutputSchema):
 class ProfileBundleReconcileResult(OutputSchema):
     """Outcome of one portable profile-bundle export reconciliation sweep."""
 
-    reconciled_count: int = Field(ge=0)
-    failed_count: int = Field(ge=0)
+    reconciled_count: NonNegativeInt
+    failed_count: NonNegativeInt
     reconciled: list[ReconciledProfileExportPayload]
     failed: list[UnreconciledProfileExportPayload]
 

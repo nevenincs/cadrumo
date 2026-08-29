@@ -36,7 +36,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
@@ -713,14 +713,14 @@ class LedgerStatusResult(OutputSchema):
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"
-    total_count: int = Field(ge=0)
-    active_count: int = Field(ge=0)
-    archived_count: int = Field(ge=0)
-    stashed_count: int = Field(ge=0)
+    total_count: NonNegativeInt
+    active_count: NonNegativeInt
+    archived_count: NonNegativeInt
+    stashed_count: NonNegativeInt
     split_count: int = Field(ge=0, default=0)
-    pending_review_count: int = Field(ge=0)
-    reviewed_count: int = Field(ge=0)
-    skipped_count: int = Field(ge=0)
+    pending_review_count: NonNegativeInt
+    reviewed_count: NonNegativeInt
+    skipped_count: NonNegativeInt
     period: Period | None = None
     checked_transaction_count: int = Field(default=0, ge=0)
     readiness_issue_count: int = Field(default=0, ge=0)
@@ -861,8 +861,8 @@ class LedgerExportPayload(OutputSchema):
     export_format: str
     media_type: str
     filename_extension: str
-    row_count: int = Field(ge=0)
-    byte_size: int = Field(ge=0)
+    row_count: NonNegativeInt
+    byte_size: NonNegativeInt
     sha256: SnapshotId
     fieldnames: list[str]
     rows: list[LedgerExportRowPayload]
@@ -896,9 +896,9 @@ class LedgerImportPayload(OutputSchema):
     advisories use the shared envelope ``notices`` channel.
     """
 
-    rows: int = Field(ge=0)
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
+    rows: NonNegativeInt
+    imported: NonNegativeInt
+    skipped: NonNegativeInt
     likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool

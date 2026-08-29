@@ -53,11 +53,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: comes from the weaker any-record fallback. Shrink this; never grow it.
 _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
     (
-        ('184', '2023-2024', 'Tipo 2 - Registro De Rentas De La'),  # 3-record layout
-        ('184', '2023-2024', 'Tipo 2 - Registro De Socio, Heredero,'),  # 3-record layout
-        ('184', '2025-y-siguientes', 'Tipo 2 - Registro De Rentas De La'),  # 3-record layout
-        ('184', '2025-y-siguientes', 'Tipo 2 - Registro De Socio, Heredero,'),  # 3-record layout
-        ('296', '2024-y-siguientes', 'Tipo 2 - Registro De Perceptor'),  # 5-record layout
+        ("184", "2023-2024", "Tipo 2 - Registro De Rentas De La"),  # 3-record layout
+        ("184", "2023-2024", "Tipo 2 - Registro De Socio, Heredero,"),  # 3-record layout
+        ("184", "2025-y-siguientes", "Tipo 2 - Registro De Rentas De La"),  # 3-record layout
+        ("184", "2025-y-siguientes", "Tipo 2 - Registro De Socio, Heredero,"),  # 3-record layout
+        ("296", "2024-y-siguientes", "Tipo 2 - Registro De Perceptor"),  # 5-record layout
     )
 )
 
@@ -124,7 +124,10 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                                 continue
                             if coverage._join_record(sheet, layout.records, constants) is not None:
                                 continue
-                            if layout.filing_envelope is not None and sheet.name == layout.filing_envelope.record_identity:
+                            if (
+                                layout.filing_envelope is not None
+                                and sheet.name == layout.filing_envelope.record_identity
+                            ):
                                 # The layout's declared filing ENVELOPE never
                                 # reaches the fallback either: the coverage
                                 # check decides it BEFORE the join and answers
@@ -159,8 +162,7 @@ def test_the_scan_reaches_the_real_registry() -> None:
     _, scanned, _ = _scan()
 
     assert scanned >= _MINIMUM_REVISIONS_SCANNED, (
-        f"only {scanned} revisions scanned; the snapshot walk collapsed and every "
-        "assertion in this module is vacuous"
+        f"only {scanned} revisions scanned; the snapshot walk collapsed and every assertion in this module is vacuous"
     )
 
 
@@ -251,6 +253,5 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
 
     assert not misfiled, (
         "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "
-        "their own branch rather than through the weak fallback, so they are not debt: "
-        + ", ".join(sorted(misfiled))
+        "their own branch rather than through the weak fallback, so they are not debt: " + ", ".join(sorted(misfiled))
     )

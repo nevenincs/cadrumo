@@ -648,6 +648,7 @@ def test_canonical_ownership_projection_refuses_partial_and_invented_rows() -> N
         CalculationRouteSourceOwnershipCatalogue(
             resolver_sources=catalogue.resolver_sources[:-1],
             manual_input=catalogue.manual_input,
+            design_constant=catalogue.design_constant,
         )
     with pytest.raises(ValidationError, match="exactly project"):
         CalculationRouteSourceOwnershipCatalogue(
@@ -656,6 +657,7 @@ def test_canonical_ownership_projection_refuses_partial_and_invented_rows() -> N
                 *catalogue.resolver_sources[1:],
             ),
             manual_input=catalogue.manual_input,
+            design_constant=catalogue.design_constant,
         )
 
 

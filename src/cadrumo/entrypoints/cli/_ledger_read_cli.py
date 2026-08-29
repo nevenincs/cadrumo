@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from datetime import date
-from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -46,6 +45,7 @@ from ...core.json_contract import (
     ResolvedActionArgument,
     strict_round_trip,
 )
+from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
@@ -143,7 +143,7 @@ def ledger_llm_diagnostics(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
-    if not Decimal("0") <= threshold <= Decimal("1"):
+    if not is_unit_proportion(threshold):
         raise _bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
     report = build_llm_diagnostics_report(since=since_date, until=until_date, low_confidence_threshold=threshold)
     result = _llm_diagnostics_result(report, since=since_date, until=until_date)

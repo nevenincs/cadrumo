@@ -32,23 +32,19 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis
 from ...core.hashing import content_hash_hex
+from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity import CalculationRevisionId, VerificationReportId
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from .errors import ModeloValidationError
+from .filing_text import ModeloActorLabel
 
-ModeloActorLabel = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
-]
 """Validated string identifying the operator who triggered a verification run.
 
 Strips surrounding whitespace; must be 1–64 characters after stripping.
 Used as ``verified_by`` on :class:`VerificationReport` to record the actor
 label fed into the content-addressed id derivation.
 """
-_LOCALE_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
-_FACT_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
 _PRESENTATION_FACT_TOKENS = frozenset(
     {
         "action",
@@ -68,7 +64,7 @@ _PRESENTATION_FACT_TOKENS = frozenset(
 )
 _FindingLocaleKey = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=_LOCALE_KEY_PATTERN),
+    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=NAMESPACED_ID_PATTERN),
 ]
 _FindingFactValue = str | int | bool | Decimal
 
@@ -191,7 +187,7 @@ class ModeloVerificationFinding(BaseModel):
         value: Mapping[str, _FindingFactValue],
     ) -> Mapping[str, _FindingFactValue]:
         """Admit deterministic typed facts, never prose or rendering instructions."""
-        if any(not re.fullmatch(_FACT_KEY_PATTERN, key) for key in value):
+        if any(not re.fullmatch(FIELD_KEY_PATTERN, key) for key in value):
             raise ValueError("verification finding fact keys must be stable identifiers")
         if any(_is_presentation_fact_key(key) for key in value):
             raise ValueError("verification finding facts cannot carry presentation semantics")
@@ -257,7 +253,7 @@ class VerificationReport(BaseModel):
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
     resolved_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
     missing_required_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
-    run_at: datetime
+    run_at: UtcInstant
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
 

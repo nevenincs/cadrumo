@@ -396,10 +396,7 @@ class IvaLedgerCandidate(BaseModel):
                     "exemption_article": self.exemption_article.value,
                 },
             )
-        if (
-            not is_deducible_flow(self.flow_direction)
-            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
-        ):
+        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise AggregationValidationError(
                     t("aggregation.iva_ledger.errors.output_facts_carry_deduction_authority"),

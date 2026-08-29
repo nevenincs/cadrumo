@@ -19,6 +19,8 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
+from ....core.percentage import Percentage
+from ....core.unit_proportion import UnitProportion
 
 
 class AssetRecordError(_CadrumoError):
@@ -137,14 +139,14 @@ class AssetRecord(BaseModel):
     acquisition_date: date
     cost_basis: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, gt=Decimal("0"))
-    iva_rate: Decimal = Field(default=_DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Percentage = _DEFAULT_IVA_GENERAL_RATE_PCT
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    deductible_iva_ratio: UnitProportion = Decimal("1.00")
     gross_total: Decimal | None = Field(default=None, gt=Decimal("0"))
     useful_life_years: int | None = Field(default=None, gt=0)
     libertad_amortizacion: LibertadAmortizacionElection = Field(default_factory=LibertadAmortizacionElection)
     actividad_id: str | None = None
-    allocation_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    allocation_ratio: UnitProportion = Decimal("1.00")
     schema_version: str = ASSETS_SCHEMA_VERSION
 
     @field_validator("schema_version")

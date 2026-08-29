@@ -23,6 +23,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import CasillaId, OutputLanguage, Period
+from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -525,7 +526,7 @@ class ModeloEditBaselineV1(_EditModel):
     compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
     modelo: ModeloCode
-    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    filing_year: FilingYear
     period: Period
     work_unit_id: WorkUnitId
     work_catalogue_revision: ContentDigest

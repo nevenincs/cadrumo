@@ -27,6 +27,7 @@ from ...core import (
     TravelAgencyMediationType,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -42,6 +43,7 @@ from ...core.identity import (
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.time import UtcInstant
 from ..identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
@@ -581,7 +583,7 @@ class Invoice(BaseModel):
     operation_date_role: InvoiceOperationDateRole | None = None
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: TaxIdIdentityToken | None = None
-    counterparty_country: str = Field(min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2
     # Which Member State IVA-IDENTIFIES the counterparty, read from the prefix
     # of the IVA number the document printed. A DIFFERENT fact from
     # `counterparty_country` above, which is an address -- establishment -- and
@@ -688,8 +690,8 @@ class Invoice(BaseModel):
     # no recorded entry time must say so, because the alternative is stamping
     # `now()` at load and manufacturing an audit fact nobody observed. `None`
     # here means "not recorded", never "recorded as now".
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    created_at: UtcInstant | None = None
+    updated_at: UtcInstant | None = None
 
     @override
     def __hash__(self) -> int:
