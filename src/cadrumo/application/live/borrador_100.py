@@ -21,9 +21,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import override
+from typing import Annotated, override
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
@@ -50,6 +50,11 @@ BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namesp
 type _BorradorValue = Decimal | str
 
 
+
+BorradorSourceUrl = Annotated[str, StringConstraints(min_length=1, max_length=2048)]
+"""The sede address a borrador snapshot was captured from."""
+
+
 class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 100 borrador snapshot lookup misses by id.
 
@@ -72,7 +77,7 @@ class Borrador100Snapshot(BaseModel):
     filing_year: FilingYear
     period: Period
     captured_at: datetime
-    source_url: str = Field(min_length=1, max_length=2048)
+    source_url: BorradorSourceUrl
     state: SnapshotLifecycleState
     binding_values: Mapping[BindingId, _BorradorValue] = Field(default_factory=dict)
     superseded_by_snapshot_id: SnapshotId | None = None

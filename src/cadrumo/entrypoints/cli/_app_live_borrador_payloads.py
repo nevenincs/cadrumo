@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import Literal
 
 from pydantic import (
-    Field,
     NonNegativeInt,
     field_validator,
     model_validator,
 )
 
+from ...application.live.borrador_100 import BorradorSourceUrl
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
@@ -34,7 +34,7 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     filing_year: FilingYear
     period: str
     captured_at: str
-    source_url: str = Field(min_length=1, max_length=2048)
+    source_url: BorradorSourceUrl
     binding_count: NonNegativeInt
     state: Literal["active", "superseded", "discarded"]
 
@@ -98,7 +98,7 @@ class Borrador100LatestResult(OutputSchema):
     snapshot_id: SnapshotId | None
     captured_at: str | None = None
     period: str | None = None
-    source_url: str | None = Field(default=None, min_length=1, max_length=2048)
+    source_url: BorradorSourceUrl | None = None
     binding_count: NonNegativeInt | None = None
     state: Literal["active"] | None = None
 
