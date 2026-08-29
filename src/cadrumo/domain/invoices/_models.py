@@ -43,6 +43,7 @@ from ...core.identity import (
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
+from ...core.time import UtcInstant
 from ..identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
@@ -689,8 +690,8 @@ class Invoice(BaseModel):
     # no recorded entry time must say so, because the alternative is stamping
     # `now()` at load and manufacturing an audit fact nobody observed. `None`
     # here means "not recorded", never "recorded as now".
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    created_at: UtcInstant | None = None
+    updated_at: UtcInstant | None = None
 
     @override
     def __hash__(self) -> int:

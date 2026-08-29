@@ -27,6 +27,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId
+from ...core.time import UtcInstant
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
 #: be erased. Binding provision: Ley 58/2003 (Ley General Tributaria) art. 66 —
@@ -87,8 +88,8 @@ class RetentionBlockingRecord(BaseModel):
     filing_record_id: FilingRecordId
     modelo: str = Field(min_length=1)
     filing_year: FilingYear
-    filed_at: datetime
-    earliest_safe_erase_date: datetime
+    filed_at: UtcInstant
+    earliest_safe_erase_date: UtcInstant
 
 
 class RetentionFloorAssessment(BaseModel):
@@ -102,7 +103,7 @@ class RetentionFloorAssessment(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    as_of: datetime
+    as_of: UtcInstant
     floor_years: int = Field(ge=0)
     retained: tuple[RetentionBlockingRecord, ...] = ()
 

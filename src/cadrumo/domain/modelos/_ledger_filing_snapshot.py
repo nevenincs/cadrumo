@@ -15,7 +15,6 @@ free of the ledger-read dependency, per the hexagonal boundary.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
@@ -25,6 +24,7 @@ from ...core import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
+from ...core.time import UtcInstant
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 
@@ -64,7 +64,7 @@ class LedgerFilingSnapshot(BaseModel):
 
     rows: tuple[LedgerRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
-    captured_at: datetime
+    captured_at: UtcInstant
 
 
 class LedgerFilingStalenessVerdict(BaseModel):
@@ -245,7 +245,7 @@ class LedgerFilingEvidence(BaseModel):
     snapshot_fingerprint: SnapshotId
     rows: tuple[LedgerEvidenceRow, ...] = ()
     manual_entries: tuple[ManualFactBasisEntry, ...] = ()
-    captured_at: datetime
+    captured_at: UtcInstant
 
 
 __all__ = [

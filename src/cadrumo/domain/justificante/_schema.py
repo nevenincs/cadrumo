@@ -9,7 +9,6 @@ explicit :meth:`pydantic.BaseModel.model_copy`.
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -18,6 +17,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validat
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
 from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest, SubjectTaxId, same_tax_identifier
+from ...core.time import UtcInstant
 
 
 class JustificanteParserBackend(StrEnum):
@@ -69,14 +69,14 @@ class Justificante(BaseModel):
     ejercicio: str | None = Field(default=None, max_length=8)
     period: Period
     presentation_id: AeatPresentationId | None = None
-    presented_at: datetime
+    presented_at: UtcInstant
     tax_id: SubjectTaxId
     total_a_ingresar: Decimal | None = None
     total_a_devolver: Decimal | None = None
     verification_url: AnyHttpUrl
     source_pdf_path: Path
     source_pdf_sha256: ContentDigest
-    parsed_at: datetime
+    parsed_at: UtcInstant
 
     @field_validator("period", mode="before")
     @classmethod

@@ -27,7 +27,6 @@ the filing record itself never initiates a live submission.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Self, override
 
@@ -37,6 +36,7 @@ from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
+from ...core.time import UtcInstant
 from ._codes import ModeloCode
 from .errors import ModeloValidationError
 from .filing_text import EvidenceReference, ModeloActorLabel
@@ -127,7 +127,7 @@ class ExternalEvidence(BaseModel):
 
     kind: ExternalEvidenceKind
     reference_id: EvidenceReference
-    imported_at: datetime
+    imported_at: UtcInstant
 
 
 def derive_filing_record_id(
@@ -188,12 +188,12 @@ class ModeloRecord(BaseModel):
     filing_year: FilingYear
     period: Period
     member_nif: _MemberNif | None = None
-    filed_at: datetime
+    filed_at: UtcInstant
     filed_by: ModeloActorLabel
     notes: _Notes | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
-    superseded_at: datetime | None = None
+    superseded_at: UtcInstant | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
     amends_filing_record_id: FilingRecordId | None = None

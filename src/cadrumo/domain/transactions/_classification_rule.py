@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from ._enums import BusinessClassification
 from .errors import ClassificationRuleError
 
@@ -52,7 +52,7 @@ class LedgerClassificationRule(BaseModel):
     classification: BusinessClassification
     category_id: str | None = None
     priority: int = Field(default=100, ge=1)
-    created_at: datetime
+    created_at: UtcInstant
     actor: str = Field(min_length=1)
 
     @field_validator("description_pattern")

@@ -11,7 +11,6 @@ these pure pieces to persistence live in the application layer.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -21,6 +20,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IvaCompensationStateProvenance, Period, PeriodKind, StandardPeriodCode
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
+from ...core.time import UtcInstant
 from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -103,7 +103,7 @@ class IvaCompensationPeriodState(BaseModel):
             "the same literal. Provenance now has its own typed field."
         ),
     )
-    presented_at: datetime
+    presented_at: UtcInstant
     prior_pending_amount: Decimal | None = None
     applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     pending_for_later_amount: Decimal | None = Field(default=None, ge=Decimal("0"))

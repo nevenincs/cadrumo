@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -19,6 +18,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.logging import get_logger
+from ...core.time import UtcInstant
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
 from ._protocols import AttachmentStoreProtocol
@@ -35,7 +35,7 @@ class AttachmentIngestionRequest(BaseModel):
     source: AttachmentSource
     source_reference: str
     mime_type: str
-    captured_at: datetime
+    captured_at: UtcInstant
     bucket_id: BucketId | None = None
     captured_by: str | None = None
     source_command: str | None = None

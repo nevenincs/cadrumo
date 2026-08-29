@@ -36,6 +36,7 @@ from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
 from ....core.percentage import Percentage
+from ....core.time import UtcInstant
 from ....core.unit_proportion import UnitProportion
 from ...filing_evidence import FilingEvidenceReference
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
@@ -472,7 +473,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
     reason: str = Field(min_length=1, max_length=512)
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
-    decided_at: datetime
+    decided_at: UtcInstant
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
 
     @field_validator("evidence")

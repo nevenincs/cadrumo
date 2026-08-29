@@ -14,12 +14,13 @@ interface and error messages.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ...core import CasillaId, Hex64Str
+from ...core.time import UtcInstant
 from ..calculations.registry.ids import ModeloId
 from ._ids import ManualId, ManualPart
 from .errors import ManualValidationError
@@ -127,7 +128,7 @@ class LLMProvenance(_ManualStrictFrozen):
     model: str = Field(min_length=1, max_length=128, description="Concrete model name used for the draft.")
     prompt_id: str = Field(min_length=1, max_length=128, description="Named prompt from the prompt registry.")
     cache_hit: bool = Field(description="Whether the draft was served from the LLM cache.")
-    extracted_at: datetime = Field(description="UTC timestamp the draft was produced.")
+    extracted_at: UtcInstant = Field(description="UTC timestamp the draft was produced.")
 
 
 class SectionSource(_ManualStrictFrozen):
@@ -273,7 +274,7 @@ class Manual(_ManualStrictFrozen):
     summary: str
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
-    fetched_at: datetime
+    fetched_at: UtcInstant
     definition_reviewed_by: _Reviewer
     definition_reviewed_at: date
     chapters: tuple[Chapter, ...] = Field(default_factory=tuple)
@@ -304,7 +305,7 @@ class FetchedManualPart(_ManualStrictFrozen):
     relative_pdf_path: str
     sha256: Hex64Str
     content_length: int
-    fetched_at: datetime
+    fetched_at: UtcInstant
     synthetic: bool = False
 
 

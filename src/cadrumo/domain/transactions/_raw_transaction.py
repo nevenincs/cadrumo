@@ -24,7 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import ContentDigest
 from ...core.parsing import normalise_iso_4217_currency
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from .errors import TransactionValidationError
 
 
@@ -71,7 +71,7 @@ class RawProvenance(BaseModel):
     source_sha256: ContentDigest
     source_row_index: int = Field(ge=1)
     source_format: SourceFormat
-    ingested_at: datetime
+    ingested_at: UtcInstant
     provider_name: str = Field(min_length=1)
 
     @field_validator("source_path")

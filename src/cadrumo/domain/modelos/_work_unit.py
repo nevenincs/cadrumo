@@ -24,7 +24,6 @@ identifier; ``name`` is a display-only attribute.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, ValuesView
-from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, cast, override
 
@@ -34,6 +33,7 @@ from ...core import STRICT_FROZEN_CONFIG, Hex64Str, Period
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, WorkUnitId
+from ...core.time import UtcInstant
 from ..calculations.registry.ids import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
@@ -160,10 +160,10 @@ class WorkUnit(BaseModel):
     period: Period
     revision_id: _RevisionId
     name: _DisplayName
-    created_at: datetime
-    updated_at: datetime
+    created_at: UtcInstant
+    updated_at: UtcInstant
     state: WorkUnitState = WorkUnitState.BORRADOR
-    discarded_at: datetime | None = None
+    discarded_at: UtcInstant | None = None
     discarded_by: ModeloActorLabel | None = None
     discard_reason: OperatorReason | None = None
     current_calculation_revision_id: Hex64Str | None = None

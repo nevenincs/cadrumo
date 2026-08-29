@@ -34,7 +34,7 @@ from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis
 from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity import CalculationRevisionId, VerificationReportId
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from .errors import ModeloValidationError
 from .filing_text import ModeloActorLabel
@@ -253,7 +253,7 @@ class VerificationReport(BaseModel):
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
     resolved_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
     missing_required_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
-    run_at: datetime
+    run_at: UtcInstant
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
 

@@ -22,7 +22,7 @@ from ...core import OBJECT_TUPLE_ADAPTER, Hex64Str
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.identity import TransactionId
-from ...core.time import parse_iso_datetime
+from ...core.time import UtcInstant, parse_iso_datetime
 from ..identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ._model_validation import (
@@ -60,7 +60,7 @@ class DecisionProvenance(BaseModel):
     model_config = _STRICT_FROZEN
 
     decided_by: str = Field(min_length=1, max_length=128)
-    decided_at: datetime
+    decided_at: UtcInstant
     reason: str = ""
     confidence: Decimal | None = None
     manual_override: bool = False
@@ -111,7 +111,7 @@ class ClassificationHistoryEntry(BaseModel):
 
     business_classification: BusinessClassification
     business_pct: Decimal | None = None
-    classified_at: datetime
+    classified_at: UtcInstant
     classified_by: str = Field(min_length=1)
     reason: str = ""
     category_id: str | None = None
@@ -199,7 +199,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     evidence_kind: Literal["purchase_invoice_evidence", "attachment"]
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
-    linked_at: datetime
+    linked_at: UtcInstant
     bucket_event_id: Hex64Str | None = None
 
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
@@ -221,7 +221,7 @@ class TransactionEditLineageEntry(BaseModel):
     previous_transaction_id: TransactionId
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
-    edited_at: datetime
+    edited_at: UtcInstant
     bucket_event_id: Hex64Str | None = None
 
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
@@ -244,7 +244,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     state: TransactionLifecycleState
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
-    changed_at: datetime
+    changed_at: UtcInstant
     reason: str = ""
     bucket_event_id: Hex64Str | None = None
 

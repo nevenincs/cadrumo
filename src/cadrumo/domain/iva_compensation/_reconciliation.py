@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.filing_year import FilingYear
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
@@ -98,7 +98,7 @@ class IvaCompensationOverride(BaseModel):
     amount: Decimal = Field(ge=Decimal("0"))
     operator_explanation: str = Field(min_length=1, max_length=1024)
     evidence_locator: str = Field(min_length=1, max_length=1024)
-    recorded_at: datetime
+    recorded_at: UtcInstant
 
 
 class IvaCompensationAuthoritySource(BaseModel):
@@ -109,7 +109,7 @@ class IvaCompensationAuthoritySource(BaseModel):
     source_kind: IvaCompensationAuthorityKind
     amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_locator: str = Field(min_length=1, max_length=1024)
-    captured_at: datetime | None = None
+    captured_at: UtcInstant | None = None
     source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
     source_filing_year: FilingYear | None = None
     source_periods: tuple[Period, ...] = ()
@@ -156,9 +156,9 @@ class IvaCompensationReconciliationDecision(BaseModel):
     #: key on it. A refusal that wants to tell an operator which one happened
     #: has nothing else to read.
     local_evidence_found_but_unusable: bool = False
-    wallet_captured_at: datetime | None = None
+    wallet_captured_at: UtcInstant | None = None
     authority_sources: tuple[IvaCompensationAuthoritySource, ...] = ()
-    decided_at: datetime
+    decided_at: UtcInstant
 
     @field_validator("reason_identity", mode="before")
     @classmethod
@@ -255,7 +255,7 @@ class _ReconciliationContext:
     wallet_amount: Decimal | None
     local_recurrence_amount: Decimal | None
     override: IvaCompensationOverride | None
-    when: datetime
+    when: UtcInstant
     wallet_captured_at: datetime | None
     stale_wallet: bool
     authority_sources: tuple[IvaCompensationAuthoritySource, ...]

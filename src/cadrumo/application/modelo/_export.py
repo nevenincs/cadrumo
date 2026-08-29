@@ -42,7 +42,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -67,7 +67,7 @@ from ...core import (
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, PrefixedContentDigest, WorkUnitId
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.bienes_inversion import (
@@ -145,7 +145,10 @@ from ._action_errors import (
 from ._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
-from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
+from ._m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_annual_summary_applies,
+    m303_regimen_simplificado_scope_for_profile,
+)
 from ._preconditions import (
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
@@ -249,7 +252,6 @@ def modelo_export_readiness_refusal(
     return _modelo_export_layout_readiness_refusal(modelo=modelo, layout=layout)
 
 
-type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -263,13 +265,13 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    decision_ref: _Sha256Ref
+    decision_ref: PrefixedContentDigest
     selected_authority: str = Field(min_length=1, max_length=64)
     divergence: str = Field(min_length=1, max_length=64)
     target_year: FilingYear
     target_period: Period
     authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
-    authority_source_refs: tuple[_Sha256Ref, ...] = Field(default_factory=tuple)
+    authority_source_refs: tuple[PrefixedContentDigest, ...] = Field(default_factory=tuple)
 
 
 class _PreparedModeloExport(NamedTuple):
@@ -1355,6 +1357,7 @@ def _prepare_modelo_export(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
+        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
     )
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,

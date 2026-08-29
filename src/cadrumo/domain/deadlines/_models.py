@@ -33,7 +33,7 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.identity import SubjectTaxId
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from ..contribuyente import (
     UE_EEA_COUNTRY_CODES,
     FiscalResidency,
@@ -1112,7 +1112,7 @@ class Schedule(BaseModel):
     profile: TaxpayerProfile
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
-    generated_at: datetime
+    generated_at: UtcInstant
 
     @field_validator("generated_at")
     @classmethod
