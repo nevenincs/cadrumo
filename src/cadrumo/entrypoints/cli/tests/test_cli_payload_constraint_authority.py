@@ -68,6 +68,10 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_modelo_bindings_payloads.py",
+        "_modelo_revision_payload_parts.py",
+        "_modelo_spreadsheet_payloads.py",
+        "_modelo_work_wizard_payloads.py",
         "_app_live_iva_wallet_payloads.py",
         "_config/_storage_payloads.py",
         "_config/_archive_reconcile_payloads.py",
@@ -117,14 +121,10 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
     "_modelo_amend_wizard_payloads.py": "amendment_reason restates the canonical discard/amendment reason alias",
     "_modelo_aux_payloads.py": "workflow-run payloads restate the locale-key grammar",
-    "_modelo_bindings_payloads.py": "binding payloads restate binding provenance bounds",
     "_modelo_iva_wallet_payloads.py": "IVA wallet payloads restate the wallet decision invariant",
     "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
     "_modelo_payloads_m036.py": "M036 payloads restate censo declaration bounds",
     "_modelo_review_package_payloads.py": "review-package payloads restate review model bounds",
-    "_modelo_revision_payload_parts.py": "revision parts restate calculation-revision bounds",
-    "_modelo_spreadsheet_payloads.py": "spreadsheet payloads restate workbook plan bounds",
-    "_modelo_work_wizard_payloads.py": "work wizard payloads restate work-unit bounds",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
 }
 

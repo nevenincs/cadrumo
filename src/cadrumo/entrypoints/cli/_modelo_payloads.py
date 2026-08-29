@@ -75,6 +75,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
     VerificationExpectationId,
 )
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos import (
     ExternalEvidenceKind,
@@ -275,7 +276,7 @@ class FindingPayload(OutputSchema):
     expectation_id: VerificationExpectationId | None = None
     message: str = Field(min_length=1, max_length=500)
     action: ResolvedPreconditionAction | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
     source_refs: list[SourceRefId] = Field(default_factory=list)
 
 
@@ -949,8 +950,8 @@ class ModeloCasillaResult(OutputSchema):
     data_type: str
     input_kind: str
     required: bool
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     binding: BindingId | None = None
     formula_id: FormulaId | None = None
     formula_expression: dict[str, object] | None = None
@@ -965,8 +966,8 @@ class CasillaRowPayload(OutputSchema):
     required: bool
     label: str
     help_text: str | None = None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class ModeloCasillasResult(OutputSchema):
@@ -1122,8 +1123,8 @@ class DeltaRowPayload(OutputSchema):
     delta: str
     pct_change: str | None
     formula_id: FormulaId | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
-    source_refs: list[SourceRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class CompareSectionPayload(OutputSchema):
@@ -1199,8 +1200,8 @@ class CasillaObservationPayload(OutputSchema):
     casilla_id: CasillaId
     value: str
     formula_id: FormulaId | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
-    source_refs: list[SourceRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class M130AccumulatedPayload(OutputSchema):

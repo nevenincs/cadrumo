@@ -13,12 +13,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
-
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
-from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
@@ -45,8 +43,8 @@ class WizardPromptedCasillaPayload(OutputSchema):
     key: NonEmptyStr
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
     value: NonEmptyStr
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     help_text: str | None = None
 
 

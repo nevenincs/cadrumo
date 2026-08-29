@@ -26,10 +26,9 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
+from ...domain.calculations.registry.ids import BindingId, RelationId
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
 class BindingEncodedOptionPayload(OutputSchema):
@@ -70,8 +69,8 @@ class BindingGroundingPayload(OutputSchema):
     """The typed :class:`~core.BindingSourceKind` value rendered as a string."""
     readiness: str
     typed_enum: str | None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     relation_inputs: tuple[RelationId, ...] = ()
     """Registry relation ids that feed this binding's value.
 

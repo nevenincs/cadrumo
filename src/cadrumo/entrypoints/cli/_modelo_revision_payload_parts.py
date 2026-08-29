@@ -23,7 +23,8 @@ from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
-from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
+from ...domain.calculations.registry.ids import BindingId, FormulaId, RelationId
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
 class DetailRowPayload(OutputSchema):
@@ -63,8 +64,8 @@ class ObservationPayload(OutputSchema):
     operand_refs: tuple[str, ...] = ()
     operand_casilla_refs: tuple[CasillaId, ...] = ()
     operand_values: tuple[str, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     # Carried from :class:`CasillaObservation` so an intentional zero (a
     # binding whose selector produced no source anchor for the target period)
     # stays distinguishable from a value-bearing zero at the operator surface.
