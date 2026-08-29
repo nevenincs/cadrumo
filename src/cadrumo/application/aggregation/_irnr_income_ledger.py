@@ -29,6 +29,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, M210PayerMode, Modelo, Period, validated_casilla_id
 from ...core.i18n import tr
 from ...core.identity import TransactionId
+from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions import (
     BusinessClassification,
@@ -92,7 +93,7 @@ class IrnrIncomeObservation(BaseModel):
     target_casilla_id: CasillaId
     official_tipo_renta_code: str = Field(min_length=2, max_length=2)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
-    applicable_rate: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    applicable_rate: UnitProportion
     payer_mode: M210PayerMode
     payer_id: str | None = None
     asset_or_right_id: str | None = None

@@ -37,7 +37,7 @@ _REGISTRY_ROOT = Path(__file__).resolve().parents[1]
 _REFUSAL_SOURCES = (
     _REGISTRY_ROOT / "diff.py",
     _REGISTRY_ROOT / "filed_state.py",
-    _REGISTRY_ROOT / "_conformance.py",
+    _REGISTRY_ROOT / "conformance.py",
     _REGISTRY_ROOT / "corpus.py",
     _REGISTRY_ROOT / "_corpus_manual_helpers.py",
 )
@@ -362,7 +362,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.OPERATOR_DECISION",
         ),
         (
-            "_conformance.py",
+            "conformance.py",
             "require_classification_row",
             "RegistryPreconditionCondition.CONFORMANCE_CLASSIFICATION_ROW_PRESENT",
             "{'modelo': str(modelo_id), 'classification_row_present': False}",
@@ -370,7 +370,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
             "NoRecoveryOutcome.SAFETY",
         ),
         (
-            "_conformance.py",
+            "conformance.py",
             "require_grounding_row",
             "RegistryPreconditionCondition.CONFORMANCE_GROUNDING_ROW_PRESENT",
             "{'modelo': str(modelo_id), 'revision_id': str(revision_id), 'grounding_row_present': False}",

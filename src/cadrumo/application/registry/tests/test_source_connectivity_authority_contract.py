@@ -61,6 +61,7 @@ def test_source_ownership_catalogue_is_an_exact_projection_not_free_enrollment()
         CalculationRouteSourceOwnershipCatalogue(
             resolver_sources=catalogue.resolver_sources[:-1],
             manual_input=catalogue.manual_input,
+            design_constant=catalogue.design_constant,
         )
     with pytest.raises(ValidationError, match="exactly project"):
         CalculationRouteSourceOwnershipCatalogue(
@@ -69,11 +70,13 @@ def test_source_ownership_catalogue_is_an_exact_projection_not_free_enrollment()
                 *catalogue.resolver_sources[1:],
             ),
             manual_input=catalogue.manual_input,
+            design_constant=catalogue.design_constant,
         )
     with pytest.raises(ValidationError, match="exactly project"):
         CalculationRouteSourceOwnershipCatalogue(
             resolver_sources=catalogue.resolver_sources,
             manual_input=catalogue.manual_input.model_copy(update={"owner_id": "invented-manual-owner"}),
+            design_constant=catalogue.design_constant,
         )
 
 
@@ -102,6 +105,7 @@ def test_source_ownership_catalogue_refuses_non_enrolled_sources(
         CalculationRouteSourceOwnershipCatalogue(
             resolver_sources=(*catalogue.resolver_sources, invented),
             manual_input=catalogue.manual_input,
+            design_constant=catalogue.design_constant,
         )
 
 
@@ -193,17 +197,37 @@ def test_repository_digest_verifier_rejects_symlink_escape(tmp_path: Path) -> No
     assert verifier.digest("src/linked/test_evidence.py") is None
 
 
-def test_registry_facade_exposes_authority_and_injected_verifier_port() -> None:
-    from .. import __all__
+def test_canonical_module_exposes_authority_and_injected_verifier_port() -> None:
+    """The public contracts are declared by their DEFINING module, not by a package facade.
 
-    assert {
+    This assertion used to read the package root's ``__all__``. That map is gone:
+    ``application.registry``'s namespace is inert, so a facade assertion passes
+    only while a forbidden re-export survives and reds the moment the boundary is
+    correct -- which is the wrong way round. The contract worth pinning is that
+    each name is public ON ITS CANONICAL MODULE, and that the package namespace
+    stays inert rather than growing a second home for it.
+    """
+    from importlib import import_module
+
+    from .. import source_connectivity_authority
+
+    # The package OBJECT is the subject here, not a symbol drawn through it:
+    # the assertion below is that this namespace re-exports nothing.
+    registry_package = import_module("cadrumo.application.registry")
+
+    exported = {
+        "CalculationRouteDesignConstantSourceOwnership",
         "CalculationRouteResolverSourceOwnership",
         "CalculationRouteSourceOwnershipCatalogue",
         "LiveSourceConnectivityProofAuthority",
         "RepositoryEvidenceDigestVerifier",
         "RepositoryRootEvidenceDigestVerifier",
         "build_calculation_route_source_ownership_catalogue",
-    } <= set(__all__)
+    }
+    assert exported <= set(source_connectivity_authority.__all__)
+    for name in exported:
+        assert hasattr(source_connectivity_authority, name), name
+    assert registry_package.__all__ == []
     assert isinstance(RepositoryRootEvidenceDigestVerifier, type)
     assert isinstance(LiveSourceConnectivityProofAuthority, type)
     assert RepositoryEvidenceDigestVerifier.__name__ == "RepositoryEvidenceDigestVerifier"

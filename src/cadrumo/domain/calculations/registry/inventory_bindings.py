@@ -66,7 +66,14 @@ class _InventorySelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M100]
-    filing_year: int
+    # PINNED TO 2025, and it must stay pinned. The three destinations this
+    # selector admits (0177, 0181, 0182) are Modelo 100's 2025 casilla numbers,
+    # and AEAT renumbers casillas between filing years -- so a selector that
+    # accepted any year would let a 2024- or 2026-scoped binding target 2025
+    # boxes and resolve silently. This field was widened to a bare ``int`` inside
+    # a reformat commit, which turned the refusal off; restoring the pin is what
+    # forces a deliberate re-adjudication when a later revision needs it.
+    filing_year: Literal[2025]
     projection_grain: Literal["taxpayer_year_activity"]
     fact: Literal["row_field"]
     record: Literal["inventory_activity"]

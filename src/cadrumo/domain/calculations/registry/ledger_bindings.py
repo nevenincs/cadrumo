@@ -35,6 +35,7 @@ from ....core.aggregation import (
     BindingSourceKind,
     LedgerIncomeGrounding,
 )
+from ....core.unit_proportion import UnitProportion
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
@@ -398,7 +399,7 @@ class IvaLedgerObservation(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
-    applied_rate: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    applied_rate: UnitProportion | None = None
     """The numeric IVA rate this line was charged at, as a fraction, when known.
 
     Carried ALONGSIDE :attr:`rate_kind` rather than instead of it, because the
@@ -476,10 +477,7 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if (
-            not is_deducible_flow(self.flow_direction)
-            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
-        ):
+        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("output IVA facts cannot carry deduction authority")
             return self

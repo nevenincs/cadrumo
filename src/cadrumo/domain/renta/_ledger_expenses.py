@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
-from ...core.unit_proportion import is_unit_proportion
+from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -102,7 +102,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     people the higher limb exists for.
     """
     exclusive_use_confirmed: bool = False
-    iva_deduction_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    iva_deduction_ratio: UnitProportion | None = None
     """Fraction of the fact's input IVA the activity affords a right to deduct (LIVA arts. 94/104).
 
     ``None`` (the default) means the axis has not been evaluated for this fact and
@@ -225,7 +225,7 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
     gross_amount: Decimal
     deductible_amount: Decimal
     non_deductible_amount: Decimal
-    applied_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    applied_ratio: UnitProportion | None = None
     statutory_cap_applied: Decimal | None = Field(default=None, ge=Decimal("0"))
     legal_references: tuple[CategoryCitation, ...] = Field(min_length=1)
 
@@ -275,7 +275,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     category_family: SpendingCategoryFamily
     profile_year: FilingYear
     proportionality_kind: ProportionalityKind
-    applied_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    applied_ratio: UnitProportion | None = None
     invoice_evidence_status: RentaInvoiceEvidenceStatus
     reconciliation_status: RentaReconciliationStatus
     legal_references: tuple[CategoryCitation, ...] = Field(min_length=1)

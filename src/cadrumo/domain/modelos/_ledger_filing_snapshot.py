@@ -24,6 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
+from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 
 
@@ -166,7 +167,7 @@ class LedgerEvidenceRow(BaseModel):
     source_jurisdiction: str | None = Field(default=None, min_length=2, max_length=2)
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
     m210_gross_income_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    m210_applicable_rate: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    m210_applicable_rate: UnitProportion | None = None
     m210_payer_mode: str | None = None
     m210_payer_id: str | None = None
     m210_asset_or_right_id: str | None = None

@@ -105,12 +105,15 @@ def test_the_grouping_holds_exactly_the_two_dwelling_families() -> None:
     Named rather than counted: a count of two would still pass if one member were
     swapped for an unrelated family, and the whole risk here is membership drift.
     """
-    assert frozenset(
-        {
-            SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
-            SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-        },
-    ) == HOME_OFFICE_FAMILIES
+    assert (
+        frozenset(
+            {
+                SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
+                SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
+            },
+        )
+        == HOME_OFFICE_FAMILIES
+    )
 
 
 def test_the_category_set_is_the_union_of_both_families_members() -> None:

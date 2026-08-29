@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from ....core import (
+    AeatProductSoftwareEvidence,
+    AeatProductSoftwareIdentity,
     Modelo,
     PaymentElection,
     Period,
@@ -232,6 +234,15 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
             draft,
             output_path=output,
             producer_snapshot=producer_snapshot,
+            # Modelo 303's layout renders an envelope prefix, and an
+            # envelope-prefixed export REQUIRES an explicit product/software
+            # identity -- correctly, since the AEAT program identifier is
+            # assigned rather than guessable. Without one the export refuses on
+            # that guard and never reaches the withdrawn-layout refusal this
+            # test exists to prove. A synthetic identity is not fabrication: it
+            # never leaves the test, and the alternative is asserting the wrong
+            # refusal.
+            product_software_identity=_product_software_identity(),
             schema_provider=provider,
         )
 
@@ -282,3 +293,17 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
 
     assert not output.exists()
     assert not output.with_suffix(output.suffix + ".tmp").exists()
+
+
+def _product_software_identity() -> AeatProductSoftwareIdentity:
+    """Return a synthetic AEAT product/software identity for the export guard."""
+    return AeatProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            AeatProductSoftwareEvidence(
+                reference="aeat-software-registration:exonerado-390-refusal-proof",
+                digest="a" * 64,
+            ),
+        ),
+    )

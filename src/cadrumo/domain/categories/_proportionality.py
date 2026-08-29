@@ -23,6 +23,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
+from ...core.unit_proportion import UnitProportion
 from ...core.validity_window import ValidityWindow
 from .errors import CategoryValidationError
 
@@ -496,9 +497,9 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """
 
     kind: ProportionalityKind
-    fixed_pct: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
-    default_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
-    statutory_multiplier: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    fixed_pct: UnitProportion | None = None
+    default_ratio: UnitProportion | None = None
+    statutory_multiplier: UnitProportion | None = None
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None

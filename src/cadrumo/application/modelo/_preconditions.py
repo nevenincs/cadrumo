@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -16,6 +16,7 @@ from ...core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId
 from ...domain.modelos import WorkUnit
 from ..operator_actions import (
@@ -27,16 +28,14 @@ from ..operator_actions import (
 )
 from ..operator_surface import ManifestActionProfile
 
-_NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
-
 
 class ModeloPreconditionFailure(BaseModel):
     """One application-owned failed condition at a canonical modelo leaf."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    subject_leaf_key: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    scenario_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    subject_leaf_key: NamespacedId
+    scenario_id: NamespacedId
     verdict: PreconditionVerdict
 
     @property

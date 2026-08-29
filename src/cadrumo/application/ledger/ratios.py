@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
-from ...core.unit_proportion import is_unit_proportion
+from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.categories import (
     HOME_OFFICE_FAMILIES,
     ProportionalityKind,
@@ -267,9 +267,9 @@ class RatiosCensoOverrideWarning(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
-    override_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
-    censo_derived_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
-    raw_afectacion_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    override_ratio: UnitProportion
+    censo_derived_ratio: UnitProportion
+    raw_afectacion_ratio: UnitProportion
 
 
 def censo_business_pct_for(
