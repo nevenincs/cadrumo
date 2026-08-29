@@ -74,7 +74,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._classification_rule import LedgerClassificationRule
+from .classification_rule import LedgerClassificationRule
 from ._dates import transaction_eligible_date_span, transaction_filing_date
 from ._enums import (
     BUSINESS_BEARING_STATES,

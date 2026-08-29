@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
+from ...core.identity import ContentDigest
 from ...core.logging import get_logger
 from ...core.time import UtcInstant, now
 from ._enums import BusinessClassification
@@ -25,6 +27,16 @@ from .errors import ClassificationRuleError
 _logger = get_logger(__name__)
 
 _RULE_ID_LENGTH: int = 64
+
+RuleDescriptionPattern = Annotated[str, StringConstraints(min_length=1)]
+"""The regular expression a rule matches a transaction description against."""
+
+RulePriority = Annotated[int, Field(ge=1)]
+"""Resolution order for competing rules; the lower integer wins."""
+
+RuleActor = Annotated[str, StringConstraints(min_length=1)]
+"""Who authored the rule, as recorded on it."""
+
 
 
 def _compute_rule_id(
@@ -47,13 +59,13 @@ class LedgerClassificationRule(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rule_id: str = Field(min_length=_RULE_ID_LENGTH, max_length=_RULE_ID_LENGTH)
-    description_pattern: str = Field(min_length=1)
+    rule_id: ContentDigest
+    description_pattern: RuleDescriptionPattern
     classification: BusinessClassification
     category_id: str | None = None
-    priority: int = Field(default=100, ge=1)
+    priority: RulePriority = 100
     created_at: UtcInstant
-    actor: str = Field(min_length=1)
+    actor: RuleActor
 
     @field_validator("description_pattern")
     @classmethod

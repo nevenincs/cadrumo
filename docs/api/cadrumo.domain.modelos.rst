@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.modelos._calculation_repository
-   cadrumo.domain.modelos._calculation_revision
    cadrumo.domain.modelos._calculation_revision_aggregate
    cadrumo.domain.modelos._calculation_revision_amendment
    cadrumo.domain.modelos._calculation_revision_m303_evidence
@@ -36,4 +35,5 @@ Submodules
    cadrumo.domain.modelos._work_unit
    cadrumo.domain.modelos.calculation_revision
    cadrumo.domain.modelos.errors
+   cadrumo.domain.modelos.filing_text
    cadrumo.domain.modelos.work_unit_repository

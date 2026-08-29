@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.transactions._classification_rule
    cadrumo.domain.transactions._dates
    cadrumo.domain.transactions._enums
    cadrumo.domain.transactions._irpf_categories
@@ -30,4 +29,5 @@ Submodules
    cadrumo.domain.transactions._service
    cadrumo.domain.transactions._tipo_actividad_partitions
    cadrumo.domain.transactions._volumen_ingresos
+   cadrumo.domain.transactions.classification_rule
    cadrumo.domain.transactions.errors

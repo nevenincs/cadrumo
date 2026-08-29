@@ -17,12 +17,14 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, NonNegativeInt, model_validator
+from pydantic import NonNegativeInt, model_validator
 
+from ...application.ledger.llm_diagnostics import LlmProviderName
 from ...core import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
+from ...domain.transactions.classification_rule import RuleActor, RuleDescriptionPattern, RulePriority
 from ._decimal_wire import DecimalWireText
 
 
@@ -40,11 +42,11 @@ class ClassificationRulePayload(OutputSchema):
     """
 
     rule_id: Hex64Str
-    description_pattern: str = Field(min_length=1)
+    description_pattern: RuleDescriptionPattern
     classification: BusinessClassification
     category_id: str | None = None
-    priority: int = Field(ge=1)
-    actor: str = Field(min_length=1)
+    priority: RulePriority
+    actor: RuleActor
     created_at: datetime
 
     @model_validator(mode="after")
@@ -151,7 +153,7 @@ class LlmUsageCostProviderPayload(OutputSchema):
     (cache hits included); ``cost_estimate_usd`` is the summed estimate.
     """
 
-    provider: str = Field(min_length=1)
+    provider: LlmProviderName
     calls: NonNegativeInt
     cache_hits: NonNegativeInt
     # unpriced_calls is unbounded here: the canonical LlmUsageCostProviderMetrics
@@ -178,7 +180,7 @@ class LlmConfidenceProviderPayload(OutputSchema):
     distribution buckets.
     """
 
-    provider: str = Field(min_length=1)
+    provider: LlmProviderName
     classified_count: NonNegativeInt
     low_confidence_count: NonNegativeInt
     high_confidence_count: NonNegativeInt

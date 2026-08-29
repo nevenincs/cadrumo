@@ -68,6 +68,7 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_ledger_rule_payloads.py",
         "_config/_censo_payloads.py",
         "_config/_collab_payloads.py",
         "_config/_google_credential_source_payloads.py",
@@ -112,7 +113,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_ledger_counterparty_payloads.py": "counterparty payloads restate counterparty identity bounds",
     "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
     "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
-    "_ledger_rule_payloads.py": "classification-rule payloads restate the rule model's bounds",
     "_modelo_amend_wizard_payloads.py": "amendment_reason restates the canonical discard/amendment reason alias",
     "_modelo_aux_payloads.py": "workflow-run payloads restate the locale-key grammar",
     "_modelo_bindings_payloads.py": "binding payloads restate binding provenance bounds",

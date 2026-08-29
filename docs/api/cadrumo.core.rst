@@ -146,13 +146,16 @@ Submodules
    cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.corpus_text
+   cadrumo.core.country_code
    cadrumo.core.credentials
    cadrumo.core.directory_scan
    cadrumo.core.ed25519_signing
    cadrumo.core.external_constants
    cadrumo.core.file_permissions
+   cadrumo.core.filing_year
    cadrumo.core.flows
    cadrumo.core.hashing
+   cadrumo.core.identifier_grammar
    cadrumo.core.json_contract
    cadrumo.core.locks
    cadrumo.core.locks_errors
@@ -161,6 +164,7 @@ Submodules
    cadrumo.core.operations
    cadrumo.core.output_rendering
    cadrumo.core.paths
+   cadrumo.core.percentage
    cadrumo.core.presentation
    cadrumo.core.product_identity
    cadrumo.core.profile_discovery
@@ -174,6 +178,7 @@ Submodules
    cadrumo.core.text_fold
    cadrumo.core.transport_locus
    cadrumo.core.tty
+   cadrumo.core.unit_proportion
    cadrumo.core.validity_window
    cadrumo.core.wizard_catalogue
    cadrumo.core.workbook
