@@ -1,4 +1,4 @@
-"""The bounded-text shapes that recur across every layer, stated once.
+"""The bounded scalar shapes that recur across every layer, stated once.
 
 Most of this campaign's aliases name a DOMAIN concept -- a filing year, a share
 of one, a country code -- and carry its bound as a consequence. These are
@@ -37,6 +37,9 @@ PositiveCount = Annotated[int, Field(ge=1)]
 NonNegativeDecimal = Annotated[Decimal, Field(ge=Decimal("0"))]
 """A decimal quantity that cannot go below zero."""
 
+CalendarMonth = Annotated[int, Field(ge=1, le=12)]
+"""A month of the year, numbered as AEAT numbers them."""
+
 type NonEmptyList[T] = Annotated[list[T], Field(min_length=1)]
 """A list that carries at least one element.
 
@@ -45,4 +48,4 @@ than quietly promoting it to a tuple: the strict models refuse the coercion,
 and a projection has no business changing what a caller may hand it.
 """
 
-__all__ = ["NonEmptyList", "NonEmptyStr", "NonNegativeDecimal", "PositiveCount"]
+__all__ = ["CalendarMonth", "NonEmptyList", "NonEmptyStr", "NonNegativeDecimal", "PositiveCount"]

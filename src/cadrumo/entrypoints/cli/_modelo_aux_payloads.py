@@ -33,6 +33,7 @@ from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...core.unit_proportion import UnitFraction
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -100,7 +101,7 @@ class ModeloAuditViewResult(OutputSchema):
     calculation_revision_id: CalculationRevisionId | None = None
     filing_record_id: FilingRecordId | None = None
     verification_state: BundleVerificationState
-    completeness_ratio: float = Field(ge=0.0, le=1.0)
+    completeness_ratio: UnitFraction
     records: list[EvidenceRecordRefPayload]
     created_at: datetime
     notes: str = Field(default="", max_length=2000)
@@ -112,7 +113,7 @@ class ModeloAuditCheckResult(OutputSchema):
     operation: str = "modelo.audit.check"
     bundle_id: Hex64Str
     verification_state: BundleVerificationState
-    completeness_ratio: float = Field(ge=0.0, le=1.0)
+    completeness_ratio: UnitFraction
     findings: list[EvidenceBundleCheckFindingPayload]
 
 
