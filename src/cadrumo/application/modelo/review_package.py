@@ -44,8 +44,9 @@ from __future__ import annotations
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
@@ -79,6 +80,18 @@ _DRAFT_MEMBER = "draft.fichero-boe"
 #: yet reached verified-complete has no filing-grade grounding to share; a
 #: superseded revision is stale and must not be handed to an accountant as
 #: current.
+
+
+
+ReviewPackageActor = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+"""Who built, counter-signed or submitted a review package.
+
+Bounded more generously than :obj:`ModeloActorLabel`, which caps a filing's
+actor at sixty-four. The two are fed from the same operator resolver, so the
+difference is unexplained rather than principled; it is recorded here instead
+of being silently narrowed, because tightening a persisted bound is a decision
+about stored data and not a de-duplication.
+"""
 
 
 class ReviewPackageError(CadrumoError):
@@ -128,7 +141,7 @@ class ReviewPackageManifest(BaseModel):
     revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool
     built_at: datetime
-    built_by: str = Field(min_length=1, max_length=128)
+    built_by: ReviewPackageActor
     notes: str = Field(default="", max_length=2000)
 
 

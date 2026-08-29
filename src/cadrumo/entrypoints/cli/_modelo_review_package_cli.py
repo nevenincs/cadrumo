@@ -84,7 +84,7 @@ from ...application.modelo._export import (
     export_modelo_revision,
 )
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo._review_package import (
+from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
     ReviewPackageRevisionStateError,

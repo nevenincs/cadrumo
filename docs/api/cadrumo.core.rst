@@ -175,6 +175,7 @@ Submodules
    cadrumo.core.source_connectivity
    cadrumo.core.storage_materialization
    cadrumo.core.tabular
+   cadrumo.core.text_bounds
    cadrumo.core.text_fold
    cadrumo.core.transport_locus
    cadrumo.core.tty

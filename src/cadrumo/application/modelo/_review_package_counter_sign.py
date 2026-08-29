@@ -38,7 +38,7 @@ bytes except transiently in process memory to sign.
 See Also:
     :mod:`~application.modelo._review_package_signing`
         The operator-side signing primitive this module counter-signs on top of.
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Builds and integrity-verifies the review package that is signed.
 """
 

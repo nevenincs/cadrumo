@@ -964,7 +964,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package.ReviewPackageError",
+        "cadrumo.application.modelo.review_package.ReviewPackageError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE",
             category=ErrorCategory.ERROR,
@@ -974,7 +974,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package.ReviewPackageRevisionStateError",
+        "cadrumo.application.modelo.review_package.ReviewPackageRevisionStateError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_REVISION_STATE",
             category=ErrorCategory.REFUSED,
@@ -984,7 +984,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package.ReviewPackageIntegrityError",
+        "cadrumo.application.modelo.review_package.ReviewPackageIntegrityError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_INTEGRITY",
             category=ErrorCategory.REFUSED,

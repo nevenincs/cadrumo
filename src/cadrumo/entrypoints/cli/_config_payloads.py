@@ -40,6 +40,7 @@ from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_utc_aware
+from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
 from ...domain.user_profile.values import ProfileSetupState
 
 # The two wizard-owned profile result schemas are deferred public targets owned
@@ -487,7 +488,7 @@ class ConfigResetTargetPayload(OutputSchema):
     """Secret-free phase projection for one reset target."""
 
     bucket_id: BucketId
-    label: str | None = Field(default=None, min_length=1, max_length=160)
+    label: ProfileLabel | None = None
     setup_state_at_snapshot: ProfileSetupState | None = None
     exists_at_snapshot: bool
     phase: ConfigResetTargetPhase
@@ -1151,9 +1152,9 @@ class ApoderadoScopePayload(OutputSchema):
     refused rather than forwarded.
     """
 
-    code: str = Field(min_length=1, max_length=32)
-    name_es: str = Field(min_length=1, max_length=200)
-    name_en: str = Field(min_length=1, max_length=200)
+    code: ApoderadoScopeCode
+    name_es: ApoderadoScopeName
+    name_en: ApoderadoScopeName
     modelo_codes: list[str] = []
 
     @field_validator("code")

@@ -57,7 +57,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package import verify_review_package
+from ..review_package import verify_review_package
 from .._review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
     emit_collab_package_decrypted_event,

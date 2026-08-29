@@ -23,7 +23,7 @@ See Also:
         tamper cases.
     :mod:`~application.modelo._review_package_signing`
         Operator Ed25519 signing layer that the accountant receipt signs over.
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Checksum-manifest package builder re-verified before signature checks.
     :mod:`~application.modelo._review_package_feedback`
         Follow-on encrypted feedback-package round trip that can carry a

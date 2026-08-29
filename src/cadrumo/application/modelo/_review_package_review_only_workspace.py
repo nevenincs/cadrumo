@@ -32,7 +32,7 @@ See Also:
     :mod:`~application.modelo._review_package_recipient_encryption`
         Produces the :class:`~application.modelo.RecipientDecryptedPackage`
         this module wraps, and defines the ``review_only`` disposition flag.
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Defines :class:`~application.modelo.ReviewPackageManifest`, the
         descriptor recovered alongside the decrypted package bytes.
 """
@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.time import now as _utc_now
-from ._review_package import ReviewPackageManifest
+from .review_package import ReviewPackageManifest
 from ._review_package_recipient_encryption import RecipientDecryptedPackage
 
 

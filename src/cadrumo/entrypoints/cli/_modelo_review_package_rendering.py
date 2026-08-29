@@ -40,7 +40,7 @@ from ._modelo_review_package_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.modelo._review_package import (
+    from ...application.modelo.review_package import (
         ReviewPackageBuildResult,
         ReviewPackageVerification,
     )

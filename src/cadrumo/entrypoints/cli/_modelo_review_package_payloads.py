@@ -30,6 +30,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from ...application.modelo.review_package import ReviewPackageActor
 from ...core import Hex64Str, Period
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
@@ -57,7 +58,7 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     has_ledger_evidence: bool
     output_path: str
     member_count: PositiveCount
-    built_by: str = Field(min_length=1, max_length=128)
+    built_by: ReviewPackageActor
     built_at: datetime
 
 
@@ -87,7 +88,7 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     period: Period
     revision_state: NonEmptyStr
     has_ledger_evidence: bool
-    built_by: str = Field(min_length=1, max_length=128)
+    built_by: ReviewPackageActor
     built_at: datetime
 
 
@@ -237,7 +238,7 @@ class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     note: str = Field(default="", max_length=4000)
-    submitted_by: str = Field(min_length=1, max_length=128)
+    submitted_by: ReviewPackageActor
     counter_signature_verified: bool | None = None
     attached_to_journal: bool = False
 

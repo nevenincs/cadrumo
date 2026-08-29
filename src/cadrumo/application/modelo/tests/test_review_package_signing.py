@@ -16,7 +16,7 @@ system deviates from "clean" before asserting the refusal.
 See Also:
     :mod:`~application.modelo._review_package_signing`
         Ed25519 authenticity layer exercised by the roundtrip and tamper cases.
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Checksum-manifest package builder whose integrity guarantee is verified
         before signature validation.
     :class:`~adapters.persistence.storage.SecureObjectRepository`

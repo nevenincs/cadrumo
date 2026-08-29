@@ -1,7 +1,7 @@
 """Ed25519 signing and signature verification for review packages.
 
 This module implements the signing slice deferred by
-:mod:`~application.modelo._review_package`: that module's
+:mod:`~application.modelo.review_package`: that module's
 :func:`~application.modelo.verify_review_package` is an INTEGRITY check
 only (did every archived member arrive byte-for-byte as built); it makes no
 claim about WHO built the package. This module adds the AUTHENTICITY layer on
@@ -32,7 +32,7 @@ this module; it exposes only the primitive: mint/load a per-profile keypair,
 sign a package's manifest digest, verify a signature against a public key.
 
 See Also:
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Builds and integrity-verifies the review package this module signs.
     :class:`~adapters.persistence.storage.SecureObjectRepository`
         Encrypted substrate the private key is persisted through.
@@ -68,7 +68,7 @@ from ...core.errors import CadrumoError
 from ...core.identity import BucketId, CalculationRevisionId, canonical_bucket_id
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
-from ._review_package import assert_review_package_verifies
+from .review_package import assert_review_package_verifies
 from ._review_package_keypair import ensure_singleton_keypair
 
 if TYPE_CHECKING:

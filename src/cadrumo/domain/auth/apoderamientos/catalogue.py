@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.errors import CadrumoError
@@ -19,6 +20,14 @@ from ....core.resources import bundled_path
 _DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "scopes.toml")
 
 ALL_TOKEN = "ALL"
+
+
+
+ApoderadoScopeCode = Annotated[str, StringConstraints(min_length=1, max_length=32)]
+"""The AEAT code naming one apoderamiento scope."""
+
+ApoderadoScopeName = Annotated[str, StringConstraints(min_length=1, max_length=200)]
+"""One scope's printed name, in either catalogue language."""
 
 
 class UnknownScopeError(CadrumoError):
@@ -30,9 +39,9 @@ class ApoderadoScope(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    code: str = Field(min_length=1, max_length=32)
-    name_es: str = Field(min_length=1, max_length=200)
-    name_en: str = Field(min_length=1, max_length=200)
+    code: ApoderadoScopeCode
+    name_es: ApoderadoScopeName
+    name_en: ApoderadoScopeName
     modelo_codes: tuple[str, ...] = Field(default_factory=tuple)
 
     @field_validator("code")

@@ -1,7 +1,7 @@
 """Encrypt-for-recipient transport for review packages (X25519 ECIES).
 
 This module adds a CONFIDENTIALITY layer on top of the review-package
-checksum-integrity (:mod:`~application.modelo._review_package`) and
+checksum-integrity (:mod:`~application.modelo.review_package`) and
 authenticity (:mod:`~application.modelo._review_package_signing`,
 :mod:`~application.modelo._review_package_counter_sign`) layers: a
 review package sealed with :func:`encrypt_review_package_for_recipient`
@@ -98,7 +98,7 @@ See Also:
 :mod:`~adapters.persistence.profile.recipient_replay_guard`
         The consumed-nonce ledger a caller composes around
         :func:`decrypt_review_package_for_recipient` for replay defence.
-    :mod:`~application.modelo._review_package`
+    :mod:`~application.modelo.review_package`
         Builds and integrity-verifies the review package this module
         encrypts.
     :func:`~application.modelo.ensure_review_package_signing_keypair`
