@@ -11,13 +11,12 @@ delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every paylo
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from ...core import CasillaId
 from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.filing_text import OperatorReason
 from ._modelo_payloads import ModeloRecordPayload
 
 
@@ -56,7 +55,7 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     operation: str = "modelo.work.amend_wizard"
     amendment_kind: CalculationRevisionAmendmentKind
     m303_rectificativa_motive: M303RectificativaMotive | None
-    amendment_reason: str = Field(min_length=1, max_length=500)
+    amendment_reason: OperatorReason
     amends_filing_record_id: FilingRecordId
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
 

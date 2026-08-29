@@ -87,6 +87,7 @@ from ...domain.modelos import (
     VerificationCompletenessStatus,
 )
 from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
+from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,
@@ -396,7 +397,7 @@ class ExternalEvidencePayload(OutputSchema):
     """
 
     kind: ExternalEvidenceKind
-    reference_id: str = Field(min_length=1, max_length=128)
+    reference_id: EvidenceReference
     imported_at: datetime
 
 
@@ -416,8 +417,8 @@ class ModeloRecordPayload(OutputSchema):
     filing_year: FilingYear
     period: Period
     filed_at: datetime
-    filed_by: str = Field(min_length=1, max_length=500)
-    notes: str | None = Field(default=None, min_length=1, max_length=500)
+    filed_by: ModeloActorLabel
+    notes: FilingNotes | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus
     superseded_at: datetime | None = None
@@ -881,7 +882,7 @@ class FilingRecordImportResult(ModeloRecordPayload):
 
     operation: str = "modelo.filing_record.import"
     evidence_kind: ExternalEvidenceKind
-    evidence_reference_id: str = Field(min_length=1, max_length=128)
+    evidence_reference_id: EvidenceReference
 
     @model_validator(mode="after")
     def _validate_imported_evidence_matches_record(self) -> FilingRecordImportResult:
