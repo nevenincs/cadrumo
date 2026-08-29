@@ -13,7 +13,7 @@ them here at the boundary.
 
 from __future__ import annotations
 
-from pydantic import Field, NonNegativeInt
+from pydantic import NonNegativeInt
 
 from ....application.storage_management import (
     StorageAreaDisposition,
@@ -22,6 +22,7 @@ from ....application.storage_management import (
 )
 from ....core import StorageArea
 from ....core.json_contract import OutputSchema
+from ....core.text_bounds import NonEmptyStr
 
 
 class StorageAreaPayload(OutputSchema):
@@ -31,8 +32,8 @@ class StorageAreaPayload(OutputSchema):
     occupancy: StorageOccupancy
     disposition: StorageAreaDisposition
     resolved_paths: NonNegativeInt
-    entry_count: int = Field(default=0, ge=0)
-    footprint_bytes: int = Field(default=0, ge=0)
+    entry_count: NonNegativeInt = 0
+    footprint_bytes: NonNegativeInt = 0
     reclaimable: bool
 
 
@@ -43,14 +44,14 @@ class ConfigStorageListResult(OutputSchema):
     resolved path, and whether it currently holds anything.
     """
 
-    storage_root: str = Field(min_length=1)
+    storage_root: NonEmptyStr
     areas: list[StorageAreaPayload] = []
 
 
 class ConfigStorageViewResult(OutputSchema):
     """JSON envelope for ``aeat config storage view AREA``."""
 
-    storage_root: str = Field(min_length=1)
+    storage_root: NonEmptyStr
     area: StorageAreaPayload
 
 
@@ -58,7 +59,7 @@ class StorageAreaIssuePayload(OutputSchema):
     """One disagreement between the declared tree and the tree on disk."""
 
     kind: StorageCheckIssueKind
-    path: str = Field(min_length=1)
+    path: NonEmptyStr
     area: StorageArea | None = None
     detail: str = ""
 
@@ -71,7 +72,7 @@ class ConfigStorageCheckResult(OutputSchema):
     not checked rather than checked and found clean.
     """
 
-    storage_root: str = Field(min_length=1)
+    storage_root: NonEmptyStr
     healthy: bool
     root_mode_enforced: bool
     checked_areas: NonNegativeInt
@@ -85,9 +86,9 @@ class ConfigStorageInitResult(OutputSchema):
     reports an empty list rather than restating the whole tree.
     """
 
-    storage_root: str = Field(min_length=1)
-    created_count: int = Field(default=0, ge=0)
-    already_present: int = Field(default=0, ge=0)
+    storage_root: NonEmptyStr
+    created_count: NonNegativeInt = 0
+    already_present: NonNegativeInt = 0
 
 
 class ConfigStorageReclaimResult(OutputSchema):
@@ -102,7 +103,7 @@ class ConfigStorageReclaimResult(OutputSchema):
     area: StorageArea
     target_count: NonNegativeInt
     removed_entries: NonNegativeInt
-    retained_entries: int = Field(default=0, ge=0)
+    retained_entries: NonNegativeInt = 0
 
 
 __all__ = [

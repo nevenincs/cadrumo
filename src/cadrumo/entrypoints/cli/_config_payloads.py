@@ -34,10 +34,11 @@ from ...application.config_reset import (
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
-from ...core import HEX_PATTERN_64
+from ...core import Hex64Str
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 
@@ -148,7 +149,7 @@ class ConfigRepairSetupPayload(OutputSchema):
 class ConfigRepairNamespacePayload(OutputSchema):
     """One secure-object namespace row in the config-repair report."""
 
-    namespace: str = Field(min_length=1)
+    namespace: NonEmptyStr
     readable: NonNegativeInt
     unreadable: NonNegativeInt
 
@@ -430,10 +431,10 @@ class ConfigProfileAddRowResult(OutputSchema):
     """Result of one application-owned repeatable profile-row mutation."""
 
     profile_id: ProfileId
-    section: str = Field(min_length=1)
+    section: NonEmptyStr
     row_index: NonNegativeInt
-    record_revision: int = Field(ge=1)
-    content_digest: str = Field(min_length=1)
+    record_revision: PositiveCount
+    content_digest: NonEmptyStr
 
 
 class ConfigProfileValidateResult(OutputSchema):
@@ -451,7 +452,7 @@ class ConfigProfileValidateResult(OutputSchema):
     display_name: str = Field(min_length=1, max_length=160)
     setup_state: ProfileSetupState
     valid: bool
-    schema_version: int = Field(ge=1)
+    schema_version: PositiveCount
     issues: list[ProfileIssuePayload]
 
 
@@ -523,7 +524,7 @@ class ConfigResetSummaryPayload(OutputSchema):
 class ConfigResetOperationPayload(OutputSchema):
     """Credential-free operator projection of one durable reset journal."""
 
-    operation_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    operation_id: Hex64Str
     status: ConfigResetOperationStatus
     started_at: str
     updated_at: str
@@ -870,9 +871,9 @@ class ConfigProfileExportReconcileFailurePayload(OutputSchema):
     be read; ``reason`` is the refusing error's class name.
     """
 
-    journal_id: str = Field(min_length=1)
+    journal_id: NonEmptyStr
     destination: str | None = None
-    reason: str = Field(min_length=1)
+    reason: NonEmptyStr
 
 
 class ConfigProfileDeleteResult(OutputSchema):
@@ -1011,8 +1012,8 @@ class ActiveProfileHealthPayload(OutputSchema):
     registered_bucket: bool = False
     profile_record_present: bool = False
     profile_record_error: str = ""
-    profile_present_keys: int = Field(default=0, ge=0)
-    profile_total_keys: int = Field(default=0, ge=0)
+    profile_present_keys: NonNegativeInt = 0
+    profile_total_keys: NonNegativeInt = 0
     missing_required: list[str] = []
     repairable_by_clearing_pointer: bool = False
     precondition_action: ResolvedPreconditionAction | None = None
@@ -1110,7 +1111,7 @@ class ApoderadoStatusResult(OutputSchema):
     configured: bool
     represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
     granted_scopes: list[str] = []
-    catalogue_version: str | None = Field(default=None, min_length=1)
+    catalogue_version: NonEmptyStr | None = None
     configured_at: datetime | None = None
 
 
@@ -1126,7 +1127,7 @@ class ApoderadoConfigureResult(OutputSchema):
     bucket_id: BucketId
     represented_nif: str = Field(min_length=1, max_length=16)
     granted_scopes: list[str] = []
-    catalogue_version: str = Field(min_length=1)
+    catalogue_version: NonEmptyStr
     configured_at: datetime
     notes: str = Field(default="", max_length=500)
 
@@ -1174,7 +1175,7 @@ class ApoderadoScopesListResult(OutputSchema):
     arbitrary dumped shape.
     """
 
-    catalogue_version: str = Field(min_length=1)
+    catalogue_version: NonEmptyStr
     scopes: list[ApoderadoScopePayload]
 
 
@@ -1297,6 +1298,6 @@ class AuthDiagnosticsReportResult(OutputSchema):
     operator records the phone-state outcome for an encrypted auth diagnostic.
     """
 
-    diagnostic_id: str = Field(min_length=1)
+    diagnostic_id: NonEmptyStr
     phone_state: AuthDiagnosticPhoneState
     reported_at: datetime

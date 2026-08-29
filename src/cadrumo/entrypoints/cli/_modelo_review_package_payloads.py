@@ -30,10 +30,11 @@ from datetime import datetime
 
 from pydantic import Field
 
-from ...core import HEX_PATTERN_64, Period
+from ...core import Hex64Str, Period
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 
 
 class ModeloReviewPackageBuildResult(OutputSchema):
@@ -52,10 +53,10 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: FilingYear
     period: Period
-    revision_state: str = Field(min_length=1)
+    revision_state: NonEmptyStr
     has_ledger_evidence: bool
     output_path: str
-    member_count: int = Field(ge=1)
+    member_count: PositiveCount
     built_by: str = Field(min_length=1, max_length=128)
     built_at: datetime
 
@@ -84,7 +85,7 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: FilingYear
     period: Period
-    revision_state: str = Field(min_length=1)
+    revision_state: NonEmptyStr
     has_ledger_evidence: bool
     built_by: str = Field(min_length=1, max_length=128)
     built_at: datetime
@@ -106,8 +107,8 @@ class ModeloReviewPackageSignResult(OutputSchema):
     signature_path: str
     bucket_id: BucketId
     calculation_revision_id: CalculationRevisionId
-    manifest_sha256: str = Field(pattern=HEX_PATTERN_64)
-    signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    manifest_sha256: Hex64Str
+    signer_public_key_hex: Hex64Str
     signed_at: datetime
 
 
@@ -117,7 +118,7 @@ class ModeloReviewPackageVerifySignatureResult(OutputSchema):
     operation: str = "modelo.review_package.verify_signature"
     package_path: str
     signature_path: str
-    signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    signer_public_key_hex: Hex64Str
     is_valid: bool
 
 
@@ -136,7 +137,7 @@ class ModeloReviewPackageCounterSignResult(OutputSchema):
     receipt_path: str
     bucket_id: BucketId
     note: str = Field(default="", max_length=2000)
-    counter_signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    counter_signer_public_key_hex: Hex64Str
     counter_signed_at: datetime
 
 
@@ -146,8 +147,8 @@ class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
     operation: str = "modelo.review_package.verify_receipt"
     package_path: str
     receipt_path: str
-    operator_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
-    counter_signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    operator_public_key_hex: Hex64Str
+    counter_signer_public_key_hex: Hex64Str
     is_valid: bool
 
 
@@ -165,8 +166,8 @@ class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
     operation: str = "modelo.review_package.encrypt_for_recipient"
     package_path: str
     output_path: str
-    recipient_id: str = Field(min_length=1)
-    recipient_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    recipient_id: NonEmptyStr
+    recipient_public_key_hex: Hex64Str
     review_only: bool
     issued_at: datetime
     valid_until: datetime | None = None
@@ -205,8 +206,8 @@ class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
 
     operation: str = "modelo.review_package.encrypt_feedback"
     output_path: str
-    originator_id: str = Field(min_length=1)
-    originator_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    originator_id: NonEmptyStr
+    originator_public_key_hex: Hex64Str
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     has_counter_sign: bool

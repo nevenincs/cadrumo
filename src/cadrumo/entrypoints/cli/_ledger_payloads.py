@@ -50,6 +50,7 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputRootSchema, OutputSchema
+from ...core.text_bounds import NonEmptyStr
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
     AttachmentReviewQueueResult,
@@ -164,12 +165,12 @@ class TransactionPayload(OutputSchema):
     date: str = Field(min_length=10, max_length=10)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
-    amount: str = Field(min_length=1)
+    amount: NonEmptyStr
     currency: str = Field(min_length=3, max_length=3)
-    direction: str = Field(min_length=1)
+    direction: NonEmptyStr
     counterparty: str = ""
-    description: str = Field(min_length=1)
-    business_classification: str = Field(min_length=1)
+    description: NonEmptyStr
+    business_classification: NonEmptyStr
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
@@ -185,8 +186,8 @@ class TransactionPayload(OutputSchema):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: list[str] = []
     notes: str = ""
-    lifecycle_state: str = Field(min_length=1)
-    classified_by: str = Field(min_length=1)
+    lifecycle_state: NonEmptyStr
+    classified_by: NonEmptyStr
     # Decision-provenance fields: the "why" behind the active
     # classification decision. Declared here so the strict single-transaction
     # read surface (ledger view/classify/update/archive/stash) accepts the
@@ -246,9 +247,9 @@ class LedgerReviewRowPayload(OutputSchema):
 
     id: TransactionId
     date: str = Field(min_length=10, max_length=10)
-    amount: str = Field(min_length=1)
-    description: str = Field(min_length=1)
-    status: str = Field(min_length=1)
+    amount: NonEmptyStr
+    description: NonEmptyStr
+    status: NonEmptyStr
     transaction: TransactionPayload | None = None
 
 
@@ -722,8 +723,8 @@ class LedgerStatusResult(OutputSchema):
     reviewed_count: NonNegativeInt
     skipped_count: NonNegativeInt
     period: Period | None = None
-    checked_transaction_count: int = Field(default=0, ge=0)
-    readiness_issue_count: int = Field(default=0, ge=0)
+    checked_transaction_count: NonNegativeInt = 0
+    readiness_issue_count: NonNegativeInt = 0
     ready: bool | None = None
 
 
@@ -788,7 +789,7 @@ class LedgerExportRowPayload(OutputSchema):
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str = ""
     effective_date: str = Field(min_length=10, max_length=10)
-    amount: str = Field(min_length=1)
+    amount: NonEmptyStr
     currency: str = Field(pattern=r"^[A-Z]{3}$")
     direction: str
     counterparty: str = ""
@@ -899,7 +900,7 @@ class LedgerImportPayload(OutputSchema):
     rows: NonNegativeInt
     imported: NonNegativeInt
     skipped: NonNegativeInt
-    likely_duplicates: int = Field(default=0, ge=0)
+    likely_duplicates: NonNegativeInt = 0
     dry_run: bool
     verify: bool
     period: Period | None = None
@@ -1068,9 +1069,9 @@ class LedgerReviewResult(OutputSchema):
     # Single-transaction detail path
     id: TransactionId | None = None
     date: str | None = Field(default=None, min_length=10, max_length=10)
-    amount: str | None = Field(default=None, min_length=1)
-    description: str | None = Field(default=None, min_length=1)
-    review_status: str | None = Field(default=None, min_length=1)
+    amount: NonEmptyStr | None = None
+    description: NonEmptyStr | None = None
+    review_status: NonEmptyStr | None = None
     transaction: TransactionPayload | None = None
     verbose: bool | None = None
 

@@ -30,6 +30,7 @@ from pydantic import Field, NonNegativeInt, field_validator, model_validator
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
 from ...core.telemetry import TelemetryEventPayload, TelemetryTier
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_inclusive_iso_date_range
 from ...core.unit_proportion import is_unit_proportion
 from ._decimal_wire import DecimalWireText
@@ -57,7 +58,7 @@ class LlmRunProviderPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LlmRunProviderMetrics`.
     """
 
-    provider: str = Field(min_length=1)
+    provider: NonEmptyStr
     runs: NonNegativeInt
     succeeded: NonNegativeInt
     failed: NonNegativeInt
@@ -111,9 +112,9 @@ class RunRecordPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.RunRecordView`.
     """
 
-    run_id: str = Field(min_length=1)
-    caller: str = Field(min_length=1)
-    provider: str = Field(min_length=1)
+    run_id: NonEmptyStr
+    caller: NonEmptyStr
+    provider: NonEmptyStr
     # `model` and `error_kind` stay unbounded: the canonical RunRecordView
     # defaults both to the empty string, so a blank is representable.
     model: str
@@ -160,7 +161,7 @@ class LatencyPercentilesPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LatencyPercentiles`.
     """
 
-    entries: int = Field(default=0, ge=0)
+    entries: NonNegativeInt = 0
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
@@ -172,7 +173,7 @@ class LatencyPercentilesPayload(OutputSchema):
 class LatencyProviderRowPayload(OutputSchema):
     """One provider's :class:`LatencyPercentilesPayload` row."""
 
-    provider: str = Field(min_length=1)
+    provider: NonEmptyStr
     percentiles: LatencyPercentilesPayload
 
 
@@ -212,12 +213,12 @@ class ErrorKindCountPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.ErrorKindCount`.
     """
 
-    error_kind: str = Field(min_length=1)
-    provider: str = Field(min_length=1)
+    error_kind: NonEmptyStr
+    provider: NonEmptyStr
     # ge=1, not ge=0: the canonical ErrorKindCount only materialises a row for
     # an error kind that actually occurred, so a zero-count row is not a
     # representable observation.
-    count: int = Field(ge=1)
+    count: PositiveCount
 
 
 class ErrorsBreakdownResult(OutputSchema):
@@ -265,7 +266,7 @@ class LlmUsageModelPayload(OutputSchema):
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
-    total_duration_ms: int = Field(default=0, ge=0)
+    total_duration_ms: NonNegativeInt = 0
     success_rate: DecimalWireText
 
     @field_validator("success_rate")
@@ -280,14 +281,14 @@ class LlmRunHealthProviderPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LlmRunHealthProviderMetrics`.
     """
 
-    provider: str = Field(min_length=1)
+    provider: NonEmptyStr
     runs: NonNegativeInt
     succeeded: NonNegativeInt
     failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
-    total_duration_ms: int = Field(default=0, ge=0)
+    total_duration_ms: NonNegativeInt = 0
     success_rate: DecimalWireText
     models: list[LlmUsageModelPayload]
 

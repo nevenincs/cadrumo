@@ -43,6 +43,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
+from ...core.text_bounds import NonEmptyStr
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ._operator_surface_reconciliation import current_operator_surface_reconciliation
 
@@ -172,7 +173,7 @@ class RequestedCliLeaf(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    subject_leaf_key: str = Field(min_length=1)
+    subject_leaf_key: NonEmptyStr
     canonical_cli_path: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("canonical_cli_path")

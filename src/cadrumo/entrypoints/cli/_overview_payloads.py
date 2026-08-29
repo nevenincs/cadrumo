@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from typing import Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import NonNegativeInt, model_validator
 
 from ...application.operator_actions import ActionReference
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
@@ -482,8 +482,8 @@ class OverviewPipelineModeloPayload(OutputSchema):
     modelo: str
     work_unit_id: WorkUnitId | None = None
     state: ModeloReadinessState
-    blocking_finding_count: int = Field(default=0, ge=0)
-    warning_finding_count: int = Field(default=0, ge=0)
+    blocking_finding_count: NonNegativeInt = 0
+    warning_finding_count: NonNegativeInt = 0
     summary: str
     next_action: ResolvedNoticeAction | None = None
 

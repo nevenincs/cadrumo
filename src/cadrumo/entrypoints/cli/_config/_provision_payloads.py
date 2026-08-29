@@ -19,6 +19,7 @@ from pydantic import Field, NonNegativeInt
 
 from ....core import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ....core.text_bounds import NonEmptyStr
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
 """Locale-neutral scalar facts projected from a provisioning outcome."""
@@ -32,7 +33,7 @@ class ProvisionContentionPayload(OutputSchema):
     verdict preserve the remaining explanation without prose parsing.
     """
 
-    model: str = Field(min_length=1)
+    model: NonEmptyStr
     admitted: bool
     causes: list[ContentionCause] = []
     required_bytes: NonNegativeInt
@@ -47,7 +48,7 @@ class ProvisionContentionPayload(OutputSchema):
 class ProvisionModelPayload(OutputSchema):
     """One role's resolved model and whether it is present in the runtime."""
 
-    role: str = Field(min_length=1)
+    role: NonEmptyStr
     model: str | None = None
     selected: bool
     resident: bool = False
@@ -83,7 +84,7 @@ class ProvisionPullResult(OutputSchema):
     was knowable at the start.
     """
 
-    model: str | None = Field(default=None, min_length=1)
+    model: NonEmptyStr | None = None
     pulled: bool
     bytes_fetched: int | None = None
     contention: ProvisionContentionPayload | None = None
@@ -99,7 +100,7 @@ class ProvisionVerifyResult(OutputSchema):
     debugging a stalled read needs to know which they have.
     """
 
-    model: str | None = Field(default=None, min_length=1)
+    model: NonEmptyStr | None = None
     ready: bool
     resident: bool = False
     answered: bool = False

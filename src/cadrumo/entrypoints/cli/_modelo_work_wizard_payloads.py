@@ -17,6 +17,7 @@ from pydantic import Field
 
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
 
@@ -38,12 +39,12 @@ class WizardPromptedCasillaPayload(OutputSchema):
 
     casilla_id: CasillaId
     number: str
-    label: str = Field(min_length=1)
+    label: NonEmptyStr
     channel: WizardPromptChannel
     """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
-    key: str = Field(min_length=1)
+    key: NonEmptyStr
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
-    value: str = Field(min_length=1)
+    value: NonEmptyStr
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     help_text: str | None = None

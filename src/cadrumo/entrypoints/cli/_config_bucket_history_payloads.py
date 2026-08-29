@@ -31,6 +31,7 @@ from pydantic import Field
 
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import PositiveCount
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -57,7 +58,7 @@ class BucketHistoryEventPayload(OutputSchema):
     actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
-    payload_version: int = Field(ge=1)
+    payload_version: PositiveCount
     payload: dict[str, str] = {}
 
 

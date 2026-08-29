@@ -32,6 +32,7 @@ from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -92,7 +93,7 @@ class ModeloAuditViewResult(OutputSchema):
 
     operation: str = "modelo.audit.show"
     bundle_id: Hex64Str
-    manifest_version: int = Field(ge=1)
+    manifest_version: PositiveCount
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId | None = None
@@ -124,7 +125,7 @@ class ModeloAuditExportResult(OutputSchema):
     operation: str = "modelo.audit.export"
     bucket_id: BucketId
     bundle_id: Hex64Str
-    output: str = Field(min_length=1)
+    output: NonEmptyStr
     verification_state: BundleVerificationState
     records: NonNegativeInt
 

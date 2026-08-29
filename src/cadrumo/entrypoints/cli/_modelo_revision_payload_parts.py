@@ -22,6 +22,7 @@ from ...application.modelo._result_summary import ResultSummaryRole
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
 
 
@@ -33,8 +34,8 @@ class DetailRowPayload(OutputSchema):
     each command schema to duplicate every domain row shape.
     """
 
-    index: int = Field(ge=1)
-    row_type: str = Field(min_length=1)
+    index: PositiveCount
+    row_type: NonEmptyStr
     fields: dict[str, str | None]
 
 

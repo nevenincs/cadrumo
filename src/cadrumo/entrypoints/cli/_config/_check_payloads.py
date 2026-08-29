@@ -21,6 +21,7 @@ from pydantic import Field, model_validator
 from ....application.preflight import HealthSeverity
 from ....core.identity import ProfileId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ....core.text_bounds import NonEmptyStr
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
 """Locale-neutral scalar facts projected from a provisioning outcome."""
@@ -56,7 +57,7 @@ class CheckDependencyPayload(OutputSchema):
     the live action surface without recreating a command string.
     """
 
-    service: str = Field(min_length=1)
+    service: NonEmptyStr
     available: bool
     facts: ProvisioningFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
@@ -83,7 +84,7 @@ class CheckPreflightPayload(OutputSchema):
     the exit code.
     """
 
-    check: str = Field(min_length=1)
+    check: NonEmptyStr
     healthy: bool
     severity: HealthSeverity
     facts: ProvisioningFactPayload = Field(default_factory=dict)

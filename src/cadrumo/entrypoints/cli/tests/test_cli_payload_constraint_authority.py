@@ -68,6 +68,14 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_app_live_iva_wallet_payloads.py",
+        "_config/_storage_payloads.py",
+        "_config/_archive_reconcile_payloads.py",
+        "_config/_check_payloads.py",
+        "_config/_provision_payloads.py",
+        "_ledger_counterparty_payloads.py",
+        "_payloads_modelo_reconcile.py",
+        "_registry_payloads.py",
         "_ledger_rule_payloads.py",
         "_config/_censo_payloads.py",
         "_config/_collab_payloads.py",
@@ -96,13 +104,8 @@ EXEMPT_MODULES: dict[str, str] = {
 # something, so a reconciled module cannot be left behind here.
 OUTSTANDING_MODULES: dict[str, str] = {
     "_app_live_borrador_payloads.py": "borrador capture payloads await sede-evidence model reconciliation",
-    "_app_live_iva_wallet_payloads.py": "shares the IVA wallet decision surface with _modelo_iva_wallet_payloads",
     "_app_live_notifications_payloads.py": "notification payloads restate sede notification metadata bounds",
-    "_config/_archive_reconcile_payloads.py": "archive reconcile bounds belong with the archive tier model",
-    "_config/_check_payloads.py": "config check payloads restate diagnostic bounds",
     "_config/_profile_list_payloads.py": "profile listing restates profile label bounds",
-    "_config/_provision_payloads.py": "provisioning payloads restate bucket provisioning bounds",
-    "_config/_storage_payloads.py": "storage payloads restate secure-storage configuration bounds",
     "_config_bucket_history_payloads.py": "bucket history restates bucket event bounds",
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
     "_config_help_payloads.py": "help payloads restate locale-key and label bounds",
@@ -110,7 +113,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_diagnostics_payloads.py": "diagnostics payloads restate connectivity and probe bounds",
     "_ledger_business_payloads.py": "business-activity payloads restate ledger business model bounds",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
-    "_ledger_counterparty_payloads.py": "counterparty payloads restate counterparty identity bounds",
     "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
     "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
     "_modelo_amend_wizard_payloads.py": "amendment_reason restates the canonical discard/amendment reason alias",
@@ -124,8 +126,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_modelo_spreadsheet_payloads.py": "spreadsheet payloads restate workbook plan bounds",
     "_modelo_work_wizard_payloads.py": "work wizard payloads restate work-unit bounds",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
-    "_payloads_modelo_reconcile.py": "reconcile payloads restate reconciliation diff bounds",
-    "_registry_payloads.py": "registry payloads restate registry report bounds",
 }
 
 

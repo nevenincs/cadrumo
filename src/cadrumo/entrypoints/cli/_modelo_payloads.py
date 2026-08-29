@@ -58,6 +58,7 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.text_bounds import NonEmptyStr
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -916,7 +917,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     casilla_values: dict[CasillaId, DecimalWireText]
     casilla_count: NonNegativeInt
     captured_at: datetime
-    captured_by: str = Field(min_length=1)
+    captured_by: NonEmptyStr
     official_evidence: Literal[False] = False
     filing_record_created: Literal[False] = False
     aeat_accepted: Literal[False] = False
@@ -1180,9 +1181,9 @@ class ModeloHistoryResult(OutputSchema):
     """
 
     operation: str = "modelo.history"
-    modelo: str = Field(min_length=1)
+    modelo: NonEmptyStr
     year: FilingYear | None = None
-    period: str | None = Field(default=None, min_length=1)
+    period: NonEmptyStr | None = None
     count: NonNegativeInt
     events: list[ModeloLifecycleEventPayload]
 
