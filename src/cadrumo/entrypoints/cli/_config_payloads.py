@@ -36,7 +36,7 @@ from ...application.user_profile.bundle_export_contracts import ProfileBundleExp
 from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import Hex64Str
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId, ProfileId
+from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_utc_aware
@@ -408,7 +408,7 @@ class ConfigProfileViewResult(OutputSchema):
     """
 
     profile_id: ProfileId | None = None
-    display_name: str | None = Field(default=None, min_length=1, max_length=160)
+    display_name: ProfileLabel | None = None
     setup_state: ProfileSetupState | None = None
     status: Literal["profile_record_unreadable"] | None = None
     valid: bool | None = None
@@ -449,7 +449,7 @@ class ConfigProfileValidateResult(OutputSchema):
     """
 
     profile_id: ProfileId
-    display_name: str = Field(min_length=1, max_length=160)
+    display_name: ProfileLabel
     setup_state: ProfileSetupState
     valid: bool
     schema_version: PositiveCount
@@ -905,7 +905,7 @@ class ConfigProfileDeleteResult(OutputSchema):
     """
 
     profile_id: BucketId
-    display_name: str = Field(min_length=1, max_length=160)
+    display_name: ProfileLabel
     deleted: bool
     fingerprint: BucketDeletionFingerprint | None = None
     retained_record_count: NonNegativeInt
@@ -921,8 +921,8 @@ class ConfigProfileRenameResult(OutputSchema):
     """
 
     profile_id: BucketId
-    previous_display_name: str = Field(min_length=1, max_length=160)
-    display_name: str = Field(min_length=1, max_length=160)
+    previous_display_name: ProfileLabel
+    display_name: ProfileLabel
 
 
 class ConfigProfileExportResult(OutputSchema):

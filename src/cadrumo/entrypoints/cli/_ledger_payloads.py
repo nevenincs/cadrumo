@@ -38,6 +38,13 @@ from typing import TYPE_CHECKING
 
 from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
+from ...application.ledger.models import (
+    CurrencyCode,
+    DiagnosticKind,
+    DiagnosticMessage,
+    DiagnosticSeverity,
+    IsoDateText,
+)
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import (
@@ -162,11 +169,11 @@ class TransactionPayload(OutputSchema):
     """
 
     transaction_id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
-    booked_date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
+    booked_date: IsoDateText
     value_date: str | None = None
     amount: NonEmptyStr
-    currency: str = Field(min_length=3, max_length=3)
+    currency: CurrencyCode
     direction: NonEmptyStr
     counterparty: str = ""
     description: NonEmptyStr
@@ -246,7 +253,7 @@ class LedgerReviewRowPayload(OutputSchema):
     """
 
     id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
     amount: NonEmptyStr
     description: NonEmptyStr
     status: NonEmptyStr
@@ -337,9 +344,9 @@ class LedgerImportSourcePayload(OutputSchema):
 class LedgerImportDiagnosticPayload(OutputSchema):
     """One :class:`LedgerImportDiagnosticReport` entry."""
 
-    kind: str = Field(min_length=1, max_length=32)
-    severity: str = Field(min_length=1, max_length=16)
-    message: str = Field(min_length=1, max_length=128)
+    kind: DiagnosticKind
+    severity: DiagnosticSeverity
+    message: DiagnosticMessage
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: list[str] = []
@@ -786,9 +793,9 @@ class LedgerExportRowPayload(OutputSchema):
     bucket_id: BucketId
     transaction_id: TransactionId
     lifecycle_state: str
-    booked_date: str = Field(min_length=10, max_length=10)
+    booked_date: IsoDateText
     value_date: str = ""
-    effective_date: str = Field(min_length=10, max_length=10)
+    effective_date: IsoDateText
     amount: NonEmptyStr
     currency: str = Field(pattern=r"^[A-Z]{3}$")
     direction: str
@@ -1068,7 +1075,7 @@ class LedgerReviewResult(OutputSchema):
     filters: list[str] | None = None
     # Single-transaction detail path
     id: TransactionId | None = None
-    date: str | None = Field(default=None, min_length=10, max_length=10)
+    date: IsoDateText | None = None
     amount: NonEmptyStr | None = None
     description: NonEmptyStr | None = None
     review_status: NonEmptyStr | None = None

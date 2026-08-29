@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Self
 
-from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind, Period
@@ -132,7 +132,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     booked_date: date
     value_date: date | None = None
     amount: Decimal
-    currency: str = Field(default=DEFAULT_CURRENCY, min_length=3)
+    currency: CurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
     counterparty: _LedgerOptionalText = None
     description: str = Field(min_length=1)
@@ -296,15 +296,31 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
+
+IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
+"""A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
+
+CurrencyCode = Annotated[str, StringConstraints(min_length=3, max_length=3)]
+"""An ISO-4217 code, which is three characters by definition of the standard."""
+
+DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]
+"""What an import diagnostic is about."""
+
+DiagnosticSeverity = Annotated[str, StringConstraints(min_length=1, max_length=16)]
+"""How loudly an import diagnostic asks to be read."""
+
+DiagnosticMessage = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+"""The operator-facing sentence an import diagnostic carries."""
+
 class LedgerTransactionPayload(_LedgerCountryCodeModel):
     """Canonical read projection for one ledger transaction."""
 
     transaction_id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
-    booked_date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
+    booked_date: IsoDateText
     value_date: str | None = None
     amount: str = Field(min_length=1)
-    currency: str = Field(min_length=3, max_length=3)
+    currency: CurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
@@ -488,9 +504,9 @@ class LedgerImportDiagnosticReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: str = Field(min_length=1, max_length=32)
-    severity: str = Field(min_length=1, max_length=16)
-    message: str = Field(min_length=1, max_length=128)
+    kind: DiagnosticKind
+    severity: DiagnosticSeverity
+    message: DiagnosticMessage
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: tuple[str, ...] = ()
@@ -591,7 +607,7 @@ class LedgerReviewRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
     amount: str = Field(min_length=1)
     description: str = Field(min_length=1)
     status: str = Field(min_length=1)
@@ -820,11 +836,11 @@ class LedgerExportRow(BaseModel):
     bucket_id: BucketId
     transaction_id: TransactionId
     lifecycle_state: str = Field(min_length=1)
-    booked_date: str = Field(min_length=10, max_length=10)
+    booked_date: IsoDateText
     value_date: str = ""
-    effective_date: str = Field(min_length=10, max_length=10)
+    effective_date: IsoDateText
     amount: str = Field(min_length=1)
-    currency: str = Field(min_length=3, max_length=3)
+    currency: CurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
