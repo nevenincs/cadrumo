@@ -68,6 +68,7 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_config_help_payloads.py",
         "_modelo_amend_wizard_payloads.py",
         "_modelo_bindings_payloads.py",
         "_modelo_revision_payload_parts.py",
@@ -113,7 +114,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_config/_profile_list_payloads.py": "profile listing restates profile label bounds",
     "_config_bucket_history_payloads.py": "bucket history restates bucket event bounds",
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
-    "_config_help_payloads.py": "help payloads restate locale-key and label bounds",
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
     "_diagnostics_payloads.py": "diagnostics payloads restate connectivity and probe bounds",
     "_ledger_business_payloads.py": "business-activity payloads restate ledger business model bounds",

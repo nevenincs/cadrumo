@@ -37,4 +37,12 @@ PositiveCount = Annotated[int, Field(ge=1)]
 NonNegativeDecimal = Annotated[Decimal, Field(ge=Decimal("0"))]
 """A decimal quantity that cannot go below zero."""
 
-__all__ = ["NonEmptyStr", "NonNegativeDecimal", "PositiveCount"]
+type NonEmptyList[T] = Annotated[list[T], Field(min_length=1)]
+"""A list that carries at least one element.
+
+The container is part of a payload's wire shape, so this keeps the list rather
+than quietly promoting it to a tuple: the strict models refuse the coercion,
+and a projection has no business changing what a caller may hand it.
+"""
+
+__all__ = ["NonEmptyList", "NonEmptyStr", "NonNegativeDecimal", "PositiveCount"]

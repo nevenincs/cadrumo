@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
 class HelpSurface(StrEnum):
@@ -15,13 +16,21 @@ class HelpSurface(StrEnum):
     APP = "app"
 
 
+
+HelpLabel = Annotated[str, StringConstraints(min_length=1, max_length=80)]
+"""One line of the help surface: a command, its description, a section title."""
+
+HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=120)]
+"""A heading or footer, which gets more room than a single help line."""
+
+
 class HelpEntry(BaseModel):
     """One localized command row in a curated :class:`HelpSection`."""
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-    command: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=1, max_length=80)
+    command: HelpLabel
+    description: HelpLabel
 
 
 class HelpSection(BaseModel):
@@ -29,7 +38,7 @@ class HelpSection(BaseModel):
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-    title: str = Field(min_length=1, max_length=80)
+    title: HelpLabel
     entries: tuple[HelpEntry, ...] = Field(min_length=1)
 
 
@@ -39,10 +48,10 @@ class HelpDocument(BaseModel):
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
     surface: HelpSurface
-    heading: str = Field(min_length=1, max_length=120)
+    heading: HelpProse
     paragraphs: tuple[str, ...] = Field(min_length=1)
     sections: tuple[HelpSection, ...] = Field(min_length=1)
-    footer: str = Field(min_length=1, max_length=120)
+    footer: HelpProse
 
 
 class RootLandingReport(BaseModel):

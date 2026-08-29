@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     )
     from ._crud_registry import BUILTIN_CRUD_CATALOGUE, get_builtin_catalogue
     from ._help import build_help_document, build_root_landing_report, render_help_text, render_root_landing_text
-    from ._help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
+    from .help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
     from ._manifest import (
         CommandSchemaRef,
         ExplicitExclusionInventoryRow,
@@ -217,7 +217,7 @@ _EXPORT_MODULES = {
         ("build_help_document", "build_root_landing_report", "render_help_text", "render_root_landing_text"),
         "._help",
     ),
-    **dict.fromkeys(("HelpDocument", "HelpEntry", "HelpSection", "HelpSurface", "RootLandingReport"), "._help_models"),
+    **dict.fromkeys(("HelpDocument", "HelpEntry", "HelpSection", "HelpSurface", "RootLandingReport"), ".help_models"),
     **dict.fromkeys(
         (
             "CommandSchemaRef",

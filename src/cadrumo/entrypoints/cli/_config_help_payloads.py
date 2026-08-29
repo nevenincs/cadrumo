@@ -2,34 +2,34 @@
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from ...application.operator_surface import HelpSurface
+from ...application.operator_surface.help_models import HelpLabel, HelpProse
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyList
 
 
 class ConfigHelpEntryPayload(OutputSchema):
     """One command row in the curated config help document."""
 
-    command: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=1, max_length=80)
+    command: HelpLabel
+    description: HelpLabel
 
 
 class ConfigHelpSectionPayload(OutputSchema):
     """One workflow-ordered section in the curated config help document."""
 
-    title: str = Field(min_length=1, max_length=80)
-    entries: list[ConfigHelpEntryPayload] = Field(min_length=1)
+    title: HelpLabel
+    entries: NonEmptyList[ConfigHelpEntryPayload]
 
 
 class ConfigRootResult(OutputSchema):
     """JSON envelope for bare ``aeat config`` and ``aeat config --help``."""
 
     surface: HelpSurface
-    heading: str = Field(min_length=1, max_length=120)
-    paragraphs: list[str] = Field(min_length=1)
-    sections: list[ConfigHelpSectionPayload] = Field(min_length=1)
-    footer: str = Field(min_length=1, max_length=120)
+    heading: HelpProse
+    paragraphs: NonEmptyList[str]
+    sections: NonEmptyList[ConfigHelpSectionPayload]
+    footer: HelpProse
 
 
 __all__ = ["ConfigHelpEntryPayload", "ConfigHelpSectionPayload", "ConfigRootResult"]
