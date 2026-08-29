@@ -27,8 +27,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
-
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import PositiveCount
@@ -76,6 +74,6 @@ class BucketHistoryResult(OutputSchema):
     event_types: list[BucketEventType] | None = None
     since: datetime | None = None
     until: datetime | None = None
-    object_id: str | None = Field(default=None, min_length=1, max_length=128)
+    object_id: BucketObjectId | None = None
     actor: BucketActorLabel | None = None
     events: list[BucketHistoryEventPayload]

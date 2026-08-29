@@ -9,9 +9,7 @@ authenticated profile aggregate, into a listing that authenticates nothing.
 
 from __future__ import annotations
 
-from pydantic import Field
-
-from ....core.identity import BucketId
+from ....core.identity import BucketId, ProfileLabel
 from ....core.json_contract import OutputSchema
 
 
@@ -26,7 +24,7 @@ class ProfilePointerPayload(OutputSchema):
     listed.
     """
 
-    name: str = Field(min_length=1, max_length=160)
+    name: ProfileLabel
     bucket_id: BucketId
     active: bool
 
@@ -40,7 +38,7 @@ class ConfigListResult(OutputSchema):
     active label is refused rather than silently listed as active.
     """
 
-    active_profile: str | None = Field(default=None, min_length=1, max_length=160)
+    active_profile: ProfileLabel | None = None
     profiles: list[ProfilePointerPayload]
 
 

@@ -68,6 +68,10 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 RECONCILED_MODULES: frozenset[str] = frozenset(
     {
         "_app_live_justificante_payloads.py",
+        "_config/_profile_list_payloads.py",
+        "_config_bucket_history_payloads.py",
+        "_diagnostics_payloads.py",
+        "_ledger_business_payloads.py",
         "_config_help_payloads.py",
         "_modelo_amend_wizard_payloads.py",
         "_modelo_bindings_payloads.py",
@@ -111,12 +115,8 @@ EXEMPT_MODULES: dict[str, str] = {
 OUTSTANDING_MODULES: dict[str, str] = {
     "_app_live_borrador_payloads.py": "borrador capture payloads await sede-evidence model reconciliation",
     "_app_live_notifications_payloads.py": "notification payloads restate sede notification metadata bounds",
-    "_config/_profile_list_payloads.py": "profile listing restates profile label bounds",
-    "_config_bucket_history_payloads.py": "bucket history restates bucket event bounds",
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
-    "_diagnostics_payloads.py": "diagnostics payloads restate connectivity and probe bounds",
-    "_ledger_business_payloads.py": "business-activity payloads restate ledger business model bounds",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
     "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
     "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",

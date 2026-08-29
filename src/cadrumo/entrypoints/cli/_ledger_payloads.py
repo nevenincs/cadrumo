@@ -725,7 +725,7 @@ class LedgerStatusResult(OutputSchema):
     active_count: NonNegativeInt
     archived_count: NonNegativeInt
     stashed_count: NonNegativeInt
-    split_count: int = Field(ge=0, default=0)
+    split_count: NonNegativeInt = 0
     pending_review_count: NonNegativeInt
     reviewed_count: NonNegativeInt
     skipped_count: NonNegativeInt

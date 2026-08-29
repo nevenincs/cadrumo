@@ -28,13 +28,14 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, Field, NonNegativeInt
+from pydantic import AfterValidator, NonNegativeInt
 
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
+    InventoryYear,
     MovementKind,
     ValuationMethod,
 )
@@ -130,7 +131,7 @@ class InventoryLedgerPayload(OutputSchema):
     """
 
     actividad_id: NonEmptyStr
-    year: int = Field(ge=1900)
+    year: InventoryYear
     valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_layers: list[InventoryStockLayerPayload] = []

@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
@@ -137,7 +137,7 @@ class RunsListResult(OutputSchema):
     provider: str | None = None
     # ge=1 mirrors the ``--limit`` option's own ``min=1``: a zero cap is a
     # listing that can never return a row, which the command itself refuses.
-    limit: int | None = Field(default=None, ge=1)
+    limit: PositiveCount | None = None
     runs: list[RunRecordPayload]
     total_runs: int
     has_run_data: bool
