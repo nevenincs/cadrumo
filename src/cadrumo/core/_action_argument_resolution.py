@@ -8,6 +8,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from .identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 
 _STRICT_FROZEN_CONFIG = ConfigDict(
     extra="forbid",
@@ -15,8 +16,6 @@ _STRICT_FROZEN_CONFIG = ConfigDict(
     strict=True,
     validate_assignment=True,
 )
-_FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
-_NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 
 def _validate_evidence_id_pairing(
@@ -36,14 +35,14 @@ class ActionArgumentResolution(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    argument_name: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=120)
     status: ActionArgumentStatus
     value: str | int | bool | Decimal | None = None
     source: ActionArgumentSource | None = None
-    source_key: str | None = Field(default=None, pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_key: str | None = Field(default=None, pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
     source_evidence_id: str | None = Field(
         default=None,
-        pattern=_NAMESPACED_ID_PATTERN,
+        pattern=NAMESPACED_ID_PATTERN,
         min_length=3,
         max_length=160,
     )

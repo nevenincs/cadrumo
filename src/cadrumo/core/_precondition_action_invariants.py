@@ -19,9 +19,8 @@ from ._operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 
-FIELD_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
-NAMESPACED_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
     {
         "action",
@@ -52,8 +51,8 @@ class PreconditionEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    condition_id: str = Field(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    evidence_id: str = Field(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    condition_id: NamespacedId
+    evidence_id: NamespacedId
     provenance: ActionEvidenceProvenance
     values: Mapping[str, str | int | bool | Decimal] = Field(min_length=1)
 
@@ -86,7 +85,7 @@ class PreconditionActionIdentity(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    action_id: str = Field(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    action_id: NamespacedId
 
 
 def _require_argument_matches_its_evidence(
@@ -119,7 +118,7 @@ class PreconditionOutcomeInvariant[
 
     model_config = STRICT_FROZEN_CONFIG
 
-    failed_condition_id: str = Field(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    failed_condition_id: NamespacedId
     evidence: tuple[EvidenceT, ...] = Field(min_length=1)
     action: ActionT | None = None
     argument_bindings: tuple[ArgumentT, ...] = Field(default_factory=tuple)
@@ -209,8 +208,6 @@ class PreconditionOutcomeInvariant[
 
 
 __all__ = [
-    "FIELD_KEY_PATTERN",
-    "NAMESPACED_ID_PATTERN",
     "PreconditionActionIdentity",
     "PreconditionEvidence",
     "PreconditionOutcomeInvariant",

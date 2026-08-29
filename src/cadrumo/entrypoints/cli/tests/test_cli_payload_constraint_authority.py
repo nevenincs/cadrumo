@@ -61,7 +61,11 @@ _MODEL_ROOTS = frozenset({"BaseModel", "TypedDict", "OutputSchema", "OutputRootS
 
 # Modules whose payloads carry no constraint of their own. Enforced strictly:
 # any declaration reappearing here fails.
-RECONCILED_MODULES: frozenset[str] = frozenset()
+RECONCILED_MODULES: frozenset[str] = frozenset(
+    {
+        "_app_live_justificante_payloads.py",
+    }
+)
 
 # CLI-native contracts whose canonical home IS the CLI. The verb grammar, the
 # leaf-key spelling and the command path are the command surface's own domain;
@@ -84,7 +88,6 @@ EXEMPT_MODULES: dict[str, str] = {
 OUTSTANDING_MODULES: dict[str, str] = {
     "_app_live_borrador_payloads.py": "borrador capture payloads await sede-evidence model reconciliation",
     "_app_live_iva_wallet_payloads.py": "shares the IVA wallet decision surface with _modelo_iva_wallet_payloads",
-    "_app_live_justificante_payloads.py": "justificante identity constraints belong with the justificante model",
     "_app_live_notifications_payloads.py": "notification payloads restate sede notification metadata bounds",
     "_config/_archive_reconcile_payloads.py": "archive reconcile bounds belong with the archive tier model",
     "_config/_censo_payloads.py": "censo payload invariant belongs on CensoSnapshot",

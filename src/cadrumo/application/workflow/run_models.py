@@ -43,6 +43,7 @@ from ...core import (
 )
 from ...core.errors import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
+from ...core.identifier_grammar import NamespacedId
 from ...core.logging import get_logger
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
 from ...domain.submission import ModeloDraftStatus
@@ -466,11 +467,7 @@ class WorkflowPreflightFailedDetails(_WorkflowStepDetail):
     """A preflight failure identified by a stable application error code."""
 
     kind: Literal["preflight_failed"]
-    error_code: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    error_code: NamespacedId
     auth_check: WorkflowAuthCheckDetails | None = None
 
 
@@ -478,11 +475,7 @@ class WorkflowFailureDetails(_WorkflowStepDetail):
     """A non-precondition workflow failure represented without exception prose."""
 
     kind: Literal["workflow_failure"]
-    error_code: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    error_code: NamespacedId
 
 
 type WorkflowStepDetails = Annotated[

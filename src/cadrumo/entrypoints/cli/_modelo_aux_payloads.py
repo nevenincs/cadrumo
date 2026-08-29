@@ -29,6 +29,7 @@ from ...application.workflow.run_models import (
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
 from ...core.filing_year import FilingYear
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...domain.buckets import (
@@ -180,11 +181,7 @@ class WorkflowRunPayload(WorkflowRunSummaryPayload):
     started_at: str
     obligation: WorkflowObligationFacts | None
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     summary_details: WorkflowStepDetails | None = None
     site_health_alert: SiteHealthAlert | None = None
     summary: str
@@ -222,11 +219,7 @@ class WorkRunResult(OutputSchema):
     obligation_closes_on: str | None = None
     obligation_status: str | None = None
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     site_health_stage: str | None = None
     site_health_state: str | None = None
     site_health_observed_at: str | None = None
@@ -247,11 +240,7 @@ class WorkRunDetailsResult(OutputSchema):
     operation: str = "modelo.work.run_details"
     run_id: str
     summary_stage: WorkflowStage | None
-    summary_locale_key: str = Field(
-        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
-        min_length=3,
-        max_length=160,
-    )
+    summary_locale_key: NamespacedId
     summary_detail_kind: str | None = None
     summary_detail_facts: dict[str, str | int | bool | list[str] | None] | None = None
 

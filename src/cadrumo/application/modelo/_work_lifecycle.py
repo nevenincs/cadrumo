@@ -33,7 +33,7 @@ from datetime import datetime
 from enum import StrEnum
 from types import MappingProxyType
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -45,6 +45,7 @@ from ...core import (
     NoRecoveryOutcome,
     Period,
 )
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -80,8 +81,6 @@ from ._action_errors import (
 from ._preconditions import build_modelo_precondition_failure_for_scenario
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
-
-_CONTINUATION_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 
 class ActiveWorkUnitUse(StrEnum):
@@ -155,8 +154,8 @@ class ModeloWorkLifecycleContinuation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    notice_code: str = Field(pattern=_CONTINUATION_ID_PATTERN, min_length=3, max_length=160)
-    summary_locale_key: str = Field(pattern=_CONTINUATION_ID_PATTERN, min_length=3, max_length=160)
+    notice_code: NamespacedId
+    summary_locale_key: NamespacedId
     evidence: ConditionEvidence
     action: ActionReference | None = None
     argument_bindings: tuple[ActionArgumentBinding, ...] = ()
