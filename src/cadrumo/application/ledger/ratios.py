@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
+from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories import (
     HOME_OFFICE_FAMILIES,
     ProportionalityKind,
@@ -162,7 +163,7 @@ def validate_ratios_profile(
                 ),
             )
             continue
-        if not (Decimal("0") <= ratio <= Decimal("1")):
+        if not is_unit_proportion(ratio):
             findings.append(
                 RatiosValidationFinding(
                     category=category,

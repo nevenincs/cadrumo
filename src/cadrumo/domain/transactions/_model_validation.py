@@ -31,6 +31,7 @@ from pydantic import ValidationError
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import parse_iso_datetime, validate_utc_aware
+from ...core.unit_proportion import is_unit_proportion
 from ._enums import BusinessClassification
 from ._raw_transaction import RawTransaction
 from .errors import TransactionValidationError
@@ -92,7 +93,7 @@ def validate_business_pct_coupling(
     if state is BusinessClassification.MIXED:
         if pct is None:
             raise TransactionValidationError("business_pct is required when classification is MIXED")
-        if not Decimal("0") <= pct <= Decimal("1"):
+        if not is_unit_proportion(pct):
             raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
         return
     if pct is not None:

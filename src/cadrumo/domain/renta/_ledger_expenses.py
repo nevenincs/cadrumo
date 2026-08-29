@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
+from ...core.unit_proportion import is_unit_proportion
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -145,7 +146,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     def _usage_ratios_in_bounds(cls, value: dict[SpendingCategory, Decimal]) -> dict[SpendingCategory, Decimal]:
         for category, ratio in value.items():
             _require_decimal(ratio, f"usage ratio for {category.value!r}")
-            if not (Decimal("0") <= ratio <= Decimal("1")):
+            if not is_unit_proportion(ratio):
                 raise RentaValidationError(f"usage ratio for {category.value!r} must be in [0, 1]")
         return {category: value[category] for category in sorted(value, key=lambda item: item.value)}
 

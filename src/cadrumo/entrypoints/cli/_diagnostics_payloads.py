@@ -24,7 +24,6 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
 
 from pydantic import Field, field_validator, model_validator
 
@@ -32,6 +31,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
 from ...core.telemetry import TelemetryEventPayload, TelemetryTier
 from ...core.time import validate_inclusive_iso_date_range
+from ...core.unit_proportion import is_unit_proportion
 from ._decimal_wire import DecimalWireText
 
 
@@ -46,7 +46,7 @@ def _validate_success_rate(value: str) -> str:
     parsed = try_parse_canonical_decimal(value, signed=True)
     if parsed is None:
         raise ValueError(f"{value!r} is not a canonical decimal string")
-    if not Decimal("0") <= parsed <= Decimal("1"):
+    if not is_unit_proportion(parsed):
         raise ValueError(f"{value!r} must be between 0 and 1")
     return value
 

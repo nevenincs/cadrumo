@@ -26,6 +26,7 @@ from ...core.decimal import format_decimal
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, OutputSchema
+from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
@@ -198,7 +199,7 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
     """
     if value is None:
         return None
-    if not Decimal("0") <= value <= Decimal("1"):
+    if not is_unit_proportion(value):
         raise _bad(
             tr(
                 "cli.ledger.errors.business_pct_out_of_range",
