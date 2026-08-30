@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba1483451d634ddde688de0b3598e74619263c118a4bd3a752c523bcd9cdeade'
+body_hash: 'sha256:b9b96705bb1044c9eb36c9b0228def795e67d6750406d35a8a21ae527350e54e'
 step_id: 'S322'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -59,3 +59,38 @@ THIS INVENTORY HAS GROWN AT EVERY MEASUREMENT: the row said 2 sites, a
 later sweep found ~31, this measurement found ~55, and the production total
 was 36 of which 18 were peer-held at that instant. Treat any figure here as
 a FLOOR and re-measure before scoping.
+
+COMPLETED 2026-08-30. The deliberately-deferred half above is now closed and
+production carries ZERO plan identifiers outside ruff `noqa: S###` codes.
+
+- `M` `src/cadrumo/application/live/filed_observation_persistence.py`
+- `M` `src/cadrumo/application/modelo/_edit_models.py`
+- `M` `src/cadrumo/application/modelo/_m303_filing_evidence.py`
+- `M` `src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py`
+- `M` `src/cadrumo/application/modelo/_verification_predicates.py`
+- `M` `src/cadrumo/application/user_profile/bundle.py`
+- `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `M` `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`
+- `M` `src/cadrumo/entrypoints/cli/_common.py`
+- `M` `src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py`
+- `M` `src/cadrumo/application/operator_surface/tests/test_manifest_reconciliation.py`
+- `M` `src/cadrumo/application/operator_surface/tests/test_notice_action_resolution.py`
+- `verify:` `pytest application/operator_surface + regimen_simplificado census` -> `88 passed`
+- `verify:` `grep -E "S[0-9]{2,3}" over production, minus noqa` -> `0`
+
+Three of the closed sites were shipped OPERATOR-FACING error messages, not
+commentary: `"...disagrees with its S59 snapshot"` handed a plan step id to the
+operator. S59's domain meaning is the ANNUAL ORDEN authority, per the amendment
+heading of the modelo-303 regimen-simplificado ADR, so the messages now read
+`annual Orden snapshot` / `annual Orden coordinate`. A first pass had written the
+vaguer "simplified-regime"; it was corrected after reading the ADR.
+
+The shipped `provenance="S05 VerbInputSchema.required_inputs"` value was changed
+together with the three fixtures mirroring it, so no equality could drift. Its
+sibling row's descriptive style (`"CommandSpecGraph through command_schema_refs"`)
+set the target form.
+
+The prior measurement's warning held: a first sweep reported production clean at
+zero by reading the head of a match histogram, where `S105`/`S106`/`S603` are ruff
+bandit codes. Filtering `noqa` explicitly exposed roughly fifteen real sites. Any
+count taken without excluding `noqa` is wrong in the safe-looking direction.

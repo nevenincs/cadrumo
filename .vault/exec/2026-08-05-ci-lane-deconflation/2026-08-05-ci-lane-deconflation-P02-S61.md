@@ -25,4 +25,3 @@ related:
 ## Notes
 
 The normal focused pytest invocation was initially blocked by the shared worktree's unrelated half-landed declaracion relocation: `cadrumo.adapters.inbound.declaracion._detect` could not import `extract_pages_text` from `_parsers`. The normal rerun now passes (23 passed, 56.27s); the earlier `--noconftest` result is retained as historical troubleshooting evidence rather than the sole verification.
-

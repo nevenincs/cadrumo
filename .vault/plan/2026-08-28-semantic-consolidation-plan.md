@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:abd1428e12e5718f75045619428b014ede3754f4268f1bd1cdd0cb1fe28f2e16'
+body_hash: 'sha256:c18b79ca3b0618b352428044f76f24b5ad9c1d61cca739a2ad5ccfa6f0e93dac'
 ---
 
 # `semantic-consolidation` plan
@@ -60,8 +60,11 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S103` - Declare the compensation expiry year once beside the balance model, and adopt the canonical bucket event id where the M036 payload had invented a looser one; `src/cadrumo/domain/iva_compensation/, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S105` - Keep ModeloCode on the review-package manifest and its CLI projection, both of which discarded the validated three-digit type for a hand-rolled one-to-eight string bound; `src/cadrumo/application/modelo/review_package.py, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S109` - Collapse the confidence bound onto the canonical unit-proportion predicate at both the transaction validator and the CLI gate, which restated the same zero-to-one range a third and fourth time; `src/cadrumo/domain/transactions/model_validation.py, src/cadrumo/entrypoints/cli/_review.py`.
-- [ ] `P02.S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value; `src/cadrumo/core/setup_answers.py`.
+- [x] `P02.S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value; `src/cadrumo/core/setup_answers.py`.
 - [ ] `P02.S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart; `src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S113` - Rehome the ledger folder-import fold beside the function that produces the per-file results, asserting the invocation-wide fields agree rather than silently taking the first file's; `src/cadrumo/application/ledger/actions_import.py`.
+- [ ] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
+- [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -120,6 +123,8 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S106` - Finish the errors hierarchy split the concurrent session left half-landed, repointing the five stragglers still reaching the namespace; `src/cadrumo/core/errors/`.
 - [x] `P07.S107` - Publicise the censo parser and repoint the portals service tests, the last names reached through namespaces already made inert; `src/cadrumo/adapters/inbound/censo/, src/cadrumo/application/portals/`.
 - [ ] `P07.S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently; `src/cadrumo/core/identity/`.
+- [x] `P07.S114` - Publicise the secret store's defining module, which the inert namespace left unreachable for its blob-store and storage consumers; `src/cadrumo/adapters/persistence/storage/secret_store/`.
+- [ ] `P07.S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace; `src/cadrumo/adapters/outbound/storage/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -166,6 +171,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S100` - Promote the post-retirement checks into a single reusable sweep covering all five stale-reference classes, so each retirement runs a written-down pass rather than ad-hoc checks; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P08.S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs; `src/cadrumo/application/modelo/`.
 - [ ] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
+- [x] `P08.S116` - Refuse a name imported from a namespace that exports nothing, the failure that has landed three times and takes a package down at collection rather than at use; `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`.
 
 ## Parallelization
 
