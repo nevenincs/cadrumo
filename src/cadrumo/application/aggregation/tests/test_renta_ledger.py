@@ -19,14 +19,20 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n import Translatable as tr
+from ....core.period import Period
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.categories.profile import CategoryProfile
-from ....domain.categories.proportionality import CategoryCitation, CategoryCitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ....domain.categories.proportionality import (
+    CategoryCitation,
+    CategoryCitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    parse_http_url,
+)
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices.enums import IvaRate, PaymentStatus

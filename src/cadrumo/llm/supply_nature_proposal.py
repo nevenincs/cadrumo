@@ -52,10 +52,11 @@ import asyncio
 import json
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ..core import LLM_EXTRA, ModelRole, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
 from .errors import LLMConfigError
@@ -127,7 +128,7 @@ class SupplyNatureProposal(BaseModel):
             never parsed. Empty when nothing usable arrived.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     nature: SupplyNature | None = None
     declined: bool = False
@@ -142,7 +143,7 @@ class _ProposalReply(BaseModel):
     in alongside a well-formed answer.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     supply_nature: str = Field(min_length=1)
     reason: str = ""

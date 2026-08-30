@@ -37,6 +37,14 @@ PositiveCount = Annotated[int, Field(ge=1)]
 NonNegativeDecimal = Annotated[Decimal, Field(ge=Decimal("0"))]
 """A decimal quantity that cannot go below zero."""
 
+PositiveDecimal = Annotated[Decimal, Field(gt=Decimal("0"))]
+"""A decimal quantity that must be strictly above zero.
+
+Separate from :obj:`NonNegativeDecimal` because the difference is the whole
+point at the sites that need it: an exchange rate of zero is not a rate,
+while a total of zero is a legitimate total.
+"""
+
 CalendarMonth = Annotated[int, Field(ge=1, le=12)]
 """A month of the year, numbered as AEAT numbers them."""
 
@@ -48,4 +56,11 @@ than quietly promoting it to a tuple: the strict models refuse the coercion,
 and a projection has no business changing what a caller may hand it.
 """
 
-__all__ = ["CalendarMonth", "NonEmptyList", "NonEmptyStr", "NonNegativeDecimal", "PositiveCount"]
+__all__ = [
+    "CalendarMonth",
+    "NonEmptyList",
+    "NonEmptyStr",
+    "NonNegativeDecimal",
+    "PositiveCount",
+    "PositiveDecimal",
+]

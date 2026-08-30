@@ -20,11 +20,11 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated, Literal, Protocol
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict
+from pydantic import BaseModel, BeforeValidator
 
+from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import RetencionScheme
+from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .ids import BindingId
@@ -73,7 +73,7 @@ class _RetencionesAggregationSelector(BaseModel):
     quarterly perceptor count and taxable base.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     target_casilla_id: CasillaId
     schemes: Annotated[tuple[RetencionScheme, ...], BeforeValidator(coerce_enum_tuple(RetencionScheme))] = ()

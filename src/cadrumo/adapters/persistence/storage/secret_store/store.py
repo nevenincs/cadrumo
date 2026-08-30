@@ -33,15 +33,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now, validate_utc_aware
 from .._storage_path_definitions import (
     SECRET_INDEX_FILENAME,
@@ -211,7 +211,7 @@ class _SecretIndex(BaseModel):
         entries: Map of digest hex string to :class:`_SecretIndexEntry`.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     schema_version: int = Field(ge=1)
     entries: dict[str, _SecretIndexEntry] = Field(default_factory=dict)

@@ -22,9 +22,11 @@ import pytest
 from pydantic import ValidationError
 
 from .. import export_parse as export_parse_module
+from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..export_parse import (
     _local_name,
+    _matches_record_start,
     _parse_dictionary_casilla_id,
     _parse_xml_boolean,
     _parse_xml_decimal,
@@ -39,6 +41,30 @@ from ..schema_references import SourceReference
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_m296_primary_perceptor_record_discriminator_selects_only_blank_position_500() -> None:
+    """The official primary perceptor row occupies the blank @500 alternative.
+
+    The three rival Tipo 2 records declare their own literal at that byte.  This
+    exercises the production matcher against the published generated layout,
+    rather than reproducing the discriminator in an ad-hoc test record.
+    """
+    layout = bundled_authority().snapshot("296", filing_year=2024, period="0A").revision.export_layouts[0]
+    records = tuple(record for record in layout.records if record.id.startswith("m296-"))
+    payload = bytearray(b" " * 500)
+    payload[:4] = b"2296"
+
+    expected_by_position_500 = {
+        b" ": "m296-perceptor",
+        b"F": "m296-perceptor-intereses",
+        b"A": "m296-anexo-a-pagos",
+        b"B": "m296-anexo-b-certificados",
+    }
+    for marker, expected_record_id in expected_by_position_500.items():
+        payload[499:500] = marker
+        matched = tuple(record.id for record in records if _matches_record_start(record, bytes(payload), 0))
+        assert matched == (expected_record_id,)
 
 
 # ---------------------------------------------------------------------------

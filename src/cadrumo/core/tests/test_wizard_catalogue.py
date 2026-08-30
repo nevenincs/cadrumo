@@ -7,7 +7,7 @@ These tests assert:
    same objects that _catalogue exposes as SETUP_FLOW / WIZARD_FLOWS.
 
 2. No deferred lazy upward imports from cadrumo.application.wizard.catalogue
-   remain in cadrumo.domain.deadlines.profiles or cadrumo.domain.contribuyente._keys.
+   remain in cadrumo.domain.deadlines.profiles or cadrumo.domain.contribuyente.keys.
    A fresh Python interpreter imports those domain modules and asserts the
    application wizard catalogue was not loaded as an import-time side effect.
 
@@ -96,7 +96,7 @@ import sys
 
 for module_name in (
     "cadrumo.domain.deadlines.profiles",
-    "cadrumo.domain.contribuyente._keys",
+    "cadrumo.domain.contribuyente.keys",
 ):
     importlib.import_module(module_name)
 

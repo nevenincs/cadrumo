@@ -1389,7 +1389,7 @@ def setup(app):
         if not _should_resolve_deferred_models():
             return
         from cadrumo.application import diagnostics
-        from cadrumo.core.errors import ErrorEnvelope
+        from cadrumo.core.errors.error_codes import ErrorEnvelope
 
         diagnostics._ensure_models_rebuilt()
         if not ErrorEnvelope.__pydantic_complete__:

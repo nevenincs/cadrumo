@@ -50,9 +50,10 @@ from enum import StrEnum
 from importlib import import_module
 from typing import cast
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.tty import stdin_is_tty
 
 _CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
@@ -80,7 +81,7 @@ differently from the ``--secrets-stdin`` spelling of the same thing.
 class MachineSecretPayload(BaseModel):
     """Canonical strict base for every command-specific machine-secret payload."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class MachineSecretChannel(StrEnum):

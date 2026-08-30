@@ -18,9 +18,10 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core import IvaCompensationStateProvenance
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
@@ -61,7 +62,7 @@ class FiledCaptureEvidenceTally(BaseModel):
     single declaration prevents.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     captured_count: int
     #: Units REACHED, counted in every mode. ``captured_count`` is the
@@ -99,7 +100,7 @@ class FiledDataCaptureReport(FiledCaptureEvidenceTally):
 class FiledDataCaptureFailureRow(BaseModel):
     """One failed filed-declaration capture attempt in a bulk run."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     year: int
@@ -123,7 +124,7 @@ class FiledCasillaSkipRow(BaseModel):
     taxpayer's address, and this row is built to be rendered.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     year: int
@@ -157,7 +158,7 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
 class ExpedientesBulkCaptureFailureRow(BaseModel):
     """One failed expedientes register walk in a bulk run."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     year: int
@@ -168,7 +169,7 @@ class ExpedientesBulkCaptureFailureRow(BaseModel):
 class ExpedientesBulkCaptureReport(BaseModel):
     """Read-only bulk expedientes snapshot capture report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     modelos: tuple[str, ...]
@@ -192,7 +193,7 @@ class SourceFiledDataCaptureReport(FiledCaptureEvidenceTally):
 class IvaWalletCaptureReport(BaseModel):
     """Read-only IVA compensation wallet capture report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_ref: str
     target_year: int
@@ -212,7 +213,7 @@ class IvaWalletCaptureReport(BaseModel):
 class IvaCompensationHistoryRow(BaseModel):
     """One secure stored Modelo 303 IVA compensation history row."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     year: int
     period: Period
@@ -231,7 +232,7 @@ class IvaCompensationHistoryRow(BaseModel):
 class IvaCompensationCarryForwardLotRow(BaseModel):
     """One CLI-safe IVA compensation carry-forward lot."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_ref: str
     source_filing_year: int
@@ -247,7 +248,7 @@ class IvaCompensationCarryForwardLotRow(BaseModel):
 class IvaWalletAuthorityDecisionRow(BaseModel):
     """One persisted wallet/local/override authority decision for CLI display."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_ref: str
     target_year: int
@@ -270,7 +271,7 @@ class IvaWalletAuthorityDecisionRow(BaseModel):
 class IvaCompensationHistoryReport(BaseModel):
     """Profile-local IVA compensation history report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     row_count: int
     rows: tuple[IvaCompensationHistoryRow, ...]
@@ -285,7 +286,7 @@ class IvaCompensationHistoryReport(BaseModel):
 class StoredIvaWalletObservationRow(BaseModel):
     """One redacted stored wallet observation summary reloaded from secure storage."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_ref: str
     target_year: int
@@ -299,7 +300,7 @@ class StoredIvaWalletObservationRow(BaseModel):
 class StoredIvaRemoteStateAcquisitionRow(BaseModel):
     """One redacted stored live IVA acquisition manifest summary."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     acquisition_ref: str
     captured_at: datetime
@@ -322,7 +323,7 @@ class StoredIvaRemoteStateAcquisitionRow(BaseModel):
 class IvaRemoteStateStoredEvidenceReport(BaseModel):
     """Stored remote IVA evidence available without a live AEAT read."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     history: IvaCompensationHistoryReport
     wallet_observation_count: int
@@ -334,7 +335,7 @@ class IvaRemoteStateStoredEvidenceReport(BaseModel):
 class IvaCompensationHistoryCaptureReport(BaseModel):
     """Read-only multi-year Modelo 303 IVA compensation history capture report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     output_root: str
     year_from: int
@@ -368,7 +369,7 @@ class LiveIvaReadStatus(StrEnum):
 class LiveIvaReadOutcome(BaseModel):
     """Redacted per-surface acquisition outcome."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
@@ -383,7 +384,7 @@ class LiveIvaReadOutcome(BaseModel):
 class LiveIvaAuthOutcome(BaseModel):
     """Redacted authentication outcome for a live IVA acquisition."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     status: LiveIvaReadStatus
     outcome_mode: LiveIvaAcquisitionFailureMode
@@ -398,7 +399,7 @@ class LiveIvaAuthOutcome(BaseModel):
 class IvaRemoteStateAcquisitionReport(BaseModel):
     """Combined read-only IVA remote-state acquisition report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     acquisition_manifest_id: str | None = None
     output_root: str
@@ -431,7 +432,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
     """One persisted redacted surface outcome from a live IVA acquisition."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
@@ -452,7 +453,7 @@ class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
 class IvaRemoteStateAcquisitionManifest(BaseModel):
     """Encrypted profile-local manifest for one read-only live IVA acquisition."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     acquisition_id: str
     captured_at: datetime

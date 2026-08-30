@@ -58,6 +58,8 @@ from .work_addressing import (
     ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
+    ModeloWorkspaceEvidenceFactV1,
+    ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBindingReferenceV1,
     ModeloWorkspaceBindingRequirementV1,
@@ -1111,7 +1113,8 @@ def static_inspection_casilla_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
-                section_path=("casillas",),
+                record_family=("casillas",),
+                section_path=inspection.casilla_sections.get(casilla_id, ()),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,
@@ -1161,7 +1164,12 @@ def graded_snapshot_casilla_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
-                section_path=("casillas",),
+                record_family=("casillas",),
+                # Read from the definition this path already holds, rather than
+                # through the inspection's copy: the graded admission has the
+                # casilla itself, and going via a projection of it would add a
+                # second route to one fact for no gain.
+                section_path=tuple(casilla.section),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,
@@ -1240,7 +1248,7 @@ def binding_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceBindingReferenceV1(binding_id=binding_id),
-                section_path=("bindings",),
+                record_family=("bindings",),
                 data_type="binding_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=binding_id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1272,7 +1280,7 @@ def formula_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceFormulaReferenceV1(formula_id=formula.id),
-                section_path=("formulas",),
+                record_family=("formulas",),
                 data_type="formula_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=formula.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1303,7 +1311,7 @@ def relation_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceRelationReferenceV1(relation_id=relation.id),
-                section_path=("relations",),
+                record_family=("relations",),
                 data_type="relation_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=relation.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1355,7 +1363,7 @@ def parameter_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceParameterReferenceV1(parameter_id=parameter.id),
-                section_path=("parameters",),
+                record_family=("parameters",),
                 data_type="parameter_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=parameter.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1388,6 +1396,35 @@ def static_inspection_schema_records(
         + parameter_schema_records(inspection.parameters, inspection.formulas)
     )
     return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))
+
+
+_GRADED_SNAPSHOT_PAGINATED_FACETS: frozenset[ModeloWorkspaceFacetName] = frozenset(
+    {
+        ModeloWorkspaceFacetName.SCHEMA,
+        ModeloWorkspaceFacetName.MATERIALIZATION,
+        ModeloWorkspaceFacetName.PROVENANCE,
+    }
+)
+"""The facets a graded snapshot actually paginates.
+
+``WORK_REVIEW`` is deliberately absent: it is assembled as its own facet type
+and never routed through the shared paginator, so a cursor naming it can never
+be redeemed and must refuse rather than silently return a first page.
+"""
+
+
+def _facet_cursor(
+    cursor: ModeloWorkspaceCursorV1 | None,
+    facet: ModeloWorkspaceFacetName,
+) -> ModeloWorkspaceCursorV1 | None:
+    """Return ``cursor`` when it addresses ``facet``, otherwise ``None``.
+
+    A result assembles several facets from one call, so a caller holds at
+    most one cursor at a time and the cursor itself names which facet it
+    continues. Routing on that name keeps the other facets at their first
+    page instead of applying one facet's offset to another's records.
+    """
+    return cursor if cursor is not None and cursor.facet is facet else None
 
 
 def paginate_modelo_workspace_facet[RecordT](
@@ -1537,6 +1574,7 @@ def resolve_static_inspection_result(
     authority: ValidatedRegistryAuthority,
     output_language: OutputLanguage,
     page_size: int = 200,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
 ) -> ModeloWorkspaceStaticInspectionResultV1:
     """Assemble the complete, single-page STATIC_INSPECTION result for one target.
 
@@ -1553,6 +1591,11 @@ def resolve_static_inspection_result(
     the fixed work_review facet, and the capability denominator. No second
     registry or work read occurs anywhere in this function.
     """
+    if cursor is not None and cursor.facet is not ModeloWorkspaceFacetName.SCHEMA:
+        raise ModeloWorkspaceStaleCursorError(
+            f"static inspection paginates only the schema facet; cursor names {cursor.facet.value}"
+        )
+
     work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
         target,
         bucket_id=bucket_id,
@@ -1611,6 +1654,7 @@ def resolve_static_inspection_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
         facet=ModeloWorkspaceFacetName.SCHEMA,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.SCHEMA),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1655,6 +1699,7 @@ def resolve_graded_snapshot_result(
     as_of: date,
     output_language: OutputLanguage,
     page_size: int = 200,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
 ) -> ModeloWorkspaceResultV1:
     """Assemble the complete GRADED_SNAPSHOT result for one target, or refuse honestly.
 
@@ -1696,6 +1741,12 @@ def resolve_graded_snapshot_result(
     inspection is not), so this never reuses
     ``STATIC_INSPECTION_WORK_REVIEW_FACET``.
     """
+    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
+        raise ModeloWorkspaceStaleCursorError(
+            "graded snapshot paginates the schema, materialization and provenance facets; "
+            f"cursor names {cursor.facet.value}"
+        )
+
     request = modelo_work_selector_request_for_target(target, bucket_id=bucket_id)
     work_port = ModeloWorkspaceWorkPortV1(
         request=request,
@@ -1728,6 +1779,12 @@ def resolve_graded_snapshot_result(
                 boundary="admission",
                 requested_target=target,
                 selected_target=None,
+                facts=(
+                    ModeloWorkspaceEvidenceFactV1(
+                        name="work_unit_id",
+                        value=ModeloWorkspaceTextFactValueV1(value=str(work_unit.work_unit_id)),
+                    ),
+                ),
                 responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
                 reconsideration_condition="calculate this work unit, then request a graded snapshot again",
                 recovery_action=ActionReference(action_id="operator.modelo.work.calculate"),
@@ -1868,6 +1925,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
         facet=ModeloWorkspaceFacetName.SCHEMA,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.SCHEMA),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1887,6 +1945,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1],
         materialization_records,
         facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.MATERIALIZATION),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1900,6 +1959,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1],
         provenance_records,
         facet=ModeloWorkspaceFacetName.PROVENANCE,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.PROVENANCE),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,

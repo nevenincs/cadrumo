@@ -60,6 +60,7 @@ from ....entrypoints.tui.components.theme import (
 from ....entrypoints.tui.components.widgets import (
     ContentDataTable,
     ContentScroll,
+    CredentialRequirement,
     NoticeBand,
     RequirementStatus,
     SourceActionCard,
@@ -398,14 +399,12 @@ class ProfileManagerScreen(Screen[None]):
             yield Vertical(id="manager-context")
             with Vertical(id="manager-sources", classes="cadrumo-panel"):
                 for source in known_profile_acquisition_sources():
-                    requirement_label, requirement_status = self._credential_requirement_badge(source.key)
                     yield SourceActionCard(
                         SourceActionDescriptor(
                             title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
                             description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
                             action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
-                            credential_requirement_label=requirement_label,
-                            credential_requirement_status=requirement_status,
+                            credential_requirement=self._credential_requirement_badge(source.key),
                         ),
                         id=f"source-{source.key.value}",
                     )
@@ -419,16 +418,23 @@ class ProfileManagerScreen(Screen[None]):
         self._sync_source_actions()
         await self._redraw()
 
-    def _credential_requirement_badge(
-        self, key: ProfileAcquisitionSourceKey
-    ) -> tuple[str | None, RequirementStatus | None]:
-        """Resolve one source's credential badge from its real posture, if supplied."""
+    def _credential_requirement_badge(self, key: ProfileAcquisitionSourceKey) -> CredentialRequirement | None:
+        """Resolve one source's credential badge from its real posture, if supplied.
+
+        Returns the label and status as ONE record so a caller cannot pass
+        half of a requirement: the absence of a fact and a fact are the only
+        two outcomes this can have.
+        """
         posture = self._credential_postures.get(key)
         if posture is None or not posture.requires_aeat_authentication:
-            return None, None
+            return None
         if posture.credential_held:
-            return tr("profile.journey.source.credential_requirement.held"), RequirementStatus.REQUIRED_PRESENT
-        return tr("profile.journey.source.credential_requirement.missing"), RequirementStatus.REQUIRED_MISSING
+            return CredentialRequirement(
+                tr("profile.journey.source.credential_requirement.held"), RequirementStatus.REQUIRED_PRESENT
+            )
+        return CredentialRequirement(
+            tr("profile.journey.source.credential_requirement.missing"), RequirementStatus.REQUIRED_MISSING
+        )
 
     def _sync_source_actions(self) -> None:
         """Disable a launch button when the door or the credential is missing.

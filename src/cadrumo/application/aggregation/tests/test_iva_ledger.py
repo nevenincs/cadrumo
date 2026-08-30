@@ -13,9 +13,9 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Art104TresExclusion, IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,
@@ -27,7 +27,13 @@ from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
-from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

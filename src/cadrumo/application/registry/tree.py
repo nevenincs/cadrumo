@@ -19,8 +19,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NamedTuple
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import ExportLayoutId as _ExportLayoutId
@@ -42,7 +43,7 @@ class RegistryTreeReport(BaseModel):
     bound a statement about this type rather than a hope about its input.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     registry_root: str
     source_root: str | None = None
@@ -71,7 +72,7 @@ class RegistryTreeReport(BaseModel):
 class RegistryWorkbookParityDetailReport(BaseModel):
     """Workbook parity coverage declared by one registry revision."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _WorkbookParityRefId
     workbook_source: _SourceRefId
@@ -83,7 +84,7 @@ class RegistryWorkbookParityDetailReport(BaseModel):
 class RegistryRevisionDetailReport(BaseModel):
     """Read-only details for one modelo revision from the central registry."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     revision: str

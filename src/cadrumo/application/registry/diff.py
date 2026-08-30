@@ -25,7 +25,9 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from ...core.models import STRICT_FROZEN_CONFIG
 
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.casilla_id import CasillaId as _CasillaId
@@ -58,7 +60,7 @@ __all__ = [
 class CasillaDiff(BaseModel):
     """A minimal projection of one added or removed casilla."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _CasillaId
     number: str
@@ -73,7 +75,7 @@ class RenumberedCasilla(BaseModel):
     revisions.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     continuidad_id: str
     from_id: _CasillaId
@@ -85,7 +87,7 @@ class RenumberedCasilla(BaseModel):
 class FormulaDiff(BaseModel):
     """One formula whose expression, rounding, or legal grounding changed."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _FormulaId
     target_casilla_id: _CasillaId
@@ -98,7 +100,7 @@ class FormulaDiff(BaseModel):
 class ParameterDiff(BaseModel):
     """One parameter (rate/threshold/bracket table) whose declared value changed."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _ParameterId
     data_type: str
@@ -109,7 +111,7 @@ class ParameterDiff(BaseModel):
 class BindingDiff(BaseModel):
     """A minimal projection of one added or removed data binding."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str
     source: str
@@ -118,7 +120,7 @@ class BindingDiff(BaseModel):
 class RegistryRevisionDiffReport(BaseModel):
     """Structured year-to-year diff between two revisions of one modelo."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     from_year: int

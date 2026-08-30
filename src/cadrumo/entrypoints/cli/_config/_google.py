@@ -37,7 +37,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot
@@ -90,6 +90,7 @@ from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from ....core.models import STRICT_FROZEN_CONFIG
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ._archive_push_payloads import (
@@ -133,7 +134,7 @@ class _OAuthClientWrapper(BaseModel):
     :class:`OAuthClient`.
     """
 
-    model_config = ConfigDict(frozen=True, extra="ignore")
+    model_config = STRICT_FROZEN_CONFIG
 
     # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud
     # Console JSON envelope; narrowed to OAuthClient before production use.

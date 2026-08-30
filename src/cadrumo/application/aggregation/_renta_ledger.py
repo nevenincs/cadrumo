@@ -32,23 +32,23 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import regime_apportions_deduction
-from ...core.modelo import Modelo
-from ...core.period import Period, PeriodKind
 from ...core.casilla_id import CasillaId
-from ...core.prose_elision import ElidedProse
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period, PeriodKind
+from ...core.prose_elision import ElidedProse
 from ...core.resources import resources
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfileError
-from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
+from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol

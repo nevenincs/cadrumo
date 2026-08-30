@@ -6,12 +6,11 @@ import base64
 import binascii
 import json
 import re
-from typing import Final, Literal, cast
+from typing import Annotated, ClassVar, Final, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.credentials import assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
@@ -20,7 +19,9 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
@@ -136,6 +137,20 @@ class ProfileCustodyWrappedDek(BaseModel):
         return _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
+PasswordGeneration = Annotated[int, Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+"""A profile password generation counter: at least the first, never past the ceiling."""
+
+PostChangePasswordGeneration = Annotated[int, Field(ge=2, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+"""The generation a profile reaches after a passphrase change.
+
+Narrower than :obj:`PasswordGeneration` at the bottom only: a profile starts at
+generation one, so the result of CHANGING the passphrase is two or more. The
+operator-facing result payload carried that lower bound and no ceiling at all,
+which let it report a generation the custody envelope itself would refuse to
+store. Both halves are declared here, beside the envelope that owns them.
+"""
+
+
 class _ProfileCustodyEnvelopePayload(BaseModel):
     """Validated v1 envelope fields before self-digest construction."""
 
@@ -143,7 +158,7 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
 
     schema_version: Literal[1]
     profile_id: UUID
-    password_generation: int = Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)
+    password_generation: PasswordGeneration
     dek_epoch: str
     password_encoding: Literal["utf-8"]
     key_schedule: Literal["profile-password-dek-wrap/v1"]
@@ -164,8 +179,12 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
         return _validate_digest(value, field_name="previous_envelope_digest")
 
 
-class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
+class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel):
     """Immutable v1 authority for one profile's normal password unlock."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile custody envelope"
+    _digest_mismatch_message: ClassVar[str] = "profile custody self_digest does not match its canonical record"
 
     self_digest: str
 
@@ -174,31 +193,9 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
     def _validate_self_digest(cls, value: str) -> str:
         return _validate_digest(value, field_name="self_digest")
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyEnvelope:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile custody self_digest does not match its canonical record")
-        return self
 
-    @property
-    def canonical_payload(self) -> dict[str, object]:
-        """Return the exact digest payload, excluding only ``self_digest``."""
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
-        del payload["self_digest"]
-        return payload
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Return the canonical SHA-256 digest for this envelope's payload."""
-        return canonical_json_digest(
-            self.canonical_payload,
-            maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
-            subject="profile custody envelope",
-        )
 
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise the complete envelope in its unique canonical JSON form."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
 
     @classmethod
     def create(

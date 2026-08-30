@@ -15,7 +15,7 @@ _LAZY_REEXPORT_MODULES: tuple[str, ...] = (
     "cadrumo.core",
     "cadrumo.domain.user_profile",
     "cadrumo.domain.contribuyente",
-    "cadrumo.domain.contribuyente._keys",
+    "cadrumo.domain.contribuyente.keys",
     "cadrumo.domain.portals",
     "cadrumo.domain.transactions",
     "cadrumo.application.user_profile",

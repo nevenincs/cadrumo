@@ -28,8 +28,7 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core.aggregation import CalculationSourceLineageRole
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,

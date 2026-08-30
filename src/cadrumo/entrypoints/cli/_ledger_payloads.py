@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import Field, NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...application.ledger.models import (
     CurrencyCode,
@@ -45,7 +45,6 @@ from ...application.ledger.models import (
     IsoDateText,
 )
 from ...core import LinkInconsistencyDirection
-from ...core.period import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
@@ -57,7 +56,9 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputRootSchema, OutputSchema
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
+from ...core.period import Period
+from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
@@ -798,7 +799,7 @@ class LedgerExportRowPayload(OutputSchema):
     value_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
-    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    currency: IsoCurrencyCode
     direction: str
     counterparty: str = ""
     description: str
@@ -841,13 +842,18 @@ class LedgerExportRowPayload(OutputSchema):
     @field_validator("amount", "taxable_base", "iva_amount", "value_in_eur")
     @classmethod
     def _require_non_negative_decimal(cls, value: str) -> str:
+        """Refuse an export amount the ledger could never have stored.
+
+        The sign rule is the parser's own ``signed`` axis rather than a
+        comparison written here: a ledger amount is a magnitude and direction
+        lives on its own enum, so "non-negative" is a property of the grammar,
+        not a threshold this payload gets to pick. Same shape the IVA wallet
+        payload uses for the same reason.
+        """
         if not value:
             return value
-        parsed = try_parse_canonical_decimal(value)
-        if parsed is None:
-            raise ValueError("must be a canonical decimal")
-        if parsed < 0:
-            raise ValueError("must be a non-negative decimal")
+        if try_parse_canonical_decimal(value, signed=False) is None:
+            raise ValueError("must be a non-negative canonical decimal")
         return value
 
 
@@ -1123,7 +1129,7 @@ class LedgerPreflightIssuePayload(OutputSchema):
 
     transaction_id: TransactionId
     reason: str
-    detail: str = Field(min_length=1, max_length=512)
+    detail: IssueDetail
 
 
 class LedgerLinkInconsistencyPayload(OutputSchema):

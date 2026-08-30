@@ -656,7 +656,7 @@ class InvoiceDevengoRank(StrEnum):
     terminates at :attr:`ISSUE_DATE_PROXY` and can never reach a movement date;
     the movement-date substitution belongs to the ledger-transaction side,
     whose dates have their own owners in
-    :mod:`cadrumo.domain.transactions._dates`. Declaring a member no producer
+    :mod:`cadrumo.domain.transactions.dates`. Declaring a member no producer
     on this axis can emit would be dead capacity wearing the shape of coverage.
     """
 

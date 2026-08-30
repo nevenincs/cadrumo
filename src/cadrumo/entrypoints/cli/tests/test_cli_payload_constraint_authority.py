@@ -93,9 +93,11 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_config/_collab_payloads.py",
         "_config/_google_credential_source_payloads.py",
         "_root_payloads.py",
+        "_ledger_ratios_payloads.py",
         "_modelo_aux_payloads.py",
         "_modelo_iva_wallet_payloads.py",
         "_modelo_payloads_m036.py",
+        "_ledger_payloads.py",
     }
 )
 
@@ -121,8 +123,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
-    "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
-    "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
     "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
     "_modelo_review_package_payloads.py": "review-package payloads restate review model bounds",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
@@ -166,12 +166,17 @@ def _is_threshold_literal(node: ast.expr) -> bool:
     is wrapped in a constructor call. That gap was found by mutation-proof:
     a probe validator refusing ``value > Decimal("1")`` passed the gate.
 
-    ``None`` and booleans are excluded. A comparison against either asks
-    whether a projected field is present, or whether two projected fields
-    agree, which is structural rather than a domain rule.
+    ``None``, booleans and the empty string are excluded. A comparison against
+    any of them asks whether a projected field is PRESENT, or whether two
+    projected fields agree, which is structural rather than a domain rule. The
+    empty string joins that set because an optional text field arrives over the
+    wire as ``""`` rather than ``None``, so ``value is None or value == ""`` is
+    one presence check written in the two spellings the wire actually uses --
+    it was reading the second half as a rule and flagging a validator that does
+    nothing but delegate.
     """
     if isinstance(node, ast.Constant):
-        return node.value is not None and not isinstance(node.value, bool)
+        return not (node.value is None or isinstance(node.value, bool) or node.value == "")
     if isinstance(node, ast.Call):
         func = node.func
         name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)

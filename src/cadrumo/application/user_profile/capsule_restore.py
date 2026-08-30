@@ -27,10 +27,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
 from .aggregate import ProfileRestoreAuthority
 from .custody_ports import read_profile_custody_capsule_source
 from .recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
@@ -69,7 +70,7 @@ class ProfileRestoreOutcome(BaseModel):
     the republished capsule still has a recovery route.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     label: str

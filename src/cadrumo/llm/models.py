@@ -29,10 +29,11 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..core import ImageMediaType
-from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
 from ..core.identity import ContentDigest
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from .consent import EvidenceConsentToken
 from .errors import LLMValidationError
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
@@ -58,7 +59,7 @@ class MultimodalImageInput(BaseModel):
     silently misinterpreted. The producer knows what it built; it declares it.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     content_sha256: ContentDigest = Field(
         description="Lowercase hex SHA-256 content address of the source evidence bytes.",
@@ -116,7 +117,7 @@ class LLMRequest(BaseModel):
     record; it exists only between its minting site and the dispatch point.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     prompt: str = Field(description="Prompt content passed to the provider.")
     system: str | None = Field(default=None, description="Optional system instruction.")
@@ -190,7 +191,7 @@ class LLMResponse(BaseModel):
     :class:`~llm.UsageRecord` values for cost tracking.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     text: str = Field(description="Generated text returned by the provider.")
     provider: LLMProvider = Field(description="Provider that produced the response.")
@@ -212,6 +213,8 @@ class LLMResponse(BaseModel):
 class PromptDefinition(BaseModel):
     """Prompt metadata stored by :class:`~llm.PromptRegistry`."""
 
+    # Diverges from STRICT_FROZEN_CONFIG deliberately: a prompt definition carries a
+    # compiled template object pydantic cannot describe, so arbitrary types are permitted.
     model_config = ConfigDict(strict=True, frozen=True, arbitrary_types_allowed=True)
 
     id: str = Field(description="Stable kebab-case prompt identifier.")
@@ -242,6 +245,9 @@ class PromptDefinition(BaseModel):
 class PromptRegistry(BaseModel):
     """Registry of versioned :class:`~llm.PromptDefinition` values."""
 
+    # Diverges from STRICT_FROZEN_CONFIG deliberately: this registry exposes a
+    # ``register`` mutator, so declaring it frozen would advertise an immutability
+    # the class does not have.
     model_config = ConfigDict(strict=True)
 
     definitions: dict[str, PromptDefinition] = Field(
@@ -313,7 +319,7 @@ class PromptRegistry(BaseModel):
 class CachedEntry(BaseModel):
     """Encrypted cache record persisted by :class:`~adapters.outbound.llm.LLMCache`."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LLMProvider = Field(description="Provider used for the original call.")
     model: str = Field(description="Resolved provider model.")
@@ -326,7 +332,7 @@ class CachedEntry(BaseModel):
 class UsageRecord(BaseModel):
     """Append-only usage record persisted by :class:`~adapters.outbound.llm.UsageRecorder`."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     prompt_id: str = Field(description="Prompt id associated with the call.")
     caller: str = Field(description="Logical caller that initiated the request.")
@@ -346,7 +352,7 @@ class UsageRecord(BaseModel):
 class Translation(BaseModel):
     """Translation response built on top of :class:`~llm.LLMResponse`."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     text: str = Field(description="Translated text.")
     source_lang: str = Field(description="ISO 639-1 source language code.")
@@ -367,7 +373,7 @@ class Translation(BaseModel):
 class CacheKey(BaseModel):
     """Derived cache key used by :class:`~adapters.outbound.llm.LLMCache`."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: LLMProvider = Field(description="Provider namespace for the cache entry.")
     model: str = Field(description="Resolved model namespace for the cache entry.")
@@ -378,7 +384,7 @@ class CacheKey(BaseModel):
 class CacheStats(BaseModel):
     """Basic :class:`~adapters.outbound.llm.LLMCache` statistics for CLI reporting."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: int = Field(ge=0, description="Number of cached files.")
     total_bytes: int = Field(ge=0, description="Total size of cache files in bytes.")
@@ -387,7 +393,7 @@ class CacheStats(BaseModel):
 class UsageSummary(BaseModel):
     """Aggregated :class:`~adapters.outbound.llm.UsageRecorder` statistics."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: int = Field(ge=0, description="Number of usage records included.")
     total_input_tokens: int = Field(ge=0, description="Sum of input tokens.")

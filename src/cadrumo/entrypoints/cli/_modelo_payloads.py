@@ -54,6 +54,7 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
+from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
 from ...domain.buckets.event import (
     BucketActorLabel,
@@ -1274,7 +1275,7 @@ class LedgerIssuePayload(OutputSchema):
 
     transaction_id: TransactionId
     reason: str
-    detail: str = Field(min_length=1, max_length=512)
+    detail: IssueDetail
 
 
 class ModeloReadinessResult(OutputSchema):

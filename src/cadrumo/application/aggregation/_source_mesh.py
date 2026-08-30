@@ -30,18 +30,18 @@ from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Se
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, M210GrossIncomeSourceMode
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.prose_elision import ElidedProse
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.casilla_id import CasillaId
 from ...core.decimal import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.period import Period
+from ...core.prose_elision import ElidedProse
 from ...domain.calculations import (
     DirectRowMaterializationProvenance,
     RowBindingKey,
@@ -56,8 +56,8 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError, t
 
 RowBindingValue = str | Decimal | int | bool

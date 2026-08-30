@@ -20,7 +20,14 @@ from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
 from ...domain.iva.lookup import rate_table_covers_any_positive_tier
 from ...domain.iva.prorrata import InputClassification
-from ...domain.iva.schema import EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ...domain.iva.schema import (
+    EUMemberState,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
 from ._currency_predicates import is_non_eur_without_conversion

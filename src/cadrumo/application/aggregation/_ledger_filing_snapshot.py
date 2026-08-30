@@ -42,9 +42,18 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, LedgerFilingSnapshot, LedgerFilingStalenessVerdict, LedgerRowFingerprint, ManualFactBasisEntry, diff_ledger_fingerprints, snapshot_fingerprint
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.ledger_filing_snapshot import (
+    LedgerEvidenceRow,
+    LedgerFilingEvidence,
+    LedgerFilingSnapshot,
+    LedgerFilingStalenessVerdict,
+    LedgerRowFingerprint,
+    ManualFactBasisEntry,
+    diff_ledger_fingerprints,
+    snapshot_fingerprint,
+)
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.

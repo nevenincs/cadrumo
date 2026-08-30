@@ -29,10 +29,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Final, Protocol, cast
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.external_constants import PDF_MIME_TYPE
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.attachments.enums import AttachmentSource
 from ..storage import (
     OutboundStorageError,
@@ -134,7 +135,7 @@ class DriveFolderDocument(BaseModel):
     to the operator (:attr:`name`, :attr:`mime_type`).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     file_id: str = Field(validation_alias="id", min_length=1)
     name: str = Field(min_length=1)

@@ -41,9 +41,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....core import ExportLayoutFormat
+from ....core.models import STRICT_FROZEN_CONFIG
 from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
 from .record_design_coverage import calculation_closure_casilla_ids
@@ -96,7 +97,7 @@ class RevisionCapabilityProbe(BaseModel):
         extraction_profile_count: Extraction profiles declared on the revision.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     calc_grade: bool
     has_completeness_manifest: bool
@@ -144,7 +145,7 @@ class ModeloRenameRecord(BaseModel):
             ``"label_evolved"``, ``"repurposed"``, ``"retired"``).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     continuidad_id: str
     from_revision: RevisionId
@@ -167,7 +168,7 @@ class ModeloPortalCompatibilityRef(BaseModel):
         evidence_tier: The declared evidence tier backing the cross-reference.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str
     surface: str
@@ -213,7 +214,7 @@ class ModeloEntry(BaseModel):
             the latest revision.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo_id: ModeloId
     title: str

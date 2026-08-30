@@ -42,7 +42,7 @@ identity, joining neither ``taxable_base`` nor ``cuota``.
 See Also:
     :mod:`cadrumo.domain.iva.components`
         Axis A -- which components an operation in each category has.
-    :mod:`cadrumo.domain.transactions._retencion_parameters`
+    :mod:`cadrumo.domain.transactions.retencion_parameters`
         The RIRPF art. 95 rates bounding the row-level retención inference.
 """
 

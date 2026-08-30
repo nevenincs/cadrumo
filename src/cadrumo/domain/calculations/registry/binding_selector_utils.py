@@ -6,10 +6,11 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputSelector
@@ -56,7 +57,7 @@ because it is a distinct vocabulary.
 class BindingFixedExportSelector(BaseModel):
     """Typed fixed-width export projection carried by a binding selector."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: str = Field(min_length=1, max_length=64)
     offset: OneBasedExportOffset
@@ -116,7 +117,7 @@ class BindingRowExportSelector(BaseModel):
     the consumer on whatever it used before.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: str = Field(min_length=1, max_length=64)
     row_field: str = Field(min_length=1, max_length=128)
@@ -129,7 +130,7 @@ BindingExportSelector = BindingFixedExportSelector | BindingRowExportSelector
 class BindingRowSetSelector(BaseModel):
     """Typed row-set projection carried by a row-producing binding selector."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: Literal["row_field"] = "row_field"
     row_field: str = Field(min_length=1, max_length=128)
@@ -140,7 +141,7 @@ class BindingRowSetSelector(BaseModel):
 class _BindingExportProjection(BaseModel):
     """Projection model for export-specific keys embedded in source-family selectors."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: str | None = Field(default=None, min_length=1, max_length=64)
     row_field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -232,7 +233,7 @@ class _BindingExportProjection(BaseModel):
 class _BindingRowSetProjection(BaseModel):
     """Projection model for row-set keys embedded in source-family selectors."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: str | None = Field(default=None, min_length=1, max_length=64)
     row_field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -291,7 +292,7 @@ class BooleanBindingEncodedValue(BaseModel):
     selector's declared ``true_value`` / ``false_value``).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     encoded_value: str
     boolean_meaning: bool
@@ -355,7 +356,7 @@ class ManualInputRecordFieldSelector(BaseModel):
     guarantees once ``record`` is not ``None``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: str
     field: str

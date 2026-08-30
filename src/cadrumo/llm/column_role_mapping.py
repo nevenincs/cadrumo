@@ -50,9 +50,10 @@ import textwrap
 from collections.abc import Mapping, Sequence
 from functools import cache
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ..core import LLM_EXTRA, FieldRole, ModelRole, build_provenance_stamp, require_optional_extra
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings, load_settings
 from .client import LLMClient
@@ -77,7 +78,7 @@ _MAPPING_TEMPERATURE = 0.0
 class ObservedColumn(BaseModel):
     """One column of the source table, addressed by position and printed name."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     column_index: int = Field(ge=0, description="Zero-based position of the column in the table.")
     header: str = Field(description="The header cell exactly as the file printed it.")
@@ -92,7 +93,7 @@ class RejectedRoleProposal(BaseModel):
     :attr:`~core.FieldRole.UNMAPPED`.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     column_index: int = Field(ge=0, description="Zero-based position of the column the claim concerned.")
     header: str = Field(description="The header cell exactly as the file printed it.")
@@ -108,7 +109,7 @@ class DiscardedDuplicateClaim(BaseModel):
     reported here rather than silently dropped.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     column_index: int = Field(ge=0, description="Zero-based position of the column whose claim was discarded.")
     header: str = Field(description="The header cell exactly as the file printed it.")
@@ -119,7 +120,7 @@ class DiscardedDuplicateClaim(BaseModel):
 class UnknownColumnClaim(BaseModel):
     """A claim about a column position the table does not carry."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     column_index: int = Field(description="The position claimed, which is outside the table's columns.")
     proposed_role: str = Field(description="The role token the claim named.")
@@ -137,7 +138,7 @@ class ColumnRoleProposal(BaseModel):
     the mapping call got wrong.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     roles: tuple[FieldRole, ...] = Field(min_length=1, description="One role per column, in column order.")
     unmapped_columns: tuple[ObservedColumn, ...] = Field(
@@ -179,7 +180,7 @@ class ProposedColumnRole(BaseModel):
     reported.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     column_index: int = Field(description="Zero-based position of the column being labelled.")
     role: str = Field(min_length=1, description="The role token chosen for that column.")
@@ -193,7 +194,7 @@ class ColumnRoleMappingReply(BaseModel):
     instruction rides in alongside a well-formed answer.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     assignments: tuple[ProposedColumnRole, ...] = Field(description="One claim per column the model labelled.")
 

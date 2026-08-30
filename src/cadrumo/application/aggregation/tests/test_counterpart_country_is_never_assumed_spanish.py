@@ -27,8 +27,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from .._counterpart import (
     CounterpartObservation,
     OperationKind349,

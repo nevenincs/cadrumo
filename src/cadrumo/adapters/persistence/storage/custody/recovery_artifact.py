@@ -10,13 +10,12 @@ from contextlib import contextmanager
 from ctypes import wintypes
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....application.user_profile.recovery_contracts import ProfileCustodyRecoveryArtifactWarning
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -25,11 +24,13 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._filesystem_primitives import (
     WindowsDirectoryAnchorErrors,
     windows_directory_anchor,
     windows_file_information_type,
 )
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 from .kdf_supervision import (
     unlock_profile_custody,
@@ -81,8 +82,12 @@ class _RecoveryArtifactPayload(BaseModel):
         return validate_profile_custody_dek_epoch(value)
 
 
-class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
+class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload, CustodyDigestModel):
     """Portable current-format recovery material, with no normal-login state."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile custody recovery artifact"
+    _digest_mismatch_message: ClassVar[str] = "profile recovery artifact self_digest does not match"
 
     self_digest: str
 
@@ -91,51 +96,9 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyRecoveryArtifact:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile recovery artifact self_digest does not match")
-        return self
 
-    @property
-    def canonical_payload(self) -> dict[str, object]:
-        """Return the fields ``self_digest`` itself commits to.
 
-        Excludes ``self_digest`` deliberately, the same convention as
-        :class:`~cadrumo.adapters.persistence.storage.custody.recovery.ProfileCustodyRecoveryEnvelope`:
-        the digest is computed OVER this payload, so it cannot include itself
-        without becoming unverifiable.
-        """
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
-        del payload["self_digest"]
-        return payload
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Recompute the digest a tamper check compares against ``self_digest``.
-
-        Called at construction time by the validator above, and again by a
-        caller re-verifying an artifact read back from portable storage (a
-        recovery export a taxpayer holds outside the app's own custody).
-        """
-        return canonical_json_digest(
-            self.canonical_payload,
-            maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
-            subject="profile recovery artifact",
-        )
-
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise to the exact canonical bytes this artifact's identity is pinned to.
-
-        The artifact is meant to be exported and later re-imported unchanged;
-        this is what an import path compares a re-parsed artifact's bytes
-        against to detect a record edited or re-encoded outside the app.
-        """
-        return bounded_canonical_json_bytes(
-            self.model_dump(mode="json"),
-            maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
-            subject="profile recovery artifact",
-        )
 
     @classmethod
     def from_recovery_envelope(cls, envelope: ProfileCustodyRecoveryEnvelope) -> ProfileCustodyRecoveryArtifact:

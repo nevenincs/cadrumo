@@ -26,11 +26,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
-from ....core.modelo import Modelo
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.casilla_id import CasillaId
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
@@ -112,7 +113,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
       credited, which is neither gross of retención nor IVA-exclusive.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M151] = Modelo.M151
     target_casilla_id: CasillaId

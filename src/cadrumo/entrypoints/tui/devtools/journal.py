@@ -17,6 +17,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.models import STRICT_FROZEN_CONFIG
 
 _STRICT = ConfigDict(frozen=True, extra="forbid")
 
@@ -70,7 +71,7 @@ Gesture = Annotated[Press | Type | Fill | Click, Field(discriminator="kind")]
 class Session(BaseModel):
     """One evaluation walk over one surface."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     surface: str
     width: int = 100

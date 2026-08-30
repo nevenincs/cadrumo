@@ -41,13 +41,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now as _now
 from .capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 from .custody_ports import (
@@ -96,7 +97,7 @@ class ProfileCapsuleArchiveError(CadrumoError):
 class ProfileCapsuleArchiveReceipt(BaseModel):
     """Non-secret record of one archive export."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     target: str
@@ -117,7 +118,7 @@ class ProfileCapsuleArchiveInspection(BaseModel):
     operator rather than about the archive.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     product: str
     bucket_id: BucketId

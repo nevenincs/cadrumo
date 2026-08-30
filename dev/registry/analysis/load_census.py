@@ -80,7 +80,7 @@ REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 REGISTRY_DIR: Final[Path] = SOURCE_ROOT / "cadrumo" / "domain" / "calculations" / "registry"
 
 #: The sanctioned way to load the registry: the validated authority, plus the
-#: package facade every cross-package consumer must route through to reach it.
+#: package namespace itself, which is inert and owns nothing.
 #: ``ValidatedRegistryAuthority.load`` is the only production load entry point
 #: the authority-flow rule admits.
 LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
@@ -379,43 +379,40 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     return tuple(sites)
 
 
-def facade_symbol_owners() -> Mapping[str, str]:
-    """Map each symbol the registry facade publishes to the module that defines it.
+def _imported_registry_module(node: ast.ImportFrom, module: str) -> str | None:
+    """Resolve one ``from ... import`` to the registry module it names, if any.
 
-    Both publication mechanisms are read: the eager ``from ._module import ...``
-    statements and the ``_LAZY_EXPORTS`` table the PEP 562 ``__getattr__``
-    resolves through. Omitting the second would drop the oracle and live-parity
-    modules, which are published only lazily.
+    The registry package namespace is inert by architectural rule, so a consumer
+    names the defining module in the import statement itself and there is no
+    symbol table to resolve through. Both spellings are read: the absolute
+    ``from cadrumo.domain.calculations.registry.authority import ...`` a
+    cross-package consumer uses, and the relative ``from ..authority import ...``
+    the package's own tests use.
+
+    Args:
+        node: The import statement.
+        module: The dotted name of the module containing it.
 
     Returns:
-        Symbol name to owning dotted module name.
-
-    Raises:
-        LoadCensusError: If the facade cannot be parsed.
+        The owning registry submodule, or ``None`` when the import names
+        something else. The package itself is never an owner: publishing
+        nothing, it can own nothing.
     """
-    facade = REGISTRY_DIR / "__init__.py"
-    tree = _parse(facade)
-    if tree is None:
-        raise LoadCensusError(f"cannot parse the registry facade at {facade}")
-    owners: dict[str, str] = {}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module:
-            for alias in node.names:
-                owners[alias.asname or alias.name] = f"{REGISTRY_PACKAGE}.{node.module}"
-        elif isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "_LAZY_EXPORTS" and isinstance(node.value, ast.Dict):
-                    for key, value in zip(node.value.keys, node.value.values, strict=True):
-                        if isinstance(key, ast.Constant) and isinstance(value, ast.Constant):
-                            owners[str(key.value)] = f"{REGISTRY_PACKAGE}.{str(value.value).lstrip('.')}"
-    if not owners:
-        raise LoadCensusError("the registry facade published no symbols; the parser is reading it wrongly")
-    return owners
+    if node.level == 0:
+        target = node.module or ""
+    else:
+        base = module.split(".")
+        # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
+        del base[len(base) - node.level :]
+        target = ".".join((*base, node.module)) if node.module else ".".join(base)
+    if not target.startswith(REGISTRY_PACKAGE + "."):
+        return None
+    return target
 
 
 @dataclass(frozen=True)
 class ReferenceMap:
-    """Who names each registry module's facade symbols, split by surface."""
+    """Who names each registry module, split by surface."""
 
     production: Mapping[str, frozenset[str]] = field(default_factory=dict)
     tests: Mapping[str, frozenset[str]] = field(default_factory=dict)
@@ -432,17 +429,13 @@ class ReferenceMap:
         return self.production.get(module, frozenset()) | self.tests.get(module, frozenset())
 
 
-def build_reference_map(owners: Mapping[str, str] | None = None) -> ReferenceMap:
-    """Find every module that imports a registry facade symbol, by owning module.
-
-    Args:
-        owners: Symbol-to-module map; computed from the facade when omitted.
+def build_reference_map() -> ReferenceMap:
+    """Find every module that imports a registry module, by owning module.
 
     Returns:
         The reference map, with production and test consumers kept apart so a
         module reachable only from a quality gate is visible as such.
     """
-    resolved = dict(owners or facade_symbol_owners())
     production: dict[str, set[str]] = {}
     tests: dict[str, set[str]] = {}
     for path in _iter_source_files():
@@ -451,25 +444,18 @@ def build_reference_map(owners: Mapping[str, str] | None = None) -> ReferenceMap
         if module is None or tree is None:
             continue
         # The package's own production modules reach siblings by direct import,
-        # which the graph already records. Its TESTS reach them through the
-        # facade (``from .. import symbol``), so they are consumers this map
-        # must see -- excluding them once reported two live modules as dead.
+        # which the graph already records. Its TESTS reach them by relative
+        # import (``from ..authority import ...``), so they are consumers this
+        # map must see -- excluding them once reported two live modules as dead.
         if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(module):
             continue
         bucket = tests if is_test_module(module) else production
         for node in ast.walk(tree):
             if not isinstance(node, ast.ImportFrom):
                 continue
-            imported_from = node.module or ""
-            reaches_facade = imported_from.endswith("calculations.registry") or (
-                node.level > 0 and imported_from == "" and module.startswith(REGISTRY_PACKAGE)
-            )
-            if not reaches_facade:
-                continue
-            for alias in node.names:
-                owner = resolved.get(alias.name)
-                if owner is not None:
-                    bucket.setdefault(owner, set()).add(module)
+            owner = _imported_registry_module(node, module)
+            if owner is not None:
+                bucket.setdefault(owner, set()).add(module)
     return ReferenceMap(
         production={k: frozenset(v) for k, v in production.items()},
         tests={k: frozenset(v) for k, v in tests.items()},
@@ -480,8 +466,8 @@ def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) 
     """Return registry modules nothing outside themselves and the facade reaches.
 
     A module qualifies only when three independent signals agree: no production
-    module inside the package imports it, no module anywhere imports a symbol the
-    facade owns for it, and no test imports it directly. These are DEAD
+    module inside the package imports it, no module anywhere names it in an
+    import, and no test imports it directly. These are DEAD
     CANDIDATES for review, not a verdict -- see this module's docstring for what
     the instrument cannot see.
 

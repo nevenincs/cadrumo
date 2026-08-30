@@ -7,15 +7,14 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import Period
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import Period
 from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -1114,7 +1113,7 @@ def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
 class _ContraparteClaveAccumulator(BaseModel):
     """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
@@ -1289,7 +1288,7 @@ def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:
 class _OperatorClaveAccumulator(BaseModel):
     """Mutable accumulator for operator_clave row aggregation."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
@@ -1301,7 +1300,7 @@ class _OperatorClaveAccumulator(BaseModel):
 class _OperatorClavePeriodAccumulator(BaseModel):
     """Mutable accumulator for operator_clave_period row aggregation."""
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken

@@ -42,7 +42,7 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
@@ -50,6 +50,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import normalise_iso_4217_currency, parse_iso8601_date
 from ...domain.invoices.enums import numeric_iva_rate_slots
 from ...domain.invoices.errors import InvoiceValidationError
@@ -77,7 +78,7 @@ class InvoiceWizardFieldError(BaseModel):
     wizard has no use for.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     field: str
     reason: str
@@ -92,7 +93,7 @@ class InvoiceWizardResult(BaseModel):
     pre-existing record and nothing was written.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice: Invoice
     already_existed: bool

@@ -15,6 +15,10 @@ boundary-specific.
 
 from __future__ import annotations
 
+from typing import Annotated
+
+from pydantic import BeforeValidator
+
 from ..errors.hierarchy import CoreValidationError
 
 _ISO_4217_LENGTH: int = 3
@@ -81,7 +85,22 @@ def normalise_iso_3166_alpha2_jurisdiction(value: str | None) -> str | None:
     return normalised
 
 
+IsoCurrencyCode = Annotated[str, BeforeValidator(normalise_iso_4217_currency)]
+"""A three-letter uppercase ISO 4217 code, normalised before it is checked.
+
+The normalisation has to happen BEFORE the shape check, which is why this is a
+``BeforeValidator`` and not a pattern. :func:`normalise_iso_4217_currency` says
+so in its own docstring: a bare ``min_length`` / ``max_length`` field constraint
+fires on the padding first and never reaches the normaliser, so `` usd `` is
+refused for its spaces rather than accepted as ``USD``.
+
+Three sites had written the shape out instead, in three different strengths --
+a length-only bound that accepted ``eur`` and ``$$$``, and two hand-rolled
+``^[A-Z]{3}$`` patterns that refused padding the normaliser exists to absorb.
+"""
+
 __all__ = [
+    "IsoCurrencyCode",
     "normalise_iso_3166_alpha2_jurisdiction",
     "normalise_iso_4217_currency",
 ]

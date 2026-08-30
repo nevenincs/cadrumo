@@ -17,12 +17,13 @@ from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.casilla_id import validated_casilla_id as _validated_casilla_id
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation as _RegistryModeloObservation
@@ -53,7 +54,7 @@ from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 class FiledStateVerificationReport(BaseModel):
     """Local registry calculation versus filed AEAT state verification report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_path: str
     source_observation_paths: tuple[str, ...]

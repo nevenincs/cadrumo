@@ -24,7 +24,14 @@ from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,
 )
-from ...domain.modelos.row_models import M184Clave, M184ClaveDeclarado, M184NaturalezaInmueble, M184SituacionInmueble, M184Subclave, Modelo184MemberRow
+from ...domain.modelos.row_models import (
+    M184Clave,
+    M184ClaveDeclarado,
+    M184NaturalezaInmueble,
+    M184SituacionInmueble,
+    M184Subclave,
+    Modelo184MemberRow,
+)
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import numeric_value_refusal

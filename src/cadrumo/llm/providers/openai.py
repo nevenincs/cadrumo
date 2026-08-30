@@ -10,10 +10,11 @@ from __future__ import annotations
 
 from typing import override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.config import load_settings
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..models import LLMProvider
 from .base import (
     ProviderAdapter,
@@ -44,7 +45,7 @@ class _OpenAIUsage(BaseModel):
         completion_tokens: Tokens charged for the completion.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     prompt_tokens: int = Field(ge=0)
     completion_tokens: int = Field(ge=0)
@@ -53,7 +54,7 @@ class _OpenAIUsage(BaseModel):
 class _OpenAIMessage(BaseModel):
     """Single assistant message inside a Chat Completions choice."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     content: str | None = None
 
@@ -61,7 +62,7 @@ class _OpenAIMessage(BaseModel):
 class _OpenAIChoice(BaseModel):
     """One choice within an OpenAI Chat Completions response."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     message: _OpenAIMessage
 
@@ -77,7 +78,7 @@ class _OpenAIResponse(BaseModel):
         usage: Token accounting metadata.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str
     model: str

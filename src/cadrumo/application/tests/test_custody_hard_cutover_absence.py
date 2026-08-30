@@ -491,16 +491,16 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
 
 def test_detector_flags_a_private_substrate_module_path() -> None:
     """The path axis: a string-built target is bound by the same ownership rule."""
-    dynamic = 'import_module("cadrumo.adapters.persistence.storage.custody._capsule_discovery")\n'
+    dynamic = 'import_module("cadrumo.adapters.persistence.storage.custody.capsule_discovery")\n'
     assert _retired_references(dynamic) == {
-        "private-path:cadrumo.adapters.persistence.storage.custody._capsule_discovery"
+        "private-path:cadrumo.adapters.persistence.storage.custody.capsule_discovery"
     }
 
     relative = "from ...adapters.persistence.storage._rotation import rotate_dek\n"
     assert _retired_references(relative) == {"private-path:adapters.persistence.storage._rotation"}
 
-    plain = "import cadrumo.adapters.persistence.storage.crypto._encrypted_columns as _cols\n"
-    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.crypto._encrypted_columns"}
+    plain = "import cadrumo.adapters.persistence.storage.crypto.encrypted_columns as _cols\n"
+    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.crypto.encrypted_columns"}
 
     assert _retired_references("from ...adapters.persistence.storage.crypto import encrypt_record\n") == set()
     assert _retired_references("from ._revision_persistence import build_event\n") == set()

@@ -16,8 +16,9 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
+from ...core.identity import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -26,7 +27,6 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
 from ._model_contract import require_strict_frozen_operation_model_graph
 from .capabilities import (
@@ -207,7 +207,7 @@ class OperationPublicContractSetV1(BaseModel):
 class _OperationRequestResolutionHeader(BaseModel):
     """Minimal request identity used only to select its registered model."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+    model_config = STRICT_FROZEN_CONFIG
 
     definition_id: OperationDefinitionId
 
@@ -215,7 +215,7 @@ class _OperationRequestResolutionHeader(BaseModel):
 class _OperationSnapshotResolutionHeader(BaseModel):
     """Minimal snapshot identity used only to select its registered model."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+    model_config = STRICT_FROZEN_CONFIG
 
     identity: OperationIdentity
 

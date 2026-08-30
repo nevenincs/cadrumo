@@ -57,10 +57,10 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.aggregation import AggregationCaptureKind
 from ...core.filing_year import FilingYear
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._observation_window import hashed_tax_id_token, replace_observation_window

@@ -16,10 +16,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from .....core import AuthProviderKind
 from .....core.identity import ContentDigest
+from .....core.models import STRICT_FROZEN_CONFIG
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Schema version for Cl@ve Móvil :class:`ClaveMovilSessionMetadata` records."""
@@ -37,7 +38,7 @@ class ClaveMovilSessionMetadata(BaseModel):
     session is rebuilt.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION, ge=2)
     provider_kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL

@@ -75,8 +75,8 @@ def work_preview_maritime_exemption(
             casilla_id=obs.casilla_id,
             value=str(obs.value),
             formula_id=obs.formula_id,
-            legal_refs=list(obs.legal_refs),
-            source_refs=list(obs.source_refs),
+            legal_refs=tuple(obs.legal_refs),
+            source_refs=tuple(obs.source_refs),
         )
         for obs in result.observations
     ]

@@ -24,11 +24,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
-from ....core.modelo import Modelo
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingAggregationOp
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .errors import RegistryValidationError
 from .schema import DataBindingDefinition
@@ -64,7 +65,7 @@ class _InventorySelector(BaseModel):
     so no generic signed variation can enter the selector vocabulary.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M100]
     # PINNED TO 2025, and it must stay pinned. The three destinations this

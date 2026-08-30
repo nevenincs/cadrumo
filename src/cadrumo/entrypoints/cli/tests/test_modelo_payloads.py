@@ -171,7 +171,7 @@ def test_verification_finding_payload_preserves_the_domain_contract() -> None:
         casilla_id=_PAYLOAD_CASILLA,
         expectation_id="m130-rendimiento-neto-non-negative",
         message="Rendimiento neto cannot be negative.",
-        legal_refs=["ley-35-2006:art-28"],
+        legal_refs=("ley-35-2006:art-28",),
         source_refs=["modelo-130-2025-instructions"],
     )
 
@@ -208,8 +208,8 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
         casilla_id=_PAYLOAD_CASILLA,
         value="1234.56",
         formula_id="m130-test-formula",
-        legal_refs=["ley-58-2003:art-120"],
-        source_refs=["libro-1"],
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
     )
     delta = DeltaRowPayload(
         casilla_id=_PAYLOAD_CASILLA,
@@ -220,15 +220,15 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
         delta="1134.56",
         pct_change="1134.56",
         formula_id="m130-test-formula",
-        legal_refs=["ley-58-2003:art-120"],
-        source_refs=["libro-1"],
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
     )
     google = ModeloSpreadsheetCalculateCasillaPayload(
         casilla_id=_PAYLOAD_CASILLA,
         value="1234.56",
         formula_id="m130-test-formula",
-        legal_refs=["ley-58-2003:art-120"],
-        source_refs=["libro-1"],
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
     )
 
     assert observation.formula_id == delta.formula_id == google.formula_id == "m130-test-formula"

@@ -969,3 +969,8 @@ legal_refs = [
 source_refs = ['aeat-dr-296-2024']
 
 [revisions.2024-y-siguientes.export_layouts.records.row_field_casilla_ids]
+
+[revisions.2024-y-siguientes.export_layouts.records.discriminator]
+offset = 500
+length = 1
+requires = 'blank'

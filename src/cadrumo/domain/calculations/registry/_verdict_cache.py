@@ -32,12 +32,13 @@ import json
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .... import __version__
 from ....core import StorageCategory, storage_path
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.models import STRICT_FROZEN_CONFIG
 from ._compiled_cache import loader_code_fingerprint
 from .identity import RegistryIdentity
 from .loader_cache import is_bundled_registry_root
@@ -62,7 +63,7 @@ class RegistryValidationVerdict(BaseModel):
     green verdict's key equals the freshly recomputed key.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     verdict_key: str
     package_version: str

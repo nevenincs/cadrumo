@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -182,7 +182,7 @@ class ConsentWithdrawalSurvey(BaseModel):
         transmitted_bytes_are_unrecallable: Always ``True``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     consented_dispatches: tuple[ConsentedDispatch, ...] = ()
     cloud_derived_artefacts: tuple[CloudDerivedArtefact, ...] = ()

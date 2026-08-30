@@ -45,7 +45,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from ...core import read_toml
 from ...core.modelo import Modelo
@@ -149,7 +149,7 @@ class HolidayCalendar(BaseModel):
 class _NationalHolidayRow(BaseModel):
     """One ``[[national]]`` row as authored in a festivos TOML file."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     date: date
     name: _NonEmptyShortString
@@ -158,7 +158,7 @@ class _NationalHolidayRow(BaseModel):
 class _CcaaHolidayRow(BaseModel):
     """One ``[[ccaa]]`` row as authored in a festivos TOML file."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     date: date
     ccaa_code: CalendarCCAA
@@ -175,7 +175,7 @@ class _HolidayCalendarToml(BaseModel):
     / :class:`HolidayCalendar` domain records, which stay strict.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     year: Annotated[int, Field(ge=2000, le=2100)]
     boe_ref: _NonEmptyShortString

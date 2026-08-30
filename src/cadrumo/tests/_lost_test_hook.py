@@ -68,10 +68,19 @@ def apply(
             the collected total those outcomes are measured against.
         exitstatus: The session exit status; unused, because a hole in the
             run is worth stating whether or not anything failed.
-        config: The active configuration; unused, retained to match the
-            hook signature its sibling reporters share.
+        config: The active configuration, read only to recognise a
+            collect-only run.
     """
-    del exitstatus, config
+    del exitstatus
+
+    # A collect-only run reports every test as collected and none as executed,
+    # which is this reporter's exact trigger and is CORRECT behaviour there --
+    # nothing was meant to run. Firing on it would put the banner in front of
+    # every inventory check, and a warning that cries wolf is the failure this
+    # hook exists to prevent, not a stricter version of it. Its sibling
+    # deselection reporter guards the same case for the same reason.
+    if config.getoption("--collect-only", default=False):
+        return
 
     collected = _collected_count(terminalreporter)
     if collected is None:

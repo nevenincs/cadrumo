@@ -133,7 +133,13 @@ from ...core.aggregation import (
 )
 from ...core.money import CENT
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.transactions.retencion_parameters import administrador_retencion_legal_refs, load_administrador_retencion_rates, professional_activity_retencion_rates, rirpf_art95_retencion_legal_refs, statutory_activity_retencion_rates
+from ...domain.transactions.retencion_parameters import (
+    administrador_retencion_legal_refs,
+    load_administrador_retencion_rates,
+    professional_activity_retencion_rates,
+    rirpf_art95_retencion_legal_refs,
+    statutory_activity_retencion_rates,
+)
 from ._renta_income_ledger import RentaIncomeObservation
 from ._retenciones import RetencionObservation
 from ._source_mesh import CalculationSourceDiagnostic
@@ -319,7 +325,7 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
         return None
     # Function-local for the cycle reason the sibling profile-backed advisories
     # document: the profile package reaches back into this layer.
-    from ...domain.deadlines.models import IVARegime, IrpfActivityKind, IrpfEstimationRegime
+    from ...domain.deadlines.models import IrpfActivityKind, IrpfEstimationRegime, IVARegime
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import projection_for_taxpayer

@@ -14,7 +14,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import normalise_iso_4217_currency
+from ...core.parsing import IsoCurrencyCode, normalise_iso_4217_currency
 
 
 class CurrencyNormalizationStatus(StrEnum):
@@ -32,7 +32,7 @@ class MonetaryAmount(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal
-    currency: str = Field(min_length=3, max_length=3)
+    currency: IsoCurrencyCode
 
     @field_validator("currency", mode="before")
     @classmethod

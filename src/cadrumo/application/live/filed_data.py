@@ -18,11 +18,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...core.period import Period
 from ...core.identity import AeatExpedienteId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from .errors import LiveApplicationInputError
 from .remote_state_models import FiledDataCaptureFailureRow
 
@@ -30,7 +31,7 @@ from .remote_state_models import FiledDataCaptureFailureRow
 class FiledDataListingRow(BaseModel):
     """One filed declaration row listed from AEAT without downloading artefacts."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     year: int
@@ -46,7 +47,7 @@ class FiledDataListingRow(BaseModel):
 class FiledDataListingReport(BaseModel):
     """Read-only filed-declaration listing report."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     year_from: int
@@ -58,7 +59,7 @@ class FiledDataListingReport(BaseModel):
 class BulkFiledDataListingReport(BaseModel):
     """Read-only filed-declaration listing report across multiple modelos."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelos: tuple[str, ...]
     year_from: int

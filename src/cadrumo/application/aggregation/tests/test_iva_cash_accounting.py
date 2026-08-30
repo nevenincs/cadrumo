@@ -17,7 +17,12 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole
+from ....domain.iva.schema import (
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

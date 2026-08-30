@@ -21,10 +21,11 @@ from io import BytesIO
 from typing import Protocol, cast, override
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core import LLM_EXTRA, require_optional_extra
 from ...core.config import load_settings
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..errors import LLMPdfRasterisationError
 from ..models import LLMProvider
 from .base import (
@@ -120,7 +121,7 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
 class _LocalMessage(BaseModel):
     """Single message returned in an Ollama chat response."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     content: str
 
@@ -135,7 +136,7 @@ class _LocalResponse(BaseModel):
         eval_count: Tokens evaluated for the generated output.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     model: str
     message: _LocalMessage

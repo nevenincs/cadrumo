@@ -34,9 +34,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, ValidationError, model_validator
 
-from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from .codes import ModeloCode
 from .errors import ModeloError, ModeloValidationError
 
@@ -78,7 +79,7 @@ class TransactionRevisionParticipation(BaseModel):
     leaves both ``None``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -122,7 +123,7 @@ class TransactionRevisionParticipationIndex(BaseModel):
     upsert (:func:`upsert_transaction_participation`) replaces in place instead.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     participations: tuple[TransactionRevisionParticipation, ...] = ()

@@ -10,11 +10,12 @@ link, and writes the mutated catalogues back.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity import InvoiceId, TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.errors import InvoiceError
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.service import ReconciliationSuggestion, link_transaction, suggest_reconciliations
@@ -26,7 +27,7 @@ from ...domain.transactions.service import link_invoice
 class ReconciliationSkippedSuggestion(BaseModel):
     """A reconciliation suggestion the backend could not safely apply."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     transaction_id: TransactionId
@@ -36,7 +37,7 @@ class ReconciliationSkippedSuggestion(BaseModel):
 class InvoiceReconciliationResult(BaseModel):
     """Complete backend result for an invoice reconciliation run."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     suggestions: tuple[ReconciliationSuggestion, ...]
     applied: int = Field(default=0, ge=0)

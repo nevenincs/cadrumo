@@ -522,8 +522,8 @@ def modelo_spreadsheet_calculate(
             casilla_id=entry.target_casilla_id,
             value=str(entry.value),
             formula_id=entry.formula_id,
-            legal_refs=list(entry.legal_refs),
-            source_refs=list(entry.source_refs),
+            legal_refs=tuple(entry.legal_refs),
+            source_refs=tuple(entry.source_refs),
         )
         for entry in calc.entries
     ]

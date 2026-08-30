@@ -66,9 +66,21 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
     # nowhere else in the tracked tree may name it.
     excluded_paths = {
         Path(__file__).resolve(),
-        (repository / "src/cadrumo/application/modelo/workspace.py").resolve(),
         (repository / "src/cadrumo/application/modelo/tests/test_workspace.py").resolve(),
     }
+    # An exclusion that no longer excludes anything is the failure mode this
+    # family of gates exists to catch: it goes on suppressing a file that has
+    # stopped naming the forbidden module, so the day that file names it again
+    # the gate stays green. Assert the exclusions still earn their place, which
+    # is the same both-directions discipline the marker scan's scope gate uses.
+    # `workspace.py` was carried here until its module docstring stopped naming
+    # the rejected design; it is no longer excluded, so it is now scanned like
+    # any other module.
+    for excluded in excluded_paths:
+        assert re.search(r"(?<![A-Za-z0-9_])_workspace_projection\.py", excluded.read_text(encoding="utf-8")), (
+            f"{excluded.relative_to(repository)} is excluded from the remnant scan but no longer names the "
+            "forbidden module, so the exclusion suppresses nothing and would hide a real remnant if one returned"
+        )
     prose_remnants = tuple(
         path.relative_to(repository)
         for path in scanned_paths

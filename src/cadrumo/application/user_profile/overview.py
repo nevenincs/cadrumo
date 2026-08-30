@@ -40,13 +40,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core import ClaveMovilRoute
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
 from ...core.identity import ProfileId
 from ...core.json_contract import Notice
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction import ALWAYS_REDACT_KEY_TERMS
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.labels import profile_field_label, profile_section_title
@@ -157,7 +158,7 @@ class ProfileFieldChoice(BaseModel):
     ``régimen`` name and false of ``true``.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     value: str
     label: str
@@ -226,7 +227,7 @@ def profile_field_choices(
 class ProfileFieldView(BaseModel):
     """One schema field paired with whatever the profile records for it."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     path: str
     label: str
@@ -283,7 +284,7 @@ class ProfileFieldView(BaseModel):
 class ProfileSectionView(BaseModel):
     """One schema section and its fields, in declaration order."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str
     title: str
@@ -303,7 +304,7 @@ class ProfileSectionView(BaseModel):
 class ProfileOverview(BaseModel):
     """Everything the manager's landing page renders for one profile."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     label: str

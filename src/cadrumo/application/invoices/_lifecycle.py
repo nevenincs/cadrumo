@@ -27,10 +27,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
@@ -44,7 +45,7 @@ from ._catalogue_mutation import mutate_catalogue
 class CatalogueInvoiceRemoveResult(BaseModel):
     """Result of deleting one rich catalogue invoice."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice: Invoice
     catalogue: InvoiceCatalogue
@@ -170,7 +171,7 @@ class CatalogueInvoicePatch(BaseModel):
     delete an invoice that still carries links.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     counterparty_name: str | None = None
     counterparty_country: str | None = None
@@ -190,7 +191,7 @@ class CatalogueInvoicePatch(BaseModel):
 class CatalogueInvoiceUpdateResult(BaseModel):
     """Result of correcting one rich catalogue invoice."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice: Invoice
     catalogue: InvoiceCatalogue

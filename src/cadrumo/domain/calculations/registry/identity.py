@@ -49,12 +49,13 @@ from enum import StrEnum
 from pathlib import Path
 from typing import override
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .... import __version__
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import blake2b_hex
+from ....core.models import STRICT_FROZEN_CONFIG
 from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]
@@ -87,7 +88,7 @@ class RegistryIdentityStamp(BaseModel):
     costing a walk to read.
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str
     package_version: str

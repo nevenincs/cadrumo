@@ -22,7 +22,6 @@ from typing import Annotated, Protocol, override
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     StringConstraints,
     field_serializer,
@@ -30,9 +29,9 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.severity import BaseSeverity
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
@@ -547,11 +546,7 @@ IvaStrictFrozen = _IvaStrictFrozen
 class _IvaStrictMutable(BaseModel):
     """Strict validation mixin with mutable config for incrementally populated catalogues."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=False,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
 
 def _require_grounded_rate_refs(record: IvaRateRecord) -> None:

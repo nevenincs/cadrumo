@@ -21,10 +21,6 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import FilingPeriodCode, Period
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.aggregation import (
     CounterpartSourceKind,
     OperationKind347,
@@ -32,7 +28,11 @@ from ...core.aggregation import (
     counterpart_source_kind,
 )
 from ...core.country_code import CountryCodeAlpha2
+from ...core.external_constants import M347_THRESHOLD_EUR
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoDateString
+from ...core.period import FilingPeriodCode, Period
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 

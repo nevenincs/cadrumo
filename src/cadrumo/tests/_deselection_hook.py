@@ -27,6 +27,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -50,24 +51,56 @@ def _executed_count(terminalreporter: TerminalReporter) -> int:
     return sum(len(terminalreporter.stats.get(key, [])) for key in _OUTCOME_KEYS)
 
 
-def _remediation(expression: str) -> str:
+_COLLECTED_MARKERS_KEY = "_cadrumo_collected_marker_names"
+
+
+def record_collected_markers(config: pytest.Config, items: Iterable[pytest.Item]) -> None:
+    """Remember which markers the collected tests actually carry.
+
+    Called during collection, BEFORE selection removes anything, so the
+    remediation can name the markers that exist rather than guessing a lane.
+    Under xdist this runs inside each worker while the banner prints on the
+    controller, so the record is frequently absent exactly where it is read --
+    which is why the advice must still be correct without it.
+    """
+    names: set[str] = set()
+    for item in items:
+        names.update(mark.name for mark in item.iter_markers())
+    setattr(config, _COLLECTED_MARKERS_KEY, frozenset(names))
+
+
+def _lane_markers(config: pytest.Config) -> frozenset[str]:
+    """Return the recorded marker names, or an empty set when unknown."""
+    recorded = getattr(config, _COLLECTED_MARKERS_KEY, frozenset())
+    return recorded if isinstance(recorded, frozenset) else frozenset()
+
+
+def _remediation(expression: str, markers: frozenset[str] = frozenset()) -> str:
     """Return advice that cannot reproduce the run that just selected nothing.
 
     Naming a fixed lane is wrong precisely when the operator already chose
     it: following "re-run with -m integration" after running -m integration
     reproduces the identical empty selection, so the remediation completes
-    the defect instead of resolving it. When the selected lane is already
-    the one that would otherwise be suggested, point at the selector that
-    cannot be empty for a module that collected anything at all.
+    the defect instead of resolving it.
+
+    Naming a fixed lane is ALSO wrong when the operator chose some third
+    expression, because the suggested lane can be just as empty for this
+    module -- the earlier form advised 'integration' for a module whose
+    tests are unit-marked, which reproduces the identical NOTHING RAN. The
+    defect is not the particular lane in the string, it is naming any lane
+    without knowing what the collected tests carry.
+
+    So the advice leads with the markers actually collected when they are
+    known, and otherwise offers only the selector that cannot be empty for
+    a module that collected anything at all.
     """
-    if "integration" in expression:
-        return (
-            "You already selected 'integration', so these tests carry a different marker: "
-            "re-run with -m '' to select every lane, or `just test-both-lanes`."
-        )
+    universal = "re-run with -m '' to select every lane, or `just test-both-lanes`"
+    actual = sorted(markers - {"parametrize", "usefixtures", "filterwarnings", "skip", "skipif", "xfail"})
+    if actual:
+        return f"These tests carry: {', '.join(actual)}. Select one of those, or {universal}."
     return (
-        "If you targeted a specific module, its tests likely carry a different marker: "
-        "re-run with -m integration (or `just test-integration`)."
+        "These tests carry a different marker, and this run cannot say which "
+        f"(xdist deselects inside its workers): {universal}."
     )
 
 
@@ -114,7 +147,7 @@ def apply(
             "A green result here means the selection matched nothing, NOT that the code is sound.",
             red=True,
         )
-        terminalreporter.write_line(_remediation(expression))
+        terminalreporter.write_line(_remediation(expression, _lane_markers(config)))
         return
 
     if not deselected:

@@ -17,12 +17,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NoReturn, Protocol, Self, cast, runtime_checkable
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core import StorageCategory, StorageCustodyProfile, storage_location
-from ...core.secure_object_write import SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.errors.hierarchy import CoreError
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.secure_object_write import SecureObjectWrite
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
@@ -497,7 +498,7 @@ class ProfileCustodyConcurrentChangeError(ProfileCustodyRecordIntegrityError):
 class ProfileRecordEncryptedBlob(BaseModel):
     """Neutral encrypted-record shape exchanged across the application port."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     nonce: bytes = Field(min_length=12, max_length=12)
     ciphertext: bytes = Field(min_length=16)

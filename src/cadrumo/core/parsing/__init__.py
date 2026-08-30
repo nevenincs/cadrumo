@@ -29,6 +29,7 @@ from __future__ import annotations
 from datetime import date
 
 from ._codes import (
+    IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,
     normalise_iso_4217_currency,
 )
@@ -53,6 +54,7 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
 
 
 __all__ = [
+    "IsoCurrencyCode",
     "IsoDateString",
     "enum_value",
     "normalise_iso_3166_alpha2_jurisdiction",

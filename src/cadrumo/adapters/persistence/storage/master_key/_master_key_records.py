@@ -10,13 +10,15 @@ active profile is synthetic before a published deterministic key is admitted.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from .....core.models import STRICT_FROZEN_CONFIG
 
 
 class _EnvelopeFact(BaseModel):
     """A single fact entry within an :class:`EnvelopeDocument` payload."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = STRICT_FROZEN_CONFIG
 
     path: str
     value: object = None
@@ -25,7 +27,7 @@ class _EnvelopeFact(BaseModel):
 class _EnvelopePayload(BaseModel):
     """The ``payload`` dict inside an :class:`EnvelopeDocument`."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = STRICT_FROZEN_CONFIG
 
     facts: list[_EnvelopeFact] = Field(default_factory=list)
 
@@ -33,6 +35,6 @@ class _EnvelopePayload(BaseModel):
 class EnvelopeDocument(BaseModel):
     """Typed representation of a decrypted user-profile envelope JSON document."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = STRICT_FROZEN_CONFIG
 
     payload: _EnvelopePayload | None = None
