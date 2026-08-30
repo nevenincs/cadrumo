@@ -159,7 +159,7 @@ own history even after the revision it names has been superseded. This
 narrower set exists for the operator-facing surfaces that must not do that --
 as one of them puts it, "a superseded revision is stale and must not be
 handed to an accountant as current" (see
-:mod:`application.modelo._review_package`)."""
+:mod:`application.modelo.review_package`)."""
 
 
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)

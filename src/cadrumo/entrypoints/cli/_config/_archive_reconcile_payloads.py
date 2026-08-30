@@ -22,18 +22,19 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import Field, NonNegativeInt
+from pydantic import NonNegativeInt
 
 from ....application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ....core import Hex64Str
 from ....core.json_contract import OutputSchema
+from ....core.text_bounds import NonEmptyStr
 
 
 class ReconciledProfileExportPayload(OutputSchema):
     """One crash-interrupted export the sweep resolved and cleared."""
 
     operation_id: Hex64Str
-    destination: str = Field(min_length=1)
+    destination: NonEmptyStr
     purpose: ProfileBundleExportPurpose
 
 
@@ -46,9 +47,9 @@ class UnreconciledProfileExportPayload(OutputSchema):
     contents onto an operator-facing surface.
     """
 
-    journal_id: str = Field(min_length=1)
+    journal_id: NonEmptyStr
     destination: str | None = None
-    reason: str = Field(min_length=1)
+    reason: NonEmptyStr
 
 
 class ProfileBundleReconcileResult(OutputSchema):

@@ -13,7 +13,8 @@ from ....domain.deadlines import (
     IVARegime,
     TaxpayerProfile,
 )
-from .. import OverviewCalendarRange, build_overview_calendar
+from ..calendar import build_overview_calendar
+from ..calendar_models import OverviewCalendarRange
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

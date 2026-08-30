@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from ....entrypoints._operation_composition import build_production_operation_registry
+from ....entrypoints.operation_composition import build_production_operation_registry
 from ..registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

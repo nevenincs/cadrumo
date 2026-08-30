@@ -4,7 +4,8 @@ from typing import cast
 import pytest
 
 from ....domain.deadlines import DeadlineEngine, TaxpayerProfile
-from .. import OverviewAgendaError, build_overview_agenda
+from ..agenda import build_overview_agenda
+from ..errors import OverviewAgendaError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

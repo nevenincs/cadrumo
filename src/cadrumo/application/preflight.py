@@ -56,7 +56,7 @@ from .operator_actions import ActionReference, ConditionEvidence, PreconditionVe
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from ..domain.portals import PortalDriftEvent
+    from ..domain.portals.drift import PortalDriftEvent
 
 
 __all__ = [
@@ -647,8 +647,8 @@ def probe_portal_registry_health(
     Returns:
         One :class:`PreflightCheck` row with id ``portal-registry:health``.
     """
-    from ..domain.portals import PORTAL_REGISTRY
-    from ..domain.portals import PortalRegistryError as _PortalRegistryError
+    from ..domain.portals.errors import PortalRegistryError as _PortalRegistryError
+    from ..domain.portals.registry import PORTAL_REGISTRY
 
     try:
         portal_count = len(PORTAL_REGISTRY)

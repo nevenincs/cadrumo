@@ -65,7 +65,7 @@ from ._lineage_models import (
     derive_split_group_id,
 )
 from ._m210_income_classification import M210IncomeClassification
-from ._model_validation import (
+from .model_validation import (
     coerce_raw_transaction,
     normalize_identifier_tuple,
     require_aware_datetime,

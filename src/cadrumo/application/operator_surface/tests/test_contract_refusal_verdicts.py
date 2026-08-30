@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 
 from ....core import ActionConditionality, NoRecoveryOutcome
-from .._contract import require_accepted_root, resolve_source_kind_alias
+from ..contract import require_accepted_root, resolve_source_kind_alias
 from ..errors import OperatorSurfaceContractError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

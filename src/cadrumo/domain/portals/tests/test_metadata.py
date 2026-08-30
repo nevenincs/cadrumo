@@ -13,9 +13,9 @@ from ....tests.aeat_literal_fixtures import (
     PORTAL_RETIRED_WITH_NOTES_PATH_CANARY,
     portal_path,
 )
-from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from .._codes import Portal
-from .._metadata import PortalMetadata
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..codes import Portal
+from ..metadata import PortalMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

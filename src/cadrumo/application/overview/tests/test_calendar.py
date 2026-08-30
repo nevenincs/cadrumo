@@ -24,23 +24,24 @@ from ....domain.deadlines import (
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.notifications import PersistedNotificationsSnapshot
-from .. import (
+from ..calendar import (
+    _registry_window_for_work_unit,
+    build_overview_calendar,
+    build_overview_calendar_events,
+    calendar_events_from_expedientes_snapshots,
+    calendar_events_from_notification_snapshots,
+)
+from ..calendar_models import (
     OverviewCalendar,
     OverviewCalendarEntry,
     OverviewCalendarEventType,
     OverviewCalendarRange,
     OverviewCensoEnrolmentState,
     OverviewPeriodState,
-    build_filing_obligation_advisories,
-    build_overview_calendar,
-    build_overview_calendar_events,
-    calendar_applicability_profile_keys_for_modelo,
-    calendar_censo_enrolment_profile_keys,
-    calendar_events_from_expedientes_snapshots,
-    calendar_events_from_notification_snapshots,
     user_state_for,
 )
-from .._calendar import _registry_window_for_work_unit
+from ..calendar_warnings import calendar_applicability_profile_keys_for_modelo, calendar_censo_enrolment_profile_keys
+from ..status_report import build_filing_obligation_advisories
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
 )

@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .._event import (
+from ..event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventObjectType,

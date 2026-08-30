@@ -7,16 +7,11 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application.overview import (
-    NO_AEAT_HISTORY_NOTICE_CODE,
-    AdvisedObligation,
-    CoverageAdviceReason,
-    ObligationCoverageReport,
-    OverviewCalendar,
-    OverviewCalendarRange,
-)
-from ....application.overview._agenda import OverviewAgenda
-from ....application.overview._backlog import OverviewBacklog
+from ....application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
+from ....application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
+from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
+from ....application.overview.agenda import OverviewAgenda
+from ....application.overview.backlog import OverviewBacklog
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from .._overview_payloads import (
     OverviewAgendaResult,

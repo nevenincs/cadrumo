@@ -25,11 +25,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
-
 from ...core import ClassifierInputSource
 from ...core.identity import ContentDigest
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr
 from ...domain.iva import EUMemberState, IvaTerritorialScope
 
 
@@ -48,13 +47,13 @@ class CounterpartyEstablishmentPayload(OutputSchema):
     """
 
     counterparty_key: ContentDigest
-    canonical_tax_identifier: str = Field(min_length=1)
+    canonical_tax_identifier: NonEmptyStr
     territorial_scope: IvaTerritorialScope | None = None
     # Emitted always, `None` included: a caller has to be able to tell an
     # unanswered registration from one answered as Spain, and a field that
     # vanished when absent would make those read alike.
     identification_state: EUMemberState | None = None
-    asserted_by: str = Field(min_length=1)
+    asserted_by: NonEmptyStr
     asserted_at: datetime
     note: str = ""
 
@@ -87,7 +86,7 @@ class CounterpartyWithdrawResult(OutputSchema):
             than the first attempt.
     """
 
-    canonical_tax_identifier: str = Field(min_length=1)
+    canonical_tax_identifier: NonEmptyStr
     withdrawn: bool
 
 
@@ -160,7 +159,7 @@ class CounterpartyViewResult(OutputSchema):
             the one a confirm raises cannot drift.
     """
 
-    tax_identifier: str = Field(min_length=1)
+    tax_identifier: NonEmptyStr
     confirmed: bool
     territorial_scope: IvaTerritorialScope | None = None
     source: ClassifierInputSource | None = None

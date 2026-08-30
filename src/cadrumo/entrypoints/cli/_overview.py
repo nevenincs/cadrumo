@@ -31,13 +31,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...application import overview as _overview_application
-from ...application.overview import (
-    OverviewCalendar,
-    OverviewCalendarEvent,
-    OverviewCalendarFilingEvidence,
-    OverviewCalendarRange,
-    build_overview_calendar,
-)
+from ...application.overview.calendar import build_overview_calendar
+from ...application.overview.calendar_models import OverviewCalendar, OverviewCalendarEvent, OverviewCalendarFilingEvidence, OverviewCalendarRange
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, strict_round_trip
@@ -89,7 +84,7 @@ from ._period_parsing import _canonical_period
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from ...application.overview import CalendarWarning
+    from ...application.overview.calendar_models import CalendarWarning
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
@@ -666,7 +661,7 @@ def overview_agenda(
     and only adapts the application DTO to the CLI envelope and tabular text
     lines.
     """
-    from ...application.overview import build_overview_agenda
+    from ...application.overview.agenda import build_overview_agenda
     from ...application.user_profile.projections import record_to_values
 
     current = _state()
@@ -707,7 +702,7 @@ def overview_backlog(
     :func:`build_overview_backlog`; it does not resume or mutate modelo
     workflows.
     """
-    from ...application.overview import build_overview_backlog
+    from ...application.overview.backlog import build_overview_backlog
     from ...application.user_profile.projections import record_to_values
 
     current = _state()
@@ -748,7 +743,8 @@ def overview_explain(
     The explanation comes from :func:`build_overview_explain`; this adapter only
     maps application errors to CLI validation and renders the typed envelope.
     """
-    from ...application.overview import OverviewExplainError, build_overview_explain
+    from ...application.overview.errors import OverviewExplainError
+    from ...application.overview.explain import build_overview_explain
 
     current = _state()
     try:
@@ -781,7 +777,7 @@ def overview_prepare(
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
-    from ...application.overview import build_data_prep_walkthrough
+    from ...application.overview.data_prep import build_data_prep_walkthrough
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     current = _state()
@@ -847,7 +843,7 @@ def overview_pipeline(
     from ...application.modelo._calculation_actions import get_calculation_revision
     from ...application.modelo._filing_actions import list_verification_reports
     from ...application.modelo._work_lifecycle import list_work_units
-    from ...application.overview import build_pipeline_health_report
+    from ...application.overview.pipeline_health import build_pipeline_health_report
     from ...domain.modelos import VerificationReport
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ._ledger_payloads import LedgerStatusResult

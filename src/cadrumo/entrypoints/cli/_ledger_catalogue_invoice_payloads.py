@@ -28,6 +28,7 @@ from ...core import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount
 from ...domain.invoices import PaymentStatus, validate_country_code, validate_iva_number
 from ...domain.iva import InvoiceKind
 
@@ -51,14 +52,14 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     invoice_id: InvoiceId
     bucket_id: BucketId | None = None
     kind: InvoiceKind
-    invoice_number: str = Field(min_length=1)
+    invoice_number: NonEmptyStr
     issued_at: date
-    counterparty_name: str = Field(min_length=1)
+    counterparty_name: NonEmptyStr
     counterparty_tax_id: TaxIdIdentityToken | None = None
     counterparty_country: CountryCodeAlpha2
-    base_total: Decimal = Field(ge=Decimal("0"))
-    iva_total: Decimal = Field(ge=Decimal("0"))
-    grand_total: Decimal = Field(ge=Decimal("0"))
+    base_total: NonNegativeDecimal
+    iva_total: NonNegativeDecimal
+    grand_total: NonNegativeDecimal
     currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
@@ -72,7 +73,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     # than presenting the foreign face value as though it were euro.
     fx_rate: Decimal | None = Field(default=None, gt=Decimal("0"))
     fx_rate_date: date | None = None
-    fx_rate_source: str | None = Field(default=None, min_length=1)
+    fx_rate_source: NonEmptyStr | None = None
     base_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     iva_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     grand_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -167,9 +168,9 @@ class CatalogueInvoiceListResult(OutputSchema):
 class BulkInvoiceImportRowFailurePayload(OutputSchema):
     """One refused row from a bulk invoice import, naming its row and field."""
 
-    row_number: int = Field(ge=1)
-    field: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
+    row_number: PositiveCount
+    field: NonEmptyStr
+    reason: NonEmptyStr
 
 
 class CatalogueInvoiceImportResult(OutputSchema):

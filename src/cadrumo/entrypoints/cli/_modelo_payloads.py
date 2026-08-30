@@ -58,12 +58,14 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.text_bounds import NonEmptyStr
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -74,6 +76,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
     VerificationExpectationId,
 )
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos import (
     ExternalEvidenceKind,
@@ -85,6 +88,7 @@ from ...domain.modelos import (
     VerificationCompletenessStatus,
 )
 from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
+from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,
@@ -274,7 +278,7 @@ class FindingPayload(OutputSchema):
     expectation_id: VerificationExpectationId | None = None
     message: str = Field(min_length=1, max_length=500)
     action: ResolvedPreconditionAction | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
     source_refs: list[SourceRefId] = Field(default_factory=list)
 
 
@@ -394,7 +398,7 @@ class ExternalEvidencePayload(OutputSchema):
     """
 
     kind: ExternalEvidenceKind
-    reference_id: str = Field(min_length=1, max_length=128)
+    reference_id: EvidenceReference
     imported_at: datetime
 
 
@@ -414,8 +418,8 @@ class ModeloRecordPayload(OutputSchema):
     filing_year: FilingYear
     period: Period
     filed_at: datetime
-    filed_by: str = Field(min_length=1, max_length=500)
-    notes: str | None = Field(default=None, min_length=1, max_length=500)
+    filed_by: ModeloActorLabel
+    notes: FilingNotes | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus
     superseded_at: datetime | None = None
@@ -879,7 +883,7 @@ class FilingRecordImportResult(ModeloRecordPayload):
 
     operation: str = "modelo.filing_record.import"
     evidence_kind: ExternalEvidenceKind
-    evidence_reference_id: str = Field(min_length=1, max_length=128)
+    evidence_reference_id: EvidenceReference
 
     @model_validator(mode="after")
     def _validate_imported_evidence_matches_record(self) -> FilingRecordImportResult:
@@ -916,7 +920,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     casilla_values: dict[CasillaId, DecimalWireText]
     casilla_count: NonNegativeInt
     captured_at: datetime
-    captured_by: str = Field(min_length=1)
+    captured_by: NonEmptyStr
     official_evidence: Literal[False] = False
     filing_record_created: Literal[False] = False
     aeat_accepted: Literal[False] = False
@@ -948,8 +952,8 @@ class ModeloCasillaResult(OutputSchema):
     data_type: str
     input_kind: str
     required: bool
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     binding: BindingId | None = None
     formula_id: FormulaId | None = None
     formula_expression: dict[str, object] | None = None
@@ -964,8 +968,8 @@ class CasillaRowPayload(OutputSchema):
     required: bool
     label: str
     help_text: str | None = None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class ModeloCasillasResult(OutputSchema):
@@ -1121,8 +1125,8 @@ class DeltaRowPayload(OutputSchema):
     delta: str
     pct_change: str | None
     formula_id: FormulaId | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
-    source_refs: list[SourceRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class CompareSectionPayload(OutputSchema):
@@ -1166,7 +1170,7 @@ class ModeloLifecycleEventPayload(OutputSchema):
     occurred_at: datetime
     actor: BucketActorLabel
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     payload: dict[str, str]
 
 
@@ -1180,9 +1184,9 @@ class ModeloHistoryResult(OutputSchema):
     """
 
     operation: str = "modelo.history"
-    modelo: str = Field(min_length=1)
+    modelo: NonEmptyStr
     year: FilingYear | None = None
-    period: str | None = Field(default=None, min_length=1)
+    period: NonEmptyStr | None = None
     count: NonNegativeInt
     events: list[ModeloLifecycleEventPayload]
 
@@ -1198,8 +1202,8 @@ class CasillaObservationPayload(OutputSchema):
     casilla_id: CasillaId
     value: str
     formula_id: FormulaId | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
-    source_refs: list[SourceRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class M130AccumulatedPayload(OutputSchema):

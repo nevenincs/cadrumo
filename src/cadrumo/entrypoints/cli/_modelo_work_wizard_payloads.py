@@ -13,11 +13,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
-
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ...core.text_bounds import NonEmptyStr
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
@@ -38,14 +37,14 @@ class WizardPromptedCasillaPayload(OutputSchema):
 
     casilla_id: CasillaId
     number: str
-    label: str = Field(min_length=1)
+    label: NonEmptyStr
     channel: WizardPromptChannel
     """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
-    key: str = Field(min_length=1)
+    key: NonEmptyStr
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
-    value: str = Field(min_length=1)
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    value: NonEmptyStr
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     help_text: str | None = None
 
 

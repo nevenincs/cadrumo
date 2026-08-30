@@ -39,7 +39,7 @@ from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, Tr
 from ...core.time import UtcInstant
 from ._codes import ModeloCode
 from .errors import ModeloValidationError
-from .filing_text import EvidenceReference, ModeloActorLabel
+from .filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 
 """Validated string identifying the operator who filed or triggered a filing event.
 
@@ -47,10 +47,6 @@ Strips surrounding whitespace; must be 1–64 characters after stripping.
 Used as ``filed_by`` on :class:`ModeloRecord` and feeds into the
 content-addressed :func:`derive_filing_record_id`.
 """
-_Notes = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
 _MemberNif = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=32),
@@ -190,7 +186,7 @@ class ModeloRecord(BaseModel):
     member_nif: _MemberNif | None = None
     filed_at: UtcInstant
     filed_by: ModeloActorLabel
-    notes: _Notes | None = None
+    notes: FilingNotes | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: UtcInstant | None = None

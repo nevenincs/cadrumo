@@ -14,7 +14,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ....application.operator_surface import build_help_document
+from ....application.operator_surface.help import build_help_document
 from .._config_help_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

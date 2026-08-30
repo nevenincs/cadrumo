@@ -35,10 +35,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field, NonNegativeInt, StringConstraints, field_validator, model_validator
+from pydantic import NonNegativeInt, StringConstraints, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import CalendarMonth
 from ...core.time import today_madrid
 from ...domain.contribuyente import DescendantRecordFields
 
@@ -60,7 +61,7 @@ class GuarderiaMonthSpendPayload(OutputSchema):
     fact this application does not hold.
     """
 
-    month: int = Field(ge=1, le=12)
+    month: CalendarMonth
     amount_euros: NonNegativeInt
 
 

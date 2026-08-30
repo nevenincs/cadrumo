@@ -152,7 +152,7 @@ _MODELO_GROUP_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
         "_service must alias FOREIGN_ASSET_MODELOS from cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.application.overview._calendar",
+        "cadrumo.application.overview.calendar",
         "_IVA_REGIME_MODELOS",
         "IVA_REGIME_MODELOS",
         "_calendar must alias IVA_REGIME_MODELOS from cadrumo.core.external_constants",

@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
-
 from ...application.modelo._taxation_comparison import TaxationRecommendation
 from ...application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
@@ -29,6 +27,7 @@ from ...core import Modelo
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ._decimal_wire import DecimalWireText
 
@@ -59,10 +58,10 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     a second copy could only drift from the registry reason behind it.
     """
 
-    field_name: str = Field(min_length=1)
+    field_name: NonEmptyStr
     work_unit_value: str = ""
     evidence_value: str = ""
-    kind: str = Field(min_length=1)
+    kind: NonEmptyStr
     diff_kind: ModeloReconciliationDiffKind = ModeloReconciliationDiffKind.HEADER_FIELD
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
@@ -109,14 +108,14 @@ class WorkCompareTaxationResult(OutputSchema):
     # transport row cannot carry a filing year the work unit itself refuses.
     filing_year: FilingYear
     modelo: Modelo
-    revision: str = Field(min_length=1)
+    revision: NonEmptyStr
     conjunta_cuota_resultante: DecimalWireText
     individual_cuota_resultante: DecimalWireText
     conjunta_resultado: DecimalWireText
     individual_resultado: DecimalWireText
     delta_resultado: DecimalWireText
     recommendation: TaxationRecommendation
-    recommendation_reason: str = Field(min_length=1)
+    recommendation_reason: NonEmptyStr
 
     # Scope of the individual branch, not an incidental diagnostic: it states
     # which households the figure above is valid for, so a machine consumer

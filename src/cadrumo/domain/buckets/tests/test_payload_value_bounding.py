@@ -47,8 +47,10 @@ _BOUNDED_CALLS = frozenset(
         # Fixed-width renderings.
         "isoformat",
         "hex",
-        # A rendered Decimal is a scalar amount, not a collection.
-        "_decimal_to_string",
+        # A rendered Decimal is a scalar amount, not a collection. The name
+        # follows the canonical formatter, which absorbed the four private
+        # copies this entry was originally written against.
+        "format_decimal",
         # Digests: one of the sanctioned remedies.
         *_HASHING_CALLS,
         "_transaction_ids_digest",
@@ -244,7 +246,7 @@ def test_detector_scans_a_non_empty_production_surface() -> None:
     items = production_ast_items()
 
     assert len(items) > 100, f"production AST surface implausibly small: {len(items)}"
-    assert any(Path(path).name == "_event.py" for path, _ in items)
+    assert any(Path(path).name == "event.py" for path, _ in items)
 
 
 def test_payload_value_fits_answers_the_bound_without_building_an_event() -> None:

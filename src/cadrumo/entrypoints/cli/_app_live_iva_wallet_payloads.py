@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import (
-    Field,
+    NonNegativeInt,
     model_validator,
 )
 
@@ -143,11 +143,11 @@ class IvaWalletCaptureHistoryResult(OutputSchema):
     # partial capture presented its counts with no way to tell that some
     # declarations were never read; the path/ref/key fields let an operator
     # confirm what the counts are counting.
-    casilla_count: int = Field(default=0, ge=0)
+    casilla_count: NonNegativeInt = 0
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
     calculation_observation_keys: list[str] = []
-    failed_declaration_count: int = Field(default=0, ge=0)
+    failed_declaration_count: NonNegativeInt = 0
     failed_declarations: list[str] = []
 
     @model_validator(mode="after")

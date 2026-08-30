@@ -13,7 +13,7 @@ from ...core.i18n import output_language, tr
 from ._command_spec import DefaultKind, OptionSpec, SchemaState
 
 if TYPE_CHECKING:
-    from ...application.operator_surface import CommandSchemaRef
+    from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
     from ._command_spec import CommandSpec, ParameterSpec
@@ -349,7 +349,7 @@ def command_registration_policy(command: str) -> CommandExecutionPolicy:
 
 @cache
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
-    from ...application.operator_surface import CommandSchemaRef
+    from ...application.operator_surface.manifest import CommandSchemaRef
     from ._command_specs import COMMAND_GRAPH
 
     return tuple(

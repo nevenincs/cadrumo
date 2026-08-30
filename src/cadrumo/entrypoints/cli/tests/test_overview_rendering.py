@@ -20,15 +20,10 @@ from datetime import date
 
 import pytest
 
-from ....application.overview import (
-    AdvisedObligation,
-    CoverageAdviceReason,
-    ObligationCoverageReport,
-    OverviewCalendarRange,
-    OverviewStatusNextStepId,
-    OverviewStatusReport,
-    build_overview_calendar,
-)
+from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
+from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
+from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.deadlines import (
     EntityType,

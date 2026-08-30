@@ -45,7 +45,7 @@ def test_no_two_production_definitions_declare_the_same_financial_operand_kind()
     belongs to - the exact ambiguity a declared, unique operand_kind exists
     to rule out.
     """
-    from ....entrypoints._operation_composition import build_production_operation_registry
+    from ....entrypoints.operation_composition import build_production_operation_registry
 
     registry = build_production_operation_registry()
     kinds_by_definition: dict[str, list[str]] = {}
@@ -73,7 +73,7 @@ def test_exactly_one_production_definition_owns_the_edit_contract_apply_authorit
     """
     import inspect
 
-    from ....entrypoints._operation_composition import build_production_operation_registry
+    from ....entrypoints.operation_composition import build_production_operation_registry
 
     registry = build_production_operation_registry()
     owners = [

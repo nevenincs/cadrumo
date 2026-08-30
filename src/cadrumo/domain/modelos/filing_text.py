@@ -36,10 +36,21 @@ OperatorReason = Annotated[
 ]
 """Why an operator discarded or amended a revision, in their own words."""
 
+FilingNotes = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
+"""Free operator commentary attached to a filing record.
+
+Shares its bounds with :obj:`OperatorReason` and is deliberately a separate
+name: a reason explains an action the operator took, notes are whatever else
+they wanted recorded, and one changing length has no business moving the other.
+"""
+
 EvidenceReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
 """The AEAT-side identity of an externally-filed return's attested evidence."""
 
-__all__ = ["EvidenceReference", "ModeloActorLabel", "OperatorReason"]
+__all__ = ["EvidenceReference", "FilingNotes", "ModeloActorLabel", "OperatorReason"]

@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....application.overview import DataPrepStepId, DataPrepStepState
+from ....application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPrepareStepPayload

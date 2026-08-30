@@ -20,7 +20,7 @@ from datetime import date
 
 import pytest
 
-from ....application.overview import OverviewCalendarRange
+from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
 from .._overview import (
     _local_calendar_filing_evidence,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.overview import overview_status_report_from_projection
+from ....application.overview.status_report import overview_status_report_from_projection
 from ....application.state_projection import (
     OperatorStateProjection,
     ProjectionActiveProfile,

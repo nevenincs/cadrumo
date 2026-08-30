@@ -219,14 +219,14 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "write_text",
     ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",
     (
-        "src/cadrumo/application/modelo/_review_package.py",
+        "src/cadrumo/application/modelo/review_package.py",
         "build_review_package",
         "write_bytes",
     ): "explicit operator-directed review-package export stages the rendered filing artefact only long "
     "enough to create its checksum archive, in a directory pinned beside output_path "
     "(dir=output_path.parent), never the OS-shared temp directory",
     (
-        "src/cadrumo/application/modelo/_review_package.py",
+        "src/cadrumo/application/modelo/review_package.py",
         "build_review_package",
         "write_text",
     ): "explicit operator-directed review-package export stages revision evidence and manifest JSON only "
@@ -618,7 +618,7 @@ def test_production_file_write_inventory_is_reviewed() -> None:
 
 
 _REVIEW_PACKAGE_STAGING_SITES: tuple[tuple[str, str], ...] = (
-    ("src/cadrumo/application/modelo/_review_package.py", "build_review_package"),
+    ("src/cadrumo/application/modelo/review_package.py", "build_review_package"),
     ("src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py", "review_package_build"),
 )
 """Every known site that stages review-package plaintext filing evidence in a

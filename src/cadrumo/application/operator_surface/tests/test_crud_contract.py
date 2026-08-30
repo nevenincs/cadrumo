@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import (
+from ..crud_contract import (
     CANONICAL_CRUD_VERBS,
     BucketEventSuffix,
     CrudContractCatalogue,

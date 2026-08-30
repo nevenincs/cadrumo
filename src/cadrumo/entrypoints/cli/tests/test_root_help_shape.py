@@ -30,7 +30,7 @@ from ._profile_storage_fixtures import isolated_profile_storage
 __all__ = ["isolated_profile_storage"]
 
 from .... import __version__
-from ....application.operator_surface import build_help_document
+from ....application.operator_surface.help import build_help_document
 from ....core import PRODUCT_IDENTITY, OutputLanguage
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings

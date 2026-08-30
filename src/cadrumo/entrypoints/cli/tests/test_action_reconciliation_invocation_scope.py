@@ -11,7 +11,7 @@ import typer
 from click.testing import CliRunner as ClickCliRunner
 from typer.testing import CliRunner as TyperCliRunner
 
-from ....application.operator_surface import OperatorSurfaceReconciliation
+from ....application.operator_surface.manifest import OperatorSurfaceReconciliation
 from .. import current_operator_surface_reconciliation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

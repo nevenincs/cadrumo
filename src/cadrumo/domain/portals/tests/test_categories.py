@@ -1,12 +1,12 @@
-"""Unit tests for :mod:`cadrumo.domain.portals._categories`."""
+"""Unit tests for :mod:`cadrumo.domain.portals.categories`."""
 
 from __future__ import annotations
 
 import pytest
 
 from ....core.external_constants import load_external_constants
-from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from .._hosts import portal_host_name
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..hosts import portal_host_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

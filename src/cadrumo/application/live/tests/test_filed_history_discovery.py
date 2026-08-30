@@ -50,7 +50,7 @@ _ACTIVITY_START = date(2024, 3, 1)
 
 def _confidently_excluded(profile: TaxpayerProfile) -> set[str]:
     """Return the modelos the profile positively answers "no" for."""
-    from ....application.overview import build_obligation_coverage
+    from ....application.overview.coverage import build_obligation_coverage
 
     return set(build_obligation_coverage(profile, (), today=_TODAY).confidently_excluded)
 

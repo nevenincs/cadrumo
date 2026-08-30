@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Self
 
-from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind, Period
@@ -22,7 +22,6 @@ from ...core.external_constants import (
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
-from ...core.unit_proportion import is_unit_proportion
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
@@ -40,6 +39,7 @@ from ...domain.transactions import (
     TransactionLifecycleLineageEntry,
     TransactionValidationError,
 )
+from ...domain.transactions.model_validation import validate_business_pct_coupling
 from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
@@ -132,7 +132,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     booked_date: date
     value_date: date | None = None
     amount: Decimal
-    currency: str = Field(default=DEFAULT_CURRENCY, min_length=3)
+    currency: CurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
     counterparty: _LedgerOptionalText = None
     description: str = Field(min_length=1)
@@ -187,14 +187,8 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
 
     @model_validator(mode="after")
     def _validate_business_percentage(self) -> Self:
-        if self.business_classification is BusinessClassification.MIXED:
-            if self.business_pct is None:
-                raise TransactionValidationError("business_pct is required when classification is MIXED")
-            if not is_unit_proportion(self.business_pct):
-                raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
-            return self
-        if self.business_pct is not None:
-            raise TransactionValidationError("business_pct must be None unless classification is MIXED")
+        """Ask the domain whether this classification and share agree."""
+        validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
     @model_validator(mode="after")
@@ -296,15 +290,31 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
+
+IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
+"""A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
+
+CurrencyCode = Annotated[str, StringConstraints(min_length=3, max_length=3)]
+"""An ISO-4217 code, which is three characters by definition of the standard."""
+
+DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]
+"""What an import diagnostic is about."""
+
+DiagnosticSeverity = Annotated[str, StringConstraints(min_length=1, max_length=16)]
+"""How loudly an import diagnostic asks to be read."""
+
+DiagnosticMessage = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+"""The operator-facing sentence an import diagnostic carries."""
+
 class LedgerTransactionPayload(_LedgerCountryCodeModel):
     """Canonical read projection for one ledger transaction."""
 
     transaction_id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
-    booked_date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
+    booked_date: IsoDateText
     value_date: str | None = None
     amount: str = Field(min_length=1)
-    currency: str = Field(min_length=3, max_length=3)
+    currency: CurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
@@ -488,9 +498,9 @@ class LedgerImportDiagnosticReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: str = Field(min_length=1, max_length=32)
-    severity: str = Field(min_length=1, max_length=16)
-    message: str = Field(min_length=1, max_length=128)
+    kind: DiagnosticKind
+    severity: DiagnosticSeverity
+    message: DiagnosticMessage
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: tuple[str, ...] = ()
@@ -591,7 +601,7 @@ class LedgerReviewRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
+    date: IsoDateText
     amount: str = Field(min_length=1)
     description: str = Field(min_length=1)
     status: str = Field(min_length=1)
@@ -820,11 +830,11 @@ class LedgerExportRow(BaseModel):
     bucket_id: BucketId
     transaction_id: TransactionId
     lifecycle_state: str = Field(min_length=1)
-    booked_date: str = Field(min_length=10, max_length=10)
+    booked_date: IsoDateText
     value_date: str = ""
-    effective_date: str = Field(min_length=10, max_length=10)
+    effective_date: IsoDateText
     amount: str = Field(min_length=1)
-    currency: str = Field(min_length=3, max_length=3)
+    currency: CurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)

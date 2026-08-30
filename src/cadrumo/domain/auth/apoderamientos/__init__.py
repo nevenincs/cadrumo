@@ -25,7 +25,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._catalogue import (
+from .catalogue import (
     ALL_TOKEN,
     ApoderadoScope,
     ApoderamientosCatalogue,

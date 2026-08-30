@@ -608,7 +608,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.auth.apoderamientos._catalogue.UnknownScopeError",
+        "cadrumo.domain.auth.apoderamientos.catalogue.UnknownScopeError",
         ErrorCode(
             code="REFUSED_APODERADO_UNKNOWN_SCOPE",
             category=ErrorCategory.REFUSED,

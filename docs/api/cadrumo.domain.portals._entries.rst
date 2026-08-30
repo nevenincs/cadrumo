@@ -13,7 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.portals._entries._common
+   cadrumo.domain.portals._entries.common
    cadrumo.domain.portals._entries.portal_calendario_contribuyente
    cadrumo.domain.portals._entries.portal_cert_selection
    cadrumo.domain.portals._entries.portal_cert_validation_rest

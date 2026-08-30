@@ -381,7 +381,9 @@ def test_portal_health_warns_on_recorded_volatile_url_drift() -> None:
     """A recorded drift on a rotatable app-path URL is a non-blocking advisory."""
     from datetime import UTC, datetime
 
-    from ...domain.portals import PORTAL_REGISTRY, UrlStability, evaluate_portal_drift
+    from ...domain.portals.categories import UrlStability
+    from ...domain.portals.drift import evaluate_portal_drift
+    from ...domain.portals.registry import PORTAL_REGISTRY
 
     entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.VOLATILE_APP_PATH)
     drift = evaluate_portal_drift(
@@ -402,7 +404,9 @@ def test_portal_health_errors_on_recorded_stable_url_drift() -> None:
     """A recorded drift on a BOE-referenced stable URL is a red integrity row."""
     from datetime import UTC, datetime
 
-    from ...domain.portals import PORTAL_REGISTRY, UrlStability, evaluate_portal_drift
+    from ...domain.portals.categories import UrlStability
+    from ...domain.portals.drift import evaluate_portal_drift
+    from ...domain.portals.registry import PORTAL_REGISTRY
 
     entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.STABLE_PROTOCOL_GRADE)
     drift = evaluate_portal_drift(

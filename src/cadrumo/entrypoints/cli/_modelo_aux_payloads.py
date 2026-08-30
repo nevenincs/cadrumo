@@ -32,12 +32,15 @@ from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...core.unit_proportion import UnitFraction
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.query_reports import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -74,7 +77,7 @@ class EvidenceRecordRefPayload(OutputSchema):
     """
 
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     content_sha256: ContentDigest
     payload_size_bytes: NonNegativeInt
 
@@ -92,13 +95,13 @@ class ModeloAuditViewResult(OutputSchema):
 
     operation: str = "modelo.audit.show"
     bundle_id: Hex64Str
-    manifest_version: int = Field(ge=1)
+    manifest_version: PositiveCount
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId | None = None
     filing_record_id: FilingRecordId | None = None
     verification_state: BundleVerificationState
-    completeness_ratio: float = Field(ge=0.0, le=1.0)
+    completeness_ratio: UnitFraction
     records: list[EvidenceRecordRefPayload]
     created_at: datetime
     notes: str = Field(default="", max_length=2000)
@@ -110,7 +113,7 @@ class ModeloAuditCheckResult(OutputSchema):
     operation: str = "modelo.audit.check"
     bundle_id: Hex64Str
     verification_state: BundleVerificationState
-    completeness_ratio: float = Field(ge=0.0, le=1.0)
+    completeness_ratio: UnitFraction
     findings: list[EvidenceBundleCheckFindingPayload]
 
 
@@ -124,7 +127,7 @@ class ModeloAuditExportResult(OutputSchema):
     operation: str = "modelo.audit.export"
     bucket_id: BucketId
     bundle_id: Hex64Str
-    output: str = Field(min_length=1)
+    output: NonEmptyStr
     verification_state: BundleVerificationState
     records: NonNegativeInt
 
@@ -136,7 +139,7 @@ class WorkUnitHistoryEventPayload(OutputSchema):
     occurred_at: datetime
     event_type: BucketEventType
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
+    object_id: BucketObjectId
     actor: BucketActorLabel
     payload: dict[str, str]
 

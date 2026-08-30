@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from ....application.overview import calendar_filing_evidence_from_sources
+from ....application.overview.calendar_evidence import calendar_filing_evidence_from_sources
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....core import Period
 from ....tests.aeat_literal_fixtures import FILED_ARTEFACT_PATH_FIXTURE, aeat_url

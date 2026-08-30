@@ -16,11 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
-
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
 class ModeloSpreadsheetPushResult(OutputSchema):
@@ -163,8 +162,8 @@ class ModeloSpreadsheetCalculateCasillaPayload(OutputSchema):
     casilla_id: CasillaId
     value: str
     formula_id: FormulaId | None = None
-    legal_refs: list[LegalRefId] = Field(min_length=1)
-    source_refs: list[SourceRefId] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class ModeloSpreadsheetPullResult(OutputSchema):

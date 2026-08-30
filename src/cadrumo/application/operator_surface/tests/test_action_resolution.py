@@ -14,8 +14,8 @@ from ...operator_actions import (
     ActionCatalogueEntry,
     ActionReference,
 )
-from .. import ManifestActionProfile
-from .._manifest import (
+from ..errors import OperatorSurfaceContractError
+from ..manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
     OperatorSurfaceReconciliation,
@@ -23,7 +23,7 @@ from .._manifest import (
     ResultSchemaInventoryRow,
     resolve_manifest_action_profiles,
 )
-from ..errors import OperatorSurfaceContractError
+from ..models import ManifestActionProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

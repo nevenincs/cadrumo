@@ -30,6 +30,7 @@ from ...application.modelo.reconciliation_records import (
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import BucketId, ProfileId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...domain.modelos.filing_text import ModeloActorLabel
 
 
 class M036DeclarationRecordResult(OutputSchema):
@@ -119,7 +120,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     source_path: str
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
-    actor: str = Field(min_length=1, max_length=64)
+    actor: ModeloActorLabel
     reconciled_at: datetime
 
 

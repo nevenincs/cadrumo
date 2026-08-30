@@ -35,6 +35,16 @@ UnitProportion = Annotated[Decimal, Field(ge=UNIT_PROPORTION_MIN, le=UNIT_PROPOR
 """A Decimal share of one, for a model field that carries the bound in its type."""
 
 
+UnitFraction = Annotated[float, Field(ge=0.0, le=1.0)]
+"""A share of one carried as a float, for a score rather than a money share.
+
+Deliberately separate from :obj:`UnitProportion`. A confidence, a completeness
+ratio or a coverage figure is a measurement whose last bits do not have to
+survive arithmetic; a share of a taxable amount is money and stays Decimal.
+Mixing them would let a float creep into a financial path through an alias.
+"""
+
+
 def is_unit_proportion(value: Decimal) -> bool:
     """Whether ``value`` is a share of one, inclusive at both ends."""
     return UNIT_PROPORTION_MIN <= value <= UNIT_PROPORTION_MAX
@@ -43,6 +53,7 @@ def is_unit_proportion(value: Decimal) -> bool:
 __all__ = [
     "UNIT_PROPORTION_MAX",
     "UNIT_PROPORTION_MIN",
+    "UnitFraction",
     "UnitProportion",
     "is_unit_proportion",
 ]

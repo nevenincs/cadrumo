@@ -18,8 +18,9 @@ from ...operator_actions import (
     ActionCatalogueEntry,
     ActionReference,
 )
-from .. import ResolvedCatalogueAction, _action_resolution, resolve_catalogue_action, resolve_notice_action
-from .._manifest import (
+from .. import action_resolution as _action_resolution
+from ..action_resolution import ResolvedCatalogueAction, resolve_catalogue_action, resolve_notice_action
+from ..manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
     MountedFamilyInventoryRow,
@@ -29,7 +30,7 @@ from .._manifest import (
     ResultSchemaInventoryRow,
     SurfaceExposureInventoryRow,
 )
-from .._manifest import ResolvedCatalogueAction as ManifestResolvedCatalogueAction
+from ..manifest import ResolvedCatalogueAction as ManifestResolvedCatalogueAction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

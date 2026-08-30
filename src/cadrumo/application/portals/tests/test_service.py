@@ -8,7 +8,7 @@ import sys
 import pytest
 
 from ....core.i18n import tr
-from ....domain.portals import PORTAL_REGISTRY
+from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import (
     PortalNotFoundError,
     PortalRow,

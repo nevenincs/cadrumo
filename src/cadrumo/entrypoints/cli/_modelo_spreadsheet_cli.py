@@ -210,7 +210,7 @@ def execute_google_sheets_export(
         GoogleSheetsExportOperationRequest,
         GoogleSheetsExportRootFolderRequiredError,
     )
-    from ...entrypoints._operation_composition import compose_google_sheets_export_service
+    from ...entrypoints.operation_composition import compose_google_sheets_export_service
 
     try:
         active = resolve_active_profile()

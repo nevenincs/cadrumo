@@ -20,17 +20,7 @@ from typing import TYPE_CHECKING
 import click
 
 if TYPE_CHECKING:
-    from ...application.operator_surface import (
-        CommandSchemaRef,
-        ExplicitExclusionInventoryRow,
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        MountedFamilyInventoryRow,
-        OperatorSurfaceReconciliation,
-        ProfilePolicyInventoryRow,
-        ResultSchemaInventoryRow,
-        SurfaceExposureInventoryRow,
-    )
+    from ...application.operator_surface.manifest import CommandSchemaRef, ExplicitExclusionInventoryRow, InputSchemaInventoryRow, LiveLeafInventoryRow, MountedFamilyInventoryRow, OperatorSurfaceReconciliation, ProfilePolicyInventoryRow, ResultSchemaInventoryRow, SurfaceExposureInventoryRow
     from ._verb_input_schema import VerbInputSchema
 
 __all__ = ["current_operator_surface_reconciliation"]
@@ -117,14 +107,8 @@ def _current_operator_surface_schema_rows(
     primary_paths: Mapping[str, tuple[str, ...]],
 ) -> _CurrentOperatorSurfaceSchemaInventory:
     """Build application-owned reconciliation rows from the verified live sources."""
-    from ...application.operator_surface import (
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        MountedFamilyInventoryRow,
-        ProfilePolicyInventoryRow,
-        ResultSchemaInventoryRow,
-        get_operator_surface_contract,
-    )
+    from ...application.operator_surface.contract import get_operator_surface_contract
+    from ...application.operator_surface.manifest import InputSchemaInventoryRow, LiveLeafInventoryRow, MountedFamilyInventoryRow, ProfilePolicyInventoryRow, ResultSchemaInventoryRow
     from ._command_schema import command_registration_policy
     from ._command_specs import COMMAND_GRAPH
 
@@ -208,7 +192,7 @@ def _current_operator_surface_exposures(
     command_keys: tuple[str, ...],
 ) -> tuple[SurfaceExposureInventoryRow, ...]:
     """Project which registry command keys an operator surface may expose."""
-    from ...application.operator_surface import SurfaceExposureInventoryRow
+    from ...application.operator_surface.manifest import SurfaceExposureInventoryRow
     from ._verb_input_schema import is_exposable_command
 
     return tuple(
@@ -223,7 +207,7 @@ def _current_operator_surface_exposures(
 
 def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
     """Project the declared root-landing omissions into reconciliation evidence."""
-    from ...application.operator_surface import ExplicitExclusionInventoryRow, ReconciliationSurface
+    from ...application.operator_surface.manifest import ExplicitExclusionInventoryRow, ReconciliationSurface
     from ._command_specs import COMMAND_GRAPH
 
     root_landing_schema_keys = frozenset(
@@ -268,7 +252,7 @@ def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     constructed reconciliation, preserving the live inspection semantics used
     by standalone verification code.
     """
-    from ...application.operator_surface import OperatorSurfaceReconciliation, reconcile_operator_surface_inventory
+    from ...application.operator_surface.manifest import OperatorSurfaceReconciliation, reconcile_operator_surface_inventory
 
     ctx = click.get_current_context(silent=True)
     if ctx is None:

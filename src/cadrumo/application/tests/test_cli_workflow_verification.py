@@ -11,7 +11,7 @@ from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
 from ...tests.user_profile import register_minimal_profile
 from ..auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
-from ..operator_surface import require_accepted_root
+from ..operator_surface.contract import require_accepted_root
 from ..wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
 from ..workflow.persistence import workflow_state_repository
 

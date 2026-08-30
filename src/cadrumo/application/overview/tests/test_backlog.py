@@ -14,7 +14,7 @@ from typing import TypedDict
 
 import pytest
 
-from .._backlog import OverviewBacklog, build_overview_backlog
+from ..backlog import OverviewBacklog, build_overview_backlog
 from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

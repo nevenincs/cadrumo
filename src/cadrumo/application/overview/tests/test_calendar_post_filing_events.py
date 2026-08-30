@@ -19,12 +19,12 @@ from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period, PostFilingEventKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.notifications import PersistedNotificationsSnapshot
-from .. import (
-    OverviewCalendarRange,
+from ..calendar import (
     actionable_post_filing_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
 )
+from ..calendar_models import OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID, SOURCE_URL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

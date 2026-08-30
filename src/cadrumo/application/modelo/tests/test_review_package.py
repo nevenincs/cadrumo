@@ -29,7 +29,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._review_package import (
+from ..review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
     ReviewPackageRevisionStateError,

@@ -39,9 +39,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
-from typing import Final, Literal
+from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
@@ -97,6 +97,11 @@ _BYTE_DERIVED_FIELDS: Final[frozenset[str]] = frozenset({"attachment_id", "sanci
 _NON_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset({"fetched_at", "mode"})
 
 
+
+NotificationParseRefusal = Annotated[str, StringConstraints(min_length=1, max_length=512)]
+"""Why a sede notification document could not be parsed."""
+
+
 class NotificationDocumentNotFoundError(SnapshotNotFoundError):
     """Raised when no stored document record matches the requested certificado."""
 
@@ -143,7 +148,7 @@ class NotificationDocumentRecord(BaseModel):
     source_url: str = Field(min_length=1)
     fetched_at: datetime
     sancion: SancionLiquidacion | None = None
-    parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
+    parse_refusal: NotificationParseRefusal | None = None
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")

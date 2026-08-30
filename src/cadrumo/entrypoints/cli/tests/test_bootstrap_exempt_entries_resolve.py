@@ -44,7 +44,8 @@ import pytest
 from click import Context as ClickContext
 from typer.main import get_command
 
-from ....application.operator_surface import MOUNTED_COMMAND_FAMILIES, OperatorMutability
+from ....application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
+from ....application.operator_surface.models import OperatorMutability
 from .. import app
 from .._bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
 

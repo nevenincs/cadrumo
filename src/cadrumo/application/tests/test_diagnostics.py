@@ -43,7 +43,7 @@ from ..diagnostics import (
     secure_object_unreadable_total,
 )
 from ..operator_actions import ConditionEvidence, PreconditionVerdict
-from ..overview import declare_next_action
+from ..overview.next_actions import declare_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -23,7 +23,8 @@ from ....application.live.expedientes import (
     ExpedientesService,
 )
 from ....application.live.notifications import NotificationsService
-from ....application.overview import OverviewCalendarRange, build_overview_calendar
+from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.user_profile.projections import record_to_values
 from ....core import Period
 from ....core.config import override_settings

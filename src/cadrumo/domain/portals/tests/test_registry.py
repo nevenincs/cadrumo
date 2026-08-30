@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`~domain.portals._registry`.
+"""Unit tests for :mod:`~domain.portals.registry`.
 
 The suite pins :data:`~domain.portals.PORTAL_REGISTRY` as the frozen
 ``Portal`` → :class:`~domain.portals.PortalMetadata` authority, checks lookup
@@ -7,7 +7,7 @@ helpers such as :func:`~domain.portals.get_portal` and
 reports through logging rather than process stdio.
 
 See Also:
-    :mod:`~domain.portals._registry`
+    :mod:`~domain.portals.registry`
         Registry assembly and invariant enforcement under test.
     :class:`~domain.portals.Portal`
         Closed portal identifier enum that defines registry closure.
@@ -23,17 +23,17 @@ from types import MappingProxyType
 
 import pytest
 
-from .._categories import PortalCategory
-from .._codes import Portal
-from .._metadata import PortalMetadata
-from .._registry import (
+from ..categories import PortalCategory
+from ..codes import Portal
+from ..errors import PortalIntegrityError, UnknownPortalError
+from ..metadata import PortalMetadata
+from ..registry import (
     PORTAL_REGISTRY,
     _finalise_registry,
     get_portal,
     portals_by_category,
     portals_for_modelo,
 )
-from ..errors import PortalIntegrityError, UnknownPortalError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -177,11 +177,11 @@ def test_finalise_registry_logs_info_on_success(
 ) -> None:
     """``_finalise_registry`` keeps successful import-time logs at debug level."""
     caplog.clear()
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.domain.portals._registry"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.domain.portals.registry"):
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
     assert len(mapping) == 41
     debug_records = [
-        r for r in caplog.records if r.name == "cadrumo.domain.portals._registry" and r.levelno == logging.DEBUG
+        r for r in caplog.records if r.name == "cadrumo.domain.portals.registry" and r.levelno == logging.DEBUG
     ]
     assert len(debug_records) == 1
     assert "loaded 41 portal entries" in debug_records[0].getMessage()

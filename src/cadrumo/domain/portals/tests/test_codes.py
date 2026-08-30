@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._codes import Portal
+from ..codes import Portal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

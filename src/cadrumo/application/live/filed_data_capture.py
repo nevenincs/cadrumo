@@ -1445,7 +1445,7 @@ def expected_filed_declaration_grid(
     # Deferred to keep application.live's import-time graph free of the overview
     # package, which reaches back into this package for its evidence snapshots.
     # The same reason _coverage.py defers its own application.modelo lookup.
-    from ..overview import CoverageAdviceReason, build_obligation_coverage
+    from ..overview.coverage import CoverageAdviceReason, build_obligation_coverage
 
     coverage = build_obligation_coverage(profile, (), today=today)
     candidates = {
@@ -1691,7 +1691,7 @@ def classify_register_scoping_signal(
         :attr:`~core.RegisterScopingSignal.INCONCLUSIVE` when either side of the
         comparison is empty, because then the comparison discriminates nothing.
     """
-    from ..overview import build_obligation_coverage
+    from ..overview.coverage import build_obligation_coverage
 
     offered = {item.modelo for item in availability.items}
     excluded = set(build_obligation_coverage(profile, (), today=today).confidently_excluded)

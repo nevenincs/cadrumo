@@ -28,12 +28,14 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, Field, NonNegativeInt
+from pydantic import AfterValidator, NonNegativeInt
 
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
+    InventoryYear,
     MovementKind,
     ValuationMethod,
 )
@@ -75,10 +77,10 @@ if TYPE_CHECKING:
 class InventoryStockLayerPayload(OutputSchema):
     """One :class:`StockLayer` transport row."""
 
-    sku: str = Field(default="default", min_length=1)
+    sku: NonEmptyStr = "default"
     quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     unit_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    source_movement_id: str = Field(min_length=1)
+    source_movement_id: NonEmptyStr
 
 
 class InventoryAcquisitionCostSummaryPayload(OutputSchema):
@@ -90,17 +92,17 @@ class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     component_count: NonNegativeInt
-    evidence_count: int = Field(ge=1)
+    evidence_count: PositiveCount
     complete: bool
 
 
 class InventoryMovementPayload(OutputSchema):
     """One :class:`MovementRecord` transport row."""
 
-    movement_id: str = Field(min_length=1)
+    movement_id: NonEmptyStr
     movement_date: IsoDateText
     kind: _MovementKindText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    sku: str = Field(default="default", min_length=1)
+    sku: NonEmptyStr = "default"
     quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
@@ -128,8 +130,8 @@ class InventoryLedgerPayload(OutputSchema):
     CLI appends at the emit site.
     """
 
-    actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    actividad_id: NonEmptyStr
+    year: InventoryYear
     valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_layers: list[InventoryStockLayerPayload] = []

@@ -18,9 +18,8 @@ filed-state comparison. These schemas document the CLI transport shape that ente
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.filed_state import RegistryFiledStateComparison
 from ...domain.calculations.registry.ids import ExportLayoutId, LegalRefId, RelationId, SourceRefId, WorkbookParityRefId
 
@@ -38,8 +37,8 @@ class RegistryWorkbookParityDetailPayload(OutputSchema):
 class RegistryRevisionDetailPayload(OutputSchema):
     """One modelo revision's registry inventory, mirroring :class:`RegistryRevisionDetailReport`."""
 
-    modelo: str = Field(min_length=1)
-    revision: str = Field(min_length=1)
+    modelo: NonEmptyStr
+    revision: NonEmptyStr
     legal_refs: list[LegalRefId] = []
     source_refs: list[SourceRefId] = []
     export_layout_ids: list[ExportLayoutId] = []

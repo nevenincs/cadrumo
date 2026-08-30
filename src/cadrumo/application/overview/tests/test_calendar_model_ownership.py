@@ -11,8 +11,9 @@ from pydantic import AnyHttpUrl
 from ....adapters.outbound.aeat.sede import RemoteNotification
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...live.notifications import PersistedNotificationsSnapshot
-from .. import OverviewCalendarEvent, OverviewCalendarRange, calendar_events_from_notification_snapshots
-from .. import _calendar_models as _calendar_models
+from .. import calendar_models as _calendar_models
+from ..calendar import calendar_events_from_notification_snapshots
+from ..calendar_models import OverviewCalendarEvent, OverviewCalendarRange
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +41,7 @@ _PUBLIC_CALENDAR_MODEL_NAMES = frozenset(
 def test_calendar_dtos_are_publicly_owned_by_models_not_builder_module() -> None:
     """The public DTO surface resolves directly to its defining module."""
     overview = import_module("cadrumo.application.overview")
-    calendar_builder = import_module("cadrumo.application.overview._calendar")
+    calendar_builder = import_module("cadrumo.application.overview.calendar")
 
     assert set(overview.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
     assert set(_calendar_models.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES

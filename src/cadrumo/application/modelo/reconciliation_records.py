@@ -36,6 +36,7 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
+from ...domain.modelos.filing_text import ModeloActorLabel
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):
@@ -192,7 +193,7 @@ class ModeloReconciliationRecord(BaseModel):
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
-    actor: str = Field(min_length=1, max_length=64)
+    actor: ModeloActorLabel
     reconciled_at: datetime
 
     @field_validator("reconciled_at")
@@ -243,7 +244,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     verdict: ModeloReconciliationVerdict
     diff_count: int = Field(ge=0)
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
-    actor: str = Field(min_length=1, max_length=64)
+    actor: ModeloActorLabel
     reconciled_at: datetime
 
     @field_validator("reconciled_at")

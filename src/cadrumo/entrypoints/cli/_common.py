@@ -43,6 +43,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
+from ...core.text_bounds import NonEmptyStr
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ._operator_surface_reconciliation import current_operator_surface_reconciliation
 
@@ -172,7 +173,7 @@ class RequestedCliLeaf(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    subject_leaf_key: str = Field(min_length=1)
+    subject_leaf_key: NonEmptyStr
     canonical_cli_path: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("canonical_cli_path")
@@ -405,7 +406,7 @@ def _resolve_cli_precondition_action_reference(
     if action is None:
         return None
     from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface import resolve_catalogue_action
+    from ...application.operator_surface.action_resolution import resolve_catalogue_action
     from ...core.json_contract import ResolvedActionReference
 
     resolution = resolve_catalogue_action(
@@ -782,7 +783,7 @@ def resolve_notice_action(
     hand-assemble a wire action or silently omit a live required input.
     """
     from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface import resolve_notice_action as resolve_application_notice_action
+    from ...application.operator_surface.action_resolution import resolve_notice_action as resolve_application_notice_action
 
     resolved = resolve_application_notice_action(
         action=action,

@@ -20,12 +20,10 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import CadrumoError, get_registered_error_code
 from ...domain.modelos import ModeloCode
-from ...domain.portals import (
-    PORTAL_REGISTRY,
-    Portal,
-    PortalCategory,
-    PortalMetadata,
-)
+from ...domain.portals.categories import PortalCategory
+from ...domain.portals.codes import Portal
+from ...domain.portals.metadata import PortalMetadata
+from ...domain.portals.registry import PORTAL_REGISTRY
 
 
 class PortalNotFoundError(CadrumoError):

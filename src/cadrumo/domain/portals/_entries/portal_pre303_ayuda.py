@@ -9,10 +9,10 @@ exposed as :data:`ENTRY` and consumed by
 from __future__ import annotations
 
 from ....core.config import Settings
-from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from .._codes import Portal
-from .._metadata import PortalMetadata
-from ._common import build_entry
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..codes import Portal
+from ..metadata import PortalMetadata
+from .common import build_entry
 
 _PRE303 = Settings.external_constants().aeat.pre303
 

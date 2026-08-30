@@ -11,7 +11,7 @@ import hashlib
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from urllib.parse import urlparse
@@ -442,7 +442,7 @@ class TestJustificanteModel:
             ),
             source_pdf_path=pdf,
             source_pdf_sha256=sha256 or hashlib.sha256(pdf.read_bytes()).hexdigest(),
-            parsed_at=datetime(2026, 4, 12, 0, 0, 0),
+            parsed_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
         )
 
     def test_model_is_frozen(self, tmp_path: Path) -> None:

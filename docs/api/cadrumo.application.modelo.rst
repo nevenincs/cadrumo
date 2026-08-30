@@ -88,7 +88,6 @@ Submodules
    cadrumo.application.modelo._required_binding_gate
    cadrumo.application.modelo._result_disposition_resolution
    cadrumo.application.modelo._result_summary
-   cadrumo.application.modelo._review_package
    cadrumo.application.modelo._review_package_collab_audit
    cadrumo.application.modelo._review_package_counter_sign
    cadrumo.application.modelo._review_package_feedback
@@ -127,6 +126,7 @@ Submodules
    cadrumo.application.modelo.reconciliation_parsing
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
+   cadrumo.application.modelo.review_package
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_review

@@ -22,7 +22,9 @@ from ...application.modelo._result_summary import ResultSummaryRole
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
+from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...domain.calculations.registry.ids import BindingId, FormulaId, RelationId
+from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
 class DetailRowPayload(OutputSchema):
@@ -33,8 +35,8 @@ class DetailRowPayload(OutputSchema):
     each command schema to duplicate every domain row shape.
     """
 
-    index: int = Field(ge=1)
-    row_type: str = Field(min_length=1)
+    index: PositiveCount
+    row_type: NonEmptyStr
     fields: dict[str, str | None]
 
 
@@ -62,8 +64,8 @@ class ObservationPayload(OutputSchema):
     operand_refs: tuple[str, ...] = ()
     operand_casilla_refs: tuple[CasillaId, ...] = ()
     operand_values: tuple[str, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
     # Carried from :class:`CasillaObservation` so an intentional zero (a
     # binding whose selector produced no source anchor for the target period)
     # stays distinguishable from a value-bearing zero at the operator surface.

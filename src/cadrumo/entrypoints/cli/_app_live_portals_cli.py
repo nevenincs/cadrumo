@@ -13,7 +13,8 @@ from typing import TypedDict
 import typer
 
 from ...core.i18n import tr
-from ...domain.portals import PortalCategory, PortalRegistryError
+from ...domain.portals.categories import PortalCategory
+from ...domain.portals.errors import PortalRegistryError
 from ._common import emit_envelope
 
 
@@ -46,7 +47,7 @@ def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
 
 
 def _portal_row(metadata) -> _PortalRow:
-    from ...domain.portals import portal_host_name
+    from ...domain.portals.hosts import portal_host_name
 
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare
@@ -78,7 +79,7 @@ def portals_list(
     :class:`PortalsListResult`.
     """
     try:
-        from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
+        from ...domain.portals.registry import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
         if category and modelo:
             raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
@@ -114,7 +115,7 @@ def portals_show(
     :class:`PortalEntryPayload` projection as :class:`PortalsViewResult`.
     """
     try:
-        from ...domain.portals import get_portal
+        from ...domain.portals.registry import get_portal
 
         metadata = get_portal(portal_id)
     except PortalRegistryError as exc:

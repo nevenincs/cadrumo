@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.auth.apoderamientos._catalogue
+   cadrumo.domain.auth.apoderamientos.catalogue

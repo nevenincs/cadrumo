@@ -8,11 +8,8 @@ import pytest
 
 from ....core import Period
 from ....domain.modelos import ExternalEvidenceKind
-from .. import (
-    OverviewAeatSubmissionState,
-    OverviewLocalFilingState,
-    calendar_filing_evidence_from_sources,
-)
+from ..calendar_evidence import calendar_filing_evidence_from_sources
+from ..calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )

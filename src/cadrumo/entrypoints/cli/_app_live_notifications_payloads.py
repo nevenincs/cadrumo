@@ -6,11 +6,11 @@ from datetime import datetime
 from typing import Literal
 
 from pydantic import (
-    Field,
     NonNegativeInt,
     model_validator,
 )
 
+from ...application.live.notification_documents import NotificationParseRefusal
 from ...core.identity import (
     AeatCertificadoId,
     AeatClaveLiquidacion,
@@ -19,6 +19,7 @@ from ...core.identity import (
     SnapshotId,
 )
 from ...core.json_contract import OutputSchema
+from ...core.text_bounds import NonEmptyStr, PositiveCount
 
 
 class NotificationRowPayload(OutputSchema):
@@ -73,7 +74,7 @@ class NotificationsCaptureResult(OutputSchema):
     captured_at: datetime
     persisted_at: datetime
     row_count: NonNegativeInt
-    source_url: str = Field(min_length=1)
+    source_url: NonEmptyStr
 
 
 class NotificationsListResult(OutputSchema):
@@ -102,7 +103,7 @@ class NotificationsViewResult(OutputSchema):
     bucket_id: BucketId
     snapshot_id: SnapshotId
     captured_at: datetime
-    source_url: str = Field(min_length=1)
+    source_url: NonEmptyStr
     row_count: NonNegativeInt
     rows: list[NotificationRowPayload]
 
@@ -176,12 +177,12 @@ class NotificationDocumentPayload(OutputSchema):
     certificado_id: AeatCertificadoId
     attachment_id: ContentDigest
     document_sha256: ContentDigest
-    byte_size: int = Field(ge=1)
-    source_url: str = Field(min_length=1)
+    byte_size: PositiveCount
+    source_url: NonEmptyStr
     fetched_at: datetime
     sancion_parsed: bool
     sancion: SancionReadingPayload | None = None
-    parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
+    parse_refusal: NotificationParseRefusal | None = None
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")

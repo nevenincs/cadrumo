@@ -120,7 +120,7 @@ def censo_pull(
     )
     from ....application.user_profile.projections import record_to_effective_facts
     from ....domain.user_profile.values import UserProfileFact
-    from ....entrypoints import run_censal_review
+    from ....entrypoints.censal_review import run_censal_review
     from ._censo_review_cli import confirm_censal_review
 
     # Refuse an absent active profile before the read, not after: the live

@@ -16,12 +16,8 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ...live.expedientes import PersistedExpedientesSnapshot
-from .. import (
-    OverviewCalendar,
-    OverviewCalendarRange,
-    build_overview_calendar,
-    calendar_events_from_expedientes_snapshots,
-)
+from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
+from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
 from .calendar_test_support import profile as _profile
@@ -291,8 +287,8 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
     exclusion must reach them too — neither may leak the NOT_APPLICABLE
     Modelo 130 as a confident due / late row for an objetiva autónomo."""
 
-    from .._agenda import build_overview_agenda
-    from .._backlog import build_overview_backlog
+    from ..agenda import build_overview_agenda
+    from ..backlog import build_overview_backlog
 
     profile = _objetiva_autonomo()
 
@@ -401,7 +397,7 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     valid tuple.
     """
 
-    from .._agenda import build_overview_agenda
+    from ..agenda import build_overview_agenda
 
     profile = _fully_enrolled_autonomo()
 
@@ -426,7 +422,7 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     uncovered 2027 year.
     """
 
-    from .._backlog import build_overview_backlog
+    from ..backlog import build_overview_backlog
 
     profile = _fully_enrolled_autonomo()
 

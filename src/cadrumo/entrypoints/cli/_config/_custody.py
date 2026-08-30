@@ -274,7 +274,7 @@ async def _run_logout_operation(profile_id: UUID) -> None:
     this returns and the caller needs no observation pass to learn that.
     """
     from ....application.user_profile.operations import build_profile_logout_operation_request
-    from ..._operation_composition import compose_operation_dependencies
+    from ...operation_composition import compose_operation_dependencies
 
     services = compose_operation_dependencies()
     try:

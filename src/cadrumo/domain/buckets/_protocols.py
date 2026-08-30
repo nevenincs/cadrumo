@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ._event import BucketEventHistoryCatalogue
+from .event import BucketEventHistoryCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
     from ...adapters.persistence.storage import SecureObjectWrite
