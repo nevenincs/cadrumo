@@ -180,11 +180,74 @@ def fix_pyproject() -> int:
     return n
 
 
+
+def fix_string_module_paths() -> int:
+    """Repoint a dotted cadrumo module path written inside a string literal.
+
+    A module path is not always an import. It appears in a logger name, in a
+    ``caplog.at_level`` target, and -- most consequentially -- inside the source
+    of a subprocess a test spawns. None of those are import nodes, so every
+    AST-based sweep above is blind to them.
+
+    The subprocess case fails in the most misleading way available: the child
+    exits non-zero, the parent reports only that it never signalled readiness,
+    and the failure reads as flakiness. Four custody lock tests were written off
+    that way until the string was read.
+    """
+    module_path = re.compile(r"cadrumo(?:\.[A-Za-z_][A-Za-z_0-9]*)+")
+
+    def public_form(dotted: str) -> str | None:
+        target = ROOT / dotted.replace(".", "/")
+        if target.with_suffix(".py").exists() or (target / "__init__.py").exists():
+            return None
+        leaf = target.name
+        if len(leaf) < 2 or not leaf.startswith("_"):
+            return None
+        public = target.with_name(leaf[1:])
+        if public.with_suffix(".py").exists() or (public / "__init__.py").exists():
+            return dotted.rsplit(".", 1)[0] + "." + leaf[1:]
+        return None
+
+    changed = 0
+    for path in sorted(SRC.rglob("*.py")) + sorted(Path("dev").rglob("*.py")):
+        try:
+            text = path.read_text(encoding="utf-8")
+            tree = ast.parse(text)
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        lines = text.splitlines()
+        subs: set[tuple[str, str]] = set()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            # An absence assertion means the OPPOSITE of a reference: the old
+            # module is expected to be gone, so repointing it at the live one
+            # inverts the test. The same trap as `assert not (pkg / "_x.py")`,
+            # in the dotted spelling.
+            context = "
+".join(lines[max(0, node.lineno - 4) : node.lineno])
+            if "raises" in context and ("ModuleNotFoundError" in context or "ImportError" in context):
+                continue
+            for dotted in module_path.findall(node.value):
+                replacement = public_form(dotted)
+                if replacement:
+                    subs.add((dotted, replacement))
+        if not subs:
+            continue
+        report.append(f"  string-path: {path} {sorted(old for old, _ in subs)}")
+        if apply:
+            for old, new in sorted(subs, key=lambda pair: -len(pair[0])):
+                text = text.replace(old, new)
+            path.write_text(text, encoding="utf-8")
+        changed += 1
+    return changed
+
 counts = {
     "dot-depth files": fix_dot_depth(),
     "module-object files": fix_module_object_imports(),
     "pin files": fix_pins(),
     "pyproject ignores": fix_pyproject(),
+    "string module paths": fix_string_module_paths(),
 }
 print("\n".join(report) if report else "  (nothing found)")
 print("\n" + ("APPLIED" if apply else "DRY RUN") + ":", ", ".join(f"{k}={v}" for k, v in counts.items()))

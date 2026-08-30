@@ -178,9 +178,9 @@ def test_operator_surface_application_package_has_no_typer_dependency() -> None:
 
         for module_name in (
             "cadrumo.application.operator_surface",
-            "cadrumo.application.operator_surface._contract",
-            "cadrumo.application.operator_surface._help",
-            "cadrumo.application.operator_surface._models",
+            "cadrumo.application.operator_surface.contract",
+            "cadrumo.application.operator_surface.help",
+            "cadrumo.application.operator_surface.models",
         ):
             importlib.import_module(module_name)
 

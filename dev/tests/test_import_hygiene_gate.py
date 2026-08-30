@@ -1284,7 +1284,7 @@ def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path
         ),
         (
             "cadrumo/entrypoints/tui/app.py",
-            "from cadrumo.application.operations._registry import definitions\n",
+            "from cadrumo.application.operations.registry import definitions\n",
             TuiBoundaryViolationKind.PRIVATE_FACADE,
         ),
         (
@@ -1294,7 +1294,7 @@ def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path
         ),
         (
             "cadrumo/entrypoints/tui/app.py",
-            "import importlib\nimportlib.import_module('cadrumo.application.operations._registry')\n",
+            "import importlib\nimportlib.import_module('cadrumo.application.operations.registry')\n",
             TuiBoundaryViolationKind.PRIVATE_FACADE,
         ),
     ),
