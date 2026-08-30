@@ -3,7 +3,7 @@
 This module provides classmethod factories on :class:`RegistryValidationError`
 and :class:`RegistrySnapshotError` for each canonical raise scenario. The
 factory pattern pins the context-dict keys downstream consumers
-(``cadrumo.core.errors.error_codes`` template renderer, CLI JSON emit via
+(``cadrumo.core.errors._registry`` template renderer, CLI JSON emit via
 ``SchemaEnvelope``, i18n locales referencing keys by name) rely on.
 
 The existing ``raise RegistryValidationError(message, context=...)`` shape
@@ -19,7 +19,7 @@ from enum import StrEnum
 from typing import Self
 
 from ....core import CasillaId, Modelo
-from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
+from ....core.errors import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from .ids import BindingId, RelationId, RevisionId
 
 

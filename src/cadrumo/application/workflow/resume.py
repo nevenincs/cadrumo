@@ -228,7 +228,7 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
         raise WorkflowResumeRefusedError(
             # BOTH message and translated_message, deliberately. The
             # operator-facing envelope resolves ``translated_message`` first
-            # (``core.errors.error_codes.resolve_error_message``), so this
+            # (``core.errors._registry.resolve_error_message``), so this
             # ``message`` changes nothing an operator sees -- it changes only
             # ``str(exc)``, which is what a traceback and a failing test's own
             # summary line show.
