@@ -72,6 +72,7 @@ _INSPECTION_ROOT_FIELDS = frozenset(
         "source_ref_ids",
         "legal_ref_ids",
         "casilla_ids",
+        "casilla_sections",
         "binding_ids",
         "projection_endpoints",
         "formulas",
