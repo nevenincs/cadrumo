@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record

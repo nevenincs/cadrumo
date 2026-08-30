@@ -23,7 +23,7 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema

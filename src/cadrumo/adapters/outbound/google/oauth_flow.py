@@ -31,7 +31,7 @@ from datetime import datetime
 from typing import NoReturn
 
 from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty

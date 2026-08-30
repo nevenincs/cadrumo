@@ -46,7 +46,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.period_offset_math import same_ejercicio_prior_quarter_anchors

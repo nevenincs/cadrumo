@@ -43,11 +43,11 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Modelo,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification

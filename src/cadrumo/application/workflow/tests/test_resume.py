@@ -13,7 +13,8 @@ from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthSta
 from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import ActionConditionality, ActionEvidenceProvenance, Modelo, NoRecoveryOutcome
+from ....core.modelo import Modelo
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message

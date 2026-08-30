@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
     from ..auth.models import AuthState

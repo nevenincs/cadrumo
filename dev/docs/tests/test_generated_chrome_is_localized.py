@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind

@@ -28,7 +28,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.deadlines.models import TaxpayerProfile

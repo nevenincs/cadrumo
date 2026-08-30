@@ -20,7 +20,7 @@ from typing import Never
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.attachments.enums import AttachmentSource
 from ...storage import (
     OutboundStorageError,

@@ -31,7 +31,7 @@ import pytest
 # import` edge as reaching through the inert namespace.
 import cadrumo.application.ledger.preflight as preflight_module
 
-from ....core import OperatorActionAxis
+from ....core.operator_action_enums import OperatorActionAxis
 from ....core.aggregation import BindingSourceKind
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

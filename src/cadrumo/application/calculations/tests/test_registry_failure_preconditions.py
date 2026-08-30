@@ -6,7 +6,7 @@ from dataclasses import replace
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
 from ..registry_preconditions import calculation_registry_failure_verdict
 

@@ -21,11 +21,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
 from ....core.errors.error_codes import render_error_json, render_error_text
 from ...operator_actions import (

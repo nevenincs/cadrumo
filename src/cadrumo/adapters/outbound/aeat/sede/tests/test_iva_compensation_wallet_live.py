@@ -15,7 +15,8 @@ from urllib.parse import urlsplit
 import pytest
 
 from ......application.auth.sessions import ensure_authenticated_aeat_session
-from ......core import AuthProviderKind, Modelo
+from ......core import AuthProviderKind
+from ......core.modelo import Modelo
 from ......core.period import Period
 from ......core.config import Settings, load_settings
 from ......core.errors.hierarchy import CadrumoError

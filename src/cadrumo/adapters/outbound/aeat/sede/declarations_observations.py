@@ -25,7 +25,8 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact
+from .....core import CasillaValueKind, ExportLayoutFormat, ObservedHeaderFact
+from .....core.modelo import Modelo
 from .....core.period import Period
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings

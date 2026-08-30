@@ -13,7 +13,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210PayerMode
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from .errors import TransactionValidationError
 

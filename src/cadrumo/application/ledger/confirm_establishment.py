@@ -66,7 +66,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason, IvaCategoryOutcome
+from ...core import ClassifierInputSource, ConfirmationBlockReason, IvaCategoryOutcome
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import parse_iso8601_date
 from ...domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ...domain.iva.establishment import record_country_code_status

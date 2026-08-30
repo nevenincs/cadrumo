@@ -32,7 +32,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection

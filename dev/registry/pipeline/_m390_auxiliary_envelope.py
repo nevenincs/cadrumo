@@ -16,7 +16,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.application.filing import render_envelope_prefix_field
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period, StandardPeriodCode
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity

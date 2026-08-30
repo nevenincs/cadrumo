@@ -8,8 +8,8 @@ import pytest
 
 from ... import core
 from ...tests import modules_declaring_class
-from .. import OperatorActionAxis
-from .. import _operator_action_enums as owner
+from ..operator_action_enums import OperatorActionAxis
+from .. import operator_action_enums as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

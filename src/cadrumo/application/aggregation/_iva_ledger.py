@@ -46,7 +46,7 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     IvaDeductionFactKind,
     ProrrataProvisionalProvenance,

@@ -30,7 +30,8 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, OperatorActionAxis
+from ...core.operator_action_enums import OperatorActionAxis
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN

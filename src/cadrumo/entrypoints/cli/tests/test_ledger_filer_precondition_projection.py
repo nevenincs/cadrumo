@@ -20,7 +20,7 @@ import pytest
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_territorial_scope
 from ....application.ledger.preconditions import LedgerPreconditionCondition
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._common import cli_policy_refusal_projection
 

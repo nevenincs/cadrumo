@@ -58,7 +58,8 @@ from typing import Final
 
 from ..application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ..core import LLM_EXTRA, ActionEvidenceProvenance, FieldOrigin, provenance_transport_label, require_optional_extra
+from ..core import LLM_EXTRA, FieldOrigin, provenance_transport_label, require_optional_extra
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings, load_settings
 from .client import LLMClient
 from .consent import EvidenceConsentToken

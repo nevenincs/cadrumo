@@ -18,7 +18,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.identity import BucketId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion

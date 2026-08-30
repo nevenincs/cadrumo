@@ -25,7 +25,7 @@ from zipfile import BadZipFile
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

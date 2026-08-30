@@ -25,7 +25,7 @@ from ....application.modelo._taxation_comparison import (
     TaxationComparisonResult,
     TaxationRecommendation,
 )
-from ....core import Modelo
+from ....core.modelo import Modelo
 from .._payloads_modelo_reconcile import WorkCompareTaxationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -58,7 +58,8 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210GrossIncomeSourceMode
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
@@ -167,7 +168,7 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     the revision id — operators can supply rows in any order. The nif-like field
     varies by row type: nif (M184/M232/M347) or nif_comunitario (M349).
 
-    Occurrence number established as presentation-only (S292): every
+    Occurrence number established as presentation-only: every
     row-producer resolver these detail rows correspond to sorts by an
     equivalent content key before assigning fichero occurrence numbers, so
     two supply orders render identical bytes, not merely the same id here.
@@ -748,7 +749,7 @@ class CalculationSourceRef(BaseModel):
     revision; duplicating them here would fragment the grounding across two
     surfaces.
 
-    S290: ``source_casilla_ids`` is NOT grounding and the rationale above does
+    ``source_casilla_ids`` is NOT grounding and the rationale above does
     not extend to it. It is a subject IDENTITY -- which casilla(s), if any,
     this source object's resolution feeds -- and nothing else on the revision
     carries it for the general (non-row-materialized) case; dropping it here

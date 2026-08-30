@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from .descendant_facts import descendant_list_from_facts
 from .renta_codes import RentaMaritalStatus
 

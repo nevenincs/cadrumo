@@ -43,7 +43,7 @@ from typing import ClassVar, Literal
 from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY

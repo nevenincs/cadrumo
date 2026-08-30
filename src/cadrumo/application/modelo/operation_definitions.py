@@ -27,7 +27,8 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, M210PayerMode, PaymentElection, RefundElection
+from ...core import M210PayerMode, PaymentElection, RefundElection
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.operations import (
     OperationCancellation,

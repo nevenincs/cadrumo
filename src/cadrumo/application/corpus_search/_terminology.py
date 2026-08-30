@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, ConceptLifecycle
 from ...core.text_fold import fold_diacritics
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.directory_scan import (
     scan_directory,
 )

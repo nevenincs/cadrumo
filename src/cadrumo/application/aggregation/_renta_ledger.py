@@ -32,8 +32,9 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, regime_apportions_deduction
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import regime_apportions_deduction
+from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.casilla_id import CasillaId
 from ...core.prose_elision import ElidedProse

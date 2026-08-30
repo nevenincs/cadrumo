@@ -52,7 +52,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.period import Period as _Period
 from ...core.errors.hierarchy import CoreError

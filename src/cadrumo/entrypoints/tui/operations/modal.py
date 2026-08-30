@@ -33,7 +33,7 @@ from ....application.operations.frontend_contracts import (
     OperationResponseRejectRequestV1,
 )
 from ....application.operations.models import OperationId, OperationRevision
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.i18n import tr
 from ....core.operations import OperationLifecycle
 from ....core.time import now

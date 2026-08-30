@@ -60,7 +60,7 @@ __all__ = ["register_wizard_catalogue"]
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind

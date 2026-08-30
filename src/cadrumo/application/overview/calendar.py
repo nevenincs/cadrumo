@@ -37,7 +37,7 @@ from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core import Modelo as _Modelo
+from ...core.modelo import Modelo as _Modelo
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind

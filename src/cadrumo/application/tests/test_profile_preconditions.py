@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from ...core import NoRecoveryOutcome, ProfileSessionRefusalReason
+from ...core import ProfileSessionRefusalReason
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..operator_actions import PreconditionVerdict
 from ..profile_preconditions import (
     FormerProductDetectionScope,

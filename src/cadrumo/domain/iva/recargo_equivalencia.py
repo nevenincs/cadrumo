@@ -40,7 +40,7 @@ from typing import Final, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.decimal import coerce_decimal_strict
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import path_stat_fingerprint

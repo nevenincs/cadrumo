@@ -28,7 +28,8 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 
-from ...core import ActionEvidenceProvenance, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.loader import load_registry_tree

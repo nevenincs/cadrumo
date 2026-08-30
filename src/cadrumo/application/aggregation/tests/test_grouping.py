@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.aggregation import BindingSourceKind

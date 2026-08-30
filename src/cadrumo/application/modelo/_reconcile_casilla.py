@@ -48,7 +48,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.casilla_id import CasillaId
 
 

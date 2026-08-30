@@ -23,7 +23,7 @@ from cadrumo.application.operator_surface.manifest import (
     ManifestActionResolution,
     resolve_manifest_action_profiles,
 )
-from cadrumo.core import ActionEvidenceProvenance
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 
 from ..agent_eval._action_coverage import LeafConditionScenario, leaf_condition_scenario_matrix

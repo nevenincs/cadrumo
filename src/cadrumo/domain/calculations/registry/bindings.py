@@ -32,7 +32,8 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG
+from ....core import OBJECT_TUPLE_ADAPTER
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, Period, RegistryPeriodCode
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind

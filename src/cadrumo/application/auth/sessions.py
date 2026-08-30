@@ -29,7 +29,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
+from ...core import AuthProviderKind, ClaveMovilRoute
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
 from ...core.identity import (

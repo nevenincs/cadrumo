@@ -27,7 +27,7 @@ from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

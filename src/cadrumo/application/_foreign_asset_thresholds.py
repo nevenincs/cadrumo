@@ -10,10 +10,10 @@ from types import MappingProxyType
 
 from ..core import (
     ForeignAssetObligationGroup,
-    Modelo,
     RevisionReviewStatus,
     obligation_groups_established_by_legal_refs,
 )
+from ..core.modelo import Modelo
 from ..core.resources import bundled_path
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter

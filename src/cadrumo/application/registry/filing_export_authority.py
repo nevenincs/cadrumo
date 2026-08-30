@@ -15,7 +15,7 @@ from typing import Annotated, ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.ids import (
     ExportLayoutId,
     ModeloId,

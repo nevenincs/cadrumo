@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import DataBindingDefinition

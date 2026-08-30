@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ....core import (
-    STRICT_FROZEN_CONFIG,
     FilingProjectionRef,
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -18,6 +17,7 @@ from ....core import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
+from ....core.models import STRICT_FROZEN_CONFIG
 from ...iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, ActividadOrdenAnual, AutoridadAgricolaOrdenAnualNoResuelta, RegimenSimplificadoActivity, RegimenSimplificadoFilingRows, validate_regimen_simplificado_rows
 from .errors import RegistryValidationError
 

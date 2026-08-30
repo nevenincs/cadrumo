@@ -48,7 +48,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.corpus_manifest import (
     CorpusBundleError,

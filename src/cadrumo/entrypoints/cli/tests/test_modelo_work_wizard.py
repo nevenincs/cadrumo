@@ -33,7 +33,7 @@ from ....application.flows.errors import FlowCopyResolutionError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo._action_errors import modelo_work_wizard_retry_exhausted_precondition
 from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

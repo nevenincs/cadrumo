@@ -36,7 +36,7 @@ if TYPE_CHECKING:
         Response,
     )
 
-from .....core import NoRecoveryOutcome
+from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState

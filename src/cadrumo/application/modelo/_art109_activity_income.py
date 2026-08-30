@@ -28,7 +28,7 @@ from enum import StrEnum
 from typing import Final
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.errors import RegistryValidationError

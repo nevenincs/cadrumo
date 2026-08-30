@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -51,7 +51,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion import BienInversionRecordError
 from ...domain.calculations.registry.schema import ModeloRevision

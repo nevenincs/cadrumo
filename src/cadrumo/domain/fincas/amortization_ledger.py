@@ -21,7 +21,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents

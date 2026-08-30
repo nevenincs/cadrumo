@@ -36,7 +36,7 @@ from typing import Any, Final, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from ..core import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CoreError, ProfileAnswerTypeError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger

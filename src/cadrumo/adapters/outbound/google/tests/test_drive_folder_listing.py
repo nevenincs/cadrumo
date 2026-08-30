@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...storage import OutboundStorageError, OutboundStoragePermissionError, OutboundStorageValidationError
 from ..document_link_resolver import list_drive_folder_documents
 from .drive_media_server import drive_files_list_endpoint

@@ -22,7 +22,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
 from .amortization_ledger import compute_amortization_for_year

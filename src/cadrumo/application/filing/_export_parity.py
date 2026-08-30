@@ -66,11 +66,11 @@ from decimal import Decimal
 from ...core import (
     ExportLayoutFormat,
     FilingProducerKey,
-    Modelo,
     PriorDomiciliationElection,
     ResultDisposition,
     result_disposition_requires_bank_account,
 )
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
 from ...domain.calculations.registry.export_parse import xml_dictionary_entries

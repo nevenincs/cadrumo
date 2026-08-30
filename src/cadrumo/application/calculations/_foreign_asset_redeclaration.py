@@ -30,9 +30,9 @@ from urllib.parse import quote
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
-    Modelo,
     foreign_asset_obligation_group,
 )
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import ForeignAssetClass

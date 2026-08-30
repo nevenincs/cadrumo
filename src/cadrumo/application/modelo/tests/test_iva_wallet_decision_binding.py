@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority

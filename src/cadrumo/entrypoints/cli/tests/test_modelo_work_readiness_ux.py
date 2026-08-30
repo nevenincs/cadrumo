@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

@@ -16,7 +16,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
+from ...core import REVIEWED_REVISION_REVIEW_STATUSES, RegistryAuthorityGrade
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.corpus_catalogue import verify_source_file

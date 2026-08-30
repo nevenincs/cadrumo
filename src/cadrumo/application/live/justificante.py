@@ -71,8 +71,9 @@ from ...adapters.persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, normalise_aeat_csv
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import normalise_aeat_csv
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear

@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .._models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

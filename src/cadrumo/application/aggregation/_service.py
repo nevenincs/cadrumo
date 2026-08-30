@@ -23,14 +23,14 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
-from ...core.period import Period
-from ...core.aggregation import BindingSourceKind
-from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...domain.modelos.codes import ModeloCode
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -101,7 +101,7 @@ class PerModeloAggregationLogFields(BaseModel):
     model_config = _STRICT_FROZEN
 
     service_name: str = "per_modelo_aggregation"
-    modelo: str = Field(min_length=1)
+    modelo: ModeloCode
     period: Period
     provider: PerModeloAggregationContributor
     observation_count: int = Field(ge=0)
@@ -167,7 +167,7 @@ class PerModeloAggregationCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=16)
+    modelo: ModeloCode
     period: Period
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
@@ -211,7 +211,7 @@ class PerModeloAggregationResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=16)
+    modelo: ModeloCode
     period: Period
     provider: PerModeloAggregationContributor
     aggregation: PerModeloAggregationPayload

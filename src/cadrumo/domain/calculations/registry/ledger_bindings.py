@@ -29,7 +29,9 @@ from typing import Annotated, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind, Modelo
+from ....core import IvaDeductionFactKind
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import (
     BindingAggregationOp,

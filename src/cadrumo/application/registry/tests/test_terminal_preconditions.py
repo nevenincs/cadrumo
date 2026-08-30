@@ -10,7 +10,7 @@ from typing import override
 
 import pytest
 
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.casilla_id import validated_casilla_id
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority

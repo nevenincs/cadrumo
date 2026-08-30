@@ -234,17 +234,17 @@ if TYPE_CHECKING:
         default_model_runtime_id,
         model_candidate,
     )
-    from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
+    from .modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
     from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
     from ._modelo_work_progress_state import ModeloWorkProgressState
-    from ._models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    from .models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     from ._notificacion_estado_servicio import (
         NotificacionEstadoServicio,
         resolve_notificacion_estado_servicio,
     )
     from ._objeto_tributario import ObjetoTributario
     from ._observed_header_fact import ObservedHeaderFact
-    from ._operator_action_enums import (
+    from .operator_action_enums import (
         ActionArgumentSource,
         ActionArgumentStatus,
         ActionConditionality,
@@ -863,10 +863,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ART_81_1_MATERNIDAD_RELACIONES": "._descendant_relacion",
     "AcceleratorKind": "._hardware",
     "ActionArgumentResolution": "._action_argument_resolution",
-    "ActionArgumentSource": "._operator_action_enums",
-    "ActionArgumentStatus": "._operator_action_enums",
-    "ActionConditionality": "._operator_action_enums",
-    "ActionEvidenceProvenance": "._operator_action_enums",
+    "ActionArgumentSource": ".operator_action_enums",
+    "ActionArgumentStatus": ".operator_action_enums",
+    "ActionConditionality": ".operator_action_enums",
+    "ActionEvidenceProvenance": ".operator_action_enums",
     "AeatProductSoftwareEvidence": ".product_identity",
     "AeatProductSoftwareIdentity": ".product_identity",
     "AggregationCaptureKind": ".aggregation",
@@ -998,19 +998,19 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ModelRole": "._model_catalogue",
     "ModelRuntime": "._model_catalogue",
     "ModelSelectionAdvisory": "._model_catalogue",
-    "Modelo": "._modelo",
+    "Modelo": ".modelo",
     "ModeloCalculationRouteId": "._calculation_route",
     "ModeloWorkProgressState": "._modelo_work_progress_state",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
-    "NON_REGISTRY_MODELOS": "._modelo",
-    "NoRecoveryOutcome": "._operator_action_enums",
+    "NON_REGISTRY_MODELOS": ".modelo",
+    "NoRecoveryOutcome": ".operator_action_enums",
     "NotificacionEstadoServicio": "._notificacion_estado_servicio",
     "OBJECT_TUPLE_ADAPTER": "._type_adapters",
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS": ".aggregation",
     "OFFICIAL_M210_TIPO_RENTA_CODES": "._irnr",
     "OFX_EXTRA": "._optional_extras",
     "OPTIONAL_EXTRAS": "._optional_extras",
-    "OUT_OF_SCOPE_OBLIGATIONS": "._modelo",
+    "OUT_OF_SCOPE_OBLIGATIONS": ".modelo",
     "ObjetoTributario": "._objeto_tributario",
     "ObservedHeaderFact": "._observed_header_fact",
     "OperationCancellation": ".operations",
@@ -1022,7 +1022,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "OperationInteractionKind": ".operations",
     "OperationLifecycle": ".operations",
     "OperationTerminalCondition": ".operations",
-    "OperatorActionAxis": "._operator_action_enums",
+    "OperatorActionAxis": ".operator_action_enums",
     "OperatorProgress": "._operator_progress",
     "OptionalExtra": "._optional_extras",
     "OrdenAnualHtmlParseError": "._orden_anual_html",
@@ -1078,8 +1078,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "STORAGE_ROOT_MODE": ".storage_materialization",
     "STORAGE_ROOT_SETTINGS_FIELD": "._storage_taxonomy",
     "STORAGE_TAXONOMY": "._storage_taxonomy",
-    "STRICT_FROZEN_CONFIG": "._models",
-    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": "._models",
+    "STRICT_FROZEN_CONFIG": ".models",
+    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": ".models",
     "STRUCTURED_DOCUMENT_SHAPES": "._document_shape",
     "STR_KEYED_MAPPING_ADAPTER": "._type_adapters",
     "SectorDiferenciadoLetra": "._prorrata_register",
@@ -1124,7 +1124,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "TipoVinculacion": "._modelo_232_codigos",
     "TravelAgencyMediationType": ".aggregation",
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE": "._authority_grade",
-    "UNMODELED_OBLIGATIONS": "._modelo",
+    "UNMODELED_OBLIGATIONS": ".modelo",
     "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": "._schema_family_disposition",
     "record_design_epoch_year": "._record_design_epoch",
     "accepted_filing_period_codes": ".period",

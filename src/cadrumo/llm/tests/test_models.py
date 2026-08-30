@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...core import NoRecoveryOutcome
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ..errors import LLMValidationError
 from ..models import LLMProvider, LLMRequest, LLMResponse, PromptDefinition, Translation
 

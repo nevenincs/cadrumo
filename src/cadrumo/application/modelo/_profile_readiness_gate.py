@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.errors.severity import BaseSeverity
 from ...core.parsing import parse_iso8601_date

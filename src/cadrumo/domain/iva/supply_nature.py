@@ -61,7 +61,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from .schema import IvaCategory
 
 __all__ = [

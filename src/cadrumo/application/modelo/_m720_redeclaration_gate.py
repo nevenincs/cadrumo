@@ -33,7 +33,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.verification_report import ModeloVerificationFinding

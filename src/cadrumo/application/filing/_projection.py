@@ -8,7 +8,6 @@ from typing import cast
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import (
-    STRICT_FROZEN_CONFIG,
     FilingProjectionRef,
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
@@ -17,8 +16,9 @@ from ...core import (
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
-    Modelo,
 )
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.m303_differentiated_deduction_projection import (

@@ -28,7 +28,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree

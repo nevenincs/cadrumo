@@ -23,7 +23,7 @@ from collections.abc import Mapping
 from functools import lru_cache
 from types import MappingProxyType
 
-from ...core import Modelo as _Modelo
+from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...domain.calculations.registry.applicability import (

@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.iva.schema import IvaCategory
 

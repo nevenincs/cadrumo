@@ -24,7 +24,7 @@ from ...adapters.persistence.profile.inventory import (
     InventoryLedgerRepository,
 )
 from ...adapters.persistence.storage import secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.time import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType

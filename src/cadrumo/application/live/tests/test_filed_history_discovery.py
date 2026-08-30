@@ -161,7 +161,7 @@ def test_every_nominated_modelo_is_one_the_registry_actually_models() -> None:
 
 
 def test_an_out_of_scope_modelo_is_absent() -> None:
-    from ....core import OUT_OF_SCOPE_OBLIGATIONS
+    from ....core.modelo import OUT_OF_SCOPE_OBLIGATIONS
 
     grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     out_of_scope = {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}

@@ -23,7 +23,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import is_unit_proportion
 from ..categories.proportionality import ProportionalityKind
 from ..categories.registry import load_category_profiles

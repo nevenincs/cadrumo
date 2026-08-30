@@ -28,11 +28,11 @@ import pytest
 
 from .. import (
     AmendmentLiabilityDirection,
-    Modelo,
     classify_amendment_liability_direction,
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
+from ..modelo import Modelo
 from ..period import Period
 from .._amendment_kind_regime import modelo_has_codified_amendment_regime
 

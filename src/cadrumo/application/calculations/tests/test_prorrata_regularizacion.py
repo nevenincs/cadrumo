@@ -29,10 +29,10 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Modelo,
     ProrrataProvisionalProvenance,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind

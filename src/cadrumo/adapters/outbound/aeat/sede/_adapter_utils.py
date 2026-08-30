@@ -23,7 +23,7 @@ from re import compile
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.text_fold import fold_diacritics
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE

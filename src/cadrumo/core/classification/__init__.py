@@ -26,7 +26,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from .._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class SensitivityClass(StrEnum):

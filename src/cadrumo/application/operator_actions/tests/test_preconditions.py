@@ -7,7 +7,7 @@ import inspect
 
 import pytest
 
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...workflow.profile_health import assess_active_profile_health
 from .. import (
     active_profile_pointer_repair_verdict,

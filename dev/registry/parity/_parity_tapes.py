@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import STRICT_FROZEN_CONFIG
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.period import Period, hydrate_scenario_filing_period
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.time import now

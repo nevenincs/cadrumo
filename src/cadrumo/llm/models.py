@@ -28,7 +28,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..core import ActionEvidenceProvenance, ImageMediaType
+from ..core import ImageMediaType
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
 from ..core.identity import ContentDigest

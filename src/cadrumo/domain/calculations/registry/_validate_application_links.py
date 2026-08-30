@@ -18,7 +18,8 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 
-from ....core import Modelo, RegistryAuthorityGrade
+from ....core import RegistryAuthorityGrade
+from ....core.modelo import Modelo
 from .schema import ModeloRevision
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}

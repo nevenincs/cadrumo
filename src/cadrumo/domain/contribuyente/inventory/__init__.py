@@ -26,8 +26,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT

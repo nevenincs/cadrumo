@@ -50,7 +50,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .config import load_settings
 from .decimal import european_thousands_reading_is_ambiguous
 from .errors.hierarchy import CoreValidationError

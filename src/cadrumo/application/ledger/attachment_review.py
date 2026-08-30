@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.attachments.enums import AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.attachments.protocols import AttachmentStoreProtocol

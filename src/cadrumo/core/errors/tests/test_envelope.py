@@ -10,7 +10,7 @@ import textwrap
 import pytest
 from pydantic import ValidationError
 
-from ... import (
+from ...operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,

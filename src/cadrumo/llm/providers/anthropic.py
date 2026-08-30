@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from ...core import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from ..models import LLMProvider
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict

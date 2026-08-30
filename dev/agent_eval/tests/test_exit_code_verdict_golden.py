@@ -19,7 +19,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions import no_action_precondition_verdict
-from cadrumo.core import ActionEvidenceProvenance
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection

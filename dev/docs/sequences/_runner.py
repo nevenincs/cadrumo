@@ -73,7 +73,7 @@ from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
-from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock

@@ -60,7 +60,9 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import ActionEvidenceProvenance, M210GrossIncomeSourceMode, Modelo
+from ...core import M210GrossIncomeSourceMode
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.config import Settings

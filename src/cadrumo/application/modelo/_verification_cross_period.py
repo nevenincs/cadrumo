@@ -22,7 +22,8 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
-from ...core import ActionEvidenceProvenance, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.decimal import coerce_decimal_strict
 from ...domain.calculations.registry.applicability import derive_not_applicable_source_modelos
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality

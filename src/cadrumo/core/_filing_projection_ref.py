@@ -9,7 +9,7 @@ from typing import Annotated, Final, Literal, cast, get_args
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, model_validator
 
 from .casilla_id import CasillaId
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 
 _Identity = Annotated[
     str,

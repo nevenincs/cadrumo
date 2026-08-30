@@ -70,8 +70,8 @@ from ....application.storage.calc_sheets import (
     plan_layout,
     registry_sha,
 )
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal

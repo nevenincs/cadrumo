@@ -24,7 +24,8 @@ from datetime import date
 
 import pytest
 
-from ....core import NON_REGISTRY_MODELOS, ExportLayoutFormat, Modelo, RevisionReviewStatus
+from ....core import ExportLayoutFormat, RevisionReviewStatus
+from ....core.modelo import Modelo, NON_REGISTRY_MODELOS
 from ....core.access_gate import AuthorizationState
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.classification_coherence import build_classification_coherence_audit

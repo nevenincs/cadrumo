@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 
 from ....core import (
-    Modelo,
     PaymentElection,
     PriorDomiciliationElection,
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity

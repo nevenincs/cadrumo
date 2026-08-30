@@ -9,7 +9,7 @@ from typing import Literal, cast
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import today_madrid
 from .errors import ProfileValidationError
 from .family_types import (

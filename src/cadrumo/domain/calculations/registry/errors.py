@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Self
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from .ids import BindingId, RelationId, RevisionId

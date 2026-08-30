@@ -65,7 +65,8 @@ from typing import TYPE_CHECKING, Final, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, FieldOrigin
+from ...core import FieldOrigin
+from ...core.models import STRICT_FROZEN_CONFIG
 
 # Imported at RUNTIME rather than under ``TYPE_CHECKING``: the scope annotates a
 # pydantic field, so a name visible only to the type checker leaves the model

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ...operator_actions import ActionReference
 from ..models import ManifestActionProfile
 

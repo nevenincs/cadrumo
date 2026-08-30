@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ...calculations.registry.formula_runtime_ops import read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

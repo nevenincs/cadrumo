@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..handoffs import relation_consumption_index, relation_is_consumed
 from ..schema_surfaces import CasillaDefinition

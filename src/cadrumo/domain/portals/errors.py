@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 

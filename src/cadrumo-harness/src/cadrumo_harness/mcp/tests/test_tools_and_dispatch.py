@@ -420,7 +420,7 @@ def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
     trading an actionable answer for an unhinted one. The exemption is asserted to
     still be bare, so silently pinning it later also reds this gate.
     """
-    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
+    from cadrumo.core.modelo import Modelo, NON_REGISTRY_MODELOS
 
     expected = [modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]
     assert NON_REGISTRY_MODELOS, "the exclusion must exclude something, or this gate is vacuous"

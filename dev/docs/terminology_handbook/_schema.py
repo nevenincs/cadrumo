@@ -40,7 +40,7 @@ from cadrumo.application.corpus_search import (
     CONCEPT_ID_MIN_LENGTH,
     CONCEPT_ID_PATTERN,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 

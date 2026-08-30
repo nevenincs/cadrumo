@@ -29,14 +29,14 @@ from ....application.workflow.run_models import (
     WorkflowStage,
     WorkflowStep,
 )
-from ....core import (
+from ....core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.errors.hierarchy import SiteHealthState
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES

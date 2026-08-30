@@ -40,10 +40,10 @@ from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     DescendantRelacion,
     M210GrossIncomeSourceMode,
-    Modelo,
     RegistryAuthorityGrade,
     RescateType,
 )
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.decimal import try_parse_canonical_decimal

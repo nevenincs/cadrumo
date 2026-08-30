@@ -47,7 +47,8 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG, provenance_stamp_transport
+from ...core import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant
 from .evidence import PurchaseInvoiceEvidenceInputError
 from .extracted_document_cache import read_cached_transcription

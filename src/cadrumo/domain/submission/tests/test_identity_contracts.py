@@ -19,7 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.submission import SubmissionRepository
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._models import (

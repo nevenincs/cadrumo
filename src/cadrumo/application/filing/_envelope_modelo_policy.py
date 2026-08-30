@@ -19,7 +19,7 @@ from collections.abc import Callable, Mapping
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition

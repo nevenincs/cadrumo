@@ -32,7 +32,7 @@ from typing import Annotated, Self, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex

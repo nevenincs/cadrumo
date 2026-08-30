@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

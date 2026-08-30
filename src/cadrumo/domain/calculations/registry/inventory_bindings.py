@@ -26,7 +26,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingAggregationOp
 from .binding_selector_utils import selector_against_model

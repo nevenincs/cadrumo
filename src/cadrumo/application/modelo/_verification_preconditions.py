@@ -7,7 +7,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import CalculationRevisionId
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity, VerificationReport
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure

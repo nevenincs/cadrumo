@@ -14,12 +14,12 @@ from ....core import (
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoFact,
-    Modelo,
     PaymentElection,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.resources import bundled_path

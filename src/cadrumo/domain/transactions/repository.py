@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from .errors import LedgerStorageError
 from .models import BucketTransactionRef

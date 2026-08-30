@@ -21,7 +21,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.ids import (

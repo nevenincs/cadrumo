@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Protocol
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from .ids import LegalRefId, SourceRefId
 from .m303_orden_manifest import (
     collect_m303_annual_orden_fingerprints,

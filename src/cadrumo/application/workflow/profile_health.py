@@ -30,15 +30,14 @@ from typing import Literal
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import ProfileRecordUnavailability, ProfileSessionRefusalReason
+from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-    ProfileRecordUnavailability,
-    ProfileSessionRefusalReason,
 )
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
-from ...core import FilingProducerKey, Modelo, ResultDisposition
+from ...core import FilingProducerKey, ResultDisposition
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError

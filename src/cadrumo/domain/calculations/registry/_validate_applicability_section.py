@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ._validate_helpers import missing_refs
 from .applicability import hydrate_applicability_rule
 from .errors import RegistryValidationError

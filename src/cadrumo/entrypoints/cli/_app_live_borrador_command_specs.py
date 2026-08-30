@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ._app_live_command_spec_support import _key
 from ._command_spec import (
     ArgumentSpec,

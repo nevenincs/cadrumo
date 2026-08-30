@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,

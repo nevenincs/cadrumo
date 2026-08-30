@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ..contract import require_accepted_root, resolve_source_kind_alias
 from ..errors import OperatorSurfaceContractError
 

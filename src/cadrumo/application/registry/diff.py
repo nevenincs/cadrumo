@@ -27,7 +27,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority

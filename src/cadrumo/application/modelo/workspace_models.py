@@ -7,12 +7,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    RegistryAuthorityGrade,
-    RegistrySchemaFamilyDisposition,
-    RevisionReviewStatus,
-)
+from ...core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
@@ -1225,8 +1221,8 @@ class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
     facts: Annotated[tuple[ModeloWorkspaceEvidenceFactV1, ...], Field(max_length=_MAX_SAFE_FACTS)] = ()
     evidence: _BoundedRefList[ModeloWorkspaceEvidenceReferenceV1] = ()
     responsible_owner: _BoundedCode
-    source_disposition: RegistrySchemaFamilyDisposition | None = None
     reconsideration_condition: _BoundedText
+    source_disposition: RegistrySchemaFamilyDisposition | None = None
     recovery_action: ActionReference | None = None
 
     @field_validator("facts")

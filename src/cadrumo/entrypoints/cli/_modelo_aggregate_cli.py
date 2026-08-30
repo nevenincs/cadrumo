@@ -24,7 +24,7 @@ from ...application.aggregation import (
     route_invoice_retenciones,
 )
 from ...application.invoices import resolve_catalogue_invoice
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr

@@ -43,7 +43,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.locks import exclusive_file_lock
 from .....core.atomic_write import atomic_write_hardened_bytes
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

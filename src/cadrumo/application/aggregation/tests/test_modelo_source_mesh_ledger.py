@@ -19,10 +19,10 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository, session
 from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    NoRecoveryOutcome,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.classification import SensitivityClass

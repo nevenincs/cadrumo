@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, ProrrataProvisionalProvenance
+from ....core import ProrrataProvisionalProvenance
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation

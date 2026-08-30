@@ -18,7 +18,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core import STRICT_FROZEN_CONFIG, DescendantRelacion
+from ....core import DescendantRelacion
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,

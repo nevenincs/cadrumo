@@ -67,7 +67,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import ProfileSessionRefusalReason
 from .....core.base64_codec import b64_decode, b64_encode
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

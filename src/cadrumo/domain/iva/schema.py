@@ -30,7 +30,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.severity import BaseSeverity
 from ...core.parsing import parse_iso8601_date

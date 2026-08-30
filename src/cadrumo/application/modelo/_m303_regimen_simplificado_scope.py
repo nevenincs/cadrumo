@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import ActionEvidenceProvenance, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos.work_unit import WorkUnit
@@ -62,7 +63,7 @@ def resolve_m303_regimen_simplificado_scope(
 def m303_regimen_simplificado_scope_for_profile(
     profile: TaxpayerProfile,
 ) -> M303RegimenSimplificadoScopeDecision:
-    """Map the canonical secure IVA profile composition to the closed S59 scope."""
+    """Map the canonical secure IVA profile composition to the closed simplified-regime scope."""
     iva_profile = profile.iva
     if iva_profile is None:
         raise ModeloProfileReadinessError(

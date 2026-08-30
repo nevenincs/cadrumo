@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 
 
 class OperatorProgress(BaseModel):

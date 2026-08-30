@@ -8,7 +8,7 @@ operator catalogue.
 
 from __future__ import annotations
 
-from ...core import (
+from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,

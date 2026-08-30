@@ -20,7 +20,7 @@ from collections.abc import Callable
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import CopyRefKind
 from ...core.i18n import tr
 from .definition import CopyRef, FlowDefinition, FlowPage

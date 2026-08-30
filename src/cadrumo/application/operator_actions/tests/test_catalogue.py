@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 from pydantic import ValidationError
 
-from ....core import ActionArgumentSource
+from ....core.operator_action_enums import ActionArgumentSource
 from .._catalogue import (
     OPERATOR_ACTION_CATALOGUE,
     ActionArgumentBindingSpecification,

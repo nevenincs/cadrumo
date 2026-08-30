@@ -30,7 +30,7 @@ import unicodedata
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.casilla_id import CasillaId
 
 __all__ = [

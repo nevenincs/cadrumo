@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.period import Period
 from ...core.product_identity import AeatProductSoftwareIdentity

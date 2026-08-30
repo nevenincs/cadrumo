@@ -30,8 +30,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.directory_scan import scan_directory
 from ...core.errors.severity import BaseSeverity

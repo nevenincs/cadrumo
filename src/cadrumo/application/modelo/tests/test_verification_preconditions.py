@@ -7,11 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
 from .._verification_preconditions import (
     ModeloVerificationResult,

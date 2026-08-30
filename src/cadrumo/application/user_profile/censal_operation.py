@@ -10,7 +10,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from ...core.operations import (
     OperationCancellation,

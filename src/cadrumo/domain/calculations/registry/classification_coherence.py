@@ -68,7 +68,9 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ....core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo, TaxDomain
+from ....core import TaxDomain
+from ....core.modelo import Modelo, NON_REGISTRY_MODELOS
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
 from ....core.resources import bundled_path
 from ._validate_revision_rules import validate_informative_class_invariant

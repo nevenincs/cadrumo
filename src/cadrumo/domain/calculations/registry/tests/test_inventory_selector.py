@@ -7,7 +7,7 @@ from itertools import product
 import pytest
 from pydantic import ValidationError
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..binding_selector_utils import binding_row_set_selector

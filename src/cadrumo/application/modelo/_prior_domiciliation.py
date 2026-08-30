@@ -15,7 +15,8 @@ would compute.
 
 from __future__ import annotations
 
-from ...core import Modelo, ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
+from ...core import ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
+from ...core.modelo import Modelo
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit

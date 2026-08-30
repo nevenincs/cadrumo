@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
 from .._retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_BINDING_ID,

@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AuthProviderDescription
 from ...core.errors.severity import BaseSeverity
 from ._models import ModeloPresentado

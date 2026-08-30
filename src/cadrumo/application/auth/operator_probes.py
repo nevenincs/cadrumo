@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage import has_active_bucket_session
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError

@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import FieldRole
 from .....core.tabular import NormalizedTable
 

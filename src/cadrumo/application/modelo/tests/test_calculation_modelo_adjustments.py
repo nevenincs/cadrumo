@@ -8,7 +8,7 @@ from typing import Literal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition

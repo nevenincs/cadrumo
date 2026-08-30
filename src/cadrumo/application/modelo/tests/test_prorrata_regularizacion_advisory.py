@@ -33,7 +33,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, ProrrataRegisterRegime
+from ....core import ProrrataRegisterRegime
+from ....core.modelo import Modelo
 from ....core.casilla_id import validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority

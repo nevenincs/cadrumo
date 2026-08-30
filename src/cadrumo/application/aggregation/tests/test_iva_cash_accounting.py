@@ -11,7 +11,8 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values

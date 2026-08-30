@@ -22,13 +22,11 @@ from ....application.operator_actions import (
 )
 from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from ....core import (
+from ....core import AuthProviderKind, MissingOptionalExtraError, OptionalExtra
+from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    AuthProviderKind,
-    MissingOptionalExtraError,
-    OptionalExtra,
 )
 from ....core.config import Settings, override_settings
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code

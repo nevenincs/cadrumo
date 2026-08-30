@@ -45,9 +45,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG,
-)
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core import (
     ProrrataActivityRowType as _ProrrataActivityRowType,
 )

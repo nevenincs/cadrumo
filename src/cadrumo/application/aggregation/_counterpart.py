@@ -21,7 +21,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import FilingPeriodCode, Period
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.aggregation import (

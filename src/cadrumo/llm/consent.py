@@ -38,7 +38,7 @@ from typing import Never, Self, override
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
-from ..core import ActionEvidenceProvenance
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import LLMProvider, Settings
 from .errors import LLMConsentError
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict

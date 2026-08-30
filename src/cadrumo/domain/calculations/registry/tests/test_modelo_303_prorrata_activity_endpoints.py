@@ -12,10 +12,10 @@ from .....core import (
     EstadoCasillaOficial,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    Modelo,
     ProrrataActivityRowType,
     ProrrataRegisterRegime,
 )
+from .....core.modelo import Modelo
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry

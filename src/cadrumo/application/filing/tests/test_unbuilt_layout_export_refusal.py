@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core.modelo import Modelo
 from .. import (
     FilingElectionFacts,
     Modelo111ProfileFacts,

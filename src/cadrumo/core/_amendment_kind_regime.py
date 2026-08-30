@@ -62,7 +62,7 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ._modelo import Modelo
+from .modelo import Modelo
 
 if TYPE_CHECKING:
     # Deferred: ``._period`` transitively imports ``.errors``, which imports

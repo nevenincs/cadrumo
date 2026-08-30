@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_input_kind import InputKind
 

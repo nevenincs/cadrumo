@@ -27,7 +27,8 @@ from functools import cache
 
 import pytest
 
-from ....core import Modelo, TipoActividad
+from ....core import TipoActividad
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import PageStatus
 from .definition import FlowDefinition
 from .engine import FlowState, page_status, visible_sequence

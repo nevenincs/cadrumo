@@ -20,7 +20,7 @@ import re
 
 import pytest
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._cli_projection import CliOptionRecord, CliSurfaceRecord

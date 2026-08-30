@@ -65,7 +65,7 @@ from typing import Literal
 
 import pytest
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..export import derive_export_layouts_from_bindings

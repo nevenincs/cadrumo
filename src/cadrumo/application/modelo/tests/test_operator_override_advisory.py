@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from .._action_errors import ModeloAggregationBindingError

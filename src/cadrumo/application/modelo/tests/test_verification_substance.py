@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import (

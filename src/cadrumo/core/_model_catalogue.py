@@ -53,7 +53,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "ANTHROPIC_COMMERCIAL_TERMS",

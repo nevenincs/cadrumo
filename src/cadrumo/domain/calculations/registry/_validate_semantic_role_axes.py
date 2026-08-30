@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 
 _MODELO_PREFIXED_ROLE_RE: Final = re.compile(r"^m(\d{3})_(.+)$")
 _MODELO_VALUES: Final[frozenset[str]] = frozenset(member.value for member in Modelo)

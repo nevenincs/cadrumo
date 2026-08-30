@@ -18,7 +18,7 @@ from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.operator_actions import lookup_action
 from ....application.review.errors import ReviewKindReservedError
-from ....core import ActionArgumentStatus
+from ....core.operator_action_enums import ActionArgumentStatus
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.config import override_settings
 from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, ErrorEnvelope, render_error_text

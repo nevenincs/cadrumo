@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.schema_input_kind import InputKind

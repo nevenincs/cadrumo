@@ -39,7 +39,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import DeudaDireccion, ObjetoTributario
 from .....core.period import Period
 from .....core.config import Settings

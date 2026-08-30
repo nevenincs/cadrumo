@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import NoReturn, Protocol
 
 from ...application.filing import AmendmentEvidence
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol

@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.period import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger

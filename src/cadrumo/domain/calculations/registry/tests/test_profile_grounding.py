@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .....core.aggregation import BindingSourceKind
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError

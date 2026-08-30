@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,

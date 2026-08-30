@@ -40,7 +40,8 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import M210GrossIncomeSourceMode, Modelo
+from ...core import M210GrossIncomeSourceMode
+from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole

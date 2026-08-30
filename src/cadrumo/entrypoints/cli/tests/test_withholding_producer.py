@@ -22,7 +22,7 @@ from ....application.aggregation import (
     WithholdingObservation,
     persist_percepcion_observations,
 )
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_aggregate_cli import _parse_typed_cli_observations

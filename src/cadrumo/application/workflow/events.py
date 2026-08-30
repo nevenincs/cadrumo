@@ -27,7 +27,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.time import now as utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType

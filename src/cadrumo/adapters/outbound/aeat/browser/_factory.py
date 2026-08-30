@@ -33,7 +33,7 @@ from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
-from .....core import NoRecoveryOutcome
+from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.async_cleanup import (
     close_async_resources,
 )

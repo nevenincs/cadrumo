@@ -58,7 +58,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_printed_phrase
 from .regime_legend import REGIME_LEGENDS, RegimeLegend
 from .schema import IvaCategory

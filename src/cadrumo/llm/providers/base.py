@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ...core import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from ..models import LLMProvider, MultimodalImageInput
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict

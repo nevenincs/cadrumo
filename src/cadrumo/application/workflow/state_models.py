@@ -13,10 +13,8 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from ...core import (
-    STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
-)
-from ...core import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus

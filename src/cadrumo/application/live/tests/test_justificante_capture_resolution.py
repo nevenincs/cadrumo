@@ -15,7 +15,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.schema import Expediente
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.config import Settings
 from ..errors import LiveApplicationInputError

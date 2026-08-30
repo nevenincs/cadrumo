@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas

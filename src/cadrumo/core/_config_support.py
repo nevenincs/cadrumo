@@ -20,7 +20,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, SecretStr
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .external_constants import OutputLanguage, load_external_constants
 from .identity import BucketId
 

@@ -26,13 +26,13 @@ from ....core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     UNDECLARED_REGISTRY_AUTHORITY_GRADE,
     FilingProjectionRef,
-    Modelo,
     RegistryAuthorityGrade,
     ResultDisposition,
     RevisionReviewStatus,
     TaxDomain,
     filing_projection_ref_casilla_id,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind

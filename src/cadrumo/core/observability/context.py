@@ -21,7 +21,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ..models import STRICT_FROZEN_CONFIG
 from ..config import load_settings
 from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger

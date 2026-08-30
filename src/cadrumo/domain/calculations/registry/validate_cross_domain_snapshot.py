@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId
 from .ids import BindingId
 

@@ -43,7 +43,8 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import IvaCompensationStateProvenance, Modelo, normalise_aeat_csv
+from ...core import IvaCompensationStateProvenance, normalise_aeat_csv
+from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
@@ -225,7 +226,7 @@ def persist_filed_calculation_observation(
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
         source_headers=observation.headers,
-        # Canonical S05 ingress: official evidence must recover its one typed
+        # Canonical ingress: official evidence must recover its one typed
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
         normalize_m303_carry=True,

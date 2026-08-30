@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from ....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 

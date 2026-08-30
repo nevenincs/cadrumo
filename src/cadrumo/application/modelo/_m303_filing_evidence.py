@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
-from ...core import ActionEvidenceProvenance, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -106,7 +107,7 @@ def _validate_m303_simplified_filing_evidence(
     registry_snapshot: RegistrySnapshot,
     evidence: M303FilingInstanceEvidence,
 ) -> None:
-    """Validate the S59 simplified-regime evidence against profile and rows."""
+    """Validate the simplified-regime evidence against profile and rows."""
     regimen = evidence.regimen_simplificado
 
     expected_snapshot = resolve_m303_regimen_simplificado_snapshot(

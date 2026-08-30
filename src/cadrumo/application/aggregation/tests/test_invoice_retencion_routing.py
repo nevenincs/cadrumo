@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority

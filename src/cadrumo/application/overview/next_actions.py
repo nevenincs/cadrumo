@@ -33,8 +33,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionArgumentSource, ActionArgumentStatus, Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ..operator_actions import ActionArgumentBinding, ActionReference, DeclaredNextAction
 
 if TYPE_CHECKING:

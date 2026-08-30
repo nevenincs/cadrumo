@@ -27,13 +27,13 @@ from ....application.workflow.run_models import (
     WorkflowStage,
     WorkflowStep,
 )
-from ....core import (
+from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.deadlines.models import ObligationStatus

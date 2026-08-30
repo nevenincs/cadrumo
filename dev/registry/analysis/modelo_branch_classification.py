@@ -83,7 +83,7 @@ class BranchAdjudication:
 
 def modelo_codes() -> frozenset[str]:
     """Return every modelo code the core enum declares."""
-    from cadrumo.core import Modelo
+    from cadrumo.core.modelo import Modelo
 
     return frozenset(member.value for member in Modelo)
 

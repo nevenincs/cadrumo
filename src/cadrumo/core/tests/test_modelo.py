@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ...domain.calculations.registry.authority import bundled_authority
-from .. import NON_REGISTRY_MODELOS, Modelo
+from ..modelo import Modelo, NON_REGISTRY_MODELOS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

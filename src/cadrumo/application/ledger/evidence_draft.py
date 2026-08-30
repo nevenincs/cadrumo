@@ -116,7 +116,6 @@ from ...adapters.persistence.storage import AttachmentStore, secure_object_repos
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
 from ...core import (
     PDF_CONTAINER_SHAPES,
-    STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
     DraftDiscrepancyKind,
     FieldGroundingOutcome,
@@ -126,6 +125,7 @@ from ...core import (
     ServiceCapability,
     detect_image_media_type,
 )
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings

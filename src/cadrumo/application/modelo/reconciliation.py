@@ -53,8 +53,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_identity_token
 from ...core.time import now

@@ -41,7 +41,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind
+from ...core import IvaDeductionFactKind
+from ...core.models import STRICT_FROZEN_CONFIG
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
 # inside ``classify_invoice_line_for_iva``

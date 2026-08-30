@@ -23,7 +23,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents as _round_to_cents
 from .enums import ExpenseCategory
 from .models import FincaGasto

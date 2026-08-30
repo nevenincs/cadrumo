@@ -35,7 +35,7 @@ through the abstract Protocol without naming ``renta``.
 
 from __future__ import annotations
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 

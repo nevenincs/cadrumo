@@ -50,7 +50,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind

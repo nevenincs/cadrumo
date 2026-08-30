@@ -17,9 +17,9 @@ from ....core import (
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
-    Modelo,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority

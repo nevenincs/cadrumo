@@ -43,7 +43,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex

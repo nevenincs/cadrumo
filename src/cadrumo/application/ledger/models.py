@@ -9,7 +9,7 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind
 from ...core.period import Period
 

@@ -30,12 +30,12 @@ from ....core import (
     M296PerceptorInteresesField,
     M296PerceptorInteresesProjectionRef,
     M296PerceptorProjectionRef,
-    Modelo,
     PaymentElection,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from .._m296_projection import build_m296_filing_projection_plan
 from .._producer_snapshot import (

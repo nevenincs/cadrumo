@@ -11,8 +11,8 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ._action_argument_resolution import ActionArgumentResolution
-from ._models import STRICT_FROZEN_CONFIG
-from ._operator_action_enums import (
+from .models import STRICT_FROZEN_CONFIG
+from .operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,

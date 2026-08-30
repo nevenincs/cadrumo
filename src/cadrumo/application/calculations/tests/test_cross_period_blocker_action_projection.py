@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import OperatorActionAxis
+from ....core.operator_action_enums import OperatorActionAxis
 from .. import (
     OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER,
     CrossPeriodCleanStateBlocker,

@@ -17,10 +17,11 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core import IBAN_SHAPE_RE, OBJECT_TUPLE_ADAPTER, Modelo, iban_mod_97, normalise_iban
+from ...core import IBAN_SHAPE_RE, OBJECT_TUPLE_ADAPTER, iban_mod_97, normalise_iban
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,

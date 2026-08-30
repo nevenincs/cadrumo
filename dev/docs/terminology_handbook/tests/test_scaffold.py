@@ -429,7 +429,7 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     # The assertion this replaces was about GRANULARITY -- modelos are the
     # concept-grade axis, unlike casillas -- and that intent is unchanged here.
     # What narrowed is which modelos, not the axis.
-    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
+    from cadrumo.core.modelo import Modelo, NON_REGISTRY_MODELOS
 
     for modelo in Modelo:
         concept_id = f"modelo-{modelo.value}"

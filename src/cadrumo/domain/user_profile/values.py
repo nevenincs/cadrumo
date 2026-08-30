@@ -16,7 +16,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex

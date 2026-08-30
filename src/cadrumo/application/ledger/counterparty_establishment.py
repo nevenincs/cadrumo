@@ -63,7 +63,8 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     SensitivityClass,
 )
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
+from ...core import ClassifierInputSource
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest

@@ -45,7 +45,7 @@ from uuid import UUID
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.buckets.errors import BucketDeleteRefusedError
 from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session

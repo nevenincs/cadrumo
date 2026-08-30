@@ -51,12 +51,9 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import (
-    M210_TIPO_RENTA_CODE_PROJECTION,
-    ActionEvidenceProvenance,
-    M210GrossIncomeSourceMode,
-    Modelo,
-)
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import CalculationRevisionId

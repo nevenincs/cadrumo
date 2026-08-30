@@ -464,7 +464,7 @@ def _canonical_action_arguments(
     provenance; the command graph is the authority for positional versus option
     syntax.  This helper deliberately has no action- or command-specific branch.
     """
-    from cadrumo.core import ActionArgumentStatus
+    from cadrumo.core.operator_action_enums import ActionArgumentStatus
     from cadrumo.core.product_identity import PRODUCT_IDENTITY
     from cadrumo.entrypoints.cli import command_graph
 
@@ -555,7 +555,7 @@ def _execute_safe_recovery_and_retry(
     both the recovery and the retry.  A terminal/safety/operator-decision outcome
     has no action and therefore cannot reach this function.
     """
-    from cadrumo.core import ActionArgumentStatus, ActionConditionality
+    from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality
     from cadrumo.entrypoints.cli import resolve_cli_precondition_action
 
     resolved = resolve_cli_precondition_action(precondition_verdict)

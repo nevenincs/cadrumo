@@ -24,7 +24,7 @@ from typing import cast
 import pytest
 
 from cadrumo.application.provisioning import ProvisioningPreconditionCondition
-from cadrumo.core import NoRecoveryOutcome
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 
 from .._smoke_common import (

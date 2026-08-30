@@ -22,7 +22,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 

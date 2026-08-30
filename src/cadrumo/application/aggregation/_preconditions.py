@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 

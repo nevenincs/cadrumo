@@ -36,7 +36,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.logging import get_logger
 from ...core.unit_proportion import UnitProportion

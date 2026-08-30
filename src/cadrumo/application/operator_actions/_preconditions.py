@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import (
+from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,

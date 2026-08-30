@@ -44,7 +44,6 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import (
-    Modelo,
     PaymentElection,
     RefundElection,
     ResultDisposition,
@@ -52,6 +51,7 @@ from ...core import (
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError

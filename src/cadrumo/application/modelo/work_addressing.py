@@ -38,7 +38,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, StringConstraints, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.filing_year import FilingYear

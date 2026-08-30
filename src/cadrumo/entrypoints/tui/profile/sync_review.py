@@ -37,7 +37,7 @@ from ....application.user_profile.censal_operation import (
 )
 from ....application.user_profile.presentation import ProfileFieldSourceClass, profile_field_source_class
 from ....application.user_profile.projections import record_to_effective_facts
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.user_profile.values import UserProfileRecord
 from ..components.theme import tokenised

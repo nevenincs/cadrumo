@@ -23,7 +23,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.contribuyente.keys import ProfileKey, ProfileKeyRequirement, optional_profile_keys
 from ...domain.contribuyente.keys import profile_keys as _get_profile_keys
 from .completeness import (

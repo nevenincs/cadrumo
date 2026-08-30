@@ -85,7 +85,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.establishment import StatedCountryCodeStatus, country_code_for_printed_country_name, record_country_code_status, territorial_scope_for_country
 from .party_attribution import PartyAddress, party_addresses
 

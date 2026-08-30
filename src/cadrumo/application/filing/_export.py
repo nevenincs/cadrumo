@@ -53,9 +53,10 @@ from typing import Protocol, overload
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN
-from ...core import ExportLayoutFormat, FilingProducerKey, Modelo, PriorDomiciliationElection
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN
+from ...core import ExportLayoutFormat, FilingProducerKey, PriorDomiciliationElection
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.product_identity import AeatProductSoftwareIdentity

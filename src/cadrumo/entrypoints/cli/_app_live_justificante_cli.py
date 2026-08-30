@@ -12,7 +12,7 @@ import asyncio
 
 import typer
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._common import active_bucket_id_or_refuse, emit_envelope

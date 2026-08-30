@@ -21,7 +21,7 @@ from typing import Annotated, Final, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .identity import ContentDigest, SubjectTaxId
 
 

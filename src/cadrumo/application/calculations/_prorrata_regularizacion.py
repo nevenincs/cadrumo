@@ -45,13 +45,9 @@ from typing import ClassVar, Final
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    Modelo,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    regime_apportions_deduction,
-)
+from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, regime_apportions_deduction
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole

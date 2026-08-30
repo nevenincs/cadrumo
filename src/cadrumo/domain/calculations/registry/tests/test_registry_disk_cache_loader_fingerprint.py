@@ -30,7 +30,8 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from .....core import AuthProviderKind, Modelo
+from .....core import AuthProviderKind
+from .....core.modelo import Modelo
 from .....core.config import override_settings
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
@@ -176,7 +177,7 @@ def test_derived_types_hash_their_private_defining_files_not_a_facade_init() -> 
     resolved = {item.marker: item for item in _derive_embedded_foreign_types()}
     period = resolved["cadrumo.core.period.Period"]
     tax_domain = resolved["cadrumo.core._tax_domain.TaxDomain"]
-    assert period.source_path.name == "_period.py", period.source_path
+    assert period.source_path.name == "period.py", period.source_path
     assert tax_domain.source_path.name == "_tax_domain.py", tax_domain.source_path
 
 

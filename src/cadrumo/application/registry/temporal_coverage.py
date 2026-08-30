@@ -13,7 +13,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
+from ...core import RegistryAuthorityGrade
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import RegistrySelectorPeriodCode
 from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority

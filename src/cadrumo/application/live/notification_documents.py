@@ -43,7 +43,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.identity import AeatCertificadoId, BucketId
 from ...core.logging import get_logger

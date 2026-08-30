@@ -6,7 +6,7 @@ from datetime import datetime
 
 from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.live.snapshot_base import SnapshotLifecycleState
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     AeatCsv,

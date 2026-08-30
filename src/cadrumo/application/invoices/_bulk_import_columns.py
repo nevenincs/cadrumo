@@ -30,7 +30,8 @@ from collections.abc import Callable, Sequence
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, FieldRole
+from ...core import FieldRole
+from ...core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "BULK_IMPORT_FIELD_BY_ROLE",

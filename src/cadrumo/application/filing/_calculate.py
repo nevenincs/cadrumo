@@ -31,7 +31,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.errors.severity import BaseSeverity
 from ...core.time import validate_utc_aware

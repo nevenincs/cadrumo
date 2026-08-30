@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.identity import PrefixedContentDigest
 from .capsule_records import ProfileCustodyCapsuleLabel

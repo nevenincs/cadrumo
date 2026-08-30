@@ -9,7 +9,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -244,7 +244,7 @@ def _m303_regimen_simplificado_annual_summary_handoff_digest(
 
 
 class M303RegimenSimplificadoFilingEvidence(BaseModel):
-    """Taxpayer rows bound to the exact S59 Orden and record-design snapshot."""
+    """Taxpayer rows bound to the exact annual Orden and record-design snapshot."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -257,9 +257,9 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     @model_validator(mode="after")
     def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
         if self.scope_decision != self.regimen_snapshot.scope_decision:
-            raise ModeloValidationError("M303 simplified-regime evidence scope disagrees with its S59 snapshot")
+            raise ModeloValidationError("M303 simplified-regime evidence scope disagrees with its annual Orden snapshot")
         if self.rows.ejercicio != self.regimen_snapshot.orden.ejercicio:
-            raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its S59 snapshot")
+            raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its annual Orden snapshot")
         _validate_m303_regimen_simplificado_result_coordinate(self)
         if self.scope_decision.is_not_claimed:
             if self.rows.activities:
@@ -272,7 +272,7 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
 def _validate_m303_regimen_simplificado_result_coordinate(
     evidence: M303RegimenSimplificadoFilingEvidence,
 ) -> None:
-    """Require the retained result to name exactly these rows and S59 coordinate."""
+    """Require the retained result to name exactly these rows and annual Orden coordinate."""
     _validate_m303_result_snapshot_coordinate(evidence)
     _validate_m303_result_activity_order(evidence)
     _validate_m303_result_activity_evidence(evidence)
@@ -299,7 +299,7 @@ def _validate_m303_result_snapshot_coordinate(evidence: M303RegimenSimplificadoF
         record_design.sha256,
         record_design.record_design_epoch,
     ):
-        raise ModeloValidationError("M303 simplified calculation result disagrees with its S59 coordinate")
+        raise ModeloValidationError("M303 simplified calculation result disagrees with its annual Orden coordinate")
 
 
 def _validate_m303_result_activity_order(evidence: M303RegimenSimplificadoFilingEvidence) -> None:

@@ -23,8 +23,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal

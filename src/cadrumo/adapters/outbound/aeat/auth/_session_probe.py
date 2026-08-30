@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.logging import get_logger
 
 if TYPE_CHECKING:

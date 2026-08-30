@@ -23,7 +23,7 @@ from datetime import date
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact

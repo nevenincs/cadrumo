@@ -45,12 +45,12 @@ from typing import Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import (
-    STRICT_FROZEN_CONFIG,
     ConfirmationBlockReason,
     DraftDiscrepancyKind,
     FieldGroundingOutcome,
     FindingResolutionAction,
 )
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from .evidence_draft import FieldAmbiguityCandidate, InvoiceDraft

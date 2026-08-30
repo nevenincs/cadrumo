@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode

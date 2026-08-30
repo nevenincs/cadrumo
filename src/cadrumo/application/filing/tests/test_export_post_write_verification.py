@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing.errors import FilingExportError

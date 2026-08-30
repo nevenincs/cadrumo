@@ -42,7 +42,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr

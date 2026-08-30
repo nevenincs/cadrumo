@@ -30,8 +30,8 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import OperatorActionAxis
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.external_constants import DEFAULT_CURRENCY

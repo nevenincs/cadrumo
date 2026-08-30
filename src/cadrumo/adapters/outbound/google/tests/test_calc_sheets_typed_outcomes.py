@@ -13,7 +13,8 @@ from typing import Any, cast
 import pytest
 
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, SheetExportPlan
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, TaxDomain
+from .....core import TaxDomain
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan, preview_export_plan

@@ -29,17 +29,13 @@ from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Se
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core import (
-    OBJECT_TUPLE_ADAPTER,
-    STR_KEYED_MAPPING_ADAPTER,
-    STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    M210GrossIncomeSourceMode,
-)
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, M210GrossIncomeSourceMode
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.prose_elision import ElidedProse
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear

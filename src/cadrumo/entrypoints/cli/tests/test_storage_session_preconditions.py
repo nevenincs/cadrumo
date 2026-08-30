@@ -15,7 +15,7 @@ from ....adapters.persistence.storage.errors import (
     SessionExpiredError,
 )
 from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .. import errors

@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ..event_replay import OperationEventCursor
 from .events import OperationEvent
 
