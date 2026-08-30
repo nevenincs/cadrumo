@@ -95,6 +95,7 @@ import pytest  # noqa: E402
 
 from cadrumo.tests import register_collection_storage_root_cleanup, temporary_env  # noqa: E402
 from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
+from cadrumo.tests._deselection_hook import record_collected_markers as _record_collected_markers  # noqa: E402
 from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
 from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
 from cadrumo.tests._lost_test_hook import apply as _report_lost_tests  # noqa: E402
@@ -138,6 +139,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     """Apply the repository-wide collection-policy contracts."""
     _apply_marker_contract(config, items)
     _apply_banned_live_import_policy(items)
+    # Recorded here, before selection removes anything, so the empty-selection
+    # banner can name the markers these tests actually carry instead of
+    # guessing a lane that may be just as empty.
+    _record_collected_markers(config, items)
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:

@@ -1697,7 +1697,6 @@ def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose(
         "landed in PR",
         "recorded in the ADR",
         "Ste" + "p 4 of the campaign",
-        "closed by S08",
     )
     for probe in test_scoped_only:
         assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (
@@ -1707,15 +1706,22 @@ def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose(
             f"{probe!r} reached the production scope; only the document-naming families were widened"
         )
 
-    # The dotted step-notation families ARE production-scoped, and the assertion
-    # runs the same both ways as the exclusions above: reaching production proves
-    # the widening took effect, and matching the full table proves the pattern
-    # still discriminates rather than having quietly stopped matching. The bare
-    # single-code family stays test-scoped and is probed among the exclusions
-    # above, because it reaches 22 production modules that have not been swept.
+    # The step-notation families ARE production-scoped, and the assertion runs
+    # the same both ways as the exclusions above: reaching production proves the
+    # widening took effect, and matching the full table proves the pattern still
+    # discriminates rather than having quietly stopped matching.
+    #
+    # The bare single-code family joined them once its two blockers cleared, and
+    # its exclusion here was always empirical rather than principled -- it was
+    # held back because it reached production modules nobody had swept. Both
+    # facts changed: the suppression stripper now recognises the file-level
+    # form, so ruff's own rule codes no longer read as campaign ids, and the
+    # production sweep is complete. Measured through the stripper the gate
+    # itself runs, the pattern finds ZERO production hits.
     production_scoped_too = (
         "carried in W01.P02.S03",
         "see P02.S14",
+        "closed by S08",
     )
     for probe in production_scoped_too:
         assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (

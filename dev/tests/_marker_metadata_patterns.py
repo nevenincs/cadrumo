@@ -87,7 +87,20 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
         ("only P02 here",),
         scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
     ),
-    PatternCase(re.compile(r"\bS\d{2,4}\b"), ("closed by S08",), ("the S1 bucket",)),
+    # Production-scoped last of the three step-notation cases, and deliberately
+    # after its siblings rather than with them: this shape collides with ruff's
+    # own rule codes, so it could only be widened once the suppression stripper
+    # handled the file-level suppression form as well as the trailing one. With
+    # that in place the pattern finds ZERO production hits across the tree,
+    # measured through the stripper the gate itself runs -- the earlier figure of
+    # 68 files was 55 file-level suppressions the stripper could not yet see,
+    # plus the genuine sites since swept.
+    PatternCase(
+        re.compile(r"\bS\d{2,4}\b"),
+        ("closed by S08",),
+        ("the S1 bucket",),
+        scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
+    ),
     PatternCase(re.compile(r"\blegacy-(?:plan|step)"), ("a legacy-plan carry",), ("a legacy-format reader",)),
     PatternCase(
         re.compile(r"\baccepted contract\b", re.IGNORECASE),
