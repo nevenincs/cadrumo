@@ -5,10 +5,10 @@ from __future__ import annotations
 import base64
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
@@ -20,6 +20,7 @@ from .....core.hashing import (
 )
 from .....core.identity import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from .records import (
@@ -93,8 +94,12 @@ class _RecoveryPayload(BaseModel):
         return validate_prefixed_digest(value, field_name="previous_recovery_digest")
 
 
-class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
+class ProfileCustodyRecoveryEnvelope(_RecoveryPayload, CustodyDigestModel):
     """One creation-enrolled, independently current-format recovery wrapper."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_RECOVERY_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile recovery envelope"
+    _digest_mismatch_message: ClassVar[str] = "profile recovery self_digest does not match its canonical record"
 
     self_digest: str
 
@@ -103,52 +108,9 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyRecoveryEnvelope:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile recovery self_digest does not match its canonical record")
-        return self
 
-    @property
-    def canonical_payload(self) -> dict[str, object]:
-        """Return the fields ``self_digest`` itself commits to.
 
-        Excludes ``self_digest`` deliberately: the digest is computed OVER this
-        payload, so including it would make the digest self-referential and
-        unverifiable. Every self-digest computation and check goes through this
-        one exclusion so the committed field set can never drift between them.
-        """
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
-        del payload["self_digest"]
-        return payload
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Recompute the digest a tamper check compares against ``self_digest``.
-
-        The validator above calls this at construction time; callers verifying
-        an already-parsed envelope call it again to confirm the stored digest
-        still matches, catching a record edited after it was written.
-        """
-        return canonical_json_digest(
-            self.canonical_payload,
-            maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
-            subject="profile recovery envelope",
-        )
-
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise to the exact canonical bytes this envelope's identity is pinned to.
-
-        A recovery envelope's on-disk form must be byte-for-byte reproducible so
-        :func:`parse_profile_custody_recovery_envelope` can reject a record whose
-        stored bytes differ from re-serialising the parsed value, catching
-        reordering or re-encoding tampering a value-only digest check would miss.
-        """
-        return bounded_canonical_json_bytes(
-            self.model_dump(mode="json"),
-            maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
-            subject="profile recovery envelope",
-        )
 
     @classmethod
     def create(

@@ -6,10 +6,10 @@ import base64
 import binascii
 import json
 import re
-from typing import Final, Literal, cast
+from typing import ClassVar, Final, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.credentials import assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -21,6 +21,7 @@ from .....core.hashing import (
 )
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
@@ -164,8 +165,12 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
         return _validate_digest(value, field_name="previous_envelope_digest")
 
 
-class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
+class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel):
     """Immutable v1 authority for one profile's normal password unlock."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile custody envelope"
+    _digest_mismatch_message: ClassVar[str] = "profile custody self_digest does not match its canonical record"
 
     self_digest: str
 
@@ -174,31 +179,9 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
     def _validate_self_digest(cls, value: str) -> str:
         return _validate_digest(value, field_name="self_digest")
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyEnvelope:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile custody self_digest does not match its canonical record")
-        return self
 
-    @property
-    def canonical_payload(self) -> dict[str, object]:
-        """Return the exact digest payload, excluding only ``self_digest``."""
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
-        del payload["self_digest"]
-        return payload
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Return the canonical SHA-256 digest for this envelope's payload."""
-        return canonical_json_digest(
-            self.canonical_payload,
-            maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
-            subject="profile custody envelope",
-        )
 
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise the complete envelope in its unique canonical JSON form."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
 
     @classmethod
     def create(

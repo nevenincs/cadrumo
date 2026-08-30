@@ -227,8 +227,12 @@ class _ProfileCustodyCommitPayload(BaseModel):
         return value
 
 
-class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
+class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
     """Minimal immutable marker that is the sole current-format discovery proof."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_COMMIT_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile capsule commit"
+    _digest_mismatch_message: ClassVar[str] = "profile capsule commit self_digest does not match"
 
     self_digest: str
 
@@ -243,41 +247,9 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
             raise ValueError("profile capsule self_digest must be a lowercase sha256 digest")
         return value
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyCommit:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile capsule commit self_digest does not match")
-        return self
 
-    @property
-    def canonical_payload(self) -> dict[str, object]:
-        """Return the fields ``self_digest`` itself commits to, excluding the digest itself."""
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
-        del payload["self_digest"]
-        return payload
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Recompute the digest a tamper check compares against ``self_digest``.
 
-        This commit is the SOLE discovery proof for a current-format capsule
-        (see the class docstring), so a caller re-verifies this on every
-        discovery pass, not just at construction — a mismatch here means the
-        commit marking a capsule as current has itself been altered.
-        """
-        return canonical_json_digest(
-            self.canonical_payload,
-            maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-            subject="profile capsule commit",
-        )
-
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise to the exact canonical bytes this commit's identity is pinned to."""
-        return bounded_canonical_json_bytes(
-            self.model_dump(mode="json"),
-            maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-            subject="profile capsule commit",
-        )
 
     @classmethod
     def create(
