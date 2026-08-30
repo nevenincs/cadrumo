@@ -2,76 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, Literal, TypeVar, cast
+from typing import Literal
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.identity import PrefixedContentDigest
 from .capsule_records import ProfileCustodyCapsuleLabel
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 
 LABEL_HEAD_MAX_BYTES = 4 * 1024
 """Bounded durable head and pending-advance records share one strict budget."""
 
-_ModelT = TypeVar("_ModelT", bound="_CustodyDigestModel")
 
 
-def _payload_without_self_digest(model: BaseModel) -> dict[str, object]:
-    payload = cast(dict[str, object], model.model_dump(mode="json"))
-    payload.pop("self_digest", None)
-    return payload
 
 
-class _CustodyDigestModel(BaseModel):
-    """Shared canonical digest and JSON behavior for custody head records."""
-
-    model_config = STRICT_FROZEN_CONFIG
-    _digest_maximum_bytes: ClassVar[int]
-    _digest_subject: ClassVar[str]
-
-    @property
-    def computed_self_digest(self) -> str:
-        return canonical_json_digest(
-            _payload_without_self_digest(self),
-            maximum_bytes=self._digest_maximum_bytes,
-            subject=self._digest_subject,
-        )
-
-    def canonical_json_bytes(self) -> bytes:
-        return bounded_canonical_json_bytes(
-            cast(dict[str, object], self.model_dump(mode="json")),
-            maximum_bytes=self._digest_maximum_bytes,
-            subject=self._digest_subject,
-        )
-
-    @classmethod
-    # values is splatted into pydantic's model_construct(**values: Any),
-    # whose own signature has a same-named parameter (_fields_set): a
-    # KWARGS-ANY-RATIONALE-MODEL-CONSTRUCT-SPLAT: narrower value type makes
-    # every checker treat the splat as a possible match against it.
-    def _create_with_self_digest(cls: type[_ModelT], values: dict[str, Any], error_message: str) -> _ModelT:
-        try:
-            payload = cls.model_construct(**values, self_digest="").model_dump(mode="json")
-            payload["self_digest"] = canonical_json_digest(
-                cast(dict[str, object], {key: value for key, value in payload.items() if key != "self_digest"}),
-                maximum_bytes=cls._digest_maximum_bytes,
-                subject=cls._digest_subject,
-            )
-            return cls.model_validate_json(
-                bounded_canonical_json_bytes(
-                    cast(dict[str, object], payload),
-                    maximum_bytes=cls._digest_maximum_bytes,
-                    subject=cls._digest_subject,
-                )
-            )
-        except (ValidationError, ValueError, TypeError) as exc:
-            raise ProfileCustodyRecordError(error_message) from exc
 
 
-class ProfileLabelHead(_CustodyDigestModel):
+class ProfileLabelHead(CustodyDigestModel):
     """Trusted current label witness, separate from the immutable commit marker."""
 
     _digest_maximum_bytes = LABEL_HEAD_MAX_BYTES
@@ -186,7 +136,7 @@ class ProfileLabelHead(_CustodyDigestModel):
         )
 
 
-class ProfileLabelHeadPendingAdvance(_CustodyDigestModel):
+class ProfileLabelHeadPendingAdvance(CustodyDigestModel):
     """Crash-recovery witness for one label-record then head advance."""
 
     _digest_maximum_bytes = LABEL_HEAD_MAX_BYTES
