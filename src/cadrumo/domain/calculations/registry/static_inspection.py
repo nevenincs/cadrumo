@@ -187,6 +187,15 @@ class RegistryRevisionInspection(RegistryModel):
     """The exact legal-reference union exercised by this model/revision."""
 
     casilla_ids: frozenset[CasillaId]
+    casilla_sections: Mapping[CasillaId, tuple[str, ...]] = MappingProxyType({})
+    """Each casilla's declared section path, as the revision itself declares it.
+
+    Carried alongside the ids because the ids alone cannot say where a casilla
+    sits in the modelo's own structure, and a consumer needing that structure
+    would otherwise have to re-read the revision -- the wholesale exposure this
+    projection exists to avoid. Read from the same casilla definitions the id
+    set is derived from, so the two cannot disagree.
+    """
     binding_ids: frozenset[BindingId]
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
     # These declaration tuples are the non-filing evidence surface consumed by
@@ -231,6 +240,7 @@ class RegistryRevisionInspection(RegistryModel):
         selected_sources = {
             source_ref: sources[source_ref] for source_ref in sorted(selected_source_ids) if source_ref in sources
         }
+        revision_casillas = casillas_by_id(revision)
         return cls(
             modelo_id=modelo.id,
             revision_id=revision.id,
@@ -241,7 +251,10 @@ class RegistryRevisionInspection(RegistryModel):
             sources=selected_sources,
             source_ref_ids=frozenset(selected_source_ids),
             legal_ref_ids=frozenset(selected_legal_ids),
-            casilla_ids=frozenset(casillas_by_id(revision)),
+            casilla_ids=frozenset(revision_casillas),
+            casilla_sections=MappingProxyType(
+                {casilla_id: tuple(casilla.section) for casilla_id, casilla in revision_casillas.items()}
+            ),
             binding_ids=frozenset(binding.id for binding in revision.bindings),
             projection_endpoints=revision.projection_endpoints,
             formulas=revision.formulas,

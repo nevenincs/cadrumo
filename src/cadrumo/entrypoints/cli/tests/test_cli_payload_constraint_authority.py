@@ -97,6 +97,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_modelo_aux_payloads.py",
         "_modelo_iva_wallet_payloads.py",
         "_modelo_payloads_m036.py",
+        "_ledger_payloads.py",
     }
 )
 
@@ -122,7 +123,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
-    "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
     "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
     "_modelo_review_package_payloads.py": "review-package payloads restate review model bounds",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",

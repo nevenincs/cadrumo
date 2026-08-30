@@ -1114,6 +1114,7 @@ def static_inspection_casilla_schema_records(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
                 record_family=("casillas",),
+                section_path=inspection.casilla_sections.get(casilla_id, ()),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,
@@ -1164,6 +1165,11 @@ def graded_snapshot_casilla_schema_records(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
                 record_family=("casillas",),
+                # Read from the definition this path already holds, rather than
+                # through the inspection's copy: the graded admission has the
+                # casilla itself, and going via a projection of it would add a
+                # second route to one fact for no gain.
+                section_path=tuple(casilla.section),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,

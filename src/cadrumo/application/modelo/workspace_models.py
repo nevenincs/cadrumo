@@ -535,6 +535,15 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
 
     reference: ModeloWorkspaceSchemaReferenceV1
     record_family: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_RECORD_FAMILY_DEPTH)]
+    section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_RECORD_FAMILY_DEPTH)] = ()
+    """The modelo's OWN declared section path for this record, when it has one.
+
+    Distinct from ``record_family``, which labels which registry family the
+    record belongs to. Only casillas carry a declared section: a binding,
+    formula, relation or parameter is not placed anywhere in the modelo's
+    printed structure, so an empty tuple there means "this kind of record has
+    no section", not "the section was dropped".
+    """
     data_type: _BoundedCode
     label: ModeloWorkspaceRecordLabelV1
     classification: ModeloWorkspaceSchemaClassification
