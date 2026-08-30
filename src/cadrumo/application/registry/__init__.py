@@ -7,10 +7,10 @@ the single entry point for
 :class:`domain.calculations.registry.RegistrySnapshot` values, and
 deadline windows.
 
-This package root is inert for real contracts: it re-exports 87 names
-resolved lazily from sibling modules, and owns no type or function
-definitions of its own. The three local read surfaces each live in their
-own module and are imported directly:
+This package root owns no type or function definitions of its own. It
+once re-exported 87 sibling names through a lazy map; that map is retired
+and the root exports nothing. The three local read surfaces each live in
+their own module and are imported directly:
 :mod:`application.registry.tree` (registry-tree inspection and
 verification over the bundled ``registry/aeat`` tree),
 :mod:`application.registry.corpus` (corpus/manual projection over
@@ -62,22 +62,6 @@ from __future__ import annotations
 
 from importlib import import_module
 
-"""Names this package re-exports, resolved on first access.
-
-The package root is a HYBRID: it defines real contracts of its own AND
-re-exports 89 names from siblings. A lazy map still works, because
-``__getattr__`` runs only for names absent from module globals -- the module's
-own definitions are untouched and stay eager.
-
-Eager re-exports made this root expensive to touch at all. CommandSpec
-parameter annotations resolve through here, so BUILDING the Typer signature for
-an unrelated registry command imported the filing package, the sede adapter and
-the persistence family behind them. Four `app/registry/manuals/*` nodes paid
-that on resolution.
-"""
-
-
 import_module("cadrumo.domain.renta")
 
-
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
