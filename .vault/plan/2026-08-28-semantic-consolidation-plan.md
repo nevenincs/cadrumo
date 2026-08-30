@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:bf38a686d2ac406db09010d0945c5e3beb38ce917b88227586ac9f9769cc322c'
+body_hash: 'sha256:9e7e84055f27d843283c68c408dea4419dc0dd9bc54972625f9444d24c59049b'
 ---
 
 # `semantic-consolidation` plan
@@ -108,6 +108,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S86` - Retire the core observability facade: sixty-one names across eleven modules, with the replay canonicity gate's pinned module literal moved in the same change; `src/cadrumo/core/observability/`.
 - [x] `P07.S87` - Retire the currency, manuals and fincas facades, one package per commit; `src/cadrumo/domain/`.
 - [x] `P07.S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable; `src/cadrumo/domain/`.
+- [x] `P07.S95` - Retire the deadlines, Google outbound and AEAT sede facades, repointing module-object imports and their body uses together; `src/cadrumo/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -148,6 +149,9 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S92` - Sweep the second stale-pin class the path sweep could not see: gates naming their canonical module by bare basename, distinguishing those from assertions that a retired module is absent; `src/cadrumo/, dev/`.
 - [x] `P08.S93` - Run both stale-pin sweeps after every namespace retirement rather than once, since each retirement creates new stale pins; `src/cadrumo/, dev/`.
 - [ ] `P08.S94` - Rule on the two application/modelo edit-execution functions that compose a secure-object write without asserting a revision, a pre-existing finding the composing-write gate reports; `src/cadrumo/application/modelo/_edit_execution.py`.
+- [x] `P08.S96` - Sweep the third stale-pin class: ruff per-file ignores in pyproject naming modules the retirements made public, deleting rather than repointing where a narrower inline suppression already covers the site; `pyproject.toml`.
+- [x] `P08.S97` - Rehome the censal no-write-surface scan and its anti-tautology guard off the sede facade onto the censal module, so emptying a namespace cannot turn a guard green by emptiness; `src/cadrumo/adapters/outbound/aeat/sede/tests/`.
+- [x] `P08.S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them; `src/cadrumo/core/setup_answers.py`.
 
 ## Parallelization
 
