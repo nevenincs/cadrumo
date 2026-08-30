@@ -43,11 +43,7 @@ if TYPE_CHECKING:
     from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
-from ...core.errors import (
-    get_error_exit_code,
-    get_registered_error_code,
-    render_error_json,
-)
+from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json
 
 _ABORTED_EXIT_CODE = 1
 _KEYBOARD_INTERRUPT_EXIT_CODE = 130

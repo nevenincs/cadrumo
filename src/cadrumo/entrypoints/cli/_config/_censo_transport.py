@@ -68,7 +68,7 @@ def censo_import(
     apply: bool = False,
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
-    from ....adapters.inbound.censo import parse_certificado_censal_bytes
+    from ....adapters.inbound.censo.parser import parse_certificado_censal_bytes
     from ....application.user_profile.cotejo_apply import apply_cotejo
     from ....application.workflow.persistence import workflow_state_repository
     from ....domain.censo.certificado import censo_facts_from_certificado

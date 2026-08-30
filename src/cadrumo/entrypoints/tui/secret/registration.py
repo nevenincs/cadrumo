@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from ....core.credentials import ProfilePasswordAssessment
 
 __all__ = [
+    "RecoveryHandoverAbandonedError",
     "RecoveryHandoverCancelledError",
     "RecoveryWordsScreen",
     "RegistrationAttempt",
@@ -93,6 +94,22 @@ class RegistrationRefusal:
 #: liveness check only; it is never a deadline on the operator, who may take
 #: as long as copying down a mnemonic actually requires.
 _RECOVERY_HANDOFF_POLL_SECONDS = 0.1
+
+
+class RecoveryHandoverAbandonedError(Exception):
+    """The screen that owed the recovery confirmation is no longer presentable.
+
+    Distinct from :class:`RecoveryHandoverCancelledError`, which reports a
+    deliberate operator choice. This reports that nobody CAN answer: the
+    words screen left the application's screen stack without releasing the
+    handoff, so the waiting worker would otherwise block for the lifetime of
+    the process with no error and no diagnostic.
+    """
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-recovery-handover-abandonment-signal: this reports an unanswerable handoff rather than a "
+        "storage or custody fault; the frontend catches it by name and renders a RegistrationRefusal message key"
+    )
 
 
 class RecoveryHandoverCancelledError(Exception):
@@ -461,14 +478,16 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             resolved.set()
 
         def _show() -> None:
-            self.app.push_screen(
-                RecoveryWordsScreen(
-                    enrollment=enrollment,
-                    locale=self._active_language,
-                    on_confirm=_accept,
-                    on_cancel=_refuse,
-                )
+            nonlocal words_screen
+            words_screen = RecoveryWordsScreen(
+                enrollment=enrollment,
+                locale=self._active_language,
+                on_confirm=_accept,
+                on_cancel=_refuse,
             )
+            self.app.push_screen(words_screen)
+
+        words_screen: RecoveryWordsScreen | None = None
 
         try:
             self.app.call_from_thread(_show)
@@ -478,9 +497,24 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             # releasing this handoff through ``on_unmount``, so wait on that
             # condition instead: poll the event, and give up only once the app
             # is no longer running.
+            unstacked_polls = 0
             while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
                 if not self.app.is_running:
                     break
+                # A pending handoff always has its screen on the stack:
+                # ``push_screen`` appends synchronously and ``call_from_thread``
+                # returns only after it has. So "unanswered AND unstacked" is a
+                # state a waiting operator cannot be in, which is what makes this
+                # safe to act on -- it can only mean the screen left without its
+                # ``on_unmount`` releasing us. Confirmed across two polls because
+                # this list is read from a worker thread and one torn read must
+                # not abandon a live registration.
+                if words_screen is not None and words_screen not in self.app.screen_stack:
+                    unstacked_polls += 1
+                    if unstacked_polls > 1:
+                        raise RecoveryHandoverAbandonedError
+                else:
+                    unstacked_polls = 0
             if supplied_proof is None:
                 raise RecoveryHandoverCancelledError
             return supplied_proof

@@ -13,7 +13,7 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ..adapters.persistence.profile import SyncRunRecordRepository
+from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,

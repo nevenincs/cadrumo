@@ -40,7 +40,8 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ._common import activate_subcommand_output_language
 from ._modelo_behavior_support import (
     require_active_profile as _require_active_profile,

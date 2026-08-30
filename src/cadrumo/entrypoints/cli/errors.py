@@ -50,14 +50,8 @@ from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions import PreconditionVerdict
 from ...core import FormerProductStateError
 from ...core.click_context import argv_requests_json, json_output_requested
-from ...core.errors import (
-    ActiveProfilePointerError,
-    CadrumoError,
-    get_error_exit_code,
-    get_registered_error_code,
-    render_error_json,
-    render_error_text,
-)
+from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json, render_error_text
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile.errors import StoredProfileDriftError
