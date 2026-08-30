@@ -41,14 +41,7 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.snapshot import build_snapshot
-from ....domain.deadlines import (
-    ChargeAccount,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    RefundAccount,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, RefundAccount, TaxpayerProfile
 from ....domain.filing import FilingExportValidationError, ModeloDraft
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (

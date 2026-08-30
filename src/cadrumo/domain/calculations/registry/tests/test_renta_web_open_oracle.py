@@ -111,7 +111,7 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
 
 
 def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
-    from .....adapters.outbound.aeat.sede import RentaWebOpenSedeDriver
+    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
 
     payload = json.dumps(
         {
@@ -136,14 +136,14 @@ def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
 
 
 def test_live_driver_refuses_payload_without_canonical_scrape_map() -> None:
-    from .....adapters.outbound.aeat.sede import RentaWebOpenSedeDriver
+    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
 
     with pytest.raises(RegistryValidationError, match=r"keyed by canonical casilla\.id"):
         RentaWebOpenSedeDriver().planned_operations(b"{}", expected={_RENTA_TRABAJO_CASILLA: object()})
 
 
 def test_live_driver_refuses_expected_casilla_not_declared_for_scraping() -> None:
-    from .....adapters.outbound.aeat.sede import RentaWebOpenSedeDriver
+    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
 
     payload = json.dumps(
         {

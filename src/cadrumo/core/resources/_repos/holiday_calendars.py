@@ -20,6 +20,6 @@ class HolidayCalendarRepository(ResourceCacheRepository[object, int]):
 
     @override
     def _load(self, key: int) -> object:
-        from ....domain.deadlines import load_holiday_calendar
+        from ....domain.deadlines.festivos import load_holiday_calendar
 
         return load_holiday_calendar(key)

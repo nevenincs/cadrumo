@@ -50,7 +50,7 @@ See Also:
 from __future__ import annotations
 
 from ...core.identity import same_tax_identifier
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 
 __all__ = ["counterparty_is_the_filer"]
 

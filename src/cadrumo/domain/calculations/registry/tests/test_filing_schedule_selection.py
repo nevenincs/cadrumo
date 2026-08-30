@@ -8,7 +8,7 @@ import pytest
 
 from .....core.errors import BaseSeverity
 from .....core.resources import bundled_path
-from ....deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
+from ....deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.registry_contract import validate_user_profile_registry_contract
 from .._validate import RegistryValidator

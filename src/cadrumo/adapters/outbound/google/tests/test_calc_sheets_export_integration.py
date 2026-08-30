@@ -18,7 +18,7 @@ import pytest
 
 from .....application.storage.calc_sheets import build_export_plan
 from .....domain.calculations.registry.authority import bundled_authority
-from .._calc_sheets_apply import (
+from ..calc_sheets_apply import (
     _build_auto_filter_requests,
     _build_base_font_requests,
     _build_column_width_requests,

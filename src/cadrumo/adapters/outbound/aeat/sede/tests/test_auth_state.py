@@ -124,7 +124,7 @@ def test_fetch_notifications_summary_carries_translated_message_on_none_path() -
 
 
 def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path() -> None:
-    from .._iva_compensation_wallet import fetch_iva_compensation_wallet
+    from ..iva_compensation_wallet import fetch_iva_compensation_wallet
 
     session = _minimal_session(storage_state_path=None)
 
@@ -148,7 +148,7 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
 
 
 def test_walk_expedientes_tree_carries_translated_message_on_none_path() -> None:
-    from .._walker import walk_expedientes_tree
+    from ..walker import walk_expedientes_tree
 
     session = _minimal_session(storage_state_path=None)
 

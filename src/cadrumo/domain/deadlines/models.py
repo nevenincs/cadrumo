@@ -34,7 +34,7 @@ from ...core.external_constants import (
 from ...core.filing_year import FilingYear
 from ...core.identity import SubjectTaxId
 from ...core.time import UtcInstant, validate_utc_aware
-from ..contribuyente.renta_codes import FiscalResidency, UE_EEA_COUNTRY_CODES
+from ..contribuyente.renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from .errors import DeadlineValidationError
 
 

@@ -9,11 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    IVA_COMPENSATION_WALLET_URL,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
-)
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core import BindingSourceKind, IvaCompensationStateProvenance, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority

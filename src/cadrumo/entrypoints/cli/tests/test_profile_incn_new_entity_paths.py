@@ -108,7 +108,7 @@ def _load_active_taxpayer_profile():
     from ....application.workflow.persistence import workflow_state_repository
     from ....core.bucket_pointer import read_pointer
     from ....core.config import load_settings
-    from ....domain.deadlines import taxpayer_profile_from_mapping
+    from ....domain.deadlines.profiles import taxpayer_profile_from_mapping
 
     pointer = read_pointer(load_settings().cadrumo_local_storage_root)
     assert pointer.bucket_id is not None, "config profile create did not mint an active bucket pointer"
@@ -118,7 +118,7 @@ def _load_active_taxpayer_profile():
         assert record is not None
         canonical = dict(record_to_path_values(record))
     # The LIS Art. 29 gate consumes the canonical-token mapping projected
-    # via ``taxpayer_profile_from_mapping`` in ``domain.deadlines._profiles``.
+    # via ``taxpayer_profile_from_mapping`` in ``domain.deadlines.profiles``.
     # That projection carries ``new_entity_first_two_profit_periods`` and
     # ``incn_prior_12_months`` through to the corporate-tax record, unlike
     # the narrower wizard-status ``TaxpayerProfile`` projection.

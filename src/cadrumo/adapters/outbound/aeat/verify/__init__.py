@@ -50,7 +50,7 @@ from .....domain.calculations.registry.remote_state_guard import (
 from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
 from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
-from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
+from ..sede.errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
 
 _logger = _get_logger(__name__)
 

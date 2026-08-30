@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core import FilingProducerKey, Period, PriorDomiciliationElection, ProrrataEspecialTransitionKind
-from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
+from ...domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing import FilingExportValidationError
 from ...domain.iva import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision import M303RectificativaMotive

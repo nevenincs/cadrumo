@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 import typer
 
 from ...adapters.inbound.notificacion import NotificationDocumentReader
-from ...adapters.outbound.aeat.sede import assert_notification_content_readable, fetch_notification_document
+from ...adapters.outbound.aeat.sede.notifications import assert_notification_content_readable, fetch_notification_document
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
     LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,

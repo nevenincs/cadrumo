@@ -11,30 +11,15 @@ from typing import Literal
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-)
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines import (
-    DeadlineEngine,
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.engine import DeadlineEngine
+from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import ObservationEnvelopePayload

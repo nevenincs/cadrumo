@@ -183,7 +183,7 @@ def _label_for(selector: str) -> str:
 
 
 def _profile(**kwargs):
-    from ....domain.deadlines import IVARegime, TaxpayerProfile
+    from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 
     return TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime.GENERAL, **kwargs)
 
@@ -212,7 +212,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     The entity type IS declared here, so naming it would send the operator
     back to a box they already answered.
     """
-    from ....domain.deadlines import EntityType
+    from ....domain.deadlines.models import EntityType
 
     refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType.NATURAL_PERSON))
 

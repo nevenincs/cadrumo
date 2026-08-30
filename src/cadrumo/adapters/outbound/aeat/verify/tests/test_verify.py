@@ -146,7 +146,7 @@ def test_browser_adapter_type_error_is_registered() -> None:
 def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
     """The registered adapter mismatch builds a typed public envelope."""
     from ......core.errors import build_error_envelope
-    from ...sede import BrowserAdapterTypeError
+    from ...sede.errors import BrowserAdapterTypeError
 
     exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type")
     envelope = build_error_envelope(exc)

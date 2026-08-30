@@ -21,11 +21,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ...adapters.outbound.aeat.sede import (
-    FiledDeclaracionObservation,
-    SedeParseError,
-    non_numeric_observed_casillas,
-)
+from ...adapters.outbound.aeat.sede.declarations_observations import non_numeric_observed_casillas
+from ...adapters.outbound.aeat.sede.errors import SedeParseError
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
 from .errors import LiveApplicationError, LiveApplicationInputError
 from .filed_observation_persistence import (
     justificante_csvs_for_observation,

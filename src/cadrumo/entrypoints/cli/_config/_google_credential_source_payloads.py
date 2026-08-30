@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from pydantic import model_validator
 
-from ....adapters.outbound.google import GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ....adapters.outbound.google.impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from ....core import GoogleCredentialSourceKind
 from ....core.json_contract import OutputSchema
 

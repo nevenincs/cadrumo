@@ -8,7 +8,7 @@ from ....adapters.outbound.aeat.auth.clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
 )
-from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError, SedeParseError
+from ....adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..errors import (
     LiveIvaAcquisitionFailureMode,
     classify_live_iva_acquisition_failure,

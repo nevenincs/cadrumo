@@ -38,7 +38,7 @@ from ..sync_runs import (
 )
 
 if TYPE_CHECKING:
-    from ....adapters.outbound.google import CalcSheetsApplyResult
+    from ....adapters.outbound.google.calc_sheets_apply import CalcSheetsApplyResult
     from ._records import SheetExportPlan
 
 __all__ = ["export_modelo_to_sheets"]

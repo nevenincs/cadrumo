@@ -19,7 +19,7 @@ Composition:
   version + registry SHA.
 
 All Google calls route through
-:func:`~adapters.outbound.google._api.execute_request`, which raises
+:func:`~adapters.outbound.google.api.execute_request`, which raises
 typed :exc:`~adapters.outbound.storage.OutboundStorageError`
 subclasses on Drive / Sheets failures. This adapter adds
 :exc:`~adapters.outbound.storage.OutboundStorageConflictError` when it
@@ -63,7 +63,6 @@ from ....application.storage.calc_sheets import (
 )
 from ....core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
-from ._api import execute_request
 from ._calc_sheets_apply_values import (
     _build_evidence_value_data,
     _build_formula_data,
@@ -89,6 +88,7 @@ from ._drive_entries import (
     require_drive_entry_id,
 )
 from ._preconditions import google_terminal_refusal
+from .api import execute_request
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"

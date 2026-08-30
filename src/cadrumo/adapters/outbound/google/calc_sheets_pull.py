@@ -1,6 +1,6 @@
 """Read operator-edited Sheets cells back into structured records.
 
-Pairs with :mod:`~adapters.outbound.google._calc_sheets_apply`. The export
+Pairs with :mod:`~adapters.outbound.google.calc_sheets_apply`. The export
 side materialises a
 :class:`~application.storage.calc_sheets.SheetExportPlan` as a real Google
 Sheets workbook; this module reads the operator's edits back out, validates the
@@ -101,8 +101,8 @@ from ..storage import (
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
-from ._api import execute_request
 from ._preconditions import google_terminal_refusal
+from .api import execute_request
 
 _OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "cadrumo"

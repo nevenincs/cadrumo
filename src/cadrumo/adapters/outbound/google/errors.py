@@ -6,7 +6,7 @@ That keeps the public CLI taxonomy explicit while
 :mod:`entrypoints.cli._config._google_errors` can map concrete
 :class:`GoogleAuthError` subclasses to localised refusal text. Constructors
 carry structured diagnostic context (``context={...}``) without leaking the
-secret material handled by :mod:`adapters.outbound.google._oauth_flow`.
+secret material handled by :mod:`adapters.outbound.google.oauth_flow`.
 """
 
 from __future__ import annotations
@@ -132,7 +132,7 @@ class GoogleAuthProfileUnboundError(GoogleAuthError):
     """Raised when Google auth cannot resolve the active AEAT profile.
 
     Emitted by :func:`adapters.outbound.google.active_profile.resolve_active_profile`
-    and profile-loading guards in :mod:`adapters.outbound.google._oauth_flow`.
+    and profile-loading guards in :mod:`adapters.outbound.google.oauth_flow`.
     """
 
 

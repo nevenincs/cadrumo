@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....deadlines import CalendarCCAA
+from ....deadlines.festivos import CalendarCCAA
 from ..schema import (
     BicString,
     CalendarDate,

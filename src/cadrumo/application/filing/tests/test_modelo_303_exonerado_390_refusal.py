@@ -22,7 +22,7 @@ from ....core import (
 from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
+from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     M303RegimenSimplificadoScope,

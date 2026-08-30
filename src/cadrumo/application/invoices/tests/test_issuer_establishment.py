@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind

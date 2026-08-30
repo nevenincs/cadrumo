@@ -32,7 +32,7 @@ Uses only synthetic local bytes; makes no AEAT contact.
 See Also:
     :meth:`~adapters.outbound.aeat.browser.BrowserSession._build_context_kwargs`
         Where ``accept_downloads=False`` is set for every context.
-    :func:`~adapters.outbound.aeat.sede._declarations_fetch._capture_submitted_file_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_submitted_file_artefact`
         The production consumer of this shape.
 """
 

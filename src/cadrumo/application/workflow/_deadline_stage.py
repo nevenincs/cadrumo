@@ -27,15 +27,9 @@ from typing import NoReturn
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, Period
 from ...core.time import now as _utcnow
-from ...domain.deadlines import (
-    ModeloDeadline,
-    NoDeadlineWindowsError,
-    Schedule,
-    ScheduleComputationError,
-    TaxpayerProfile,
-    compute_obligation_schedule,
-    next_deadline,
-)
+from ...domain.deadlines.engine import compute_obligation_schedule, next_deadline
+from ...domain.deadlines.errors import NoDeadlineWindowsError, ScheduleComputationError
+from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
 from ..operator_actions import no_action_precondition_verdict
 from .errors import WorkflowAbortSignalError
 from .protocols import DeadlineEngineProtocol

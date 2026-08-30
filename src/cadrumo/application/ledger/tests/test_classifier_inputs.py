@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import ClassifierInputSource, CounterpartyTaxablePersonStatus
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva import CustomerTaxStatus
 from ..classifier_inputs import ClassifierInputFact, collect_classifier_inputs
 from ..evidence_draft import InvoiceDraft

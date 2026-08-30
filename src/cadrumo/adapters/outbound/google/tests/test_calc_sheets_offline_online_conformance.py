@@ -31,7 +31,7 @@ from .....application.storage.calc_sheets import (
     serialize_offline_workbook,
 )
 from .....core import CasillaId, Period, validated_casilla_id
-from .._calc_sheets_apply import (
+from ..calc_sheets_apply import (
     _build_emphasis_format_requests,
     _build_evidence_value_data,
     _build_formula_data,

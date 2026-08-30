@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import IvaCompensationWalletObservation
+from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ....core import Period
 from ....core.identity import tax_id_identity_token
 from ....domain.iva_compensation import (

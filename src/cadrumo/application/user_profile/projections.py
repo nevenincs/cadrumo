@@ -19,7 +19,8 @@ from typing import TypeGuard
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
+from ...domain.deadlines.models import IVARegime, TaxpayerProfile
+from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import (

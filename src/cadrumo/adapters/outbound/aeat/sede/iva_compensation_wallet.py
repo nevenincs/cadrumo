@@ -65,8 +65,8 @@ from ._iva_compensation_wallet_parsing import (
     is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
 )
-from ._schema import IvaCompensationWalletObservation
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .schema import IvaCompensationWalletObservation
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession

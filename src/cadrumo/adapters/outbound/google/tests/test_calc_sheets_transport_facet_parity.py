@@ -33,7 +33,7 @@ from .....application.storage.calc_sheets import (
     serialize_offline_workbook,
 )
 from .....domain.calculations.registry.authority import bundled_authority
-from .._calc_sheets_apply import (
+from ..calc_sheets_apply import (
     _build_protected_range_requests,
     _build_styled_range_requests,
 )

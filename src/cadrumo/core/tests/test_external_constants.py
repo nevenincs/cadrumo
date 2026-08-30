@@ -363,12 +363,12 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
     checked_paths = (
         repo_path("src/cadrumo/core/config.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_parse.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/groi_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/nif_iva_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/declarations.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/parse.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
         repo_path("src/cadrumo/domain/manuals/fetch.py"),
     )

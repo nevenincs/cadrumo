@@ -13,10 +13,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    Declaracion,
-    Expediente,
-)
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.schema import Expediente
 from ....core import Modelo, Period
 from ....core.config import Settings
 from ..errors import LiveApplicationInputError

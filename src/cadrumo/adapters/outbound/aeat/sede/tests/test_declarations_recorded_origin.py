@@ -35,7 +35,7 @@ import pytest
 
 from ......core.config import Settings
 from .. import _declarations_fetch
-from .._declarations import (
+from ..declarations import (
     _SEDE_BASE,
     _cotejo_document_url,
     _cotejo_view_url,

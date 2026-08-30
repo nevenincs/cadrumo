@@ -763,7 +763,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     """Profile creation normalizes lowercase ``iva.regime`` for the deadline engine."""
     from ....application.user_profile.projections import projection_for_taxpayer
     from ....application.workflow.persistence import workflow_state_repository
-    from ....domain.deadlines import IVARegime
+    from ....domain.deadlines.models import IVARegime
 
     bucket_id = register_cli_profile(
         label="operator",

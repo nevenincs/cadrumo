@@ -26,7 +26,8 @@ from ...core import Modelo, Period, ThirdPartyDeclarationRole
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_setup_answers
-from ._models import (
+from .errors import ProfileError
+from .models import (
     CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,
@@ -39,7 +40,6 @@ from ._models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from .errors import ProfileError
 
 
 def taxpayer_profile_from_mapping(

@@ -77,8 +77,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
-from ._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 from .errors import GoogleAuthError, GoogleAuthPreconditionCondition, google_auth_no_action_verdict
+from .records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -239,7 +239,7 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
        scoped to ``config.target_scopes``.
     2. Eagerly refresh the discovered SOURCE credential when it is stale or
        invalid
-       (:func:`~adapters.outbound.google._impersonation._ensure_source_credential_is_fresh`).
+       (:func:`~adapters.outbound.google.impersonation._ensure_source_credential_is_fresh`).
        A merely-stale
        ADC user credential (past its access-token lifetime but still holding
        a live refresh token) is silently renewed here — the normal case for

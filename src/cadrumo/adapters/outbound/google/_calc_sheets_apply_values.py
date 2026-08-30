@@ -1,8 +1,8 @@
 """Google Sheets value-write payload builders for calc sheet exports.
 
-:mod:`adapters.outbound.google._calc_sheets_apply` clears the workbook
+:mod:`adapters.outbound.google.calc_sheets_apply` clears the workbook
 tabs and passes these payloads to the shared
-:func:`adapters.outbound.google._api.execute_request` boundary for a
+:func:`adapters.outbound.google.api.execute_request` boundary for a
 Sheets ``values.batchUpdate`` call. This module stays pure: it maps
 :class:`application.storage.calc_sheets.SheetExportPlan` facets into A1
 ranges plus row values and never opens a Google service object itself.

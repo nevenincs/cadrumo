@@ -6,15 +6,9 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import Declaracion
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core import Period
-from ....domain.deadlines import (
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
@@ -481,7 +475,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 def _legal_entity() -> TaxpayerProfile:
     """A sociedad limitada — an Impuesto sobre Sociedades contribuyente."""
 
-    from ....domain.deadlines import LegalEntityForm
+    from ....domain.deadlines.models import LegalEntityForm
 
     return TaxpayerProfile(
         tax_id="B12345674",

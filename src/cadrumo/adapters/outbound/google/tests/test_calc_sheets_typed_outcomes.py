@@ -16,7 +16,7 @@ from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, She
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, TaxDomain
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
-from .._calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..calc_sheets_pull import (
     MetadataMatchState,
     OperatorEdit,
@@ -178,7 +178,7 @@ print(json.dumps({{
 
 def test_apply_missing_google_api_client_is_a_closed_safety_outcome() -> None:
     outcome = _missing_google_client_outcome(
-        module="cadrumo.adapters.outbound.google._calc_sheets_apply",
+        module="cadrumo.adapters.outbound.google.calc_sheets_apply",
         call="_drive_service",
     )
 

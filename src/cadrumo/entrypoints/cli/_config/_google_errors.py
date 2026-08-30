@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....adapters.outbound.google import GoogleAuthError
+from ....adapters.outbound.google.errors import GoogleAuthError
 from ....adapters.outbound.storage import OutboundStorageError
 from ....core.errors import get_registered_error_code
 from ..errors import CliRefusedBoundaryError

@@ -14,7 +14,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import RemoteNotification
+from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core import ACTIONABLE_POST_FILING_EVENT_KINDS, NotificacionEstadoServicio, PostFilingEventKind
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import actionable_post_filing_events, calendar_events_from_notification_snapshots

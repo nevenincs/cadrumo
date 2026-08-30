@@ -33,9 +33,9 @@ from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, Sna
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
-from ...domain.deadlines import ObligationStatus as _ObligationStatus
-from ...domain.deadlines import Recovery as _Recovery
+from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
+from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
+from ...domain.deadlines.models import Recovery as _Recovery
 from ..operator_actions import DeclaredNextAction
 from .coverage import ObligationCoverageReport
 

@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ....domain.deadlines import EntityType, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import EntityType, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 

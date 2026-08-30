@@ -20,7 +20,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.outbound.aeat.sede import Declaracion
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...core import Period
 from ...core.identity import AeatExpedienteId
 from .errors import LiveApplicationInputError

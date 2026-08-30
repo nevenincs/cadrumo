@@ -3,7 +3,7 @@ cadrumo.core.setup_answers.SetupAnswers and the project_answers registration slo
 
 These tests verify:
 - SetupAnswers is defined in cadrumo.core.setup_answers (not cadrumo.application.wizard).
-- cadrumo.domain.deadlines._profiles projects through the core answer table and
+- cadrumo.domain.deadlines.profiles projects through the core answer table and
   loads no application wizard module at all.
 - The project_answers registration slot raises before registration and
   dispatches correctly after.
@@ -17,7 +17,7 @@ See Also:
     :func:`~core.setup_answers.get_project_answers`
         Slot reader whose pre-registration failure and post-registration
         dispatch are covered here.
-    :mod:`~domain.deadlines._profiles`
+    :mod:`~domain.deadlines.profiles`
         Domain consumer that must import setup-answer projection objects from
         core, not from application wizard modules.
     :func:`~core.wizard_catalogue.get_setup_flow`
@@ -56,7 +56,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
 
     The wizard catalogue is the authoritative binding between the flow descriptor
     and the typed-answers class.  It must reference the core class so that
-    project_answers returns instances that domain code (cadrumo.domain.deadlines._profiles)
+    project_answers returns instances that domain code (cadrumo.domain.deadlines.profiles)
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
@@ -107,7 +107,7 @@ def test_profiles_projects_through_the_core_answer_table() -> None:
     rather than merely hiding it, so what this asserts is that the domain
     holds the core function itself.
     """
-    from ...domain.deadlines import _profiles as profiles_mod
+    from ...domain.deadlines import profiles as profiles_mod
     from ..setup_answers import project_setup_answers
 
     bound = getattr(profiles_mod, "project_setup_answers", None)
@@ -124,7 +124,7 @@ def test_profiles_import_purity_never_loads_the_wizard() -> None:
         import importlib
         import sys
 
-        profiles = importlib.import_module("cadrumo.domain.deadlines._profiles")
+        profiles = importlib.import_module("cadrumo.domain.deadlines.profiles")
         from cadrumo.core.setup_answers import project_setup_answers
 
         assert profiles.project_setup_answers is project_setup_answers
@@ -253,10 +253,7 @@ def test_setup_answers_minimal_valid() -> None:
 
 def test_setup_answers_string_enum_coercion() -> None:
     """SetupAnswers coerces known string tokens to their enum members."""
-    from ...domain.deadlines import (
-        EntityType,
-        IVARegime,
-    )
+    from ...domain.deadlines.models import EntityType, IVARegime
     from ..setup_answers import SetupAnswers
 
     # Test iva_regime coercion

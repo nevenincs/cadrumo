@@ -2,7 +2,7 @@
 
 Round-3 semantic duplicate discovery found `_dismiss_pre303_alert_modal_if_present`
 implemented twice -- once in `auth._clave_movil_page_flow` (a method on
-`_ClaveMovilPageFlowMixin`), once in `sede._iva_compensation_wallet` (a free
+`_ClaveMovilPageFlowMixin`), once in `sede.iva_compensation_wallet` (a free
 function) -- with no cross-reference between the two, and TWO real
 behavioural divergences rather than a calling-convention difference: (1) the
 auth copy checked the modal's CSS `"show"` class before acting at all, the
@@ -79,7 +79,7 @@ from ......application.auth.protocols import BrowserPagePort
 from ......core.config import Settings, load_settings
 from ..._playwright import Page
 from ...auth.clave_movil import ClaveMovilAuthProvider
-from .._iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
+from ..iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -265,7 +265,7 @@ def test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal(
     """
     page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
-    with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.outbound.aeat.sede._iva_compensation_wallet"):
+    with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet"):
         _run(lambda: _run_wallet(page))
 
     assert any(

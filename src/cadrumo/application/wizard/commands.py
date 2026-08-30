@@ -154,7 +154,7 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.deadlines import FiscalResidency
+    from ...domain.deadlines.models import FiscalResidency
 
     return [member.value for member in FiscalResidency]
 
@@ -172,12 +172,7 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines import (
-        EntityType,
-        IrpfEstimationRegime,
-        IrpfIncomeCategory,
-        LegalEntityForm,
-    )
+    from ...domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm
 
     return (
         [member.value for member in EntityType],
@@ -219,7 +214,7 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     the wizard catalogue and the profile schema validate against.
     """
     from ...domain.contribuyente.renta_codes import SituacionFamiliar
-    from ...domain.deadlines import IrpfSpecialRegime
+    from ...domain.deadlines.models import IrpfSpecialRegime
 
     return (
         [member.value for member in IrpfSpecialRegime],
@@ -1231,7 +1226,7 @@ def _run_full_flow(
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
     _require_filing_baseline(flow, project_answers(flow, values))
-    from ...domain.deadlines import taxpayer_profile_from_mapping
+    from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
     apply_profile_fact_changes(

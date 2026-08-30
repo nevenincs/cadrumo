@@ -25,7 +25,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ....domain.deadlines import EntityType
+from ....domain.deadlines.models import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator

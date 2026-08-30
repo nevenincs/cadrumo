@@ -39,7 +39,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetK
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
 from ...core.time import today_madrid
-from ...domain.deadlines import EntityType
+from ...domain.deadlines.models import EntityType
 from ..flows.definition import (
     CopyRef,
     FlowChoice,

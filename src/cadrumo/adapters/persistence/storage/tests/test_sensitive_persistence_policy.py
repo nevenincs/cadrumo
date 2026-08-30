@@ -95,7 +95,7 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "domain" / "usage_ratios" / "_service.py",
     SRC_CADRUMO / "adapters" / "persistence" / "profile",
     SRC_CADRUMO / "adapters" / "outbound" / "aeat" / "auth",
-    SRC_CADRUMO / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
+    SRC_CADRUMO / "adapters" / "outbound" / "aeat" / "sede" / "observation_store.py",
     SRC_CADRUMO / "adapters" / "outbound" / "google",
     SRC_CADRUMO / "adapters" / "outbound" / "llm",
     # The gated local-inference subpackage. Enumerated in the SAME change
@@ -214,7 +214,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     "is confined to that root by a final-path comparison, an is_relative_to check and a "
     "regular-file test",
     (
-        "src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
+        "src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",
     ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",

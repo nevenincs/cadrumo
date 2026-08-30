@@ -4,7 +4,9 @@ import pytest
 
 from ...user_profile.errors import UserProfileNotFoundError
 from ...user_profile.loader import load_user_profile_schema
-from .. import M303TaxTerritory, ProfileError, taxpayer_profile_from_mapping
+from ..errors import ProfileError
+from ..models import M303TaxTerritory
+from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

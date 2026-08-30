@@ -28,7 +28,8 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .._groi_check import (
+from ..errors import SedeNavigationError
+from ..groi_check import (
     _READ_GUARD_POLICY,
     DEFAULT_GROI_TIMEOUT_MS,
     GroiNifVerdict,
@@ -38,7 +39,6 @@ from .._groi_check import (
     assert_groi_read_landing,
     extract_verdict_from_response_text,
 )
-from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

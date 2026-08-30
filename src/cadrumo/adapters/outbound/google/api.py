@@ -1,17 +1,17 @@
 """Shared Google API request execution with typed-error translation.
 
-Both :mod:`adapters.outbound.google._calc_sheets_apply` and
+Both :mod:`adapters.outbound.google.calc_sheets_apply` and
 :mod:`adapters.outbound.google.calc_sheets_pull` issue
 ``google-api-python-client`` requests. This module provides the single
-:func:`~adapters.outbound.google._api.execute_request` boundary they route
+:func:`~adapters.outbound.google.api.execute_request` boundary they route
 through so transport failures, HTTP failures, and quota responses become the typed
 :class:`~adapters.outbound.storage.OutboundStorageError` hierarchy
 instead of endpoint-specific ``HttpError`` strings.
 
 See Also:
-    :class:`~adapters.outbound.google._api.GoogleDriveFile`,
-    :class:`~adapters.outbound.google._api.GoogleSheetsRange`, and
-    :class:`~adapters.outbound.google._api.GoogleSpreadsheet` document the
+    :class:`~adapters.outbound.google.api.GoogleDriveFile`,
+    :class:`~adapters.outbound.google.api.GoogleSheetsRange`, and
+    :class:`~adapters.outbound.google.api.GoogleSpreadsheet` document the
     shared response shapes the calc Sheets adapters cast at their call sites.
 """
 
@@ -66,7 +66,7 @@ class _ExecutableRequest(Protocol):
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest`` class.
     This protocol captures the part
-    :func:`~adapters.outbound.google._api.execute_request` needs: the
+    :func:`~adapters.outbound.google.api.execute_request` needs: the
     ``execute()`` method with optional ``http`` and ``num_retries`` parameters
     for Google client retry handling. ``http`` mirrors ``HttpRequest.execute``'s
     own stub type (``httplib2.Http | HttpMock | None``) rather than a bare
@@ -104,7 +104,7 @@ class GoogleDriveFile(_GoogleDriveFileRequired, total=False):
     """Typed shape for a Google Drive Files resource response.
 
     Covers the file metadata fields consumed by
-    :mod:`adapters.outbound.google._calc_sheets_apply` and
+    :mod:`adapters.outbound.google.calc_sheets_apply` and
     :mod:`adapters.outbound.google.calc_sheets_pull`. Additional fields
     returned by Drive are ignored by :class:`typing.TypedDict` consumers.
 
@@ -129,7 +129,7 @@ class GoogleSheetsRange(_GoogleSheetsRangeRequired, total=False):
 
     Covers fields returned by ``spreadsheets.values.get`` and
     ``spreadsheets.values.update`` through
-    :func:`~adapters.outbound.google._api.execute_request`.
+    :func:`~adapters.outbound.google.api.execute_request`.
 
     See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values.
     """
@@ -152,7 +152,7 @@ class GoogleSpreadsheet(_GoogleSpreadsheetRequired, total=False):
     """Typed shape for a Sheets ``Spreadsheet`` resource.
 
     Covers top-level fields returned by ``spreadsheets.get`` through
-    :func:`~adapters.outbound.google._api.execute_request`.
+    :func:`~adapters.outbound.google.api.execute_request`.
 
     See https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.
     """
@@ -270,7 +270,7 @@ def _quota_marker(error: Exception) -> str | None:
     Google may signal quota exhaustion through an HTTP 429 status, a 403 with
     ``error.status=RESOURCE_EXHAUSTED``, or nested ``reason`` fields such as
     ``rateLimitExceeded``.
-    :func:`~adapters.outbound.google._api.execute_request` uses this helper
+    :func:`~adapters.outbound.google.api.execute_request` uses this helper
     to route those 403 responses to
     :exc:`~adapters.outbound.storage.OutboundStorageQuotaError` instead of
     the generic permission refusal.

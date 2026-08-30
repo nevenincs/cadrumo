@@ -29,7 +29,7 @@ from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.renta_codes import FiscalResidency
-from ...domain.deadlines import IrpfSpecialRegime
+from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ...domain.transactions.models import Transaction

@@ -24,9 +24,9 @@ import pytest
 
 from ......core import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
-from .._declarations import Declaracion, capture_declaration, walk_declarations_register
-from .._schema import SedeCapture
+from ..declarations import Declaracion, capture_declaration, walk_declarations_register
 from ..errors import SedeError
+from ..schema import SedeCapture
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 from playwright.async_api import Route, async_playwright
 
-from ..adapters.outbound.aeat.sede import DeclaracionesRegisterSession
+from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
 from ..application.auth.session_types import AeatSession, CertificateSessionDetail
 from ..core.config import override_settings
 from . import FIXTURES_DIR

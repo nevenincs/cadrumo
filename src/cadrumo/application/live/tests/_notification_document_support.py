@@ -17,12 +17,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 
 from ....adapters.inbound.notificacion import NotificationDocumentReader
-from ....adapters.outbound.aeat.sede import (
-    NotificationDocument,
-    RemoteNotification,
-    assert_notification_content_readable,
-    fetch_notification_document,
-)
+from ....adapters.outbound.aeat.sede.notifications import NotificationDocument, RemoteNotification, assert_notification_content_readable, fetch_notification_document
 from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ....adapters.persistence.storage import (
     LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,

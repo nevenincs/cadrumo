@@ -65,7 +65,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ....domain.filing import FilingExportError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.modelos.filing_record import ExternalEvidenceKind

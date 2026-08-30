@@ -37,7 +37,7 @@ from ......tests.aeat_literal_fixtures import (
     KATA_COTEJO_ID_PATH_FIXTURE,
     aeat_url,
 )
-from .._schema import (
+from ..schema import (
     Expediente,
     FiledDeclaracionArtefact,
     IvaCompensationWalletObservation,

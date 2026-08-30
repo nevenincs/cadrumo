@@ -52,7 +52,7 @@ from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
-from ...domain.deadlines import IVARegime
+from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind

@@ -7,8 +7,8 @@ is an evidence question, not a formatting one, and every capture path must
 answer it identically.
 
 Three paths fetch a CSV-keyed PDF — the row-capture branch in
-``_declarations_fetch``, ``_declarations.capture_declaration``, and
-``_walker.capture_justificante``. They previously carried three
+``_declarations_fetch``, ``declarations.capture_declaration``, and
+``walker.capture_justificante``. They previously carried three
 hand-written copies of the same status / body / content-type checks, and
 the copies had drifted apart: the row-capture branch accepted any header
 merely CONTAINING ``"pdf"``. This module pins the single contract and the
@@ -26,7 +26,7 @@ import pytest
 
 from ......core.directory_scan import scan_directory
 from ......core.external_constants import PDF_MIME_TYPE
-from .. import _declarations, _declarations_fetch, _walker
+from .. import _declarations_fetch, declarations, walker
 from .._adapter_utils import assert_pdf_response, response_media_type
 from ..errors import JustificanteFetchError
 
@@ -208,8 +208,8 @@ class TestEveryCapturePathRoutesThroughTheContract:
 
     _CAPTURE_SITES = (
         (_declarations_fetch, "_capture_row_pdf_artefact"),
-        (_declarations, "capture_declaration"),
-        (_walker, "capture_justificante"),
+        (declarations, "capture_declaration"),
+        (walker, "capture_justificante"),
     )
 
     @pytest.mark.parametrize(("module", "function"), _CAPTURE_SITES)
@@ -242,7 +242,7 @@ class TestEveryCapturePathRoutesThroughTheContract:
         content type CONTAINS a pdf token, which is the shape that admitted
         ``application/notpdf`` and ``x-application/pdf-trap``.
         """
-        sede_root = Path(_walker.__file__).resolve().parent
+        sede_root = Path(walker.__file__).resolve().parent
         offenders: list[str] = []
         for source_path in scan_directory(sede_root, pattern="*.py"):
             tree = ast.parse(source_path.read_text(encoding="utf-8"))

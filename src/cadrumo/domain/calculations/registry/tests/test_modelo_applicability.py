@@ -8,16 +8,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ....deadlines import (
-    EntityType,
-    FiscalResidency,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IrpfSpecialRegime,
-    IVARegime,
-    LegalEntityForm,
-    TaxpayerProfile,
-)
+from ....deadlines.models import EntityType, FiscalResidency, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, IrpfSpecialRegime, LegalEntityForm, TaxpayerProfile
 from ..applicability import (
     MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,

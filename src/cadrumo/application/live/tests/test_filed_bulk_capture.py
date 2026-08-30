@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import Declaracion, SedeParseError
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.errors import SedeParseError
 from ....core import Period
 from ..errors import LiveIvaSurfaceTimeoutError
 from ..filed_data_capture import (

@@ -1,4 +1,4 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`cadrumo.domain.deadlines._models`.
+"""Unit tests for the strict pydantic v2 models in :mod:`cadrumo.domain.deadlines.models`.
 
 Verifies the strictness invariants of
 :class:`cadrumo.domain.deadlines.TaxpayerProfile` (extra fields,
@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from .. import (
+from ..models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
@@ -27,8 +27,8 @@ from .. import (
     ObligationStatus,
     Schedule,
     TaxpayerProfile,
-    taxpayer_profile_from_mapping,
 )
+from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _P_2026_1T = Period.from_year_and_code(2026, "1T")

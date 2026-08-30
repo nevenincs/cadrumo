@@ -28,7 +28,7 @@ from ......core.resources import bundled_path
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ......domain.calculations.registry.export_parse import xml_dictionary_entries
-from .._declarations_observations import _observed_value_kind
+from ..declarations_observations import _observed_value_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

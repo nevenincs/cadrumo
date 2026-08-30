@@ -28,7 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core import FiledHistoryDiscoverySignal
-from .._schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
+from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -40,13 +40,13 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._parse import parse_expediente_detail, parse_resumen_tree
-from ._schema import Expediente, JustificanteRef, SedeCapture
 from .errors import (
     ExpedienteNotFoundError,
     SedeFailureMode,
     SedeNavigationError,
 )
+from .parse import parse_expediente_detail, parse_resumen_tree
+from .schema import Expediente, JustificanteRef, SedeCapture
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession

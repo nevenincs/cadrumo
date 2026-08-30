@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import IrpfActivityKind, IrpfEstimationRegime, IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
+from ..models import IrpfActivityKind, IrpfEstimationRegime, IVARegime, TaxpayerProfile
+from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

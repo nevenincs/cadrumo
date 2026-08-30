@@ -3,7 +3,8 @@ from typing import cast
 
 import pytest
 
-from ....domain.deadlines import DeadlineEngine, TaxpayerProfile
+from ....domain.deadlines.engine import DeadlineEngine
+from ....domain.deadlines.models import TaxpayerProfile
 from ..agenda import build_overview_agenda
 from ..errors import OverviewAgendaError
 

@@ -242,7 +242,7 @@ _FREE_TEXT_POPULATIONS: Final[tuple[_FreeTextPopulation, ...]] = (
 #: population's claim is obsolete and must be re-adjudicated rather than left
 #: standing as a stale carve-out.
 _FREE_TEXT_ANCHORS: Final[tuple[tuple[str, str, str], ...]] = (
-    ("src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py", "Declaracion", "estado"),
+    ("src/cadrumo/adapters/outbound/aeat/sede/declarations_schema.py", "Declaracion", "estado"),
     ("src/cadrumo/adapters/outbound/aeat/sede/deudas.py", "Deuda", "situacion"),
 )
 

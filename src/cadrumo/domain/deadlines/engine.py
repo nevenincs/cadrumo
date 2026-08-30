@@ -26,19 +26,19 @@ if TYPE_CHECKING:
     from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
 
-from ._models import (
+from .errors import (
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ScheduleComputationError,
+)
+from .models import (
     ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
     TaxpayerProfile,
 )
-from ._recargo import build_recovery_for_overdue
-from .errors import (
-    DeadlineValidationError,
-    NoDeadlineWindowsError,
-    ScheduleComputationError,
-)
+from .recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 

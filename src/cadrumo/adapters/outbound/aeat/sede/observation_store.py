@@ -59,8 +59,8 @@ from ....persistence.storage import (
     SecureObjectRowIdentityError,
     secure_object_repository_for_active_bucket,
 )
-from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 from .errors import ExpedienteNotFoundError, SedeValidationError
+from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_NAMESPACE = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace
@@ -215,6 +215,7 @@ class FiledDeclaracionObservationStore:
         *,
         objects: SecureObjectRepository | None = None,
     ) -> None:
+        """Bind the storage root, and the object repository if one is injected."""
         self._root = Path(root)
         self._objects = objects
         self._observation_repository: FiledDeclaracionObservationRepository | None = None

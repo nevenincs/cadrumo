@@ -81,7 +81,7 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
 def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
     """Enum- and language-derived choice labels must be concrete descriptor keys."""
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from ..domain.deadlines import EntityType, FiscalResidency, IrpfIncomeCategory
+    from ..domain.deadlines.models import EntityType, FiscalResidency, IrpfIncomeCategory
 
     keys = _wizard_descriptor_translation_keys()
 

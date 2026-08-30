@@ -34,7 +34,7 @@ from ....core.external_constants import (
 )
 from ....core.i18n import Translatable as tr
 from ....core.i18n import tr as _tr
-from ....domain.deadlines import IVARegime
+from ....domain.deadlines.models import IVARegime
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, new_profile_id
 from .._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
 from .._registered_values import project_registered_values

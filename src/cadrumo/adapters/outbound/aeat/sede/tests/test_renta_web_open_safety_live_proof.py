@@ -40,7 +40,7 @@ async def _attempt_presentar_click() -> tuple[bool, str]:
     (blocked, message) where ``blocked=True`` means the safety guard
     refused the click (the desired outcome).
     """
-    from .._renta_web_open import (
+    from ..renta_web_open import (
         _click_expected,
         _expect_visible,
         _fill_identification_profile,

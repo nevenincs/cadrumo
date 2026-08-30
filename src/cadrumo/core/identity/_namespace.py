@@ -126,7 +126,7 @@ reasoning: the ``revision_id`` segment is a human-authored registry slug of
 variable shape (see :data:`~domain.calculations.registry.RevisionId`), so a
 regex built from today's observed values would be invention, not evidence. The
 bound is carried unchanged from the one production field this alias replaces
-(``adapters.outbound.aeat.sede._schema``).
+(``adapters.outbound.aeat.sede.schema``).
 """
 
 AeatCertificadoId = Annotated[str, StringConstraints(min_length=10, max_length=16, pattern=r"^\d{10,16}$")]

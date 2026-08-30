@@ -41,8 +41,8 @@ from ..storage import (
     OutboundStorageValidationError,
     next_drive_page_token,
 )
-from ._api import execute_request
 from ._preconditions import google_terminal_refusal
+from .api import execute_request
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
 # The bare form requires >=25 chars so a hyphenated English token (e.g.

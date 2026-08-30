@@ -89,7 +89,7 @@ from ._declarations_fetch import (
     _origin_of,
 )
 from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
-from ._declarations_observations import (
+from .declarations_observations import (
     FiledDeclaracionArtefactSink,
     _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
@@ -103,9 +103,15 @@ from ._declarations_observations import (
     _with_derived_303_compensation_available_observation,
     observed_casillas_from_submitted_file,
 )
-from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
-from ._declarations_schema import Declaracion
-from ._schema import (
+from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
+from .declarations_schema import Declaracion
+from .errors import (
+    JustificanteFetchError,
+    SedeFailureMode,
+    SedeNavigationError,
+    SedeParseError,
+)
+from .schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclarationAvailability,
@@ -113,12 +119,6 @@ from ._schema import (
     JustificanteRef,
     ObservedCasillaValue,
     SedeCapture,
-)
-from .errors import (
-    JustificanteFetchError,
-    SedeFailureMode,
-    SedeNavigationError,
-    SedeParseError,
 )
 
 if TYPE_CHECKING:
@@ -436,6 +436,7 @@ class DeclaracionesRegisterSession:
     """Reusable read-only session for AEAT's filed-declarations register."""
 
     def __init__(self, session: AeatSession, page: Page, context: BrowserContext) -> None:
+        """Bind the live session, page and browser context this reader drives."""
         self.session = session
         self._page = page
         self._context = context
@@ -1019,7 +1020,7 @@ async def capture_declaration(
             subject=f"CSV={csv!r}",
         )
 
-        from ._schema import Expediente
+        from .schema import Expediente
 
         sha256 = sha256_hex(body)
         log.info(

@@ -74,7 +74,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.deadlines import FiscalResidency, TaxpayerProfile
+from ...domain.deadlines.models import FiscalResidency, TaxpayerProfile
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.models import Invoice
 from ...domain.iva import InvoiceKind

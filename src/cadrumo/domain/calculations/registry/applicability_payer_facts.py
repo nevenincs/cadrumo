@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping
 from enum import StrEnum
 from types import MappingProxyType
 
-from ...deadlines import TaxpayerProfile
+from ...deadlines.models import TaxpayerProfile
 
 __all__ = ["PayerFact", "payer_fact_holds"]
 

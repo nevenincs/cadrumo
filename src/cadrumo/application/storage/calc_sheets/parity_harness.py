@@ -412,7 +412,7 @@ def verify_modelo_parity(
     snapshot's process-local cache. The local Decimal runtime is
     invoked once and consulted only for comparison.
     """
-    from ....adapters.outbound.google import apply_export_plan
+    from ....adapters.outbound.google.calc_sheets_apply import apply_export_plan
 
     operator_inputs, inputs_by_id = _build_operator_inputs(snapshot, scenario)
     relation_values = _build_relation_values(snapshot, scenario)

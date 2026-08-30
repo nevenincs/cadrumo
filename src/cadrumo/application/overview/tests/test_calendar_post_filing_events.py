@@ -15,7 +15,8 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core import Period, PostFilingEventKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.notifications import PersistedNotificationsSnapshot

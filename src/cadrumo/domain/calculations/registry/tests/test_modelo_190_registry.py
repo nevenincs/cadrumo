@@ -10,7 +10,7 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
-from .....domain.deadlines import shift_deadline
+from .....domain.deadlines.festivos import shift_deadline
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator

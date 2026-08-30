@@ -58,14 +58,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypedDict
 
-from ....adapters.outbound.google import (
-    GoogleAuthError,
-    GoogleCredentialSourceSelection,
-    GoogleImpersonationConfig,
-    load_credential_source_selection,
-    resolve_active_profile,
-    save_credential_source_selection,
-)
+from ....adapters.outbound.google.active_profile import resolve_active_profile
+from ....adapters.outbound.google.errors import GoogleAuthError
+from ....adapters.outbound.google.impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ....adapters.outbound.google.session_store import load_credential_source_selection, save_credential_source_selection
 from ....core import GoogleCredentialSourceKind
 from .._common import emit_envelope
 from ._google_credential_source_payloads import (

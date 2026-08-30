@@ -46,7 +46,7 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 
 
 class CoverageAdviceReason(StrEnum):

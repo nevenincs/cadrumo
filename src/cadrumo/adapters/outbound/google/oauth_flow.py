@@ -12,13 +12,13 @@ Two policy gates fire before any network IO happens:
    :func:`adapters.outbound.google.resolve_active_profile`.
 2. When :class:`core.config.SecretStoreBackend` is configured as
    ``UNSECURED`` and that profile carries a real Spanish NIF / NIE / CIF,
-   :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`
+   :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`
    refuses with
    :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`.
 
 See Also:
     :func:`adapters.outbound.google.run_login_flow` executes the login
-    path, :func:`adapters.outbound.google._oauth_flow.credentials_to_records`
+    path, :func:`adapters.outbound.google.oauth_flow.credentials_to_records`
     produces :class:`adapters.outbound.google.OAuthToken` and
     :class:`adapters.outbound.google.OAuthMetadata`, and
     :data:`adapters.outbound.google.REQUIRED_SCOPES` defines the consent
@@ -36,7 +36,6 @@ from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
-from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
@@ -48,6 +47,7 @@ from .errors import (
     GoogleAuthUnsecuredModeRefusedError,
     google_auth_no_action_verdict,
 )
+from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
 # Upper bound (seconds) on how long the loopback consent receiver blocks
 # waiting for the operator to complete the browser flow. Defence in depth
@@ -131,7 +131,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     The resolver loads the profile bucket pointer through
     :func:`application.workflow.read_profile_bucket_by_id`, opens the
     canonical user-profile lifecycle service, and reads the tax-id fact used by
-    :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`.
+    :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`.
 
     Returns:
         The stored ``identity.tax_id`` value, or an empty string when the
@@ -250,13 +250,13 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
     Always runs the real
     ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``
     against ``accounts.google.com``. The flow checks profile state with
-    :func:`adapters.outbound.google._oauth_flow.resolve_active_tax_id`,
+    :func:`adapters.outbound.google.oauth_flow.resolve_active_tax_id`,
     applies
-    :func:`adapters.outbound.google._oauth_flow.check_unsecured_mode_safety`,
+    :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`,
     requires
-    :func:`adapters.outbound.google._oauth_flow.require_interactive_terminal`,
+    :func:`adapters.outbound.google.oauth_flow.require_interactive_terminal`,
     then maps the resulting credential fields through
-    :func:`adapters.outbound.google._oauth_flow.credentials_to_records`.
+    :func:`adapters.outbound.google.oauth_flow.credentials_to_records`.
 
     Args:
         client: Operator-imported

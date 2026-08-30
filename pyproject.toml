@@ -124,6 +124,7 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo.entrypoints._cli_main:main"
+aeat-tui = "cadrumo.entrypoints.tui.launcher:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -784,9 +785,6 @@ convention = "google"
 "src/cadrumo/domain/calculations/registry/tests/test_mutable_tree_fingerprint_invalidation.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/cadrumo/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
-# `SECRET`/`DEFER_TOKEN` are widget-kind and canonical-answer tokens, not
-# password literals; ruff's S105 heuristic flags the constant names.
-"src/cadrumo/application/wizard/_models.py" = ["S105"]
 "src/cadrumo/core/flows.py" = ["S105"]
 "src/cadrumo/core/config.py" = ["S105"]
 "src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S106"]
@@ -794,7 +792,7 @@ convention = "google"
 # AEAT registry uses ``Q1..Q4`` casing on the BOE-published row model field names; the
 # domain model preserves the canonical AEAT casing so the registry-binding mapping
 # stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.
-"src/cadrumo/domain/modelos/_row_models.py" = ["N815"]
+"src/cadrumo/domain/modelos/row_models.py" = ["N815"]
 # The wire mirrors of those same row models carry the field names verbatim so the
 # mirror stays 1:1 with the type it mirrors; renaming them here would put a casing
 # translation between the wire and the domain row for no gain. Same AEAT casing,
@@ -817,9 +815,9 @@ convention = "google"
 "src/cadrumo/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py" = ["RUF005"]
 "src/cadrumo/core/classification/__init__.py" = ["S105"]
 "src/cadrumo/core/file_permissions.py" = ["S603"]
-"src/cadrumo/domain/auth/apoderamientos/_catalogue.py" = ["S105"]
+"src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]
-"src/cadrumo/domain/deadlines/_festivos.py" = ["S105"]
+"src/cadrumo/domain/deadlines/festivos.py" = ["S105"]
 "src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
 # Spawns a fresh interpreter to make the `llm` extra's probe module genuinely
 # unresolvable before any product module loads; the absent state cannot be

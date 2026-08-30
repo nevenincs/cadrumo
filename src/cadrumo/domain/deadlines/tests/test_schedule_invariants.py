@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Modelo, Period
-from .._models import (
+from ..models import (
     CrossPeriodGroupMemberRoster,
     IVARegime,
     ModeloDeadline,

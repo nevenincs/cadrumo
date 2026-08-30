@@ -23,14 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....deadlines import (
-    EntityType,
-    FiscalResidency,
-    IrpfIncomeCategory,
-    IVARegime,
-    LegalEntityForm,
-    TaxpayerProfile,
-)
+from ....deadlines.models import EntityType, FiscalResidency, IVARegime, IrpfIncomeCategory, LegalEntityForm, TaxpayerProfile
 from ..applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ._registry_schema_support import _committed_modelo
 

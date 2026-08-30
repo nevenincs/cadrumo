@@ -15,9 +15,9 @@ from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ......core.config import Settings
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......tests.secure_sql import TestRuntimeProfile
-from .._observation_store import FiledDeclaracionObservationStore
-from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ..errors import SedeValidationError
+from ..observation_store import FiledDeclaracionObservationStore
+from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'

@@ -101,14 +101,7 @@ if TYPE_CHECKING:
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
 from ....core.time import today_madrid
-from ...deadlines import (
-    EntityType,
-    FiscalResidency,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    TaxpayerProfile,
-)
+from ...deadlines.models import EntityType, FiscalResidency, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
 from .applicability_payer_facts import PayerFact, payer_fact_holds
 from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
@@ -923,7 +916,7 @@ def _resolve_registry_applicability_rule(
     is itself fingerprint-bounded, so calling it here costs one
     O(1) cache-key hash, not a re-parse, and a tree edit is seen on the very
     next call. Caching here would re-introduce the path-only registry cache
-    the authority-flow rule forbids -- exactly the defect S28 removed.
+    the authority-flow rule forbids -- exactly the defect that consolidation removed.
     """
     if authority is not None:
         return resolve_applicability_rule_from_authority(authority, modelo)

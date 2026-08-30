@@ -12,10 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines import (
-    MODELO_IVA_BLOCK_CLAIMING_PATHS,
-    MODELO_IVA_BLOCK_REQUIRED_PATHS,
-)
+from ....domain.deadlines.profiles import MODELO_IVA_BLOCK_CLAIMING_PATHS, MODELO_IVA_BLOCK_REQUIRED_PATHS
 from ..catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
 from ..models import WizardQuestion
 

@@ -35,7 +35,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.outbound.aeat.sede import SedeNavigationError
+from ....adapters.outbound.aeat.sede.errors import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.directory_scan import scan_directory

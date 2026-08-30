@@ -10,7 +10,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
+from ....adapters.outbound.aeat.sede.notifications import NotificationDocument, RemoteNotification
 from ....application.live.tests import build_service, sancion_pdf_bytes, served_document
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.hashing import sha256_hex

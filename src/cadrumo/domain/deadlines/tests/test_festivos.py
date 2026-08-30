@@ -27,7 +27,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
-from .. import (
+from ..errors import DeadlineValidationError
+from ..festivos import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
     DeadlineShift,
@@ -39,7 +40,6 @@ from .. import (
     next_business_day,
     shift_deadline,
 )
-from ..errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -344,7 +344,7 @@ def test_ccaa_enum_has_19_members_covering_17_autonomies_plus_2_cities() -> None
 
 
 def test_no_parallel_festivos_implementation_exists() -> None:
-    """Only ``cadrumo.domain.deadlines._festivos`` owns festivos /
+    """Only ``cadrumo.domain.deadlines.festivos`` owns festivos /
     business-day semantics. Any other module defining functions with
     these names is a duplicate that re-introduces drift."""
 
@@ -352,7 +352,7 @@ def test_no_parallel_festivos_implementation_exists() -> None:
 
     repo_root = Path(__file__).resolve().parents[4]
     source_root = repo_root / "src" / "cadrumo"
-    canonical_module = source_root / "domain" / "deadlines" / "_festivos.py"
+    canonical_module = source_root / "domain" / "deadlines" / "festivos.py"
 
     canonical_symbols = (
         "load_holiday_calendar",
@@ -369,7 +369,7 @@ def test_no_parallel_festivos_implementation_exists() -> None:
             assert f"def {symbol}" not in text, (
                 f"shadow festivos implementation detected: "
                 f"{py_file} defines `def {symbol}`; the canonical "
-                f"owner is `cadrumo.domain.deadlines._festivos`."
+                f"owner is `cadrumo.domain.deadlines.festivos`."
             )
 
 

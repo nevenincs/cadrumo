@@ -20,7 +20,7 @@ from typing import Final
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....core import Period
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings

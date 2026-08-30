@@ -11,8 +11,9 @@ from ....core import Modelo, Period
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
-from .. import (
-    DeadlineEngine,
+from ..engine import DeadlineEngine, applies_to, explain, next_deadline
+from ..errors import NoDeadlineWindowsError, ScheduleComputationError
+from ..models import (
     IrpfEstimationRegime,
     IVARegime,
     M303RegimeComposition,
@@ -20,14 +21,9 @@ from .. import (
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
-    NoDeadlineWindowsError,
     ObligationStatus,
     Schedule,
-    ScheduleComputationError,
     TaxpayerProfile,
-    applies_to,
-    explain,
-    next_deadline,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

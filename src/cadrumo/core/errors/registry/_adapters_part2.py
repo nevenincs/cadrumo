@@ -358,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthAdcUnavailableError",
+        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcUnavailableError",
         ErrorCode(
             code="FAIL_GOOGLE_ADC_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthAdcStaleError",
+        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcStaleError",
         ErrorCode(
             code="FAIL_GOOGLE_ADC_STALE",
             category=ErrorCategory.FAIL,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthImpersonationRefusedError",
+        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_IMPERSONATION",
             category=ErrorCategory.REFUSED,

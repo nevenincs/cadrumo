@@ -3,7 +3,7 @@
 All parsers take raw HTML strings and return strict pydantic records.
 No Playwright, no I/O. This makes them trivially unit-testable
 against captured fixtures and keeps the navigation (side-effect)
-concerns isolated in :mod:`adapters.outbound.aeat.sede._walker`.
+concerns isolated in :mod:`adapters.outbound.aeat.sede.walker`.
 
 Public surface: :func:`parse_resumen_tree` (top-level expediente
 listing), :func:`parse_expediente_detail` (per-expediente CSV
@@ -23,9 +23,9 @@ from pydantic import AnyHttpUrl
 from .....core.config import Settings
 from .....core.logging import get_logger
 from .._html import parse_html
-from ._declarations_remote import extract_csv_from_url
-from ._schema import Expediente, JustificanteRef
+from .declarations_remote import extract_csv_from_url
 from .errors import SedeParseError
+from .schema import Expediente, JustificanteRef
 
 _SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 

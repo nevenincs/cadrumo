@@ -5,13 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...domain.deadlines import (
-    EntityType,
-    FiscalResidency,
-    IrpfIncomeCategory,
-    irnr_representante_fiscal_required,
-    modelo_iva_profile_required_paths,
-)
+from ...domain.deadlines.models import EntityType, FiscalResidency, IrpfIncomeCategory, irnr_representante_fiscal_required
+from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
 if TYPE_CHECKING:
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition

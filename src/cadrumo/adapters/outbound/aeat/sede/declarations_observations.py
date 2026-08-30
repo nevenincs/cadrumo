@@ -68,14 +68,14 @@ from .....domain.iva_compensation import (
     derive_m303_compensation_available_from_casillas,
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
-from ._declarations_schema import Declaracion
-from ._schema import (
+from .declarations_schema import Declaracion
+from .errors import SedeParseError, SedeValidationError
+from .schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     ObservedCasillaSkip,
     ObservedCasillaValue,
 )
-from .errors import SedeParseError, SedeValidationError
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -318,6 +318,7 @@ def observed_casillas_from_submitted_file(
     body: bytes,
     artefact: FiledDeclaracionArtefact,
 ) -> tuple[ObservedCasillaValue, ...]:
+    """Read the casilla values a submitted fichero actually carries."""
     try:
         resolved = resolve_export_layout(snapshot)
         parsed = parse_export_payload(

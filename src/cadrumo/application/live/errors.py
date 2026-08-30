@@ -30,7 +30,7 @@ from ..operator_actions import PreconditionVerdict, no_action_precondition_verdi
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
-    from ...adapters.outbound.aeat.sede import SedeError
+    from ...adapters.outbound.aeat.sede.errors import SedeError
 
 
 class LiveIvaAcquisitionFailureMode(StrEnum):
@@ -188,7 +188,7 @@ def _classify_clave_movil_timeout(exc: ClaveMovilApprovalTimeoutError) -> LiveIv
 
 
 def _classify_sede_error(exc: SedeError) -> LiveIvaAcquisitionFailureMode:
-    from ...adapters.outbound.aeat.sede import SedeFailureMode
+    from ...adapters.outbound.aeat.sede.errors import SedeFailureMode
 
     if exc.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value:
         context = exc.context if isinstance(exc.context, dict) else {}
@@ -213,7 +213,7 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
         ClaveMovilApprovalTimeoutError,
         ClaveMovilConfigurationError,
     )
-    from ...adapters.outbound.aeat.sede import SedeError
+    from ...adapters.outbound.aeat.sede.errors import SedeError
 
     if isinstance(exc, LiveIvaSurfaceTimeoutError):
         return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED

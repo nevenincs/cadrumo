@@ -37,8 +37,8 @@ from ....persistence.storage import (
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from .. import session_store
-from .._impersonation import GoogleCredentialSourceSelection
-from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..impersonation import GoogleCredentialSourceSelection
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

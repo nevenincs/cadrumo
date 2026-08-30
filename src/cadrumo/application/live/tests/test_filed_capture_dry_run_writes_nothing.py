@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path) -> None:
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+    from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 
     observation = _prior_303_observation(pending_compensation=Decimal("0.00"))
 

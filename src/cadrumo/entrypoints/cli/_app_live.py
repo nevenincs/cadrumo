@@ -75,7 +75,7 @@ from ._common import (
 
 if TYPE_CHECKING:
     from ...application.live.verify import VerifyVerdict
-    from ...domain.deadlines import TaxpayerProfile
+    from ...domain.deadlines.models import TaxpayerProfile
 
 
 def _verify_expected(value: str | None) -> VerifyVerdict | None:

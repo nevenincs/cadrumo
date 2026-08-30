@@ -38,9 +38,9 @@ Read both files to see the full closed picture; neither alone proves "no
 taxpayer bytes ever touch disk" -- together they do.
 
 See Also:
-    :func:`~adapters.outbound.aeat.sede._declarations_fetch._capture_submitted_file_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_submitted_file_artefact`
         The guarded function.
-    :func:`~adapters.outbound.aeat.sede._declarations_fetch._capture_row_pdf_artefact`
+    :func:`~adapters.outbound.aeat.sede.declarations_fetch._capture_row_pdf_artefact`
         The sibling function whose in-memory fetch shape this gate expects
         ``_capture_submitted_file_artefact`` to mirror.
     :meth:`~adapters.outbound.aeat.browser.BrowserSession._build_context_kwargs`

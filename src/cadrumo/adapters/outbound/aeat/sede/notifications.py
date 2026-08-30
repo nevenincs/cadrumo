@@ -52,8 +52,8 @@ from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response, assert_read_http_for, assert_read_landing, cell_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
-from ._walker import assert_landed_url_readable
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession

@@ -52,8 +52,8 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
-from ._impersonation import GoogleCredentialSourceSelection
-from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from .impersonation import GoogleCredentialSourceSelection
+from .records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 _NAMESPACE_CLIENT = GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace
 _NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace

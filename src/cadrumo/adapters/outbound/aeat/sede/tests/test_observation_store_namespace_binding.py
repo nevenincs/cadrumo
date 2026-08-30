@@ -39,9 +39,9 @@ from .....persistence.storage import (
 )
 from .....persistence.storage.sql import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
-from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
-from .._observation_store import FiledDeclaracionObservationStore
-from .._schema import (
+from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ..observation_store import FiledDeclaracionObservationStore
+from ..schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     IvaCompensationWalletObservation,

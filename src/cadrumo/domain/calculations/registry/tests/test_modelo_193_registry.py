@@ -9,7 +9,7 @@ import pytest
 
 from .....core import CasillaId
 from .....core.resources import bundled_path
-from .....domain.deadlines import shift_deadline
+from .....domain.deadlines.festivos import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

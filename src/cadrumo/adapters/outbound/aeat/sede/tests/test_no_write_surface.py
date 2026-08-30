@@ -51,7 +51,7 @@ def _local_persistence_is_allowed(source_name: str, line: str) -> bool:
     :class:`TestTheGuardCanActuallyFire` can prove both that it excuses what it
     is meant to and that it excuses nothing else.
     """
-    if source_name != "_observation_store.py":
+    if source_name != "observation_store.py":
         return False
     return (
         "self._objects.save(" in line
@@ -157,7 +157,7 @@ class TestTheGuardCanActuallyFire:
         """The sanctioned local-persistence shapes stay allowed in their own module."""
         for accessor in ("_objects", "_repository", "_observations", "_wallet_observations"):
             line = f"        self.{accessor}.save(record)"
-            assert not _line_offends("_observation_store.py", line, "save"), (
+            assert not _line_offends("observation_store.py", line, "save"), (
                 f"self.{accessor}.save(...) must remain allowed in _observation_store.py"
             )
 
@@ -170,8 +170,8 @@ class TestTheGuardCanActuallyFire:
         """
         line = "        self._observations.save(record)"
         assert _line_offends("_declarations_fetch.py", line, "save")
-        assert _line_offends("_iva_compensation_wallet.py", line, "save")
+        assert _line_offends("iva_compensation_wallet.py", line, "save")
 
     def test_the_exemption_does_not_excuse_a_different_verb(self) -> None:
         """Only ``save`` is exempted on those accessors, not every mutation verb."""
-        assert _line_offends("_observation_store.py", "        self._observations.submit(record)", "submit")
+        assert _line_offends("observation_store.py", "        self._observations.submit(record)", "submit")

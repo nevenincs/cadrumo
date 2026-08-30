@@ -35,7 +35,8 @@ from pydantic import ValidationError
 
 from .....core import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
-from .._impersonation import (
+from ..errors import GoogleAuthError
+from ..impersonation import (
     GoogleAuthAdcStaleError,
     GoogleAuthAdcUnavailableError,
     GoogleAuthImpersonationRefusedError,
@@ -45,8 +46,7 @@ from .._impersonation import (
     describe_impersonation_target,
     resolve_impersonated_credentials,
 )
-from .._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
-from ..errors import GoogleAuthError
+from ..records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

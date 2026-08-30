@@ -50,7 +50,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core import TipoActividad
 from ...core.resources import bundled_path
-from ..deadlines import IrpfActivityKind
+from ..deadlines.models import IrpfActivityKind
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:

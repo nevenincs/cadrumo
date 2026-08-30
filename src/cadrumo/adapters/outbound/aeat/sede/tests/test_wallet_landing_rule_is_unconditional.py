@@ -47,7 +47,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_WALLET_MODULE = Path(__file__).resolve().parent.parent / "_iva_compensation_wallet.py"
+_WALLET_MODULE = Path(__file__).resolve().parent.parent / "iva_compensation_wallet.py"
 _GUARDED_FUNCTION = "_submit_wallet_execute_gate_if_present"
 _LANDING_REFUSAL = "_assert_read_landing"
 

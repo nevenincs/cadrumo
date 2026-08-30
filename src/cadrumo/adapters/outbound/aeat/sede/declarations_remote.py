@@ -33,6 +33,7 @@ def assert_read_http(
     *,
     policy: RemoteStateGuardPolicy,
 ) -> None:
+    """Refuse an HTTP call the read-only remote-state policy does not permit."""
     assert_remote_operation_allowed(
         policy,
         RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
@@ -44,6 +45,7 @@ def assert_read_browser_action(
     *,
     policy: RemoteStateGuardPolicy,
 ) -> None:
+    """Refuse a browser action the read-only remote-state policy does not permit."""
     assert_remote_operation_allowed(
         policy,
         RemoteOperation(kind="browser_action", action=action),

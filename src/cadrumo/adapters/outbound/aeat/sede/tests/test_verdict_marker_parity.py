@@ -17,8 +17,8 @@ from __future__ import annotations
 import pytest
 
 from .._adapter_utils import SPANISH_NEGATIVE_VERDICT_MARKERS, extract_marker_verdict
-from .._groi_check import extract_verdict_from_response_text as groi_verdict
-from .._nif_iva_check import extract_verdict_from_response_text as nif_iva_verdict
+from ..groi_check import extract_verdict_from_response_text as groi_verdict
+from ..nif_iva_check import extract_verdict_from_response_text as nif_iva_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

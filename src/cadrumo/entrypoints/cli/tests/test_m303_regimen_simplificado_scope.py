@@ -13,7 +13,7 @@ import pytest
 from ....application.calculations import IvaWalletDecisionRepository
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import M303RegimeComposition
+from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope

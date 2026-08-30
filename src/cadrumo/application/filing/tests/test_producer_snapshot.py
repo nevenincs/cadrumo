@@ -32,15 +32,7 @@ from ....domain.bienes_inversion import (
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines import (
-    ChargeAccount,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    RefundAccount,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ....domain.filing import (
     ModeloDraft,
     compute_modelo_draft_id,

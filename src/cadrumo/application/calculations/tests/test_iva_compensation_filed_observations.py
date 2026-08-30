@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import ObservedCasillaValue, SedeError
+from ....adapters.outbound.aeat.sede.errors import SedeError
+from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import (
@@ -48,7 +49,7 @@ _CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
 
 def _history_state_from_filed_observation(observation: object):
     """Build history only through the disposition-grounded envelope contract."""
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
 
     if not isinstance(observation, FiledDeclaracionObservation):
         raise AssertionError("test requires a filed declaration observation")

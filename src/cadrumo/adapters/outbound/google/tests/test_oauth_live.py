@@ -29,8 +29,8 @@ import os
 import pytest
 
 from .....tests.live_gate import requires_live_enabled
-from .._oauth_flow import run_login_flow
-from .._records import REQUIRED_SCOPES
+from ..oauth_flow import run_login_flow
+from ..records import REQUIRED_SCOPES
 from ..session_store import (
     delete_session,
     load_client,

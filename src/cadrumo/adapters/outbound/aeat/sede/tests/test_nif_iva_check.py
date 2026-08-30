@@ -26,7 +26,8 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._nif_iva_check import (
+from ..errors import SedeNavigationError
+from ..nif_iva_check import (
     _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckResult,
@@ -36,7 +37,6 @@ from .._nif_iva_check import (
     assert_nif_iva_read_landing,
     extract_verdict_from_response_text,
 )
-from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _AEAT = Settings.external_constants().aeat

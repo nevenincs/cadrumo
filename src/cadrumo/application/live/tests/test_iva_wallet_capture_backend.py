@@ -10,11 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import (
-    IVA_COMPENSATION_WALLET_URL,
-    FiledDeclaracionObservationStore,
-    parse_iva_compensation_wallet_html,
-)
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import (

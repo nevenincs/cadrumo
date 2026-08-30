@@ -9,14 +9,8 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    IVA_COMPENSATION_WALLET_URL,
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
-    ObservedCasillaValue,
-)
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation, IvaCompensationWalletRow, ObservedCasillaValue
 from ....core import (
     CasillaId,
     CasillaValueKind,

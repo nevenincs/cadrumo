@@ -109,14 +109,10 @@ from .....tests.aeat_literal_fixtures import (
 )
 from .....tests.master_key import EphemeralMasterKeyProvider
 from ....outbound.aeat.auth import session_store as _session_store
-from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
-from ....outbound.google import (
-    REQUIRED_SCOPES,
-    DriveConfig,
-    OAuthClient,
-    OAuthMetadata,
-    OAuthToken,
-)
+from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
+from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
+from ....outbound.google.records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken, REQUIRED_SCOPES
 from ....outbound.google import session_store as google_session_store
 from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets

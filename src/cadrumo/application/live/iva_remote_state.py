@@ -38,14 +38,14 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
-from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
-from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation as _FiledDeclaracionObservation
-from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore
-from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
-from ...adapters.outbound.aeat.sede import fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet
-from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register
-from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwright
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion as _Declaracion
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
+from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore
+from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet
+from ...adapters.outbound.aeat.sede.declarations import open_declarations_register as _open_declarations_register
+from ...adapters.outbound.aeat.sede.declarations import shared_playwright as _shared_playwright
 from ...adapters.persistence.storage import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )

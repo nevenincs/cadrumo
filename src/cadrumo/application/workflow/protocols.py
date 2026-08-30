@@ -39,7 +39,7 @@ from typing import Protocol, override, runtime_checkable
 
 from ...core import AuthProviderDescription, Period
 from ...core.errors import BaseSeverity
-from ...domain.deadlines import Schedule, TaxpayerProfile
+from ...domain.deadlines.models import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases are domain-owned input contracts.
 # This module consumes them for its protocol annotations; callers import them

@@ -6,7 +6,7 @@ consumed in the body:
 
 * ``http`` / ``num_retries`` — part of the ``google-api-python-client``
   ``execute()`` keyword contract on the ``_ExecutableRequest`` Protocol stub
-  (:mod:`cadrumo.adapters.outbound.google._api`). The stub body is ``...``; the
+  (:mod:`cadrumo.adapters.outbound.google.api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
 * ``fileId`` — the Drive ``get_media`` keyword on the ``_DriveFilesResource``
   Protocol stub (:mod:`cadrumo.adapters.outbound.google.document_link_resolver`).
