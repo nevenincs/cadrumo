@@ -7,9 +7,9 @@ the single entry point for
 :class:`domain.calculations.registry.RegistrySnapshot` values, and
 deadline windows.
 
-This package root is inert for real contracts: it re-exports 87 names
-resolved lazily from sibling modules, and owns no type or function
-definitions of its own. The three local read surfaces each live in their
+This package root is inert for real contracts: it owns no type or
+function definitions of its own, and the lazy re-export map it used to
+carry has been retired, so it re-exports nothing either. The three local read surfaces each live in their
 own module and are imported directly:
 :mod:`application.registry.tree` (registry-tree inspection and
 verification over the bundled ``registry/aeat`` tree),
@@ -62,32 +62,16 @@ from __future__ import annotations
 
 from importlib import import_module
 
-from .errors import (
-    RegistryApplicationError,
-    RegistryApplicationInputError,
-)
-
-"""Names this package re-exports, resolved on first access.
-
-The package root is a HYBRID: it defines real contracts of its own AND
-re-exports 89 names from siblings. A lazy map still works, because
-``__getattr__`` runs only for names absent from module globals -- the module's
-own definitions are untouched and stay eager.
-
-Eager re-exports made this root expensive to touch at all. CommandSpec
-parameter annotations resolve through here, so BUILDING the Typer signature for
-an unrelated registry command imported the filing package, the sede adapter and
-the persistence family behind them. Four `app/registry/manuals/*` nodes paid
-that on resolution.
-"""
-
-
-
-
-
-
-
+# The eager `cadrumo.domain.renta` import is NOT incidental and must not be
+# tidied away with the rest: it registers the first-slice routing cross-domain
+# snapshot check that Modelo 100 snapshots require. The module docstring above
+# records its cost (~613 modules, ~1.3s against a clean interpreter) precisely
+# so that a later reader measuring this package attributes the cost correctly
+# rather than deleting the line that causes it.
 import_module("cadrumo.domain.renta")
 
 
+#: Empty deliberately. The re-export map this root once carried has been
+#: retired, and nothing imports from the package root any more - every consumer
+#: reaches its sibling directly (1054 imports of `.errors`, zero of this root).
 __all__: list[str] = []
