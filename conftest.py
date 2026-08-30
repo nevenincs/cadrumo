@@ -97,6 +97,7 @@ from cadrumo.tests import register_collection_storage_root_cleanup, temporary_en
 from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
 from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
 from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
+from cadrumo.tests._lost_test_hook import apply as _report_lost_tests  # noqa: E402
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
 from cadrumo.tests._marker_hook import apply_banned_live_import_policy as _apply_banned_live_import_policy  # noqa: E402
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
@@ -166,5 +167,6 @@ def pytest_terminal_summary(
     exitstatus: int,
     config: pytest.Config,
 ) -> None:
-    """Delegate to the shared marker-deselection reporter."""
+    """Delegate to the shared deselection and lost-test reporters."""
     _report_deselection(terminalreporter, exitstatus, config)
+    _report_lost_tests(terminalreporter, exitstatus, config)
