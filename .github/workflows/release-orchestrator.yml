@@ -149,6 +149,22 @@ jobs:
           version: "0.11.29"
           enable-cache: true
 
+      # release-please is a Node tool. `version_bump` shells out to
+      # `release-please@16` through npx, so this job needs a Node runtime and
+      # said so itself when it did not have one:
+      #
+      #     VersionBumpError: node is not on PATH; release-please shells out
+      #     through npx and needs a Node.js runtime
+      #
+      # The refusal names host provisioning (OP-11) as the remedy. Setting the
+      # runtime up in the job instead keeps the requirement declared where it is
+      # used, so a fresh or rebuilt runner cannot silently lack it - and it is
+      # already this repository's convention, in ci.yml and packaging-claude.yml.
+      # Version 20 matches ci.yml, the primary lane.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
       - name: Compute the version and land the bump
         id: bump
         env:
