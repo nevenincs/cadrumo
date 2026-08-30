@@ -184,22 +184,38 @@ class RequirementBadge(Static, can_focus=False):
 
 
 @dataclass(frozen=True, slots=True)
+class CredentialRequirement:
+    """One resolved credential-requirement fact, present or absent as a unit.
+
+    A label without a status, or a status without a label, is not a weaker
+    fact -- it is not a fact at all, and the card cannot render half of one.
+    Carrying the pair in one record makes that state unexpressible instead
+    of relying on callers to honour it: the previous shape was two
+    independent optional fields whose dependency lived only in prose, so a
+    half-populated descriptor silently rendered NO badge and raised nothing,
+    dropping a resolved requirement on an operator-facing surface with no
+    signal at all.
+    """
+
+    label: str
+    status: RequirementStatus
+
+
+@dataclass(frozen=True, slots=True)
 class SourceActionDescriptor:
     """One `Get data` source: what it is, and the action that starts it.
 
-    ``credential_requirement_label``/``credential_requirement_status`` are an
-    optional pre-resolved requirement fact -- the caller supplies both or
-    neither, since this widget classifies nothing itself. When both are
-    present, the card renders them through the shared
-    :class:`RequirementBadge`, the same primitive `Required` uses, rather
-    than inventing a second requirement presentation for sources.
+    ``credential_requirement`` is an optional pre-resolved requirement fact;
+    this widget classifies nothing itself. When present, the card renders it
+    through the shared :class:`RequirementBadge`, the same primitive
+    `Required` uses, rather than inventing a second requirement
+    presentation for sources.
     """
 
     title: str
     description: str
     action_label: str
-    credential_requirement_label: str | None = None
-    credential_requirement_status: RequirementStatus | None = None
+    credential_requirement: CredentialRequirement | None = None
 
 
 class SourceActionCard(Vertical):
@@ -230,16 +246,16 @@ class SourceActionCard(Vertical):
     def compose(self) -> ComposeResult:
         yield Static(self._descriptor.title, classes="cadrumo-source-card-title", markup=False)
         yield Static(self._descriptor.description, classes="cadrumo-source-card-description", markup=False)
-        label = self._descriptor.credential_requirement_label
-        status = self._descriptor.credential_requirement_status
-        if label is not None and status is not None:
-            yield RequirementBadge(label, status, id="source-credential-requirement")
+        requirement = self._descriptor.credential_requirement
+        if requirement is not None:
+            yield RequirementBadge(requirement.label, requirement.status, id="source-credential-requirement")
         yield Button(self._descriptor.action_label, id="btn-source-action", classes="cadrumo-source-card-action")
 
 
 __all__ = [
     "ContentDataTable",
     "ContentScroll",
+    "CredentialRequirement",
     "DisclosureGroup",
     "NoticeBand",
     "RequirementBadge",

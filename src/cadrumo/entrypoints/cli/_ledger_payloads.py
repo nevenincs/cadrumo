@@ -45,7 +45,6 @@ from ...application.ledger.models import (
     IsoDateText,
 )
 from ...core import LinkInconsistencyDirection
-from ...core.period import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
@@ -57,7 +56,8 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputRootSchema, OutputSchema
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
@@ -798,7 +798,7 @@ class LedgerExportRowPayload(OutputSchema):
     value_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
-    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    currency: IsoCurrencyCode
     direction: str
     counterparty: str = ""
     description: str

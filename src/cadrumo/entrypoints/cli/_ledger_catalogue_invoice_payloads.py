@@ -28,6 +28,7 @@ from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
+from ...core.parsing import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
@@ -61,7 +62,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     base_total: NonNegativeDecimal
     iva_total: NonNegativeDecimal
     grand_total: NonNegativeDecimal
-    currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
+    currency: IsoCurrencyCode
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
     notes: str = ""
