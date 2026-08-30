@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:fbd0dcfe022d04d4162fe5816a272b838bd36877f8158243514dc4d3df30195b'
+body_hash: 'sha256:2e73ff7350d51f89243d674ef0b90c7a86995a5ea1679e96d9f37b91e62e87c0'
 ---
 
 # `semantic-consolidation` plan
@@ -66,6 +66,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [ ] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
 - [x] `P02.S119` - Adopt ModeloCode on the aggregation contract and result payloads, leaving the operator-input command untyped so its registry-driven refusal can still name the supported set; `src/cadrumo/application/aggregation/_service.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
+- [x] `P02.S125` - Declare the represented-NIF length bound once and the two password-generation bounds beside the envelope that owns them, closing a result payload that reported a generation the envelope would refuse to store; `src/cadrumo/application/auth/, src/cadrumo/adapters/persistence/storage/custody/, src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
