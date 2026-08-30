@@ -40,6 +40,8 @@ cli:
           használjuk fel.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
+        view_help: Megmutatja, mit válaszolna az áfa-azonosítási létra erre az üzleti
+          partnerre az eddig megerősített adatok alapján.
         withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
           hogy a korábbi válasz téves volt.
       evidence:
@@ -279,6 +281,8 @@ cli:
             A choose az olvasatot az értékével vagy a review által mutatott kivonattal
             nevezi meg.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
+          view_help: Megjeleníti egy függőben lévő piszkozat minden ellenőrizhető
+            mezőjét, a blokkoló megállapításokkal együtt.
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
@@ -678,6 +682,8 @@ cli:
           hiányosként jelöli a csomagot.
         group_help: Bizonyítékcsomag-audit parancsok (show/check/export).
         output_help: A csomag ZIP-archívumának kimeneti útvonala.
+        view_help: Megjeleníti egy bizonyítékcsomag manifesztjét és a rá hivatkozó
+          rekordok listáját.
       bindings:
         app_help: Egy AEAT adónyomtatvány kötéseinek vizsgálata és előnézete.
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -1004,6 +1010,10 @@ cli:
           kell.
         import_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
           ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
+        list_empty: Még nincs rögzített egyeztetés.
+        list_help: Felsorolja az aktív profilban rögzített korábbi egyeztetéseket.
+        list_work_unit_id_help: Munkaegység-azonosító szerint szűri az egyeztetéseket
+          (SHA-256 vagy egyértelmű előtag).
         pull_help: Letölti egy munkaegység igazolását az AEAT-tól, és egyeztet ellene.
           Kapcsolatba lép az AEAT-tal (csak olvasás).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
@@ -1743,6 +1753,8 @@ cli:
         report_help: Az üzemeltető által megfigyelt Cl@ve alkalmazás állapotának rögzítése
           egy hitelesítési diagnosztikához.
         show_help: Egyetlen redaktált titkosított hitelesítési diagnosztika megjelenítése.
+        view_help: Megjelenít egy titkosított hitelesítési diagnosztikát azonosító
+          alapján, az érzékeny tartalmak elrejtésével.
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs).
       help: Az aktív hitelesítési szolgáltató konfigurálása.
       login_fresh_help: Kényszerítsen új élő hitelesítést mentett AEAT-munkamenet
@@ -1921,6 +1933,8 @@ cli:
           felhasználói e-mail cím (nem kötelező)
         target_principal_help: A megszemélyesítendő szolgáltatási fiók e-mail címe
           (kötelező --kind service_account_impersonation esetén)
+        view_help: Megjeleníti az aktív profilhoz mentett Google hitelesítésiadat-forrás
+          kiválasztását.
       detail:
         client_json_bad_wrapper: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           rendelkezik megfelelő "installed" wrapper objektummal.
@@ -1978,6 +1992,7 @@ cli:
         get_help: A beállított Google Drive gyökérmappa megjelenítése.
         help: A Google Drive gyökérmappa-kötés kezelése.
         set_help: Google Drive mappa azonosítójának kötése az aktív profilhoz.
+        view_help: Megjeleníti az aktív profilhoz beállított Google Drive gyökérmappát.
       help: A Google OAuth asztali integráció kezelése a Drive és a Sheets számára.
       login_help: Az OAuth-hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
         adat megújítása).
@@ -2123,6 +2138,8 @@ cli:
           állapotát.
         state_help: A képesség engedélyezése (on) vagy letiltása (off).
         state_label: állapot
+        view_help: Megjeleníti az aktív profil minden szolgáltatási képességének feloldott
+          állapotát.
       censo:
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
@@ -2603,6 +2620,10 @@ cli:
           empty: üres
           populated: adatokat tartalmaz
           unresolved: feloldatlan
+      view:
+        area_argument_help: A megtekintendő tárolási terület (state, logs, cache vagy
+          exports).
+        area_help: Részletesen megjelenít egy megadott tárolási helyet.
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -3349,6 +3370,7 @@ cli:
           bevallási előzményt.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
+        modelo_audit_view: Megjeleníti egy bizonyítékcsomag manifesztjét egy bevallás-felülvizsgálathoz.
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
         modelo_list: Támogatott nyomtatványok listázása.
@@ -3396,6 +3418,8 @@ cli:
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
         profile_status: Az aktív profil készültségének megjelenítése.
+        profile_view: Egy profil adatainak megjelenítése (alapértelmezésben az aktív
+          profilé).
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
@@ -3411,6 +3435,7 @@ cli:
         storage_init: Létrehozza a hiányzó tárolókönyvtárakat
         storage_list: Megnézheted, hol tárolódik minden helyi adattípus
         storage_reclaim: Hely felszabadítása egy újraépíthető tárolóterület törlésével
+        storage_view: Megnézheted egy megadott tárolási hely részletes adatait
       root:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.

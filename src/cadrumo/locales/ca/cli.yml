@@ -43,6 +43,8 @@ cli:
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
+        view_help: Mostra què respondria l'escala d'identificació d'IVA per a aquesta
+          contrapart amb el que s'ha confirmat fins ara.
         withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
           que la resposta anterior era incorrecta.
       evidence:
@@ -283,6 +285,8 @@ cli:
           resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
             Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
+          view_help: Mostra tots els camps revisables d'un esborrany pendent, juntament
+            amb les seves troballes bloquejants.
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
@@ -676,6 +680,8 @@ cli:
           el paquet és incomplet.
         group_help: Verbs d'auditoria del paquet d'evidència (show/check/export).
         output_help: Ruta de sortida per al ZIP del paquet.
+        view_help: Mostra el manifest d'un paquet d'evidències i la seva llista de
+          registres referenciats.
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -1003,6 +1009,10 @@ cli:
           conciliar.
         import_help: Concilia una unitat de treball contra un PDF de justificant o
           declaració local. Només local; mai contacta amb AEAT.
+        list_empty: Encara no hi ha conciliacions registrades.
+        list_help: Llista les conciliacions anteriors registrades al perfil actiu.
+        list_work_unit_id_help: Filtra les conciliacions per identificador d'unitat
+          de treball (SHA-256 o un prefix inequívoc).
         pull_help: Descàrrega d'AEAT el justificant d'una unitat de treball i concilia-hi.
           Contacta amb AEAT (només lectura).
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
@@ -1746,6 +1756,8 @@ cli:
         report_help: Registrar l'estat de l'app Cl@ve observat per l'operador per
           a un diagnòstic d'autenticació.
         show_help: Mostra un diagnòstic d'autenticació xifrat i redactat.
+        view_help: Mostra un diagnòstic d'autenticació xifrat pel seu identificador,
+          amb els cossos sensibles ocults.
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
       login_fresh_help: Forçar una nova autenticació en viu en lloc de reutilitzar
@@ -1929,6 +1941,8 @@ cli:
           a tot el domini (opcional)
         target_principal_help: Correu del compte de servei a suplantar (obligatori
           amb --kind service_account_impersonation)
+        view_help: Mostra la selecció de font de credencials de Google desada per
+          al perfil actiu.
       detail:
         client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
           que no és un objecte
@@ -1989,6 +2003,8 @@ cli:
         get_help: Mostra la carpeta arrel de Google Drive configurada
         help: Gestiona la carpeta arrel de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil actiu
+        view_help: Mostra la carpeta arrel de Google Drive configurada per al perfil
+          actiu.
       help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
       login_help: Executar el flux de consentiment OAuth (o refrescar una credencial
         existent)
@@ -2131,6 +2147,8 @@ cli:
           actiu.
         state_help: Si activar (on) o desactivar (off) la capacitat.
         state_label: estat
+        view_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
+          actiu.
       censo:
         apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
           només previsualitza).
@@ -2604,6 +2622,10 @@ cli:
           empty: buida
           populated: amb dades
           unresolved: sense resoldre
+      view:
+        area_argument_help: L'àrea d'emmagatzematge a consultar (state, logs, cache
+          o exports).
+        area_help: Mostra amb detall una ubicació d'emmagatzematge declarada.
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -3352,6 +3374,8 @@ cli:
           una sola passada.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
+        modelo_audit_view: Mostra el manifest d'un paquet d'evidències d'una revisió
+          de declaració.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
@@ -3401,6 +3425,7 @@ cli:
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
+        profile_view: Mostrar les dades d'un perfil (per defecte, el perfil actiu).
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible de tots els perfils desats localment.
         reset_status: Mostra l'estat d'una operació de reinici sense modificar dades
@@ -3415,6 +3440,7 @@ cli:
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
         storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
+        storage_view: Consulta amb detall una ubicació d'emmagatzematge concreta
       root:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.
