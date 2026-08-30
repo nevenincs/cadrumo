@@ -32,3 +32,23 @@ plan row's cited path omits it. The digest pinned in this artefact
 tree-wide scalar, so an unrelated peer commit elsewhere cannot flap it. The
 `disposition_tally` field is descriptive provenance, not a pinned pass
 condition — no test asserts an exact count against it.
+
+CORRECTION 2026-08-30: the `.vault/reference/` artefact listed above no longer
+exists. Commit `280ec80a67` deleted it on 2026-08-28 under a subject announcing
+only additive work for the semantic-consolidation feature. The deletion is
+defensible -- the document was a SNAPSHOT of generated data, reproducible by
+calling `build_modelo_workspace_action_denominator()` -- so no information was
+lost, but this record must not keep asserting a file that is gone.
+
+The row's substance is satisfied and was re-measured at HEAD rather than taken
+from this record: `dev/quality/modelo_workspace_action_denominator.py` exists,
+both public functions resolve, the validator returns ZERO violations, and
+`dev/tests/test_modelo_workspace_action_denominator.py` holds it as a standing
+gate at 9 passing tests.
+
+- `verify:` `validate_modelo_workspace_action_denominator(build_...())` -> `0 violations`
+- `verify:` `pytest dev/tests/test_modelo_workspace_action_denominator.py` -> `9 passed`
+
+This row is NOT of the same kind as W01.P01.S01 and W05.P10.S38, whose C1
+receipt subject commit `51023bdad2` retired outright. That commit explicitly
+preserved the action denominator, so the three rows must not be swept together.
