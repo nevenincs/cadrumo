@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:fd7205fc609029c56cdeb614236c75a6782d78d1f6aa46feadf9700c14cddad6'
+body_hash: 'sha256:7989f5288dd345b44c4b7e31776343a0b2460632a32b517318ef614dfb7bebb0'
 related: []
 ---
 
@@ -2322,3 +2322,98 @@ fails loudly instead of persisting. Proven both directions against the real
 population: the assertion fails for the removed entry and holds for the two
 that remain, which is the both-directions discipline this family's own
 counter-example is praised for.
+
+### Measured 2026-08-31: the readiness fixture is a shared core with scenario tails, not 19 copies
+
+**Pathway:** `_READY_PROFILE_FACTS`, 20 definition sites across the test tree;
+the blocker `W07.P16.S333` names for its remaining payload work.
+
+Recorded there as "package-private and duplicated in 19 files". Measured
+structurally, and the first framing this measurement produced was ALSO wrong in
+the opposite direction: comparing whole AST values reports 19 distinct shapes
+from 20 sites, which is technically true and materially misleading -- two sites
+differing only in `identity.surnames` ("Modelo Selector" versus "Modelo Work")
+count as distinct under that comparison while being the same fixture.
+
+Compared per fact path instead: 15 paths appear in EVERY site, 7 of them
+carrying an identical value everywhere. Of the 8 that vary, most are cosmetic
+labels naming the test (`identity.name`, `identity.surnames`,
+`activities.description`, `identity.tax_id`). A further 14 paths appear in only
+some sites and are genuinely scenario-specific -- the `renta_*` family appears
+in exactly one, `censo.activity_start_date` in seven.
+
+So the population is a real shared baseline with per-scenario tails, not
+nineteen copies of one constant. A shared home is justified for the 15-path
+core; folding the tails into it would manufacture a fixture no test asked for.
+
+**A candidate defect inside it, checked and refuted.** Four IVA facts are
+written as the STRING `'false'` at five sites and the BOOLEAN `False` at the
+rest, and `_result_disposition_resolution.py:391` guards on `if redeme and
+...`, where a non-empty string is truthy -- which would read a
+not-enrolled taxpayer as REDEME-enrolled and resolve a negative period to
+devolución. It does not happen: `UserProfileFact` normalises `'false'` to
+`False` at the boundary, verified by construction. The divergence is cosmetic.
+Recorded because the shape is exactly the one worth checking, and because the
+next reader should not have to re-derive the refutation.
+
+**Remediation.** Give the 15-path core one sanctioned home and let each site
+keep its own tail. Do NOT consolidate on the count alone: the count says
+"nineteen copies", and the members say "one core, nineteen scenarios".
+
+#### Correction, same day: the remediation above would have added a 21st literal
+
+The finding immediately above proposed giving the 15-path core "one sanctioned
+home". That is the wrong shape, and the tree already says so.
+
+`cadrumo.tests.user_profile.complete_profile_facts` is the sanctioned
+mechanism, and its own docstring rules on exactly this: it extends a caller's
+facts by asking the validation service what the schema still reports missing,
+"rather than from a hand-listed set", because "a literal list of required paths
+is a second authority for the schema's own required flags: the moment the
+schema gains one, every profile assembled from the literal is quietly short of
+complete while still calling itself so".
+
+That is the failure mode the 20 `_READY_PROFILE_FACTS` literals already carry.
+Consolidating them into one shared constant would preserve it perfectly -- one
+literal instead of twenty, still a second authority, and now with the
+authority of looking canonical. The count would improve and the defect would
+not.
+
+**Corrected remediation.** Migrate the sites to
+`complete_profile_facts(schema, facts=<the scenario's own tail>)`, which keeps
+each test's meaningful values and lets the schema supply the rest. The shared
+thing already exists; what is missing is its adoption. Verify by adding a
+required field to the schema and confirming a migrated site still assembles a
+complete profile while a literal one does not -- the divergence that a shared
+constant would hide.
+
+### Evidence update 2026-08-31: S361's named ImportError no longer has a source
+
+**Pathway:** `W07.P17.S361` in the tui-architecture plan, an EVIDENCE row that
+records HEAD failing to collect
+`entrypoints/tui/modelo/view/tests/test_work_review.py` with `ImportError:
+cannot import name 'BucketEventHistoryRepositoryProtocol' from
+'cadrumo.domain.buckets'`.
+
+That symbol is now defined in `domain/buckets/protocols.py` and is exported
+from the package namespace in NEITHER the working tree nor HEAD. Every
+consumer -- application bucket-event repository, inventory service, invoice
+creation and lifecycle, ledger classification and common actions -- imports it
+from the canonical defining module. A tree-wide search finds ZERO
+package-namespace imports of it, and the named test file carries no such
+import at HEAD either.
+
+**Scoped precisely, because the row's own subject is the cost of inferring.**
+What is established is that the specific import the row names cannot be the
+source of that ImportError any more. What is NOT established is that HEAD now
+collects the module: an ImportError can arrive transitively, and confirming
+collection requires extracting HEAD and running it, which was not done here.
+The row's standing instruction -- confirm HEAD collects the module before
+reaching for a HEAD baseline, and say so when it does not rather than
+inferring -- applies to this update as much as to the triage it warns about.
+
+**Remediation.** The row closes on the operator's landing decision, not on
+this. Recorded so the decision is taken against current evidence: the
+relocation campaign appears to have dissolved the specific breakage the row
+documents, which weakens the "working tree is more coherent than HEAD"
+argument in the one direction the row measured it.

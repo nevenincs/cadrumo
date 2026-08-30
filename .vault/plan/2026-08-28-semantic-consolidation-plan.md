@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:2e73ff7350d51f89243d674ef0b90c7a86995a5ea1679e96d9f37b91e62e87c0'
+body_hash: 'sha256:a3d3ecf73bae8f7588eb50f001761a067a3817ed3a8ad43b40bb7fafd191ccf1'
 ---
 
 # `semantic-consolidation` plan
@@ -67,6 +67,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
 - [x] `P02.S119` - Adopt ModeloCode on the aggregation contract and result payloads, leaving the operator-input command untyped so its registry-driven refusal can still name the supported set; `src/cadrumo/application/aggregation/_service.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [x] `P02.S125` - Declare the represented-NIF length bound once and the two password-generation bounds beside the envelope that owns them, closing a result payload that reported a generation the envelope would refuse to store; `src/cadrumo/application/auth/, src/cadrumo/adapters/persistence/storage/custody/, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S126` - Declare the ISO 4217 currency shape once as a normalising alias and adopt it at the domain model and both CLI payloads, giving the domain the uppercase rule it lacked; `src/cadrumo/core/parsing/, src/cadrumo/domain/currency/, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S127` - Adopt the canonical non-negative and positive decimal aliases on the catalogue invoice payload's money and rate fields; `src/cadrumo/core/text_bounds.py, src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -91,6 +93,7 @@ The same filing_year field carries six contradictory windows across the tree -- 
 - [x] `P06.S122` - Extract the self-verifying custody digest base into a leaf module so every custody record can reach it, the two capsule records having been unable to subclass it where it lived; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [x] `P06.S123` - Extend the custody digest base with the digest field validator, the mismatch check and the canonical payload, then subclass the five records that hand-roll them; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [ ] `P06.S124` - Move the remaining three custody records onto the digest base, each with its digest proved unchanged, the envelope and recovery envelope and capsule commit still hand-rolling the computation; `src/cadrumo/adapters/persistence/storage/custody/`.
+- [ ] `P06.S128` - Rule on the operator-clave accumulator, whose docstring calls it a mutable accumulator while its config freezes it, so every aggregation write raises; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 
 ### Phase `P07` - Rule on the second population of non-inert package namespaces
 
