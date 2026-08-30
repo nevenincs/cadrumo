@@ -1098,6 +1098,40 @@ def project_modelo_work_target(
     return project_modelo_work_unit(resolution.work_unit)
 
 
+def diverging_work_target_revision_axes(
+    *,
+    law_revision_id: RevisionId,
+    requested_revision_id: RevisionId | None,
+    stored_revision_id: RevisionId | None,
+) -> frozenset[str]:
+    """Return the axis names whose asserted revision is not the law-determined one.
+
+    The one comparison behind both revision-assertion surfaces. An axis that
+    supplies no value asserts nothing and can never diverge; a supplied value
+    is normalised and judged against the law-determined revision ALONE, never
+    against the other axis, so a stored value can never select the revision a
+    request is judged by.
+
+    Extracted because the rule was written twice, in two dispositions -- this
+    module raising on divergence and the Workspace projection recording it as
+    typed data. The dispositions differ legitimately: an exception escaping a
+    read projection would destroy the information its typed refusal exists to
+    carry. The COMPARISON differing would not be legitimate, and two copies of
+    one normalisation drift silently: a change to what counts as equal lands at
+    one site, the other goes on answering the old question, and the two
+    surfaces disagree about whether a taxpayer's stored revision matches the
+    law.
+
+    Returns:
+        The diverging axis names, empty when every supplied axis matches.
+    """
+    return frozenset(
+        axis
+        for axis, candidate in (("requested", requested_revision_id), ("stored", stored_revision_id))
+        if candidate is not None and candidate.strip() != law_revision_id
+    )
+
+
 def assert_work_target_revision(
     capture: RegistryAuthorityCapture,
     *,
@@ -1125,14 +1159,19 @@ def assert_work_target_revision(
     law_revision_id = (
         projection.revision_id if isinstance(projection, RegistryRevisionInspection) else projection.revision.id
     )
+    diverging = diverging_work_target_revision_axes(
+        law_revision_id=law_revision_id,
+        requested_revision_id=requested_revision_id,
+        stored_revision_id=stored_revision_id,
+    )
     for axis, candidate in (
         ("requested", requested_revision_id),
         ("stored", stored_revision_id),
     ):
-        if candidate is None:
+        if axis not in diverging or candidate is None:
             continue
         asserted = candidate.strip()
-        if asserted != law_revision_id:
+        if True:
             raise ModeloWorkRegistryYearMismatchError(
                 f"{axis} registry revision {asserted!r} is not the law-determined revision "
                 f"for this filing target. The law-determined revision is {law_revision_id!r}. "
