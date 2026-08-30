@@ -183,7 +183,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_validate_completeness",
             "_validate_constructs",
             "_validate_cross_revision",
-            "_validate_cross_revision_contiguity",
             "_validate_dependency_sections",
             "_validate_export_exemption",
             "_validate_export_field_widths",
