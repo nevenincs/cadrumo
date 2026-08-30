@@ -48,9 +48,11 @@ from .....application.modelo.reconciliation_records import (
 )
 from .....application.workflow.persistence import workflow_state_repository
 from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
-from .....domain.buckets import BucketEventType
+from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
-from .....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.repository import upsert_work_unit
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests import FIXTURES_DIR
 from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....inbound.justificante import parse_justificante
@@ -427,7 +429,8 @@ def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back() -> None:
     )
     assert len(events_before) == 1
 
-    from .....domain.buckets import BucketEvent, BucketEventObjectType, append_bucket_event, derive_bucket_event_id
+    from .....domain.buckets.event import BucketEvent, BucketEventObjectType, derive_bucket_event_id
+    from .....domain.buckets.event_repository import append_bucket_event
 
     second_at = _RECONCILED_AT + timedelta(hours=1)
     payload = {"work_unit_id": work_unit_id, "verdict": ModeloReconciliationVerdict.MATCHES.value, "diffs": "0"}

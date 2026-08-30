@@ -39,29 +39,25 @@ from ....application.ledger.actions_manual import (
 from ....application.ledger.models import LedgerExportCommand, LedgerSourceImportCommand, ManualLedgerTransactionPatch
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
-from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ....domain.categories import SpendingCategory
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.models import Attachment
+from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios import UsageRatioProfile
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations

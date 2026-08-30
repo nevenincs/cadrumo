@@ -26,17 +26,15 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .. import (
+from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,
-    IvaArt69DosService,
-    IvaCategory,
     IvaInvoiceClassificationCriteria,
-    IvaRateKind,
     IvaTerritorialScope,
     TransactionKind,
     classify_iva,
 )
+from ..schema import IvaArt69DosService, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

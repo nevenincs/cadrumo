@@ -63,7 +63,7 @@ def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]
         return
     causante_ccaa = arguments.get(_CAUSANTE_CCAA_PARAMETER)
     if isinstance(causante_ccaa, str):
-        from ...domain.contribuyente import parse_tax_region
+        from ...domain.contribuyente.tax_residence import parse_tax_region
 
         # Raises for a foral territory, which is the more specific refusal.
         parse_tax_region(causante_ccaa)

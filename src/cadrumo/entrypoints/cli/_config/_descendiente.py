@@ -42,7 +42,8 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....domain.contribuyente import DescendantInfo, serialise_meses_trabajo
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.meses_trabajo import serialise_meses_trabajo
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -67,7 +68,7 @@ def _active_profile_pointer() -> ProfileBucketPointer:
 
 def _load_descendientes(bucket_id: str) -> tuple[DescendantInfo, ...]:
     """Return the active profile's declared descendants, oldest fact-order preserved."""
-    from ....domain.contribuyente import descendant_list_from_facts
+    from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
     from ....domain.user_profile.errors import ProfileNotFoundError
     from ._profile_readiness import _read_profile_record
 
@@ -88,7 +89,7 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     before rewriting, so a ``remove`` that shrinks the set never leaves a stale
     higher-index fact behind for :func:`descendant_list_from_facts` to re-discover.
     """
-    from ....domain.contribuyente import descendant_facts_from_list
+    from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
     from ....domain.user_profile.errors import ProfileNotFoundError
     from ....domain.user_profile.values import UserProfileFact
     from ._profile_readiness import _read_profile_record
@@ -134,7 +135,7 @@ def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
     flag round-trip, so what an operator reads back is a value they could paste
     straight into ``GASTOS_GUARDERIA_MENSUAL=`` unchanged.
     """
-    from ....domain.contribuyente import serialise_guarderia_mensual
+    from ....domain.contribuyente.guarderia_mensual import serialise_guarderia_mensual
 
     return serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or "-"
 
@@ -317,7 +318,7 @@ def descendiente_add(
     from pydantic import ValidationError
 
     from ....core.errors import ProfileAnswerTypeError
-    from ....domain.contribuyente import parse_descendiente_flag
+    from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
 
     pointer = _active_profile_pointer()
     existing = _load_descendientes(pointer.bucket_id)

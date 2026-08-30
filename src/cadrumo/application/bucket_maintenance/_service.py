@@ -18,7 +18,7 @@ from ...application.filing import FilingRetentionAuthority
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
-from ...domain.buckets import BucketDeleteRefusedError
+from ...domain.buckets.errors import BucketDeleteRefusedError
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint

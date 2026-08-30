@@ -21,8 +21,8 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ....domain.contribuyente import FiscalResidency
-from ....domain.deadlines import IrpfSpecialRegime
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IrpfSpecialRegime
 from .._ledger_support import _resolve_source_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

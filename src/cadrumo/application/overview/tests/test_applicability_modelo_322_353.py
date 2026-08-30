@@ -5,15 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
-from ....domain.deadlines import (
-    EntityType,
-    IVARegime,
-    LegalEntityForm,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

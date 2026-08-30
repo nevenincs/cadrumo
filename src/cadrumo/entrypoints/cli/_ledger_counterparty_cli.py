@@ -49,7 +49,8 @@ import typer
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
-from ...domain.iva import EUMemberState, IvaTerritorialScope
+from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.schema import EUMemberState
 from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (

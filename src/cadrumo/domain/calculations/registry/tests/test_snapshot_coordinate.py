@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # canonical-routing check is owned by the development-side parity tests.
 _EMITTING_SURFACES: Final[tuple[str, ...]] = (
     "src/cadrumo/domain/calculations/registry/tests/_scenarios.py",
-    "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py",
+    "src/cadrumo/adapters/outbound/aeat/sede/declarations.py",
 )
 
 

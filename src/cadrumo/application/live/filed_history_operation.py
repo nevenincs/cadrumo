@@ -23,7 +23,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....adapters.outbound.google import (
-    DriveConfig,
-    GoogleAuthError,
-    load_drive_config,
-    resolve_active_profile,
-    save_drive_config,
-)
+from ....adapters.outbound.google.active_profile import resolve_active_profile
+from ....adapters.outbound.google.errors import GoogleAuthError
+from ....adapters.outbound.google.records import DriveConfig
+from ....adapters.outbound.google.session_store import load_drive_config, save_drive_config
 from .._common import emit_envelope
 from ._google_errors import _google_refusal
 from ._google_folder_payloads import GoogleFolderSetResult, GoogleFolderViewResult

@@ -32,15 +32,9 @@ import pytest
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.iva import (
-    IvaCategory,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    ProrrataInputs,
-    compute_prorrata_definitiva_anual,
-)
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
+from ....domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from .._prorrata_regularizacion import build_prorrata_declared_volume_divergence_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

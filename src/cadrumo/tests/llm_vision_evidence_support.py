@@ -15,13 +15,9 @@ from PIL import Image
 
 from ..core import STR_KEYED_MAPPING_ADAPTER
 from ..core.config import override_settings
-from ..domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ..domain.transactions.enums import TransactionDirection
+from ..domain.transactions.models import Transaction
+from ..domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,

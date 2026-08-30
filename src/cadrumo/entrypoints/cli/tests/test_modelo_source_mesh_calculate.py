@@ -21,18 +21,13 @@ from ....core import (
 )
 from ....core.errors import ERROR_REGISTRY
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.categories import SpendingCategory
-from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import EUMemberState, IvaCategory, IvaDeductionClassificationProvenance
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -729,7 +724,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path)
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
         from ....application.calculations import IvaWalletDecisionRepository
-        from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+        from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
@@ -839,7 +834,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     advisory assertions meaningful.
     """
     from ....application.calculations import IvaWalletDecisionRepository
-    from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+    from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
     with open_test_profile_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(

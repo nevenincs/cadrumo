@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....core import FieldRole
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import import_invoices_from_rows, read_bulk_invoice_import_source
@@ -78,7 +78,7 @@ def test_the_libro_registro_is_refused_whole_without_a_mapping() -> None:
     meaningful — without it, a passing import could simply mean the headers
     happened to match all along.
     """
-    from ....domain.invoices import InvoiceValidationError
+    from ....domain.invoices.errors import InvoiceValidationError
 
     with pytest.raises(InvoiceValidationError) as caught:
         read_bulk_invoice_import_source(_LIBRO)

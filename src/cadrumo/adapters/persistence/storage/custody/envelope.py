@@ -23,7 +23,7 @@ def create_profile_custody_password_envelope(
     previous_envelope_digest: str | None = None,
     settings: Settings | None = None,
 ) -> ProfileCustodyEnvelope:
-    """Create a password wrapper through the S03 supervised KDF boundary."""
+    """Create a password wrapper through the supervised KDF boundary."""
     wrapped_dek = wrap_profile_custody_password_material(
         secret=password,
         dek=dek,

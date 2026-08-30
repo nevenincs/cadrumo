@@ -38,7 +38,7 @@ from typing import override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.aeat.sede import NotificationsSnapshot, RemoteNotification, fetch_notifications_query
+from ...adapters.outbound.aeat.sede.notifications import NotificationsSnapshot, RemoteNotification, fetch_notifications_query
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG

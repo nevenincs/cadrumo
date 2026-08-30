@@ -28,31 +28,16 @@ from ...core.errors import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import canonical_json_bytes, sha256_file
 from ...core.i18n import tr
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    emit_bucket_events,
-)
-from ...domain.currency import (
-    CurrencyNormalizationService,
-    CurrencyNormalizationStatus,
-    MonetaryAmount,
-)
-from ...domain.transactions import (
-    BucketTransactionRef,
-    ImportSummary,
-    RawTransaction,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionValidationError,
-    derive_import_fingerprint,
-    derive_movement_day_key,
-    derive_transaction_id,
-    existing_transaction_import_fingerprints,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_events
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
+from ...domain.currency.service import CurrencyNormalizationService
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_import_fingerprint, derive_movement_day_key, derive_transaction_id, existing_transaction_import_fingerprints
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.raw_transaction import RawTransaction
+from ...domain.transactions.repository import ImportSummary
 from ..transactions import LedgerImportDiagnostic, classify_import_row, import_ledger_with_diagnostics
 from .actions_common import (
     build_ledger_bucket_event,

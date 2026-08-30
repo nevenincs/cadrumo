@@ -121,7 +121,7 @@ from .sessions import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.buckets import BucketEvent, BucketEventType
+    from ...domain.buckets.event import BucketEvent, BucketEventType
     from ..state_projection import OperatorStateProjection
     from ..workflow.state_models import WorkflowState
 
@@ -172,7 +172,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         :class:`application.workflow.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.
     """
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
     from ..workflow.persistence import workflow_state_repository
     from ..workflow.profile_health import assess_active_profile_health
 
@@ -761,7 +761,7 @@ async def login_operator_auth(
             certificate_credentials=certificate_credentials,
         )
 
-        from ...domain.buckets import BucketEventType
+        from ...domain.buckets.event import BucketEventType
         from ..workflow.persistence import workflow_state_repository
 
         bucket_id = snapshot.bucket_id
@@ -984,7 +984,7 @@ def logout_operator_auth(
                     state.model_copy(update={"auth": cleared_auth}),
                     tuple(("auth.session.cleared", provider_id) for provider_id in event_provider_ids),
                 )
-                from ...domain.buckets import BucketEventType
+                from ...domain.buckets.event import BucketEventType
 
                 durable_events = tuple(
                     _BucketEventSpec(

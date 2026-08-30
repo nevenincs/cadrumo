@@ -122,7 +122,7 @@ def unrevisioned_appends(tree: ast.AST) -> int:
 #: read, and that branch composes from a plain load() by necessity. Excluding
 #: the definition rather than every module named here keeps the rule structural
 #: -- a second module adopting this shape is still reported.
-_DEFINES_THE_GUARDED_COMPOSER = "src/cadrumo/domain/buckets/_event_repository.py"
+_DEFINES_THE_GUARDED_COMPOSER = "src/cadrumo/domain/buckets/event_repository.py"
 
 
 def test_no_production_module_appends_onto_an_unrevisioned_load() -> None:

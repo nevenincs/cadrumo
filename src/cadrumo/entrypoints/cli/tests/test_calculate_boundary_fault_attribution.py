@@ -29,7 +29,7 @@ from typing import Any
 
 import pytest
 
-from ....domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
+from ....domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output

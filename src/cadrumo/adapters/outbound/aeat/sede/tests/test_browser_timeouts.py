@@ -8,7 +8,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_RENTA_MODULE = "cadrumo.adapters.outbound.aeat.sede._renta_web_open"
+_RENTA_MODULE = "cadrumo.adapters.outbound.aeat.sede.renta_web_open"
 
 
 def test_visible_probe_timeout_constant_value() -> None:

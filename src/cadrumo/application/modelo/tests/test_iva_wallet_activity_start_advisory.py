@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva_compensation import IvaCompensationDecisionReason
+from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from ...calculations import IvaWalletDecisionRepository
 from .._iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit

@@ -24,12 +24,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclarationAvailability,
-    FiledDeclarationAvailabilityReport,
-)
+from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
-from ....domain.deadlines import TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
@@ -67,12 +64,7 @@ def _autonomo(
     ``object`` on the way into the model, which is what a supplied date being
     silently the wrong type would have hidden.
     """
-    from ....domain.deadlines import (
-        EntityType,
-        IrpfEstimationRegime,
-        IrpfIncomeCategory,
-        IVARegime,
-    )
+    from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory
 
     return TaxpayerProfile(
         tax_id="X1234567L",
@@ -179,7 +171,7 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
     # The signal is worthless unless it is genuinely taxpayer-specific, so this
     # asserts the derivation actually responds to declared facts rather than
     # returning one universal list under a taxpayer-specific name.
-    from ....domain.deadlines import EntityType, IVARegime
+    from ....domain.deadlines.models import EntityType, IVARegime
 
     natural = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     company = expected_filed_declaration_grid(
@@ -496,7 +488,7 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
 
 
 def _declaration_row(*, modelo: str, year: int, period: str, expediente_id: str, presented_at: datetime):
-    from ....adapters.outbound.aeat.sede import Declaracion
+    from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 
     return Declaracion(
         modelo=modelo,
@@ -518,11 +510,7 @@ def _filed_130_observation_for_tests():
 
     from pydantic import AnyHttpUrl
 
-    from ....adapters.outbound.aeat.sede import (
-        FiledDeclaracionArtefact,
-        FiledDeclaracionObservation,
-        ObservedCasillaValue,
-    )
+    from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
     from ....core import CasillaValueKind
     from ....core.config import Settings
 

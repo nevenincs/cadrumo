@@ -34,24 +34,13 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId, TransactionId
-from ...domain.categories import (
-    HOME_OFFICE_FAMILIES,
-    SpendingCategory,
-    family_for,
-    home_office_categories,
-)
-from ...domain.iva import IvaCategory
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    has_employment_irpf_category,
-    is_classified,
-)
+from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for, home_office_categories
+from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState, is_classified
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import has_employment_irpf_category
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import CensoRatioMismatchError
 from ..aggregation import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
@@ -753,7 +742,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 # raises all twenty members, and preflight runs two of the screens and never
 # enters the rest. Thirteen members therefore have no preflight counterpart to
 # map onto, and inventing one would ship an operator-facing message for a
-# condition this layer cannot detect -- the failure S200 was written against.
+# condition this layer cannot detect -- the failure this guard was written against.
 # The partition records that reachability fact per member instead. Its sibling
 # is right that an exemption ROW would be the worse shape on an axis where
 # severity is a product choice; here the second side is a structural fact about

@@ -26,7 +26,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
-from .....domain.transactions import SourceFormat
+from .....domain.transactions.raw_transaction import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialValidationError,

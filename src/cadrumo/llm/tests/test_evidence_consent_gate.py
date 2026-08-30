@@ -42,18 +42,17 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import (
+from ..client import LLMClient
+from ..client import LLMClient as _ClientUnderInspection
+from ..consent import (
     EvidenceConsentToken,
-    LLMClient,
-    LLMConsentError,
-    LLMRequest,
-    TextInvoiceFieldExtractor,
     cloud_evidence_read_permitted,
-    extract_invoice_fields_from_text,
     mint_evidence_consent_token,
+    provider_reads_off_host,
 )
-from .._client import LLMClient as _ClientUnderInspection
-from .._consent import provider_reads_off_host
+from ..errors import LLMConsentError
+from ..evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

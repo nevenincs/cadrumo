@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...domain.iva import SupplyNature
-from .._supply_nature_proposal import (
+from ...domain.iva.supply_nature import SupplyNature
+from ..supply_nature_proposal import (
     UNDETERMINED_SUPPLY_NATURE,
     build_supply_nature_prompt,
     parse_supply_nature_response,

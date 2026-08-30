@@ -22,14 +22,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Modelo
-from ....iva import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ..ledger_bindings import (
     _iva_build_matcher,
     _iva_reachability_probe,

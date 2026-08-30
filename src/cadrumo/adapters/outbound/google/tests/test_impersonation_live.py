@@ -24,7 +24,7 @@ test resolves is persisted; the minted token lives only in process memory
 for the duration of the test.
 
 See Also:
-    `adapters.outbound.google._impersonation.resolve_impersonated_credentials`
+    `adapters.outbound.google.impersonation.resolve_impersonated_credentials`
         The resolver under test.
 """
 
@@ -35,7 +35,7 @@ import os
 import pytest
 
 from .....tests.live_gate import requires_live_google_enabled
-from .._impersonation import (
+from ..impersonation import (
     GoogleImpersonationConfig,
     describe_impersonation_target,
     resolve_impersonated_credentials,

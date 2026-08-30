@@ -53,16 +53,9 @@ from ....domain.calculations.registry.ledger_impatriado_bindings import (
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,

@@ -8,7 +8,7 @@ Covers:
   DIAGNOSTIC-class URL host-only redaction property.
 * :exc:`cadrumo.core.observability.RunTraceValidationError` on a corrupted
   JSONL line.
-* :class:`cadrumo.core.observability._sink.JsonlRunSink` rejecting events
+* :class:`cadrumo.core.observability.sink.JsonlRunSink` rejecting events
   whose ``run_id`` does not match its bound id, and skipping records
   that carry no ``run_event`` extra (without creating the file).
 * Strict ``run_id`` validation across :func:`load_trace`,
@@ -33,23 +33,19 @@ from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory, storage_path
 from ...config import override_settings
 from ...directory_scan import iter_directory
-from .. import (
-    NavigationPayload,
-    RunEvent,
-    RunEventKind,
-    RunEventPayload,
-    RunOutcome,
-    RunTrace,
-    RunTracePersistenceError,
-    RunTraceValidationError,
+from ..errors import RunTracePersistenceError, RunTraceValidationError
+from ..models import NavigationPayload, RunEvent, RunEventKind, RunEventPayload, RunOutcome, RunTrace
+from ..sink import JsonlRunSink
+from ..store import (
+    EVENTS_FILENAME,
+    TRACE_FILENAME,
     iter_runs,
     load_events,
     load_trace,
+    runs_dir,
     save_events_append,
     save_trace,
 )
-from .._sink import JsonlRunSink
-from .._store import EVENTS_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -194,8 +190,7 @@ class TestJsonlRunSinkRunIdFilter:
 
 class TestStoreRunIdValidation:
     def test_load_trace_rejects_path_traversal(self, tmp_path: Path) -> None:
-        from .. import load_events, load_trace
-        from .._store import _validate_run_id
+        from ..store import _validate_run_id, load_events, load_trace
 
         bad_run_ids = (
             "../escape",
@@ -221,7 +216,7 @@ class TestStoreRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        from .. import load_trace
+        from ..store import load_trace
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
@@ -233,7 +228,7 @@ class TestStoreRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        from .. import load_trace
+        from ..store import load_trace
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             runs_root = storage_path(StorageCategory.RUNS, settings=settings)
@@ -330,7 +325,7 @@ class TestStorePersistenceErrors:
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
-            caplog.set_level(logging.WARNING, logger="cadrumo.core.observability._store")
+            caplog.set_level(logging.WARNING, logger="cadrumo.core.observability.store")
             assert list(iter_runs()) == [(run_b, trace_b)]
 
         messages = [record.getMessage() for record in caplog.records]
@@ -347,7 +342,7 @@ class TestStorePersistenceErrors:
             (runs_root / "not-a-run").mkdir()
             (runs_root / "0123456789abcdef").mkdir()
 
-            caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability._store")
+            caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability.store")
 
             assert list(iter_runs(settings=settings)) == []
         messages = [record.getMessage() for record in caplog.records]
@@ -386,7 +381,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """Validation must be eager — not deferred until iteration."""
-        from .. import iter_events
+        from ..store import iter_events
 
         with (
             override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)),
@@ -400,7 +395,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """Consuming n events pulls exactly n lines off disk."""
-        from .. import iter_events
+        from ..store import iter_events
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             run_id = "0123456789abcdef"
@@ -421,7 +416,7 @@ class TestIterEvents:
         tmp_path: Path,
     ) -> None:
         """A validation error fires during iteration, not at call time."""
-        from .. import iter_events
+        from ..store import iter_events
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             run_id = "abcdef0123456789"
@@ -488,7 +483,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
                 )
                 record.run_event = self._event(run_id)
 
-                with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability._sink"):
+                with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability.sink"):
                     sink.emit(record)
             finally:
                 sink.close()
@@ -496,7 +491,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert warning_records, "sink must emit a WARNING when the write fails"
         warn = warning_records[0]
-        assert warn.name == "cadrumo.core.observability._sink"
+        assert warn.name == "cadrumo.core.observability.sink"
         # The record must have been processed by SecretScrubbingFilter:
         # exc_text is set by the filter (it formats exc_info into text and
         # scrubs it).  We assert the raw bearer/token placeholder is absent

@@ -28,11 +28,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    IvaTerritorialScope,
-    territorial_scope_for_country,
-    territorial_scope_for_spanish_postal_code,
-)
+from ..classification import IvaTerritorialScope
+from ..establishment import territorial_scope_for_country, territorial_scope_for_spanish_postal_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

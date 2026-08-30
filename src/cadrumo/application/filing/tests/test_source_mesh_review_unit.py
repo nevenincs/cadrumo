@@ -21,8 +21,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.hashing import content_hash_hex
-from ....domain.invoices import Invoice, InvoiceCatalogue
-from ....domain.iva import InvoiceKind
+from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.iva.classification import InvoiceKind
 from ...invoices import build_catalogue_invoice
 from .._review import _invoice_catalogue_fingerprint
 

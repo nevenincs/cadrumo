@@ -14,13 +14,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from ....iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-)
+from ....iva.classification import InvoiceKind, TransactionKind
+from ....iva.oss import OssIossRegime
+from ....iva.schema import EUMemberState, IvaRateKind
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..ledger_bindings import (

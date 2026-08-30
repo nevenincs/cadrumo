@@ -21,14 +21,14 @@ from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.transactions import TransactionValidationError
+from ...domain.transactions.errors import TransactionValidationError
 from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._ledger_support import _ledger_transaction_validation_no_recovery
 from ._period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
-    from ...domain.currency import CurrencyNormalizationService
-    from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+    from ...domain.currency.service import CurrencyNormalizationService
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -191,7 +191,7 @@ def ledger_import(
     normalised_provider = _validate_import_provider(provider)
     context = _import_bucket_context(dry_run=dry_run)
     from ...adapters.outbound.fx import default_ecb_rate_provider
-    from ...domain.currency import CurrencyNormalizationService
+    from ...domain.currency.service import CurrencyNormalizationService
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
     canonical_period = _optional_canonical_period(period, year=year)

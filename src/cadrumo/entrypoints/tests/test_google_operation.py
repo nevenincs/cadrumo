@@ -158,7 +158,7 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
     owner_imports = tuple(node.module or "" for node in ast.walk(owner_tree) if isinstance(node, ast.ImportFrom))
     assert not any(module.startswith("adapters") or module.startswith("entrypoints") for module in owner_imports)
 
-    composition_source = (Path(__file__).parents[1] / "_operation_composition.py").read_text(encoding="utf-8")
+    composition_source = (Path(__file__).parents[1] / "operation_composition.py").read_text(encoding="utf-8")
     composition_tree = ast.parse(composition_source)
     direct_calls = {
         node.func.id

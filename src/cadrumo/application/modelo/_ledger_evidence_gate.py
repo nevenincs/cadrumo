@@ -23,12 +23,7 @@ from ...domain.iva import (
 from ...domain.modelos import LedgerEvidenceRow
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
-from ...domain.transactions import (
-    BUSINESS_BEARING_STATES,
-    BusinessClassification,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..aggregation import invoice_kind_for_direction
 from ._preconditions import build_modelo_precondition_failure
 

@@ -24,7 +24,7 @@ import pytest
 
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.export_parse import xml_dictionary_entries
-from ....domain.filing import FilingExportValidationError
+from ....domain.filing.errors import FilingExportValidationError
 from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import (
     _modelo_100_comunidad_block,

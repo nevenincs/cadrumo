@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.secure_sql import TestRuntimeProfile
 from ....persistence.storage import (
     LLM_CACHE_NAMESPACE,

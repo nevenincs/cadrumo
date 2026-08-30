@@ -31,7 +31,7 @@ from typing import Final
 import pytest
 
 from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
 from ..document_direction import (
     DIRECTION_BY_FILER_ROLE,

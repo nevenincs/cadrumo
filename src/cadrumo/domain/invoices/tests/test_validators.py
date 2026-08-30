@@ -10,8 +10,8 @@ from ....core.identity import (
     nif_iva_prefix_for_country,
     validate_spanish_tax_id,
 )
-from ...iva import EUMemberState
-from .._validators import validate_country_code, validate_iva_number
+from ...iva.schema import EUMemberState
+from ..validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

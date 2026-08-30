@@ -17,7 +17,8 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing import FilingExportValidationError, ModeloDraft
+from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.schema import ModeloDraft
 from ._export_parity import did_page_suppressed
 from ._producer_snapshot import FilingProducerSnapshot
 from ._projection import FilingProjectionPlan, FilingRecordRenderContext

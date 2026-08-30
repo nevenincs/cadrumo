@@ -42,7 +42,7 @@ from ....core import (
 from ....core.config import override_settings
 from ....core.errors import SiteHealthState
 from ....core.external_constants import OutputLanguage
-from ....domain.deadlines import ObligationStatus
+from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operator_actions import (

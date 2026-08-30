@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from ....core import Period, ThirdPartyDeclarationRole
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
-from .. import (
+from ..models import (
     CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,

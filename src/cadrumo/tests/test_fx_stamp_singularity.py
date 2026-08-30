@@ -1,6 +1,6 @@
 """FX-stamp singularity gate: one authority decides the euro-conversion policy.
 
-``resolve_fx_conversion_stamp`` (:mod:`cadrumo.domain.currency._service`) is the
+``resolve_fx_conversion_stamp`` (:mod:`cadrumo.domain.currency.service`) is the
 single production answer to "at which date is this record's euro rate taken, and
 when is it deliberately left unstamped?". No other production module may reach a
 rate provider to decide it.
@@ -60,7 +60,7 @@ _PROVIDER_METHOD = "get_eur_rate"
 #: Modules permitted to reach a rate provider: the policy's home, and the
 #: adapter package that implements the protocol.
 _SANCTIONED = (
-    Path("src/cadrumo/domain/currency/_service.py"),
+    Path("src/cadrumo/domain/currency/service.py"),
     Path("src/cadrumo/adapters/outbound/fx"),
 )
 
@@ -106,7 +106,7 @@ def test_the_detector_fires_on_the_canonical_policy() -> None:
     Without this, a detector matching nothing — a renamed method, a broken walk —
     would report a clean tree forever while the gate below passed vacuously.
     """
-    canonical = _REPO_ROOT / Path("src/cadrumo/domain/currency/_service.py")
+    canonical = _REPO_ROOT / Path("src/cadrumo/domain/currency/service.py")
     assert canonical.is_file(), "the currency service moved; retarget _SANCTIONED"
 
     callers = _rate_provider_calls(ast.parse(canonical.read_text(encoding="utf-8")))

@@ -8,16 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preflight import (
     LedgerPreflightIssue,
     _issues_for_transaction,

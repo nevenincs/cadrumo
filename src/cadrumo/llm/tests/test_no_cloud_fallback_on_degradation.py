@@ -39,7 +39,9 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import LLMClient, LLMConsentError, LLMError, LLMRequest, LLMRetryPolicy
+from ..client import LLMClient, LLMRetryPolicy
+from ..errors import LLMConsentError, LLMError
+from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
 
 __all__ = ["_fresh_arena"]

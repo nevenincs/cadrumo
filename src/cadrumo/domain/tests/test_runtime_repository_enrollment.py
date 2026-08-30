@@ -12,22 +12,12 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests.secure_sql import isolated_runtime_profile
-from ..invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
-from ..iva import InvoiceKind
-from ..transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ..invoices.enums import IvaRate, PaymentStatus
+from ..invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..iva.classification import InvoiceKind
+from ..transactions.enums import TransactionDirection
+from ..transactions.models import Transaction, TransactionCatalogue
+from ..transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,7 +9,7 @@ import pytest
 
 from .....core import FormerProductStateError
 from .....core.config import Settings
-from .....domain.buckets import BucketImportError
+from .....domain.buckets.errors import BucketImportError
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AEAT_BROWSER_SESSION_NAMESPACE,

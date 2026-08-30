@@ -65,7 +65,7 @@ def test_recovery_prose_scan_rejects_each_reintroduced_directive(tmp_path: Path,
 
 def test_modelo_202_missing_incn_exposes_domain_facts_without_a_command() -> None:
     """The calculation rule keeps the missing fact while withholding action policy."""
-    from ....deadlines import EntityType
+    from ....deadlines.models import EntityType
 
     verdict = modelo_202_modality_from_inputs(
         entity_type=EntityType.LEGAL_ENTITY,

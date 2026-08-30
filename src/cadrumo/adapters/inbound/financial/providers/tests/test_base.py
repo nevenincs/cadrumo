@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ......core.tabular import coerce_cell_text
-from ......domain.transactions import RawTransaction, SourceFormat
+from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
 from .. import (
     BankStatementParseError,

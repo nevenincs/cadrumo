@@ -29,7 +29,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.filing import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
+from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile

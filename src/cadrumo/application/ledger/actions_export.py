@@ -21,17 +21,11 @@ if TYPE_CHECKING:
     pass
 
 from ...core import Period
-from ...domain.buckets import (
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
-from ...domain.transactions import (
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-)
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.transactions.enums import TransactionLifecycleState
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..export import serialize_tabular_rows
 from .actions_common import (
     build_ledger_bucket_event,

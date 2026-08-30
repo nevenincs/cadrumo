@@ -32,13 +32,9 @@ from pathlib import Path
 import pytest
 
 from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..ledger_bindings import IvaLedgerObservation, iva_ledger_selector, resolve_ledger_iva_aggregation_binding_values
 from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring

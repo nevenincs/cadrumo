@@ -2,7 +2,7 @@
 
 These concrete repositories live in the persistence adapter
 (:mod:`cadrumo.adapters.persistence.profile.fincas`); they satisfy the
-read-side ports declared in :mod:`cadrumo.domain.fincas._repository_ports`.
+read-side ports declared in :mod:`cadrumo.domain.fincas.repository_ports`.
 """
 
 from __future__ import annotations
@@ -18,15 +18,8 @@ from ._fincas_engine_fixture import engine
 
 __all__ = ["engine"]
 
-from .....domain.fincas import (
-    Arrendamiento,
-    ExpenseCategory,
-    Finca,
-    FincaAmortizacionLedgerEntry,
-    FincaGasto,
-    FincaRendimientoRecord,
-    UseType,
-)
+from .....domain.fincas.enums import ExpenseCategory, UseType
+from .....domain.fincas.models import Arrendamiento, Finca, FincaAmortizacionLedgerEntry, FincaGasto, FincaRendimientoRecord
 from ...storage import (
     RepositoryError,
     session_scope,

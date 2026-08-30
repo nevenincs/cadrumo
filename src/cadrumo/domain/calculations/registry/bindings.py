@@ -42,12 +42,7 @@ from ....core import (
 )
 from ....core.aggregation import BindingSourceKind
 from ....core.filing_year import FilingYear
-from ...iva_compensation import (
-    M303_COMPENSATION_APLICADA_CASILLA,
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    M303_COMPENSATION_GENERADA_CASILLA,
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-)
+from ...iva_compensation.filed_derivation import M303_COMPENSATION_APLICADA_CASILLA, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA
 from .binding_selector_utils import selector_against_model, selector_as_dict
 from .bindings_previous_filing import PreviousModeloSelector, validate_previous_filing_binding
 from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference

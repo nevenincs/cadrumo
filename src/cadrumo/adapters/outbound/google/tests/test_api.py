@@ -30,7 +30,7 @@ from ...storage import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from .._api import GoogleApiResponseBody, _ExecutableRequest, execute_request
+from ..api import GoogleApiResponseBody, _ExecutableRequest, execute_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

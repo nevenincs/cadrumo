@@ -25,7 +25,7 @@ from datetime import date
 
 import pytest
 
-from .._classification import (
+from ..classification import (
     _CLASSIFICATION_RULES,
     CustomerTaxStatus,
     InvoiceKind,
@@ -35,8 +35,8 @@ from .._classification import (
     TransactionKind,
     classify_iva,
 )
-from .._identification import identification_state_for_printed_tax_identifier
-from .._schema import EUMemberState, IvaCategory, IvaRateKind
+from ..identification import identification_state_for_printed_tax_identifier
+from ..schema import EUMemberState, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -258,7 +258,7 @@ class TestAnUnplacedOperationDemandsEverything:
 
     def test_a_result_that_declares_nothing_defaults_to_demanding_everything(self) -> None:
         """The fail-toward-asking default, so a forgotten declaration costs a question."""
-        from .._classification import IvaClassificationResult
+        from ..classification import IvaClassificationResult
 
         bare = IvaClassificationResult(category=IvaCategory.UNKNOWN, matched_rule_id="R99_fallthrough")
         assert bare.consumes_party_facts == frozenset(PartyFact)

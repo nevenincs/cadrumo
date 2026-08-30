@@ -14,7 +14,9 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ...categories import ProportionalityKind, SpendingCategory, resolve_category_profiles
+from ...categories.proportionality import ProportionalityKind
+from ...categories.registry import resolve_category_profiles
+from ...categories.spending_category import SpendingCategory
 from .. import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,

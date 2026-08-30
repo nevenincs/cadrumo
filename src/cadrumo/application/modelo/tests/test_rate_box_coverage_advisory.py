@@ -31,7 +31,8 @@ from ....core.aggregation import BindingAggregation, BindingAggregationOp, Bindi
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...aggregation import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics

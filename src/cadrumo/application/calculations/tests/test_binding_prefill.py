@@ -32,14 +32,11 @@ from ....domain.calculations.registry.ledger_bindings import (
 )
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
-from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...bienes_inversion import BienesInversionIvaRegisterRepository

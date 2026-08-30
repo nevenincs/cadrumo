@@ -7,17 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import ObservedCasillaValue, SedeError
+from ....adapters.outbound.aeat.sede.errors import SedeError
+from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....domain.iva_compensation import (
-    IvaCompensationCasillaReferenceError,
-    IvaCompensationExpiryReviewState,
-    IvaCompensationSeedConflictError,
-    IvaCompensationYearRangeError,
-    build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationExpiryReviewState, build_iva_compensation_carry_forward_report, enforce_iva_compensation_four_year_window
+from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m303_carry_ingress import M303CarryIngressError
@@ -48,7 +43,7 @@ _CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
 
 def _history_state_from_filed_observation(observation: object):
     """Build history only through the disposition-grounded envelope contract."""
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
 
     if not isinstance(observation, FiledDeclaracionObservation):
         raise AssertionError("test requires a filed declaration observation")

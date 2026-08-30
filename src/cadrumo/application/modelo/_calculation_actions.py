@@ -107,7 +107,7 @@ from ...domain.modelos.calculation_revision import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..filing import modelo_record_repository_for_application

@@ -16,7 +16,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.inbound.financial.providers import CsvProvider
-from ....domain.transactions import derive_transaction_id
+from ....domain.transactions.models import derive_transaction_id
 from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli

@@ -24,7 +24,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....domain.iva import EUMemberState, IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import EUMemberState
 from ....tests.secure_sql import TestRuntimeProfile
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,

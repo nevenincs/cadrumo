@@ -55,15 +55,9 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, validated_casilla_id
 from ...core.identity import TransactionId
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._currency_predicates import (

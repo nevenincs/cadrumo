@@ -1,4 +1,4 @@
-"""Strict-validation tests for the :mod:`cadrumo.core.observability._models` records.
+"""Strict-validation tests for the :mod:`cadrumo.core.observability.models` records.
 
 Covers:
 
@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .. import (
+from ..models import (
     ArgumentRecord,
     ArgumentSource,
     AssertionPayload,
@@ -184,7 +184,7 @@ class TestRunIdentity:
     """The run identity is one canonical shape across every observability record.
 
     ``run_id`` is minted as 16 lowercase hex characters. That shape was
-    previously enforced only in :mod:`core.observability._store` — at the
+    previously enforced only in :mod:`core.observability.store` — at the
     point of *persistence* — so a malformed identity could be built into a
     :class:`RunEvent`, a :class:`RunTrace`, or a
     :class:`WorkflowLinkPayload` and only fail later, or never, if the
@@ -196,7 +196,7 @@ class TestRunIdentity:
 
     def test_workflow_link_refuses_malformed_run_id(self) -> None:
         """A workflow link cannot carry a run id the workflow engine could not mint."""
-        from .. import WorkflowLinkPayload
+        from ..models import WorkflowLinkPayload
 
         for bad in self._MALFORMED:
             with pytest.raises(ValidationError):
@@ -248,8 +248,8 @@ class TestRunIdentity:
         """
         import re
 
-        from .. import RUN_ID_PATTERN
-        from .._context import _mint_run_id
+        from ..context import _mint_run_id
+        from ..models import RUN_ID_PATTERN
 
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
@@ -272,7 +272,7 @@ class TestTraceFingerprints:
     _CANONICAL = "a" * 64
 
     def _make_context(self, **overrides: str) -> object:
-        from .._context import RunContextInfo
+        from ..context import RunContextInfo
 
         fields: dict[str, object] = {
             "run_id": _RUN_ID,

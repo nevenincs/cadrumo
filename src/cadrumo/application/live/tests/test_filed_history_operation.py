@@ -14,11 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import (
-    DeclaracionesRegisterSession,
-    FiledDeclarationAvailability,
-    FiledDeclarationAvailabilityReport,
-)
+from ....adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
+from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -33,7 +30,7 @@ from ....core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.frontend_contracts import (

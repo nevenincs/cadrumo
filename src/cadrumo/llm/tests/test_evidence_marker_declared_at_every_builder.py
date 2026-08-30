@@ -36,7 +36,7 @@ import inspect
 import pytest
 
 from ...tests import aeat_relative, production_python_files
-from .._column_role_mapping import build_column_role_mapping_prompt
+from ..column_role_mapping import build_column_role_mapping_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,7 +44,7 @@ _REQUEST_MODEL = "LLMRequest"
 _MARKER = "evidence_derived"
 
 _BUILDERS_DECLARING_NO_EVIDENCE = {
-    "llm/_column_role_mapping.py": (
+    "llm/column_role_mapping.py": (
         "Column-role mapping transmits the header row -- the file's schema labels -- and never a "
         "cell value: the prompt builder accepts headers and nothing else, and the instruction it "
         "compiles forbids the model to reproduce data. Marking this request evidence-derived would "
@@ -92,11 +92,11 @@ def test_the_scan_finds_the_known_request_builders() -> None:
     found = {relative for relative, _, _ in _request_construction_sites()}
 
     for expected in (
-        "llm/_column_role_mapping.py",
-        "llm/_evidence_draft_text.py",
-        "llm/_evidence_draft_vision.py",
-        "llm/_text_classifier.py",
-        "llm/_vision_classifier.py",
+        "llm/column_role_mapping.py",
+        "llm/evidence_draft_text.py",
+        "llm/evidence_draft_vision.py",
+        "llm/text_classifier.py",
+        "llm/vision_classifier.py",
     ):
         assert expected in found, f"the request-construction scan did not find the known builder in {expected}"
 

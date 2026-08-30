@@ -25,7 +25,7 @@ import asyncio
 import pytest
 from playwright.async_api import async_playwright
 
-from .._declarations import _row_locator_for_expediente
+from ..declarations import _row_locator_for_expediente
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

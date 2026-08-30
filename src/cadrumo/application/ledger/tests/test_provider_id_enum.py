@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider
-from ....domain.transactions import TransactionValidationError
+from ....domain.transactions.errors import TransactionValidationError
 from ..actions_import import LedgerProviderID, _resolve_financial_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

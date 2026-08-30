@@ -32,9 +32,9 @@ from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
-from ._enums import BusinessClassification
-from ._raw_transaction import RawTransaction
+from .enums import BusinessClassification
 from .errors import TransactionValidationError
+from .raw_transaction import RawTransaction
 
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")
@@ -60,6 +60,11 @@ def _json_default(value: object) -> str:
 
 
 def require_aware_datetime(value: datetime) -> datetime:
+    """Return *value* if it is UTC-aware, as a transaction error if not.
+
+    Delegates to the canonical awareness check and only translates the
+    exception, so the rule stays in one place.
+    """
     try:
         return validate_utc_aware(value)
     except CoreValidationError as exc:
@@ -67,6 +72,7 @@ def require_aware_datetime(value: datetime) -> datetime:
 
 
 def validate_classified_by_shape(value: str) -> str:
+    """Return the classifier attribution if it names a recognised author."""
     normalized = value.strip()
     if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
         return normalized
@@ -79,6 +85,7 @@ def validate_classified_by_shape(value: str) -> str:
 
 
 def validate_confidence_range(value: Decimal | None) -> Decimal | None:
+    """Return a classifier confidence if it is a share of one, or None."""
     if value is None:
         return None
     if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
@@ -90,6 +97,11 @@ def validate_business_pct_coupling(
     state: BusinessClassification,
     pct: Decimal | None,
 ) -> None:
+    """Refuse a business share that disagrees with its classification.
+
+    A MIXED transaction must carry a share and any other classification must
+    not, which is the coupling every write path checks.
+    """
     if state is BusinessClassification.MIXED:
         if pct is None:
             raise TransactionValidationError("business_pct is required when classification is MIXED")
@@ -101,6 +113,7 @@ def validate_business_pct_coupling(
 
 
 def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
+    """Return the identifiers stripped, refusing blanks and duplicates."""
     normalized = tuple(item.strip() for item in value if item.strip())
     if len(normalized) != len(value):
         raise TransactionValidationError("identifier fields must not contain blank values")
@@ -110,6 +123,7 @@ def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def trim_lineage_text(value: str | None) -> str | None:
+    """Return lineage prose stripped, or None when it carries nothing."""
     if value is None:
         return None
     trimmed = value.strip()
@@ -119,6 +133,7 @@ def trim_lineage_text(value: str | None) -> str | None:
 
 
 def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+    """Return *value* as a UTC-aware datetime, naming the field on refusal."""
     if isinstance(value, str):
         value = parse_iso_datetime(value)
     if not isinstance(value, datetime):
@@ -127,6 +142,7 @@ def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime
 
 
 def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
+    """Return *value* if it is not negative, naming the field on refusal."""
     if value is not None and value < Decimal("0"):
         raise TransactionValidationError(
             _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
@@ -135,6 +151,7 @@ def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> 
 
 
 def coerce_raw_transaction(raw: object) -> RawTransaction:
+    """Return *raw* as a RawTransaction, accepting the model or its payload."""
     if isinstance(raw, RawTransaction):
         return raw
     try:

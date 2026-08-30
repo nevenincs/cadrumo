@@ -17,14 +17,14 @@ from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
-from .._prorrata import (
+from ..errors import ProrrataInputError
+from ..prorrata import (
     ProrrataInputs,
     ProrrataKind,
     RegularizacionProrrataDireccion,
     compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
 )
-from ..errors import ProrrataInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

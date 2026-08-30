@@ -24,10 +24,10 @@ import pytest
 
 from ....core import resolve_anchored_extracted_unit
 from ....core.resources import bundled_path
-from .. import (
+from ..schema import IvaCategory
+from ..supply_nature import (
     LIVA_CITATION_QUALIFIERS,
     STATUTORY_CITATIONS,
-    IvaCategory,
     StatutoryCitation,
     SupplyNature,
     SupplyNatureDerivationOutcome,

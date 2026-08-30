@@ -24,13 +24,13 @@ from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRe
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from .._amendment import (
+from ..amendment import (
     AmendmentKind,
     CasillaChange,
     ModeloComplementaria,
     make_amendment_id,
 )
-from .._schema import (
+from ..schema import (
     ModeloDraft,
     ModeloDraftStatus,
     ModeloValue,

@@ -26,7 +26,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
-from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
+from ....domain.invoices.errors import InvoicePersistenceError
+from ....domain.invoices.models import InvoiceCatalogue
 from ..storage import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 

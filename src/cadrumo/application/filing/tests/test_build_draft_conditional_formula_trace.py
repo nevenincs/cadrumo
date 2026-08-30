@@ -30,8 +30,8 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.filing import ModeloInputs
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.filing.protocols import ModeloInputs
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission import ModeloDraftStatus
 from .. import build_draft, build_runtime_schema_provider
 from ..runtime import ModeloOperatorProfile

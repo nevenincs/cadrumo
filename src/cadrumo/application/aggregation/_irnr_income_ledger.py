@@ -32,16 +32,10 @@ from ...core.i18n import tr
 from ...core.identity import TransactionId
 from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.transactions import (
-    BusinessClassification,
-    M210IncomeClassification,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.m210_income_classification import M210IncomeClassification
+from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase

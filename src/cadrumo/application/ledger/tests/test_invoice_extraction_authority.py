@@ -29,7 +29,8 @@ import pytest
 
 from ....core import Period
 from ....domain import iva as _iva_module
-from ....domain.iva import EUMemberState, IvaCategory, load_iva_rate_table
+from ....domain.iva.rates import load_iva_rate_table
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
@@ -133,7 +134,7 @@ class TestTheRendererCannotReachAroundItsArgument:
         is the only source. A renderer that helpfully merged its own lookup with
         the argument would pass the first half alone.
         """
-        from ....llm import render_invoice_extraction_prompt
+        from ....llm.invoice_extraction_prompt import render_invoice_extraction_prompt
 
         real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
@@ -150,7 +151,7 @@ class TestTheRendererCannotReachAroundItsArgument:
 
     def test_the_compiled_artefact_reports_the_values_it_rendered(self) -> None:
         """The stamp must describe the read that happened, not a re-resolution."""
-        from ....llm import render_invoice_extraction_prompt
+        from ....llm.invoice_extraction_prompt import render_invoice_extraction_prompt
 
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
 
@@ -170,7 +171,7 @@ class TestTheProductionReadPathSuppliesTheValues:
         request, because doing so would need live inference this gate must not
         perform.
         """
-        from ....llm import build_text_field_extraction_prompt
+        from ....llm.evidence_draft_text import build_text_field_extraction_prompt
 
         prompt = build_text_field_extraction_prompt("Factura 1", values=_fabricated_values())
 

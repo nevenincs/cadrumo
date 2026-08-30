@@ -37,11 +37,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation import (
-    IvaCompensationPeriodState,
-    build_iva_compensation_carry_forward_report,
-    derive_iva_compensation_year_end_carry_partition,
-)
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, build_iva_compensation_carry_forward_report, derive_iva_compensation_year_end_carry_partition
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

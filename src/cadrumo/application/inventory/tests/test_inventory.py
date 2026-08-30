@@ -13,7 +13,7 @@ from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.contribuyente.inventory import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,

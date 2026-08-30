@@ -21,15 +21,9 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
-from ...domain.categories import (
-    HOME_OFFICE_FAMILIES,
-    ProportionalityKind,
-    ProportionalityRule,
-    SpendingCategory,
-    effective_usage_ratio,
-    family_for,
-    resolve_category_profiles,
-)
+from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
+from ...domain.categories.registry import resolve_category_profiles
+from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,

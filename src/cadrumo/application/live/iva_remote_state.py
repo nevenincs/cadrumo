@@ -38,14 +38,14 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
-from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
-from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation as _FiledDeclaracionObservation
-from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore
-from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
-from ...adapters.outbound.aeat.sede import fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet
-from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register
-from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwright
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion as _Declaracion
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
+from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore
+from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet
+from ...adapters.outbound.aeat.sede.declarations import open_declarations_register as _open_declarations_register
+from ...adapters.outbound.aeat.sede.declarations import shared_playwright as _shared_playwright
 from ...adapters.persistence.storage import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )
@@ -77,13 +77,11 @@ from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.identity import tax_id_identity_token as _tax_id_identity_token
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
-from ...domain.iva_compensation import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
-from ...domain.iva_compensation import IvaCompensationPeriodState as _IvaCompensationPeriodState
-from ...domain.iva_compensation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
-from ...domain.iva_compensation import (
-    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
-)
+from ...domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
+from ...domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState as _IvaCompensationPeriodState
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
+from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report
 from .errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_data_capture import capture_report_path as _capture_report_path
 from .filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period

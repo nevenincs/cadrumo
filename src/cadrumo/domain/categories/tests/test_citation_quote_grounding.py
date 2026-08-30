@@ -31,9 +31,9 @@ from ....core.citation_grounding import CitationGrounding
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.legal import legal_reference_quotes_corpus
 from ....domain.calculations.registry.loader import load_catalogue_file
-from .._proportionality import CategoryCitation
-from .._registry import load_category_profiles
-from .._spending_category import SpendingCategory
+from ..proportionality import CategoryCitation
+from ..registry import load_category_profiles
+from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

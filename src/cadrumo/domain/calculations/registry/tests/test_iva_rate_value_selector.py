@@ -15,13 +15,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....domain.iva import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from .....domain.iva.flow import IvaFlowDirection
+from .....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from ..schema import DataBindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector

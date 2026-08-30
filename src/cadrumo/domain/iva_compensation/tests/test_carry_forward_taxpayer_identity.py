@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import IvaCompensationStateProvenance, Period
-from .._carry_forward import (
+from ..carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
     IvaCompensationPeriodState,

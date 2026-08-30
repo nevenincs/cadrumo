@@ -19,8 +19,8 @@ import pytest
 from ....core import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso, TipoActividad
 from ....core.resources import bundled_path
 from ...calculations.registry.loader import load_legal_parameters_only
-from .._tipo_actividad_partitions import tipo_actividad_code_set
-from .._volumen_ingresos import counts_toward_volumen_de_ingresos
+from ..tipo_actividad_partitions import tipo_actividad_code_set
+from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

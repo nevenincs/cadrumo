@@ -49,8 +49,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._classification import IvaTerritorialScope
-from .._establishment import territorial_scope_for_country
+from ..classification import IvaTerritorialScope
+from ..establishment import territorial_scope_for_country
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

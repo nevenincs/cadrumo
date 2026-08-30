@@ -52,37 +52,27 @@ from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_typ
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
-from ...domain.buckets import (
-    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
-from ...domain.categories import SpendingCategory
-from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
-from ...domain.transactions import (
-    BUSINESS_BEARING_STATES,
-    BusinessClassification,
+from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
+from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.llm import (
     LLMClassificationResponse,
     LLMClassifier,
     LLMSplitProposer,
     LLMSplitResponse,
     PromptSpec,
-    Transaction,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-    TransactionNotFoundError,
-    TransactionValidationError,
     prompt_spec_with_every_spending_category,
     prompt_spec_with_saturation_fields,
-    set_classification,
 )
-from ...llm import (
-    LocalTextLLMClassifier,
-    LocalVisionLLMClassifier,
-    MultimodalImageInput,
-    rasterise_pdf_pages_to_base64_png,
-)
+from ...domain.transactions.models import Transaction
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.service import set_classification
+from ...llm.models import MultimodalImageInput
+from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ...llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
@@ -92,6 +82,8 @@ from ...llm.suggestions import (
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
 )
+from ...llm.text_classifier import LocalTextLLMClassifier
+from ...llm.vision_classifier import LocalVisionLLMClassifier
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
@@ -324,14 +316,14 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     model-missing failure escaped every CLI ``except`` clause as a raw
     ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
     an application evidence-input refusal when the probe confirms that the
-    reader is unavailable. The S33 provisioning verdict remains unmodified for
+    reader is unavailable. The provisioning verdict remains unmodified for
     later live-surface resolution. A call failure followed by an available probe
     is not misclassified as an unavailable-reader precondition.
     """
     import httpx
 
-    from ...domain.transactions import LLMClassifierError
-    from ...llm import LLMProviderError
+    from ...domain.transactions.llm import LLMClassifierError
+    from ...llm.errors import LLMProviderError
 
     try:
         return run()
@@ -367,7 +359,7 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     import time
 
     from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-    from ...llm import LLMCacheError
+    from ...llm.errors import LLMCacheError
 
     started_at = now()
     clock_start = time.monotonic()
@@ -436,7 +428,7 @@ def classify_with_evidence(
         return response, vision.decided_by
     text = evidence.text if evidence is not None else None
     if text_classifier is None:
-        # S44: the LOCAL text reader, wired here for the first time. Before it
+        # The LOCAL text reader, wired here for the first time. Before it
         # existed this branch refused unless the operator supplied a cloud
         # provider, which is what made a text-layer PDF the one document class
         # whose contents left the host -- the more machine-readable document

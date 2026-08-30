@@ -34,8 +34,8 @@ from collections import Counter
 import pytest
 
 from ......tests import FIXTURES_DIR
-from .._declarations import _register_rows_from_snapshot
 from .._declarations_listbox import _parse_listbox
+from ..declarations import _register_rows_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

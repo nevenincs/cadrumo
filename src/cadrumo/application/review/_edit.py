@@ -40,7 +40,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
-from ...domain.invoices import numeric_iva_rate_percentages
+from ...domain.invoices.enums import numeric_iva_rate_percentages
 from .errors import EditParseError
 
 _DECIMAL_RE = re.compile(r"^-?\d+(\.\d+)?$")

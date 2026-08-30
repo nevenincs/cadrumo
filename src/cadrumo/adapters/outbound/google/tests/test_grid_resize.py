@@ -28,7 +28,7 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core import CasillaId, Period, validated_casilla_id
-from .._calc_sheets_apply import _build_grid_resize_requests
+from ..calc_sheets_apply import _build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

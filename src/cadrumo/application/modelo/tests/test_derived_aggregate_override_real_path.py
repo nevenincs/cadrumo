@@ -49,7 +49,8 @@ from ....core import Period, validated_casilla_id
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import (

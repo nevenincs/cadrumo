@@ -17,7 +17,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...categories import SpendingCategory, load_category_profiles
+from ...categories.registry import load_category_profiles
+from ...categories.spending_category import SpendingCategory
 from .._ledger_expenses import RentaDeductibilityContext, _resolve_statutory_cap
 from ..errors import RentaValidationError
 

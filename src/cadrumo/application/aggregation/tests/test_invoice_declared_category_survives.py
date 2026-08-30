@@ -36,15 +36,12 @@ import pytest
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import (
-    InvoiceKind,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....domain.invoices.enums import IvaRate
+from ....domain.invoices.models import Invoice
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings import (
     _invoice_line_iva_observation,

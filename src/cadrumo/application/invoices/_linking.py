@@ -16,13 +16,11 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import SecureObjectWrite
 from ...core.identity import InvoiceId, TransactionId
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLinkError,
-    link_transaction,
-)
-from ...domain.transactions import TransactionCatalogue, link_invoice
+from ...domain.invoices.errors import InvoiceLinkError
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.service import link_transaction
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.service import link_invoice
 
 
 class InvoiceTransactionLinkResult(BaseModel):

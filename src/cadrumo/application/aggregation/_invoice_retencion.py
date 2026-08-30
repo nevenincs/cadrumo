@@ -59,14 +59,14 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import InvoiceId
-from ...domain.iva import IvaRetencionRole, category_components
+from ...domain.iva.components import IvaRetencionRole, category_components
 from ._retenciones import RetencionObservation, RetencionScheme
 from .errors import AggregationValidationError, t
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from ...domain.invoices import Invoice
+    from ...domain.invoices.models import Invoice
 
 _SPANISH_COUNTRY_CODE: Final[str] = "ES"
 

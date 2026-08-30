@@ -48,7 +48,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.invoices import find_invoice, find_unmatched
+from ...domain.invoices.service import find_invoice, find_unmatched
 from ._bulk_import import (
     BULK_INVOICE_IMPORT_ALLOWED_COLUMNS,
     BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,

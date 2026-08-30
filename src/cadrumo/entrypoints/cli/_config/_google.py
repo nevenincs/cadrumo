@@ -43,23 +43,11 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this CLI path.
-from ....adapters.outbound.google import (
-    REQUIRED_SCOPES,
-    GoogleAuthClientNotRegisteredError,
-    GoogleAuthError,
-    GoogleAuthExpiredError,
-    GoogleAuthValidationError,
-    OAuthClient,
-    delete_session,
-    load_client,
-    load_metadata,
-    load_token,
-    resolve_active_profile,
-    run_login_flow,
-    save_client,
-    save_metadata,
-    save_token,
-)
+from ....adapters.outbound.google.active_profile import resolve_active_profile
+from ....adapters.outbound.google.errors import GoogleAuthClientNotRegisteredError, GoogleAuthError, GoogleAuthExpiredError, GoogleAuthValidationError
+from ....adapters.outbound.google.oauth_flow import run_login_flow
+from ....adapters.outbound.google.records import OAuthClient, REQUIRED_SCOPES
+from ....adapters.outbound.google.session_store import delete_session, load_client, load_metadata, load_token, save_client, save_metadata, save_token
 from ....adapters.outbound.storage import (
     OutboundStorageError,
     OutboundStorageValidationError,

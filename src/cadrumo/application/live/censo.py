@@ -18,7 +18,7 @@ LIVE_CENSAL_READ_OPERATION = "live-censal-read"
 
 async def pull_censal_datos() -> CensalObservation:
     """Read the authenticated taxpayer's censo state without persisting or adopting it."""
-    from ...adapters.outbound.aeat.sede import fetch_censal_datos
+    from ...adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
 
     session, settings = await active_verified_session(operation=LIVE_CENSAL_READ_OPERATION)
     return await fetch_censal_datos(session, taxpayer_nif=session.identity_nif, settings=settings)

@@ -41,12 +41,8 @@ from ...domain.modelos import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
-from ...domain.transactions import (
-    BUSINESS_BEARING_STATES,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations import IvaWalletDecisionRepository
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation

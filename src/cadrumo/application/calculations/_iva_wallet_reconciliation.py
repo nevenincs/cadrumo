@@ -6,13 +6,13 @@ those evidence sources, plus an explicit taxpayer override when present, into
 the effective binding decision consumed by Modelo 303 calculation.
 
 The pure decision logic
-(:func:`~domain.iva_compensation._reconciliation.reconcile_iva_compensation_wallet`
+(:func:`~domain.iva_compensation.reconciliation.reconcile_iva_compensation_wallet`
 and its wallet/recurrence predicates) lives in
-:mod:`~domain.iva_compensation._reconciliation`; it consumes structural
+:mod:`~domain.iva_compensation.reconciliation`; it consumes structural
 ports such as
-:class:`~domain.iva_compensation._reconciliation.IvaCompensationWalletObservationProtocol`
+:class:`~domain.iva_compensation.reconciliation.IvaCompensationWalletObservationProtocol`
 and
-:class:`~domain.iva_compensation._reconciliation.LocalIvaCompensationRecurrenceProtocol`
+:class:`~domain.iva_compensation.reconciliation.LocalIvaCompensationRecurrenceProtocol`
 so the domain never imports the Sede adapter. This module orchestrates
 :class:`~.observations_repository.CalculationObservationRepository` reads,
 :class:`~.observations_repository.IvaWalletDecisionRepository` persistence, and
@@ -42,16 +42,8 @@ from pydantic import BaseModel, ConfigDict
 from ...core import BindingSourceKind, CalculationSourceLineageRole, Modelo, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.iva_compensation import (
-    DEFAULT_MAX_WALLET_AGE_DAYS,
-    IvaCompensationOverride,
-    IvaCompensationReconciliationDecision,
-    IvaCompensationReconciliationInputError,
-    IvaCompensationWalletObservationProtocol,
-    local_recurrence_authority_source,
-    reconcile_iva_compensation_wallet,
-    validate_wallet_matches_snapshot,
-)
+from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
+from ...domain.iva_compensation.reconciliation import DEFAULT_MAX_WALLET_AGE_DAYS, IvaCompensationOverride, IvaCompensationReconciliationDecision, IvaCompensationWalletObservationProtocol, local_recurrence_authority_source, reconcile_iva_compensation_wallet, validate_wallet_matches_snapshot
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -67,7 +59,7 @@ class IvaCompensationReconciliationReport(BaseModel):
     """Application-level reconciliation result for one Modelo 303 target.
 
     Carries the domain
-    :class:`~domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
     plus the :class:`~._binding_prefill.BindingPrefillReport` used to reconstruct
     the local recurrence side of the comparison.
     """
@@ -83,7 +75,7 @@ class IvaWalletDecisionSourceResolver:
 
     Owns ``iva_wallet_decision`` and materialises the
     ``modelo-303-compensacion-pendiente-anteriores`` binding from a persisted
-    :class:`~domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
     The returned :class:`~application.aggregation.CalculationSourceResolution`
     carries the selected amount plus provenance for every authority source that
     participated in the wallet/filed-history/local-recurrence decision.
@@ -227,9 +219,9 @@ def reconcile_modelo_303_iva_compensation(
     :class:`~domain.calculations.registry.RegistrySnapshot`, reconstructs local recurrence through
     :func:`~._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`,
     delegates authority selection to
-    :func:`~domain.iva_compensation._reconciliation.reconcile_iva_compensation_wallet`,
+    :func:`~domain.iva_compensation.reconciliation.reconcile_iva_compensation_wallet`,
     and persists the resulting
-    :class:`~domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
     through :class:`~.observations_repository.IvaWalletDecisionRepository` when
     ``persist`` is true.
 
@@ -247,7 +239,7 @@ def reconcile_modelo_303_iva_compensation(
             enabled, an explicitly supplied repository must use the same
             encrypted storage backend as ``repository``.
         override: Optional
-            :class:`~domain.iva_compensation._reconciliation.IvaCompensationOverride`
+            :class:`~domain.iva_compensation.reconciliation.IvaCompensationOverride`
             evidence when the operator has resolved a divergence.
         decided_at: Decision timestamp override for deterministic replay and tests.
         max_wallet_age_days: Maximum accepted age for live wallet evidence.

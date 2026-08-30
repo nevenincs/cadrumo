@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....application.overview.calendar_evidence import calendar_filing_evidence_from_sources
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....core import Period

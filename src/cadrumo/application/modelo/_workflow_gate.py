@@ -55,7 +55,7 @@ from ...domain.filing import ModeloInputs
 from ...domain.modelos import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
-from ...domain.transactions import TransactionCatalogue
+from ...domain.transactions.models import TransactionCatalogue
 from ..filing import (
     approve_draft,
     build_draft,

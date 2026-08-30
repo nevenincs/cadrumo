@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....domain.manuals import ManualPart
+from .....domain.manuals.schema import ManualPart
 from ...errors import ResourceValidationError
 from ..manuals import ManualKey, ManualRepository
 
@@ -58,7 +58,7 @@ def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> 
     error hierarchy lets the caller catch via either the domain-
     specific class or the resource-level base.
     """
-    from .....domain.manuals import ManualNotFoundError
+    from .....domain.manuals.errors import ManualNotFoundError
 
     # The bundled corpus is now fully extracted, so this contract is exercised
     # against a synthetic unextracted manual (manifest + source.pdf present, no

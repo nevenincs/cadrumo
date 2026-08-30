@@ -44,7 +44,7 @@ def test_click_tokens_include_canonical_write_verb_tokens() -> None:
 
 
 _SEDE_DIR = REPO_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "aeat" / "sede"
-_DRIVER_FILE = _SEDE_DIR / "_renta_web_open.py"
+_DRIVER_FILE = _SEDE_DIR / "renta_web_open.py"
 
 
 def test_forbidden_token_set_carries_every_high_risk_action() -> None:

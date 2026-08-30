@@ -20,7 +20,7 @@ class RecargoBandsRepository(ResourceCacheRepository[object, None]):
 
     @override
     def _load(self, key: None) -> object:
-        from ....domain.deadlines import load_recargo_bands
+        from ....domain.deadlines.recargo import load_recargo_bands
 
         return load_recargo_bands()
 

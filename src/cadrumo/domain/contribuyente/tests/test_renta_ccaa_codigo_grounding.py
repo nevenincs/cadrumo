@@ -19,7 +19,8 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
-from .. import CCAA, RENTA_MODELO100_CCAA_CODIGOS, modelo100_ccaa_codigo
+from ..ccaa import CCAA
+from ..renta_codes import RENTA_MODELO100_CCAA_CODIGOS, modelo100_ccaa_codigo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

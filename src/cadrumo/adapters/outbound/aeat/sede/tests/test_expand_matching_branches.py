@@ -23,7 +23,7 @@ import asyncio
 import pytest
 from playwright.async_api import async_playwright
 
-from .._walker import _expand_matching_branches
+from ..walker import _expand_matching_branches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

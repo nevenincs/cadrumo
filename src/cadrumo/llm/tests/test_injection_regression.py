@@ -73,9 +73,10 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import LLMClient, LLMRequest
-from .._invoice_field_contract import anchor_key_for_field
-from .._invoice_field_grounding import parse_invoice_extraction_response
+from ..client import LLMClient
+from ..invoice_field_contract import anchor_key_for_field
+from ..invoice_field_grounding import parse_invoice_extraction_response
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

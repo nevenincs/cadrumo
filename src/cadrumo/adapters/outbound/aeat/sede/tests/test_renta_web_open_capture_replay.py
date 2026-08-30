@@ -32,7 +32,7 @@ from ......domain.calculations.registry.renta_web_open_oracle import (
     serialize_renta_web_open_replay_decimal,
 )
 from ......tests.live_gate import requires_live_enabled
-from .._renta_web_open import collect_renta_web_open_observation
+from ..renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

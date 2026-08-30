@@ -30,8 +30,11 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory, is_deducible_flow
+from ....domain.invoices.enums import IvaRate
+from ....domain.invoices.models import Invoice
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.flow import is_deducible_flow
+from ....domain.iva.schema import IvaCategory
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings import _DECLARED_CATEGORY_BASE_ONLY_FLOWS, _invoice_line_iva_observation
 

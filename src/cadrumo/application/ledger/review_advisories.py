@@ -41,7 +41,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 from ...core import ReviewAdvisoryKind
-from ...domain.iva import StatedCountryCodeStatus
+from ...domain.iva.establishment import StatedCountryCodeStatus
 from .country_vocabulary_advisory import country_vocabulary_advisory
 from .party_attribution import party_attribution_advisory
 

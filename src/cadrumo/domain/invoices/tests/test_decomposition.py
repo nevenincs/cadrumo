@@ -22,15 +22,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
-from ...iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-)
-from .._decomposition import (
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.oss import OssIossRegime
+from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ..decomposition import (
     INVOICE_DECOMPOSITION_DEFECT_GUIDANCE,
     InvoiceComponents,
     InvoiceDecomposition,
@@ -38,8 +33,8 @@ from .._decomposition import (
     decompose_invoice,
     partition_invoices,
 )
-from .._enums import IvaRate, PaymentStatus, iva_rate_percentage
-from .._models import Invoice, InvoiceLine
+from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

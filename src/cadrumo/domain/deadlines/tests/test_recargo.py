@@ -17,8 +17,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from .._models import Recovery
-from .._recargo import (
+from ..errors import DeadlineValidationError
+from ..models import Recovery
+from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
     load_recargo_bands,
@@ -26,7 +27,6 @@ from .._recargo import (
     resolve_recargo_band,
     twelve_month_anniversary,
 )
-from ..errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

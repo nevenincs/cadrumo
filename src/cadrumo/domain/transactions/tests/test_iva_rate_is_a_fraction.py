@@ -28,13 +28,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ..enums import TransactionDirection
+from ..models import Transaction
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

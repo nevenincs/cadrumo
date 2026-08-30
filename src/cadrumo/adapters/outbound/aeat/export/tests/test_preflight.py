@@ -8,7 +8,7 @@ import pytest
 
 from ......core.errors import BaseSeverity
 from ......core.i18n import Translatable as tr
-from ......domain.filing import ModeloValidationFinding
+from ......domain.filing.schema import ModeloValidationFinding
 from ......domain.submission import ModeloDraftStatus, Preflight, SubmissionPreflightError
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 

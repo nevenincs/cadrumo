@@ -51,11 +51,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core import DraftDiscrepancyKind
-from ...domain.iva import (
-    country_code_for_printed_country_name,
-    territorial_scope_for_country,
-    territorial_scope_for_spanish_postal_code,
-)
+from ...domain.iva.establishment import country_code_for_printed_country_name, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
 from .party_attribution import party_addresses
 
 if TYPE_CHECKING:

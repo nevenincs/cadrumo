@@ -9,19 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueError,
-    TransactionDirection,
-    find_transaction,
-    link_invoice,
-    set_classification,
-)
+from ..enums import BusinessClassification, TransactionDirection
+from ..errors import TransactionCatalogueError
+from ..models import Transaction, TransactionCatalogue
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..service import find_transaction, link_invoice, set_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,14 +9,8 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    IVA_COMPENSATION_WALLET_URL,
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
-    ObservedCasillaValue,
-)
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation, IvaCompensationWalletRow, ObservedCasillaValue
 from ....core import (
     CasillaId,
     CasillaValueKind,
@@ -28,7 +22,7 @@ from ....core import (
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.snapshot import build_snapshot
-from ....domain.iva_compensation import IvaCompensationPeriodState
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.registry_tree import bundled_registry_tree
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``

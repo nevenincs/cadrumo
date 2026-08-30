@@ -38,7 +38,7 @@ from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
-from ...domain.buckets import BucketEventType
+from ...domain.buckets.event import BucketEventType
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from .custody_ports import (

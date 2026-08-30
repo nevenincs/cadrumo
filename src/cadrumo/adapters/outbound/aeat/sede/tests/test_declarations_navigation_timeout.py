@@ -18,7 +18,7 @@ from playwright.async_api import Route, async_playwright
 
 from ......core.config import override_settings
 from ..._playwright import PlaywrightTimeoutError
-from .._declarations import _drive_search
+from ..declarations import _drive_search
 from ..errors import SedeFailureMode, SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

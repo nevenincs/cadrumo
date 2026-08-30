@@ -23,7 +23,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from .. import BucketEvent, BucketEventType
+from ..event import BucketEvent, BucketEventType
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -62,7 +62,7 @@ def test_the_shared_primitive_requires_an_explicit_payload_version() -> None:
     """
     import inspect
 
-    from .. import emit_bucket_event
+    from ..event_repository import emit_bucket_event
 
     parameter = inspect.signature(emit_bucket_event).parameters["payload_version"]
     assert parameter.default is inspect.Parameter.empty, (

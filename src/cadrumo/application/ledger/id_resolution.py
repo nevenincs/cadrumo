@@ -35,7 +35,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...domain.transactions import Transaction, TransactionCatalogue, TransactionIdPrefixError
+from ...domain.transactions.errors import TransactionIdPrefixError
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8

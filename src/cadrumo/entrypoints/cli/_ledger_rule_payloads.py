@@ -23,7 +23,8 @@ from ...application.ledger.llm_diagnostics import LlmProviderName
 from ...core import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
-from ...domain.transactions import BusinessClassification, LedgerClassificationRule
+from ...domain.transactions.classification_rule import LedgerClassificationRule
+from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.classification_rule import RuleActor, RuleDescriptionPattern, RulePriority
 from ._decimal_wire import DecimalWireText
 

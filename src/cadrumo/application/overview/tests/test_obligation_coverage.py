@@ -31,14 +31,7 @@ from ....core import (
     Modelo,
 )
 from ....domain.calculations.registry.applicability import has_applicability_rule
-from ....domain.deadlines import (
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    LegalEntityForm,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm, TaxpayerProfile
 from ....tests.attribute_scope import scoped_attribute
 from ...modelo.registry_discovery import registry_modelo_codes
 from .. import coverage as _coverage

@@ -29,17 +29,11 @@ import pytest
 from ....core import ConceptoIngreso, Period, TipoActividad
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_legal_parameters_only
-from ....domain.transactions import (
-    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    counts_toward_art_109_activity_income,
-    counts_toward_volumen_de_ingresos,
-    tipo_actividad_code_set,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ....domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income, counts_toward_volumen_de_ingresos
 from ...aggregation.tests._renta_income_aggregation_support import _raw_transaction
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,

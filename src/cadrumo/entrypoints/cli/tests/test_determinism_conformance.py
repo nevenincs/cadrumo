@@ -51,7 +51,7 @@ from ....core.observability import (
     mask_document,
 )
 from ....core.time import frozen_clock
-from ....domain.transactions import TransactionDirection
+from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._command_schema import command_schema_types

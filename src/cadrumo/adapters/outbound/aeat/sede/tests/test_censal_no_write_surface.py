@@ -42,13 +42,13 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .. import is_forbidden_censal_landing
+from ..censal_datos import is_forbidden_censal_landing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 _SEDE_ROOT = Path(__file__).resolve().parent.parent
-_CENSAL_MODULE = _SEDE_ROOT / "_censal_datos.py"
+_CENSAL_MODULE = _SEDE_ROOT / "censal_datos.py"
 
 # Procedure codes reachable from the consulta page's own launcher links.
 # G322 is the "Otras Modificaciones Censales" door confirmed live on the
@@ -157,14 +157,16 @@ class TestCensalPublicSurfaceOffersNoWrite:
         rather than by naming individual hooks, so a future pydantic
         lifecycle method cannot smuggle a false positive back in.
         """
-        from ... import sede
+        from .. import censal_datos
 
         forbidden_fragments = ("submit", "fill", "click", "follow", "send", "presentar", "modificar", "guardar")
         offenders: list[str] = []
-        for name in sede.__all__:
-            if "censal" not in name.casefold():
+        for name in dir(censal_datos):
+            if name.startswith("_"):
                 continue
-            attribute = getattr(sede, name)
+            attribute = getattr(censal_datos, name)
+            if getattr(attribute, "__module__", None) != censal_datos.__name__:
+                continue  # imported into the module, not part of its surface
             for member in dir(attribute):
                 if member.startswith("_") or member.startswith("model_"):
                     continue
@@ -193,11 +195,23 @@ class TestCensalPublicSurfaceOffersNoWrite:
         assert offenders == ["submit_modificacion"]
 
     def test_the_scan_covers_a_non_empty_censal_surface(self) -> None:
-        """A clean result above means nothing if no censal symbol was exported."""
-        from ... import sede
+        """A clean result above means nothing if the module offered nothing to read.
 
-        exported = [name for name in sede.__all__ if "censal" in name.casefold()]
-        assert exported, "no censal symbols exported from the sede facade; the scan above read nothing"
+        This used to count censal names on the sede package facade. That facade
+        is retired and exports nothing, so the guard would have gone permanently
+        green-by-emptiness -- the exact false pass it exists to prevent. It now
+        reads the censal module's own public surface, which is where the reader
+        actually lives.
+        """
+        from .. import censal_datos
+
+        public = [
+            name
+            for name in dir(censal_datos)
+            if not name.startswith("_")
+            and getattr(getattr(censal_datos, name), "__module__", None) == censal_datos.__name__
+        ]
+        assert public, "the censal module defines nothing; the scan above read nothing"
 
 
 class TestStaticFilingPathWall:

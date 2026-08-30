@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...iva import EUMemberState
-from .._validators import (
+from ...iva.schema import EUMemberState
+from ..validators import (
     EU_MEMBER_STATE_CODES,
     assert_eu_member_state_code,
     is_eu_member_state_code,

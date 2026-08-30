@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
 from ...core.directory_scan import scan_directory
 from ...core.identity import ContentDigest
-from ...domain.iva import InvoiceKind
+from ...domain.iva.classification import InvoiceKind
 from ..operator_actions import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 

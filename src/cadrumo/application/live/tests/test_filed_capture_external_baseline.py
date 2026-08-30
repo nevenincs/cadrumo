@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore, ObservedCasillaValue
+from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository

@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.iva.schema import IvaCategory
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._cli_json_support import _json_object

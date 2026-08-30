@@ -86,7 +86,7 @@ from .probes import PROBE_RESULTS_NEEDING_ATTENTION
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from ...domain.buckets import BucketEvent, BucketEventType
+    from ...domain.buckets.event import BucketEvent, BucketEventType
     from ..workflow.persistence import WorkflowStateRepository
     from ..workflow.state_models import WorkflowState
     from .models import CertificateSourceRecord
@@ -210,7 +210,7 @@ def register_operator_certificate_source(
     Returns:
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
 
     with _certificate_mutation_span() as active_bucket_id:
         _persist_with_event(
@@ -271,7 +271,7 @@ def select_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     Returns:
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
 
     normalized_name = name.strip()
     with _certificate_mutation_span() as active_bucket_id:
@@ -315,7 +315,7 @@ def remove_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     Returns:
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
     from ..workflow.persistence import workflow_state_repository
 
     normalized_name = name.strip()
@@ -797,7 +797,7 @@ def _finalize_certificate_secret_mutation(
     intent: CertificateSecretMutationIntent,
 ) -> None:
     """Atomically append the original stable event and clear its durable intent."""
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
 
     event_types = {
         CertificateSecretMutationEventKind.SET: BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET,

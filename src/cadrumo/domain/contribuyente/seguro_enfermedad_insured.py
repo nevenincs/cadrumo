@@ -36,11 +36,11 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
-from ._descendant_facts import descendant_list_from_facts
-from ._renta_codes import RentaMaritalStatus
+from .descendant_facts import descendant_list_from_facts
+from .renta_codes import RentaMaritalStatus
 
 if TYPE_CHECKING:
-    from ._descendant import DescendantInfo
+    from .descendant import DescendantInfo
 
 __all__ = [
     "DISCAPACIDAD_MINIMUM_GRADE",

@@ -46,24 +46,13 @@ import pytest
 
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.iva import (
-    IVA_CATEGORY_COMPONENTS,
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaKindApplicability,
-)
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.components import IVA_CATEGORY_COMPONENTS, IvaKindApplicability
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._invoice_kind import invoice_kind_for_direction
 from .._iva_ledger import IvaLedgerAggregationIssueReason
 from ._iva_authority_support import aggregate_iva_ledger_observations

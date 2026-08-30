@@ -27,8 +27,8 @@ from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.formula_runtime_ops import read_parameter
 from ...calculations.registry.legal import verify_legal_catalogue
-from .._enums import ReduccionTier
-from .._tier_resolver import (
+from ..enums import ReduccionTier
+from ..tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     JOVEN_TENANT_AGE_MAX,
     JOVEN_TENANT_AGE_MIN,

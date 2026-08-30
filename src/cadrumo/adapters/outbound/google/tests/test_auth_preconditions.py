@@ -18,11 +18,13 @@ from .....core.config import override_settings
 from .....core.errors import TerminalPreconditionErrorMixin
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
-from .. import _impersonation as impersonation_module
-from .. import _oauth_flow as oauth_flow_module
 from .. import active_profile as active_profile_module
-from .._impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
-from .._oauth_flow import (
+from .. import impersonation as impersonation_module
+from .. import oauth_flow as oauth_flow_module
+from ..active_profile import resolve_active_profile
+from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
+from ..impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
+from ..oauth_flow import (
     _decode_email_from_id_token,
     _raise_local_server_error,
     check_unsecured_mode_safety,
@@ -30,9 +32,7 @@ from .._oauth_flow import (
     require_interactive_terminal,
     resolve_active_tax_id,
 )
-from .._records import REQUIRED_SCOPES
-from ..active_profile import resolve_active_profile
-from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
+from ..records import REQUIRED_SCOPES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

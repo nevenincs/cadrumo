@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ..capsule_record import ProfileRecordSession

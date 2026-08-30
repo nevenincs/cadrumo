@@ -40,7 +40,8 @@ from ._ledger_value_fixtures import repository
 __all__ = ["repository"]
 
 from ....core import ClassifierInputSource
-from ....domain.iva import EUMemberState, IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import EUMemberState
 from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ..establishment_ladder import (
     CounterpartyEstablishment,

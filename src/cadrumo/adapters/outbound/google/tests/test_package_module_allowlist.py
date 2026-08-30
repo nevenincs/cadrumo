@@ -12,7 +12,7 @@ See Also:
     :mod:`~adapters.outbound.google`
         Public Google outbound adapter facade whose colocated tests are
         guarded by this inventory check.
-    :mod:`~adapters.outbound.google._oauth_flow`
+    :mod:`~adapters.outbound.google.oauth_flow`
         Desktop OAuth flow surface whose legacy predecessors remain outside
         the allowed module list.
     :mod:`~adapters.outbound.google.session_store`
@@ -36,8 +36,8 @@ _PACKAGE_ROOT = Path(__file__).resolve().parent
 _ALLOWED_MODULES: frozenset[str] = frozenset(
     {
         "__init__.py",
-        "_api.py",
-        "_calc_sheets_apply.py",
+        "api.py",
+        "calc_sheets_apply.py",
         "calc_sheets_pull.py",
         "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
         "test_calc_sheets_transport_facet_parity.py",  # contract: offline/online transports render the same plan facets (alignment, protection)
@@ -45,8 +45,8 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "errors.py",
-        "_impersonation.py",  # service-account impersonation credential source
-        "_oauth_flow.py",
+        "impersonation.py",  # service-account impersonation credential source
+        "oauth_flow.py",
         "active_profile.py",
         "_records.py",
         "session_store.py",

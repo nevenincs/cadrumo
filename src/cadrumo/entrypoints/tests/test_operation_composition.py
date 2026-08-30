@@ -110,7 +110,7 @@ def test_production_composition_exposes_only_public_services() -> None:
 
 
 def test_production_composition_imports_user_profile_operations_from_its_canonical_module() -> None:
-    source_path = Path(__file__).parents[1] / "_operation_composition.py"
+    source_path = Path(__file__).parents[1] / "operation_composition.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
     imported_modules = tuple(node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
 
@@ -121,7 +121,7 @@ def test_production_composition_imports_user_profile_operations_from_its_canonic
 
 
 def test_production_composition_imports_only_public_operation_defining_modules() -> None:
-    source_path = Path(__file__).parents[1] / "_operation_composition.py"
+    source_path = Path(__file__).parents[1] / "operation_composition.py"
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
     operation_imports = tuple(
         node

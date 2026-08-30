@@ -27,7 +27,7 @@ from ......tests.aeat_literal_fixtures import (
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
 )
-from .._censal_datos import (
+from ..censal_datos import (
     _FORBIDDEN_LANDING_MARKERS,
     _assert_read_http,
     _assert_read_landing,
@@ -138,7 +138,7 @@ class TestParseCensalDatos:
         from bs4 import Tag
 
         from ..._html import parse_html
-        from .._censal_datos import (
+        from ..censal_datos import (
             _DOMICILIO_LABELS,
             _IDENTITY_LABELS,
             _fold,
@@ -276,9 +276,9 @@ class TestNoWriteSurface:
         """The module must not bind itself to one load-balancer host."""
         from pathlib import Path
 
-        from .. import _censal_datos
+        from .. import censal_datos
 
-        source = Path(_censal_datos.__file__).read_text(encoding="utf-8")
+        source = Path(censal_datos.__file__).read_text(encoding="utf-8")
         pinned = [name for name in ("www1", "www2", "www3", "www6", "www12") if f"domains.{name}" in source]
 
         assert pinned == []
@@ -341,10 +341,10 @@ class TestNoWriteSurface:
 
     def test_module_exposes_no_submitting_operation(self) -> None:
         """The public surface offers navigation and parsing only."""
-        from .. import _censal_datos
+        from .. import censal_datos
 
         forbidden = ("submit", "fill", "click", "press", "modif", "post")
-        offenders = [name for name in _censal_datos.__all__ if any(token in name.casefold() for token in forbidden)]
+        offenders = [name for name in censal_datos.__all__ if any(token in name.casefold() for token in forbidden)]
 
         assert offenders == []
 

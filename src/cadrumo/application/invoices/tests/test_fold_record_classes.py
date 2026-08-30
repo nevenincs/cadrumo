@@ -34,8 +34,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.invoices import Invoice, InvoiceClass, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
+from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

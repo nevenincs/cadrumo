@@ -30,16 +30,10 @@ from datetime import date
 import pytest
 
 from ....core import ClassifierInputSource, IvaCategoryOutcome
-from ....domain.iva import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    IvaTerritorialScope,
-    SupplyNature,
-    record_country_code_status,
-    stated_country_code_status,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
+from ....domain.iva.establishment import record_country_code_status, stated_country_code_status
+from ....domain.iva.schema import IvaCategory, IvaRateKind
+from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
 from ..classification_assembly import (
     DeclaredFact,

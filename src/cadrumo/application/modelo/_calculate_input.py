@@ -73,7 +73,7 @@ from ...domain.calculations.registry.schema_scalars import (
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.contribuyente import descendant_list_from_facts
+from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.modelos import (
     Dt12WindowEligibility,
     Modelo184MemberRow,

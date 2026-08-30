@@ -18,13 +18,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
-    IvaCategory,
-    IvaRateKind,
-    IvaRateResolution,
-    resolve_category_rate,
-    split_gross_at_rate,
-)
+from ..saturation import IvaRateResolution, resolve_category_rate, split_gross_at_rate
+from ..schema import IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

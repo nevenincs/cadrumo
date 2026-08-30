@@ -111,7 +111,7 @@ from .m111_no_retenciones import (
 from .observations_repository import CalculationObservationRepository
 
 if TYPE_CHECKING:
-    from ...domain.deadlines import EntityType
+    from ...domain.deadlines.models import EntityType
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
@@ -360,7 +360,7 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
     if not raw:
         return None
-    from ...domain.deadlines import EntityType
+    from ...domain.deadlines.models import EntityType
 
     try:
         return EntityType(raw)

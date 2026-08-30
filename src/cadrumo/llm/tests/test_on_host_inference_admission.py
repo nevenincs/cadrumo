@@ -37,7 +37,9 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import LLMBusyError, LLMClient, LLMProviderError, LLMRequest
+from ..client import LLMClient
+from ..errors import LLMBusyError, LLMProviderError
+from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
 
 __all__ = ["_fresh_arena"]
@@ -226,7 +228,7 @@ def test_a_failed_dispatch_gives_its_slot_back(tmp_path: Path) -> None:
     the symptom (everything is busy, nothing is running) points nowhere near the
     release path.
     """
-    from .._client import _on_host_inference_arena
+    from ..client import _on_host_inference_arena
 
     runtime = _HeldRuntime()
     runtime.status = HTTPStatus.SERVICE_UNAVAILABLE
@@ -252,7 +254,7 @@ def test_an_off_host_provider_does_not_occupy_an_on_host_slot(tmp_path: Path) ->
     the point is which provider takes a slot, and a real cloud call is exactly
     what this repository must never make in a test.
     """
-    from .._client import _on_host_inference_arena
+    from ..client import _on_host_inference_arena
 
     client = _client(tmp_path, concurrency=1)
     arena = _on_host_inference_arena(client.settings)

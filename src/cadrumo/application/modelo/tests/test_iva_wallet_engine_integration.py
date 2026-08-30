@@ -10,7 +10,7 @@ import pytest
 
 from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.iva_compensation import IvaCompensationOverride, IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import IvaCompensationOverride, IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
 from ...calculations import (
     CalculationObservationRepository,

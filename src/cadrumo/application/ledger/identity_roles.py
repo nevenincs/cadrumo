@@ -85,7 +85,7 @@ from ...core.identity import (
     same_tax_identifier,
     validate_spanish_tax_id,
 )
-from ...domain.iva import country_code_for_printed_tax_identifier
+from ...domain.iva.establishment import country_code_for_printed_tax_identifier
 from .evidence_draft import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
 from .grounding_anchor import ground_ambiguous_candidates
 

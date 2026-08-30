@@ -40,19 +40,17 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
-from ...domain.filing import (
-    CasillaSchemaProvider,
-    ModeloApprovalBasis,
-    ModeloDraft,
-    ModeloDraftError,
-    ModeloValidator,
-    derive_validation_status,
-)
+from ...domain.categories.profile import CategoryProfile
+from ...domain.categories.registry import resolve_category_profiles
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.filing.errors import ModeloDraftError
+from ...domain.filing.protocols import CasillaSchemaProvider
+from ...domain.filing.schema import ModeloApprovalBasis, ModeloDraft
+from ...domain.filing.validator import ModeloValidator, derive_validation_status
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.invoices import InvoiceCatalogue
+from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
-from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values

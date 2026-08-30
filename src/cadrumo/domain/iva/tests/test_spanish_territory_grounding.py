@@ -50,7 +50,7 @@ import pytest
 
 from ....core import normalise_corpus_text, resolve_anchored_extracted_unit
 from ....core.resources import bundled_path
-from .. import IvaTerritorialScope
+from ..classification import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

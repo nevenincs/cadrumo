@@ -25,7 +25,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ....domain.deadlines import EntityType
+from ....domain.deadlines.models import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
@@ -214,7 +214,7 @@ def test_the_wizard_grammar_is_the_domain_grammar() -> None:
     agree today.
     """
     from ....core.errors import ProfileAnswerTypeError
-    from ....domain.contribuyente import parse_guarderia_mensual
+    from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     definition = _probe_definition()
     state = _one_descendant_state(definition)

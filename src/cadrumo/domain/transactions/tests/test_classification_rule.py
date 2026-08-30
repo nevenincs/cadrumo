@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from ..classification_rule import LedgerClassificationRule
-from .._enums import BusinessClassification
+from ..enums import BusinessClassification
 from ..errors import ClassificationRuleError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

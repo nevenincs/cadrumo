@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 from ..operator_actions import DeclaredNextAction
 from ..state_projection import build_auth_readiness
 from ..user_profile.completeness import iva_regime_required

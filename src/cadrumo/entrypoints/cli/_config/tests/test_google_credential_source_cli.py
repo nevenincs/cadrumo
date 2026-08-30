@@ -65,7 +65,8 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.google import GoogleAuthAdcUnavailableError, load_credential_source_selection
+from .....adapters.outbound.google.impersonation import GoogleAuthAdcUnavailableError
+from .....adapters.outbound.google.session_store import load_credential_source_selection
 from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
 from .....tests.cli_runner import invoke_cached_cli

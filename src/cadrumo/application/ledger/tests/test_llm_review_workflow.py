@@ -18,21 +18,14 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....domain.buckets import BucketEvent, BucketEventType
-from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    LLMSplitResponse,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ....domain.buckets.event import BucketEvent, BucketEventType
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.llm import LLMSplitResponse
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,

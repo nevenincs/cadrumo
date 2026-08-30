@@ -31,8 +31,8 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
-from ...domain.deadlines import IVARegime as _IVARegime
+from ...domain.deadlines.models import IrpfEstimationRegime as _IrpfEstimationRegime
+from ...domain.deadlines.models import IVARegime as _IVARegime
 from ..operator_actions import DeclaredNextAction
 from .calendar_models import (
     CalendarCompleteness,

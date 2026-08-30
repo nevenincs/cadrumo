@@ -22,7 +22,7 @@ from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets import BucketEvent, BucketEventType
-from ....domain.contribuyente import required_profile_keys
+from ....domain.contribuyente.keys import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile

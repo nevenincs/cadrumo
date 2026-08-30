@@ -17,10 +17,8 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
 
-from .....domain.fincas import (
-    Finca,
-    UseType,
-)
+from .....domain.fincas.enums import UseType
+from .....domain.fincas.models import Finca
 from ._fincas_engine_fixture import engine
 
 __all__ = ["engine"]

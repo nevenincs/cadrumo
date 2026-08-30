@@ -6,16 +6,16 @@ import pytest
 
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.i18n import Translatable as tr
-from .. import (
+from ..errors import ProfileKeysRegistrationError
+from ..keys import (
     PROFILE_KEYS,
     ProfileKey,
     ProfileKeyRequirement,
     get_profile_key,
     optional_profile_keys,
+    register_profile_keys,
     required_profile_keys,
 )
-from .._keys import register_profile_keys
-from ..errors import ProfileKeysRegistrationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -31,7 +31,7 @@ from ._confirmation_profile_fixture import profile
 __all__ = ["profile"]
 
 from ....core import LOCAL_TRANSPORT_LABEL
-from ....domain.transactions import TransactionNotFoundError
+from ....domain.transactions.errors import TransactionNotFoundError
 from ....tests.secure_sql import TestRuntimeProfile
 from ..evidence_draft import InvoiceDraft
 from ..extraction_draft_store import load_extraction_drafts, read_extraction_draft
@@ -170,7 +170,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
     rejections that shared this branch before it, and every draft assertion
     above would still pass.
     """
-    from ....domain.transactions import BusinessClassification
+    from ....domain.transactions.enums import BusinessClassification
     from ....llm.suggestions import LLMClassificationSuggestion
 
     suggestion = LLMClassificationSuggestion(

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import normalise_key
+from ..normalise import normalise_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

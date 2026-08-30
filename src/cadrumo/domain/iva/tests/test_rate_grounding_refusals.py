@@ -22,14 +22,14 @@ import pytest
 from ....core.resources import bundled_path
 from ...calculations.registry.schema_references import LegalReference, SourceReference
 from .._grounding import legal_ref_failures
-from .._rates import (
+from ..errors import IvaCatalogueError
+from ..rates import (
     _source_ref_failures,
     _source_window_covers,
     _source_window_failure,
     _verify_rate_grounding,
 )
-from .._schema import EUMemberState, IvaRateKind, IvaRateRecord
-from ..errors import IvaCatalogueError
+from ..schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

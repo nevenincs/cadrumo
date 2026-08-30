@@ -26,12 +26,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .. import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
-from .._descendant_facts import (
+from ..descendant import DescendantInfo
+from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..family_profile import RentaFamilyProfile
+from ..family_types import MinimoDescendientesThresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

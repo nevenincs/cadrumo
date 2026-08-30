@@ -1,4 +1,4 @@
-"""End-to-end redaction tests for :class:`cadrumo.core.observability._sink.JsonlRunSink`.
+"""End-to-end redaction tests for :class:`cadrumo.core.observability.sink.JsonlRunSink`.
 
 The sink writes :class:`cadrumo.core.observability.RunEvent` records that
 may carry casilla form-fill values, AEAT navigation URLs, and free-form
@@ -24,15 +24,8 @@ from pathlib import Path
 import pytest
 
 from ....tests.aeat_literal_fixtures import REDACTION_SECRET_WLPL_PATH_CANARY, aeat_url
-from .. import (
-    ErrorPayload,
-    FormFillPayload,
-    NavigationPayload,
-    RunEvent,
-    RunEventKind,
-    RunEventPayload,
-)
-from .._sink import JsonlRunSink
+from ..models import ErrorPayload, FormFillPayload, NavigationPayload, RunEvent, RunEventKind, RunEventPayload
+from ..sink import JsonlRunSink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

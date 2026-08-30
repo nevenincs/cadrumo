@@ -9,9 +9,10 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventType
-from ....domain.categories import SpendingCategory
-from ....domain.transactions import BusinessClassification, TransactionLifecycleState, TransactionValidationError
+from ....domain.buckets.event import BucketEventType
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
 from ....llm.suggestions import LLMClassificationSuggestion
 from ..llm_classification import apply_evidence_split, reject_llm_suggestion, suggest_evidence_split
 from ._llm_evidence_split_support import (

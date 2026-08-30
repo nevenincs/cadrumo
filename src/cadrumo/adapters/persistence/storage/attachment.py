@@ -38,14 +38,9 @@ from ....core.identity import BucketId
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.time import now
-from ....domain.attachments import (
-    Attachment,
-    AttachmentNotFoundError,
-    AttachmentPersistenceError,
-    AttachmentStoreProtocol,
-    AttachmentValidationError,
-    is_link_only_mime_type,
-)
+from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
+from ....domain.attachments.models import Attachment, is_link_only_mime_type
+from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ._namespace_registry import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
 )

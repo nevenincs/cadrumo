@@ -51,7 +51,7 @@ def _validate_manual_legal_reference(reference: LegalReference, source_root: Pat
     if not path.is_file():
         return
     try:
-        from ...manuals import Section
+        from ...manuals.schema import Section
 
         Section.model_validate_json(path.read_text(encoding="utf-8"))
     except Exception as exc:

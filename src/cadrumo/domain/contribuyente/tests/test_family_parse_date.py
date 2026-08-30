@@ -15,8 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import DescendantRelacion
-from .. import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile
-from .._family_types import coerce_iso_date_field
+from ..descendant import DescendantInfo
+from ..family_types import RentaAscendantProfile, RentaDescendantProfile, coerce_iso_date_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

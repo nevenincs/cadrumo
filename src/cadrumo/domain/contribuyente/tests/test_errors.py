@@ -12,7 +12,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import ErrorCategory, get_registered_error_code
-from .. import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError, parse_tax_region
+from ..errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
+from ..tax_residence import parse_tax_region
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

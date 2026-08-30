@@ -6,7 +6,7 @@ specification and the three caller contracts consolidated in contract:
 - ``_calc_sheets_pull``: nullable-cell pattern — no default, returns ``None``.
 - ``_row_set_assembly``: aggregation pattern — ``default=Decimal("0")``, always returns
   a :class:`~decimal.Decimal`.
-- ``invoices._models``: strict-validator pattern — no default; ``None`` result is
+- ``invoices.models``: strict-validator pattern — no default; ``None`` result is
   handled by pydantic's ``ValidationError`` at the model boundary.
 
 Tests are NOT tautological because the expected values are specified

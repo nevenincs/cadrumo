@@ -94,7 +94,7 @@ def test_current_tree_ledger_rejects_a_mutated_unadjudicated_candidate() -> None
     candidates = current_census()
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
     unadjudicated = CandidateRecord(
-        path="src/cadrumo/application/overview/_data_prep.py",
+        path="src/cadrumo/application/overview/data_prep.py",
         enclosing_symbol="_work_unit_step",
         role="producer",
         alias="next_action",
@@ -110,7 +110,7 @@ def test_current_tree_ledger_rejects_a_mutated_unadjudicated_candidate() -> None
 def test_current_tree_adjudication_fails_closed_for_an_unrecognized_action_alias() -> None:
     """A scanner-discovered alias cannot be silently classified by a nearby known shape."""
     candidate = CandidateRecord(
-        path="src/cadrumo/application/overview/_data_prep.py",
+        path="src/cadrumo/application/overview/data_prep.py",
         enclosing_symbol="_work_unit_step",
         role="producer",
         alias="unreviewed_action_field",
@@ -360,3 +360,66 @@ def test_missing_ledger_path_fails_the_checked_in_and_cli_entrypoints(
 
     assert main(["--current-tree", "--dispositions", str(missing_path)]) == 1
     assert "cannot read disposition ledger" in capsys.readouterr().out
+
+
+def test_a_module_rename_no_longer_orphans_an_adjudication() -> None:
+    """Relocating a module preserves every judgement it held.
+
+    This is the defect the key derivation exists to prevent: a
+    private-to-public promotion changes only where a site LIVES, never
+    which action it reaches or in which enclosing symbol, yet a
+    path-keyed identity discarded thirty-four adjudications in one sweep
+    because the string in front of ``::`` moved.
+
+    Driven from a real ledger entry rather than a synthetic one, so a key
+    that stopped matching the census's own records would fail here too.
+    """
+    live = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    assert live, "the checked-in ledger is empty; this proof needs a real adjudication"
+    original = live[0].key
+
+    directory, _, module = original.path.rpartition("/")
+    promoted = replace(original, path=f"{directory}/_{module}")
+    assert promoted.path != original.path, "the fixture must actually move the module"
+
+    assert promoted == original, (
+        "a module rename orphaned an adjudication: the key still carries the file path in its identity"
+    )
+    assert hash(promoted) == hash(original), "a relocated key must land in the same bucket, not merely compare equal"
+    assert {original: "kept"}[promoted] == "kept"
+
+
+def test_a_function_rename_still_requires_re_adjudication() -> None:
+    """The identity is relocation-immune, not change-blind.
+
+    Renaming the enclosing symbol is a real change to the thing being
+    judged, so it must NOT silently inherit the old judgement. Without
+    this, dropping ``path`` from the identity could be "fixed" by
+    dropping every discriminator until nothing distinguishes two sites.
+    """
+    live = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    original = live[0].key
+
+    renamed = replace(original, enclosing_symbol=f"{original.enclosing_symbol}_renamed")
+
+    assert renamed != original, "a renamed enclosing symbol must not inherit the previous adjudication"
+
+
+def test_every_checked_in_adjudication_keeps_a_distinct_identity() -> None:
+    """The relocation-immune key still separates every real ledger row.
+
+    ``alias`` is frequently the ``<command-literal>`` placeholder, so role
+    plus alias plus action identity alone is NOT unique -- it collides
+    across dozens of live rows. This asserts the property rather than a
+    tally, so a ledger that grows does not have to come back and edit a
+    constant.
+    """
+    live = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    keys = [disposition.key for disposition in live]
+
+    duplicates = [key for key, count in Counter(keys).items() if count > 1]
+
+    assert not duplicates, (
+        f"{len(duplicates)} adjudications share one identity, so the ledger cannot tell them apart: "
+        f"{[key.render() for key in duplicates[:5]]}"
+    )

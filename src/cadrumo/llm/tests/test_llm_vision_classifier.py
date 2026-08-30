@@ -18,13 +18,10 @@ from ...application.provisioning import (
 )
 from ...core import AcceleratorKind, ImageMediaType, model_candidate
 from ...core.config import load_settings
-from ...domain.categories import SpendingCategory
-from ...domain.iva import IvaCategory
-from ...domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    prompt_spec_with_saturation_fields,
-)
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
 from ...tests.llm_vision_evidence_support import (
     _json_array,
     _json_object,
@@ -32,9 +29,9 @@ from ...tests.llm_vision_evidence_support import (
     _run_against_loopback_ollama,
     _transaction,
 )
-from .. import LLMClient
-from .._models import MultimodalImageInput
-from .._vision_classifier import LocalVisionLLMClassifier
+from ..client import LLMClient
+from ..models import MultimodalImageInput
+from ..vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

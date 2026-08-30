@@ -26,9 +26,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind
-from .._enums import IvaRate, PaymentStatus, iva_rate_percentage
-from .._models import Invoice, InvoiceLine
+from ...iva.classification import InvoiceKind
+from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

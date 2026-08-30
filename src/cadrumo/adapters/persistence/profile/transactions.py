@@ -75,30 +75,16 @@ from ....domain.bienes_inversion import (
     InvestmentAssetAcquisitionLink,
     validate_investment_asset_reciprocity,
 )
-from ....domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaRateKind,
-    derive_flow_for_classification,
-    rate_kinds_for_declared_rate,
-    validate_iva_deduction_fact,
-)
-from ....domain.transactions import (
-    LedgerDatePartition,
-    LedgerStorageError,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
-    StoredTransactionDriftError,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    transaction_eligible_date_span,
-    transaction_filing_date,
-    transaction_index_object_key,
-    transaction_object_key,
-)
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ....domain.iva.flow import derive_flow_for_classification
+from ....domain.iva.lookup import rate_kinds_for_declared_rate
+from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
+from ....domain.transactions.models import LedgerDatePartition, OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..storage import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
@@ -1183,7 +1169,7 @@ class TransactionCatalogueRepository:
         cache[key] = payload_hash
 
     def _require_current_rows(self, object_keys: Iterable[str]) -> None:
-        """Refuse an ordinary read until the explicit S54 cutover has persisted v2."""
+        """Refuse an ordinary read until the explicit catalogue cutover has persisted v2."""
         keys = tuple(object_keys)
         old = [
             object_key

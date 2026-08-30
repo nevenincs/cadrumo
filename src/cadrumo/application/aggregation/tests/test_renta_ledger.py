@@ -23,30 +23,18 @@ from ....core.aggregation import BindingAggregation, BindingAggregationOp, Bindi
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.categories import (
-    CategoryCitation,
-    CategoryCitationSource,
-    CategoryProfile,
-    ProportionalityKind,
-    ProportionalityRule,
-    SpendingCategory,
-    parse_http_url,
-)
-from ....domain.contribuyente import CCAA
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
+from ....domain.categories.profile import CategoryProfile
+from ....domain.categories.proportionality import CategoryCitation, CategoryCitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.contribuyente.ccaa import CCAA
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.renta import RentaExpenseDirection
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE

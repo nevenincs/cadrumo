@@ -50,11 +50,11 @@ CORE_STRUCTS: dict[str, str] = {
     "Envelope": "cadrumo.adapters.persistence.storage.envelope._envelope",
     "MasterKeyProvider": "cadrumo.adapters.persistence.storage.master_key._master_key",
     # Portal registry
-    "Portal": "cadrumo.domain.portals._codes",
-    "PortalMetadata": "cadrumo.domain.portals._metadata",
-    "PortalCategory": "cadrumo.domain.portals._categories",
+    "Portal": "cadrumo.domain.portals.codes",
+    "PortalMetadata": "cadrumo.domain.portals.metadata",
+    "PortalCategory": "cadrumo.domain.portals.categories",
     # Financial-input aggregates and their repositories
-    "TransactionCatalogue": "cadrumo.domain.transactions._models",
+    "TransactionCatalogue": "cadrumo.domain.transactions.models",
     "TransactionCatalogueRepository": "cadrumo.adapters.persistence.profile.transactions",
     "InvoiceCatalogue": "cadrumo.domain.invoices._models",
     # Profile, deadlines, and filing records
@@ -62,7 +62,7 @@ CORE_STRUCTS: dict[str, str] = {
     "Schedule": "cadrumo.domain.deadlines._models",
     "UserProfileRecord": "cadrumo.domain.user_profile.values",
     "ModeloDraft": "cadrumo.domain.filing._schema",
-    "ModeloRecord": "cadrumo.domain.modelos._filing_record",
+    "ModeloRecord": "cadrumo.domain.modelos.filing_record",
 }
 
 # A Sphinx cross-reference role capturing the referenced symbol's final segment,

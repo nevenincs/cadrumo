@@ -35,12 +35,13 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.outbound.aeat.sede import SedeNavigationError
+from ....adapters.outbound.aeat.sede.errors import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.directory_scan import scan_directory
 from ....core.hashing import sha256_hex
-from ....domain.attachments import AttachmentKind, load_attachment
+from ....domain.attachments.enums import AttachmentKind
+from ....domain.attachments.service import load_attachment
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..errors import LiveApplicationInputError
 from ..notification_documents import (

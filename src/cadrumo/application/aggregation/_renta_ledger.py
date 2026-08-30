@@ -44,19 +44,18 @@ from ...core import (
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.resources import resources
-from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.contribuyente import (
-    CCAA,
-    ForalRegimeError,
-    TaxResidenceProfileError,
-    parse_tax_region,
-)
+from ...domain.categories.profile import CategoryProfile
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.contribuyente.ccaa import CCAA
+from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfileError
+from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
-from ...domain.deadlines import IVARegime
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind
+from ...domain.deadlines.models import IVARegime
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -71,14 +70,9 @@ from ...domain.renta import (
     resolve_region_category_profiles,
     select_deductibility_profile,
 )
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord

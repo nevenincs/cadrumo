@@ -9,7 +9,7 @@ the other bucket-maintenance verbs.
 
 from __future__ import annotations
 
-from .....domain.buckets import BucketExportError, BucketImportError
+from .....domain.buckets.errors import BucketExportError, BucketImportError
 
 
 class SealedArchiveLayoutError(BucketImportError):

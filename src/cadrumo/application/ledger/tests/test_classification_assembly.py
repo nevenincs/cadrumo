@@ -14,16 +14,9 @@ from datetime import date
 import pytest
 
 from ....core import ClassifierInputSource
-from ....domain.iva import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    IvaTerritorialScope,
-    SupplyNature,
-    TransactionKind,
-    domestic_rate_tier_is_required,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope, TransactionKind, domestic_rate_tier_is_required
+from ....domain.iva.schema import IvaCategory, IvaRateKind
+from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -273,7 +266,7 @@ def test_the_probe_agrees_with_the_domain_laziness_authority() -> None:
     A category moved into or out of the nature-indifferent set reds here rather
     than silently making the assembly demand the wrong thing.
     """
-    from ....domain.iva import supply_nature_is_required
+    from ....domain.iva.supply_nature import supply_nature_is_required
 
     for scopes, expect_forks in (
         ((IvaTerritorialScope.ES_MAINLAND, IvaTerritorialScope.ES_MAINLAND), False),
@@ -931,7 +924,8 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
     entering or leaving the table is a legitimate change, while verifying nothing
     never is.
     """
-    from ....domain.iva import EUMemberState, IvaInvoiceClassificationCriteria, classify_iva
+    from ....domain.iva.classification import IvaInvoiceClassificationCriteria, classify_iva
+    from ....domain.iva.schema import EUMemberState
 
     fallthrough = "R99_fallthrough"
     reachable_kinds = (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL)

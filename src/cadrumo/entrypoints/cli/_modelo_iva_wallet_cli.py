@@ -19,7 +19,7 @@ from ...application.modelo._iva_wallet_seed import (
 from ...core import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
-from ...domain.iva_compensation import IvaCompensationSeedConflictError
+from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult

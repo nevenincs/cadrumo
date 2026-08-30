@@ -33,15 +33,15 @@ from pydantic import AnyHttpUrl
 from ......core import Period
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
-from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
-from .._observation_store import FiledDeclaracionObservationStore
-from .._schema import (
+from ..errors import SedeValidationError
+from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ..observation_store import FiledDeclaracionObservationStore
+from ..schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
-from ..errors import SedeValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -138,7 +138,7 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
 
 def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp_path: Path) -> None:
     """The targeted lookup refuses instead of answering with the other declaration."""
-    from .._observation_store import _OBSERVATION_NAMESPACE
+    from ..observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -163,7 +163,7 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_enumeration(tmp_p
     A consumer that lists rather than looks up would otherwise carry the
     substituted evidence with no key ever compared.
     """
-    from .._observation_store import _OBSERVATION_NAMESPACE
+    from ..observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -188,7 +188,7 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
     A wallet balance read against the wrong target period is a wrong number in
     a filing, not a mislabelled record.
     """
-    from .._observation_store import _IVA_WALLET_OBSERVATION_NAMESPACE
+    from ..observation_store import _IVA_WALLET_OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -216,7 +216,7 @@ def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path
     new identity check. Here the substituted bytes are a complete, parseable
     envelope for the OTHER row.
     """
-    from .._observation_store import _OBSERVATION_NAMESPACE
+    from ..observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -268,7 +268,7 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
     evidence, so bytes that cannot re-derive their own address cannot defend a
     figure whatever they contain.
     """
-    from .._observation_store import _ARTEFACT_NAMESPACE
+    from ..observation_store import _ARTEFACT_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")

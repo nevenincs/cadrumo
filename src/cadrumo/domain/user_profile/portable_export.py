@@ -28,7 +28,7 @@ from ...core.time import now as _utc_now
 from ..modelos import ModeloRecord as _ModeloRecord
 from ..modelos import WorkUnit as _WorkUnit
 from ..modelos.calculation_revision import CalculationRevision as _CalculationRevision
-from ..transactions import Transaction as _Transaction
+from ..transactions.models import Transaction as _Transaction
 from .values import UserProfileRecord
 
 

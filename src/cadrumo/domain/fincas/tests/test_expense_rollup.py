@@ -11,12 +11,9 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
-    CarryForwardEntry,
-    ExpenseCategory,
-    FincaGasto,
-    compute_gastos_for_year,
-)
+from ..enums import ExpenseCategory
+from ..expense_rollup import CarryForwardEntry, compute_gastos_for_year
+from ..models import FincaGasto
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

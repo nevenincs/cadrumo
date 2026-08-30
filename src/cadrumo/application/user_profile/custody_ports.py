@@ -24,7 +24,7 @@ from ...core.classification import SensitivityClass
 from ...core.errors import CoreError
 
 if TYPE_CHECKING:
-    from ...domain.buckets import BucketEventHistoryCatalogue
+    from ...domain.buckets.event import BucketEventHistoryCatalogue
     from ...domain.user_profile.portable_export import CarriedSecureObject
     from ...domain.user_profile.values import UserProfileSnapshot
     from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning

@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from ......core.config import override_settings
 from ......core.parsing import normalise_iso_4217_currency
-from ......domain.transactions import RawProvenance, RawTransaction, SourceFormat
+from ......domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._base import FinancialValidationError, default_currency
 from .._csv import _currency_from_aliases
 from .._ofx import _resolve_statement_context

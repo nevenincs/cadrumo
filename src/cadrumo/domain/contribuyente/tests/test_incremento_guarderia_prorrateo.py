@@ -21,9 +21,10 @@ from decimal import Decimal
 
 import pytest
 
-from .. import DescendantInfo, RentaFamilyProfile
-from .._guarderia_mensual import parse_guarderia_mensual
-from .._meses_trabajo import parse_meses_trabajo
+from ..descendant import DescendantInfo
+from ..family_profile import RentaFamilyProfile
+from ..guarderia_mensual import parse_guarderia_mensual
+from ..meses_trabajo import parse_meses_trabajo
 from ._registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

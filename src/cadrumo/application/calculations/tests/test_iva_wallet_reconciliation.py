@@ -9,23 +9,14 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    IVA_COMPENSATION_WALLET_URL,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
-)
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core import BindingSourceKind, IvaCompensationStateProvenance, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva_compensation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationDecisionReason,
-    IvaCompensationOverride,
-    IvaCompensationPeriodState,
-    IvaCompensationReconciliationInputError,
-    IvaCompensationWalletObservationProtocol,
-    IvaWalletReconciliationError,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
+from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationOverride, IvaCompensationWalletObservationProtocol
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._iva_wallet_reconciliation import (

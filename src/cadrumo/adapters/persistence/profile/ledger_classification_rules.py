@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import override
 
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
-from ....domain.transactions import LedgerClassificationRule
+from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ..storage import LEDGER_CLASSIFICATION_RULES_NAMESPACE, SecureBoundRepository
 
 

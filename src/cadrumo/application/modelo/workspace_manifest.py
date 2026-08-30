@@ -195,7 +195,7 @@ def generate_modelo_workspace_field_manifest_for_inspection(
 ) -> ModeloWorkspaceFieldManifestV1:
     """Classify every reachable STATIC_INSPECTION type leaf and tagged branch.
 
-    S278: a static inspection makes a structurally distinct authority claim
+    A static inspection makes a structurally distinct authority claim
     from a graded snapshot (it "cannot calculate, render, or file anything"),
     so it gets its own complete manifest over its own type universe rather
     than a partial view filtered out of the snapshot-rooted manifest -- the

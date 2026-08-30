@@ -7,17 +7,11 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....core import BindingSourceKind, Period
-from ....domain.categories import SpendingCategory
-from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...user_profile.censo_sync import CensoSyncService

@@ -11,7 +11,7 @@ import pytest
 from ....core import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
-from ....domain.filing import FilingExportError
+from ....domain.filing.errors import FilingExportError
 from .. import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from .._export import (
     DeclaracionExportResult,

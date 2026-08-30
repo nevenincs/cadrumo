@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...deadlines import EntityType
+from ...deadlines.models import EntityType
 
 __all__ = ["TAX_ROUTE_FOR_ENTITY_TYPE", "TaxRoute"]
 

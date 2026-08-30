@@ -2,7 +2,7 @@
 
 import pytest
 
-from .. import GoogleApiResponseBody, GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet
+from ..api import GoogleApiResponseBody, GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

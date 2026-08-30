@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....domain.iva import InvoiceKind
-from ....domain.transactions import BusinessClassification, TransactionDirection
+from ....domain.iva.classification import InvoiceKind
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions import LedgerImportDiagnosticKind
 from ..filter import (
     DeclaracionReviewFilterSpec,

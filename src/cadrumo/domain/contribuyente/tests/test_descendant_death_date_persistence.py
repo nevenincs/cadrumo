@@ -20,8 +20,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import DescendantRelacion
-from .. import DescendantInfo
-from .._descendant_facts import (
+from ..descendant import DescendantInfo
+from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,

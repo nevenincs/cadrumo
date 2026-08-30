@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import FieldOrigin
-from ....llm import ExtractionPayload, ExtractionProducer
+from ....llm.suggestions import ExtractionPayload, ExtractionProducer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

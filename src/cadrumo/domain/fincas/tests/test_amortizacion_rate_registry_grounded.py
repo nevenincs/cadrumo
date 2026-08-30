@@ -27,7 +27,7 @@ import pytest
 
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.formula_runtime_ops import read_parameter
-from .._amortization_ledger import _resolve_amortizacion_inmueble_rate
+from ..amortization_ledger import _resolve_amortizacion_inmueble_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

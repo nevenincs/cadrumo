@@ -110,7 +110,7 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
     rejects them via ``ForalRegimeError``. See ``_ccaa_choice_values``.
     """
 
-    from ....domain.contribuyente import CCAA
+    from ....domain.contribuyente.ccaa import CCAA
 
     expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
     assert expected == _CCAA_CHOICE_VALUES

@@ -11,7 +11,7 @@ import pytest
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
-from ....iva import IvaLedgerObservationRole
+from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..binding_aggregation import binding_aggregation_op
 from ..binding_selector_utils import selector_as_dict
@@ -575,7 +575,8 @@ def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula(revis
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(revision_id: str) -> None:
-    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ....iva.flow import IvaFlowDirection
+    from ....iva.schema import IvaCategory, IvaRateKind
     from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,

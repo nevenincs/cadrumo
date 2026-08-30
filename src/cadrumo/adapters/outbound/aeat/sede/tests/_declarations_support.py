@@ -27,7 +27,7 @@ from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
-from .._declarations import (
+from ..declarations import (
     Declaracion,
     SedeParseError,
     _assert_read_browser_action,
@@ -42,12 +42,12 @@ from .._declarations import (
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
 )
-from .._declarations import (
+from ..declarations import (
     _select_authoritative_declaration as _select_authoritative_declaration_production,
 )
-from .._declarations_observations import registry_observation_from_filed_declaration
-from .._observation_store import FiledDeclaracionObservationStore
-from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ..declarations_observations import registry_observation_from_filed_declaration
+from ..observation_store import FiledDeclaracionObservationStore
+from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 __all__ = [
     "UTC",

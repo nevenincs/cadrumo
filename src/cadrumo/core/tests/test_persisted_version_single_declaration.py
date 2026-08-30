@@ -152,23 +152,13 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
     (
-        "src/cadrumo/domain/calculations/registry/_schema_exports.py",
+        "src/cadrumo/domain/calculations/registry/schema_exports.py",
         "FilingEnvelopeDefinition",
         "schema_version",
     ): (
         f"{_UNNAMED_SOLE_DECLARATION} This declares an envelope GRAMMAR rather than an instance, "
         "so whether it is a persisted format at all is part of the open question."
     ),
-    (
-        "src/cadrumo/domain/contribuyente/__init__.py",
-        "TaxResidenceProfile",
-        "schema_version",
-    ): _UNNAMED_SOLE_DECLARATION,
-    (
-        "src/cadrumo/domain/contribuyente/_family_profile.py",
-        "RentaFamilyProfile",
-        "schema_version",
-    ): _UNNAMED_SOLE_DECLARATION,
     (
         "src/cadrumo/application/aggregation/_service.py",
         "PerModeloAggregationContract",
@@ -190,7 +180,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _RESPONSE_CONTRACT,
     (
-        "src/cadrumo/application/operator_surface/_models.py",
+        "src/cadrumo/application/operator_surface/models.py",
         "OperatorSurfaceContract",
         "schema_version",
     ): _RESPONSE_CONTRACT,
@@ -200,7 +190,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _RESPONSE_CONTRACT,
     (
-        "src/cadrumo/domain/calculations/registry/_censo_modelos.py",
+        "src/cadrumo/domain/calculations/registry/censo_modelos.py",
         "CensoModeloFoundationContract",
         "schema_version",
     ): _RESPONSE_CONTRACT,
@@ -412,7 +402,7 @@ def test_the_two_repaired_formats_stay_repaired(source_tree_ast: Mapping[Path, a
             "src/cadrumo/application/user_profile/bundle_export_contracts.py",
         ),
         (
-            "src/cadrumo/domain/fincas/_models.py",
+            "src/cadrumo/domain/fincas/models.py",
             "FINCA_SCHEMA_VERSION",
             "src/cadrumo/adapters/persistence/storage/sql/_orm.py",
         ),

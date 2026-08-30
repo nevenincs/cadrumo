@@ -30,12 +30,7 @@ from datetime import datetime
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import PositiveCount
-from ...domain.buckets import (
-    BucketActorLabel,
-    BucketEventId,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event import BucketObjectId
 
 

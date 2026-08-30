@@ -127,7 +127,7 @@ def verify_filed_state(
     # this package, and because CommandSpec annotations resolve through here it
     # dragged the auth session store -- and the whole persistence family -- into
     # merely RESOLVING unrelated registry commands.
-    from ...adapters.outbound.aeat.sede import registry_observation_from_filed_declaration
+    from ...adapters.outbound.aeat.sede.declarations_observations import registry_observation_from_filed_declaration
 
     filed_observation = _load_filed_observation(observation_path)
     registry_observation = registry_observation_from_filed_declaration(filed_observation)
@@ -225,7 +225,7 @@ def _filed_state_casilla_is_input(
 
 
 def _load_filed_observation(path: Path):
-    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+    from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 
     return FiledDeclaracionObservationStore(path.parent).load_observation(path)
 

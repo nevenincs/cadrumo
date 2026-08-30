@@ -23,10 +23,7 @@ from typing import Any, cast
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclarationAvailability,
-    FiledDeclarationAvailabilityReport,
-)
+from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ....application.live.filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryReport,

@@ -28,19 +28,9 @@ from datetime import date
 
 import pytest
 
-from .. import (
-    EUMemberState,
-    IvaCatalogue,
-    IvaCatalogueError,
-    IvaCategory,
-    IvaCategoryNotFoundError,
-    IvaCitation,
-    IvaRateKind,
-    IvaRateNotFoundError,
-    IvaRegulation,
-    cite,
-    lookup_rate,
-)
+from ..errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
+from ..lookup import cite, lookup_rate
+from ..schema import EUMemberState, IvaCatalogue, IvaCategory, IvaCitation, IvaRateKind, IvaRegulation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

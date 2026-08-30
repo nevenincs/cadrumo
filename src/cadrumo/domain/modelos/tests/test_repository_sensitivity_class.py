@@ -40,10 +40,12 @@ from ....adapters.persistence.storage import (
     SecureObjectRepository,
     SensitivityClass,
 )
-from ....domain.buckets import BucketEventHistoryCatalogue
+from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import ModeloRecordCatalogue, VerificationReportCatalogue, WorkUnitCatalogue
 from ..calculation_revision import CalculationRevisionCatalogue
+from ..filing_record import ModeloRecordCatalogue
+from ..verification_report import VerificationReportCatalogue
+from ..work_unit import WorkUnitCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

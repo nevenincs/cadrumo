@@ -71,18 +71,10 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    ProrrataInputs,
-    RegularizacionProrrataDireccion,
-    RegularizacionProrrataResult,
-    compute_prorrata_definitiva_anual,
-    compute_regularizacion_prorrata_anual,
-    especial_mandatory_rule,
-    is_especial_mandatory,
-    m303_annual_settlement_period_order,
-)
+from ...domain.iva.flow import IvaFlowDirection
+from ...domain.iva.m303_settlement import m303_annual_settlement_period_order
+from ...domain.iva.prorrata import ProrrataInputs, RegularizacionProrrataDireccion, RegularizacionProrrataResult, compute_prorrata_definitiva_anual, compute_regularizacion_prorrata_anual, especial_mandatory_rule, is_especial_mandatory
+from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,

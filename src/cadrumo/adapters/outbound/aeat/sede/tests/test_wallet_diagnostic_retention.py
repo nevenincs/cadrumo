@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ......core.config import override_settings
-from .._iva_compensation_wallet import prune_wallet_diagnostic_dumps
+from ..iva_compensation_wallet import prune_wallet_diagnostic_dumps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

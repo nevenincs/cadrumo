@@ -22,8 +22,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .._enums import SplitRole
-from .._models import SplitLineage, derive_split_group_id
+from ..enums import SplitRole
+from ..models import SplitLineage, derive_split_group_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

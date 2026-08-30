@@ -31,7 +31,7 @@ from typing import Final
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import Declaracion
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path

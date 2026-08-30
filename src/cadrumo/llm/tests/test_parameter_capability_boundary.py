@@ -20,10 +20,9 @@ from typing import override
 
 import pytest
 
-from .._client import LLMClient
-from .._providers import ProviderCompletion, ProviderRequest
-from .._providers.anthropic import build_message_kwargs
-from .._providers.base import _ProviderAdapter
+from ..client import LLMClient
+from ..providers.anthropic import build_message_kwargs
+from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -54,7 +53,7 @@ def _request(
     )
 
 
-class _RefusesTemperature(_ProviderAdapter):
+class _RefusesTemperature(ProviderAdapter):
     """An adapter whose model rejects an explicitly-sent temperature."""
 
     provider = None  # type: ignore[assignment]  # reason: payload-shape probe, never dispatched
@@ -133,7 +132,7 @@ def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
     it landed. The asymmetry is the size of the harm, not an oversight.
     """
 
-    class _Plain(_ProviderAdapter):
+    class _Plain(ProviderAdapter):
         provider = None  # type: ignore[assignment]  # reason: probe only
 
         @override

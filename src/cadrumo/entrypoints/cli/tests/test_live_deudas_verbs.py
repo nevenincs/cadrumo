@@ -17,7 +17,7 @@ from decimal import Decimal
 import pytest
 from click.testing import Result
 
-from ....adapters.outbound.aeat.sede import Deuda
+from ....adapters.outbound.aeat.sede.deudas import Deuda
 from ....application.live.deudas import (
     DeudasCapture,
     DeudasService,

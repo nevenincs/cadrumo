@@ -43,7 +43,7 @@ from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from .._ledger_evidence_batch_cli import _batch_payload, _batch_text_lines, _run_notices
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 

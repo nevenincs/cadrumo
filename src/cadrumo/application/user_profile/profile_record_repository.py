@@ -18,7 +18,7 @@ from uuid import UUID
 
 from ...core.paths import effective_storage_root
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventType
+from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .capsule_record import (

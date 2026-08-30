@@ -30,12 +30,8 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.time import now as utc_now
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventObjectType,
-    BucketEventType,
-    emit_bucket_event,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_event
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 
 SYSTEM_BUCKET_ID: Final[str] = "system"

@@ -316,7 +316,7 @@ class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
 class ModeloWorkspaceTechnicalLabelV1(_WorkspaceModel):
     """A row's canonical registry identifier, presented honestly as never-translated.
 
-    S284: formula, binding, relation, and parameter identities have no
+    Formula, binding, relation, and parameter identities have no
     locale-catalogue entry anywhere in the tree and are never surfaced to a
     taxpayer as operator-facing prose -- they are registry names, always
     shown as themselves in every diagnostic and review surface that already
@@ -545,7 +545,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     family_disposition: RegistrySchemaFamilyDisposition
     legal_refs: _BoundedRefList[LegalRefId] | None = ()
     """``None`` means this admission's producer never carries legal grounding
-    for this reference kind (S283); an empty tuple means it does, and none is
+    for this reference kind; an empty tuple means it does, and none is
     declared. The two must never collapse into one "nothing here" shape --
     a bare empty tuple over legal grounding reads as "the law requires
     nothing," while ``None`` honestly reads as "not measured"."""
@@ -560,7 +560,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
         Annotated[tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)] | None
     ) = ()
     """``None`` means this admission's producer never carries constraint
-    declarations for this reference kind (S283, same distinction as
+    declarations for this reference kind (the same distinction as
     ``legal_refs``): a static inspection has no ``CasillaDefinition`` to
     check, so it cannot honestly claim "no constraints declared" the way an
     empty tuple would."""
@@ -587,11 +587,11 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
     """One selected canonical resolver lineage row, optionally for a workspace subject.
 
-    S290: ``subject`` is ``None`` when the underlying ``calculation_source``
+    ``subject`` is ``None`` when the underlying ``calculation_source``
     (``CalculationSourceRef``) carries no linked casilla identity --
     ``source_casilla_ids`` empty, which is the common case today since most
     resolver call sites do not yet populate it. This is the same
-    None-vs-()-shaped distinction S283 gave a schema record's optional
+    None-vs-()-shaped distinction drawn by a schema record's optional
     grounding fields: ``None`` means "this producer never carries this data
     for this row", never a silently dropped record. An unlinked ref still
     produces exactly one record (never zero), so an audit reader sees every
@@ -904,7 +904,7 @@ class ModeloWorkspaceLedgerTransactionSubjectV1(_WorkspaceModel):
 class ModeloWorkspaceLedgerPeriodSubjectV1(_WorkspaceModel):
     """A ledger-preflight issue that is not tied to any one transaction.
 
-    S291: :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue`
+    :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue`
     carries ``transaction_id: TransactionId | Literal["__period__"]`` for a
     condition scoped to the whole period rather than one row (an unsupported
     period with no date span, per ``_unsupported_period_issue``). Collapsing
@@ -964,7 +964,7 @@ class ModeloWorkspaceReadinessV1(_WorkspaceModel):
 class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
     """The explicitly requested and declared grade for one snapshot admission.
 
-    S128: a third ``effective_grade`` field was retired here. The registry's
+    A third ``effective_grade`` field was retired here. The registry's
     own grade check (``_check_snapshot_authority_grade``) REFUSES a snapshot
     whose declared grade is below the requested one; it never truncates and
     never returns a snapshot built at some lesser grade. Under every path

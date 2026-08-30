@@ -57,16 +57,13 @@ from ...domain.calculations.registry.runtime_graph import (
 )
 from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_formula import ParameterDefinition
-from ...domain.contribuyente import (
-    CCAA,
-    MinimoDescendientesThresholds,
-    RentaFamilyProfile,
-    RentaMaritalStatus,
-    compute_deduccion_maternidad_0611,
-    descendant_list_from_facts,
-    marriage_full_year,
-    marriage_month_start,
-)
+from ...domain.contribuyente.ccaa import CCAA
+from ...domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
+from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
+from ...domain.contribuyente.family_profile import RentaFamilyProfile
+from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
+from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
+from ...domain.contribuyente.renta_codes import RentaMaritalStatus
 from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema

@@ -14,22 +14,11 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-from ....domain.iva import (
-    IvaCashAccountingPaymentEvidence,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaLedgerObservationRole,
-)
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     IvaLedgerAggregation,

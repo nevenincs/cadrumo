@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.google import RowSetCellEdit, RowSetEdit
+from ....adapters.outbound.google.calc_sheets_pull import RowSetCellEdit, RowSetEdit
 from ....domain.calculations.registry.authority import bundled_authority
 from .._modelo_spreadsheet_cli import _assemble_pull_observations
 

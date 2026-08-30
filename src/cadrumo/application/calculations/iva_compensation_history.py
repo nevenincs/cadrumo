@@ -5,9 +5,9 @@ Records are stored at
 the
 :data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`.
 The repository exposes typed
-:class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+:class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
 objects; carry-forward projection is produced by
-:func:`~domain.iva_compensation._carry_forward.build_iva_compensation_carry_forward_report`.
+:func:`~domain.iva_compensation.carry_forward.build_iva_compensation_carry_forward_report`.
 Rows are written through
 :class:`~adapters.persistence.storage.SecureBoundRepository`, so
 the namespace, schema version, and sensitivity declared by the storage registry
@@ -20,7 +20,7 @@ and
 for Modelo 303-to-Modelo 390 annual cross-checking.
 
 See Also:
-    :mod:`domain.iva_compensation._carry_forward`
+    :mod:`domain.iva_compensation.carry_forward`
         Pure FIFO lot projection and four-year review policy.
     :mod:`application.calculations.iva_wallet_balance`
         Offline balance query built from this repository.
@@ -51,16 +51,8 @@ from ...core.time import now
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation import (
-    IvaCompensationCarryForwardReport,
-    IvaCompensationCasillaReferenceError,
-    IvaCompensationDecimalParseError,
-    IvaCompensationPeriodState,
-    IvaCompensationSeedConflictError,
-    IvaCompensationYearRangeError,
-    derive_iva_compensation_year_end_carry_partition,
-    iva_compensation_period_sort_key,
-)
+from ...domain.iva_compensation.carry_forward import IvaCompensationCarryForwardReport, IvaCompensationPeriodState, derive_iva_compensation_year_end_carry_partition, iva_compensation_period_sort_key
+from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError, IvaCompensationDecimalParseError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )
@@ -99,7 +91,7 @@ class IvaCompensationAnnualSummary(BaseModel):
     """Filed Modelo 390 annual IVA compensation summary for cross-checking.
 
     Compared against the
-    :class:`~domain.iva_compensation._carry_forward.IvaCompensationCarryForwardReport`
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationCarryForwardReport`
     built from Modelo 303 period states by
     :func:`cross_check_iva_compensation_annual_summary`.
     """
@@ -145,7 +137,7 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     """Comparison between Modelo 303 carry-forward lots and a filed Modelo 390 summary.
 
     Carries the expected Modelo 390 annual carry fields derived by
-    :func:`~domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`
+    :func:`~domain.iva_compensation.carry_forward.derive_iva_compensation_year_end_carry_partition`
     plus any mismatched
     ``CasillaId`` values.
     """
@@ -182,7 +174,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
     """Encrypted profile-local store of Modelo 303 IVA compensation history.
 
     Persists
-    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
     rows in
     :data:`adapters.persistence.storage.IVA_COMPENSATION_HISTORY_NAMESPACE`
     for later carry-forward, balance, and reconciliation reads. The
@@ -204,7 +196,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         """Return latest stored state for one period.
 
         Returns an
-        :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
+        :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
         when a record exists, or ``None`` when none has been persisted for the
         given period.
         """
@@ -215,7 +207,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         self.save(state)
 
     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
-        """Return stored :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState` rows.
+        """Return stored :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState` rows.
 
         The returned tuple is sorted in chronological filing order using the
         same period sort key consumed by the domain carry-forward projection.
@@ -242,7 +234,7 @@ def seed_iva_compensation_period(
     """Persist a manually declared carry-forward balance for one Modelo 303 period.
 
     Returns an
-    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`.
 
     Intended for first-time users whose historical M303 carry-forward pre-dates
     the local compensation history. The seeded state declares
@@ -295,7 +287,7 @@ def correct_iva_compensation_period(
     """Overwrite a manually-seeded carry-forward balance for one Modelo 303 period.
 
     Returns the corrected
-    :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`.
 
     The single-writer companion of :func:`seed_iva_compensation_period`: where
     seeding refuses if a record already exists, correction is the deliberate
@@ -494,7 +486,7 @@ def cross_check_iva_compensation_annual_summary(
     The expected ``iva.anual.compensacion-ultimo-periodo-97`` and
     ``iva.anual.compensacion-generada-ejercicio-no-97`` figures are derived
     through the SAME FIFO carry partition that drives the Modelo 390 calculation
-    (:func:`~domain.iva_compensation._carry_forward.derive_iva_compensation_year_end_carry_partition`),
+    (:func:`~domain.iva_compensation.carry_forward.derive_iva_compensation_year_end_carry_partition`),
     so the
     cross-check and both annual carry bindings cannot diverge: all three read
     one partition of the year's pending credit. ``period_states`` is the same

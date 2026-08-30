@@ -28,7 +28,6 @@ from .....application.storage.calc_sheets import (
     build_export_plan,
 )
 from .....domain.calculations.registry.authority import bundled_authority
-from .._calc_sheets_apply import _occupied_address_ranges, _occupied_addresses_from_response
 from .._calc_sheets_apply_values import (
     _build_evidence_value_data,
     _build_formula_data,
@@ -38,6 +37,7 @@ from .._calc_sheets_apply_values import (
     payload_written_addresses,
     stale_addresses,
 )
+from ..calc_sheets_apply import _occupied_address_ranges, _occupied_addresses_from_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -225,7 +225,7 @@ class TestOrderingIsStructural:
         """
         import inspect
 
-        from .._calc_sheets_apply import _clear_stale_addresses, _write_plan_values
+        from ..calc_sheets_apply import _clear_stale_addresses, _write_plan_values
 
         assert inspect.signature(_write_plan_values).return_annotation == "frozenset[str]"
         clear_params = inspect.signature(_clear_stale_addresses).parameters
@@ -247,7 +247,7 @@ class TestOrderingIsStructural:
 
 
 def _calc_sheets_apply_source() -> str:
-    from .. import _calc_sheets_apply
+    from .. import calc_sheets_apply
 
-    assert _calc_sheets_apply.__file__ is not None
-    return _calc_sheets_apply.__file__
+    assert calc_sheets_apply.__file__ is not None
+    return calc_sheets_apply.__file__

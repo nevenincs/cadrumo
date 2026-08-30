@@ -7,9 +7,9 @@ re-validator. No transport is dispatched, so nothing in this module can reach a
 provider.
 
 See Also:
-    :class:`~llm._evidence_draft_text.TextInvoiceFieldExtractor`
+    :class:`~llm.evidence_draft_text.TextInvoiceFieldExtractor`
         Reader under test.
-    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
+    :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation shared with the vision reader.
     :func:`~core.identity.nif_iva_format_for_country`
         EU NIF-IVA structural authority the tax-id grounding now consults.
@@ -26,19 +26,19 @@ from pydantic import ValidationError
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin, NoRecoveryOutcome
 from ...core.config import load_settings
-from .._evidence_draft_text import (
+from ..errors import LLMConfigError, LLMValidationError
+from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
 )
-from .._invoice_field_grounding import (
+from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
-from .._models import LLMProvider, LLMRequest
-from ..errors import LLMConfigError, LLMValidationError
+from ..models import LLMProvider, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

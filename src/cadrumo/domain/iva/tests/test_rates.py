@@ -13,14 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from .. import (
-    EUMemberState,
-    IvaCatalogueError,
-    IvaRateKind,
-    IvaRateNotFoundError,
-    load_iva_rate_table,
-    lookup_rate,
-)
+from ..errors import IvaCatalogueError, IvaRateNotFoundError
+from ..lookup import lookup_rate
+from ..rates import load_iva_rate_table
+from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

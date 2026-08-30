@@ -26,12 +26,10 @@ import pytest
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.contribuyente import (
-    DescendantInfo,
-    MinimoDescendientesThresholds,
-    RentaFamilyProfile,
-    RentaMaritalStatus,
-)
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.family_profile import RentaFamilyProfile
+from ....domain.contribuyente.family_types import MinimoDescendientesThresholds
+from ....domain.contribuyente.renta_codes import RentaMaritalStatus
 from ..profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
@@ -384,7 +382,7 @@ def test_anualidades_flag_still_reads_con_derecho_for_an_eligible_shared_custody
 
 def test_new_facts_survive_a_serialisation_round_trip() -> None:
     """The predicate can only see these values if they persist and reload."""
-    from ....domain.contribuyente import descendant_facts_from_list, descendant_list_from_facts
+    from ....domain.contribuyente.descendant_facts import descendant_facts_from_list, descendant_list_from_facts
 
     original = DescendantInfo(
         birth_date=date(2010, 5, 1),
@@ -404,7 +402,7 @@ def test_an_unreadable_rentas_figure_refuses_rather_than_restoring_the_minimo() 
     exact silent over-claim the Art. 58.1 ceiling exists to prevent.
     """
     from ....core.errors import ProfileAnswerTypeError
-    from ....domain.contribuyente import descendant_list_from_facts
+    from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
 
     with pytest.raises(ProfileAnswerTypeError):
         descendant_list_from_facts(

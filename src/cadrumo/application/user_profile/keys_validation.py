@@ -24,12 +24,8 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.contribuyente import (
-    ProfileKey,
-    ProfileKeyRequirement,
-    optional_profile_keys,
-)
-from ...domain.contribuyente import profile_keys as _get_profile_keys
+from ...domain.contribuyente.keys import ProfileKey, ProfileKeyRequirement, optional_profile_keys
+from ...domain.contribuyente.keys import profile_keys as _get_profile_keys
 from .completeness import (
     IVA_REGIME_PATH,
     conditional_profile_required_paths,

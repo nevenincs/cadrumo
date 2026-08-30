@@ -46,14 +46,11 @@ from ...core.json_contract import (
     strict_round_trip,
 )
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.categories import (
-    CATEGORY_FAMILY_MEMBERS,
-    SpendingCategory,
-    SpendingCategoryFamily,
-)
-from ...domain.invoices import LinkInconsistency
-from ...domain.transactions import Transaction, TransactionCatalogue, ledger_irpf_category_catalogue
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
+from ...domain.invoices.service import LinkInconsistency
+from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ._common import _bad, _state, _tx_repo, active_profile_label, emit_envelope, resolve_notice_action
 from ._decimal_parsing import optional_decimal_text
 from ._ledger_list import (
@@ -83,7 +80,7 @@ def resolve_ledger_transaction_id(
     """Resolve a read-side transaction id while following stable edit lineage."""
     from ...application.cli_exception_preconditions import CliExceptionPrecondition
     from ...application.ledger.id_resolution import resolve_lineage_transaction_id
-    from ...domain.transactions import TransactionIdPrefixError
+    from ...domain.transactions.errors import TransactionIdPrefixError
 
     catalogue = transaction_repository.load()
     try:
@@ -932,7 +929,7 @@ def _ledger_track_participated_in(
     """Return the finalized-revision participations for ``transaction_id``, or ``None``.
 
     Wraps :func:`~cadrumo.application.ledger.participation_read.get_transaction_participation`, whose
-    :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex` is the
+    :class:`~TransactionRevisionParticipationIndex` is the
     rebuildable inverse index from ledger rows to finalized revisions.
     Surfaces the inverse audit trail on the ``ledger track`` lineage output:
     every finalized modelo revision and filing that consumed this transaction.

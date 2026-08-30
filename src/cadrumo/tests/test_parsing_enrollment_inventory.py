@@ -269,20 +269,20 @@ def _collect_fromisoformat_violations(
 
 
 _EXEMPT_BOOL_SITES: Mapping[str, tuple[int, str]] = {
-    "src/cadrumo/domain/user_profile/_values.py": (
+    "src/cadrumo/domain/user_profile/values.py": (
         1,
         "Not operator input. This is the fact carrier decoding its own JSON round-trip, and it "
         "accepts only the two canonical tokens it emitted. Widening it to the operator vocabulary "
         "would promote a stored 'si' into a typed bool at re-parse, which is a different contract: "
         "the carrier's job is to restore what it wrote, not to interpret what a person typed.",
     ),
-    "src/cadrumo/domain/contribuyente/_descendant_facts.py": (
+    "src/cadrumo/domain/contribuyente/descendant_facts.py": (
         2,
         "Reads back the canonical 'true'/'false' this same module writes (see "
         "descendant_facts_from_list). A stored value it produced needs no vocabulary; the operator "
         "input on the flag-parsing path above it does, and that path was converted.",
     ),
-    "src/cadrumo/application/wizard/_persistence.py": (
+    "src/cadrumo/application/wizard/persistence.py": (
         1,
         "parse_canonical reads a token this application itself wrote, and its strictness is a "
         "GUARD rather than an oversight: accepting 'True' or 'TRUE' would silently admit an "
@@ -292,8 +292,17 @@ _EXEMPT_BOOL_SITES: Mapping[str, tuple[int, str]] = {
         "widening it here would disable the guard. The descendiente reads in the same file are "
         "NOT exempt -- they were converted, which is why this is granted for one site only.",
     ),
-    "src/cadrumo/domain/calculations/registry/_record_design.py": (
+    "src/cadrumo/domain/calculations/registry/export_value_policy.py": (
         2,
+        "A FALSE POSITIVE in the strictest direction. These sites do not PARSE a boolean, they "
+        "VALIDATE one character of a fixed-width AEAT export record: a selected/unselected field "
+        "is literally ASCII 0 or 1 and nothing else. parse_bool accepts a wider vocabulary, so "
+        "substituting it here would admit 'true' and 'si' into a byte-exact official record. The "
+        "canonical parser is a superset of what these sites accept, which is exactly why it is "
+        "the wrong tool: for a validator, a wider vocabulary is a weaker guard.",
+    ),
+    "src/cadrumo/domain/calculations/registry/record_design.py": (
+        1,
         "A FALSE POSITIVE, and the reason is worth stating so nobody 'fixes' it. The tokens are "
         "'no' and 'n' -- the Spanish abbreviation for numero -- and the code is looking for a "
         "spreadsheet column headed N. or No. Nothing here is a boolean. The detector matches on "

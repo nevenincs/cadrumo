@@ -13,17 +13,15 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
+from ..classification import (
     CustomerTaxStatus,
-    EUMemberState,
     InvoiceKind,
-    IvaCategory,
     IvaInvoiceClassificationCriteria,
-    IvaRateKind,
     IvaTerritorialScope,
     TransactionKind,
     classify_iva,
 )
+from ..schema import EUMemberState, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

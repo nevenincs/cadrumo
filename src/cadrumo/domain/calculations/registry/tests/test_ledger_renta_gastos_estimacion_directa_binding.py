@@ -11,7 +11,8 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from ....categories import SpendingCategory, resolve_category_profiles
+from ....categories.registry import resolve_category_profiles
+from ....categories.spending_category import SpendingCategory
 from ....renta import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,

@@ -390,7 +390,7 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions import Transaction, TransactionCatalogue
+    from ...domain.transactions.models import Transaction, TransactionCatalogue
     from ..ledger.transaction_repository import transaction_catalogue_repository
 
     if not bundle.ledger_transactions:

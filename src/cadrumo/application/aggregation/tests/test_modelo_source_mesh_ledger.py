@@ -29,39 +29,19 @@ from ....core.classification import SensitivityClass
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.categories import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    IvaRate,
-    PaymentStatus,
-)
-from ....domain.iva import (
-    EUMemberState,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-)
-from ....domain.iva import (
-    InvoiceKind as CatalogueInvoiceKind,
-)
-from ....domain.iva import (
-    InvoiceKind as IvaInvoiceKind,
-)
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import TransactionKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.oss import OssIossRegime
+from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
+from ....domain.iva.classification import InvoiceKind as IvaInvoiceKind
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -947,7 +927,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
 def test_transaction_catalogue_refuses_new_legacy_drift_fixture(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    from ....domain.transactions import transaction_index_object_key
+    from ....domain.transactions.repository import transaction_index_object_key
 
     with pytest.raises(EnvelopeVersionError):
         secure_objects.save(

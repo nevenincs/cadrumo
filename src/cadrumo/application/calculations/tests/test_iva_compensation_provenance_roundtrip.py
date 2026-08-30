@@ -33,7 +33,7 @@ from sqlalchemy import select
 
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core import IvaCompensationStateProvenance, Period
-from ....domain.iva_compensation import IvaCompensationPeriodState
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 

@@ -7,7 +7,7 @@ marker onto an unmarked entry a previous run created, and refuse a
 foreign-owned entry rather than adopt operator content.
 
 That policy previously existed twice inside
-:mod:`adapters.outbound.google._calc_sheets_apply` (once for folders, once
+:mod:`adapters.outbound.google.calc_sheets_apply` (once for folders, once
 for spreadsheets), differing only in MIME type and in the action and error
 text. Two copies of one ownership decision can drift independently, and a
 drift here means adopting or overwriting Drive content the operator owns, so
@@ -28,7 +28,7 @@ The module also owns two invariants the duplicated copies did not enforce:
   returned means no caller can index one that has none.
 
 See Also:
-    :func:`adapters.outbound.google._api.execute_request`
+    :func:`adapters.outbound.google.api.execute_request`
         Executor that maps Drive transport failures onto the typed
         :class:`adapters.outbound.storage.OutboundStorageError` hierarchy.
 """
@@ -41,8 +41,8 @@ from typing import Any, Final
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
-from ._api import execute_request
 from ._preconditions import google_terminal_refusal
+from .api import execute_request
 
 OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 OWNERSHIP_VALUE: Final[str] = "cadrumo"

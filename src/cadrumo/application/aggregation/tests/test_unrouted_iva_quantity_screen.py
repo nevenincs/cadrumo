@@ -35,25 +35,13 @@ from ....domain.calculations.registry.ledger_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva import (
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    derive_flow_for_classification,
-)
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import derive_flow_for_classification
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
 from .._source_mesh import CalculationSourceContext

@@ -35,18 +35,12 @@ from ...domain.calculations.registry.formula_runtime_ops import resolve_paramete
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos import WorkUnit
-from ...domain.transactions import (
-    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
-    IRPF_CATEGORY_TRABAJO,
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-    counts_toward_art_109_activity_income,
-    tipo_actividad_code_set,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, IRPF_CATEGORY_TRABAJO
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income
 
 _ZERO = Decimal("0")
 _ART_109_THRESHOLD_PARAMETER_ID = "irpf.art_109_retained_income_exemption_ratio"

@@ -5,11 +5,11 @@ import pytest
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....tests.ecb_stub import ecb_csv_fetch
-from .._models import (
+from ..models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from .._service import CurrencyNormalizationService
+from ..service import CurrencyNormalizationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

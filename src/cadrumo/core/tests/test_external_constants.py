@@ -363,14 +363,14 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
     checked_paths = (
         repo_path("src/cadrumo/core/config.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_parse.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/groi_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/nif_iva_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/declarations.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/parse.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
-        repo_path("src/cadrumo/domain/manuals/_fetch.py"),
+        repo_path("src/cadrumo/domain/manuals/fetch.py"),
     )
 
     offenders = _token_literal_offenders(
@@ -431,7 +431,7 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
-    allowed_files = {"src/cadrumo/domain/portals/_hosts.py"}
+    allowed_files = {"src/cadrumo/domain/portals/hosts.py"}
 
     offenders: list[str] = []
     for path, tree in package_ast_items(source_tree_ast):

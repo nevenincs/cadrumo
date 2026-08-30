@@ -40,7 +40,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core import DraftDiscrepancyKind
-from ...domain.iva import LegendDerivationOutcome, derive_category_from_regime_legend
+from ...domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from .evidence_draft import DraftDiscrepancyFinding
 
 if TYPE_CHECKING:

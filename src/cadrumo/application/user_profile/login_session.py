@@ -1488,7 +1488,8 @@ def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
     returns before this point, so a retry re-stamps no activation.
     """
     from ...core.config import override_settings
-    from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
+    from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+    from ...domain.buckets.event_repository import emit_bucket_event
 
     # A CLI invocation may have resolved and pinned the previously active
     # profile before an interactive login selects this one.  The pointer and

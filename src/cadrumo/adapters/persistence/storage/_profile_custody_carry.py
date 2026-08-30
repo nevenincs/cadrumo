@@ -49,16 +49,12 @@ from ....core import SecureObjectWrite, StorageCustodyProfile
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....domain.evidence_consent import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
-from ....domain.transactions import LedgerClassificationRule
+from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.user_profile.errors import ProfileExportError
 from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
-from ...outbound.aeat.sede import (
-    FiledDeclaracionObservation,
-    IvaCompensationWalletObservation,
-    filed_declaracion_observation_object_key,
-    iva_compensation_wallet_observation_object_key,
-)
+from ...outbound.aeat.sede.observation_store import filed_declaracion_observation_object_key, iva_compensation_wallet_observation_object_key
+from ...outbound.aeat.sede.schema import FiledDeclaracionObservation, IvaCompensationWalletObservation
 from ..profile.filing_drafts import ModeloDraftRepository
 from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository

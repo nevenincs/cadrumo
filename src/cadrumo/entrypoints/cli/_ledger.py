@@ -30,18 +30,10 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.iva import (
-    EUMemberState,
-    InputClassification,
-    IvaCategory,
-)
-from ...domain.transactions import (
-    BusinessClassification,
-    TransactionDirection,
-    TransactionIdPrefixError,
-    TransactionValidationError,
-    is_classified,
-)
+from ...domain.iva.prorrata import InputClassification
+from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
+from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, _profile_to_taxpayer, _state, _tx_repo, emit_envelope
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
@@ -324,7 +316,7 @@ def ledger_add(
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
     from ...adapters.outbound.fx import default_ecb_rate_provider
-    from ...domain.currency import CurrencyNormalizationService
+    from ...domain.currency.service import CurrencyNormalizationService
 
     try:
         result = create_manual_transaction(
@@ -692,7 +684,7 @@ def ledger_link(
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.ledger.actions_manual import link_manual_transaction_invoice
-    from ...domain.invoices import InvoiceLinkError
+    from ...domain.invoices.errors import InvoiceLinkError
 
     state = _state()
     transaction_repository = _tx_repo(state)

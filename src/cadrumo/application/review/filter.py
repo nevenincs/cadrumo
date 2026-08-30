@@ -34,8 +34,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period, PeriodError
-from ...domain.iva import InvoiceKind
-from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...domain.iva.classification import InvoiceKind
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
 from .errors import FilterParseError
 

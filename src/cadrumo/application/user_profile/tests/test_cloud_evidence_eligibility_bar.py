@@ -46,7 +46,8 @@ from ....core import ServiceCapability
 from ....core.config import Settings, load_settings
 from ....core.directory_scan import scan_directory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
+from ....llm.consent import EvidenceConsentToken, cloud_evidence_read_permitted, mint_evidence_consent_token
+from ....llm.errors import LLMConsentError
 from ..capabilities import CapabilitySource, resolve_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

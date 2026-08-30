@@ -43,7 +43,7 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # (domain/calculations/registry/_verdict_cache.py:_ROOT_HASH_LEN).
     "sha256[:16]": r"[0-9a-f]{16}",
     # Observability per-run trace directory: 16 lowercase hex characters,
-    # the shape core.observability._context._mint_run_id mints.
+    # the shape core.observability.context._mint_run_id mints.
     "run_id": r"[0-9a-f]{16}",
     # ISO calendar date (llm-usage / llm-run-telemetry daily filenames).
     "timestamp": r"\d{4}-\d{2}-\d{2}",

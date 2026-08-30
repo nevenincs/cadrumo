@@ -71,7 +71,7 @@ from ...core import STRICT_FROZEN_CONFIG, FieldOrigin
 # pydantic field, so a name visible only to the type checker leaves the model
 # undefined at construction. The import is already paid for by the ladder this
 # module quotes, which binds the same package at its own module scope.
-from ...domain.iva import IvaTerritorialScope
+from ...domain.iva.classification import IvaTerritorialScope
 from .establishment_ladder import scope_printed_evidence_would_establish
 
 if TYPE_CHECKING:

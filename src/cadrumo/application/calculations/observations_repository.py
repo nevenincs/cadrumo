@@ -70,7 +70,7 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .errors import (
     CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,
@@ -84,7 +84,7 @@ class ObservationSourceKind(StrEnum):
     """Origin of a persisted calculation observation.
 
     This classifies the observation provenance before a filing's separate
-    :class:`~domain.modelos.ExternalEvidenceKind` is materialised. Only the
+    :class:`~ExternalEvidenceKind` is materialised. Only the
     three AEAT origins are official filing evidence; local app and operator
     rows may support calculation prefill but cannot establish filing-grade
     cross-period readiness.

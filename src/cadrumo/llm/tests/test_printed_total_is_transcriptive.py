@@ -37,8 +37,8 @@ from decimal import Decimal
 import pytest
 
 from ...core import FieldOrigin
-from .._invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
-from .._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
+from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
+from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

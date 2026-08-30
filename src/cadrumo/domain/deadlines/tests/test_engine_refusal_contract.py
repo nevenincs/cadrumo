@@ -19,21 +19,14 @@ import pytest
 
 from ....core import Period
 from ...calculations.registry.schema_verification import ProfilePredicateDefinition
-from .. import (
-    DeadlineEngine,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    NoDeadlineWindowsError,
-    ScheduleComputationError,
-    TaxpayerProfile,
-)
-from .. import _engine as _engine_module
-from .._engine import (
+from .. import engine as _engine_module
+from ..engine import (
     _MISSING_WINDOWS_MESSAGE_KEY,
     _SCHEDULE_COMPUTATION_MESSAGE_KEY,
+    DeadlineEngine,
 )
+from ..errors import NoDeadlineWindowsError, ScheduleComputationError
+from ..models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

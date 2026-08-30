@@ -11,12 +11,9 @@ import typer
 from ...application.ledger.models import ApplyRulesResult
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.i18n import tr
-from ...domain.transactions import (
-    BusinessClassification,
-    LedgerClassificationRule,
-    Transaction,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.classification_rule import LedgerClassificationRule
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.models import Transaction
 from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 
@@ -29,7 +26,7 @@ def _short_display_id(value: str) -> str:
 def _validate_category_id(category_id: str | None) -> str | None:
     if category_id is None:
         return None
-    from ...domain.categories import SpendingCategory
+    from ...domain.categories.spending_category import SpendingCategory
 
     value = category_id.strip()
     if not value:

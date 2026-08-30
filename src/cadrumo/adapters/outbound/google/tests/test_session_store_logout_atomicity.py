@@ -30,7 +30,7 @@ from .....adapters.persistence.storage import SecureObjectDeletion, StorageValid
 from .....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
-from ._schema import (
+from .schema import (
     IvaCatalogue,
     IvaCategory,
     IvaCitation,

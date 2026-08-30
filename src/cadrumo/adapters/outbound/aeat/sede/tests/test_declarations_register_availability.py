@@ -31,15 +31,15 @@ import pytest
 
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core import FiledHistoryDiscoverySignal
-from .._declarations import (
+from ..declarations import (
     _combobox_option_texts,
     discover_filed_declaration_availability,
     filed_register_ejercicio_options,
     filed_register_modelo_options,
     walk_declarations_register,
 )
-from .._schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ..errors import SedeNavigationError, SedeParseError
+from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -37,15 +37,15 @@ from ...application.ledger.document_transcription import DocumentTranscription, 
 from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import load_settings
 from ...core.time import now
-from .._client import LLMClient
-from .._evidence_draft_text import TextInvoiceFieldExtractor
-from .._models import LLMProvider, LLMResponse
+from ..client import LLMClient
+from ..evidence_draft_text import TextInvoiceFieldExtractor
+from ..models import LLMProvider, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
     from ...application.ledger.evidence_draft import InvoiceDraft
-    from .._models import LLMRequest
+    from ..models import LLMRequest
 
 _REPLY = json.dumps(
     {

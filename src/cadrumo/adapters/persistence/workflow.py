@@ -19,7 +19,8 @@ from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
-from ...domain.buckets import BucketEvent, append_bucket_event
+from ...domain.buckets.event import BucketEvent
+from ...domain.buckets.event_repository import append_bucket_event
 from .profile.buckets import BucketEventHistoryRepository
 from .storage import (
     WORKFLOW_RUN_NAMESPACE,

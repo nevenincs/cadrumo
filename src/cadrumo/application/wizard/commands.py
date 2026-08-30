@@ -142,7 +142,7 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     common = [member.value for member in CCAA]
     foral = ["pais_vasco", "navarra"]
@@ -154,7 +154,7 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.deadlines import FiscalResidency
+    from ...domain.deadlines.models import FiscalResidency
 
     return [member.value for member in FiscalResidency]
 
@@ -172,12 +172,7 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines import (
-        EntityType,
-        IrpfEstimationRegime,
-        IrpfIncomeCategory,
-        LegalEntityForm,
-    )
+    from ...domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm
 
     return (
         [member.value for member in EntityType],
@@ -218,8 +213,8 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     ``--situacion-familiar`` flag choices never drift from the values
     the wizard catalogue and the profile schema validate against.
     """
-    from ...domain.contribuyente import SituacionFamiliar
-    from ...domain.deadlines import IrpfSpecialRegime
+    from ...domain.contribuyente.renta_codes import SituacionFamiliar
+    from ...domain.deadlines.models import IrpfSpecialRegime
 
     return (
         [member.value for member in IrpfSpecialRegime],
@@ -1231,7 +1226,7 @@ def _run_full_flow(
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
     _require_filing_baseline(flow, project_answers(flow, values))
-    from ...domain.deadlines import taxpayer_profile_from_mapping
+    from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
     apply_profile_fact_changes(
@@ -1388,7 +1383,8 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
     if ccaa_token is None:
         return
 
-    from ...domain.contribuyente import ForalRegimeError, parse_tax_region
+    from ...domain.contribuyente.errors import ForalRegimeError
+    from ...domain.contribuyente.tax_residence import parse_tax_region
 
     try:
         parse_tax_region(ccaa_token)
@@ -1626,7 +1622,7 @@ def _ccaa_was_defaulted(
     path prompts for the value and is likewise excluded, as is ``edit``
     (whose CCAA already exists on the profile).
     """
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     return (
         mode == "create"
@@ -1682,7 +1678,7 @@ def _emit_wizard_success(
     callers).
     """
     from ...core.click_context import json_output_requested
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
     from ..operator_output import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
@@ -1834,7 +1830,7 @@ def _wizard_success_notices(
     entered with, not one a mid-walk output-language switch left behind.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     verb_key = "create" if mode == "create" else "edit"
     # The next-step hint is text-surface only. ``Notice`` reserves executable

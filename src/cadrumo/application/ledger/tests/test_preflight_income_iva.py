@@ -6,11 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.transactions import (
-    TransactionCatalogue,
-    TransactionDirection,
-    has_employment_irpf_category,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.irpf_categories import has_employment_irpf_category
+from ....domain.transactions.models import TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _transaction
 

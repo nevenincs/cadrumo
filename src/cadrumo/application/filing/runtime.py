@@ -95,7 +95,8 @@ from ...domain.calculations.registry.schema_surfaces import (
 )
 from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
 from ...domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
-from ...domain.filing import CasillaCollection, CasillaSchema, registry_schema_version
+from ...domain.filing.protocols import CasillaCollection, CasillaSchema
+from ...domain.filing.schema import registry_schema_version
 from .errors import ModeloApplicationError as ModeloBuilderError
 
 

@@ -28,7 +28,9 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import LLMClient, LLMProviderError, LLMRateLimitError, LLMRequest
+from ..client import LLMClient
+from ..errors import LLMProviderError, LLMRateLimitError
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -75,11 +77,11 @@ def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Iterator[tuple[str, Que
 
 def test_provider_package_facade_does_not_reexport_private_adapters() -> None:
     """Private adapter types must stay on their owning modules."""
-    from .. import _providers
+    from .. import providers as _providers
 
-    assert "_ProviderAdapter" not in _providers.__dict__
+    assert "ProviderAdapter" not in _providers.__dict__
     assert all(not name.startswith("_") for name in _providers.__all__)
-    assert not hasattr(_providers, "_ProviderAdapter")
+    assert not hasattr(_providers, "ProviderAdapter")
 
 
 def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:

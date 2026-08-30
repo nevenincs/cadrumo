@@ -96,16 +96,12 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
-from ...domain.iva import (
-    EUMemberState,
-    IvaTerritorialScope,
-    country_code_for_printed_country_name,
-    identification_state_for_printed_tax_identifier,
-    match_regime_legend,
-    rate_kinds_for_declared_rate,
-    territorial_scope_for_country,
-    territorial_scope_for_spanish_postal_code,
-)
+from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.establishment import country_code_for_printed_country_name, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ...domain.iva.identification import identification_state_for_printed_tax_identifier
+from ...domain.iva.legend_derivation import match_regime_legend
+from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.schema import EUMemberState
 
 # `names_spain` is the sibling module's authority on what positively names
 # Spain, and is imported rather than restated: a second copy of that test is
@@ -122,7 +118,7 @@ from .counterparty_establishment import (
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.iva import InvoiceKind
+    from ...domain.iva.classification import InvoiceKind
     from .evidence_draft import InvoiceDraft
 
 __all__ = [

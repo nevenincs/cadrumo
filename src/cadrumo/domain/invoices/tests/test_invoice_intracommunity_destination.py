@@ -33,8 +33,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
-from .. import Invoice, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ..enums import IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

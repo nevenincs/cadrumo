@@ -26,7 +26,7 @@ from pydantic import BaseModel
 
 from ....core import RentaDeclaracionType
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....domain.contribuyente import SituacionFamiliar
+from ....domain.contribuyente.renta_codes import SituacionFamiliar
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import SECTION_VERDICT_PREFIX, answer, next_page, start_flow
 from ...flows.validators import ValidationVerdict, resolve_cross_field_validator

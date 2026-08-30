@@ -18,13 +18,9 @@ import pytest
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import (
-    DeadlineEngine,
-    IVARegime,
-    ScheduleComputationError,
-    TaxpayerProfile,
-    compute_obligation_schedule,
-)
+from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
+from ....domain.deadlines.errors import ScheduleComputationError
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from .. import _deadline_stage as deadline_stage_module
 from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module

@@ -31,12 +31,7 @@ from ....core import BindingSourceKind, Period
 from ....core.time import validate_utc_aware
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
-from .. import (
-    ModeloBindingValue,
-    ModeloDraft,
-    ModeloValue,
-    ModeloValueKind,
-)
+from ..schema import ModeloBindingValue, ModeloDraft, ModeloValue, ModeloValueKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

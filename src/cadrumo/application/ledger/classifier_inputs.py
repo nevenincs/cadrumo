@@ -41,12 +41,12 @@ from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTax
 
 # Runtime imports: both are pydantic field types on the models below, so a
 # TYPE_CHECKING-only import leaves the models un-buildable at construction.
-from ...domain.deadlines import IVARegime
+from ...domain.deadlines.models import IVARegime
 
 if TYPE_CHECKING:
     from typing import Self
 
-    from ...domain.deadlines import TaxpayerProfile
+    from ...domain.deadlines.models import TaxpayerProfile
     from .evidence_draft import InvoiceDraft
 
 __all__ = [

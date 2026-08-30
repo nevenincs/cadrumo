@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...domain.contribuyente import normalise_key
+from ...domain.contribuyente.normalise import normalise_key
 from ..workflow.review_models import WorkflowEvent, utc_now
 from .errors import ReviewError
 from .models import InvoiceReviewRecord, LedgerReviewRecord

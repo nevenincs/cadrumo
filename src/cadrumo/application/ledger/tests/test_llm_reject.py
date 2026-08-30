@@ -19,20 +19,13 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEvent, BucketEventType
-from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionNotFoundError,
-)
+from ....domain.buckets.event import BucketEvent, BucketEventType
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionNotFoundError
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSuggestionRejectionResult
 from ....tests.secure_sql import isolated_runtime_profile
 from ..llm_classification import reject_llm_suggestion

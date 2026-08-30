@@ -32,16 +32,10 @@ import pytest
 import cadrumo.application.ledger.preflight as preflight_module
 
 from ....core import BindingSourceKind, OperatorActionAxis
-from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,

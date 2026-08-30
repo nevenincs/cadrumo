@@ -33,7 +33,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
-from ....domain.filing import FilingValidationError, ModeloDraft, compute_modelo_draft_id
+from ....domain.filing.errors import FilingValidationError
+from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id
 from ..storage import (
     FILING_DRAFTS_NAMESPACE,
     SecureBoundRepository,

@@ -20,7 +20,7 @@ and a string property.
 See Also:
     :meth:`~adapters.outbound.llm.LLMCache.build_key`
         The derivation under test.
-    :class:`~llm._invoice_extraction_prompt.CompiledInvoiceExtractionPrompt`
+    :class:`~llm.invoice_extraction_prompt.CompiledInvoiceExtractionPrompt`
         Carrier of the rate-provenance token the stamp folds in.
 """
 
@@ -32,11 +32,11 @@ from ...adapters.outbound.llm import LLMCache
 from ...application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 from ...core import Period
 from ...core.time import now
-from ...domain.transactions import DecisionProvenance
-from .._evidence_draft_text import TextInvoiceFieldExtractor
-from .._evidence_draft_vision import LocalVisionDocumentTranscriber
-from .._invoice_extraction_prompt import build_invoice_extraction_prompt
-from .._models import LLMProvider, LLMRequest
+from ...domain.transactions.models import DecisionProvenance
+from ..evidence_draft_text import TextInvoiceFieldExtractor
+from ..evidence_draft_vision import LocalVisionDocumentTranscriber
+from ..invoice_extraction_prompt import build_invoice_extraction_prompt
+from ..models import LLMProvider, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

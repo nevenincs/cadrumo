@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
+from ..spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily, family_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

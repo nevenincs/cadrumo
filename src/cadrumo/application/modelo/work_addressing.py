@@ -46,7 +46,7 @@ from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, Wo
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.contribuyente import CCAA
+from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.calculation_revision import (
     CURRENT_SEALED_REVISION_STATES,

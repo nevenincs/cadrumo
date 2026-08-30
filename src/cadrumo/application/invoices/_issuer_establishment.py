@@ -74,9 +74,10 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.deadlines import FiscalResidency, TaxpayerProfile
-from ...domain.invoices import Invoice, InvoiceClass
-from ...domain.iva import InvoiceKind
+from ...domain.deadlines.models import FiscalResidency, TaxpayerProfile
+from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.models import Invoice
+from ...domain.iva.classification import InvoiceKind
 
 _DOMESTIC_COUNTRY_CODE = "ES"
 

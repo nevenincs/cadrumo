@@ -36,8 +36,8 @@ from ......tests.aeat_literal_fixtures import (
     AEAT_APEX_EVIL_SUFFIX_URL_CANARY,
     AEAT_APEX_NOT_PREFIX_URL_CANARY,
 )
-from .. import _declarations_fetch, _walker
-from .._parse import parse_resumen_tree
+from .. import _declarations_fetch, walker
+from ..parse import parse_resumen_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -77,7 +77,7 @@ class _NavigationRecorder:
     """Records what would cross the wire.
 
     This is an observation point at the network boundary, not a stand-in for
-    the logic under test: the code under test is the guard in ``_walker``, and
+    the logic under test: the code under test is the guard in ``walker``, and
     this records whether a request escaped it. It implements only the two
     attributes of a Playwright ``Page`` that ``_goto_guarded`` touches.
     """
@@ -111,7 +111,7 @@ class TestOffHostNavigationIsRefusedBeforeItHappens:
         recorder = _NavigationRecorder()
         refusal: RegistryValidationError | None = None
         try:
-            await _walker._goto_guarded(recorder, url)
+            await walker._goto_guarded(recorder, url)
         except RegistryValidationError as exc:
             refusal = exc
 
@@ -138,7 +138,7 @@ class TestOffHostNavigationIsRefusedBeforeItHappens:
         guarded rather than trusted to have been built by this module.
         """
         with pytest.raises(RegistryValidationError):
-            _walker._assert_read_http("GET", url)
+            walker._assert_read_http("GET", url)
 
     @pytest.mark.parametrize("url", _OFF_AEAT_URLS)
     def test_the_walker_refuses_with_the_declarations_readers_shape(self, url: str) -> None:
@@ -150,7 +150,7 @@ class TestOffHostNavigationIsRefusedBeforeItHappens:
         to name the rejected URL; only then is the shared shape compared.
         """
         with pytest.raises(RegistryValidationError) as walker_exc:
-            _walker._assert_read_http("GET", url)
+            walker._assert_read_http("GET", url)
         with pytest.raises(RegistryValidationError) as declarations_exc:
             _declarations_fetch._assert_read_http("GET", url)
 
@@ -176,8 +176,8 @@ class TestTheLandedUrlIsReAsserted:
         """
         recorder = _NavigationRecorder(landing=landing)
         with pytest.raises(RegistryValidationError):
-            await _walker._goto_guarded(recorder, _walker._RESUMEN_URL)
-        assert recorder.attempted == [_walker._RESUMEN_URL]
+            await walker._goto_guarded(recorder, walker._RESUMEN_URL)
+        assert recorder.attempted == [walker._RESUMEN_URL]
 
 
 class TestTheOffHostUrlReachesTheGuardFromARealParse:
@@ -199,7 +199,7 @@ class TestTheOffHostUrlReachesTheGuardFromARealParse:
             'href="https://evil.example.test/steal?e=1">2024EXP00000001</a></li></ul>'
             "</li></ul></body></html>"
         )
-        expedientes = parse_resumen_tree(html, base_url=_walker._SEDE_BASE)
+        expedientes = parse_resumen_tree(html, base_url=walker._SEDE_BASE)
 
         assert len(expedientes) == 1, "the fixture must actually parse, or the guard is never reached"
         detail_url = str(expedientes[0].detail_url)
@@ -210,7 +210,7 @@ class TestTheOffHostUrlReachesTheGuardFromARealParse:
         recorder = _NavigationRecorder()
         refusal: RegistryValidationError | None = None
         try:
-            await _walker._goto_guarded(recorder, detail_url)
+            await walker._goto_guarded(recorder, detail_url)
         except RegistryValidationError as exc:
             refusal = exc
 
@@ -235,14 +235,14 @@ class TestLegitimateAeatReadsStillPass:
         AEAT load-balances the authenticated surface across its numbered pool,
         so pinning one host would refuse a legitimate dispatch.
         """
-        _walker._assert_read_http("GET", f"{origin}{Settings.external_constants().aeat.sede_paths.expedientes_resumen}")
+        walker._assert_read_http("GET", f"{origin}{Settings.external_constants().aeat.sede_paths.expedientes_resumen}")
 
     @pytest.mark.asyncio
     async def test_an_allowed_url_navigates(self) -> None:
         """SUPPORTING: passes with the guard removed; confirms the admit path."""
         recorder = _NavigationRecorder()
-        await _walker._goto_guarded(recorder, _walker._RESUMEN_URL)
-        assert recorder.attempted == [_walker._RESUMEN_URL]
+        await walker._goto_guarded(recorder, walker._RESUMEN_URL)
+        assert recorder.attempted == [walker._RESUMEN_URL]
 
 
 class TestThePolicyShape:
@@ -250,7 +250,7 @@ class TestThePolicyShape:
 
     def test_the_policy_is_an_authenticated_read_surface(self) -> None:
         """SUPPORTING: passes with the navigation guard removed."""
-        policy = _walker._READ_GUARD_POLICY
+        policy = walker._READ_GUARD_POLICY
         assert policy.classification == "authenticated_read_surface"
         assert policy.requires_authentication is True
         assert policy.synthetic_data_allowed is False
@@ -261,7 +261,7 @@ class TestThePolicyShape:
         An empty allow-list means a browser action added here later fails the
         guard until it is declared, rather than passing unnoticed.
         """
-        assert _walker._READ_GUARD_POLICY.allowed_browser_action_patterns == ()
+        assert walker._READ_GUARD_POLICY.allowed_browser_action_patterns == ()
 
 
 class TestNoUnguardedWireCrossingRemains:
@@ -286,7 +286,7 @@ class TestNoUnguardedWireCrossingRemains:
         """DISCRIMINATING: the PDF GET must be preflighted, not just typed."""
         import inspect
 
-        source = inspect.getsource(_walker.capture_justificante)
+        source = inspect.getsource(walker.capture_justificante)
         guard_at = source.find('_assert_read_http("GET", str(ref.pdf_url))')
         fetch_at = source.find("context.request.get(str(ref.pdf_url))")
         assert guard_at != -1, "the PDF fetch is not guarded"
@@ -297,4 +297,4 @@ class TestNoUnguardedWireCrossingRemains:
 def _read_walker_source() -> str:
     from pathlib import Path
 
-    return Path(_walker.__file__).read_text(encoding="utf-8")
+    return Path(walker.__file__).read_text(encoding="utf-8")

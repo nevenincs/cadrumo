@@ -20,19 +20,11 @@ from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory, storage_path
 from ...config import override_settings
 from ...directory_scan import scan_directory
-from .. import (
-    GenericPayload,
-    RunEventKind,
-    RunEventPayload,
-    RunOutcome,
-    RunTracePersistenceError,
-    current_run_context,
-    load_events,
-    load_trace,
-    record_event,
-    run_context,
-)
-from .._store import EVENTS_FILENAME, TRACE_FILENAME
+from ..context import current_run_context, run_context
+from ..errors import RunTracePersistenceError
+from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
+from ..recorder import record_event
+from ..store import EVENTS_FILENAME, TRACE_FILENAME, load_events, load_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -160,7 +152,7 @@ class TestRunContextRunIdValidation:
         ``_build_initial_context`` so no directory is ever created for
         a rejected run_id.
         """
-        from .. import RunTraceValidationError
+        from ..errors import RunTraceValidationError
 
         bad_run_ids = ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789")
 
@@ -256,7 +248,7 @@ class TestRunSinkScrubbing:
     ) -> None:
         """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
         from ...logging import SecretScrubbingFilter, attach_run_sink
-        from .._sink import JsonlRunSink
+        from ..sink import JsonlRunSink
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)

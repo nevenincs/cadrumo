@@ -29,8 +29,9 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.invoices import Invoice, InvoiceValidationError
-from ....domain.iva import InvoiceKind
+from ....domain.invoices.errors import InvoiceValidationError
+from ....domain.invoices.models import Invoice
+from ....domain.iva.classification import InvoiceKind
 from ..evidence_draft import (
     _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR,
     InvoiceConfirmationResult,

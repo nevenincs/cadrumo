@@ -6,8 +6,8 @@ through the authenticated Sede adapter, persist encrypted
 :class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
 payloads and artefacts, promote extracted casillas into registry-grounded
 calculation observations, and attempt to stamp matching current
-:class:`~cadrumo.domain.modelos.ModeloRecord` filings with live
-:class:`~cadrumo.domain.modelos.ExternalEvidence`.
+:class:`~ModeloRecord` filings with live
+:class:`~ExternalEvidence`.
 
 Source capture resolves a law-determined
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision` (via
@@ -45,18 +45,10 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.outbound.aeat.sede import (
-    Declaracion,
-    DeclaracionesRegisterSession,
-    FiledDeclaracionObservation,
-    FiledDeclaracionObservationStore,
-    FiledDeclarationAvailabilityReport,
-    capture_previous_filing_observations,
-    capture_relation_source_observations,
-    discover_filed_declaration_availability,
-    open_declarations_register,
-    shared_playwright,
-)
+from ...adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession, capture_previous_filing_observations, capture_relation_source_observations, discover_filed_declaration_availability, open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, SyncSurface
 from ...core.bucket_pointer import require_active_bucket_id
@@ -113,7 +105,7 @@ from .session import active_verified_session
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.deadlines import TaxpayerProfile
+    from ...domain.deadlines.models import TaxpayerProfile
     from ..calculations import CalculationObservationRepository
 
 
@@ -681,7 +673,7 @@ async def capture_filed_data(
 
     The report accounts for persisted observation manifests, encrypted artefact
     references, saved justificante CSVs, stamped
-    :class:`cadrumo.domain.modelos.ModeloRecord` ids, conflicts, and calculation
+    :class:`~ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
     session, settings = await active_verified_session()

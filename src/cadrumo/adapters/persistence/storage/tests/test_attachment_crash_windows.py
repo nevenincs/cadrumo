@@ -25,12 +25,9 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.attachments import (
-    Attachment,
-    AttachmentKind,
-    AttachmentNotFoundError,
-    AttachmentSource,
-)
+from .....domain.attachments.enums import AttachmentKind, AttachmentSource
+from .....domain.attachments.errors import AttachmentNotFoundError
+from .....domain.attachments.models import Attachment
 from .....tests.secure_sql import isolated_runtime_profile
 from ..attachment import AttachmentStore
 

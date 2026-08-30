@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._llm import LLMClassifierError, parse_response, prompt_spec_with_saturation_fields
-from .._models import BusinessClassification
+from ..llm import LLMClassifierError, parse_response, prompt_spec_with_saturation_fields
+from ..models import BusinessClassification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -13,7 +13,7 @@ import pytest
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, validated_casilla_id
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.manuals import ManualPart
+from ....domain.manuals.schema import ManualPart
 from ..conformance import _AxisIndex
 from ..corpus import (
     RegistryCitationShowCommand,

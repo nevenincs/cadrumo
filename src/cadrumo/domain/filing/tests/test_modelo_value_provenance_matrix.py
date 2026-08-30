@@ -22,7 +22,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .. import ModeloValue, ModeloValueKind
+from ..schema import ModeloValue, ModeloValueKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

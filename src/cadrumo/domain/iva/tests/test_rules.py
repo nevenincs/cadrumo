@@ -8,7 +8,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.citation_grounding import CitationGrounding
-from .. import IvaCategory, IvaCitation, cite, resolve_catalogue
+from ..catalogue import resolve_catalogue
+from ..lookup import cite
+from ..schema import IvaCategory, IvaCitation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

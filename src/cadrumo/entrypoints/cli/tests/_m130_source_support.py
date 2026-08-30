@@ -8,15 +8,9 @@ from pathlib import Path
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.profile_capsule import open_test_profile_session
 
 

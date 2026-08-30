@@ -14,13 +14,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....application.workflow.persistence import workflow_state_repository
-from ....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryCatalogue,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 

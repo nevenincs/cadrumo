@@ -31,8 +31,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
 from ...review.models import InvoiceReviewRecord
 from .. import invoice_display_amounts, invoice_review_status
 

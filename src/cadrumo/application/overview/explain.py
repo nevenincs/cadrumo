@@ -42,13 +42,10 @@ from ...domain.calculations.registry.applicability import (
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.deadlines import (
-    DeadlineEngine,
-    DeadlineValidationError,
-    NoDeadlineWindowsError,
-    TaxpayerProfile,
-    twelve_month_anniversary,
-)
+from ...domain.deadlines.engine import DeadlineEngine
+from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.deadlines.recargo import twelve_month_anniversary
 from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .errors import OverviewExplainError
 

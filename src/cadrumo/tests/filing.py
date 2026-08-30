@@ -33,10 +33,12 @@ from ..application.filing import (
 )
 from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.calculations.registry.ids import BindingId
-from ..domain.filing import ModeloBuilderError, ModeloDraft, ModeloInputs
-from ..domain.invoices import InvoiceCatalogue
+from ..domain.filing.errors import ModeloBuilderError
+from ..domain.filing.protocols import ModeloInputs
+from ..domain.filing.schema import ModeloDraft
+from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus
-from ..domain.transactions import TransactionCatalogue
+from ..domain.transactions.models import TransactionCatalogue
 
 _REGISTRY_TEST_BUCKET_ID = "1465aefb-768a-4344-a564-1f0737966d59"  # was 'registry-test'
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)

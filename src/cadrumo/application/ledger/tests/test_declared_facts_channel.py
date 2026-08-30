@@ -35,13 +35,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import ClassifierInputSource
-from ....domain.iva import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaRateKind,
-    IvaTerritorialScope,
-    SupplyNature,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
+from ....domain.iva.schema import IvaRateKind
+from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,

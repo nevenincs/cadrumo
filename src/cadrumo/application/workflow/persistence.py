@@ -42,7 +42,7 @@ from ...core.classification import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
-from ...domain.buckets import BucketEvent
+from ...domain.buckets.event import BucketEvent
 from .errors import WorkflowError
 from .events import (
     WorkflowStateResetFingerprint,

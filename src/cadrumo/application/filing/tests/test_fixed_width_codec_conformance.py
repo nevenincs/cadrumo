@@ -17,11 +17,8 @@ from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    FilingExportValidationError,
-    ModeloDraft,
-    registry_schema_version,
-)
+from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.schema import ModeloDraft, registry_schema_version
 from ....domain.modelos.errors import ModeloExportError
 from ....domain.submission import ModeloDraftStatus
 from .._export import _RecordRenderRow, _render_record

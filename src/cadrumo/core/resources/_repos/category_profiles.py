@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.categories import CategoryProfile, SpendingCategory
+    from ....domain.categories.profile import CategoryProfile
+    from ....domain.categories.spending_category import SpendingCategory
 
 
 class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategory", "CategoryProfile"], int]):
@@ -25,6 +26,6 @@ class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategor
 
     @override
     def _load(self, key: int) -> Mapping[SpendingCategory, CategoryProfile]:
-        from ....domain.categories import resolve_category_profiles
+        from ....domain.categories.registry import resolve_category_profiles
 
         return resolve_category_profiles(key)

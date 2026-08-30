@@ -55,7 +55,7 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import SyncSurface
 from ....core.identity import BucketId
 from ....core.time import validate_utc_aware
-from ....domain.buckets import BucketEvent, BucketEventId
+from ....domain.buckets.event import BucketEvent, BucketEventId
 
 __all__ = [
     "SyncRunCoverage",

@@ -72,13 +72,13 @@ _EXEMPT_MODULES: dict[str, str] = {
 #: everything, and a scan that matches nothing passes vacuously.
 _KNOWN_FORM_DRIVING: frozenset[str] = frozenset(
     {
-        "_censal_datos.py",
-        "_declarations.py",
+        "censal_datos.py",
+        "declarations.py",
         "_declarations_fetch.py",
-        "_groi_check.py",
-        "_iva_compensation_wallet.py",
-        "_nif_iva_check.py",
-        "_renta_web_open.py",
+        "groi_check.py",
+        "iva_compensation_wallet.py",
+        "nif_iva_check.py",
+        "renta_web_open.py",
     },
 )
 
@@ -88,14 +88,14 @@ _KNOWN_FORM_DRIVING: frozenset[str] = frozenset(
 #: matches everything would report every module enrolled, which is silent.
 _KNOWN_ENROLLED: frozenset[str] = frozenset(
     {
-        "_censal_datos.py",
-        "_declarations.py",
+        "censal_datos.py",
+        "declarations.py",
         "_declarations_fetch.py",
-        "_groi_check.py",
-        "_iva_compensation_wallet.py",
-        "_nif_iva_check.py",
-        "_renta_web_open.py",
-        "_walker.py",
+        "groi_check.py",
+        "iva_compensation_wallet.py",
+        "nif_iva_check.py",
+        "renta_web_open.py",
+        "walker.py",
     },
 )
 

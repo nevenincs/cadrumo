@@ -23,7 +23,8 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.contribuyente import DescendantInfo, GuarderiaMonthSpend
+    from ...domain.contribuyente.descendant import DescendantInfo
+    from ...domain.contribuyente.family_types import GuarderiaMonthSpend
     from ...domain.user_profile.values import UserProfileRecord
 
 from ...core import DescendantRelacion
@@ -362,7 +363,9 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     entry date is dropped (see :func:`_safe_relacion_and_entry_dates`) so
     persistence projection never raw-raises.
     """
-    from ...domain.contribuyente import DescendantInfo, parse_meses_trabajo, relacion_kwarg
+    from ...domain.contribuyente.descendant import DescendantInfo
+    from ...domain.contribuyente.descendant_facts import relacion_kwarg
+    from ...domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
     meses = row.get("meses-madre-trabajo") or ""
     birth_date = parse_iso8601_date(row["birth-date"])
@@ -481,7 +484,7 @@ def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
       to fix the text.
     """
     from ...core.errors import ProfileAnswerTypeError
-    from ...domain.contribuyente import parse_guarderia_mensual
+    from ...domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     annual_raw = row.get("gastos-guarderia") or ""
     annual = int(annual_raw) if annual_raw else 0
@@ -512,7 +515,7 @@ def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str,
     """
     if DESCENDANTS_COUNT_PAGE_ID not in answers:
         return []
-    from ...domain.contribuyente import descendant_facts_from_list
+    from ...domain.contribuyente.descendant_facts import descendant_facts_from_list
 
     count = _instance_count(answers.get(DESCENDANTS_COUNT_PAGE_ID, ""))
     descendientes: list[DescendantInfo] = []
@@ -551,7 +554,7 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     """
     if record is None:
         return {}
-    from ...domain.contribuyente import descendant_list_from_facts
+    from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
     from ..user_profile.projections import record_to_path_values
 
     descendientes = descendant_list_from_facts(record_to_path_values(record))
@@ -570,7 +573,8 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
     An absent optional field emits NO answer rather than a stored default,
     which keeps a facts-to-answers re-projection identical on both legs.
     """
-    from ...domain.contribuyente import serialise_guarderia_mensual, serialise_meses_trabajo
+    from ...domain.contribuyente.guarderia_mensual import serialise_guarderia_mensual
+    from ...domain.contribuyente.meses_trabajo import serialise_meses_trabajo
 
     answers = {
         f"{prefix}.birth-date": descendant.birth_date.isoformat(),

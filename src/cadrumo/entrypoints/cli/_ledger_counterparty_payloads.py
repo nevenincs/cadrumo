@@ -29,7 +29,8 @@ from ...core import ClassifierInputSource
 from ...core.identity import ContentDigest
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
-from ...domain.iva import EUMemberState, IvaTerritorialScope
+from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.schema import EUMemberState
 
 
 class CounterpartyEstablishmentPayload(OutputSchema):

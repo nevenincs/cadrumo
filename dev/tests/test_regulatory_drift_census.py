@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: this census executes. The detector recovering them is what makes a clean
 #: residue mean "adjudicated" rather than "blind".
 _KNOWN_INSTANCES: tuple[tuple[str, FindingKind], ...] = (
-    ("src/cadrumo/domain/calculations/registry/_applicability.py", FindingKind.MODELO_KEYED_MAPPING_ENTRY),
+    ("src/cadrumo/domain/calculations/registry/applicability.py", FindingKind.MODELO_KEYED_MAPPING_ENTRY),
     # The year-set control moved because its old specimen was CURED, not because
     # the detector weakened: d7a4413227 removed
     # `SUPPORTED_EJERCICIOS = (2022, ..., 2026)` from `_m303_orden_constants.py`
@@ -142,7 +142,7 @@ def test_a_planted_finding_is_reported_unadjudicated() -> None:
 def test_a_real_finding_is_covered_so_the_planted_proof_is_not_vacuous() -> None:
     """The same matcher answers for a finding the ledger does cover."""
     covered = Finding(
-        "src/cadrumo/domain/calculations/registry/_applicability.py",
+        "src/cadrumo/domain/calculations/registry/applicability.py",
         "<module>",
         FindingKind.MODELO_KEYED_MAPPING_ENTRY,
         "_RULES[M100]",

@@ -40,12 +40,10 @@ import pytest
 from ....core import CasillaId, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.contribuyente import (
-    DescendantInfo,
-    GuarderiaMonthSpend,
-    descendant_facts_from_list,
-    parse_guarderia_mensual,
-)
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
+from ....domain.contribuyente.family_types import GuarderiaMonthSpend
+from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic

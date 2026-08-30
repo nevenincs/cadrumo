@@ -35,8 +35,11 @@ from ...core import FieldRole, IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.models import Invoice
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory
 from ._common import _bad, emit_envelope
 from ._common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
@@ -577,7 +580,7 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
         from ...core.errors import CadrumoError
 
         try:
-            from ...llm import map_column_roles
+            from ...llm.column_role_mapping import map_column_roles
         except ImportError:
             return None
         try:

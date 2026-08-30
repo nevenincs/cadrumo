@@ -8,7 +8,7 @@ from importlib import import_module
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import RemoteNotification
+from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...live.notifications import PersistedNotificationsSnapshot
 from .. import calendar_models as _calendar_models

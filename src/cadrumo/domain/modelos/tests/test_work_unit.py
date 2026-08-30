@@ -687,7 +687,7 @@ def test_causante_ccaa_roundtrips_and_defaults_through_repository(repo: WorkUnit
     default to ``None``.
     """
 
-    from ...contribuyente import CCAA
+    from ...contribuyente.ccaa import CCAA
 
     default_unit = _create_action_work_unit(repo)
     annotated_unit = _create_action_work_unit(repo, period=_P_2026_2T, causante_ccaa=CCAA.MADRID)
@@ -709,7 +709,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     call is not overwritten.
     """
 
-    from ...contribuyente import CCAA
+    from ...contribuyente.ccaa import CCAA
 
     first = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
     second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)

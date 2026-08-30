@@ -21,8 +21,8 @@ import pytest
 
 from ....core import Period
 from ...calculations.registry.errors import RegistrySnapshotError
-from .._plazo import resolve_filing_closes_on
-from .._recargo import (
+from ..plazo import resolve_filing_closes_on
+from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
     load_recargo_bands,

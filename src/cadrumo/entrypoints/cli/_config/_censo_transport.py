@@ -71,7 +71,7 @@ def censo_import(
     from ....adapters.inbound.censo import parse_certificado_censal_bytes
     from ....application.user_profile.cotejo_apply import apply_cotejo
     from ....application.workflow.persistence import workflow_state_repository
-    from ....domain.censo import censo_facts_from_certificado
+    from ....domain.censo.certificado import censo_facts_from_certificado
 
     certificado = parse_certificado_censal_bytes(file.read_bytes())
     facts = censo_facts_from_certificado(certificado)

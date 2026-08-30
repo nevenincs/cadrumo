@@ -27,9 +27,9 @@ from pydantic import AnyHttpUrl
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
-from .._observation_store import FiledDeclaracionObservationStore
-from .._schema import (
+from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ..observation_store import FiledDeclaracionObservationStore
+from ..schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
@@ -142,7 +142,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from .....persistence.storage.sql import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
-    from .._observation_store import _OBSERVATION_NAMESPACE
+    from ..observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")

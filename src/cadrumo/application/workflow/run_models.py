@@ -45,7 +45,7 @@ from ...core.errors import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import get_logger
-from ...domain.deadlines import ModeloDeadline, ObligationStatus
+from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ...domain.submission import ModeloDraftStatus
 from ..operator_actions import ConditionEvidence, PreconditionVerdict
 from ._identity import period_identity_segment

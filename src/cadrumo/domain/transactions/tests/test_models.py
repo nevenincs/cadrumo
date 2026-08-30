@@ -11,29 +11,22 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Art104TresExclusion, ConceptoIngreso, TipoActividad
-from ...iva import (
-    InputClassification,
-    IvaCategory,
-    IvaExemptionArticle,
-)
-from .. import (
-    BusinessClassification,
+from ...iva.prorrata import InputClassification
+from ...iva.schema import IvaCategory, IvaExemptionArticle
+from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..models import (
     ClassificationHistoryEntry,
     DecisionProvenance,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
     Transaction,
-    TransactionDirection,
-    TransactionLifecycleState,
     derive_import_fingerprint,
     derive_movement_day_key,
     derive_transaction_id,
     normalise_movement_reference,
 )
-from .._volumen_ingresos import counts_toward_volumen_de_ingresos
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -70,39 +70,18 @@ from ...domain.calculations.registry.ledger_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.iva import (
-    EUMemberState,
-    InputClassification,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    IvaTerritorialScope,
-    ProrrataInputError,
-    ProrrataReference,
-    StatedCountryCodeStatus,
-    deductible_percentage_for,
-    flow_direction_for_invoice_kind,
-    is_deducible_flow,
-    rate_kinds_for_declared_rate,
-    stated_country_code_status,
-    territorial_scope_for_country,
-    validate_iva_deduction_fact,
-    validate_prorrata_reference,
-)
+from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...domain.iva.errors import ProrrataInputError
+from ...domain.iva.establishment import StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country
+from ...domain.iva.flow import IvaFlowDirection, flow_direction_for_invoice_kind, is_deducible_flow
+from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.prorrata import InputClassification, ProrrataReference, deductible_percentage_for, validate_prorrata_reference
+from ...domain.iva.schema import EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._invoice_kind import invoice_kind_for_direction

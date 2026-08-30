@@ -48,22 +48,18 @@ from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, TipoActi
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.identity import TransactionId
 from ...core.money import round_to_cents
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, decompose_invoice
-from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
-from ...domain.transactions import (
-    BusinessClassification,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-    counts_toward_volumen_de_ingresos,
-    has_activity_irpf_category,
-    has_employment_irpf_category,
-    maximum_supported_activity_retencion_rate,
-    tipo_actividad_code_set,
-)
+from ...domain.invoices.decomposition import decompose_invoice
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.components import category_cuota_is_zero_by_law
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
+from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
+from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion

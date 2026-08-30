@@ -82,7 +82,7 @@ def test_enum_consumed_binding_ids_identifies_legal_entity_form() -> None:
 
 def test_string_inputs_for_ids_extracts_enum_binding() -> None:
     """_string_inputs_for_ids must extract string enum values from ModeloInputs."""
-    from ....domain.filing import ModeloInputs
+    from ....domain.filing.protocols import ModeloInputs
 
     inputs: ModeloInputs = {
         "modelo-200-2024-profile-legal-entity-form": "sl",

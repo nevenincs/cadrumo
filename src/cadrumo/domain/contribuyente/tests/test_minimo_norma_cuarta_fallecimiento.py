@@ -20,7 +20,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import DescendantInfo, RentaFamilyProfile
+from ..descendant import DescendantInfo
+from ..family_profile import RentaFamilyProfile
 from ._registry_thresholds import (
     registry_birth_order_amounts,
     registry_fallecimiento_amount,

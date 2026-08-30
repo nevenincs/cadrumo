@@ -42,15 +42,13 @@ from ...domain.calculations.registry.ledger_bindings import (
     unsupported_ledger_oss_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceLine, iva_rate_kind
-from ...domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-    lookup_rate,
-)
+from ...domain.invoices.enums import iva_rate_kind
+from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind, TransactionKind
+from ...domain.iva.lookup import lookup_rate
+from ...domain.iva.oss import OssIossRegime
+from ...domain.iva.schema import EUMemberState, IvaRateKind
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,

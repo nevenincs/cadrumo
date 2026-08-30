@@ -40,7 +40,7 @@ from ....core import (
 )
 from ....core.errors import SiteHealthState
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....domain.deadlines import ObligationStatus
+from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record

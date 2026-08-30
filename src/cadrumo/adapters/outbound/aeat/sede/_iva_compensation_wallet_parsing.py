@@ -36,8 +36,8 @@ from .....domain.calculations.registry.remote_state_guard import (
 )
 from .._html import parse_html
 from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
-from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 _AMOUNT_SEPARATOR_CLASS = f"[{re.escape(AEAT_THOUSANDS_SEPARATORS)}]"

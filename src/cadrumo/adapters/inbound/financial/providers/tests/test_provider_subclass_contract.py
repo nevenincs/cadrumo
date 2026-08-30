@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ......domain.transactions import SourceFormat
+from ......domain.transactions.raw_transaction import SourceFormat
 from .. import FinancialProvider, FinancialProviderConfigError, ParsedLedgerRow, ProviderValidation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

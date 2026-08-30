@@ -12,8 +12,9 @@ from ......application.modelo._workflow_gate import build_revision_deadline_wind
 from ......core import AuthProviderKind, Period
 from ......core.config import Settings
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ......domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
-from ......domain.filing import ModeloDraft, ModeloValidationFinding
+from ......domain.deadlines.engine import DeadlineEngine
+from ......domain.deadlines.models import IVARegime, TaxpayerProfile
+from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ......domain.submission import DeadlineWindowChecker, ModeloDraftStatus
 
 _DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)

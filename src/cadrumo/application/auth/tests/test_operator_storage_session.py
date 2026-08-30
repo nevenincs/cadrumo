@@ -22,7 +22,7 @@ from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
-from ....domain.contribuyente import required_profile_keys
+from ....domain.contribuyente.keys import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

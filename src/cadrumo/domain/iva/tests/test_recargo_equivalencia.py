@@ -7,9 +7,9 @@ It protects the recargo de equivalencia ladder as legal data, not as inline
 Python constants.
 
 See Also:
-    :mod:`~domain.iva._recargo_equivalencia`
+    :mod:`~domain.iva.recargo_equivalencia`
         Registry-backed loader and frozen rate record under test.
-    :mod:`~domain.iva._saturation`
+    :mod:`~domain.iva.saturation`
         IVA-category saturation policy that surfaces recargo as operator-derived
         rather than silently deriving a domestic rate.
     :mod:`~application.calculations.tests.test_modelo_303_special_case_casilla_routing`
@@ -27,10 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
-from .. import (
-    LivaArt161RecargoRates,
-    load_recargo_rates,
-)
+from ..recargo_equivalencia import LivaArt161RecargoRates, load_recargo_rates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

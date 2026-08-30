@@ -4,7 +4,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import IrpfEstimationRegime, IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
+from ..models import IrpfEstimationRegime, IVARegime, TaxpayerProfile
+from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

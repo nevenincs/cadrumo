@@ -21,8 +21,8 @@ canonical-token parsing without importing application modules directly.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
 inside validators rather than at module level to break the circular import
-path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines._models`` ->
-``cadrumo.domain.deadlines.__init__`` -> ``cadrumo.domain.deadlines._profiles`` ->
+path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines.models`` ->
+``cadrumo.domain.deadlines.__init__`` -> ``cadrumo.domain.deadlines.profiles`` ->
 ``cadrumo.core.setup_answers``. This mirrors the deferral strategy used in
 ``cadrumo.core.resources._repos.*`` and is the established project pattern.
 """
@@ -404,8 +404,8 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
 #
 # All domain imports are deferred inside validators and accessors below to
 # avoid the circular import:
-#   cadrumo.core.setup_answers → cadrumo.domain.deadlines._models
-#   → cadrumo.domain.deadlines.__init__ → cadrumo.domain.deadlines._profiles
+#   cadrumo.core.setup_answers → cadrumo.domain.deadlines.models
+#   → cadrumo.domain.deadlines.__init__ → cadrumo.domain.deadlines.profiles
 #   → cadrumo.core.setup_answers   (partially initialised → ImportError)
 # ---------------------------------------------------------------------------
 
@@ -415,20 +415,24 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
 # importing the module at definition time, re-introducing the circular
 # import described in the block comment above.
 def _m() -> Any:
-    """Return the cadrumo.domain.deadlines module (lazy)."""
+    """Return the module that defines the taxpayer-profile enums (lazy).
+
+    Was the ``cadrumo.domain.deadlines`` package namespace, which re-exported
+    these. The namespace is inert, so this names the module that defines them.
+    """
     import importlib
 
-    return importlib.import_module("cadrumo.domain.deadlines")
+    return importlib.import_module("cadrumo.domain.deadlines.models")
 
 
-# ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# cadrumo.domain.contribuyente module object; typed return would require importing the
-# module at definition time, re-introducing the circular import.
+# ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the renta-code module
+# object; typed return would require importing it at definition time,
+# re-introducing the circular import.
 def _p() -> Any:
-    """Return the cadrumo.domain.contribuyente module (lazy)."""
+    """Return the renta-code module that owns the profile enums (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente")
+    return importlib.import_module("cadrumo.domain.contribuyente.renta_codes")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object;
@@ -438,7 +442,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente").CCAA
+    return importlib.import_module("cadrumo.domain.contribuyente.ccaa").CCAA
 
 
 # ---------------------------------------------------------------------------
@@ -790,7 +794,7 @@ class SetupAnswers(BaseModel):
     def _parse_fiscal_residency(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
         if value == "":
             return ""
-        fiscal_residency_cls = _m().FiscalResidency
+        fiscal_residency_cls = _p().FiscalResidency
         if isinstance(value, fiscal_residency_cls):
             return value
         if isinstance(value, str):

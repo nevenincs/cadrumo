@@ -7,7 +7,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...domain.transactions import LedgerDatePartition, TransactionCatalogue, TransactionCatalogueRepositoryProtocol
+    from ...domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 class MemoizedTransactionCatalogueRepository:
@@ -60,7 +61,7 @@ class MemoizedTransactionCatalogueRepository:
             for partition in self._partition_catalogues.values():
                 available = partition.in_window.transactions
                 if requested.issubset(available):
-                    from ...domain.transactions import TransactionCatalogue
+                    from ...domain.transactions.models import TransactionCatalogue
 
                     cached = TransactionCatalogue.from_transactions(available[transaction_id] for transaction_id in key)
                     break

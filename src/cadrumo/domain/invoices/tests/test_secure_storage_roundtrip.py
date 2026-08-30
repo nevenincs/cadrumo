@@ -43,16 +43,11 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import IntracomOperationType, TravelAgencyMediationType
 from ....tests.secure_sql import isolated_runtime_profile
-from ...iva import InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
-from .. import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceClass,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    IvaRate,
-    PaymentStatus,
-)
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.oss import OssIossRegime
+from ...iva.schema import IvaCategory, IvaRateKind
+from ..enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceCatalogue, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

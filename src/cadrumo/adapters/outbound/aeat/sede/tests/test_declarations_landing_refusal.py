@@ -28,7 +28,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .._declarations import assert_declarations_read_landing
+from ..declarations import assert_declarations_read_landing
 from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

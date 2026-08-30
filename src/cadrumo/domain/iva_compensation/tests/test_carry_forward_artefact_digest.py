@@ -28,7 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import IvaCompensationStateProvenance, Period
-from .._carry_forward import IvaCompensationPeriodState
+from ..carry_forward import IvaCompensationPeriodState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

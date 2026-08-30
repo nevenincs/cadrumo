@@ -9,7 +9,8 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from .....domain.transactions import BusinessClassification, LedgerClassificationRule
+from .....domain.transactions.classification_rule import LedgerClassificationRule
+from .....domain.transactions.enums import BusinessClassification
 from .....tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,

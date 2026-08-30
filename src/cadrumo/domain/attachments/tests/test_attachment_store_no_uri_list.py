@@ -23,10 +23,10 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
-from .._enums import AttachmentKind, AttachmentSource
-from .._models import Attachment
-from .._service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from ..enums import AttachmentKind, AttachmentSource
 from ..errors import AttachmentValidationError
+from ..models import Attachment
+from ..service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -12,10 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..adapters.outbound.google import (
-    GoogleAuthError,
-    GoogleAuthValidationError,
-)
+from ..adapters.outbound.google.errors import GoogleAuthError, GoogleAuthValidationError
 from ..adapters.persistence.storage.bucket import (
     BucketError,
     BucketValidationError,

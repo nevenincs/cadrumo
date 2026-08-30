@@ -28,7 +28,7 @@ import pytest
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....core.config import load_settings, override_settings
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.loopback_llm import (

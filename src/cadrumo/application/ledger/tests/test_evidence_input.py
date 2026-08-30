@@ -19,13 +19,8 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import PDF_CONTAINER_SHAPES, DocumentShape
 from ....core.config import Settings
-from ....domain.attachments import (
-    AttachmentBytesContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    add_attachment,
-)
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ..evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,

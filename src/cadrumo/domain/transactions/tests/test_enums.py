@@ -12,7 +12,7 @@ from enum import StrEnum
 
 import pytest
 
-from .._enums import SplitRole, TransactionDirection, TransactionLifecycleState
+from ..enums import SplitRole, TransactionDirection, TransactionLifecycleState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

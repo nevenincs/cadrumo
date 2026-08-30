@@ -1,4 +1,4 @@
-"""Focused unit tests for deadlines._engine.classify_obligation_status.
+"""Focused unit tests for deadlines.engine.classify_obligation_status.
 
 `classify_obligation_status` maps a window's ``closes_on`` date + the reference
 ``today`` + the configured ``due_soon_days`` into one of four
@@ -22,8 +22,8 @@ from datetime import date
 
 import pytest
 
-from .. import ObligationStatus
-from .._engine import classify_obligation_status
+from ..engine import classify_obligation_status
+from ..models import ObligationStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

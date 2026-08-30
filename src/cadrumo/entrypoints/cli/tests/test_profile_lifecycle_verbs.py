@@ -290,7 +290,7 @@ def test_config_login_emits_profile_activated_event() -> None:
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``

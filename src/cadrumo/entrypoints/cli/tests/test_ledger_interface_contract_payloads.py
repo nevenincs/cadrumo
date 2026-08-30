@@ -17,8 +17,9 @@ from pydantic import ValidationError
 from ....application.export import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....core import OperatorActionAxis
-from ....domain.categories import ProportionalityKind, SpendingCategory
-from ....domain.transactions import BusinessClassification
+from ....domain.categories.proportionality import ProportionalityKind
+from ....domain.categories.spending_category import SpendingCategory
+from ....domain.transactions.enums import BusinessClassification
 from .._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceListResult,
     CatalogueInvoiceRecordPayload,

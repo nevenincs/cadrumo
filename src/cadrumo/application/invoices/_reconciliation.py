@@ -15,18 +15,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity import InvoiceId, TransactionId
-from ...domain.invoices import (
-    InvoiceCatalogue,
-    InvoiceError,
-    ReconciliationSuggestion,
-    link_transaction,
-    suggest_reconciliations,
-)
-from ...domain.transactions import (
-    TransactionCatalogue,
-    TransactionError,
-    link_invoice,
-)
+from ...domain.invoices.errors import InvoiceError
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.service import ReconciliationSuggestion, link_transaction, suggest_reconciliations
+from ...domain.transactions.errors import TransactionError
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.service import link_invoice
 
 
 class ReconciliationSkippedSuggestion(BaseModel):

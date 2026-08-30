@@ -28,13 +28,7 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines import (
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..explain import build_overview_explain
@@ -179,8 +173,9 @@ def test_derive_modelo_applicability_is_the_shared_implementation() -> None:
     """
     from inspect import getclosurevars
 
-    from .. import derive_modelo_applicability as calendar_fn
+    from .. import calendar as calendar_module
 
+    calendar_fn = calendar_module._derive_modelo_applicability
     explain_fn = getclosurevars(build_overview_explain).globals["derive_modelo_applicability"]
 
     assert calendar_fn is explain_fn, (

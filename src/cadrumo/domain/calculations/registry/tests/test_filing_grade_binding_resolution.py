@@ -31,7 +31,7 @@ from .....application.registry.source_connectivity import (
     load_source_connectivity_census,
 )
 from .....core import BindingSourceKind, RegistryAuthorityGrade
-from .....domain.filing import ModeloBuilderError
+from .....domain.filing.errors import ModeloBuilderError
 from ..authority import bundled_authority
 from ..bindings import selector_model_for_source, validate_binding_selector_shape
 from ..schema import DataBindingDefinition, ModeloRevision

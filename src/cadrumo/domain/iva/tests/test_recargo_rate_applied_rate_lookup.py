@@ -19,13 +19,13 @@ from decimal import Decimal
 
 import pytest
 
-from .._recargo_equivalencia import (
+from ..errors import IvaValidationError
+from ..recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,
     load_recargo_rates,
     recargo_rate_for_applied_rate,
 )
-from ..errors import IvaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -113,7 +113,7 @@ def test_overlapping_windows_for_one_rate_are_refused() -> None:
     Silently answering from an ambiguous key is precisely what made the
     tier-keyed shape unsafe, so the replacement refuses instead of ordering.
     """
-    from .._recargo_equivalencia import _reject_overlapping_windows
+    from ..recargo_equivalencia import _reject_overlapping_windows
 
     overlapping = (
         RecargoRateRecord(

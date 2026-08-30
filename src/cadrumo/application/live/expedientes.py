@@ -1,7 +1,7 @@
 """Bucket-scoped expedientes snapshot service.
 
 Wraps the read-only AEAT sede declarations walker
-(:mod:`cadrumo.adapters.outbound.aeat.sede._declarations`) with
+(:mod:`cadrumo.adapters.outbound.aeat.sede.declarations`) with
 bucket-scoped persistence. Read-only by construction: no method calls
 AEAT to mutate expediente state.
 
@@ -28,7 +28,8 @@ from typing import override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.aeat.sede import Declaracion, open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG

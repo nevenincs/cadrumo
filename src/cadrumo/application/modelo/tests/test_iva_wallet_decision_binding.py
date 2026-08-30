@@ -10,7 +10,7 @@ import pytest
 from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )

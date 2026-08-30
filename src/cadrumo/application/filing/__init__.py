@@ -73,24 +73,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from ...core.errors import BaseSeverity as _BaseSeverity
-from ...domain.filing import (
-    CasillaSchemaProvider as _CasillaSchemaProvider,
-)
-from ...domain.filing import (
-    DeadlineChecker as _DeadlineChecker,
-)
-from ...domain.filing import (
-    ModeloDraft as _ModeloDraft,
-)
-from ...domain.filing import (
-    ModeloValidationFinding as _ModeloValidationFinding,
-)
-from ...domain.filing import (
-    ModeloValidator as _ModeloValidator,
-)
-from ...domain.filing import (
-    apply_validation as _apply_validation,
-)
+from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
+from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
+from ...domain.filing.schema import ModeloDraft as _ModeloDraft
+from ...domain.filing.schema import ModeloValidationFinding as _ModeloValidationFinding
+from ...domain.filing.validator import ModeloValidator as _ModeloValidator
+from ...domain.filing.validator import apply_validation as _apply_validation
 from ._calculate import (
     DeclaracionCalculateSummary,
     summarise_calculation,

@@ -17,8 +17,8 @@ from ...core import Period
 from ...core.decimal import format_decimal
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
-from ...domain.invoices import Invoice, InvoiceCatalogue
-from ...domain.transactions import TransactionCatalogue
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.transactions.models import TransactionCatalogue
 from ..review.actions import update_invoice_review
 from ..review.filter import InvoiceReviewFilterSpec, InvoiceReviewStatus
 from ..review.models import InvoiceReviewRecord

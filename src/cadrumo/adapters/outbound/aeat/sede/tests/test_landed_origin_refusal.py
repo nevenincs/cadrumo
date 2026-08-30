@@ -33,7 +33,7 @@ import pytest
 
 from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE
-from .. import _adapter_utils, _declarations_fetch, _iva_compensation_wallet
+from .. import _adapter_utils, _declarations_fetch, iva_compensation_wallet
 from .._adapter_utils import landed_origin
 from ..errors import SedeNavigationError
 
@@ -95,10 +95,10 @@ class TestTheWalletRefuses:
         page = _LandedPage(landed or "")
         produced: str | None = None
         try:
-            produced = _iva_compensation_wallet._landed_wallet_url(page)
+            produced = iva_compensation_wallet._landed_wallet_url(page)
         except SedeNavigationError:
             produced = None
-        assert produced != _iva_compensation_wallet.IVA_COMPENSATION_WALLET_URL, (
+        assert produced != iva_compensation_wallet.IVA_COMPENSATION_WALLET_URL, (
             f"FABRICATED wallet source_url {produced!r} recorded for an unusable landing {landed!r}"
         )
         assert produced is None
@@ -106,7 +106,7 @@ class TestTheWalletRefuses:
     @pytest.mark.parametrize("landed", _USABLE_LANDINGS)
     def test_a_usable_landing_records_the_host_that_answered(self, landed: str) -> None:
         """SUPPORTING: the admit path still names the landed host."""
-        recorded = _iva_compensation_wallet._landed_wallet_url(_LandedPage(landed))
+        recorded = iva_compensation_wallet._landed_wallet_url(_LandedPage(landed))
         assert recorded.startswith(landed_origin(landed) or "")
 
 
@@ -124,7 +124,7 @@ class TestAllThreeReadersAgreeOnRefusal:
         with pytest.raises(SedeNavigationError):
             _declarations_fetch._origin_of(landed)
         with pytest.raises(SedeNavigationError):
-            _iva_compensation_wallet._landed_wallet_url(_LandedPage(landed or ""))
+            iva_compensation_wallet._landed_wallet_url(_LandedPage(landed or ""))
 
 
 class TestTheExtractionIsOneSharedPredicate:
@@ -138,11 +138,11 @@ class TestTheExtractionIsOneSharedPredicate:
         removes. ``is`` cannot.
         """
         assert _declarations_fetch._landed_origin is _adapter_utils.landed_origin
-        assert _iva_compensation_wallet.landed_origin is _adapter_utils.landed_origin
+        assert iva_compensation_wallet.landed_origin is _adapter_utils.landed_origin
 
     @pytest.mark.parametrize(
         "module",
-        [_declarations_fetch, _iva_compensation_wallet],
+        [_declarations_fetch, iva_compensation_wallet],
     )
     def test_the_retired_inline_extraction_is_absent(self, module: ModuleType) -> None:
         """IDENTITY: the old two-line urlsplit shape is gone from the module.

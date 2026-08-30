@@ -33,7 +33,7 @@ from ....core import (
 from ....core.config import Settings, override_settings
 from ....core.errors import CoreValidationError, ErrorCategory, get_error_exit_code
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....llm import LLMRequest, PromptDefinition
+from ....llm.models import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection

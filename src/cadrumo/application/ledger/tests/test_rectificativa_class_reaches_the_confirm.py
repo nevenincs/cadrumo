@@ -39,7 +39,7 @@ import pytest
 
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
 from ....core.directory_scan import iter_directory
-from ....domain.invoices import InvoiceClass
+from ....domain.invoices.enums import InvoiceClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

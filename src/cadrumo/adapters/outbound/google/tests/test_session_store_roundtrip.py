@@ -10,8 +10,8 @@ import pytest
 from .....core import GoogleCredentialSourceKind
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from .._impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
-from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "1a92e8a0-9da5-4712-8b71-a8aadd4eed42"  # was 'google-session'

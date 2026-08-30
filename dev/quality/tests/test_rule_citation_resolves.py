@@ -245,7 +245,7 @@ def test_the_resolver_reports_a_renamed_constant_and_a_moved_module() -> None:
     )
     misses = _unresolvable(
         planted,
-        tracked_paths={"src/cadrumo/domain/calculations/registry/_iva_wallet_relation_targets.py"},
+        tracked_paths={"src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py"},
         known_constants={"IVA_WALLET_OWNED_RELATION_TARGETS"},
     )
     reported = {token for _, token, _ in misses}

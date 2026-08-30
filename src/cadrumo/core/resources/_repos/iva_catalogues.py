@@ -33,7 +33,8 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
 
     @override
     def _load(self, key: int) -> object:
-        from ....domain.iva import IvaCatalogueError, iva_catalogue_years, resolve_catalogue
+        from ....domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
+        from ....domain.iva.errors import IvaCatalogueError
 
         if self._path is not None and key not in iva_catalogue_years(self._path):
             raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}")

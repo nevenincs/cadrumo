@@ -16,7 +16,7 @@ from ...application.ledger.actions_classification import bulk_classify_from_csv 
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.transactions import BusinessClassification, is_classified
+from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._common import _bad, emit_envelope
 from ._ledger_support import _TransactionRepo
 

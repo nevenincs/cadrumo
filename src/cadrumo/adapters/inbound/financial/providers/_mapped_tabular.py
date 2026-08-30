@@ -38,7 +38,7 @@ from .....core.errors import CadrumoError, CoreValidationError, resolve_error_me
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
-from .....domain.transactions import SourceFormat
+from .....domain.transactions.raw_transaction import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialProviderError,
@@ -113,7 +113,7 @@ def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | N
     ``llm`` extra's identity rather than a rendered installation command.
     """
     try:
-        from .....llm import SemanticColumnRoleMapper
+        from .....llm.column_role_mapping import SemanticColumnRoleMapper
     except MissingOptionalExtraError:
         raise
     except ImportError:

@@ -18,8 +18,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
 from ..evidence_reference import (
     EvidenceReference,

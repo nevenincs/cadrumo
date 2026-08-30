@@ -38,7 +38,8 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.iva import IvaTerritorialScope, territorial_scope_for_spanish_postal_code
+from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.establishment import territorial_scope_for_spanish_postal_code
 from ..evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

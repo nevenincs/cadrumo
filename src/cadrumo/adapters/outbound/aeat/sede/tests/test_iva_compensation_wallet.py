@@ -27,15 +27,6 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._iva_compensation_wallet import (
-    IVA_COMPENSATION_WALLET_URL,
-    PRE303_PRESENTATION_SERVICE_URL,
-    _assert_read_browser_action,
-    _assert_read_http,
-    _dump_wallet_diagnostic,
-    _wait_for_wallet_execute_initial_shape,
-    assert_wallet_read_landing,
-)
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
     _assert_own_name_representation_form_html,
@@ -48,6 +39,15 @@ from .._iva_compensation_wallet_parsing import (
     parse_iva_compensation_wallet_html,
 )
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ..iva_compensation_wallet import (
+    IVA_COMPENSATION_WALLET_URL,
+    PRE303_PRESENTATION_SERVICE_URL,
+    _assert_read_browser_action,
+    _assert_read_http,
+    _dump_wallet_diagnostic,
+    _wait_for_wallet_execute_initial_shape,
+    assert_wallet_read_landing,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

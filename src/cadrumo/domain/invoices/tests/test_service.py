@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import LinkInconsistencyDirection
-from .._service import (
+from ..service import (
     LinkInconsistency,
     ReconciliationSuggestion,
 )

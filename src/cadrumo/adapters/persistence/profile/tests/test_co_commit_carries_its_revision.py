@@ -49,7 +49,7 @@ _COMPOSING_WRITES = frozenset({"to_secure_object_write", "save_with_secure_objec
 #: exists/load/save, so an injected alternative may offer no revisioned read.
 #: Excluding the definition rather than the shape keeps a second module adopting
 #: it reportable.
-_DEFINES_THE_GUARDED_COMPOSER = "src/cadrumo/domain/buckets/_event_repository.py"
+_DEFINES_THE_GUARDED_COMPOSER = "src/cadrumo/domain/buckets/event_repository.py"
 
 
 def _is_plain_load(node: ast.AST) -> bool:

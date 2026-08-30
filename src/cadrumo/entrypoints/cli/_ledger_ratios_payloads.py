@@ -22,7 +22,8 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
-from ...domain.categories import ProportionalityKind, SpendingCategory
+from ...domain.categories.proportionality import ProportionalityKind
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
 
 

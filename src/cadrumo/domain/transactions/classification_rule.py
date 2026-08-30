@@ -1,7 +1,7 @@
 """Domain model for a ledger classification rule.
 
 A rule binds a regex description-pattern to a target
-:class:`~cadrumo.domain.transactions._enums.BusinessClassification`.
+:class:`~cadrumo.domain.transactions.enums.BusinessClassification`.
 Rule IDs are content-addressed (SHA-256 of the rule's key fields) so
 creation is idempotent: adding the same pattern + classification pair
 twice produces the same rule_id and the repository overwrites the prior
@@ -21,7 +21,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest
 from ...core.logging import get_logger
 from ...core.time import UtcInstant, now
-from ._enums import BusinessClassification
+from .enums import BusinessClassification
 from .errors import ClassificationRuleError
 
 _logger = get_logger(__name__)

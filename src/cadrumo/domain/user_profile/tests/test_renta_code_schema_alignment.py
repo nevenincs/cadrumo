@@ -20,7 +20,7 @@ import pytest
 
 from ....core import RentaDeclaracionType
 from ....domain import contribuyente
-from ....domain.contribuyente import RentaMaritalStatus, RentaSexCode
+from ....domain.contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError
 from ..loader import load_user_profile_schema
 

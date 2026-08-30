@@ -22,22 +22,23 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.contribuyente._ccaa
-   cadrumo.domain.contribuyente._constants
-   cadrumo.domain.contribuyente._deduccion_maternidad
-   cadrumo.domain.contribuyente._descendant
-   cadrumo.domain.contribuyente._descendant_facts
-   cadrumo.domain.contribuyente._descendant_guarderia
-   cadrumo.domain.contribuyente._descendant_madrid
-   cadrumo.domain.contribuyente._descendant_maternity
-   cadrumo.domain.contribuyente._descendant_record
-   cadrumo.domain.contribuyente._family_profile
-   cadrumo.domain.contribuyente._family_types
-   cadrumo.domain.contribuyente._guarderia_mensual
-   cadrumo.domain.contribuyente._keys
-   cadrumo.domain.contribuyente._marriage_facts
-   cadrumo.domain.contribuyente._meses_trabajo
-   cadrumo.domain.contribuyente._normalise
-   cadrumo.domain.contribuyente._renta_codes
+   cadrumo.domain.contribuyente.ccaa
+   cadrumo.domain.contribuyente.constants
+   cadrumo.domain.contribuyente.deduccion_maternidad
+   cadrumo.domain.contribuyente.descendant
+   cadrumo.domain.contribuyente.descendant_facts
+   cadrumo.domain.contribuyente.descendant_guarderia
+   cadrumo.domain.contribuyente.descendant_madrid
+   cadrumo.domain.contribuyente.descendant_maternity
+   cadrumo.domain.contribuyente.descendant_record
    cadrumo.domain.contribuyente.errors
+   cadrumo.domain.contribuyente.family_profile
+   cadrumo.domain.contribuyente.family_types
+   cadrumo.domain.contribuyente.guarderia_mensual
+   cadrumo.domain.contribuyente.keys
+   cadrumo.domain.contribuyente.marriage_facts
+   cadrumo.domain.contribuyente.meses_trabajo
+   cadrumo.domain.contribuyente.normalise
+   cadrumo.domain.contribuyente.renta_codes
    cadrumo.domain.contribuyente.seguro_enfermedad_insured
+   cadrumo.domain.contribuyente.tax_residence

@@ -8,7 +8,7 @@ import pytest
 
 from ....core import Period
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
-from ....domain.deadlines import M303RegimeComposition
+from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register import ProrrataRegister
 from ...aggregation import (
     IvaLedgerAggregation,

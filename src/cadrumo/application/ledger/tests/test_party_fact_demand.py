@@ -28,19 +28,9 @@ from datetime import date
 import pytest
 
 from ....core import ClassifierInputSource, CounterpartyTaxablePersonStatus
-from ....domain.iva import (
-    CustomerTaxStatus,
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaInvoiceClassificationCriteria,
-    IvaRateKind,
-    IvaTerritorialScope,
-    PartyFact,
-    SupplyNature,
-    TransactionKind,
-    classify_iva,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, PartyFact, TransactionKind, classify_iva
+from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,

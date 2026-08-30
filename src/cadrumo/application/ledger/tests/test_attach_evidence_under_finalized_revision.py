@@ -28,13 +28,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.aggregation import row_fingerprint
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ....domain.transactions import (
-    BucketTransactionRef,
-    BusinessClassification,
-    TransactionDirection,
-    TransactionValidationError,
-    derive_transaction_id,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..actions_manual import (
     attach_manual_transaction_evidence,

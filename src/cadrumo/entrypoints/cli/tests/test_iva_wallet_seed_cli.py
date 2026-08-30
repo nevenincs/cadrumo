@@ -14,11 +14,8 @@ from ....application.calculations import (
     seed_iva_compensation_period,
 )
 from ....core import IvaCompensationStateProvenance, Period
-from ....domain.iva_compensation import (
-    IvaCompensationCarryForwardLot,
-    IvaCompensationExpiryReviewState,
-    IvaCompensationSeedConflictError,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
+from ....domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile

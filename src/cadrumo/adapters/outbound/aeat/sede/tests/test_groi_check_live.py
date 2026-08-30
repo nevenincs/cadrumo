@@ -26,7 +26,7 @@ import pytest
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
-from .._groi_check import (
+from ..groi_check import (
     GroiSedeDriver,
     extract_verdict_from_response_text,
 )

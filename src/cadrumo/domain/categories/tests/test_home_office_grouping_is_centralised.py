@@ -23,12 +23,12 @@ from pathlib import Path
 
 import pytest
 
-from .. import HOME_OFFICE_FAMILIES, SpendingCategoryFamily, home_office_categories
+from ..spending_category import HOME_OFFICE_FAMILIES, SpendingCategoryFamily, home_office_categories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The module allowed to name both families together: the canonical declaration.
-_CANONICAL_MODULE = "_spending_category.py"
+_CANONICAL_MODULE = "spending_category.py"
 
 #: Package root of the shipped application source.
 _SOURCE_ROOT = Path(__file__).resolve().parents[3]
@@ -118,7 +118,7 @@ def test_the_grouping_holds_exactly_the_two_dwelling_families() -> None:
 
 def test_the_category_set_is_the_union_of_both_families_members() -> None:
     """SUPPORTING. The derived helper must stay derived, not become a second list."""
-    from .._spending_category import categories_for_family
+    from ..spending_category import categories_for_family
 
     expected = {category for family in HOME_OFFICE_FAMILIES for category in categories_for_family(family)}
 

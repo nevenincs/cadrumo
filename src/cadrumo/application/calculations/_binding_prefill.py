@@ -69,7 +69,8 @@ from ...domain.calculations.registry.runtime_graph import expression_casilla_ref
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )

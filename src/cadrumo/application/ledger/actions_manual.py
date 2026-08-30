@@ -25,41 +25,25 @@ if TYPE_CHECKING:
 from ...core import BindingSourceKind, IvaDeductionEvidenceAuthority, Period
 from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
-from ...domain.attachments import link_attachment_transaction
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_history_write,
-)
-from ...domain.currency import CurrencyNormalizationService
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
+from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments.service import link_attachment_transaction
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.currency.service import CurrencyNormalizationService
+from ...domain.invoices.errors import InvoiceLinkError
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,
 )
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionEditLineageEntry,
-    TransactionEvidenceProvenanceEntry,
-    TransactionLifecycleLineageEntry,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    derive_import_fingerprint,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction, TransactionCatalogue, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry, derive_import_fingerprint
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )

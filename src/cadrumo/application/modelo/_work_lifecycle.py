@@ -57,7 +57,7 @@ from ...domain.buckets import (
     bucket_event_history_write as _bucket_event_write,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.contribuyente import CCAA
+from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos import (
     ModeloCode,
     WorkUnit,

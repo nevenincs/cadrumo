@@ -17,7 +17,7 @@ domain record that does not reach into profile state.
 The failure this guards is not hypothetical or operator-typo-shaped, and the
 mechanism has changed while the exposure has not. The reader no longer scans for
 the first checksum-valid Spanish tax id, and the field contract
-(:data:`~llm._invoice_field_contract.INVOICE_FIELD_CONTRACTS`) no longer asks only for "the supplier's
+(:data:`~llm.invoice_field_contract.INVOICE_FIELD_CONTRACTS`) no longer asks only for "the supplier's
 NIF/NIE/CIF": both parties are asked for separately, by role, precisely because
 one identifier plus a caller's assumption made the two indistinguishable.
 
@@ -50,7 +50,7 @@ See Also:
 from __future__ import annotations
 
 from ...core.identity import same_tax_identifier
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 
 __all__ = ["counterparty_is_the_filer"]
 

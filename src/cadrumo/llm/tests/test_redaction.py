@@ -25,7 +25,7 @@ import pytest
 
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
-from .._models import (
+from ..models import (
     CachedEntry,
     LLMProvider,
     LLMRequest,

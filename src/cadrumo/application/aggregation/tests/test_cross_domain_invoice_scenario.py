@@ -41,15 +41,10 @@ from ....core.aggregation import LedgerIncomeGrounding
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    load_retencion_actividades_rates,
-)
+from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.retencion_parameters import load_retencion_actividades_rates
 from .._iva_ledger import (
     IvaLedgerAggregationIssueReason,
     resolve_iva_ledger_binding_values,

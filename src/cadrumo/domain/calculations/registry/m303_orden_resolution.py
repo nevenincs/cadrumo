@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from ....core import Modelo
-from ....domain.iva import M303RegimenSimplificadoScopeDecision
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.period import period_end_date
 from ._supplementary_orden import supplementary_orden_authority
 from .errors import RegistryValidationError

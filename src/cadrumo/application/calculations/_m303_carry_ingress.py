@@ -22,14 +22,7 @@ from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    M303_COMPENSATION_GENERADA_CASILLA,
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_CASILLA,
-    M303CompensationAvailableDerivation,
-    derive_m303_compensation_available_from_casillas,
-)
+from ...domain.iva_compensation.filed_derivation import M303CompensationAvailableDerivation, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA, derive_m303_compensation_available_from_casillas
 
 if TYPE_CHECKING:
     from ..operator_actions import PreconditionVerdict

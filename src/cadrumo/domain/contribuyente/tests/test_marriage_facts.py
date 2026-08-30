@@ -17,7 +17,7 @@ from datetime import date
 
 import pytest
 
-from .._marriage_facts import (
+from ..marriage_facts import (
     marriage_date_from_facts,
     marriage_derived_facts,
     marriage_full_year,

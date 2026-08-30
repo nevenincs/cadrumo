@@ -47,19 +47,12 @@ from ..application.aggregation import (
 )
 from ..core import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
-from ..domain.currency import (
-    CurrencyNormalizationService,
-    CurrencyNormalizationStatus,
-    MonetaryAmount,
-)
-from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
-from ..domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ..domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
+from ..domain.currency.service import CurrencyNormalizationService
+from ..domain.iva.flow import IvaFlowDirection
+from ..domain.iva.schema import EUMemberState, IvaCategory
+from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..domain.transactions.models import Transaction, TransactionCatalogue
 from .ecb_stub import ecb_csv_fetch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -15,9 +15,7 @@ from typing import TYPE_CHECKING
 from ...core import Modelo as _Modelo
 from ...core.decimal import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
-from ...domain.deadlines import (
-    evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation,
-)
+from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
 from .calendar_models import (
     OverviewStatusReport,
 )
@@ -137,7 +135,7 @@ def overview_status_report_from_projection(
     the one :class:`application.state_projection.OperatorStateProjection`;
     it is not a second state-assembly path. Both the declaration-draft
     :class:`domain.filing.ModeloDraft` count and the
-    :class:`domain.modelos.WorkUnitCatalogue` count are carried
+    :class:`~WorkUnitCatalogue` count are carried
     distinctly.
 
     Args:

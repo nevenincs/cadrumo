@@ -18,7 +18,7 @@ from ....core import StorageCategory, storage_path
 from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root, read_db_at_rest_bytes
@@ -763,7 +763,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     """Profile creation normalizes lowercase ``iva.regime`` for the deadline engine."""
     from ....application.user_profile.projections import projection_for_taxpayer
     from ....application.workflow.persistence import workflow_state_repository
-    from ....domain.deadlines import IVARegime
+    from ....domain.deadlines.models import IVARegime
 
     bucket_id = register_cli_profile(
         label="operator",

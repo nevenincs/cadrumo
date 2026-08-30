@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import IvaCatalogueError, iva_catalogue_years, resolve_catalogue
-from .._catalogue import bundled_iva_catalogue, load_iva_catalogue
+from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, load_iva_catalogue, resolve_catalogue
+from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

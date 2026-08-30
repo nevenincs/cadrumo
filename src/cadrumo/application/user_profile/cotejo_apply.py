@@ -37,14 +37,14 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.buckets import BucketEventType
+from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .capsule_record import ProfileRecordConflictError
 from .profile_record_repository import ProfileRecordRepository
 from .validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
-    from ...domain.censo import CertificadoSituacionCensal
+    from ...domain.censo.certificado import CertificadoSituacionCensal
     from ...domain.user_profile.values import UserProfileRecord
     from .censal_operation import CensalReviewedOperand
 

@@ -46,21 +46,11 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.legal import verify_legal_catalogue
 from ...domain.calculations.registry.schema_references import LegalReference, RegistryExternalLink
-from ...domain.manuals import (
-    ManualCasillaReference,
-    ManualId,
-    ManualNotFoundError,
-    ManualPart,
-    ManualVerificationIssue,
-    ManualVerificationReport,
-    find_rules,
-    iter_sections,
-    load_manual,
-    verify_manual_dir,
-)
-from ...domain.manuals import (
-    load_catalogue as load_manual_catalogue,
-)
+from ...domain.manuals.errors import ManualNotFoundError
+from ...domain.manuals.loader import find_rules, iter_sections, load_manual
+from ...domain.manuals.schema import ManualCasillaReference, ManualId, ManualPart
+from ...domain.manuals.verify import ManualVerificationIssue, ManualVerificationReport, verify_manual_dir
+from ...domain.manuals.loader import load_catalogue as load_manual_catalogue
 from ._corpus_manual_helpers import load_manual_manifest as _load_manual_manifest
 from ._corpus_manual_helpers import (
     manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,

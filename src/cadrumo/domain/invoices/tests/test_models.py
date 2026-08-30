@@ -9,22 +9,24 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.identity import IdentityError
-from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
-from .._enums import (
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.oss import OssIossRegime
+from ...iva.schema import EUMemberState, IvaRateKind
+from ..enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
     iva_rate_slot_percentage,
     numeric_iva_rate_percentages,
 )
-from .._models import (
+from ..errors import InvoiceValidationError
+from ..models import (
     Invoice,
     InvoiceCatalogue,
     InvoiceLine,
     _normalise_invoice_monetary_fields,
     derive_invoice_id,
 )
-from ..errors import InvoiceValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -193,7 +195,7 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     (the historical persistence shape) into IvaCategory members and
     serializes them back to their string values, so existing
     serialization round-trips remain valid."""
-    from ...iva import IvaCategory
+    from ...iva.schema import IvaCategory
 
     invoice = _valid_invoice()
     assert invoice.iva_category is None
@@ -329,7 +331,8 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
     for Spain at a given date.
     """
-    from ...iva import EUMemberState, IvaRateKind, lookup_rate
+    from ...iva.lookup import lookup_rate
+    from ...iva.schema import EUMemberState, IvaRateKind
 
     sample_date = date(2025, 6, 15)
 

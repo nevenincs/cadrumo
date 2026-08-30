@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .....domain.deadlines import shift_deadline
+from .....domain.deadlines.festivos import shift_deadline
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..legal import verify_legal_catalogue

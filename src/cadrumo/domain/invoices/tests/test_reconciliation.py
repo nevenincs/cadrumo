@@ -13,18 +13,13 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.invoices import link_invoice_transaction_repositories
 from ....core import LinkInconsistencyDirection
-from ...iva import InvoiceKind
-from ...transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
-from .._enums import IvaRate, PaymentStatus
-from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._service import (
+from ...iva.classification import InvoiceKind
+from ...transactions.enums import TransactionDirection
+from ...transactions.models import Transaction, TransactionCatalogue
+from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..enums import IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..service import (
     suggest_reconciliations,
     verify_link_consistency,
 )

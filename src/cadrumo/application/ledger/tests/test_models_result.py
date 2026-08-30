@@ -10,14 +10,9 @@ import pytest
 
 from ....core.external_constants import CLASSIFIED_BY_MANUAL
 from ....core.external_constants import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_CORE
-from ....domain.transactions import (
-    BucketTransactionRef,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import BucketTransactionRef, Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..models import ManualLedgerTransactionResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

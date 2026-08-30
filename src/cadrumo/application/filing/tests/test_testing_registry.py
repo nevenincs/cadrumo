@@ -8,11 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.filing import (
-    ModeloBuilderError,
-    ModeloDraft,
-    ModeloValueKind,
-)
+from ....domain.filing.errors import ModeloBuilderError
+from ....domain.filing.schema import ModeloDraft, ModeloValueKind
 from ....domain.submission import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 

@@ -10,9 +10,9 @@ import pytest
 from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ....tests.fixtures.settings import EnvFileFreeSettings
-from .. import ManualId, ManualPart, verify_manual_dir
 from ..errors import ManualNotFoundError, ManualReviewRequiredError
-from ..verify import raise_on_errors
+from ..schema import ManualId, ManualPart
+from ..verify import raise_on_errors, verify_manual_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

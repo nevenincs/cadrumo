@@ -53,17 +53,11 @@ from .....application.workflow.state_models import DeclaracionPointer, WorkflowS
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....domain.attachments import AttachmentNotFoundError
-from .....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryCatalogue,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from .....domain.attachments.errors import AttachmentNotFoundError
+from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.categories import SpendingCategory
+from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from .....domain.filing import (
@@ -78,26 +72,15 @@ from .....domain.filing import (
     registry_schema_version,
 )
 from .....domain.identifiers import ModeloIdentifier
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
-from .....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    VerificationReportCatalogue,
-    WorkUnit,
-    WorkUnitCatalogue,
-    WorkUnitState,
-    derive_filing_record_id,
-    derive_verification_report_id,
-    derive_work_unit_id,
-)
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from .....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, VerificationReportCatalogue, derive_verification_report_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -111,16 +94,11 @@ from .....domain.submission import (
     SubmissionStatus,
     make_submission_id,
 )
-from .....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.usage_ratios import UsageRatioProfile
-from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -131,14 +109,10 @@ from .....tests.aeat_literal_fixtures import (
 )
 from .....tests.master_key import EphemeralMasterKeyProvider
 from ....outbound.aeat.auth import session_store as _session_store
-from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
-from ....outbound.google import (
-    REQUIRED_SCOPES,
-    DriveConfig,
-    OAuthClient,
-    OAuthMetadata,
-    OAuthToken,
-)
+from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
+from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
+from ....outbound.google.records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken, REQUIRED_SCOPES
 from ....outbound.google import session_store as google_session_store
 from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets

@@ -42,7 +42,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...domain.modelos import ModeloCode, WorkUnitCatalogue
-from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..modelo.work_addressing import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
@@ -56,7 +56,8 @@ if TYPE_CHECKING:
     from ...application.ledger.evidence import PurchaseInvoiceEvidence
     from ...application.ledger.preflight import LedgerPreflightReport
     from ...domain.invoices import InvoiceCatalogue
-    from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
+    from ...domain.transactions.models import Transaction
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 class DataPrepStepState(StrEnum):

@@ -7,22 +7,23 @@ from typing import cast
 
 import pytest
 
-from .. import (
-    REGIME_PERIODICITY,
+from ..classification import (
     CustomerTaxStatus,
-    DeductionScope,
-    EUMemberState,
     InvoiceKind,
-    IossFilerRole,
-    IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
-    OssIossRegime,
-    RegimePeriodicity,
     TransactionKind,
     classify_iva,
+)
+from ..oss import (
+    REGIME_PERIODICITY,
+    DeductionScope,
+    IossFilerRole,
+    OssIossRegime,
+    RegimePeriodicity,
     regime_allows_deduction,
 )
+from ..schema import EUMemberState, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

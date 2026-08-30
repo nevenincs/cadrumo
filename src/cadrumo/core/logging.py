@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Any, overload, override
 from pydantic import ConfigDict, RootModel
 
 if TYPE_CHECKING:
-    from .observability import RunContextInfo
+    from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
 from .redaction import ALWAYS_REDACT_KEY_TERMS, redact_for_log
 
@@ -408,7 +408,7 @@ class SecretScrubbingFilter(logging.Filter):
 def _install_run_context_record_factory() -> None:
     """Install a :class:`LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
-    The contextvars live in :mod:`cadrumo.core.observability._context`. They are
+    The contextvars live in :mod:`cadrumo.core.observability.context`. They are
     imported lazily inside the closure so this function never triggers
     a partial import of :mod:`cadrumo.core.observability` (which would create a
     cycle through :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
@@ -444,10 +444,7 @@ def _install_run_context_record_factory() -> None:
         nonlocal cached_vars
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            from .observability import (
-                RUN_CONTEXT_VAR,
-                STEP_CONTEXT_VAR,
-            )
+            from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 
             cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
         run_var, step_var = cached_vars
@@ -465,7 +462,7 @@ class _DropRunEventFilter(logging.Filter):
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
     diet — they're already persisted to ``events.jsonl`` via
-    :class:`~cadrumo.core.observability._sink.JsonlRunSink`. Echoing them
+    :class:`~cadrumo.core.observability.sink.JsonlRunSink`. Echoing them
     on stderr as well would spam the console with one
     ``run.event NAVIGATION`` line per step; suppressing them here
     removes the noise while leaving the record intact for any other
@@ -792,7 +789,7 @@ def attach_run_sink(sink: logging.Handler) -> None:
 
     Args:
         sink: The :class:`logging.Handler` (typically
-            :class:`cadrumo.core.observability._sink.JsonlRunSink`) to
+            :class:`cadrumo.core.observability.sink.JsonlRunSink`) to
             attach to the root logger.
 
     The sink is a diagnostic observability target. It receives redacted log

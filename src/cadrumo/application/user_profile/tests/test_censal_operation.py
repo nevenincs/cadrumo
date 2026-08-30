@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import parse_censal_datos
+from ....adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....tests import FIXTURES_DIR
 from ...operations.interactions import (
     OperationApplyResponse,

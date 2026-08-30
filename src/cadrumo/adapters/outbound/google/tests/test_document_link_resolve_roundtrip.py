@@ -28,14 +28,9 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....domain.attachments import (
-    AttachmentBytesContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    AttachmentValidationError,
-    add_attachment,
-)
+from .....domain.attachments.enums import AttachmentKind, AttachmentSource
+from .....domain.attachments.errors import AttachmentValidationError
+from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStoragePermissionError
 from ..document_link_resolver import resolve_document_link

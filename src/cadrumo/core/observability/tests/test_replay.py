@@ -28,18 +28,11 @@ from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory
 from ...config import Settings, override_settings
 from ...directory_scan import scan_directory
-from .. import (
-    AeatCorpusDriftError,
-    ArgumentRecord,
-    ArgumentSource,
-    CadrumoObservabilityError,
-    RunOutcome,
-    RunTrace,
-    compute_corpus_sha256,
-    replay_run,
-    save_trace,
-)
-from .._replay import _argv_from_arguments
+from ..errors import AeatCorpusDriftError, CadrumoObservabilityError
+from ..fingerprint import compute_corpus_sha256
+from ..models import ArgumentRecord, ArgumentSource, RunOutcome, RunTrace
+from ..replay import _argv_from_arguments, replay_run
+from ..store import save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -117,13 +110,9 @@ class TestReplayRun:
     def test_replay_of_propagated_via_env_var(self, tmp_path: Path) -> None:
         """The re-entered run context must label its trace with ``replay_of``."""
         from ...config import Settings as _Settings
-        from .. import (
-            compute_corpus_sha256 as _compute_corpus_sha256,
-        )
-        from .. import (
-            run_context,
-        )
-        from .._store import load_trace
+        from ..context import run_context
+        from ..fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
+        from ..store import load_trace
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             current_corpus = _compute_corpus_sha256(_Settings())
@@ -157,8 +146,8 @@ class TestReplayRun:
 
     def test_replay_of_ignored_when_env_is_non_canonical(self, tmp_path: Path) -> None:
         """Legacy sentinel ``"1"`` must not pollute the trace."""
-        from .. import run_context
-        from .._store import load_trace
+        from ..context import run_context
+        from ..store import load_trace
 
         with override_settings(
             cadrumo_replay_active="1",
@@ -177,7 +166,7 @@ class TestReplayRun:
         full replay pipeline; replay-path coverage for the denylist-hit
         case is provided by :meth:`test_refuses_replay_of_removed_write_flag_recording`.
         """
-        from .._replay import _argument_uses_removed_write_flag
+        from ..replay import _argument_uses_removed_write_flag
 
         safe = ArgumentRecord(name="no-dry-run", value="False", source=ArgumentSource.FLAG)
         assert _argument_uses_removed_write_flag(safe) is False
@@ -335,7 +324,7 @@ class TestReplayActiveEnvVarCanonicity:
     """Assert that REPLAY_ACTIVE_ENV_VAR has exactly one definition site.
 
     The literal string ``"CADRUMO_REPLAY_ACTIVE"`` must appear only in
-    ``_replay.py`` at line 26 (the canonical assignment).  Any duplicate
+    ``replay.py`` at line 26 (the canonical assignment).  Any duplicate
     definition in another module is an authoring error that this test
     catches at the source level.
     """
@@ -357,13 +346,13 @@ class TestReplayActiveEnvVarCanonicity:
 
         assert hits, "literal not found anywhere — canonical definition missing"
 
-        # Exactly one hit, and it must be the canonical assignment in _replay.py.
+        # Exactly one hit, and it must be the canonical assignment in replay.py.
         assert len(hits) == 1, (
             f"Expected exactly one occurrence of the literal across non-test package files; "
             f"found {len(hits)}:\n" + "\n".join(f"  {f.name}:{ln}  {src}" for f, ln, src in hits)
         )
         canonical_file, _canonical_line, canonical_source = hits[0]
-        assert canonical_file.name == "_replay.py", (
-            f"Canonical definition must be in _replay.py, found in {canonical_file.name}"
+        assert canonical_file.name == "replay.py", (
+            f"Canonical definition must be in replay.py, found in {canonical_file.name}"
         )
         assert canonical_source.startswith("REPLAY_ACTIVE_ENV_VAR = ")

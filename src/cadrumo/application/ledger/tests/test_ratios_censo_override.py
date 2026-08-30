@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ..ratios import (
     RatiosCensoOverrideWarning,
     censo_business_pct_for,

@@ -54,7 +54,7 @@ from ...domain.modelos import (
 )
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.
 _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (

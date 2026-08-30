@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,

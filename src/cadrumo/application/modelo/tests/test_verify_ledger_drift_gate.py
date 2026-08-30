@@ -32,7 +32,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.aggregation import row_fingerprint
 from ....domain.modelos import ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ....domain.transactions import BusinessClassification, Transaction
+from ....domain.transactions.enums import BusinessClassification
+from ....domain.transactions.models import Transaction
 from ....tests.env_scope import ready_clave_settings
 from ....tests.secure_sql import isolated_runtime_profile
 from ...ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields

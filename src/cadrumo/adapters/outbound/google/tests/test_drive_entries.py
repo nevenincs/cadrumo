@@ -1,7 +1,7 @@
 """Contract tests for the shared Drive owned-entry lookup policy.
 
 The folder and spreadsheet lookups in
-:mod:`~adapters.outbound.google._calc_sheets_apply` were two hand-copies of
+:mod:`~adapters.outbound.google.calc_sheets_apply` were two hand-copies of
 one ownership decision, and neither validated that an adopted entry carried a
 usable ``id``. Both defects are exercised here against a real in-process
 Drive double that records the queries it receives, so the assertions run on
@@ -25,7 +25,6 @@ import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....outbound.storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
-from .._calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from .._drive_entries import (
     OWNERSHIP_KEY,
     OWNERSHIP_VALUE,
@@ -33,6 +32,7 @@ from .._drive_entries import (
     escape_drive_query_name,
     require_drive_entry_id,
 )
+from ..calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

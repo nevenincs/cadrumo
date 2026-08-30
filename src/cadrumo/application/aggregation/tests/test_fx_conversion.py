@@ -43,10 +43,9 @@ from ....adapters.outbound.fx import EcbReferenceRateProvider
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.currency import (
-    CurrencyNormalizationService,
-)
-from ....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
+from ....domain.currency.service import CurrencyNormalizationService
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.ecb_stub import ecb_csv_fetch
 from ...ledger.actions_import import import_ledger_transactions
 from .._currency_predicates import is_non_eur_without_conversion
@@ -135,7 +134,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
     populated, meaning the aggregation gate will not emit UNSUPPORTED_CURRENCY.
     """
     raw = _usd_raw("usd-gate-001")
-    from ....domain.transactions import Transaction
+    from ....domain.transactions.models import Transaction
 
     tx = Transaction.model_validate(
         {
@@ -155,7 +154,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
 def test_usd_transaction_without_conversion_is_flagged() -> None:
     """A USD transaction with no value_in_eur is flagged by the gate predicate."""
     raw = _usd_raw("usd-gate-002")
-    from ....domain.transactions import Transaction
+    from ....domain.transactions.models import Transaction
 
     tx = Transaction.model_validate(
         {

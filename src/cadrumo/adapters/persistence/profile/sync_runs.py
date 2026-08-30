@@ -11,7 +11,8 @@ from ....application.storage.sync_runs import (
     SyncRunRecordRepositoryProtocol,
     sync_run_record_key,
 )
-from ....domain.buckets import BucketEvent, bucket_event_history_write
+from ....domain.buckets.event import BucketEvent
+from ....domain.buckets.event_repository import bucket_event_history_write
 from ..storage import SYNC_RUN_RECORDS_NAMESPACE, SecureBoundRepository, SensitivityClass
 from .buckets import BucketEventHistoryRepository
 

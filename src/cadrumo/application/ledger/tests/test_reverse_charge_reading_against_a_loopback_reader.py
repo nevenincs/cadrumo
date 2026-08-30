@@ -43,11 +43,8 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldOrigin
 from ....core.config import load_settings, override_settings
-from ....domain.iva import (
-    IvaCategory,
-    LegendDerivationOutcome,
-    derive_category_from_regime_legend,
-)
+from ....domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
+from ....domain.iva.schema import IvaCategory
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,

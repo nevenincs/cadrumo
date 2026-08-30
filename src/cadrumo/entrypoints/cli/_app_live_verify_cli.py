@@ -163,7 +163,7 @@ def verify_nif_iva(
     records the verdict through :class:`VerifyService`, and returns
     :class:`VerifyNifIvaResult`.
     """
-    from ...adapters.outbound.aeat.sede import NifIvaCheckSedeDriver
+    from ...adapters.outbound.aeat.sede.nif_iva_check import NifIvaCheckSedeDriver
     from ...application.live.verify import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
@@ -204,7 +204,7 @@ def verify_tgvi(
     gate, records the verdict through :class:`VerifyService`, and returns
     :class:`VerifyTgviResult`.
     """
-    from ...adapters.outbound.aeat.sede import GroiSedeDriver
+    from ...adapters.outbound.aeat.sede.groi_check import GroiSedeDriver
     from ...application.live.verify import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings

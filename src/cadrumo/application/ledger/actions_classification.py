@@ -28,7 +28,8 @@ if TYPE_CHECKING:
 
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...domain.transactions import LedgerClassificationRule, TransactionCatalogue
+    from ...domain.transactions.classification_rule import LedgerClassificationRule
+    from ...domain.transactions.models import TransactionCatalogue
     from .models import LedgerRemovalBlocker
     from .rule_repository import LedgerClassificationRuleRepositoryProtocol
 
@@ -42,14 +43,10 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    is_classified,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .actions_common import (
     blockers_by_source_transaction_id,
     normalise_timestamp,
@@ -414,7 +411,7 @@ def add_classification_rule(
     regex, as validated by
     :class:`~domain.transactions.LedgerClassificationRule`.
     """
-    from ...domain.transactions import LedgerClassificationRule
+    from ...domain.transactions.classification_rule import LedgerClassificationRule
     from .rule_repository import ledger_classification_rule_repository
 
     repo = (

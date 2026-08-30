@@ -19,7 +19,7 @@ from datetime import date
 
 import pytest
 
-from .._descendant import DescendantInfo
+from ..descendant import DescendantInfo
 from ..seguro_enfermedad_insured import (
     DISCAPACIDAD_MINIMUM_GRADE,
     count_seguro_enfermedad_insured,

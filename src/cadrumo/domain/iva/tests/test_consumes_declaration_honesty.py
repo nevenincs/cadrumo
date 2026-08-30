@@ -53,8 +53,8 @@ from typing import Any
 
 import pytest
 
-from .. import _classification
-from .._classification import (
+from .. import classification
+from ..classification import (
     EUMemberState,
     IvaInvoiceClassificationCriteria,
     PartyFact,
@@ -96,7 +96,7 @@ def _criteria_attributes_read(
     predicate: Callable[..., Any],
     *,
     seen: frozenset[str] = frozenset(),
-    module: ModuleType = _classification,
+    module: ModuleType = classification,
 ) -> set[str]:
     """Return the criteria attributes ``predicate`` reads, following its helpers.
 
@@ -165,7 +165,7 @@ def _criteria_attributes_read(
     return found
 
 
-def _facts_read_by(predicate: Callable[..., Any], *, module: ModuleType = _classification) -> set[PartyFact]:
+def _facts_read_by(predicate: Callable[..., Any], *, module: ModuleType = classification) -> set[PartyFact]:
     """Return the party facts a predicate's reads amount to.
 
     Takes ``module`` for the same reason the extractor does, and threading it
@@ -204,8 +204,8 @@ def test_the_fact_mapping_covers_the_criteria_model_exactly() -> None:
 
 def test_the_rule_table_is_populated() -> None:
     """Non-vacuity: the comparison below is over nothing if the table is empty."""
-    assert len(_classification._CLASSIFICATION_RULES) >= _MINIMUM_RULES, (
-        f"the rule table exposes only {len(_classification._CLASSIFICATION_RULES)} row(s), below the "
+    assert len(classification._CLASSIFICATION_RULES) >= _MINIMUM_RULES, (
+        f"the rule table exposes only {len(classification._CLASSIFICATION_RULES)} row(s), below the "
         f"floor of {_MINIMUM_RULES}; the extraction is looking at the wrong object rather than at a "
         f"table that shrank"
     )
@@ -218,7 +218,7 @@ def test_every_rule_reads_at_least_one_criteria_attribute() -> None:
     against an empty declaration and pass while asserting nothing about itself.
     This makes that state an error rather than a silent pass.
     """
-    for rule in _classification._CLASSIFICATION_RULES:
+    for rule in classification._CLASSIFICATION_RULES:
         try:
             attributes = _criteria_attributes_read(rule.predicate)
         except _PredicateUnreadableError as exc:
@@ -230,7 +230,7 @@ def test_every_rule_declares_exactly_the_facts_its_predicate_reads() -> None:
     """Both directions at once: nothing declared unread, nothing read undeclared."""
     undeclared: list[str] = []
     unread: list[str] = []
-    for rule in _classification._CLASSIFICATION_RULES:
+    for rule in classification._CLASSIFICATION_RULES:
         try:
             actual = _facts_read_by(rule.predicate)
         except _PredicateUnreadableError as exc:
@@ -273,7 +273,7 @@ def test_the_identification_reads_are_actually_reached() -> None:
     """
     identifying = {
         rule.rule_id
-        for rule in _classification._CLASSIFICATION_RULES
+        for rule in classification._CLASSIFICATION_RULES
         if PartyFact.IVA_IDENTIFICATION_STATE in _facts_read_by(rule.predicate)
     }
     assert identifying, (

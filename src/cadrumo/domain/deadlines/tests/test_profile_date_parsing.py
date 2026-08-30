@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
-from .. import ProfileError
-from .. import _profiles as profiles
+from .. import profiles as profiles
+from ..errors import ProfileError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

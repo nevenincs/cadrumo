@@ -30,7 +30,7 @@ from ....core import (
     Period,
 )
 from ....core.errors import SiteHealthState
-from ....domain.deadlines import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
+from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions import (
     ActionArgumentBinding,

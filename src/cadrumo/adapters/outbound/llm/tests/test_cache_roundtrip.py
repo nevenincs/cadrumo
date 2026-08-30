@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .....llm import LLMProvider, LLMRequest, LLMResponse
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from .._cache import LLMCache
 
@@ -156,7 +156,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from .....llm import LLMCacheError
+    from .....llm.errors import LLMCacheError
     from ....persistence.storage.sql import SecureObjectRow
     from .._cache import _CACHE_NAMESPACE
 

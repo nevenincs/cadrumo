@@ -29,7 +29,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core import ClassifierInputSource
-from ....domain.iva import IvaTerritorialScope, classify_iva
+from ....domain.iva.classification import IvaTerritorialScope, classify_iva
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -442,7 +442,8 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
     """
     from datetime import date
 
-    from ....domain.iva import InvoiceKind, IvaCategory
+    from ....domain.iva.classification import InvoiceKind
+    from ....domain.iva.schema import IvaCategory
 
     filer_side = DeclaredFact[IvaTerritorialScope](
         value=IvaTerritorialScope.ES_MAINLAND,

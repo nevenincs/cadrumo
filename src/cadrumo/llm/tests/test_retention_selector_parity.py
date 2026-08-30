@@ -29,8 +29,8 @@ from decimal import Decimal
 import pytest
 
 from ...adapters.outbound.llm import LLMRunRecord
-from .._models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
-from .._retention import select_retention_removal_keys
+from ..models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
+from ..retention import select_retention_removal_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

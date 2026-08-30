@@ -41,7 +41,7 @@ from .....core import OFX_EXTRA, MissingOptionalExtraError, optional_extra_avail
 from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
-from .....domain.transactions import SourceFormat
+from .....domain.transactions.raw_transaction import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialValidationError,

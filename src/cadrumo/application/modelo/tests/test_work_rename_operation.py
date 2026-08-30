@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import OperationCancellation, OperationDurability, OperationEffect
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,

@@ -17,16 +17,8 @@ from .....core import (
     M303RegimenSimplificadoModuleValue,
     Period,
 )
-from .....domain.iva import (
-    ActividadAgricolaSimplificado,
-    ActividadNoAgricolaSimplificado,
-    EntradaModuloSimplificado,
-    HechoActividadSimplificado,
-    IvaValidationError,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
+from .....domain.iva.errors import IvaValidationError
+from .....domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ....filing_evidence import FilingEvidenceReference
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError

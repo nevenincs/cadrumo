@@ -36,24 +36,12 @@ from ....core.aggregation import (
     LedgerIncomeGrounding,
 )
 from ....core.unit_proportion import UnitProportion
-from ...iva import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
-    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
-    EUMemberState,
-    InputClassification,
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-    is_deducible_flow,
-    validate_iva_deduction_fact,
-)
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...iva.flow import IvaFlowDirection, is_deducible_flow
+from ...iva.oss import OssIossRegime
+from ...iva.prorrata import InputClassification
+from ...iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind, M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES
 from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     resolve_ledger_family_binding_values,

@@ -27,7 +27,8 @@ __all__ = ["pdf_file"]
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....domain.transactions import TransactionDirection, TransactionValidationError
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.errors import TransactionValidationError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..actions_manual import (
     attach_manual_transaction_evidence,
@@ -177,8 +178,8 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
     # evidence reference under the evidence/invoice store split; attach must
     # refuse it. The two id spaces stay distinct even though both are
     # content-addressed 64-hex digests, so the refusal cannot lean on shape.
-    from ....domain.invoices import derive_invoice_id
-    from ....domain.iva import InvoiceKind
+    from ....domain.invoices.models import derive_invoice_id
+    from ....domain.iva.classification import InvoiceKind
 
     invoice_id = derive_invoice_id(
         kind=InvoiceKind.RECEIVED,

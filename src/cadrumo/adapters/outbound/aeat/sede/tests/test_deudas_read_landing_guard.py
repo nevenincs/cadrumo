@@ -38,9 +38,8 @@ from ......tests.aeat_literal_fixtures import (
     DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES,
     aeat_url,
 )
-from .. import assert_deudas_landing, deudas_read_path_prefixes
 from .._adapter_utils import assert_read_landing
-from ..deudas import _READ_GUARD_POLICY
+from ..deudas import _READ_GUARD_POLICY, assert_deudas_landing, deudas_read_path_prefixes
 from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
