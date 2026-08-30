@@ -47,7 +47,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo, read_toml
+from ...core import read_toml
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
 from .errors import DeadlineValidationError
 

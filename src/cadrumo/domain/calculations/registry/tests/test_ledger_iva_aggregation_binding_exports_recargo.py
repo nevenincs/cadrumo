@@ -10,7 +10,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
+from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaRateKind
 from ..authority import bundled_authority

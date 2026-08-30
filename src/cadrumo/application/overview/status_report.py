@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
-from ...core import Modelo as _Modelo
+from ...core.modelo import Modelo as _Modelo
 from ...core.decimal import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
 from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation

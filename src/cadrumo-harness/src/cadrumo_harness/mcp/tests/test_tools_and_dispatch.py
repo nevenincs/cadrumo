@@ -329,7 +329,7 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
     clave is added to the enum, and covering all three writing verbs stops one of
     them regressing to a hand-parsed ``str`` while its siblings stay typed.
     """
-    from cadrumo.core import IntracomOperationType
+    from cadrumo.core.aggregation import IntracomOperationType
 
     expected = [operation.value for operation in IntracomOperationType]
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
@@ -420,7 +420,7 @@ def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
     trading an actionable answer for an unhinted one. The exemption is asserted to
     still be bare, so silently pinning it later also reds this gate.
     """
-    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
+    from cadrumo.core.modelo import Modelo, NON_REGISTRY_MODELOS
 
     expected = [modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]
     assert NON_REGISTRY_MODELOS, "the exclusion must exclude something, or this gate is vacuous"

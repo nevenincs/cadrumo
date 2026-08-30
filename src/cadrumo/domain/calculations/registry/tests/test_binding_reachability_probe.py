@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ..ledger_bindings import (

@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...core import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.iva_compensation.filed_derivation import M303_COMPENSATION_APLICADA_CASILLA, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA
 
 __all__ = [

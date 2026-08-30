@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import Period
+from ......core.period import Period
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from ..errors import SedeValidationError

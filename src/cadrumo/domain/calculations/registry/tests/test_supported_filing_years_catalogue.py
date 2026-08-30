@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .....core.resources import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError

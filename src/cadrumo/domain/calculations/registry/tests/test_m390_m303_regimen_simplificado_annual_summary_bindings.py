@@ -6,7 +6,9 @@ from typing import get_args
 
 import pytest
 
-from .....core import BindingSourceKind, CasillaId, FilingProjectionRef
+from .....core import FilingProjectionRef
+from .....core.casilla_id import CasillaId
+from .....core.aggregation import BindingSourceKind
 from .....domain.modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 from ..authority import bundled_authority
 from ..bindings import (

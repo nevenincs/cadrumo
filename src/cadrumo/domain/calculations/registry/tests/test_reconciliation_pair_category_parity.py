@@ -35,7 +35,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import selector_as_dict
 from ..schema import ModeloRevision
 from ._registry_schema_support import _committed_registry_tree

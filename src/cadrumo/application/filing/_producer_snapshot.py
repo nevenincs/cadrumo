@@ -15,7 +15,6 @@ from typing import Annotated, ClassVar, Final, Literal
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from ...core import (
-    STRICT_FROZEN_CONFIG,
     M390ActivityField,
     M390DifferentiatedDeductionProjectionField,
     M390ProrrataActivityProjectionField,
@@ -24,15 +23,15 @@ from ...core import (
     M390RegimenSimplificadoModuleValue,
     M390RepresentativeField,
     M390RepresentativeKind,
-    Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
-    StandardPeriodCode,
     result_disposition_is_refund,
 )
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period, StandardPeriodCode
 from ...core.identity import SubjectTaxId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,

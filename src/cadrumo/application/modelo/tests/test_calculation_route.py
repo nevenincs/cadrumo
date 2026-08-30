@@ -6,7 +6,8 @@ from dataclasses import replace
 
 import pytest
 
-from ....core import BindingSourceKind, ModeloCalculationRouteId
+from ....core import ModeloCalculationRouteId
+from ....core.aggregation import BindingSourceKind
 from ...aggregation import AggregationValidationError, BindingSourceDisposition
 from ...calculations import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculation_route import (

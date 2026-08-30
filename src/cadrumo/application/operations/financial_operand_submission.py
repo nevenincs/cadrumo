@@ -32,7 +32,7 @@ from __future__ import annotations
 from threading import RLock
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core import content_hash_hex
+from ...core.hashing import content_hash_hex
 from .financial_operand import (
     OperationFinancialOperandRefusalReason,
     OperationTransientFinancialOperandAccess,

@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from .._modelo_bindings import _INVOICE_LEDGER_SCREEN_BINDINGS
 

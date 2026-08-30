@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from ._modelo_fixtures import active_cli_profile_fixture
 

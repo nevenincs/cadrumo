@@ -41,7 +41,7 @@ from pydantic import ValidationError
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
-from ....core import IntracomOperationType, TravelAgencyMediationType
+from ....core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime

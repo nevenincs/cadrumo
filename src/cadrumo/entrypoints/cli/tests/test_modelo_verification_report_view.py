@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -106,7 +106,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         VerificationFindingPreconditionProjection,
         build_verification_precondition_failure,
     )
-    from ....core import ActionEvidenceProvenance
+    from ....core.operator_action_enums import ActionEvidenceProvenance
     from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._action_rendering import resolved_precondition_action_json_cell
     from .._modelo_rendering import (

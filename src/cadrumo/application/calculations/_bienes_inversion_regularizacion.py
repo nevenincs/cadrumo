@@ -26,7 +26,10 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionRecordError,

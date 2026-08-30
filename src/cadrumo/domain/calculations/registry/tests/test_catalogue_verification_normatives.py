@@ -7,7 +7,8 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade, normalise_corpus_text
+from .....core import RegistryAuthorityGrade
+from .....core.corpus_text import normalise_corpus_text
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT

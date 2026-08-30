@@ -44,8 +44,10 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never, override
 
-from ...core import ActionEvidenceProvenance, CasillaId, Modelo
-from ...core import Period as _Period
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.casilla_id import CasillaId
+from ...core.period import Period as _Period
 from ...core.identity import same_tax_identifier
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements

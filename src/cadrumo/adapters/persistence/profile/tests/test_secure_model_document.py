@@ -13,7 +13,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from .....adapters.persistence.storage import PROFILE_ASSETS_LEDGER_NAMESPACE
-from .....core import ABSENT_SECURE_OBJECT_REVISION_ID
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.contribuyente.assets import AssetClass, AssetRecord, AssetsLedgerDocument
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .._secure_model_document import ProfileBareModelSecurePersistence

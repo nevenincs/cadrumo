@@ -25,11 +25,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
-    OUT_OF_SCOPE_OBLIGATIONS,
-    UNMODELED_OBLIGATIONS,
-    Modelo,
-)
+from ....core.modelo import Modelo, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS
 from ....domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm, TaxpayerProfile
 from ....tests.attribute_scope import scoped_attribute

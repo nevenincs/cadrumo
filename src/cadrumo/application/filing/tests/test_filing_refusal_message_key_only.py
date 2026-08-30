@@ -42,7 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.directory_scan import scan_directory
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....domain.filing.errors import FilingExportError, ModeloBuilderError, ModeloImportError

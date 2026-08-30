@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import get_args
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger

@@ -28,7 +28,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, StringConstraints
 
-from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 __all__ = [
     "CommandToken",

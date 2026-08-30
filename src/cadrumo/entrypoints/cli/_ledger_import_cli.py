@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.actions_import import LedgerProviderID, import_ledger_source
+from ...application.ledger.actions_import import LedgerProviderID, aggregate_ledger_import_results, import_ledger_source
 from ...application.ledger.models import (
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
@@ -211,7 +211,7 @@ def ledger_import(
         transaction_repository=context.transaction_repository,
         currency_normalizer=currency_normalizer,
     )
-    result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
+    result = file_results[0] if len(file_results) == 1 else aggregate_ledger_import_results(file_results)
     report = _import_report(result, verbose=verbose, verify=verify)
     from ._ledger_payloads import LedgerImportPayload
 
@@ -243,36 +243,6 @@ def _resolve_import_paths(path: Path) -> list[Path]:
             tr("cli.ledger.import.empty_directory", path=str(path)),
         )
     return files
-
-
-def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> LedgerSourceImportResult:
-    """Sum per-file import results into one envelope for a folder import."""
-    first = results[0]
-
-    def _concat(attr: str) -> tuple[Any, ...]:
-        out: list[Any] = []
-        for result in results:
-            out.extend(getattr(result, attr))
-        return tuple(out)
-
-    return LedgerSourceImportResult(
-        rows=sum(r.rows for r in results),
-        imported=sum(r.imported for r in results),
-        skipped=sum(r.skipped for r in results),
-        likely_duplicates=sum(r.likely_duplicates for r in results),
-        dry_run=first.dry_run,
-        verify=first.verify,
-        period=first.period,
-        bucket_id=first.bucket_id,
-        import_batch_id=first.import_batch_id,
-        bucket_event_ids=_concat("bucket_event_ids"),
-        imported_transaction_refs=_concat("imported_transaction_refs"),
-        skipped_transaction_refs=_concat("skipped_transaction_refs"),
-        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
-        validation=first.validation,
-        source=first.source,
-        diagnostics=_concat("diagnostics"),
-    )
 
 
 def _empty_import_notice(result: LedgerSourceImportResult) -> tuple[str, Notice] | None:

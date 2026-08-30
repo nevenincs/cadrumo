@@ -49,7 +49,7 @@ from .....application.aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
 )
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from ..authority import bundled_authority
 from ..queries import RegistryQueryService
 from ..query_reports import RegistrySourceInventoryReport

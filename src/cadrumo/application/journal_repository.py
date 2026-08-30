@@ -27,13 +27,8 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core import (
-    HEX_PATTERN_64,
-    StorageCategory,
-    exclusive_file_lock,
-    is_link_like,
-    storage_location,
-)
+from ..core import HEX_PATTERN_64, StorageCategory, is_link_like, storage_location
+from ..core.locks import exclusive_file_lock
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.directory_scan import scan_directory
 from ..core.errors.hierarchy import CadrumoError

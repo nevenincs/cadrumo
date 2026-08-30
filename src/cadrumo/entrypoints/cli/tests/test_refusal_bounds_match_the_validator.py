@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.ids import BindingId
 from .._modelo_cli_support import _BINDING_MAX_LEN, _CASILLA_MAX_LEN
 

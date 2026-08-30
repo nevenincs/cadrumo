@@ -45,7 +45,7 @@ from typing import ClassVar
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CoreValidationError

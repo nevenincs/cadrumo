@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.renta import (

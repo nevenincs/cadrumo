@@ -59,7 +59,7 @@ import pytest
 
 from cadrumo.application.operator_surface.help import build_help_document, build_root_landing_report
 from cadrumo.application.operator_surface.help_models import HelpSurface
-from cadrumo.core import ActionEvidenceProvenance
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus

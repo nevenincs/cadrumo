@@ -31,7 +31,8 @@ from datetime import datetime
 from pydantic import Field
 
 from ...application.modelo.review_package import ReviewPackageActor
-from ...core import Hex64Str, Period
+from ...core import Hex64Str
+from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema

@@ -35,7 +35,7 @@ from ....application.modelo.work_lifecycle import (
     list_work_units,
     rename_work_unit,
 )
-from ....core import Period
+from ....core.period import Period
 from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile

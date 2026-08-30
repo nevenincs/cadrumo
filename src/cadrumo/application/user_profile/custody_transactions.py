@@ -18,7 +18,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.bucket_pointer import BucketPointer
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import (

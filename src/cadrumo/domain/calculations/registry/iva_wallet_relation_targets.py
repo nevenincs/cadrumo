@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from .ids import BindingId, ModeloId, RelationId, RevisionId
 from .schema_surfaces import RelationDefinition
 

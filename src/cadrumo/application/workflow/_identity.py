@@ -1,6 +1,6 @@
 """Stable identity helpers shared by workflow state and run contracts."""
 
-from ...core import Period
+from ...core.period import Period
 
 
 def period_identity_segment(period: Period) -> str:

@@ -6,7 +6,7 @@ The helpers inspect one
 only by declared ``casilla.id`` values.
 
 See Also:
-    :mod:`core._casilla_id`
+    :mod:`core.casilla_id`
         Shape validation for :class:`~core.CasillaId`.
     :mod:`domain.calculations.registry._formula_runtime_ops`
         Runtime input canonicalisation that rejects undeclared casillas through
@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 from .schema import ModeloRevision
 from .schema_surfaces import CasillaDefinition

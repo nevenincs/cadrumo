@@ -32,7 +32,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,

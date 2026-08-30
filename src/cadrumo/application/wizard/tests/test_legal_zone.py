@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection

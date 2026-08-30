@@ -45,7 +45,7 @@ from ..application.aggregation import (
     aggregate_iva_ledger_observations,
     aggregate_renta_income_ledger,
 )
-from ..core import Period
+from ..core.period import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ..domain.currency.service import CurrencyNormalizationService

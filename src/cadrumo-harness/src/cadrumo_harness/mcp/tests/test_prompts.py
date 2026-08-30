@@ -20,7 +20,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from cadrumo.core import accepted_filing_period_codes, accepted_filing_period_patterns
+from cadrumo.core.period import accepted_filing_period_codes, accepted_filing_period_patterns
 
 from ... import iter_skill_documents, operator_rules_text
 from .._completions import complete_prompt_argument

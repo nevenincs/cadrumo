@@ -24,7 +24,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ...core import FieldOrigin, NoRecoveryOutcome
+from ...core import FieldOrigin
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.config import load_settings
 from ..errors import LLMConfigError, LLMValidationError
 from ..evidence_draft_text import (

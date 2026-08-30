@@ -19,14 +19,14 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import (
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ...core.period import Period
 from ...core.config import Settings
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.errors.severity import BaseSeverity

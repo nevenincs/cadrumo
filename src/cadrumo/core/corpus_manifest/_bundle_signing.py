@@ -57,7 +57,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .. import HEX_PATTERN_64 as _HEX_PATTERN_64
 from .. import HEX_PATTERN_128 as _HEX_PATTERN_128
-from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..atomic_write import atomic_write_hardened_text
 from ..ed25519_signing import (
     digest_signature_is_valid,

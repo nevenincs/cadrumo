@@ -21,12 +21,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import Envelope, EnvelopeVersionError
-from ....core import (
-    CasillaId,
-    Period,
-    SecureObjectWrite,
-    validated_casilla_id,
-)
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ....tests.secure_sql import (

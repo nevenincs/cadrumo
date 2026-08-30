@@ -47,7 +47,8 @@ from .....application.modelo.reconciliation_records import (
     list_modelo_reconciliations,
 )
 from .....application.workflow.persistence import workflow_state_repository
-from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
+from .....core.period import Period
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.modelos.codes import ModeloCode
@@ -55,7 +56,7 @@ from .....domain.modelos.repository import upsert_work_unit
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests import FIXTURES_DIR
 from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ....inbound.justificante import parse_justificante
+from ....inbound.justificante.parser import parse_justificante
 from ...storage import (
     MODELO_RECONCILIATION_RECORDS_NAMESPACE,
     SecureObjectRevisionConflictError,

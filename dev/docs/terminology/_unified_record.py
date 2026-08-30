@@ -30,7 +30,7 @@ from hashlib import sha256
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core import CasillaId
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.ids import (
     BindingId,

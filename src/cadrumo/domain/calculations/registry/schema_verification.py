@@ -56,7 +56,7 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.remote_authority import first_aeat_host
 from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from .errors import RegistryValidationError

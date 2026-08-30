@@ -30,7 +30,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.command_search import CommandDoc, CommandIndex, build_command_index
+from cadrumo.application.command_search.index import CommandDoc, CommandIndex, build_command_index
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
 from ._capability_manifest import OperatorSurfaceManifest, build_operator_surface_manifest

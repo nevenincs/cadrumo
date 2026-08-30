@@ -68,13 +68,6 @@ class ReviewState(StrEnum):
     ALL = "all"
 
 
-class ReviewFormat(StrEnum):
-    """Output format for the review queue CLI."""
-
-    TABLE = "table"
-    JSON = "json"
-
-
 # Reserved kind tokens accepted for parsing but rejected by the CLI with
 # a descriptive error.
 _RESERVED_KINDS: Mapping[str, str] = MappingProxyType(

@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.user_profile.values import UserProfileFact

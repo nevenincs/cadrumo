@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import Period
+from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..borrador_100 import (

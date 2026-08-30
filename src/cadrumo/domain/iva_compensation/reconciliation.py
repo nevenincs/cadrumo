@@ -24,8 +24,8 @@ from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.time import UtcInstant, now
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError

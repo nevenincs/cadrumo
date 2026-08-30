@@ -15,7 +15,7 @@ See Also:
 
 from __future__ import annotations
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .casilla_membership import casilla_noncanonical_reference_targets, declared_casilla_ids
 from .schema import ModeloRevision
 

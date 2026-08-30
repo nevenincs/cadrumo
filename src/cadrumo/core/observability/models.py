@@ -45,7 +45,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..identity import AeatBoxNumber, ContentDigest, ContentDigestOrAbsent
 from ..time import validate_utc_aware
 

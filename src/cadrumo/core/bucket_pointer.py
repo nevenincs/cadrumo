@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .identity import BucketId
 
 if TYPE_CHECKING:  # pragma: no cover

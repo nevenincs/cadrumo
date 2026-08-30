@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind

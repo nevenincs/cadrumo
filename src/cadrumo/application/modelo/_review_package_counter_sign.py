@@ -53,7 +53,7 @@ from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import UtcInstant

@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRevisionConflictError
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode

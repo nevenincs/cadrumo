@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Protocol
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 

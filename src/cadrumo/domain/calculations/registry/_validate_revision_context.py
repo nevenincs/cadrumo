@@ -11,7 +11,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .casilla_membership import casillas_by_id, declared_casilla_ids
 from .ids import BindingId, RelationId
 from .schema import (

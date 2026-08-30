@@ -7,10 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import (
-    CasillaId,
-    validated_casilla_id,
-)
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot

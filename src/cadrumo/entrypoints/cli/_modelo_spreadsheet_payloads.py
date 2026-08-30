@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs

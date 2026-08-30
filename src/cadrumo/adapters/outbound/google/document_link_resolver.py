@@ -31,7 +31,7 @@ from typing import Any, Final, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.external_constants import PDF_MIME_TYPE
 from ....domain.attachments.enums import AttachmentSource
 from ..storage import (

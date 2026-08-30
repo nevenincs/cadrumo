@@ -13,7 +13,8 @@ from ....application.calculations import (
     query_iva_wallet_balance,
     seed_iva_compensation_period,
 )
-from ....core import IvaCompensationStateProvenance, Period
+from ....core import IvaCompensationStateProvenance
+from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
 from ....domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ....tests.cli_envelope import require_schema_envelope

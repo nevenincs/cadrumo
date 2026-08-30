@@ -42,7 +42,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Period, validated_casilla_id
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_wallet_relation_targets import (
@@ -506,7 +508,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     the enrolled resolver receives the registry-declared iva-wallet-owned set as
     ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
-    from ....core import Period
+    from ....core.period import Period
     from ...aggregation import CalculationSourceContext
     from ...calculations import PreviousFilingSourceResolver
 

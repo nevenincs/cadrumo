@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from .errors import RegistryValidationError
 from .schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from .schema_surfaces import CasillaDefinition

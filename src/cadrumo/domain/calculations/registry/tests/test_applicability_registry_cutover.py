@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .....domain.deadlines.models import EntityType, FiscalResidency, IVARegime, TaxpayerProfile
 from ..applicability import ApplicabilityVerdict, ModeloApplicabilityRule, resolve_applicability_rule_from_authority
 from ..authority import ValidatedRegistryAuthority

@@ -13,7 +13,7 @@ from ....application.operations.persistence.events import (
     OperationTerminalEvent,
 )
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ..storage import RepositoryError
 
 

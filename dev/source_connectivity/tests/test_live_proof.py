@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import BindingSourceKind, IntracomOperationType
+from cadrumo.core.aggregation import BindingSourceKind, IntracomOperationType
 from cadrumo.core._calculation_route import ModeloCalculationRouteId
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.invoices.models import derive_invoice_id

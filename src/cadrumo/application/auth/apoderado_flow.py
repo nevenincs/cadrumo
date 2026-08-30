@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
     from ...domain.auth import ApoderamientosCatalogue
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import (
     CheckpointAvailability,
     CopyRefKind,

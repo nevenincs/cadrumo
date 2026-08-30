@@ -72,12 +72,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-)
+from ...core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import (
     IdentityError,
     nif_iva_format_for_country,

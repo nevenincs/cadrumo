@@ -25,13 +25,13 @@ from ....application.filing import (
 )
 from ....core import (
     FilingProducerKey,
-    Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot

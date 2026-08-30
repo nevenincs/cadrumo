@@ -34,7 +34,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from ....core import Period, StandardPeriodCode
+from ....core.period import Period, StandardPeriodCode
 from ....entrypoints.cli._period_parsing import (
     _canonical_period,
     _filter_canonical_period,

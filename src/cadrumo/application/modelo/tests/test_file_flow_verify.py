@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ...workflow.run_models import WorkflowDeadlineContextDetails
 from ._file_flow_support import (

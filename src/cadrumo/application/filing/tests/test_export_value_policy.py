@@ -7,11 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import (
-    M303Exonerado390ActivityField,
-    M303Exonerado390ActivityProjectionRef,
-    Period,
-)
+from ....core import M303Exonerado390ActivityField, M303Exonerado390ActivityProjectionRef
+from ....core.period import Period
 from ....domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,

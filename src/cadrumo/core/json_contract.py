@@ -50,7 +50,7 @@ from pydantic import (
 )
 
 from ._action_argument_resolution import ActionArgumentResolution
-from ._operator_action_enums import ActionArgumentStatus
+from .operator_action_enums import ActionArgumentStatus
 from ._precondition_action_invariants import (
     PreconditionActionIdentity,
     PreconditionEvidence,

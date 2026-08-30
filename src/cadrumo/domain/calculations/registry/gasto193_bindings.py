@@ -16,7 +16,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from .binding_aggregation import binding_aggregation_op

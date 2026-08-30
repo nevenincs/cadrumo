@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ....core import (
-    STRICT_FROZEN_CONFIG,
     FilingProjectionRef,
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:

@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationEffect,

@@ -37,7 +37,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core.models import STRICT_FROZEN_CONFIG
 
 # Runtime imports: both are pydantic field types on the models below, so a
 # TYPE_CHECKING-only import leaves the models un-buildable at construction.

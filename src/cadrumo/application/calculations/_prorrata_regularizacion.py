@@ -45,18 +45,12 @@ from typing import ClassVar, Final
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
-    CalculationSourceLineageRole,
-    CasillaId,
-    Modelo,
-    Period,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    regime_apportions_deduction,
-    validated_casilla_id,
-)
+from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, regime_apportions_deduction
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.ids import (

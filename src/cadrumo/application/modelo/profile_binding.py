@@ -42,7 +42,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex

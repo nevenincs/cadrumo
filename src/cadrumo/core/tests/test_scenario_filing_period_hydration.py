@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .. import Period, hydrate_scenario_filing_period
+from ..period import Period, hydrate_scenario_filing_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

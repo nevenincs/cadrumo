@@ -11,7 +11,7 @@ from ....application.calculations import (
     IvaCompensationHistoryRepository,
     seed_iva_compensation_period,
 )
-from ....core import Period
+from ....core.period import Period
 from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile

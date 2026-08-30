@@ -42,7 +42,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import IdentityError, validate_spanish_tax_id

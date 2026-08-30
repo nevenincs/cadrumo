@@ -36,9 +36,6 @@ from .enums import BusinessClassification
 from .errors import TransactionValidationError
 from .raw_transaction import RawTransaction
 
-_CONFIDENCE_MIN = Decimal("0")
-_CONFIDENCE_MAX = Decimal("1")
-
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
         "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
@@ -88,7 +85,7 @@ def validate_confidence_range(value: Decimal | None) -> Decimal | None:
     """Return a classifier confidence if it is a share of one, or None."""
     if value is None:
         return None
-    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+    if not is_unit_proportion(value):
         raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
     return value
 

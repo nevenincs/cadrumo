@@ -53,13 +53,9 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core import (
-    OBJECT_TUPLE_ADAPTER,
-    STR_KEYED_MAPPING_ADAPTER,
-    ActionEvidenceProvenance,
-    Modelo,
-    NoRecoveryOutcome,
-)
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows.definition import FlowDefinition, FlowPage, FlowSection
@@ -197,7 +193,7 @@ def _third_party_declaration_role_choice_values() -> list[str]:
     ``--declaration-roles`` flag choices never drift from the
     values the wizard catalogue and the profile schema validate against.
     """
-    from ...core import ThirdPartyDeclarationRole
+    from ...core.aggregation import ThirdPartyDeclarationRole
 
     return [member.value for member in ThirdPartyDeclarationRole]
 

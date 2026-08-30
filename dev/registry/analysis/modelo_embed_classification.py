@@ -205,7 +205,7 @@ def modelo_codes() -> frozenset[str]:
     """Return every AEAT modelo code the core enum declares."""
     if str(SOURCE_ROOT.parent) not in sys.path:
         sys.path.insert(0, str(SOURCE_ROOT.parent))
-    from cadrumo.core import Modelo
+    from cadrumo.core.modelo import Modelo
 
     return frozenset(member.value for member in Modelo)
 

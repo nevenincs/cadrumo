@@ -6,7 +6,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, StringConstraints
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core.models import STRICT_FROZEN_CONFIG
 
 _EvidenceReferenceValue = Annotated[
     str,

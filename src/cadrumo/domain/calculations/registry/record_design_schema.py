@@ -9,7 +9,7 @@ from typing import Annotated, Final, Literal, Self
 
 from pydantic import ConfigDict, Field, model_validator
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel
 

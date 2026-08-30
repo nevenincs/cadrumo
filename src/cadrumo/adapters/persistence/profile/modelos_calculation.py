@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity import SubjectTaxId

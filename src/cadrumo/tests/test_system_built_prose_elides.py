@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING, Annotated
 import pytest
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ..core import elided_prose
+from ..core.prose_elision import elided_prose
 from .test_advisory_message_constructibility import _PROSE_FIELDS, _prose_caps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

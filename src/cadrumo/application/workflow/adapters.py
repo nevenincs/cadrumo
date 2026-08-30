@@ -34,7 +34,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from ...core import Period
+from ...core.period import Period
 from ...core.config import Settings, load_settings
 from ...core.identity import SubjectTaxId
 from ...core.logging import get_logger

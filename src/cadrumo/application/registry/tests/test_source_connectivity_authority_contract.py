@@ -11,9 +11,8 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
-    BindingSourceKind,
-    CalculationSourceLineageRole,
+from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.source_connectivity import (
     SourceConnectivityConnectionIdentity,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityExecutableEvidenceRole,

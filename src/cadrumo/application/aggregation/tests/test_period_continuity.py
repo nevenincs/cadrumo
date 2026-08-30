@@ -20,7 +20,7 @@ from itertools import pairwise
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

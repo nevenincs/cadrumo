@@ -4,7 +4,7 @@ A filing year addresses a registry revision, so the value decides which year's
 norms a calculation runs under. It was bounded per site, and the bounds did not
 agree: the same ``filing_year`` field carried ``ge=2000, le=2099`` at most
 sites, ``le=2100`` at others, and ``ge=1980, le=2200`` in the period model, so
-:mod:`core._period` accepted a year the aggregation observation repositories
+:mod:`core.period` accepted a year the aggregation observation repositories
 refused. Nothing detected the divergence, because each site was locally
 consistent and no test compared them.
 

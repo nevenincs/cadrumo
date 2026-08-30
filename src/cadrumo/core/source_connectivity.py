@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_
 from pydantic_core import PydanticCustomError
 
 from ._calculation_route import ModeloCalculationRouteId
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
 from .identity import CalculationRevisionId, ContentDigest
 

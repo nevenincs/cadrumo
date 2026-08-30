@@ -6,7 +6,7 @@ from datetime import timedelta, timezone
 
 import pytest
 
-from ......core import SecureObjectWrite
+from ......core.secure_object_write import SecureObjectWrite
 from ......core.errors.hierarchy import CoreValidationError
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError

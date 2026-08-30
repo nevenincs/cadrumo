@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import cast
 
-from ...core import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification, flow_direction_for_invoice_kind, is_deducible_flow
 from ...domain.iva.schema import EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow

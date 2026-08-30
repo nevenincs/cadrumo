@@ -10,7 +10,8 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core import Modelo, RegistryAuthorityGrade, RevisionReviewStatus
+from ....core import RegistryAuthorityGrade, RevisionReviewStatus
+from ....core.modelo import Modelo
 from ...filing import (
     FilingExportConformanceReceipt,
     FilingExportGeneratedOutput,

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import tr

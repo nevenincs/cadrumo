@@ -36,11 +36,12 @@ from typing import Any, Final, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from ..core import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CoreError, ProfileAnswerTypeError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger
 from .parsing import parse_bool
+from .spanish_postcode import OptionalSpanishPostcode
 
 _log = get_logger(__name__)
 
@@ -481,7 +482,7 @@ class SetupAnswers(BaseModel):
     legal_name: str = ""
     activity: str = ""
     """Free-text actividad económica / epígrafe IAE description."""
-    address_postcode: str = ""
+    address_postcode: OptionalSpanishPostcode = ""
     """Optional Spanish postcode for the taxpayer's activity/contact address."""
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""

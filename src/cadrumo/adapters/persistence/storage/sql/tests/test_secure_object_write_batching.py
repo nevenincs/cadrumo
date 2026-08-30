@@ -31,7 +31,7 @@ from typing import Any
 import pytest
 from sqlalchemy import event
 
-from ......core import SecureObjectWrite
+from ......core.secure_object_write import SecureObjectWrite
 from ......core.classification import SensitivityClass
 from ...errors import DecryptionError, SecureObjectRevisionConflictError
 from ._secure_objects_support import _ephemeral_secure_repo

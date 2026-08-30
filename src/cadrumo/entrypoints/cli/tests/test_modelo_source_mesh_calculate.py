@@ -13,12 +13,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core import (
-    STR_KEYED_MAPPING_ADAPTER,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    Period,
-)
+from ....core import STR_KEYED_MAPPING_ADAPTER, IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
 from ....core.errors.error_codes import ERROR_REGISTRY
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories.spending_category import SpendingCategory

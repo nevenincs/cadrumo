@@ -9,7 +9,7 @@ from types import ModuleType
 
 import pytest
 
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .. import registry as registry_module
 from .. import errors as errors_module

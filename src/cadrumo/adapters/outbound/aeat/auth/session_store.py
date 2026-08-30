@@ -23,7 +23,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, JsonValue, TypeAdapter, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,

@@ -52,14 +52,8 @@ from functools import cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core import (
-    LLM_EXTRA,
-    ActionEvidenceProvenance,
-    FieldRole,
-    ModelRole,
-    build_provenance_stamp,
-    require_optional_extra,
-)
+from ..core import LLM_EXTRA, FieldRole, ModelRole, build_provenance_stamp, require_optional_extra
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings, load_settings
 from .client import LLMClient
 from .errors import LLMConfigError, LLMValidationError

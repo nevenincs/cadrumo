@@ -30,10 +30,10 @@ from ...errors import (
     SecretNotFoundError,
     StorageValidationError,
 )
-from .._secret_store import SecretRecord, SecretStore
+from ..store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store._secret_store"
+_STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store.store"
 
 _SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)

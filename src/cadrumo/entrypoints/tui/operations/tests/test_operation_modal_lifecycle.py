@@ -66,7 +66,12 @@ from .....application.user_profile.custody_ports import profile_custody_secure_o
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core import OperationClosePolicy, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core.operations import (
+    OperationClosePolicy,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from .....core.time import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url

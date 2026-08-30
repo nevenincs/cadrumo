@@ -18,7 +18,7 @@ from typing import TypedDict, Unpack
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,

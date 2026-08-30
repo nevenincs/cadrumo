@@ -105,8 +105,8 @@ record_identity = "Tipo 2 - Registro De Rentas De La"
 
 [[entries]]
 export_field_id = "m184-2025.entidad.f008"
-kind = "casilla"
-casilla_id = "tipo2.tipo-hoja"
+kind = "literal"
+literal = "E"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
 

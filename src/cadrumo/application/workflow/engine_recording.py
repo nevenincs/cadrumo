@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import NoReturn
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.error_codes import build_error_envelope
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.logging import get_logger

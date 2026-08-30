@@ -12,16 +12,16 @@ from pydantic import ValidationError
 from ....core import (
     STR_KEYED_MAPPING_ADAPTER,
     FilingProducerKey,
-    Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     ProrrataEspecialTransitionKind,
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
-    validated_casilla_id,
 )
+from ....core.modelo import Modelo
+from ....core.period import Period
+from ....core.casilla_id import validated_casilla_id
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,

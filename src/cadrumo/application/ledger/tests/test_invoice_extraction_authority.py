@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain import iva as _iva_module
 from ....domain.iva.rates import load_iva_rate_table
 from ....domain.iva.schema import EUMemberState, IvaCategory

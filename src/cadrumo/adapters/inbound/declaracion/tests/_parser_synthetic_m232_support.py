@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import _MODELO_232_2016_SYNTHETIC_FIXTURE, _MODELO_232_2018_SYNTHETIC_FIXTURE, CasillaId
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(

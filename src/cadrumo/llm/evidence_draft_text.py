@@ -71,7 +71,8 @@ from ..application.ledger.invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
     resolve_invoice_extraction_authority_values,
 )
-from ..core import LLM_EXTRA, ActionEvidenceProvenance, build_provenance_stamp, require_optional_extra
+from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings, load_settings
 from .client import LLMClient
 from .consent import EvidenceConsentToken

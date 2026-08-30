@@ -15,7 +15,7 @@ from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalo
 from ......application.modelo.workspace_models import (
     ModeloWorkspaceFacetName,
 )
-from ......core import OutputLanguage
+from ......core.external_constants import OutputLanguage
 from ..controller import (
     ModeloWorkspaceReadSession,
     admit_workspace_session,

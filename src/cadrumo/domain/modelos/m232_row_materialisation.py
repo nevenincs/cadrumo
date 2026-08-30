@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ..calculations.registry.errors import RegistryValidationError
 from .row_models import Modelo232VinculadaRow
 

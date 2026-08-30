@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from .._validate_applicability_section import validate_applicability_section
 from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..errors import RegistryLoadError, RegistryValidationError

@@ -31,7 +31,7 @@ from ....application.modelo._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

@@ -16,7 +16,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ..models import (
     IVARegime,
     M303RegimeComposition,

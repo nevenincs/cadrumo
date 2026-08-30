@@ -86,7 +86,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import (

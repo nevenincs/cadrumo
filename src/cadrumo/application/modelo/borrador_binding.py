@@ -34,8 +34,10 @@ from typing import TYPE_CHECKING, ClassVar
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionEvidenceProvenance, BindingSourceKind, CalculationSourceLineageRole, Period
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId

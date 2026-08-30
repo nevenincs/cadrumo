@@ -30,7 +30,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import get_args
 
-from ...core import ActionEvidenceProvenance, CasillaId, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.money import round_to_cents

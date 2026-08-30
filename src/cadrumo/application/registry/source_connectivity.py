@@ -16,13 +16,13 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
-    CasillaId,
-    Modelo,
-    ModeloCalculationRouteId,
-    Period,
+from ...core import ModeloCalculationRouteId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind
+from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityDisposition,
     SourceConnectivityExecutableEvidenceRole,

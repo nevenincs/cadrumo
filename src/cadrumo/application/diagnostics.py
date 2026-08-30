@@ -53,15 +53,15 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
 
 from .. import __version__
-from ..core import (
-    STRICT_FROZEN_CONFIG,
+from ..core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
 )
+from ..core.modelo import Modelo
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState

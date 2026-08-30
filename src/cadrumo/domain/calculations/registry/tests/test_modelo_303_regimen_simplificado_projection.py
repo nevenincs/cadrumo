@@ -15,8 +15,8 @@ from .....core import (
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
-    Period,
 )
+from .....core.period import Period
 from .....domain.iva.errors import IvaValidationError
 from .....domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ....filing_evidence import FilingEvidenceReference

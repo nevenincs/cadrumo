@@ -11,7 +11,7 @@ from typing import override
 
 import pytest
 
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...user_profile.registration import ProfileRegistrationError
 from ...workflow.state_models import WorkflowState

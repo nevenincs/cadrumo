@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ......core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ......core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError

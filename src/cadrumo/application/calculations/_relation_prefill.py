@@ -61,7 +61,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date

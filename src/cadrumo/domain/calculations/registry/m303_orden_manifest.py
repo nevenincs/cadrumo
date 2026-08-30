@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ....core import Modelo
+from ....core.modelo import Modelo
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import EXTRACTOR_VERSION

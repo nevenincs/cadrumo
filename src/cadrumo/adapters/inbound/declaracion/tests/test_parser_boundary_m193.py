@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import (
     _MODELO_193_SYNTHETIC_FIXTURE,
     CasillaId,

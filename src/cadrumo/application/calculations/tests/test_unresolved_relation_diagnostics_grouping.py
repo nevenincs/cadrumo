@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import validated_casilla_id
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.relations import RegistryFoldRequirement
 from .._relation_prefill import _unresolved_relation_diagnostics
 

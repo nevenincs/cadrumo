@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from ...core import OperationEffect, OperationLifecycle
+from ...core.operations import OperationEffect, OperationLifecycle
 from ...core.async_cleanup import AsyncCloseable
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError

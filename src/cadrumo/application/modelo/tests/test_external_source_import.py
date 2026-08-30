@@ -9,7 +9,7 @@ import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
-from ....core import Period
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind

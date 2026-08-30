@@ -17,8 +17,8 @@ from .....core import (
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
-    validated_casilla_id,
 )
+from .....core.casilla_id import validated_casilla_id
 from .._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from .._snapshot_internals import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator

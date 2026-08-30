@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from ...adapters.inbound.justificante import parse_justificante_bytes
+from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 from ...adapters.outbound.aeat.sede.declarations_observations import registry_observation_from_filed_declaration
 from ...adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
@@ -43,7 +43,9 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind, normalise_aeat_csv
+from ...core import IvaCompensationStateProvenance, normalise_aeat_csv
+from ...core.modelo import Modelo
+from ...core.period import Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
@@ -52,7 +54,13 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante import Justificante
-from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, is_justificante_backed_external_evidence
+from ...domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    is_justificante_backed_external_evidence,
+)
 from ...domain.modelos.filing_repository import upsert_filing_record
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ..modelo.external_import_actions import (
@@ -218,7 +226,7 @@ def persist_filed_calculation_observation(
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
         source_headers=observation.headers,
-        # Canonical S05 ingress: official evidence must recover its one typed
+        # Canonical ingress: official evidence must recover its one typed
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
         normalize_m303_carry=True,

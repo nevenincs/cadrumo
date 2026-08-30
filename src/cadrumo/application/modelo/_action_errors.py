@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import cast
 
-from ...core import ActionEvidenceProvenance
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.errors.not_found import CoreNotFoundError
 from ...domain.modelos.errors import ModeloError
 from ..operator_actions import PreconditionVerdict

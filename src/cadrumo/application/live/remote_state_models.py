@@ -20,7 +20,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import IvaCompensationStateProvenance, Period
+from ...core import IvaCompensationStateProvenance
+from ...core.period import Period
 from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason

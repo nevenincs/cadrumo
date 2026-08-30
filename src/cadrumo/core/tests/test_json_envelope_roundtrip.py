@@ -25,15 +25,14 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from .. import (
+from ..operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    CasillaId,
     NoRecoveryOutcome,
-    validated_casilla_id,
 )
+from ..casilla_id import CasillaId, validated_casilla_id
 from ..json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     ActionConditionEvidence,

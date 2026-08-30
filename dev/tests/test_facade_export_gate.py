@@ -176,7 +176,7 @@ def _init_fixture_repo(root: Path) -> str:
     pkg.mkdir(parents=True)
     (pkg / "_models.py").write_text("class Present:\n    pass\n", encoding="utf-8")
     (pkg / "__init__.py").write_text(
-        'from ._models import Present\n\n__all__ = ["Present"]\n',
+        'from .models import Present\n\n__all__ = ["Present"]\n',
         encoding="utf-8",
     )
     _run_git(["init", "-q"], cwd=root)
@@ -220,7 +220,7 @@ def test_scanner_reads_git_not_the_working_tree(tmp_path: Path) -> None:
 
     facade = tmp_path / "src" / "cadrumo" / "zzz_probe" / "__init__.py"
     facade.write_text(
-        'from ._models import Present, ZzzPlantedAbsentSymbol\n\n__all__ = ["Present"]\n',
+        'from .models import Present, ZzzPlantedAbsentSymbol\n\n__all__ = ["Present"]\n',
         encoding="utf-8",
     )
 
@@ -264,7 +264,7 @@ def test_planted_break_is_detected_in_each_direction() -> None:
 
     facts = module_facts(
         ast.parse(
-            "from ._models import RunTrace\ntype SomeAlias = int\n__all__: list[str] = ['RunTrace', 'SomeAlias']\n",
+            "from .models import RunTrace\ntype SomeAlias = int\n__all__: list[str] = ['RunTrace', 'SomeAlias']\n",
         ),
     )
     # Annotated __all__ parsed, PEP 695 alias bound: both were real misses.

@@ -17,7 +17,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .....core import Period
+from .....core.period import Period
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError

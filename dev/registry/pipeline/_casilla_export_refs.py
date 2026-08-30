@@ -93,10 +93,8 @@ def write_generated_casilla_export_refs(
                 (match.group("id") for line in lines[start:end] if (match := _ID_LINE.match(line))),
                 None,
             )
-            if casilla_id is None or casilla_id not in export_refs_by_casilla:
+            if casilla_id is None:
                 continue
-            seen.add(casilla_id)
-            expected = export_refs_by_casilla[casilla_id]
             # Confine the write to the casilla's OWN keys. A casilla may carry
             # nested sub-tables (`[...casillas.constraints]`, aliases) which
             # declare their own `source_refs`; anchoring on the last one in the
@@ -110,6 +108,13 @@ def write_generated_casilla_export_refs(
                 (index for index in range(start, body_end) if _EXPORT_REFS_LINE.match(lines[index])),
                 None,
             )
+            expected = export_refs_by_casilla.get(casilla_id)
+            if expected is None:
+                if existing is not None:
+                    lines.pop(existing)
+                    changed = True
+                continue
+            seen.add(casilla_id)
             if existing is not None:
                 if lines[existing].strip() != _render(expected):
                     raise RegistryValidationError(

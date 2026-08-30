@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from .....core import normalise_corpus_text
+from .....core.corpus_text import normalise_corpus_text
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

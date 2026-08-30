@@ -13,7 +13,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ......core import DeudaDireccion, ObjetoTributario, Period
+from ......core import DeudaDireccion, ObjetoTributario
+from ......core.period import Period
 from ..deudas import Deuda
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

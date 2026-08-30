@@ -7,12 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import (
-    CasillaId,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    validated_casilla_id,
-)
+from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host

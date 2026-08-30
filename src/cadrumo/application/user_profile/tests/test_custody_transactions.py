@@ -38,7 +38,7 @@ from ....adapters.persistence.storage.master_key import (
     bind_active_bucket_session,
     current_active_bucket_session,
 )
-from ....core import Period
+from ....core.period import Period
 from ....core.bucket_pointer import BucketPointer
 from ....core.config import Settings
 from ....domain.modelos.codes import ModeloCode

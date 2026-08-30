@@ -32,7 +32,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import ActionEvidenceProvenance, Modelo, Period
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision

@@ -14,7 +14,7 @@ from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
-from ......core import OutputLanguage
+from ......core.external_constants import OutputLanguage
 from ......core.i18n import tr
 from ....components.theme import install_cadrumo_themes
 from ....components.widgets import ContentDataTable

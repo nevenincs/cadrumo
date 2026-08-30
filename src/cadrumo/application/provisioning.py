@@ -34,7 +34,6 @@ from pydantic import BaseModel, Field, model_validator
 from ..core import (
     LLM_EXTRA,
     OPTIONAL_EXTRAS,
-    STRICT_FROZEN_CONFIG,
     AcceleratorKind,
     ContentionCause,
     DeploymentLicencePosture,
@@ -50,6 +49,7 @@ from ..core import (
     model_candidate,
     optional_extra_available,
 )
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ..core.directory_scan import (
     iter_directory,

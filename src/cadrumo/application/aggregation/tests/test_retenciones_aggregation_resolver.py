@@ -19,7 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
+from ....core.operator_action_enums import NoRecoveryOutcome
+from ....core.period import Period
+from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile

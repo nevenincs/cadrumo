@@ -84,7 +84,9 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, DocumentShape, FieldGroundingOutcome, FieldOrigin, unicode_compose
+from ...core import DocumentShape, FieldGroundingOutcome, FieldOrigin
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.text_fold import unicode_compose
 from ...core.decimal import coerce_finite_european_decimal
 from ...domain.iva.establishment import country_code_for_stated_country_code
 from .document_transcription import DocumentTranscription

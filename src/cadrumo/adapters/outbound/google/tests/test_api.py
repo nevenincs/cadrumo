@@ -22,7 +22,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 from googleapiclient.model import JsonModel
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,

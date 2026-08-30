@@ -468,15 +468,15 @@ cli:
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
-        app_help: Snapshots de borrador del model 100
+        app_help: Snapshots d'esborrany del model 100
         filing_year_help: Exercici fiscal (p. ex. 2024)
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
-        list_help: Llistar snapshots persistits del borrador del model 100
-        modelo_100_help: Ordres de snapshots del borrador del model 100
+        list_help: Llistar snapshots persistits de l'esborrany del model 100
+        modelo_100_help: Ordres de snapshots de l'esborrany del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
           all'
-        view_help: Mostrar un snapshot del borrador del model 100
+        view_help: Mostrar un snapshot de l'esborrany del model 100
       deudas:
         app_help: Snapshots de deutes AEAT de només lectura
         latest_help: Mostra el snapshot de deutes més recent
@@ -553,7 +553,7 @@ cli:
           d'IVA.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
-          les captures de Modelo 303 presentats.
+          les captures de Model 303 presentats.
         pull_evidence_help: Descàrrega l'historial del Model 303 presentat i intenta
           la lectura de la cartera/IVA d'AEAT com una adquisició tipada de només lectura.
         pull_help: Descàrrega en directe i persisteix la cartera de compensació d'IVA
@@ -793,7 +793,7 @@ cli:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
           output_required: Proporcioneu --output PATH per a l artefacte fichero-BOE.
-        help: Exporta una revisió de modelo verificada o presentada a un fitxer local
+        help: Exporta una revisió de model verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT, i el fitxer
           generat no és evidència oficial de presentació davant AEAT. Useu el justificant
           AEAT, la consulta de declaracions presentades o el coteig CSV després de
@@ -978,7 +978,7 @@ cli:
         year_help: Any de la comunicació.
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
-        casilla_help: Valor de casilla amb la sintaxi CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
         no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
           `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
@@ -988,7 +988,7 @@ cli:
           130 --year %{year} --period 1T`.
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
-        del Modelo 130).
+        del Model 130).
       readiness:
         modelo_help: Codi de model (p. ex. 303).
         period_help: 'Token de període per resoldre la revisió del model: 0A anual,
@@ -1254,7 +1254,7 @@ cli:
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
           ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
           decimal i sense separador de milers, p. ex. 1234.56.'
-        borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
+        borrador_help: Id del snapshot d'esborrany del model 100 (complet o prefix
           no ambigu). Els seus valors de binding s'usen només per a bindings marcats
           aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
           prioritat.
@@ -1281,10 +1281,10 @@ cli:
           casillas`.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
-        causante_ccaa_help: CCAA de residència habitual del causant (ISD Modelo 650/660)
-          o CCAA on s'ubica el bé transmès (ITPyAJD Modelo 600/620). Determina la
-          Hisenda competent (Llei 22/2009 Art. 32). País Basc i Navarra són règims
-          forals; consulteu la Hisenda autonòmica corresponent.
+        causante_ccaa_help: CCAA de residència habitual del causant (ISD Model 650/660)
+          o CCAA on s'ubica el bé transmès (ITPyAJD Model 600/620). Determina la Hisenda
+          competent (Llei 22/2009 Art. 32). País Basc i Navarra són règims forals;
+          consulteu la Hisenda autonòmica corresponent.
         compare_taxation_error: 'La comparació conjunta vs. individual no és disponible:
           {detail}'
         compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art.
@@ -1333,7 +1333,7 @@ cli:
           29/1987 LISyD i Art. 67 RISD; termini ordinari de 6 mesos des de la defunció.
           Presenteu-lo davant la Hacienda autonòmica competent.'
         create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que
-          acompanya el Modelo 650) no està suportat per crear unitats de treball en
+          acompanya el Model 650) no està suportat per crear unitats de treball en
           aquest CLI. Fonament legal: Ley 29/1987 LISyD; presenteu-lo davant la Hacienda
           autonòmica competent.'
         create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni)
@@ -1439,10 +1439,10 @@ cli:
           binding. Executa %{discover} per llistar la guia de relacions i els altres
           bindings que encara necessita el càlcul.'
         missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados
-          del Modelo 202 al Modelo 200 amb --relation RELATION_ID=VALUE, no amb --binding.
+          del Model 202 al Model 200 amb --relation RELATION_ID=VALUE, no amb --binding.
           DP200014B:00611 resta dos canals de relació M202 mútuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados
-          per a 40.3 casilla 34 i modelo-200-2024-rel-202-pagos-fraccionados-40-2
-          per a 40.2 casilla 03. En introduir valors manuals, posa 0 a la modalitat
+          per a 40.3 casella 34 i modelo-200-2024-rel-202-pagos-fraccionados-40-2
+          per a 40.2 casella 03. En introduir valors manuals, posa 0 a la modalitat
           no usada. Executa %{discover} per llistar la guia de relacions i els bindings
           restants.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -1514,8 +1514,8 @@ cli:
           KEY és un id de relació del registre, no un id de binding; fes-lo servir
           per a entrades de relació entre períodes o entre models. Executa aeat app
           modelo bindings list --missing per veure la guia de relacions de l àmbit.
-          Per als pagos fraccionados M202 del Modelo 200, usa els canals de relació
-          mútuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat
+          Per als pagos fraccionados M202 del Model 200, usa els canals de relació
+          mútuament exclusius 40.3 casella 34 i 40.2 casella 03, posant 0 a la modalitat
           no usada quan introdueixis valors manuals.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         rescate_contingencia_year_help: 'Any en que va esdevenir la contingència (jubilació,
@@ -1543,7 +1543,7 @@ cli:
         rescate_year_help: Any en que es percep la prestació del rescat (per defecte
           l'any de la declaració). Es compara amb la finestra de l'apartat 4 DT 12a
           LIRPF mesurada des de --contingència-year.
-        result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
+        result_summary_header: resum del resultat  Model %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
@@ -1589,7 +1589,7 @@ cli:
         run_details_help: Mostra les dades tipades del pas terminal d'una execució
           persistent.
         run_help: Mostra una execució persistent del flux pel seu identificador.
-        run_id_help: Identificador estable de 16 caràcters obtingut de modelo work
+        run_id_help: Identificador estable de 16 caràcters obtingut de model work
           runs.
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
@@ -1612,13 +1612,13 @@ cli:
         select_help: Llista les unitats de treball registrades i, amb --tui, permet
           triar-ne una per obrir-ne la revisió.
         selector_ambiguous: 'Més d''una unitat de treball activa coincideix amb aquest
-          modelo, any i període.
+          model, any i període.
 
           {candidates}'
-        selector_not_found: Cap unitat de treball activa coincideix amb aquest modelo,
+        selector_not_found: Cap unitat de treball activa coincideix amb aquest model,
           any i període.
         selector_revision_conflict: Ja existeix una unitat de treball activa per a
-          aquest modelo, any i període amb revisió de registre {existing_revision};
+          aquest model, any i període amb revisió de registre {existing_revision};
           s'ha sol·licitat {requested_revision}.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA_ID=DECIMAL
@@ -1702,15 +1702,15 @@ cli:
         configure_help: Establir la configuració d'apoderat activa
         help: Gestionar la configuració d'apoderat
         scope:
-          censo: Cens (modelo 036)
+          censo: Cens (model 036)
           exped: Expedients i tràmits
           generalnt: Tràmits tributaris (general)
-          inform: Declaracions informatives (modelo 347, 349, 720)
-          iva: IVA (modelo 303, 390)
+          inform: Declaracions informatives (model 347, 349, 720)
+          iva: IVA (model 303, 390)
           notific: Notificacions i comunicacions
-          pagosf: Pagaments fraccionats (modelo 130, 131)
-          rent: Renta i patrimoni (modelo 100, 714)
-          reten: Retencions (modelo 111, 115, 123, 180, 190, 193)
+          pagosf: Pagaments fraccionats (model 130, 131)
+          rent: Renta i patrimoni (model 100, 714)
+          reten: Retencions (model 111, 115, 123, 180, 190, 193)
         scopes:
           help: Gestiona el vocabulari d'abasts d'apoderat
           list_help: Llista els abasts d'apoderat acceptats
@@ -2786,7 +2786,7 @@ cli:
         el nivell configurat realment.
     version:
       no_revisions: No hi ha revisions del registre disponibles.
-      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles,
+      registry_summary: '%{package} %{version}: %{modelos} models, %{casillas} caselles,
         %{formulas} fórmules, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
   help:
@@ -3545,17 +3545,17 @@ cli:
     calendar_local_live_events_unavailable: L'evidència local d'esdeveniments en viu
       no està disponible per a aquesta fila del calendari.
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
-      modelo no està disponible per a aquesta fila del calendari.
+      model no està disponible per a aquesta fila del calendari.
     coverage:
       investigate: No s'ha pogut determinar amb certesa l'obligació de presentació
         %{modelo} per a aquest perfil i podria quedar sense declarar. Reviseu la seva
         explicació de presentació.
     drafts: Esborranys
     explain:
-      help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
-        l'indicador binari, el text registral de justificació i les dades del perfil
-        de les quals depèn la decisió. Local; mai contacta amb AEAT.
-      modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
+      help: Descompon l'aplicabilitat d'un model davant del perfil actiu. Mostra l'indicador
+        binari, el text registral de justificació i les dades del perfil de les quals
+        depèn la decisió. Local; mai contacta amb AEAT.
+      modelo_help: Identificador del model AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     labels:
       period: Període
@@ -3633,7 +3633,7 @@ cli:
         create_profile: Crea un perfil de contribuent abans d'importar dades o iniciar
           una declaració.
         import_transactions: Importa un extracte bancari per registrar els teus moviments.
-        modelo_210_sede_only: El Modelo 210 és visible per a descobriment IRNR, però
+        modelo_210_sede_only: El Model 210 és visible per a descobriment IRNR, però
           la creació local d'unitats de treball encara no està suportada; presenta
           per AEAT Sede G320.
         repair_storage: Executa el diagnòstic d'emmagatzematge per veure el detall.
@@ -3667,7 +3667,7 @@ cli:
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
     warning:
-      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, però el motor de
+      m303_simplificado_forfait_unavailable: El Model 303 aplica, però el motor de
         càlcul forfait del règim simplificat encara no està disponible; reviseu les
         caselles del règim simplificat abans de presentar.
     year_help: Any de declaració per a --period (p. ex. 2024).
@@ -3783,7 +3783,7 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: 'Treball fiscal: ledger, modelo, lectures en viu d''AEAT, overview,
+    app_app_help: 'Treball fiscal: ledger, model, lectures en viu d''AEAT, overview,
       registry, review i diagnòstics d''execució.'
     app_help: Accedir als comandos de nivell d'aplicació.
     app_help_help: Mostra l'ajuda dels comandos de l'aplicació.
@@ -3827,7 +3827,7 @@ cli:
         perfil i del treball.'
       section_config: '  config - perfil, autenticació i diagnòstics'
       section_ledger: '  app ledger - importació bancària i revisió de moviments'
-      section_modelo: '  app modelo - catàleg de models i unitats de treball'
+      section_modelo: '  app model - catàleg de models i unitats de treball'
       section_overview: '  app overview - estat de l''espai i calendari fiscal'
       section_registry: '  app registry - dades locals del registre AEAT'
       section_review: '  app review - elements que necessiten atenció'

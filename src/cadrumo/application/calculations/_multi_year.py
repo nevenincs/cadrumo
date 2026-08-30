@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, CalculationSourceLineageRole
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import bundled_authority

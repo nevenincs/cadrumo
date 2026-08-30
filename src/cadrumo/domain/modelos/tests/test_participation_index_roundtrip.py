@@ -28,7 +28,7 @@ import pytest
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, SensitivityClass
-from ....core import Period
+from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ..codes import ModeloCode
 from ..participation_index import (

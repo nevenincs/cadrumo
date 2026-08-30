@@ -8,7 +8,8 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
-from ...core import RentaDeclaracionType, ThirdPartyDeclarationRole
+from ...core import RentaDeclaracionType
+from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers

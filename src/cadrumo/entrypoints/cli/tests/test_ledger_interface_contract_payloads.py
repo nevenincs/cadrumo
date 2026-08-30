@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ....application.export import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....core import OperatorActionAxis
+from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.categories.proportionality import ProportionalityKind
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification

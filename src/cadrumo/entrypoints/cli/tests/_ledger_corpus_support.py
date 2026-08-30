@@ -9,7 +9,7 @@ from typing import Any
 
 from click.testing import Result
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli
 

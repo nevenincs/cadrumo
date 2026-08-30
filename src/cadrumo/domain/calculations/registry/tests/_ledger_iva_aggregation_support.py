@@ -14,16 +14,15 @@ from .....application.calculations import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
 from .....core import (
-    BindingSourceKind,
-    CasillaId,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
     RegistryAuthorityGrade,
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
-    validated_casilla_id,
 )
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree

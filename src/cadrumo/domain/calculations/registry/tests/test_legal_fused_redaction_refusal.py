@@ -27,7 +27,11 @@ from typing import Final
 
 import pytest
 
-from .....core import corpus_redaction_marks, normalise_corpus_text, resolve_anchored_extracted_unit
+from .....core.corpus_text import (
+    corpus_redaction_marks,
+    normalise_corpus_text,
+    resolve_anchored_extracted_unit,
+)
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_reference, verify_legal_reference_grounding

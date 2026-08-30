@@ -24,7 +24,7 @@ from typing import Self
 
 from pydantic import Field, NonNegativeInt, model_validator
 
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema

@@ -22,7 +22,7 @@ from typing import Any, TypedDict
 import pytest
 
 from .....application.operator_actions import PreconditionVerdict
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message

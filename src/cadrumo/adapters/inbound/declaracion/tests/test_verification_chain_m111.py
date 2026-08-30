@@ -32,7 +32,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from .....tests import FIXTURES_DIR
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,

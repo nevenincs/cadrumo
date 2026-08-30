@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo184MemberRow, Modelo210AgrupacionRentaRow, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

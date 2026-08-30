@@ -24,7 +24,6 @@ See Also:
 
 from __future__ import annotations
 
-from .._schema import ArtefactKind
 from ..errors import BorradorParseError as _BorradorParseError
 from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo100ObservedV2025Extractor
 
@@ -61,4 +60,4 @@ def get_extractor(año: int) -> _Modelo100ObservedV2025Extractor:
     return cls()
 
 
-__all__ = ["ArtefactKind", "get_extractor"]
+__all__ = ["get_extractor"]

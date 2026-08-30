@@ -99,7 +99,7 @@ if TYPE_CHECKING:
     from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
     from ._calculation_route import ModeloCalculationRouteId
     from ._capabilities import ServiceCapability
-    from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+    from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
     from ._casilla_value_kind import CasillaValueKind
     from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
     from ._concept_lifecycle import ConceptLifecycle
@@ -234,17 +234,17 @@ if TYPE_CHECKING:
         default_model_runtime_id,
         model_candidate,
     )
-    from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
+    from .modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
     from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
     from ._modelo_work_progress_state import ModeloWorkProgressState
-    from ._models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    from .models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     from ._notificacion_estado_servicio import (
         NotificacionEstadoServicio,
         resolve_notificacion_estado_servicio,
     )
     from ._objeto_tributario import ObjetoTributario
     from ._observed_header_fact import ObservedHeaderFact
-    from ._operator_action_enums import (
+    from .operator_action_enums import (
         ActionArgumentSource,
         ActionArgumentStatus,
         ActionConditionality,
@@ -284,7 +284,7 @@ if TYPE_CHECKING:
         orden_anual_iva_table_text,
     )
     from ._payment_election import PaymentElection
-    from ._period import (
+    from .period import (
         FilingPeriodCode,
         Period,
         PeriodError,
@@ -863,10 +863,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ART_81_1_MATERNIDAD_RELACIONES": "._descendant_relacion",
     "AcceleratorKind": "._hardware",
     "ActionArgumentResolution": "._action_argument_resolution",
-    "ActionArgumentSource": "._operator_action_enums",
-    "ActionArgumentStatus": "._operator_action_enums",
-    "ActionConditionality": "._operator_action_enums",
-    "ActionEvidenceProvenance": "._operator_action_enums",
+    "ActionArgumentSource": ".operator_action_enums",
+    "ActionArgumentStatus": ".operator_action_enums",
+    "ActionConditionality": ".operator_action_enums",
+    "ActionEvidenceProvenance": ".operator_action_enums",
     "AeatProductSoftwareEvidence": ".product_identity",
     "AeatProductSoftwareIdentity": ".product_identity",
     "AggregationCaptureKind": ".aggregation",
@@ -879,7 +879,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BindingSourceKind": ".aggregation",
     "CalculationSourceLineageRole": ".aggregation",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
-    "CasillaId": "._casilla_id",
+    "CasillaId": ".casilla_id",
     "CasillaValueKind": "._casilla_value_kind",
     "ClassifierInputSource": "._classifier_input_source",
     "ClaveMovilRoute": "._auth_provider",
@@ -911,7 +911,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FieldOrigin": "._field_origin",
     "FieldRole": "._field_role",
     "FiledHistoryDiscoverySignal": "._filed_history_discovery_signal",
-    "FilingPeriodCode": "._period",
+    "FilingPeriodCode": ".period",
     "FilingProducerKey": "._filing_producer_key",
     "FilingProjectionRef": "._filing_projection_ref",
     "FindingResolutionAction": "._confirmation_gate",
@@ -998,19 +998,19 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ModelRole": "._model_catalogue",
     "ModelRuntime": "._model_catalogue",
     "ModelSelectionAdvisory": "._model_catalogue",
-    "Modelo": "._modelo",
+    "Modelo": ".modelo",
     "ModeloCalculationRouteId": "._calculation_route",
     "ModeloWorkProgressState": "._modelo_work_progress_state",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
-    "NON_REGISTRY_MODELOS": "._modelo",
-    "NoRecoveryOutcome": "._operator_action_enums",
+    "NON_REGISTRY_MODELOS": ".modelo",
+    "NoRecoveryOutcome": ".operator_action_enums",
     "NotificacionEstadoServicio": "._notificacion_estado_servicio",
     "OBJECT_TUPLE_ADAPTER": "._type_adapters",
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS": ".aggregation",
     "OFFICIAL_M210_TIPO_RENTA_CODES": "._irnr",
     "OFX_EXTRA": "._optional_extras",
     "OPTIONAL_EXTRAS": "._optional_extras",
-    "OUT_OF_SCOPE_OBLIGATIONS": "._modelo",
+    "OUT_OF_SCOPE_OBLIGATIONS": ".modelo",
     "ObjetoTributario": "._objeto_tributario",
     "ObservedHeaderFact": "._observed_header_fact",
     "OperationCancellation": ".operations",
@@ -1022,7 +1022,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "OperationInteractionKind": ".operations",
     "OperationLifecycle": ".operations",
     "OperationTerminalCondition": ".operations",
-    "OperatorActionAxis": "._operator_action_enums",
+    "OperatorActionAxis": ".operator_action_enums",
     "OperatorProgress": "._operator_progress",
     "OptionalExtra": "._optional_extras",
     "OrdenAnualHtmlParseError": "._orden_anual_html",
@@ -1041,9 +1041,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PRODUCT_IDENTITY": ".product_identity",
     "PROSE_ELISION_MARKER": ".prose_elision",
     "PaymentElection": "._payment_election",
-    "Period": "._period",
-    "PeriodError": "._period",
-    "PeriodKind": "._period",
+    "Period": ".period",
+    "PeriodError": ".period",
+    "PeriodKind": ".period",
     "PersistedFormatClass": ".compatibility_lifecycle",
     "PostFilingEventKind": "._post_filing_event",
     "PreconditionActionIdentity": "._precondition_action_invariants",
@@ -1066,9 +1066,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RefundElection": "._refund_election",
     "RegisterScopingSignal": "._register_scoping_signal",
     "RegistryAuthorityGrade": "._authority_grade",
-    "RegistryPeriodCode": "._period",
+    "RegistryPeriodCode": ".period",
     "RegistrySchemaFamilyDisposition": "._schema_family_disposition",
-    "RegistrySelectorPeriodCode": "._period",
+    "RegistrySelectorPeriodCode": ".period",
     "RentaDeclaracionType": "._renta_declaracion_type",
     "RescateType": "._rescate_type",
     "ResultDisposition": "._result_disposition",
@@ -1078,8 +1078,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "STORAGE_ROOT_MODE": ".storage_materialization",
     "STORAGE_ROOT_SETTINGS_FIELD": "._storage_taxonomy",
     "STORAGE_TAXONOMY": "._storage_taxonomy",
-    "STRICT_FROZEN_CONFIG": "._models",
-    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": "._models",
+    "STRICT_FROZEN_CONFIG": ".models",
+    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": ".models",
     "STRUCTURED_DOCUMENT_SHAPES": "._document_shape",
     "STR_KEYED_MAPPING_ADAPTER": "._type_adapters",
     "SectorDiferenciadoLetra": "._prorrata_register",
@@ -1103,7 +1103,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "SourceConnectivityProofFailureCause": ".source_connectivity",
     "SourceConnectivityResolverOwnershipProof": ".source_connectivity",
     "SpanishStemmer": "._spanish_stemming",
-    "StandardPeriodCode": "._period",
+    "StandardPeriodCode": ".period",
     "StateRootInputs": "._config_state_root",
     "StorageArea": "._storage_taxonomy",
     "StorageCategory": "._storage_taxonomy",
@@ -1124,12 +1124,12 @@ _LAZY_EXPORTS: dict[str, str] = {
     "TipoVinculacion": "._modelo_232_codigos",
     "TravelAgencyMediationType": ".aggregation",
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE": "._authority_grade",
-    "UNMODELED_OBLIGATIONS": "._modelo",
+    "UNMODELED_OBLIGATIONS": ".modelo",
     "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": "._schema_family_disposition",
     "record_design_epoch_year": "._record_design_epoch",
-    "accepted_filing_period_codes": "._period",
-    "accepted_filing_period_patterns": "._period",
-    "accepted_period_codes": "._period",
+    "accepted_filing_period_codes": ".period",
+    "accepted_filing_period_patterns": ".period",
+    "accepted_period_codes": ".period",
     "bucket_scoped_storage_path": "._storage_taxonomy",
     "build_provenance_stamp": "._provenance_stamp",
     "candidates_for_role": "._model_catalogue",
@@ -1158,9 +1158,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "fts_or_group": "._fts_query",
     "hardware_tier_for_free_bytes": "._hardware",
     "hydrate_filing_projection_ref": "._filing_projection_ref",
-    "hydrate_scenario_filing_period": "._period",
+    "hydrate_scenario_filing_period": ".period",
     "iban_mod_97": "._iban",
-    "is_administrative_period_token": "._period",
+    "is_administrative_period_token": ".period",
     "is_aeat_csv": "._aeat_csv",
     "is_link_like": "._link_safety",
     "lineage_obligations": ".compatibility_lifecycle",
@@ -1183,7 +1183,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "provenance_stamp_transport": "._provenance_stamp",
     "provenance_transport_label": "._provenance_stamp",
     "read_toml": "._toml",
-    "registry_period_kind": "._period",
+    "registry_period_kind": ".period",
     "render_corpus_sidecar_text": "._corpus_sidecar",
     "require_optional_extra": "._optional_extras",
     "resolve_amendment_kind_regime": "._amendment_kind_regime",
@@ -1206,8 +1206,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "undeclared_persisted_formats": ".compatibility_lifecycle",
     "unicode_compose": ".text_fold",
     "unlink_lockfile": "._lockfile_unlink",
-    "validated_casilla_id": "._casilla_id",
-    "validated_casilla_id_map": "._casilla_id",
+    "validated_casilla_id": ".casilla_id",
+    "validated_casilla_id_map": ".casilla_id",
 }
 
 

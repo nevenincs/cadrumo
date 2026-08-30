@@ -22,7 +22,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.parsing import parse_bool, parse_date

@@ -23,9 +23,4 @@ Major declaration:
 
 from __future__ import annotations
 
-from .parser import parse_justificante, parse_justificante_bytes
-
-__all__ = [
-    "parse_justificante",
-    "parse_justificante_bytes",
-]
+__all__: tuple[str, ...] = ()

@@ -44,7 +44,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IVA_CATEGORY_COMPONENTS, IvaKindApplicability

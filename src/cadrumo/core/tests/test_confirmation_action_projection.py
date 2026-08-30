@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    ConfirmationBlockReason,
-    OperatorActionAxis,
-)
+from .. import ConfirmationBlockReason
+from ..operator_action_enums import OperatorActionAxis
 from .._confirmation_gate import OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

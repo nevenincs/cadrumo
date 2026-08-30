@@ -40,7 +40,7 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.identity import BucketId
 from .document_transcription import DocumentTranscription, TranscriptionCacheEntry

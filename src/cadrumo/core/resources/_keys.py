@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from .._models import STRICT_FROZEN_CONFIG
+from ..models import STRICT_FROZEN_CONFIG
 
 
 class TypedResourceKey(BaseModel):

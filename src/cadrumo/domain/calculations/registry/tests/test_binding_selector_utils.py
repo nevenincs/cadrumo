@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..binding_selector_utils import BindingRowSetSelector, binding_row_set_selector
 from ..errors import RegistryValidationError

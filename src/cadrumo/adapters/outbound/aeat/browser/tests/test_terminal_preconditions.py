@@ -12,7 +12,7 @@ from typing import override
 import pytest
 from playwright.async_api import async_playwright
 
-from ......core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ......core.config import Settings
 from ......core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .. import _factory as factory_module

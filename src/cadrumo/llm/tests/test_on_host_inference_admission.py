@@ -27,7 +27,7 @@ from typing import override
 import pytest
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
-from ...core import NoRecoveryOutcome
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (

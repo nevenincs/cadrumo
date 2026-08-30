@@ -30,7 +30,7 @@ from dataclasses import dataclass
 
 from pydantic import ValidationError
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.config import load_settings
 
 STUB_MODELO_LOCALE_KEYS: dict[str, str] = {

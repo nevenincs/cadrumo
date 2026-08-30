@@ -40,7 +40,7 @@ from typing import Final, cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.atomic_write import atomic_write_text
 from .....core.classification import SensitivityClass
 from .....core.errors.hierarchy import CoreValidationError

@@ -12,16 +12,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import (
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    CasillaId,
-    Modelo,
-    NoRecoveryOutcome,
-    ObservedHeaderFact,
-    Period,
-    ResultDisposition,
-)
+from ....core import ObservedHeaderFact, ResultDisposition
+from ....core.modelo import Modelo
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
+from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation

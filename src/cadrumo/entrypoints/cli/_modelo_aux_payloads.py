@@ -27,7 +27,8 @@ from ...application.workflow.run_models import (
     WorkflowStage,
     WorkflowStepDetails,
 )
-from ...core import Hex64Str, Period
+from ...core import Hex64Str
+from ...core.period import Period
 from ...core.aggregation import RetencionClave
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId

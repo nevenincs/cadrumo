@@ -28,7 +28,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
 from pydantic import BaseModel
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.decimal import format_decimal
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex

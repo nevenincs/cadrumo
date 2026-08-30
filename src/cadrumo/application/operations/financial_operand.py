@@ -39,7 +39,7 @@ from typing import Annotated, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
 from .interactions import OperationInteractionId
 from .models import OperationIdentity, OperationRevision

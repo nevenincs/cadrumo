@@ -17,7 +17,7 @@ from typing import ClassVar
 
 from pydantic import TypeAdapter
 
-from ...core import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import tax_id_identity_token
 from ...domain.calculations.registry.detail_record_bindings import (

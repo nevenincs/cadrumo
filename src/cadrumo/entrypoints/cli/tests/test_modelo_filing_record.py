@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

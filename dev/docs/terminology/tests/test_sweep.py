@@ -439,7 +439,7 @@ def test_unmanifested_resolved_code_target_is_not_shipped(
     """The projection gate drops resolver-only ``code:*`` PAGE records."""
     resolver = _authoritative_target_resolver
     resolution = resolve_chunk_hits(
-        (ChunkHit(path="src/cadrumo/core/_casilla_id.py", line_start=1, line_end=1, score=1.0),),
+        (ChunkHit(path="src/cadrumo/core/casilla_id.py", line_start=1, line_end=1, score=1.0),),
         resolver=resolver,
     )
     assert len(resolution.resolved) == 1

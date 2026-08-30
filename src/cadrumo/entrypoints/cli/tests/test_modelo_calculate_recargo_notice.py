@@ -31,7 +31,7 @@ from typing import Any
 import pytest
 
 from ....application.modelo._work_plazo import ModeloWorkDeadlinePosture
-from ....core import Period, PeriodKind, registry_period_kind
+from ....core.period import Period, PeriodKind, registry_period_kind
 from ....core.time import MADRID_TZ, frozen_clock
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision

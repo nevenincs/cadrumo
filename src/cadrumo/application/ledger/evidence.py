@@ -62,7 +62,8 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG, Hex64Str
+from ...core import Hex64Str
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE

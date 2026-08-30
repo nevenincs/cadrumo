@@ -13,7 +13,7 @@ import pytest
 
 from ....application.modelo._data_inventory import profile_requirements_for_binding
 from ....application.user_profile.preflight import build_profile_preflight_requirement
-from ....core import Period, PeriodError
+from ....core.period import Period, PeriodError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ....domain.calculations.registry.ids import RevisionId

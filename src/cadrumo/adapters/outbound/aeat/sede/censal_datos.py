@@ -49,7 +49,7 @@ from .....application.user_profile.censal_observation import (
     CensalObservationAddress,
     CensalObservationIdentity,
 )
-from .....core import fold_diacritics
+from .....core.text_fold import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.i18n import tr

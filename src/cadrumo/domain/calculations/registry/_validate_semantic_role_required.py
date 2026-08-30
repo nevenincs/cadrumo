@@ -18,7 +18,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.i18n import MissingTranslationError
 from .ids import ModeloId, RevisionId
 from .schema import ModeloDefinition

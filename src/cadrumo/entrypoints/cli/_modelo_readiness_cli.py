@@ -10,7 +10,7 @@ from ...application.state_projection import (
     ProjectionModeloReadiness,
     build_operator_state_projection,
 )
-from ...core import Period, PeriodError
+from ...core.period import Period, PeriodError
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError

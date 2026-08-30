@@ -28,7 +28,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.domain.calculations.registry.authority import (

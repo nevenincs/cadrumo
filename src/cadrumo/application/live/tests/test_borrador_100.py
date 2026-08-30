@@ -16,7 +16,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,

@@ -27,16 +27,15 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import (
-    BindingSourceKind,
-    CasillaId,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Modelo,
-    Period,
     ProrrataProvisionalProvenance,
     ResultDisposition,
-    validated_casilla_id,
 )
+from ....core.modelo import Modelo
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,

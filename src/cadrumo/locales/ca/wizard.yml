@@ -380,11 +380,11 @@ wizard:
       llm-vision:
         help: Activar la visió LLM local per llegir factures.
       modelo-111-no-retenciones-periods:
-        help: Períodes Modelo 111 sense obligació, separats per comes, format AAAA:Període
+        help: Períodes Model 111 sense obligació, separats per comes, format AAAA:Període
           (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
           subjectes.
       monedas-virtuales-extranjero-above-threshold:
-        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
+        help: Monedes virtuals a l'estranger superen el llindar del Model 721
       name:
         help: Nom visible mostrat en revisions locals
       new-entity-first-two-profit-periods:
@@ -490,7 +490,7 @@ wizard:
       taxpayer-sex:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
-        help: Operacions amb tercers superen el llindar del Modelo 347
+        help: Operacions amb tercers superen el llindar del Model 347
     format:
       amount-eur: Import en euros amb punt decimal, p. ex. 50000.00.
       date-iso: Data en format AAAA-MM-DD, p. ex. 2024-03-01.
@@ -592,10 +592,10 @@ wizard:
         prompt: Data d'inici del règim especial (AAAA-MM-DD)
       modelo-111-no-retenciones-periods:
         help: Períodes AAAA:Període en què no es van pagar rendes subjectes a retenció
-          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.
-        prompt: Períodes Modelo 111 sense retencions
+          o ingrés a compte, de manera que no es presenta un Model 111 en blanc.
+        prompt: Períodes Model 111 sense retencions
       monedas-virtuales-extranjero-above-threshold:
-        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
+        prompt: Monedes virtuals a l'estranger superen el llindar del Model 721
       objective-estimation-modulos-iae-epigraph:
         help: Es desa una vegada al perfil anual. Els coeficients continuen al registre
           del model.
@@ -627,7 +627,7 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
       third-party-transactions-above-347-threshold:
-        prompt: Operacions amb tercers superen el llindar del Modelo 347
+        prompt: Operacions amb tercers superen el llindar del Model 347
       title: Obligacions
     preferencias:
       title: Preferències i capacitats

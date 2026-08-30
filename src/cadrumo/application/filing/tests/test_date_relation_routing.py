@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot

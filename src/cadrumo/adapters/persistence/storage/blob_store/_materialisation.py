@@ -31,7 +31,7 @@ from ._blob_store import EncryptedBlobStore
 
 if TYPE_CHECKING:
     from .....core.config import Settings
-    from ..secret_store import SecretStore
+    from ..secret_store.store import SecretStore
 
 # ``secret_store`` imports this package to build its own blob store, so binding
 # ``SecretStore`` at module scope closes a real import cycle. It resolved before
@@ -86,7 +86,7 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         # declared ``<storage_root>/blobs/<hex[:2]>/<hash>``. Passing the
         # storage root honours the class's existing documented contract
         # rather than redefining what ``root_dir`` means for every caller.
-        from ..secret_store import SecretStore
+        from ..secret_store.store import SecretStore
 
         blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_local_storage_root))
         store = SecretStore(

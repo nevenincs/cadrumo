@@ -11,14 +11,16 @@ from pydantic import BaseModel, ValidationError
 
 from ....core import (
     ActionArgumentResolution,
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
+)
+from ....core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-    PreconditionActionIdentity,
-    PreconditionEvidence,
-    PreconditionOutcomeInvariant,
 )
 from ....core.json_contract import (
     ActionConditionEvidence,

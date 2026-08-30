@@ -10,7 +10,7 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ...blob_store import EncryptedBlobStore
 from ...crypto.aead import KEY_SIZE
 from ...tests.fixed_master_key import fixed_master_key  # noqa: F401
-from .._secret_store import SecretStore
+from ..store import SecretStore
 
 
 @pytest.fixture

@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ..categories.spending_category import SpendingCategory
 
 FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {

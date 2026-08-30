@@ -41,7 +41,7 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 
 if TYPE_CHECKING:
-    from ...core import CasillaId
+    from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema_formula import ParameterDefinition
 
 _ZERO = Decimal("0")

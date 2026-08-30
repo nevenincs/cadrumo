@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._resolution import (

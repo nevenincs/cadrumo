@@ -31,12 +31,12 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import (
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,
     IntracomOperationType,
-    Modelo,
-    Period,
     ThirdPartyDeclarationRole,
     TravelAgencyMediationType,
 )

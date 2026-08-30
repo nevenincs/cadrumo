@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from ..authority import bundled_authority
 from ..bindings import bound_casilla_binding_ids, casillas_by_binding, resolve_bound_casilla_binding_value

@@ -6,7 +6,8 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import SubjectTaxId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference

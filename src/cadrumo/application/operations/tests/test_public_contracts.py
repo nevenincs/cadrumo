@@ -8,7 +8,7 @@ from typing import Annotated, TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
+from ....core.operations import OperationEventKind, OperationInteractionKind, OperationLifecycle
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

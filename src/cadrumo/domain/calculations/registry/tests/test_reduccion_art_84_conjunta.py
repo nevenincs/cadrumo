@@ -24,7 +24,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain

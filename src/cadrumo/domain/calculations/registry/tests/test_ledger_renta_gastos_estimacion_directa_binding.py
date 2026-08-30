@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory

@@ -37,7 +37,8 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from cadrumo.core import exclusive_file_lock, fsync_parent_dir, is_link_like
+from cadrumo.core import fsync_parent_dir, is_link_like
+from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -195,7 +196,9 @@ def publish_validated_generated_export_tree(
                 publish_error=publish_error,
             )
             _delete_journal(journal_path)
-            raise AssertionError("unreachable after rollback restoration") from publish_error
+            raise RegistryValidationError(
+                f"generated export publication failed; the previous target was restored: {publish_error}",
+            ) from publish_error
         fsync_parent_dir(target_export_root)
         journal = journal.model_copy(update={"state": "candidate_live"})
         _write_journal(journal_path, journal)
@@ -410,11 +413,20 @@ def _recover_interrupted_publication(
     ):
         raise RegistryValidationError(f"generated publication journal does not belong to this target: {journal_path}")
     expected_candidate = str(candidate_export_root)
+    backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
     if journal.candidate_export != expected_candidate:
+        # A failed cross-volume replacement can have restored the old target,
+        # removed its rollback sibling, and lost the caller's temporary root
+        # before this process can clean up the journal.  That completed
+        # rollback is safe to forget, but only when there is nothing left to
+        # recover from the recorded transaction.
+        recorded_candidate = Path(journal.candidate_export)
+        if target_export_root.exists() and not backup_export_root.exists() and not recorded_candidate.exists():
+            _delete_journal(journal_path)
+            return False
         raise RegistryValidationError(
             "generated publication journal candidate does not match the explicit caller temporary root",
         )
-    backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
     candidate_is_verified = candidate_export_root.exists() and _matches_journal_candidate(
         candidate_export_root,
         journal,
@@ -597,9 +609,7 @@ def _restore_backup_or_raise(
             "generated export publication failed and the previous export could not be restored; "
             f"publication_error={publish_error}; restoration_error={restore_error}",
         ) from restore_error
-    raise RegistryValidationError(
-        f"generated export publication failed; the previous target was restored: {publish_error}",
-    ) from publish_error
+    return None
 
 
 def _delete_opaque_rollback_if_present(backup_export_root: Path) -> None:

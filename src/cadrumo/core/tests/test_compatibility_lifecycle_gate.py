@@ -39,11 +39,11 @@ from typing import Final
 
 import pytest
 
-from .. import (
+from ..compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
     PERSISTED_FORMATS,
-    RELEASED_FORMAT_FLOORS,
     PersistedFormatClass,
+    RELEASED_FORMAT_FLOORS,
 )
 from ..compatibility_lifecycle import (
     CompatibilityRegime,

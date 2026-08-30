@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

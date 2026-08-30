@@ -7,7 +7,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from ...core import Period
+from ...core.period import Period
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.time import validate_utc_aware
 

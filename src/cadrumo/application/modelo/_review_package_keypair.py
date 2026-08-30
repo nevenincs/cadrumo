@@ -25,7 +25,7 @@ from ...adapters.persistence.storage import (
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
 )
-from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import UtcInstant
 

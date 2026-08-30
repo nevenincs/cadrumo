@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....core import Period
+from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex
 from ...storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, Envelope, SecureObjectRowIdentityError

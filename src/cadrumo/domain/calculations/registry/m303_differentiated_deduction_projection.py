@@ -10,13 +10,13 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ....core import (
-    STRICT_FROZEN_CONFIG,
     IvaDeductionFactKind,
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ....core.models import STRICT_FROZEN_CONFIG
 from ...bienes_inversion import RegistroRegularizacionResult
 from ...prorrata_register import ProrrataRegister
 from .errors import RegistryValidationError

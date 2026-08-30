@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,

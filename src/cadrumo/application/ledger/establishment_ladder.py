@@ -95,7 +95,8 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
+from ...core import ClassifierInputSource
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.establishment import country_code_for_printed_country_name, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier

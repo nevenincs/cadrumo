@@ -21,7 +21,7 @@ from ...application.ledger.evidence_draft import (
     extract_invoice_draft_from_evidence,
 )
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

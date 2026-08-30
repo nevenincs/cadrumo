@@ -36,7 +36,7 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 from bs4 import Tag
 from pydantic import AnyHttpUrl, BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex

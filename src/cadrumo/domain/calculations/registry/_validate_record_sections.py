@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
     validate_bbox_anchor_consistency,

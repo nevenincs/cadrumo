@@ -45,7 +45,7 @@ from uuid import UUID
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.buckets.errors import BucketDeleteRefusedError
 from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session
@@ -80,7 +80,7 @@ def _published_profile(tmp_path: Path) -> Generator[Path]:
 
 
 def _filing_record(*, filed_at: datetime, seed: str) -> ModeloRecord:
-    from ....core import Period
+    from ....core.period import Period
     from ....domain.modelos.codes import ModeloCode
     from ....domain.modelos.filing_record import derive_filing_record_id
 

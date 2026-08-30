@@ -46,7 +46,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceScalarMaterializationV1,
     ModeloWorkspaceVersionRefusalV1,
 )
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 
 type ModeloWorkspaceDestinationIdV1 = Literal[
     "modelo.workspace.overview",

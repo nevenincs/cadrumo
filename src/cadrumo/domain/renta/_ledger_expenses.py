@@ -20,7 +20,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion

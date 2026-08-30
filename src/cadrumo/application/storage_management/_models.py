@@ -18,7 +18,6 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import (
-    STRICT_FROZEN_CONFIG,
     FingerprintParticipation,
     StorageArea,
     StorageCategory,
@@ -28,6 +27,7 @@ from ...core import (
     StorageOverridePolicy,
     StorageScope,
 )
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 
 

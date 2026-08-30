@@ -14,7 +14,7 @@ from ....application.live.remote_state_models import (
     IvaCompensationHistoryCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ....core import Period
+from ....core.period import Period
 from .._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
 from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
 

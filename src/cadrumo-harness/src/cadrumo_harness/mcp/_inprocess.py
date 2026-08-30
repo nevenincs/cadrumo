@@ -42,7 +42,7 @@ from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
 from cadrumo.entrypoints.cli.command_api import VerbInputSchema, cli_argv_for
 

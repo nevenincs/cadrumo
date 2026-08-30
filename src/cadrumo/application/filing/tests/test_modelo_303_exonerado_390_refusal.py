@@ -8,17 +8,16 @@ from pathlib import Path
 import pytest
 
 from ....core import (
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
-    Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
-    validated_casilla_id,
 )
+from ....core.modelo import Modelo
+from ....core.period import Period
+from ....core.casilla_id import validated_casilla_id
+from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot

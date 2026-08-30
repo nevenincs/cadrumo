@@ -50,7 +50,7 @@ from typing import Final, cast, get_args
 import pytest
 from pydantic import BaseModel
 
-from .....core import Modelo
+from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..detail_record_bindings import (
     AtributionMemberObservation,

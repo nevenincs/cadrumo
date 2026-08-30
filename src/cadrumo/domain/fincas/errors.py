@@ -1,6 +1,6 @@
 """Domain errors for the rental register.
 
-Every subclass is registered in ``cadrumo.core.errors._registry._DECLARED_ERROR_CODES``
+Every subclass is registered in ``cadrumo.core.errors.registry._DECLARED_ERROR_CODES``
 so the ``__init_subclass__`` hook on :class:`core.errors.CadrumoError`
 can bind a stable :class:`core.errors.ErrorCode`.
 """

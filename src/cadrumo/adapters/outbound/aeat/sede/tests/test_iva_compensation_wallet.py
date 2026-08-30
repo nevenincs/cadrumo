@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
-from ......core import Period
+from ......core.period import Period
 from ......core.config import Settings
 from ......core.decimal import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING

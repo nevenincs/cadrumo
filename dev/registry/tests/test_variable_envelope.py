@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import content_hash_hex
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError

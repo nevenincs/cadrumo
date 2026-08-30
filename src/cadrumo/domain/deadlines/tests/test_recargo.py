@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ..errors import DeadlineValidationError
 from ..models import Recovery
 from ..recargo import (

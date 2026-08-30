@@ -30,7 +30,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE, Envelope, SecureObjectRepository
 from ....application.invoices import build_catalogue_invoice
-from ....core import IntracomOperationType
+from ....core.aggregation import IntracomOperationType
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory

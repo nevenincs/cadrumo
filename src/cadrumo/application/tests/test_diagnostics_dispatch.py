@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import (
+from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,

@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )

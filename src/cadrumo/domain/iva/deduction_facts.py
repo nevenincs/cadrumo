@@ -6,11 +6,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-)
+from ...core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import ContentDigest
 from .errors import IvaValidationError
 from .flow import IvaFlowDirection, is_deducible_flow

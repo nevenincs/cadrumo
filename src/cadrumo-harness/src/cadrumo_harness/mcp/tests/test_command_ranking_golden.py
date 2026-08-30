@@ -24,7 +24,7 @@ from collections.abc import Callable
 
 import pytest
 
-from cadrumo.application.command_search import CommandIndex
+from cadrumo.application.command_search.index import CommandIndex
 
 # The ranking helpers live on this package's own ``_meta_tools`` module (they wrap
 # the ``search`` meta-tool, not a public facade); the reach is intra-package.

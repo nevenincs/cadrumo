@@ -15,7 +15,7 @@ from pathlib import Path
 from uuid import UUID
 
 from ...application.filing import FilingRetentionAuthority
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.time import now
 from ...domain.buckets.errors import BucketDeleteRefusedError

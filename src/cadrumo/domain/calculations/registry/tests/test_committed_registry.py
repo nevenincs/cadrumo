@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
+from .....core import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload

@@ -27,7 +27,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from .. import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
+from ..modelo import Modelo, NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

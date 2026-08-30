@@ -22,7 +22,10 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, COUNTERPART_SOURCE_KINDS, RetencionScheme
 from ...core.identity import TaxIdIdentityToken
 from ...core.parsing import IsoDateString

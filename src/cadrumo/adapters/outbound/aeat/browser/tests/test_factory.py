@@ -9,7 +9,7 @@ import psutil
 import pytest
 
 from ......application.auth.protocols import BrowserSessionPort
-from ......core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ......core.config import Settings
 from ...tests import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime

@@ -13,7 +13,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken

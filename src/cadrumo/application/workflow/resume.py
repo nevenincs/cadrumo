@@ -58,7 +58,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
+from ...core import HEX_PATTERN_16, HEX_PATTERN_64
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .errors import WorkflowError
@@ -228,7 +230,7 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
         raise WorkflowResumeRefusedError(
             # BOTH message and translated_message, deliberately. The
             # operator-facing envelope resolves ``translated_message`` first
-            # (``core.errors._registry.resolve_error_message``), so this
+            # (``core.errors.error_codes.resolve_error_message``), so this
             # ``message`` changes nothing an operator sees -- it changes only
             # ``str(exc)``, which is what a traceback and a failing test's own
             # summary line show.

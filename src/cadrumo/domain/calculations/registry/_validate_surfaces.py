@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_official_source_guidance_content import deadline_window_content_failures

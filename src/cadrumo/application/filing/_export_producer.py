@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core import FilingProducerKey, Period, PriorDomiciliationElection, ProrrataEspecialTransitionKind
+from ...core import FilingProducerKey, PriorDomiciliationElection, ProrrataEspecialTransitionKind
+from ...core.period import Period
 from ...domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year

@@ -8,7 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
+from ....core import RegistryAuthorityGrade
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list

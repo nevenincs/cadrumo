@@ -41,7 +41,7 @@ from pathlib import Path
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from .. import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 _FIXTURES_DIR = Path(__file__).parent

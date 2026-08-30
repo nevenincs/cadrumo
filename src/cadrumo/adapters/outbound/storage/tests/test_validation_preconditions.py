@@ -10,7 +10,7 @@ from typing import override
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .. import OutboundStorageValidationError, ProviderKind
 from .. import _factory as factory_module
 from .. import _google_drive as drive_module

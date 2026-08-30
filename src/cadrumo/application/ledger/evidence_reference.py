@@ -37,7 +37,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind
 from .evidence import (

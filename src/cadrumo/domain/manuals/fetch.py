@@ -20,7 +20,7 @@ from typing import Protocol
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.atomic_write import atomic_write_stream, atomic_write_text
 from ...core.config import Settings, load_settings
 from ...core.hashing import hash_file

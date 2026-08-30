@@ -34,7 +34,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError

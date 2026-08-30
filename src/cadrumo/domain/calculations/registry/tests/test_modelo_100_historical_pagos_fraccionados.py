@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot

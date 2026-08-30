@@ -55,7 +55,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enums import TermStatus

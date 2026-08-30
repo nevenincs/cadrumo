@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import (
     ROW_SET_GROUPING_FOR_BINDING_SOURCE,
     BindingAggregation,

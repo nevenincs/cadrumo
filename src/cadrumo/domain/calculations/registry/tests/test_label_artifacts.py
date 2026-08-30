@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector

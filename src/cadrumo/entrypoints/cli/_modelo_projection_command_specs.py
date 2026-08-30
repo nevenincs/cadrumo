@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ._command_spec import (
     CommandSpec,
     DeferredTarget,

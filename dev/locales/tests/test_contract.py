@@ -73,7 +73,7 @@ from cadrumo.application.operator_surface.models import (
     RootSurfaceName,
 )
 from cadrumo.application.operator_surface import help as _help_module
-from cadrumo.core import BindingSourceKind
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code

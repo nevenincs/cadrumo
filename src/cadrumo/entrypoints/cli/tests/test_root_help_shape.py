@@ -31,7 +31,8 @@ __all__ = ["isolated_profile_storage"]
 
 from .... import __version__
 from ....application.operator_surface.help import build_help_document
-from ....core import PRODUCT_IDENTITY, OutputLanguage
+from ....core.external_constants import OutputLanguage
+from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
 from ....core.i18n import tr

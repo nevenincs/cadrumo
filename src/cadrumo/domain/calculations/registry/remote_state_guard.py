@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.remote_authority import (
     REMOTE_READ_SCHEME,
     canonical_remote_hostname,

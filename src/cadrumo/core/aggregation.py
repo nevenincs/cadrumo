@@ -28,7 +28,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, field_validator
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .logging import get_logger
 
 _log = get_logger(__name__)

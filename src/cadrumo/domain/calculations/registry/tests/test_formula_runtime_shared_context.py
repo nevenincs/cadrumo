@@ -25,7 +25,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId
+from .....core.casilla_id import CasillaId
 from ..formula_runtime import (
     _SPECIALIZED_EXPRESSION_EVALUATORS,
     _EvalContext,

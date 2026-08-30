@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core.period import Period
 from .....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .._extract import extract_justificante
 

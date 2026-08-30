@@ -44,7 +44,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

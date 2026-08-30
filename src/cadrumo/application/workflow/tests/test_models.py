@@ -21,14 +21,14 @@ from ....adapters.outbound.aeat.browser import (
     SiteHealthStatus,
 )
 from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
-from ....core import (
+from ....core.modelo import Modelo
+from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ....core.period import Period
 from ....core.errors.hierarchy import SiteHealthState
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url

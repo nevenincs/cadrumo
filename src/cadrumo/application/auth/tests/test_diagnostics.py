@@ -15,7 +15,7 @@ from ....adapters.persistence.storage import (
     SecureObjectRepository,
     SensitivityClass,
 )
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path

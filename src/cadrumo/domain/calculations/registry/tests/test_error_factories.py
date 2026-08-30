@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

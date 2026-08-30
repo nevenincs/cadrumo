@@ -36,7 +36,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol

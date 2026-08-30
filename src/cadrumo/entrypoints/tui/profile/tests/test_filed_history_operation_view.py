@@ -37,7 +37,7 @@ from .....application.operations.models import OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.config import load_settings
 from .....core.paths import effective_storage_root
 from .....core.time import now

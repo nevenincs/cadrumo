@@ -29,7 +29,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
 
-from ._operator_action_enums import OperatorActionAxis
+from .operator_action_enums import OperatorActionAxis
 
 __all__ = [
     "OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON",

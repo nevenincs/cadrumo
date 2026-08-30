@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import now

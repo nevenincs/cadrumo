@@ -25,8 +25,9 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, Period
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
 from ...domain.categories.spending_category import SpendingCategory
 from .errors import AggregationValidationError, t
 

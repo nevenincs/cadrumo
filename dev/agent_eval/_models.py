@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.core import NoRecoveryOutcome
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.json_contract import EnvelopeStatus
 
 if TYPE_CHECKING:

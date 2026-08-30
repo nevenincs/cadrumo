@@ -129,7 +129,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, canonical_bucket_id
 from ...core.time import UtcInstant

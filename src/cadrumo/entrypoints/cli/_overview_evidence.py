@@ -21,7 +21,11 @@ from typing import TYPE_CHECKING
 
 from ...application.overview.calendar import build_overview_calendar_events, calendar_events_from_modelo_records
 from ...application.overview.calendar_evidence import calendar_filing_evidence_from_sources, no_aeat_history_notice
-from ...application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarFilingEvidence, OverviewCalendarRange
+from ...application.overview.calendar_models import (
+    OverviewCalendarEvent,
+    OverviewCalendarFilingEvidence,
+    OverviewCalendarRange,
+)
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -377,7 +381,7 @@ def _stored_filed_justificante_matching_observation_csv(
     storage_ref: str,
     expected_tax_id: str | None,
 ) -> str | None:
-    from ...adapters.inbound.justificante import parse_justificante_bytes
+    from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 
     try:
         justificante = parse_justificante_bytes(body)

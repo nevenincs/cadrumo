@@ -8,7 +8,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding

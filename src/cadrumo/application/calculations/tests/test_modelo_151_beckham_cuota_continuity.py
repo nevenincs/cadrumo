@@ -42,7 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile

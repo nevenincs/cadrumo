@@ -21,7 +21,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
-from ..core import ActionEvidenceProvenance
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings
 from ..core.errors.error_codes import get_registered_error_code
 from ..core.hashing import content_hash_hex

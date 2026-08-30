@@ -34,11 +34,8 @@ from ...application.overview.coverage import CoverageAdviceReason, ObligationCov
 from ...application.overview.next_actions import OverviewStatusNextStep, OverviewStatusNextStepId, build_overview_status_next_steps
 from ...application.overview.pipeline_health import ModeloReadinessState
 from ...application.overview.data_prep import DataPrepStepState as _DataPrepStepState
-from ...core import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    NotificacionEstadoServicio,
-)
+from ...core import NotificacionEstadoServicio
+from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...core.i18n import tr
 from ...core.json_contract import (
     Notice,

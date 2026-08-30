@@ -27,7 +27,6 @@ import re
 from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
-from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
@@ -37,7 +36,8 @@ import typer
 import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo
+from ...core.modelo import Modelo, NON_REGISTRY_MODELOS
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -88,31 +88,6 @@ MODELO_CODE_CHOICE_ALL: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
     click.Choice([modelo.value for modelo in Modelo]),
 )
-
-
-def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.ParamType:
-    """Build a case-insensitive click choice over ``enum_class``'s values.
-
-    Typer renders a bare enum annotation as a case-SENSITIVE choice. Several
-    options on this CLI previously hand-parsed their token with ``.upper()`` or
-    ``.strip().lower()`` before constructing the enum, so replacing that parser
-    with the annotation alone silently narrows the accepted spellings — a
-    behaviour change invisible at the declaration site and in every test that
-    only uses canonical forms.
-
-    Passing the result as ``click_type`` keeps the parameter's enum annotation
-    authoritative: the handler still receives a real member, not the raw token,
-    and external input-schema builders still read the closed value set off the
-    wrapped choice. Only the accepted spelling widens.
-    """
-    # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-    # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-    # are the same runtime object behind two static names; the cast bridges only
-    # that static duality, with no Any escape.
-    return cast(
-        typer_click_types.ParamType,
-        click.Choice([member.value for member in enum_class], case_sensitive=False),
-    )
 
 
 # The application- and domain-layer symbols below are imported lazily,
@@ -219,7 +194,7 @@ def boundary_requested_leaf_scope() -> Generator[None]:
 
 
 class CliPolicyRefusalProjection(BaseModel):
-    """Typed policy handoff awaiting generic boundary transport in S18."""
+    """Typed policy handoff awaiting a generic boundary transport."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -237,7 +212,7 @@ def attach_cli_policy_refusal_projection[ExceptionT: Exception](
     *,
     projection: CliPolicyRefusalProjection,
 ) -> ExceptionT:
-    """Attach the strict S17 handoff without changing generic S18 transport."""
+    """Attach the strict typed handoff without changing the generic transport."""
     setattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, projection)
     return error
 
@@ -382,7 +357,7 @@ def _require_cli_precondition_argument_sources(
     specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]],
 ) -> None:
     """Refuse a resolved verdict binding whose provenance contradicts the catalogue."""
-    from ...core import ActionArgumentStatus
+    from ...core.operator_action_enums import ActionArgumentStatus
 
     for name, argument in observed_arguments.items():
         if argument.status is ActionArgumentStatus.MISSING:
@@ -776,7 +751,7 @@ def resolve_notice_action(
     """Resolve a fully materialised successful notice action against the live CLI.
 
     This is the sole entrypoint bridge for successful ``Notice.action`` values.
-    It derives the current result-schema, Click/S05 input, mounted-family,
+    It derives the current result-schema, Click input, mounted-family,
     profile-policy, and external projections, then delegates all action validation
     to the application-owned resolver.  Producers therefore supply only their
     stable action identity and provenance-bearing concrete values; they cannot

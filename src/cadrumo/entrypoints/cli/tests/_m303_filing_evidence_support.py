@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference

@@ -7,7 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, Modelo, Period, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.period import Period
+from ....core.casilla_id import validated_casilla_id
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import LedgerIncomeGrounding, RetencionScheme
 from ....domain.transactions.models import TransactionCatalogue
 from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names

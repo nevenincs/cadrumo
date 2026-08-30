@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import same_tax_identifier
 from ...domain.iva.classification import InvoiceKind
 from .grounding_anchor import printed_excerpt_occurs_in_text

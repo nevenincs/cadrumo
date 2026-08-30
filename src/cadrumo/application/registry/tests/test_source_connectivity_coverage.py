@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ....core import SourceConnectivityDisposition
+from ....core.source_connectivity import SourceConnectivityDisposition
 from ..source_connectivity import load_source_connectivity_census
 from ..source_connectivity_coverage import compose_source_connectivity_coverage
 

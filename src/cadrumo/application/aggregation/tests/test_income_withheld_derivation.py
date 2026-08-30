@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

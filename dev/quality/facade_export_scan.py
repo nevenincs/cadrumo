@@ -11,7 +11,7 @@ no code path:
 
 FORWARD
     The facade imports or exports a name its target module does not define.
-    ``from ._models import Thing`` where ``_models`` has no ``Thing``; or an
+    ``from .models import Thing`` where ``_models`` has no ``Thing``; or an
     ``__all__`` entry the facade never binds. Import of the package raises.
 
 MIRROR

@@ -35,7 +35,7 @@ from pydantic import ValidationError
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import StorageValidationError
-from .._secret_store import (
+from ..store import (
     SECRET_STORE_CLASSES,
     SecretRecord,
     SecretStore,
@@ -216,7 +216,7 @@ def test_the_index_row_holds_the_same_closed_set_as_the_record(classification: S
     index row is constructed on the write path too, and a closed set enforced
     only at read would let a future writer persist the mismatch.
     """
-    from .._secret_store import _SecretIndexEntry
+    from ..store import _SecretIndexEntry
 
     with pytest.raises((StorageValidationError, ValidationError)):
         _SecretIndexEntry(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
+from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,

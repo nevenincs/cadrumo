@@ -13,10 +13,7 @@ from enum import StrEnum
 
 from pydantic import ValidationError
 
-from ..core import (
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
+from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .operator_actions import (
     PreconditionVerdict,
 )

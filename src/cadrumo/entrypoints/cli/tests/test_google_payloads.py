@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from .._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetCalculateResult,
     ModeloSpreadsheetPullResult,

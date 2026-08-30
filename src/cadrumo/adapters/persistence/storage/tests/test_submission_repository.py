@@ -11,7 +11,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....core import Period, StorageCategory, storage_path
+from .....core import StorageCategory, storage_path
+from .....core.period import Period
 from .....domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,

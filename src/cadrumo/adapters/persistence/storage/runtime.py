@@ -41,7 +41,7 @@ from .master_key import current_active_bucket_session, session_serves_bucket
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.identity import BucketId
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})

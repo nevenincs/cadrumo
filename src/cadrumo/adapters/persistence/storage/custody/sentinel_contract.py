@@ -9,7 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from .....core.identity import canonical_profile_bucket_id

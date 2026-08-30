@@ -31,7 +31,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..directory_scan import scan_directory
 from ..errors.hierarchy import CadrumoError as _CadrumoError
 from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

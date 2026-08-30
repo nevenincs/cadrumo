@@ -51,19 +51,19 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
-    ActionEvidenceProvenance,
-    AeatProductSoftwareIdentity,
     ExportLayoutFormat,
     FilingProducerKey,
-    Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
+from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex

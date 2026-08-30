@@ -50,7 +50,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core import IvaDeductionFactKind
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.external_constants import (

@@ -42,7 +42,7 @@ Examples:
 
 from __future__ import annotations
 
-from .parser import parse_borrador
+from ._parser import parse_borrador
 from ._schema import ArtefactKind, BorradorExtractionProfile, BorradorParseMode, InboundBorradorObservation
 from .errors import BorradorParseError
 

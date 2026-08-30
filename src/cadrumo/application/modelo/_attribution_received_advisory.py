@@ -39,7 +39,7 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.decimal import coerce_decimal_strict
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -48,7 +48,7 @@ from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
-    from ...core import CasillaId
+    from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.ids import LegalRefId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.work_unit import WorkUnit

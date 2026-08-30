@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from ..invoice_bindings import m347_operation_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -23,7 +23,7 @@ from ....adapters.persistence.storage import (
     RepositoryError,
     SecureObjectRepository,
 )
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.directory_scan import scan_directory
 from ....core.errors.error_codes import get_registered_error_code

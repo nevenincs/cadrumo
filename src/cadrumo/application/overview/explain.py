@@ -30,8 +30,8 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.time import now, today_madrid

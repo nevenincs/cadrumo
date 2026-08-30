@@ -32,7 +32,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..formula_runtime import RegistryCalculationResult, RegistryCalculationUnresolvedOutcome
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason

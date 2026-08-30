@@ -57,7 +57,7 @@ _configure_stdio_for_utf8()
 # invoking terminal's real width.
 _disable_rich_cli_rendering()
 
-from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core import StorageCategory as _StorageCategory
 from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation

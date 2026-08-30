@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import resolve_anchored_extracted_unit
+from cadrumo.core.corpus_text import resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT

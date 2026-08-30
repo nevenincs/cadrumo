@@ -29,7 +29,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core import STRICT_FROZEN_CONFIG, ElidedProse, Hex64Str
+from ...core import Hex64Str
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.prose_elision import ElidedProse
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex

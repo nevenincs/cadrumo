@@ -13,7 +13,7 @@ from typing import override
 import pytest
 from google.oauth2.credentials import Credentials
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....tests.env_scope import scoped_env_var

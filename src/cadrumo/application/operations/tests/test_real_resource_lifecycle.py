@@ -36,7 +36,7 @@ from ....adapters.persistence.operations.secure_references import (
     operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ....core.operations import (
     OperationCancellation,

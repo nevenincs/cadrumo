@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind, CalculationSourceLineageRole
+from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from .._calculation_actions import _source_provenance_refs
 

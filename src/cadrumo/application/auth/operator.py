@@ -32,11 +32,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from ...core import (
-    ActionEvidenceProvenance,
-    AuthProviderKind,
-    NoRecoveryOutcome,
-)
+from ...core import AuthProviderKind
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token

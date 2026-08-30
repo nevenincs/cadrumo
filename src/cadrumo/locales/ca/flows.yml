@@ -209,7 +209,7 @@ flows:
       section: Resum
       verification_outcome: Resultat de la verificació
       work_unit: Unitat de treball
-    title: Modelo {modelo} · {filing_year} · {period}
+    title: Model {modelo} · {filing_year} · {period}
   modelo_select:
     column:
       filing_year: Exercici

@@ -17,7 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import CasillaId, ConceptLifecycle, Modelo, validated_casilla_id
+from cadrumo.core import ConceptLifecycle
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 
 from .. import (

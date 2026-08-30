@@ -43,7 +43,8 @@ import pytest
 
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
-from ...core import FieldGroundingOutcome, FieldOrigin, Period
+from ...core import FieldGroundingOutcome, FieldOrigin
+from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva.rates import load_iva_rate_table
 from ...domain.iva.schema import EUMemberState

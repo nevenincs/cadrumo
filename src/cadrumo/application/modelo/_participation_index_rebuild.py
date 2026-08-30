@@ -31,7 +31,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import CalculationRevisionId
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex, upsert_transaction_participation

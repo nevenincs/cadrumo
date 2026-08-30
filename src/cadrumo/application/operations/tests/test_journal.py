@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ..capabilities import OperationRequestStoragePolicy
 from ..models import (
     OperationId,

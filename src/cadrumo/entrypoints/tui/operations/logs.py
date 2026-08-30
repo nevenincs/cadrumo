@@ -23,7 +23,7 @@ from ....application.operations.frontend_contracts import (
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
 from ....application.operations.persistence.replay import RESYNCHRONIZING_REPLAY_STATUSES, OperationReplayStatus
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEventKind
 
 _DEFAULT_MAX_ROWS = 500

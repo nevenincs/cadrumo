@@ -28,8 +28,8 @@ from ...adapters.persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex

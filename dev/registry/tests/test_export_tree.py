@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 
 from ..pipeline import _export_tree
+from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
@@ -68,6 +69,35 @@ from .test_generated_export_trees import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:
+    """Generator-owned refs are exactly the generated casilla field relation."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "0001-casillas.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = "addressed"
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+id = "displaced"
+source_refs = ["source"]
+export_refs = ["generated.displaced"]
+""",
+        encoding="utf-8",
+    )
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"addressed": ("generated.addressed",)},
+    )
+
+    assert written == (path,)
+    rendered = path.read_text(encoding="utf-8")
+    assert 'id = "addressed"\nsource_refs = ["source"]\nexport_refs = ["generated.addressed"]' in rendered
+    assert 'id = "displaced"\nsource_refs = ["source"]\nexport_refs' not in rendered
 
 
 def _intermediate(
@@ -1391,7 +1421,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
         )
 
 
-@pytest.mark.parametrize("official_content", (None, 'Constante "<T" o "ZZ"'))
+@pytest.mark.parametrize("official_content", (None, 'Constante "<T" o "ZZ"', 'Constante "<T". o "ZZ"'))
 def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
     m130_inspection_snapshot,
     tmp_path,
@@ -1424,6 +1454,17 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
         )
 
     assert not target.exists()
+
+
+def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alternative() -> None:
+    """M184 2025 prints the constant before a merged explanatory sentence."""
+    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
+        'Constante "E". rentas. Declaración anual.',
+    )
+
+    assert labelled is not None
+    assert labelled.group("literal") == "E"
+    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S".') is not None
 
 
 def test_renderer_refuses_wrong_same_width_literal_without_output(m130_inspection_snapshot, tmp_path) -> None:

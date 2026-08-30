@@ -17,7 +17,7 @@ and storage factory render the same localised repair guidance.
 
 from __future__ import annotations
 
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.bucket_pointer import resolve_active_bucket_id
 from .errors import GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError, google_auth_no_action_verdict
 

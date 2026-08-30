@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (

@@ -27,7 +27,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now as _now
 from .categories import UrlStability
 from .codes import Portal

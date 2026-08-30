@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ...calculations.registry.errors import RegistrySnapshotError
 from ..plazo import resolve_filing_closes_on
 from ..recargo import (

@@ -91,7 +91,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import (
     PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
     PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,

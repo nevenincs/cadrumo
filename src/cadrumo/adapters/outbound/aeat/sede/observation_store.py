@@ -43,7 +43,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import override
 
-from .....core import Period
+from .....core.period import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now

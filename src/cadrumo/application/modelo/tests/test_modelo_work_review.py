@@ -9,7 +9,9 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind, ModeloWorkProgressState, Period
+from ....core import ModeloWorkProgressState
+from ....core.period import Period
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation

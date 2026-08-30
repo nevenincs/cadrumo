@@ -38,7 +38,7 @@ from typing import Final, Literal, get_args
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
 

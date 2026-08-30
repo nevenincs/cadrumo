@@ -62,7 +62,7 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ._modelo import Modelo
+from .modelo import Modelo
 
 if TYPE_CHECKING:
     # Deferred: ``._period`` transitively imports ``.errors``, which imports
@@ -76,7 +76,7 @@ if TYPE_CHECKING:
     # is sufficient and the module needs no runtime binding of the name.
     from _typeshed import SupportsAllComparisons
 
-    from ._period import Period
+    from .period import Period
 
 
 class AmendmentLiabilityDirection(StrEnum):

@@ -44,7 +44,7 @@ from functools import lru_cache
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
 from ....domain.calculations.registry.schema import ModeloRevision

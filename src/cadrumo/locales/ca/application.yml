@@ -184,7 +184,7 @@ application:
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No es poden fusionar observacions amb clau
-          de modelo, exercici o període diferent: {primary_modelo} {primary_filing_year}
+          de model, exercici o període diferent: {primary_modelo} {primary_filing_year}
           {primary_period} davant de {overlay_modelo} {overlay_filing_year} {overlay_period}.'
         selector_filing_year_delta_type: El selector de vinculació del registre 'filing_year_delta'
           ha de ser un nombre enter o una cadena numèrica; conté {observed_type}.
@@ -210,12 +210,12 @@ application:
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Les observacions de compensació
-          del Modelo 303 han d'usar els identificadors de casella declarats per la
+          del Model 303 han d'usar els identificadors de casella declarats per la
           revisió {revision_id}; {casilla_ids} no estan declarats.
         correction_missing: No existeix cap registre de compensació sembrat per a
           %{filing_year}/%{period}; la correcció sobreescriu una sembra existent,
           no la crea.
-        history_casilla_undeclared: La casella {casilla_id} no està declarada al modelo
+        history_casilla_undeclared: La casella {casilla_id} no està declarada al model
           {modelo} revisió {revision_id}, de manera que no s'hi pot adjuntar cap referència
           legal. Corregiu la referència de la casella.
         history_operand_ref_value_arity: La casella {casilla_id} aporta {operand_ref_count}
@@ -225,18 +225,18 @@ application:
           les referències d'operand {supplied_operand_refs}, però la fórmula {formula_id}
           projecta {formula_operand_refs}.
         history_operand_refs_without_formula: La casella {casilla_id} aporta referències
-          d'operand, però el modelo {modelo} revisió {revision_id} no declara cap
-          fórmula per a ella.
+          d'operand, però el model {modelo} revisió {revision_id} no declara cap fórmula
+          per a ella.
         local_recurrence_modelo_303_only: La recurrència local de compensació d'IVA
-          només es reconstrueix per al Modelo 303; s'ha indicat el modelo {modelo}.
+          només es reconstrueix per al Model 303; s'ha indicat el model {modelo}.
         modelo_303_only: L'historial de compensació d'IVA només accepta observacions
           del Model 303.
         modelo_390_only: El resum anual de compensació d'IVA només accepta observacions
           del Model 390.
         observed_casilla_ids_noncanonical: Les observacions de compensació d'IVA han
-          d'usar els identificadors de casella declarats pel modelo {modelo} revisió
+          d'usar els identificadors de casella declarats pel model {modelo} revisió
           {revision}; {casilla_ids} no estan declarats.
-        repository_backend_split: El magatzem d'observacions del Modelo 303 i el de
+        repository_backend_split: El magatzem d'observacions del Model 303 i el de
           l'historial de compensació d'IVA han de compartir un únic backend xifrat
           perquè totes dues escriptures es confirmin alhora.
         seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
@@ -256,11 +256,11 @@ application:
           a {decision_target_year} {decision_target_period}, però la unitat de treball
           és {context_filing_year} {context_period}.
         modelo_303_only: La conciliació de la cartera de compensació d'IVA només s'aplica
-          al Modelo 303; s'ha indicat el modelo {modelo}.
+          al Model 303; s'ha indicat el model {modelo}.
     m303_carry:
       errors:
         available_compensation_amount_missing: El sobre d'arrossegament validat del
-          Modelo 303 no porta cap import de compensació disponible a la casella {casilla_id}.
+          Model 303 no porta cap import de compensació disponible a la casella {casilla_id}.
         available_compensation_formula_missing: La revisió {revision_id} no declara
           cap fórmula per a la casella {target_casilla_id}, de manera que la compensació
           disponible amb base en la generada no en pot citar cap.
@@ -272,43 +272,43 @@ application:
           a {source_locator} porta {value}, que no és un codi de disposició de resultat.
         declaration_type_code_not_admitted: La capçalera d'origen de tipus de declaració
           a {source_locator} porta {value}, un codi que el disseny de registres del
-          Modelo 303 no admet.
+          Model 303 no admet.
         disposition_resultado_sign_incompatible: La disposició declarada {disposition}
           no s'hauria pogut seleccionar per a un resultat presentat de {resultado}.
           Només el contribuent pot decidir quina és correcta; no hi ha recuperació
           automàtica segura.
-        duplicate_declaration_type_headers: L'evidència d'arrossegament del Modelo
+        duplicate_declaration_type_headers: L'evidència d'arrossegament del Model
           303 porta {header_count} capçaleres d'origen {header_key}; se'n requereix
           exactament una.
-        envelope_not_normalized: L'historial d'arrossegament del Modelo 303 requereix
+        envelope_not_normalized: L'historial d'arrossegament del Model 303 requereix
           un parell disponible i generada ja normalitzat i conscient de la disposició.
           Torneu a ingerir l'observació presentada.
         generated_compensation_amount_missing: El sobre d'arrossegament validat del
-          Modelo 303 no porta cap import de compensació generada a la casella {casilla_id}.
-        incomplete_supported_operands: 'La normalització de l''arrossegament del Modelo
+          Model 303 no porta cap import de compensació generada a la casella {casilla_id}.
+        incomplete_supported_operands: 'La normalització de l''arrossegament del Model
           303 no pot derivar la compensació disponible a partir de les caselles presents:
           {casilla_ids}.'
-        invalid_registry_observation: L'entrada d'arrossegament del Modelo 303 requereix
-          una observació de modelo del registre; ha rebut {observed_type}.
+        invalid_registry_observation: L'entrada d'arrossegament del Model 303 requereix
+          una observació de model del registre; ha rebut {observed_type}.
         local_disposition_header_disagreement: La disposició de resultat presentada
           localment {typed_disposition} no coincideix amb la capçalera de tipus de
           declaració {header_disposition}. Només el contribuent pot decidir quina
           es va presentar; no hi ha recuperació automàtica segura.
         local_filing_disposition_required: L'evidència d'arrossegament d'una presentació
-          local del Modelo 303 ha de portar la disposició de resultat determinada
-          en el moment de la presentació; l'evidència {source_kind} no en porta cap.
+          local del Model 303 ha de portar la disposició de resultat determinada en
+          el moment de la presentació; l'evidència {source_kind} no en porta cap.
         local_filing_provenance_required: La disposició d'una presentació local del
-          Modelo 303 ha de conservar la seva procedència app_filing; porta {provenance_kind}.
-        non_m303_envelope: L'historial d'arrossegament del Modelo 303 només admet
-          observacions del Modelo 303; s'ha indicat el modelo {modelo}.
+          Model 303 ha de conservar la seva procedència app_filing; porta {provenance_kind}.
+        non_m303_envelope: L'historial d'arrossegament del Model 303 només admet observacions
+          del Model 303; s'ha indicat el model {modelo}.
         official_declaration_type_header_required: L'evidència oficial d'arrossegament
-          del Modelo 303 ha de portar exactament una capçalera d'origen {header_key};
+          del Model 303 ha de portar exactament una capçalera d'origen {header_key};
           l'evidència {source_kind} no en porta cap.
         official_disposition_header_disagreement: La disposició de resultat tipada
           {typed_disposition} no coincideix amb la capçalera de tipus de declaració
           de l'AEAT {header_disposition}. Només el contribuent pot decidir quina es
           va presentar; no hi ha recuperació automàtica segura.
-        resultado_casilla_required: La normalització de l'arrossegament del Modelo
+        resultado_casilla_required: La normalització de l'arrossegament del Model
           303 requereix la casella de resultat presentada {casilla_id}, que l'observació
           no porta.
         supplied_available_contradicts_derivation: La compensació disponible aportada
@@ -319,7 +319,7 @@ application:
           {supplied_available} i {supplied_generated} contradiu la derivació {basis}
           {derived_generated}. Només el contribuent pot decidir quins imports es van
           presentar; no hi ha recuperació automàtica segura.
-        unsupported_provenance: La normalització de l'arrossegament del Modelo 303
+        unsupported_provenance: La normalització de l'arrossegament del Model 303
           només admet evidència oficial de l'AEAT o una presentació local de l'aplicació;
           l'evidència porta {source_kind}.
     maritime_exemption:
@@ -332,7 +332,7 @@ application:
     observations:
       errors:
         casilla_ids_noncanonical: Les observacions de càlcul han d'usar els identificadors
-          de casella declarats pel modelo {modelo} revisió {revision_id}; {casilla_ids}
+          de casella declarats pel model {modelo} revisió {revision_id}; {casilla_ids}
           no estan declarats.
         decision_taxpayer_nif_blank: El NIF del contribuent a la decisió de conciliació
           no pot estar en blanc.
@@ -345,7 +345,7 @@ application:
         period_type_invalid: La clau d'observació requereix un valor de període; ha
           rebut {observed_type}.
         registry_snapshot_missing: No es poden validar els identificadors de casella
-          perquè no es resol cap revisió del registre per al modelo {modelo}, exercici
+          perquè no es resol cap revisió del registre per al model {modelo}, exercici
           {filing_year}, període {period}.
         taxpayer_nif_blank: El NIF del contribuent no pot estar en blanc quan forma
           la clau de decisió de la cartera d'IVA.
@@ -358,7 +358,7 @@ application:
           assemblador en aquesta aplicació; les agrupacions sense un són {unassemblable_groupings}.
         percepcion_clave_missing: La fila {row_index} no declara cap clave. Una percepción
           ha d'indicar la seva clave de l'AEAT, segons el disseny de registres dels
-          Modelos 190 i 193, registre de tipus 2. Aporteu la clave.
+          Models 190 i 193, registre de tipus 2. Aporteu la clave.
         percepcion_clave_unsupported: La fila {row_index} declara la clave de l'AEAT
           {clave}, que aquesta aplicació no admet.
         row_assembly_failed: 'No s''ha pogut assemblar la fila {row_index}: {validation_error_detail}.
@@ -386,7 +386,7 @@ application:
         findings_under_fail_on_warning: La validació de l'esborrany ha produït avisos
           i els avisos es tracten com a bloquejants.
         input_key_noncanonical_casilla: Una clau d'entrada fa servir una referència
-          de casilla no canònica.
+          de casella no canònica.
         input_key_not_string: Les claus d'entrada han de ser identificadors de registre
           en text.
         input_key_padded: Les claus d'entrada no han de portar espais al principi
@@ -399,12 +399,12 @@ application:
         registry_calculation_failed: El càlcul del registre ha fallat per a aquest
           esborrany.
         registry_snapshot_unavailable: No hi ha snapshot de registre disponible per
-          a aquest modelo i període.
+          a aquest model i període.
         schema_version_snapshot_mismatch: La versió del proveïdor d'esquema no coincideix
           amb el snapshot del registre.
-        text_casilla_invalid: El valor de text de la casilla no correspon al tipus
+        text_casilla_invalid: El valor de text de la casella no correspon al tipus
           de dada declarat al registre.
-        text_casilla_not_string: L'entrada de text de la casilla ha de ser un valor
+        text_casilla_not_string: L'entrada de text de la casella ha de ser un valor
           de text.
         unsupported_filing_year: L'exercici {filing_year} no està declarat com a suportat.
           El registre declara {supported_filing_years}. Admeteu l'exercici a {declaration}
@@ -413,9 +413,9 @@ application:
       errors:
         justificante_csv_absent: La complementària requereix el CSV del justificant
           de la declaració original.
-        no_changed_casilla: La complementària requereix almenys una casilla modificada.
+        no_changed_casilla: La complementària requereix almenys una casella modificada.
         original_draft_addressing_mismatch: La declaració original i l'esborrany desat
-          declaren un modelo o període diferent.
+          declaren un model o període diferent.
         original_draft_snapshot_stale: L'esborrany original no es va construir amb
           el snapshot de registre actiu.
         original_submission_csv_blank: La declaració original ha de portar un CSV
@@ -451,7 +451,7 @@ application:
         draft_not_approved: L'exportació requereix un esborrany aprovat.
         draft_snapshot_stale: L'exportació requereix un esborrany construït amb el
           snapshot de registre actiu.
-        layout_not_renderable: Aquest modelo no pot produir un fitxer local d'exportació
+        layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
         post_write_verification_refused: La verificació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
@@ -469,7 +469,7 @@ application:
       errors:
         aux_block_undeclared: El disseny d'exportació no pot escriure el bloc Aux
           obligatori de la declaració.
-        casilla_metadata_drift: La numeració o el segment de casilla es desvia del
+        casilla_metadata_drift: La numeració o el segment de casella es desvia del
           disseny de registre del registre.
         rate_boxes_understate_total: Les casilles per tipus no cobreixen el seu propi
           total declarat.
@@ -493,23 +493,23 @@ application:
           no pertany al snapshot.
     m303_export_applicability:
       errors:
-        filing_facts_absent: L'exportació del modelo 303 requereix les dades de declaració
+        filing_facts_absent: L'exportació del model 303 requereix les dades de declaració
           acoblades.
-        filing_facts_period_mismatch: Les dades de declaració del modelo 303 no coincideixen
+        filing_facts_period_mismatch: Les dades de declaració del model 303 no coincideixen
           amb el període d'exportació.
-        layout_not_snapshot_owned: El disseny d'exportació del modelo 303 no pertany
+        layout_not_snapshot_owned: El disseny d'exportació del model 303 no pertany
           al snapshot seleccionat.
-        producer_snapshot_incomplete: El snapshot productor de la declaració del modelo
+        producer_snapshot_incomplete: El snapshot productor de la declaració del model
           303 és incomplet.
-        producer_snapshot_wrong_modelo: El snapshot productor no correspon al modelo
+        producer_snapshot_wrong_modelo: El snapshot productor no correspon al model
           303.
-        regularisation_result_not_canonical: El resultat de regularització del modelo
+        regularisation_result_not_canonical: El resultat de regularització del model
           303 no és la projecció canònica.
-        snapshot_period_mismatch: El snapshot de registre del modelo 303 no coincideix
+        snapshot_period_mismatch: El snapshot de registre del model 303 no coincideix
           amb el període d'exportació.
     m303_prorrata_activity_rows:
       errors:
-        activity_rows_incomplete: Les files de prorrata per activitat del modelo 303
+        activity_rows_incomplete: Les files de prorrata per activitat del model 303
           són incompletes.
     review:
       errors:
@@ -665,14 +665,14 @@ application:
       aeat_wallet_uncrosschecked: S'ha seleccionat l'última observació vàlida de la
         cartera de l'AEAT; no hi havia recurrència local disponible per contrastar-la.
       aeat_wallet_validated: L'última observació vàlida de la cartera de l'AEAT coincideix
-        amb la recurrència local per a la compensació anterior del Modelo 303.
+        amb la recurrència local per a la compensació anterior del Model 303.
       caller_zero_matches_local_authority: El zero proporcionat per qui fa la crida
         coincideix amb l'autoritat local de zero persistida.
       filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
         recurrència de l'historial presentat requereix una anul·lació expressa del
         contribuent abans de generar el resultat automàtic.
-      filed_history_zero: La prova registrada de l'historial presentat del Modelo
-        303 estableix una compensació a traslladar de zero.
+      filed_history_zero: La prova registrada de l'historial presentat del Model 303
+        estableix una compensació a traslladar de zero.
       first_period_zero_activity_start_uncontrasted: 'SENSE CONTRASTAR: El zero del
         primer període es basa en la data d''inici d''activitat declarada per l''operador;
         Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
@@ -680,16 +680,16 @@ application:
         anterior és zero en el primer període d'IVA registrat.
       first_period_zero_local_recurrence: Un zero local inicial estableix que no existeix
         compensació anterior en el primer període d'IVA registrat.
-      local_evidence_unreadable: Existeix un registre anterior del Modelo 303, però
+      local_evidence_unreadable: Existeix un registre anterior del Model 303, però
         no es pot llegir com a prova de compensació anterior i no hi ha cap observació
         disponible de la cartera de l'AEAT.
       local_recurrence_requires_override: La cartera de l'AEAT no està disponible;
         la recurrència local requereix una anul·lació expressa del contribuent abans
         de generar el resultat automàtic.
-      local_recurrence_zero: La recurrència local del Modelo 303 estableix una compensació
+      local_recurrence_zero: La recurrència local del Model 303 estableix una compensació
         a traslladar de zero.
       no_usable_authority: No hi ha cap observació de la cartera de l'AEAT ni recurrència
-        local utilitzable per a la compensació anterior del Modelo 303.
+        local utilitzable per a la compensació anterior del Model 303.
       stale_wallet_local_recurrence_requires_override: L'observació de la cartera
         de l'AEAT està desactualitzada; la recurrència local requereix una anul·lació
         expressa del contribuent abans de generar el resultat automàtic.
@@ -731,14 +731,14 @@ application:
   live:
     borrador:
       errors:
-        binding_value_key_blank: Les claus dels valors de vinculació del borrador
+        binding_value_key_blank: Les claus dels valors de vinculació de l'esborrany
           no poden estar buides.
-        bucket_id_blank: L'identificador del bucket del borrador no pot estar buit.
-        snapshot_id_blank: L'identificador del snapshot del borrador no pot estar
+        bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.
+        snapshot_id_blank: L'identificador del snapshot de l'esborrany no pot estar
           buit.
-        snapshot_not_found: Cap snapshot del borrador coincideix amb l'identificador
+        snapshot_not_found: Cap snapshot de l'esborrany coincideix amb l'identificador
           sol·licitat.
-        snapshot_prefix_ambiguous: El prefix del snapshot del borrador coincideix
+        snapshot_prefix_ambiguous: El prefix del snapshot de l'esborrany coincideix
           amb diversos snapshots.
     deudas:
       errors:
@@ -1019,7 +1019,7 @@ application:
         derivada del llibre major no inclou evidència del llibre major ni una referència
         resoluble a l'snapshot; verifica la revisió de nou abans d'exportar.
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
-        create NAME` abans d'exportar una revisió de modelo.
+        create NAME` abans d'exportar una revisió de model.
       export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:
         {output_path} ({reason}).'
       export_period_unmappable: La unitat de treball %{work_unit_id} conté el període
@@ -1037,7 +1037,7 @@ application:
       external_import_duplicate_revision: La revisió de càlcul %{calculation_revision_id}
         ja existeix al catàleg; ja s'havia registrat una importació idèntica.
       external_import_justificante_mismatch: L'evidència d'importació externa %{evidence_reference_id}
-        no coincideix amb el modelo %{modelo}, exercici %{filing_year}, període %{period}.
+        no coincideix amb el model %{modelo}, exercici %{filing_year}, període %{period}.
       external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}
         (%{evidence_kind}) no està registrada com a artefacte de justificant persistent.
       external_import_m303_filing_evidence_required: La importació externa del model
@@ -1199,8 +1199,8 @@ application:
       verification_report_not_found: No s'ha trobat cap informe de verificació amb
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
-        vàlid per al modelo %{modelo}. Indica --year %{year} per separat i usa un
-        de: %{tokens}.'
+        vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
+        %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unitat de treball ja està descartada.
@@ -1216,7 +1216,7 @@ application:
       work_unit_mutation_refused: La unitat de treball esta descartada, i tornar a
         crear el mateix objectiu de declaracio es rebutja en lloc de retornar una
         unitat nova.
-      work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
+      work_unit_not_found: No s'ha trobat cap unitat de treball de model amb id=%{work_unit_id}.
       work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
         amb la revisió de registre %{work_unit_revision}, però la revisió determinada
         per llei per al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
@@ -1353,7 +1353,7 @@ application:
       horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:
       errors:
-        modelo_blank: L'identificador de modelo no pot estar en blanc.
+        modelo_blank: L'identificador de model no pot estar en blanc.
   registry:
     errors:
       citation_not_found: No s'ha trobat cap cita del registre per a la referència
@@ -1596,7 +1596,7 @@ application:
       resume_target_required: Indica --modelo --year --period, un id d'execució de
         flux, un id d'unitat de treball o un id de revisió de càlcul per reprendre.
       resume_visible_target_incomplete: Resume per clau natural requereix --modelo,
-        --year i --period junts; rebut modelo={modelo}, year={year}, period={period}.
+        --year i --period junts; rebut model={modelo}, year={year}, period={period}.
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
       run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
         de ruta.

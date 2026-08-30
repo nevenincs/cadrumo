@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
-from ...core import Period
+from ...core.period import Period
 
 _M303_ANNUAL_SETTLEMENT_ORDER: Final[dict[str, int]] = {"4T": 0, "0A": 1}
 

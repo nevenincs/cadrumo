@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from .._action_errors import CalculationRevisionNotFoundError
 from .._filing_actions import file_modelo_revision

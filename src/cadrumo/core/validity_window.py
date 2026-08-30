@@ -32,7 +32,7 @@ from datetime import date
 
 from pydantic import BaseModel, model_validator
 
-from ._models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 
 
 class ValidityWindow(BaseModel):

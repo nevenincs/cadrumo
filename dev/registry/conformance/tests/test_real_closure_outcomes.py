@@ -30,17 +30,11 @@ from cadrumo.application.registry.filing_export_coverage import compose_filing_e
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
 from cadrumo.application.registry.temporal_coverage import compose_temporal_coverage
-from cadrumo.core import (
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
-    Modelo,
-    PaymentElection,
-    Period,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-    SourceConnectivityDisposition,
-)
+from cadrumo.core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.period import Period
+from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
+from cadrumo.core.source_connectivity import SourceConnectivityDisposition
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy

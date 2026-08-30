@@ -914,18 +914,6 @@ class ConfigProfileDeleteResult(OutputSchema):
     completed_at: str | None = None
 
 
-class ConfigProfileRenameResult(OutputSchema):
-    """JSON envelope retained for profile-label-change evidence.
-
-    Reports the immutable profile id plus the previous and new display labels;
-    profile identity and bucket storage remain unchanged.
-    """
-
-    profile_id: BucketId
-    previous_display_name: ProfileLabel
-    display_name: ProfileLabel
-
-
 class ConfigProfileExportResult(OutputSchema):
     """JSON envelope retained for profile-bundle export evidence.
 
@@ -949,47 +937,6 @@ class ConfigProfileExportResult(OutputSchema):
     data_categories: list[str]
     excluded_data_categories: list[str] = []
     reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
-
-
-class ConfigProfileSubjectAccessRequestResult(OutputSchema):
-    """JSON envelope retained for a profile subject-access archive.
-
-    A GDPR right-of-access export: the same portable bundle produced by the
-    retired profile-bundle export surface, framed as the operator's own
-    personal-data archive. Reports the profile identity, output path, bundle
-    schema version, operator purpose, wire transport, the machine-readable
-    catalogue of the personal-data categories the archive carries so the
-    subject can see what is held, and any crash-recovery journal the
-    pre-publication sweep could not finalise.
-
-    ``excluded_data_categories`` is reported alongside, never omitted. The
-    bundle ships under the structured custody profile, so whole namespaces --
-    attachment blobs, purchase invoice evidence, the bucket event history --
-    stay in encrypted storage. Publishing only what the archive carries would
-    make the catalogue read as a completeness claim it cannot support.
-    """
-
-    profile_id: ProfileId
-    display_name: str
-    out: str
-    schema_version: int
-    purpose: ProfileBundleExportPurpose
-    transport: ProfileBundleExportTransport
-    data_categories: list[str]
-    excluded_data_categories: list[str] = []
-    reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
-
-
-class ConfigProfileImportResult(OutputSchema):
-    """JSON envelope retained for profile-bundle import evidence.
-
-    Projects :class:`ProfileImportResult` down to
-    the imported profile identity, label, and bundle schema version.
-    """
-
-    profile_id: ProfileId
-    display_name: str
-    schema_version: int
 
 
 # Sealed bucket-archive result schemas (backup / restore / inspect)

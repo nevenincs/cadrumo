@@ -18,7 +18,8 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from ...application.operator_actions import PreconditionVerdict
-from ...core import ActionEvidenceProvenance, FormerProductStateError, NoRecoveryOutcome
+from ...core import FormerProductStateError
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import set_log_level
 

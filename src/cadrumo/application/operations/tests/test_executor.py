@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 from pydantic import BaseModel
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect
 from ..capabilities import OperationOwnedResource
 from ..events import OperationLogSeverity

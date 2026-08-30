@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import normalise_corpus_text, resolve_anchored_extracted_unit
+from .....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 from ..legal import verify_legal_catalogue
 from ._catalogue_verification_support import _catalogues

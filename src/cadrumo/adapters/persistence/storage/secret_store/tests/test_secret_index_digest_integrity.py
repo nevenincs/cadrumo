@@ -40,7 +40,7 @@ from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.hashing import sha256_hex
 from ...errors import StorageValidationError
-from .._secret_store import SecretRecord, SecretStore
+from ..store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

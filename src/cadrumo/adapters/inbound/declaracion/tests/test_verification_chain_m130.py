@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,

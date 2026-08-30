@@ -7,16 +7,12 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
-    CasillaId,
-    OutputLanguage,
-    Period,
-    RegistryAuthorityGrade,
-    RegistrySchemaFamilyDisposition,
-    RevisionReviewStatus,
-)
+from ...core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
 from ...domain.calculations.registry.ids import (
@@ -47,7 +43,6 @@ _MAX_SCHEMA_SECTION_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
 _MAX_REPEATED_ROW_VALUES = 200
-_MAX_PROVENANCE_RECORDS = 64
 _MAX_CLOSURE_LIMBS = 16
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
@@ -609,7 +604,6 @@ class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):
 
     casilla_id: CasillaId
     value: ModeloScalar
-    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
 class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
@@ -620,7 +614,6 @@ class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
     values: Annotated[
         tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=_MAX_REPEATED_ROW_VALUES)
     ]
-    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
 class ModeloWorkspaceScalarMaterializationRecordV1(_WorkspaceModel):
@@ -1228,8 +1221,8 @@ class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
     facts: Annotated[tuple[ModeloWorkspaceEvidenceFactV1, ...], Field(max_length=_MAX_SAFE_FACTS)] = ()
     evidence: _BoundedRefList[ModeloWorkspaceEvidenceReferenceV1] = ()
     responsible_owner: _BoundedCode
-    source_disposition: RegistrySchemaFamilyDisposition | None = None
     reconsideration_condition: _BoundedText
+    source_disposition: RegistrySchemaFamilyDisposition | None = None
     recovery_action: ActionReference | None = None
 
     @field_validator("facts")

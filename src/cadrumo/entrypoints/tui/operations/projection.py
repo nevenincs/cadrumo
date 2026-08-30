@@ -23,7 +23,7 @@ from ....application.operations.frontend_contracts import (
     OperationUnsupportedInteractionV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationReference
-from ....core import STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationClosePolicy,
     OperationEffect,

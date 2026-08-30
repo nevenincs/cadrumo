@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import ClassVar
 
-from ...core import BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot

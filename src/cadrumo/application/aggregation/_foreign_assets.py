@@ -25,14 +25,14 @@ from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, ValidationError,
 
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
-    STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
     ForeignAssetObligationGroup,
     M720AssetClassCode,
-    Modelo,
-    Period,
     foreign_asset_obligation_group,
 )
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import ForeignAssetClass
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import content_hash_hex

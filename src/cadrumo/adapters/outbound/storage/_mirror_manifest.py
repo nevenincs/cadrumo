@@ -18,8 +18,8 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from ....application.operator_actions import no_action_precondition_verdict
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.hashing import sha256_hex
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._protocol import StorageProvider
 from ._records import (
@@ -412,6 +412,27 @@ def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
     return sha256_hex(namespace.encode() + b"\x00" + object_key)
 
 
+def remote_mirror_object_label(namespace: str) -> str:
+    """Derive the human-readable half of a mirrored row's provider filename.
+
+    A mirrored object is named ``<object-key-hmac>--<label>.bin``. The hmac half
+    comes from :func:`remote_mirror_object_key_hmac`; this is the other half,
+    and both are facts about the wire, not about whichever surface happens to
+    push. The label is the namespace's trailing dotted segment, sanitised to
+    alphanumerics, dash, underscore and dot, and capped at thirty-two
+    characters, so the operator can recognise a row in a Drive listing without
+    the name carrying anything the hmac exists to hide.
+
+    Deliberately not :func:`_manifest_label`, which names the manifest FILE for
+    a namespace: that one keeps the whole namespace, admits no dots or
+    underscores, and allows sixty-four characters. Two names for two different
+    objects, and neither policy is a superset of the other.
+    """
+    leaf = namespace.rsplit(".", 1)[-1] or "obj"
+    safe = "".join(character if character.isalnum() or character in "-_." else "-" for character in leaf)
+    return safe[:32] or "obj"
+
+
 def _manifest_label(namespace: str) -> str:
     return "".join(character if character.isalnum() else "-" for character in namespace)[:64] or "namespace"
 
@@ -426,4 +447,5 @@ __all__ = [
     "inspect_remote_mirror_upload",
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
+    "remote_mirror_object_label",
 ]

@@ -31,7 +31,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ..aggregation import DEFERRED_SOURCE_KINDS
 from ..aggregation import CallerOverrideDisposition as _CallerOverrideDisposition
 from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources

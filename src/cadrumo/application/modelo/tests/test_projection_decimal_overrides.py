@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from .._projection import ModeloProjectInvalidDecimalOverrideError, _decimal_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

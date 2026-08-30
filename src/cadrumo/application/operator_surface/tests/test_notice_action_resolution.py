@@ -7,10 +7,7 @@ import inspect
 
 import pytest
 
-from ....core import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-)
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....core.json_contract import ResolvedActionArgument
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
@@ -53,7 +50,7 @@ def _reconciliation(*, target_command_key: str, required_input_names: tuple[str,
                 input_schema=InputSchemaInventoryRow(
                     subject_leaf_key=target_command_key,
                     required_input_names=required_input_names,
-                    provenance="S05 VerbInputSchema.required_inputs",
+                    provenance="VerbInputSchema.required_inputs",
                 ),
                 mounted_family=MountedFamilyInventoryRow(
                     root="config",

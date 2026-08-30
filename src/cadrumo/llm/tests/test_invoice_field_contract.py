@@ -28,7 +28,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...core import FieldOrigin, Period
+from ...core import FieldOrigin
+from ...core.period import Period
 from ...domain import iva as _iva_module
 from ...domain.iva.rates import load_iva_rate_table
 from ...domain.iva.schema import EUMemberState, IvaCategory, NO_PRINTED_TAX_IVA_CATEGORIES

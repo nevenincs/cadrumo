@@ -7,20 +7,19 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .. import (
+from .. import aggregation, period as _period
+from ..period import (
     FilingPeriodCode,
     Period,
     PeriodError,
     PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
-    _period,
     accepted_filing_period_codes,
     accepted_filing_period_patterns,
     accepted_period_codes,
-    aggregation,
 )
-from .._period import accepted_period_patterns
+from ..period import accepted_period_patterns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

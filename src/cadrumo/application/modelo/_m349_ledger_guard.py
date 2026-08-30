@@ -12,7 +12,8 @@ that refusal condition; it does not resolve registry binding values itself.
 from __future__ import annotations
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import ActionEvidenceProvenance, Modelo
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit

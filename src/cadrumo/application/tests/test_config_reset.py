@@ -157,7 +157,7 @@ def _persist_filing(
     locks on unopened targets does not have.
     """
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ...core import Period
+    from ...core.period import Period
     from ...domain.modelos.codes import ModeloCode
     from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
     from ..filing import try_record_filing_retention_snapshot

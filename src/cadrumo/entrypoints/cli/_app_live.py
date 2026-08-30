@@ -58,7 +58,7 @@ from ...application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ...application.operator_actions import ActionReference
-from ...core import Period, PeriodError
+from ...core.period import Period, PeriodError
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

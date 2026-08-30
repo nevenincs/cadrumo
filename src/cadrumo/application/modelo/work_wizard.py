@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 
 from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr

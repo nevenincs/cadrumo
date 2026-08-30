@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ..carry_forward import derive_303_compensation_available
 from ..filed_derivation import (
     M303_COMPENSATION_GENERADA_CASILLA,

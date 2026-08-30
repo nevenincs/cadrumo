@@ -29,7 +29,8 @@ from datetime import date
 import pytest
 
 from .....application.filing import build_runtime_schema_provider
-from .....core import ExportLayoutFormat, Period
+from .....core import ExportLayoutFormat
+from .....core.period import Period
 from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot

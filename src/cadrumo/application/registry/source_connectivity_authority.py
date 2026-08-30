@@ -13,10 +13,9 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
-    BindingSourceKind,
-    CalculationSourceLineageRole,
-    ModeloCalculationRouteId,
+from ...core import ModeloCalculationRouteId
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.source_connectivity import (
     SourceConnectivityConnectionIdentity,
     SourceConnectivityEncryptedRevisionProof,
     SourceConnectivityExecutableEvidence,

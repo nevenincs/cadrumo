@@ -15,7 +15,9 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....core import CasillaId, Period, RegistryAuthorityGrade
+from ....core import RegistryAuthorityGrade
+from ....core.period import Period
+from ....core.casilla_id import CasillaId
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority

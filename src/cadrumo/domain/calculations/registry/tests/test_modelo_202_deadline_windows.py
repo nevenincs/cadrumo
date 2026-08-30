@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import PeriodKind, registry_period_kind
+from .....core.period import PeriodKind, registry_period_kind
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._validate import RegistryValidator

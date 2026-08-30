@@ -27,7 +27,7 @@ from typing import Final
 
 import pytest
 
-from .....core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
+from .....core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 

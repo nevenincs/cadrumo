@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.directory_scan import scan_directory
 from ..borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
 from ..errors import (

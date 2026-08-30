@@ -24,7 +24,8 @@ from textual.widgets import (
 )
 
 from ......application.modelo.work_review import ModeloWorkOriginAnomaly
-from ......core import EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from ......core import EstadoCasillaOficial, ModeloWorkProgressState
+from ......core.operator_action_enums import OperatorActionAxis
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr

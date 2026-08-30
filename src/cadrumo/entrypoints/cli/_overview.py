@@ -218,10 +218,7 @@ def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
 
 def _overview_status_period(period: str, *, year: int | None):
     """Resolve ``overview status --period`` through the registry-token union."""
-    from ...core import (
-        Period,
-        PeriodError,
-    )
+    from ...core.period import Period, PeriodError
 
     token = period.strip()
     if not token:

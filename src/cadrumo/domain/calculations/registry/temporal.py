@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ....core import RegistrySelectorPeriodCode
+from ....core.period import RegistrySelectorPeriodCode
 from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from .ids import RevisionId
 from .period_selector_match import selector_token_for_request

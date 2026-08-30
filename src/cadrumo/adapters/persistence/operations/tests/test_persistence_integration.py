@@ -25,7 +25,7 @@ from .....application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from .....application.operations.persistence.replay import OperationReplayStatus
-from .....core import OperationEffect, OperationLifecycle
+from .....core.operations import OperationEffect, OperationLifecycle
 from .....core.directory_scan import scan_directory
 from ...storage import RepositoryError
 from ..journal import OperationJournalRepository

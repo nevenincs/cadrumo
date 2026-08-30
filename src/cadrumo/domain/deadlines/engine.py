@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from ...core import Modelo
+from ...core.modelo import Modelo
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now, today_madrid

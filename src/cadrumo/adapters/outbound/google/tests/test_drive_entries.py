@@ -23,7 +23,7 @@ from typing import Any
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....outbound.storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from .._drive_entries import (
     OWNERSHIP_KEY,

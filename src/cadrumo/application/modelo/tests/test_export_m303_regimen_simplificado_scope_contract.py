@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register import ProrrataRegister

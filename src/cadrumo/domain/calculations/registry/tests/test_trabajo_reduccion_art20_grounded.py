@@ -22,7 +22,7 @@ from functools import lru_cache
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

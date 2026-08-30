@@ -32,7 +32,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, ParameterId, RevisionId
 

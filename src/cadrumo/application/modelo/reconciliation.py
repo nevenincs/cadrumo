@@ -53,8 +53,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_identity_token
 from ...core.time import now
@@ -95,7 +95,7 @@ _MAX_PAYLOAD_VALUE_LENGTH = 500
 _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
-    from ...core import Period
+    from ...core.period import Period
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue

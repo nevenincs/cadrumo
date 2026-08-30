@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._verification_chain_support import FIXTURES_DIR, CasillaId, DeclaracionParseError, parse_declaracion
 
 _M100_INGRESOS_EXPLOTACION_CASILLA: CasillaId = validated_casilla_id("0171")

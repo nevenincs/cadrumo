@@ -51,7 +51,7 @@ See Also:
 
 from __future__ import annotations
 
-from .parser import parse_declaracion, parse_declaracion_bytes
+from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
     ExtractionWarning,
     InboundDeclaracionObservation,

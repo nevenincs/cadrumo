@@ -13,7 +13,6 @@ from typing import Annotated, Final, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import (
-    CasillaId,
     DeclaracionIdioma,
     ExportLayoutFormat,
     FilingProducerKey,
@@ -21,6 +20,7 @@ from ....core import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
+from ....core.casilla_id import CasillaId
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
 from .export_semantics import (

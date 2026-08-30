@@ -12,9 +12,9 @@ from ....core import (
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    Modelo,
     ResultDisposition,
 )
+from ....core.modelo import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_exports import (

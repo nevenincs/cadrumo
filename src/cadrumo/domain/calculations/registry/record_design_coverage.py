@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError

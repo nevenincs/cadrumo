@@ -324,7 +324,7 @@ if TYPE_CHECKING:
         secure_object_repository_for_cold_bootstrap_state,
         secure_object_repository_for_staged_bucket,
     )
-    from .secret_store import (
+    from .secret_store.store import (
         SecretRecord,
         SecretStore,
     )
@@ -511,8 +511,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "SYNC_RUN_RECORDS_NAMESPACE": "._namespace_registry",
     "SecretAlreadyExistsError": ".errors",
     "SecretNotFoundError": ".errors",
-    "SecretRecord": ".secret_store",
-    "SecretStore": ".secret_store",
+    # The secret_store package namespace is inert, so this map names the module that
+    # DEFINES both symbols. Resolving through the package would re-enter an
+    # __init__ that binds nothing and fail lazily, on first attribute access.
+    "SecretRecord": ".secret_store.store",
+    "SecretStore": ".secret_store.store",
     "SecretStoreError": ".errors",
     "SecureBoundRepository": ".envelope",
     "SecureObjectDeletion": ".sql",

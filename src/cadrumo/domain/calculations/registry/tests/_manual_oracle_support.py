@@ -15,7 +15,7 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ..external_grounding import ManualWorkedExamplePayload
 

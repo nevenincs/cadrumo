@@ -27,6 +27,7 @@ from ....core.setup_answers import (
 from ..catalogue import SETUP_FLOW
 from ..models import WizardQuestion
 from ..persistence import project_answers
+from ..widgets import _POSTCODE_QUESTION_IDS
 
 pytestmark = [
     pytest.mark.unit,
@@ -156,9 +157,18 @@ def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_fo
 
 
 def _non_default_token(question: WizardQuestion) -> str:
-    """Return a token that is valid for the type and differs from ``default``."""
+    """Return a token that is valid for the question and differs from ``default``.
+
+    Valid for the QUESTION, not merely for its Python type. A postcode answer is
+    a ``str``, but the profile field now carries the Spanish postcode shape, so
+    the generic filler is no longer an accepted value for it. The postcode ids
+    are read from the widget module rather than restated, so a second postcode
+    question cannot appear here as a passing test and a refusing profile.
+    """
     if question.answer_type is bool:
         return "false" if question.default == "true" else "true"
     if question.choices:
         return next(choice.value for choice in question.choices if choice.value != question.default)
+    if question.id in _POSTCODE_QUESTION_IDS:
+        return "28001"
     return "sample"

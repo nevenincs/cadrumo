@@ -28,7 +28,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
+from ...core import ServiceCapability
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.parsing import parse_bool
 from ...domain.user_profile.values import UserProfileRecord

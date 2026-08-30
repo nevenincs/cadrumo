@@ -23,13 +23,13 @@ from ....core import (
     OrdenAnualIvaSeasonalIndex,
     extract_orden_anual_iva_authority,
     extract_orden_anual_iva_tables,
-    normalise_corpus_text,
     orden_anual_iva_activity_anchors,
     orden_anual_iva_authority_units,
     orden_anual_iva_table_text,
     render_corpus_sidecar_text,
-    sha256_hex,
 )
+from ....core.corpus_text import normalise_corpus_text
+from ....core.hashing import sha256_hex
 from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,

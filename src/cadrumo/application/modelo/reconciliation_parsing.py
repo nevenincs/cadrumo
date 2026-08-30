@@ -12,7 +12,7 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import Protocol
 
-from ...core import Period
+from ...core.period import Period
 from ...domain.justificante import Justificante
 
 

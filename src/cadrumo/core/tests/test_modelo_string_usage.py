@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 
 from ...tests import SRC_CADRUMO, aeat_relative, production_ast_items
-from .. import Modelo
+from ..modelo import Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

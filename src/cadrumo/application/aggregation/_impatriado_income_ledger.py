@@ -48,8 +48,11 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, validated_casilla_id
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.modelo import Modelo
+from ...core.period import Period, PeriodKind
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.prose_elision import ElidedProse
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import TransactionId
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

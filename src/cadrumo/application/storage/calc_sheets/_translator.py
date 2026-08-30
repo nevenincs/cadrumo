@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Final
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.decimal import format_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.ids import (

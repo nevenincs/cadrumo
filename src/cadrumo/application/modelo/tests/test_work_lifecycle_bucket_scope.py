@@ -20,7 +20,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile

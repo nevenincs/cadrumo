@@ -31,7 +31,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
-from ....core import Period
+from ....core.period import Period
 from ....domain.justificante import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id

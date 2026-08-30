@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.transactions.errors import TransactionNotFoundError
 from ..actions_lifecycle import stash_manual_transaction
 from ..actions_manual import (

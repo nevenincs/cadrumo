@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ....core import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.errors.hierarchy import CadrumoError
 from ....core.time import UtcInstant
 from ....core.time import now as _utc_now

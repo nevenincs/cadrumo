@@ -34,13 +34,13 @@ import pydantic
 import pytest
 
 from .....core import (
-    ABSENT_SECURE_OBJECT_REVISION_ID,
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.prorrata_register import (
     PRORRATA_REGISTER_SCHEMA_VERSION,

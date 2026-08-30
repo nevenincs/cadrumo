@@ -8,7 +8,7 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo

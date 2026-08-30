@@ -13,7 +13,8 @@ import pytest
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....core import IvaCompensationStateProvenance, Period
+from ....core import IvaCompensationStateProvenance
+from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ....tests.profile_capsule import open_test_profile_session

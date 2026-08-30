@@ -39,7 +39,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import Any, Final
 
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._preconditions import google_terminal_refusal
 from .api import execute_request

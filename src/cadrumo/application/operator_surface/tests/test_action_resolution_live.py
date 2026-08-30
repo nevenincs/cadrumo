@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import NoRecoveryOutcome
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....entrypoints.cli.command_api import build_verb_input_schemas, command_schema_refs
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,

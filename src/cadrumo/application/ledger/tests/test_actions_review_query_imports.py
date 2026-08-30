@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ..actions_import import import_ledger_source
 from ..actions_manual import query_ledger_review_rows

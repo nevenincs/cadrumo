@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from .._modelo_spreadsheet_cli import filing_period_or_refusal, load_snapshot
 from ..errors import CliRefusedBoundaryError
 

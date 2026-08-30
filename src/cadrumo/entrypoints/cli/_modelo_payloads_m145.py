@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId

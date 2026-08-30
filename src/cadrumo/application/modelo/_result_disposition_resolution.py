@@ -44,16 +44,16 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import (
-    CasillaId,
-    Modelo,
     PaymentElection,
-    Period,
     RefundElection,
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (

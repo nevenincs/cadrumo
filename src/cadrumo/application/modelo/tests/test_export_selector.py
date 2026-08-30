@@ -13,7 +13,7 @@ __all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import StorageCustodyProfile
 from ....core.classification import SensitivityClass
 from ._namespace_taxonomy import (

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys

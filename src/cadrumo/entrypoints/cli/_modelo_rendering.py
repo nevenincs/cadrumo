@@ -28,7 +28,7 @@ from ...application.modelo._work_plazo import (
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue

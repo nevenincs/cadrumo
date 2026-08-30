@@ -37,7 +37,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
-from ...core import SecureObjectWrite
+from ...core.secure_object_write import SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger

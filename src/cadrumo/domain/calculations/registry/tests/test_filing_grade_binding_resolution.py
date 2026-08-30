@@ -30,7 +30,8 @@ from .....application.registry.source_connectivity import (
     SourceConnectivityCensusManifest,
     load_source_connectivity_census,
 )
-from .....core import BindingSourceKind, RegistryAuthorityGrade
+from .....core import RegistryAuthorityGrade
+from .....core.aggregation import BindingSourceKind
 from .....domain.filing.errors import ModeloBuilderError
 from ..authority import bundled_authority
 from ..bindings import selector_model_for_source, validate_binding_selector_shape

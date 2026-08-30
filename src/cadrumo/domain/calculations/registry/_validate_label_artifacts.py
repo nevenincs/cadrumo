@@ -10,7 +10,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.i18n import MissingTranslationError
 from .ids import RevisionId
 from .schema import ModeloDefinition

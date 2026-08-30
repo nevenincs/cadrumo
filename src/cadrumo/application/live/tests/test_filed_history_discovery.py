@@ -25,7 +25,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
-from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
+from ....core import FiledHistoryDiscoverySignal, RegisterScopingSignal
+from ....core.period import Period
+from ....core.casilla_id import validated_casilla_id
 from ....domain.deadlines.models import TaxpayerProfile
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
@@ -159,7 +161,7 @@ def test_every_nominated_modelo_is_one_the_registry_actually_models() -> None:
 
 
 def test_an_out_of_scope_modelo_is_absent() -> None:
-    from ....core import OUT_OF_SCOPE_OBLIGATIONS
+    from ....core.modelo import OUT_OF_SCOPE_OBLIGATIONS
 
     grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     out_of_scope = {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
@@ -661,7 +663,7 @@ def test_the_breakdown_keys_on_period_not_on_the_query_pair() -> None:
 
 
 def _stored_130_registry_observation(*, casilla_03: str):
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 
@@ -701,7 +703,7 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
     extraction improvement -- a casilla newly READ is not a casilla AMENDED, and
     reporting it as one would train the operator to ignore the alert.
     """
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 

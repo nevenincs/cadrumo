@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .. import OutboundStorageIntegrityError
 from .._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
 

@@ -15,7 +15,7 @@ enum remains the completion source if a modelo argument is ever added.
 
 from __future__ import annotations
 
-from cadrumo.core import accepted_filing_period_codes
+from cadrumo.core.period import accepted_filing_period_codes
 
 #: The finite, enumerable FilingPeriodCode values. The prompt argument names a
 #: period the operator FILES in, so the administrative censo tokens the registry

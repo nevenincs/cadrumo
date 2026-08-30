@@ -44,7 +44,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..capsule_record import (
     ProfileRecordIntegrityError,

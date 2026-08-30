@@ -36,7 +36,7 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice, InvoiceCatalogue

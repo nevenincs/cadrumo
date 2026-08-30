@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ...core import Period
+from ...core.period import Period
 from ..invoice_extraction_prompt import (
     build_invoice_extraction_prompt,
     render_invoice_extraction_prompt,

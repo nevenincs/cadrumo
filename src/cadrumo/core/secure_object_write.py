@@ -33,7 +33,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ._hex import Hex64Str
-from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .classification import SensitivityClass
 
 DEFAULT_WRITE_PROVENANCE = "secure-object-repository"

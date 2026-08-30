@@ -104,7 +104,7 @@ def _seed_attachment_manifest(sha: str) -> None:
 def _seed_justificante() -> str:
 
     from ....adapters.persistence.profile.justificante import JustificanteRepository
-    from ....core import Period
+    from ....core.period import Period
     from ....domain.justificante import Justificante
 
     csv = "ABCD1234EFGH5678"

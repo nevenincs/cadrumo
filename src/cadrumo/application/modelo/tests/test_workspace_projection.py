@@ -35,7 +35,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ModeloWorkProgressState, OutputLanguage, Period, RegistryAuthorityGrade
+from ....core import ModeloWorkProgressState, RegistryAuthorityGrade
+from ....core.period import Period
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision

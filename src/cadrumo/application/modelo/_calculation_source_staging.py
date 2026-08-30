@@ -32,7 +32,7 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids

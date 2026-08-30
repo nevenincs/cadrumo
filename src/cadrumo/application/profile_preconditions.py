@@ -14,13 +14,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ..core import (
+from ..core import ProfileSessionRefusalReason
+from ..core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-    ProfileSessionRefusalReason,
 )
 from .operator_actions import (
     ActionArgumentBinding,

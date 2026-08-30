@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.deadlines.plazo import resolve_filing_closes_on
 from ....domain.deadlines.recargo import build_recovery_for_overdue
 from ....domain.modelos.codes import ModeloCode

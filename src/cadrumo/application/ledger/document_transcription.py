@@ -38,7 +38,8 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, FieldOrigin
+from ...core import FieldOrigin
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import ContentDigest
 from ...core.time import UtcInstant, now
 

@@ -29,7 +29,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ......core import Period
+from ......core.period import Period
 from ......core.identity import ContentDigest
 from ......tests.aeat_literal_fixtures import (
     ACCESO_DR_DETAIL_PATH_FIXTURE,

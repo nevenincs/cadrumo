@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core import Period
+from ......core.period import Period
 from ......domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,

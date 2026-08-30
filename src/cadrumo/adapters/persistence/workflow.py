@@ -15,7 +15,7 @@ from ...application.workflow.persistence import (
 )
 from ...application.workflow.run_models import WorkflowResult
 from ...application.workflow.state_models import WorkflowState
-from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
 from ...core.time import now as utc_now

@@ -7,7 +7,8 @@ import re
 from collections.abc import Mapping
 from typing import Final, Literal, cast
 
-from ....core import OBJECT_TUPLE_ADAPTER, Modelo
+from ....core import OBJECT_TUPLE_ADAPTER
+from ....core.modelo import Modelo
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
 from ._toml_helpers import as_toml_table as _as_toml_table

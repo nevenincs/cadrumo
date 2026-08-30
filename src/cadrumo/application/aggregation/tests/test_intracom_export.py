@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values

@@ -12,8 +12,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.modelo import Modelo
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines.models import EntityType, TaxpayerProfile
 from .errors import RegistryFailureClassification, RegistryFailureCondition

@@ -155,7 +155,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
     from cadrumo.core import StorageArea
-    from cadrumo.core.errors._registry import ErrorCategory
+    from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.domain.contribuyente.ccaa import CCAA
     from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -281,7 +281,9 @@ def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
 def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register every closed value used by the modelo-review facet labels."""
     from cadrumo.application.modelo.work_review import ModeloWorkOriginAnomaly
-    from cadrumo.core import BindingSourceKind, EstadoCasillaOficial, OperatorActionAxis
+    from cadrumo.core import EstadoCasillaOficial
+    from cadrumo.core.operator_action_enums import OperatorActionAxis
+    from cadrumo.core.aggregation import BindingSourceKind
     from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
     from cadrumo.domain.filing.schema import ModeloValueKind

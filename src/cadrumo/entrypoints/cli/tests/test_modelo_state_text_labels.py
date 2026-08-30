@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.config import override_settings
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id

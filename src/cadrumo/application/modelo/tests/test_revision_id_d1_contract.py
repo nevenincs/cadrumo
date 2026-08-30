@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.config import override_settings
 from ....core.errors.error_codes import resolve_error_message
 from ....domain.modelos.codes import ModeloCode

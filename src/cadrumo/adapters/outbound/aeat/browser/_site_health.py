@@ -36,7 +36,7 @@ from pydantic import (
     field_validator,
 )
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.errors.hierarchy import SiteHealthState
 from .....core.redaction import redact_for_log
 from .errors import BrowserValidationError

@@ -33,7 +33,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import FIXTURES_DIR, CasillaId, _expected_period, _modelo_snapshot, parse_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

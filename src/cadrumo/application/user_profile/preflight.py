@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core.period import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.profile_grounding import (

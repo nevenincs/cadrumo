@@ -17,7 +17,9 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from ....core import BindingSourceKind, CasillaId, Period
+from ....core.period import Period
+from ....core.casilla_id import CasillaId
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import BindingAggregationOp
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr

@@ -16,7 +16,7 @@ from typing import Final
 from PIL import Image, ImageDraw, ImageFont
 
 from cadrumo.application.filing import build_runtime_schema_provider
-from cadrumo.core import Period
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 
 from .._paths import UTF_8

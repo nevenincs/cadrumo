@@ -141,7 +141,7 @@ def _current_operator_surface_schema_rows(
             InputSchemaInventoryRow(
                 subject_leaf_key=command_key,
                 required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
-                provenance="S05 VerbInputSchema.required_inputs",
+                provenance="VerbInputSchema.required_inputs",
             )
             for command_key, schema in sorted(input_schemas.items())
         ),

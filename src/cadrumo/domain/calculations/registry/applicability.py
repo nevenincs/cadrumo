@@ -98,8 +98,8 @@ from pydantic import BaseModel, Field, StringConstraints
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
 
-from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.modelo import Modelo
 from ....core.time import today_madrid
 from ...deadlines.models import EntityType, FiscalResidency, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS

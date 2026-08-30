@@ -694,7 +694,7 @@ mcp:
     off_host_consent: 'Avís de privadesa: llegeix-lo abans de continuar. Aquesta consola
       la maneja un assistent d''IA que s''executa en el proveïdor de LLM que hagis
       triat. Les teves paraules i les xifres amb què treballa l''assistent (imports,
-      valors de casilla, obligacions) s''envien a aquest proveïdor per operar la consola.
+      valors de casella, obligacions) s''envien a aquest proveïdor per operar la consola.
       Els teus DOCUMENTS D''ORIGEN (factures, extractes bancaris i qualsevol byte
       d''evidència) MAI no surten del teu equip: es queden en emmagatzematge local
       xifrat i no es transmeten mai. Si actues per compte d''un tercer (un gestor
@@ -935,8 +935,7 @@ topic:
     title: Calendari d'obligacions
   casilla:
     body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
-      calculades o derivades de bindings. 'aeat app modelo casillas <modelo>' les
-      llista.
+      calculades o derivades de bindings. 'aeat app modelo casillas <model>' les llista.
     title: Caselles
   formats:
     body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és

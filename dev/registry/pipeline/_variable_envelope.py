@@ -24,7 +24,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import content_hash_hex
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ExportLayoutId,

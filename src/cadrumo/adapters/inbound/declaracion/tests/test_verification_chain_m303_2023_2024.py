@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._verification_chain_support import (
     _M303_2023_ONWARDS_PARAMS,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,

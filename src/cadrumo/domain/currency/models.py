@@ -13,7 +13,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import normalise_iso_4217_currency
 
 

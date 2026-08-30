@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ...calculations import CalculationObservationRepository
 from ...workflow.persistence import WorkflowRunRepository
 from ...workflow.run_models import WorkflowDeadlineContextDetails

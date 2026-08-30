@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import (
-    ActionArgumentSource,
-    NoRecoveryOutcome,
-)
+from ....core.operator_action_enums import ActionArgumentSource, NoRecoveryOutcome
 from ...operator_actions import (
     ActionArgumentBindingSpecification,
     ActionCatalogue,

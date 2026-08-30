@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import IvaDeductionFactKind, validated_casilla_id
+from .....core import IvaDeductionFactKind
+from .....core.casilla_id import validated_casilla_id
 from ....iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, TransactionKind, classify_iva
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.flow import IvaFlowDirection, derive_flow_for_classification

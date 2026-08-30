@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.bucket import acquire_lock, bucket_paths, release_lock
 from ...adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
 from ...core.identity import BucketId
 from .catalogue import get_auth_provider, known_auth_provider_ids

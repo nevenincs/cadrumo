@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field
 from ...adapters.outbound.aeat.sede.deudas import Deuda
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_DEUDAS_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId

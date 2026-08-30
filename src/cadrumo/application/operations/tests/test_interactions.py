@@ -8,7 +8,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import OperationInteractionKind
+from ....core.operations import OperationInteractionKind
 from ..interactions import (
     OperationApplyResponse,
     OperationInteractionRequest,

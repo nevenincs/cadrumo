@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import normalise_product_identity_references
+from cadrumo.core.product_identity import normalise_product_identity_references
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from cadrumo.tests.cli_runner import invoke_typer_app

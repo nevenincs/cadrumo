@@ -21,7 +21,7 @@ from functools import cache
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
 from ..runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs

@@ -19,7 +19,7 @@ from pydantic import (
 )
 
 from ...core import OBJECT_TUPLE_ADAPTER, Hex64Str
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.identity import TransactionId
 from ...core.time import UtcInstant, parse_iso_datetime

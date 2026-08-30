@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 
 from ...application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
-from ...core import Period
+from ...core.period import Period
 from ..invoice_extraction_prompt import build_invoice_extraction_prompt
 from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,

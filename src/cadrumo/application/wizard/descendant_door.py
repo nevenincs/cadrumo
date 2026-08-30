@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode
 from ..flows.definition import CopyRef, FlowDefinition, FlowSection
 from ..flows.engine import FlowState

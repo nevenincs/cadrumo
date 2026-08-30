@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, TypedDict, cast
 import httpx
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG, AcceleratorKind, ContentionCause
+from ..core import AcceleratorKind, ContentionCause
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ._provisioning_contracts import (
     OLLAMA_PROBE_CACHE_TTL_S,
@@ -60,11 +61,6 @@ def ollama_endpoint(chat_url: str, path: str) -> str:
 #: -- which on a host with no local runtime was being rediscovered once per
 #: document at ~0.94s per refused connection.
 _UNREACHABLE_SINCE: dict[str, float] = {}
-
-
-def clear_runtime_endpoint_failure_cache() -> None:
-    """Forget every remembered unreachable endpoint, so the next read retries."""
-    _UNREACHABLE_SINCE.clear()
 
 
 def _read_runtime_json(settings: Settings, path: str) -> object | None:

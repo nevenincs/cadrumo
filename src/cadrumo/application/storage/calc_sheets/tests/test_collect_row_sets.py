@@ -14,7 +14,7 @@ from itertools import pairwise
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError

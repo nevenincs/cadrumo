@@ -7,16 +7,10 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....core import (
-    CasillaId,
-    Modelo,
-    PaymentElection,
-    Period,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-    validated_casilla_id,
-)
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core.modelo import Modelo
+from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission import ModeloDraftStatus

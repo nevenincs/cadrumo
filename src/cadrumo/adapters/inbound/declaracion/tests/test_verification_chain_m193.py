@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._verification_chain_support import BindingId, CasillaId, Decimal, _assert_annual_relation_closure_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -23,7 +23,9 @@ from typing import TYPE_CHECKING, Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import Period, RegistrySelectorPeriodCode
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import RelationAggregationOp
 from ._relation_aggregation import relation_aggregation_op
 from .binding_selector_utils import unique_tuple
