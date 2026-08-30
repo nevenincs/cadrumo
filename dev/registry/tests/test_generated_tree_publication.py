@@ -357,6 +357,51 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
+    assert not _tree_publication._journal_path(context).exists()
+
+
+def test_publication_discards_only_a_completed_rollback_journal_from_an_abandoned_candidate(
+    m130_inspection_snapshot, tmp_path
+) -> None:
+    """A prior rollback never blocks a fresh caller-owned candidate from publishing."""
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        m130_inspection_snapshot,
+        existing_export=True,
+    )
+    expected_export = _tree_bytes(candidate_export_root)
+    abandoned_candidate = tmp_path / "abandoned-candidate" / "export"
+    backup_export_root = _tree_publication._rollback_sibling(
+        target_root=context.target_root.resolve(),
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
+    )
+    journal = _tree_publication._PublicationJournal(
+        schema_version=1,
+        state="backup_staged",
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
+        candidate_export=str(abandoned_candidate),
+        backup_export=str(backup_export_root),
+        candidate_manifest_sha256="a" * 64,
+    )
+    journal_path = _tree_publication._journal_path(context)
+    _tree_publication._write_journal(journal_path, journal)
+
+    published = publish_validated_generated_export_tree(
+        context=context,
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=_isolated_render_profile()[0],
+        render_profile_source_evidence=_isolated_render_profile()[1],
+    )
+
+    assert published.validated is not None
+    assert _tree_bytes(context.target_export_root) == expected_export
+    assert not candidate_export_root.exists()
+    assert not backup_export_root.exists()
+    assert not journal_path.exists()
 
 
 def test_publication_completes_a_real_interrupted_verified_candidate(m130_inspection_snapshot, tmp_path) -> None:

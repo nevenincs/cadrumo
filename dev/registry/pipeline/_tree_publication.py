@@ -413,11 +413,20 @@ def _recover_interrupted_publication(
     ):
         raise RegistryValidationError(f"generated publication journal does not belong to this target: {journal_path}")
     expected_candidate = str(candidate_export_root)
+    backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
     if journal.candidate_export != expected_candidate:
+        # A failed cross-volume replacement can have restored the old target,
+        # removed its rollback sibling, and lost the caller's temporary root
+        # before this process can clean up the journal.  That completed
+        # rollback is safe to forget, but only when there is nothing left to
+        # recover from the recorded transaction.
+        recorded_candidate = Path(journal.candidate_export)
+        if target_export_root.exists() and not backup_export_root.exists() and not recorded_candidate.exists():
+            _delete_journal(journal_path)
+            return False
         raise RegistryValidationError(
             "generated publication journal candidate does not match the explicit caller temporary root",
         )
-    backup_export_root = _journal_backup_path(journal, target_export_root, context.target_root.resolve())
     candidate_is_verified = candidate_export_root.exists() and _matches_journal_candidate(
         candidate_export_root,
         journal,
