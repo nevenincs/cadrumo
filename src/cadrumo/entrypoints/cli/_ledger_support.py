@@ -27,7 +27,7 @@ from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.categories import SpendingCategory
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.invoices import InvoiceValidationError

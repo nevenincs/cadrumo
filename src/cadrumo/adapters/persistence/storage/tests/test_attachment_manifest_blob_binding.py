@@ -22,12 +22,9 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
-from .....domain.attachments import (
-    Attachment,
-    AttachmentKind,
-    AttachmentSource,
-    AttachmentValidationError,
-)
+from .....domain.attachments.enums import AttachmentKind, AttachmentSource
+from .....domain.attachments.errors import AttachmentValidationError
+from .....domain.attachments.models import Attachment
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
 from ..sql import SecureObjectRow

@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 from ...core import STRICT_FROZEN_CONFIG, DocumentShape
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest
-from ...domain.attachments import AttachmentStoreProtocol
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from .evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 

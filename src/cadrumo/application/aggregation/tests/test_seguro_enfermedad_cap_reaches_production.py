@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import resources
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

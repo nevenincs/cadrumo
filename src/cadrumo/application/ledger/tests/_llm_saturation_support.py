@@ -13,7 +13,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields

@@ -20,7 +20,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import UtcInstant, parse_iso_datetime, validate_utc_aware
-from ._enums import AttachmentKind, AttachmentSource
+from .enums import AttachmentKind, AttachmentSource
 from .errors import AttachmentValidationError
 
 _HEX_DIGITS = frozenset("0123456789abcdef")

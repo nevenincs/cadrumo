@@ -51,7 +51,8 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
-from ..categories import SpendingCategory, resolve_category_profiles
+from ..categories.registry import resolve_category_profiles
+from ..categories.spending_category import SpendingCategory
 from ..iva import IvaCategory
 from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError

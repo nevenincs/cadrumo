@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .._proportionality import (
+from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,
     CategoryCitation,
@@ -150,7 +150,7 @@ def test_the_shipped_corpus_satisfies_the_invariant_through_the_real_loader() ->
     The invariant is a model validator, so a violating citation refuses at load;
     this asserts the corpus is actually reached rather than trivially empty.
     """
-    from .._registry import load_category_profiles
+    from ..registry import load_category_profiles
 
     profiles = load_category_profiles()
     edition_dated = [

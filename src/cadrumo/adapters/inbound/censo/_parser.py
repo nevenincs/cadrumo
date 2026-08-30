@@ -17,7 +17,7 @@ plaintext temporary file.
 
 from __future__ import annotations
 
-from ....domain.censo import CertificadoCensalParseError, CertificadoSituacionCensal
+from ....domain.censo.certificado import CertificadoCensalParseError, CertificadoSituacionCensal
 
 _PDF_MAGIC = b"%PDF-"
 

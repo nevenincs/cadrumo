@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 from ...core import BindingSourceKind, IvaDeductionEvidenceAuthority, Period
 from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
-from ...domain.attachments import link_attachment_transaction
+from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,

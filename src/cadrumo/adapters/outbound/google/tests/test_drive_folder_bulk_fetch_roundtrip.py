@@ -31,13 +31,8 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....domain.attachments import (
-    AttachmentBytesContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    add_attachment,
-)
+from .....domain.attachments.enums import AttachmentKind, AttachmentSource
+from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStorageError, OutboundStoragePermissionError
 from ..document_link_resolver import list_drive_folder_documents, resolve_document_link

@@ -29,7 +29,7 @@ from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.time import now
-from ...domain.attachments import AttachmentSource, DocumentLinkSource
+from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...llm.suggestions import LLMSplitApplyResult
@@ -211,12 +211,8 @@ def ledger_evidence_pull(
     from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...application.ledger.actions_manual import attach_manual_transaction_evidence
-    from ...domain.attachments import (
-        AttachmentBytesContent,
-        AttachmentIngestionRequest,
-        AttachmentKind,
-        add_attachment,
-    )
+    from ...domain.attachments.enums import AttachmentKind
+    from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
     attachment_source = source.to_attachment_source()
     state = _state()
@@ -319,12 +315,8 @@ def ledger_evidence_pull_all(
     )
     from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
-    from ...domain.attachments import (
-        AttachmentBytesContent,
-        AttachmentIngestionRequest,
-        AttachmentKind,
-        add_attachment,
-    )
+    from ...domain.attachments.enums import AttachmentKind
+    from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
 
     folder_id = _parse_drive_folder_reference(folder)

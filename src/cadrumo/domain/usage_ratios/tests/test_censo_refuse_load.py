@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.usage_ratios import (
 from ....adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
 )
-from ...categories import SpendingCategory
+from ...categories.spending_category import SpendingCategory
 from .. import (
     CensoRatioMismatchError,
     UsageRatioProfile,

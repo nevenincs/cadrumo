@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from ._models import Attachment
+from .models import Attachment
 
 
 @runtime_checkable

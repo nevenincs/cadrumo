@@ -47,7 +47,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
         # StrEnum value-string assignments (MEMBER = "value") are definitions, not usages.
         _SRC_ROOT / "core" / "aggregation.py",
         _SRC_ROOT / "application" / "operator_surface" / "_models.py",
-        _SRC_ROOT / "domain" / "buckets" / "_event.py",
+        _SRC_ROOT / "domain" / "buckets" / "event.py",
         # Canonical constant home for XLS_EXTENSION / XLSX_EXTENSION / LATIN_1_ENCODING
         _SRC_ROOT / "core" / "external_constants.py",
         # OracleEnvironment StrEnum definition + match validator

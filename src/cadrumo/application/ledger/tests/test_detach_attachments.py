@@ -17,14 +17,8 @@ import pytest
 
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.attachments import (
-    AttachmentBytesContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    add_attachment,
-    load_attachment,
-)
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment, load_attachment
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,

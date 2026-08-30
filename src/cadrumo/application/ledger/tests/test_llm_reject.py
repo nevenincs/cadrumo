@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets import BucketEvent, BucketEventType
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionNotFoundError

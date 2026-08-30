@@ -44,7 +44,8 @@ from ...core import (
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.resources import resources
-from ...domain.categories import CategoryProfile, SpendingCategory
+from ...domain.categories.profile import CategoryProfile
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfileError
 from ...domain.contribuyente.tax_residence import parse_tax_region

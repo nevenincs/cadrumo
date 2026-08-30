@@ -23,15 +23,9 @@ from ....core.aggregation import BindingAggregation, BindingAggregationOp, Bindi
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.categories import (
-    CategoryCitation,
-    CategoryCitationSource,
-    CategoryProfile,
-    ProportionalityKind,
-    ProportionalityRule,
-    SpendingCategory,
-    parse_http_url,
-)
+from ....domain.categories.profile import CategoryProfile
+from ....domain.categories.proportionality import CategoryCitation, CategoryCitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind

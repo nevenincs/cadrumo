@@ -18,9 +18,7 @@ from typing import TYPE_CHECKING
 
 from ...core.hashing import sha256_hex
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
@@ -55,7 +53,7 @@ from .models import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.attachments import AttachmentStoreProtocol
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
 
 

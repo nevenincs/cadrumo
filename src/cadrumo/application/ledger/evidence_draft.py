@@ -133,7 +133,9 @@ from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import ContentDigest, TaxIdIdentityToken, same_tax_identifier
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
-from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
+from ...domain.attachments.errors import AttachmentNotFoundError
+from ...domain.attachments.models import normalize_media_type
+from ...domain.attachments.service import link_attachment_invoice
 from ...domain.currency.service import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,

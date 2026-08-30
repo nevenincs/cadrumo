@@ -17,13 +17,9 @@ from pathlib import Path
 
 from ...core.identity import canonical_bucket_id
 from ...core.logging import get_logger
-from ..categories import (
-    HOME_OFFICE_FAMILIES,
-    SpendingCategory,
-    categories_for_family,
-    effective_usage_ratio,
-    resolve_category_profiles,
-)
+from ..categories.proportionality import effective_usage_ratio
+from ..categories.registry import resolve_category_profiles
+from ..categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, categories_for_family
 from ._model import UsageRatioProfile
 from .errors import UsageRatioPersistenceError, UsageRatioValidationError
 

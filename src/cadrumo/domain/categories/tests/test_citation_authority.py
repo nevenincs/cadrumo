@@ -34,12 +34,12 @@ from ....tests.aeat_literal_fixtures import (
     CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY,
     CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
 )
-from .._proportionality import (
+from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     _authoritative_citation_origins,
 )
-from .._registry import load_category_profiles
+from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

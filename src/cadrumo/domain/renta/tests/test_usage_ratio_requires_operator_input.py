@@ -41,7 +41,9 @@ from decimal import Decimal
 
 import pytest
 
-from ...categories import ProportionalityKind, SpendingCategory, resolve_category_profiles
+from ...categories.proportionality import ProportionalityKind
+from ...categories.registry import resolve_category_profiles
+from ...categories.spending_category import SpendingCategory
 from .. import (
     RentaDeductibilityContext,
     RentaDeductibilityStatus,

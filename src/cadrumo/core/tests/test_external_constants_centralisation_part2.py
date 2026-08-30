@@ -243,7 +243,7 @@ _IRPF_INT_ALIAS_IDS = (
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
     (
         "src/cadrumo/domain/contribuyente/deduccion_maternidad.py",
-        "_deduccion_maternidad.py",
+        "deduccion_maternidad.py",
         1200,
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py",
@@ -283,7 +283,7 @@ _DECIMAL_ALIAS_IDS = ("amortization-rate", "amortization-art-23-alias", "rebeca-
 _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
     (
         "src/cadrumo/domain/fincas/amortization_ledger.py",
-        "_amortization_ledger.py",
+        "amortization_ledger.py",
         "0.03",
         "AMORTIZACION_INMUEBLE_RATE",
         "Bare Decimal('0.03') amortization literals found",

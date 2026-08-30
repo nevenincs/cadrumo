@@ -34,8 +34,9 @@ from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
-from ._profile import CategoryProfile, IvaDeductibilityHint
-from ._proportionality import (
+from .errors import CategoryValidationError
+from .profile import CategoryProfile, IvaDeductibilityHint
+from .proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     ProportionalityKind,
@@ -45,8 +46,7 @@ from ._proportionality import (
     StatutoryCapVariant,
     parse_http_url,
 )
-from ._spending_category import SpendingCategory
-from .errors import CategoryValidationError
+from .spending_category import SpendingCategory
 
 
 def load_category_profiles(path: Path | None = None) -> Mapping[SpendingCategory, CategoryProfile]:

@@ -25,11 +25,9 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import is_unit_proportion
-from ..categories import (
-    ProportionalityKind,
-    SpendingCategory,
-    load_category_profiles,
-)
+from ..categories.proportionality import ProportionalityKind
+from ..categories.registry import load_category_profiles
+from ..categories.spending_category import SpendingCategory
 from .errors import UsageRatioValidationError
 
 __all__ = [

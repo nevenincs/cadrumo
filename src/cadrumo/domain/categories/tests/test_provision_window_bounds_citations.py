@@ -27,13 +27,13 @@ from ....core.resources import bundled_path
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.schema_references import LegalReference
-from .._proportionality import (
+from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,
     CategoryCitation,
     CategoryCitationSource,
 )
-from .._registry import load_category_profiles
+from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -128,7 +128,7 @@ def test_a_statutory_citation_must_name_its_provision() -> None:
     from pydantic import ValidationError
 
     from ....core.i18n import Translatable as tr
-    from .._proportionality import parse_http_url
+    from ..proportionality import parse_http_url
 
     with pytest.raises(ValidationError, match="must name it with legal_ref"):
         CategoryCitation(

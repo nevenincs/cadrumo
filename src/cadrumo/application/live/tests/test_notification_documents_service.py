@@ -42,7 +42,8 @@ from ....adapters.inbound.notificacion import NotificationDocumentReader
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
 from ....core.i18n import tr
-from ....domain.attachments import Attachment, AttachmentKind
+from ....domain.attachments.enums import AttachmentKind
+from ....domain.attachments.models import Attachment
 from ....domain.notifications import SancionLiquidacion
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile

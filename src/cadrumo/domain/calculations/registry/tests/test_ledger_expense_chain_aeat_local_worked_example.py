@@ -56,7 +56,7 @@ import pytest
 from .....application.aggregation import aggregate_renta_ledger_expenses
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
-from ....categories import SpendingCategory
+from ....categories.spending_category import SpendingCategory
 from ....invoices import InvoiceCatalogue
 from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....transactions.models import Transaction, TransactionCatalogue

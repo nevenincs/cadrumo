@@ -9,7 +9,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError

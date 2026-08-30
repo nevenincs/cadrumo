@@ -53,7 +53,7 @@ from .....application.workflow.state_models import DeclaracionPointer, WorkflowS
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....domain.attachments import AttachmentNotFoundError
+from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -63,7 +63,7 @@ from .....domain.buckets import (
 )
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.categories import SpendingCategory
+from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from .....domain.filing import (
@@ -82,22 +82,10 @@ from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
-from .....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    VerificationReportCatalogue,
-    WorkUnit,
-    WorkUnitCatalogue,
-    WorkUnitState,
-    derive_filing_record_id,
-    derive_verification_report_id,
-    derive_work_unit_id,
-)
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from .....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, VerificationReportCatalogue, derive_verification_report_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

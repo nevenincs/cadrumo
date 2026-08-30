@@ -40,7 +40,7 @@ from ....application.live.notification_documents import (
 )
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
-from ....domain.attachments import AttachmentStoreProtocol
+from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile

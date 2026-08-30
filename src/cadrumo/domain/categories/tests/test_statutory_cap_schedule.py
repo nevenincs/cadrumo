@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .._proportionality import (
+from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     ProportionalityKind,
@@ -31,8 +31,8 @@ from .._proportionality import (
     StatutoryCapPeriod,
     parse_http_url,
 )
-from .._registry import category_profile_years, load_category_profiles, resolve_category_profiles
-from .._spending_category import SpendingCategory
+from ..registry import category_profile_years, load_category_profiles, resolve_category_profiles
+from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

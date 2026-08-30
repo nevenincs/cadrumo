@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from ..categories import SpendingCategory, SpendingCategoryFamily, categories_for_family
+from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, categories_for_family
 from .enums import TransactionDirection
 
 LedgerIrpfCategoryPurpose = Literal[

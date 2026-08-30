@@ -26,7 +26,7 @@ def _short_display_id(value: str) -> str:
 def _validate_category_id(category_id: str | None) -> str | None:
     if category_id is None:
         return None
-    from ...domain.categories import SpendingCategory
+    from ...domain.categories.spending_category import SpendingCategory
 
     value = category_id.strip()
     if not value:

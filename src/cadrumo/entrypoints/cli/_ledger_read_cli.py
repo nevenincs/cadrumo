@@ -47,11 +47,7 @@ from ...core.json_contract import (
 )
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.categories import (
-    CATEGORY_FAMILY_MEMBERS,
-    SpendingCategory,
-    SpendingCategoryFamily,
-)
+from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -933,7 +929,7 @@ def _ledger_track_participated_in(
     """Return the finalized-revision participations for ``transaction_id``, or ``None``.
 
     Wraps :func:`~cadrumo.application.ledger.participation_read.get_transaction_participation`, whose
-    :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex` is the
+    :class:`~TransactionRevisionParticipationIndex` is the
     rebuildable inverse index from ledger rows to finalized revisions.
     Surfaces the inverse audit trail on the ``ledger track`` lineage output:
     every finalized modelo revision and filing that consumed this transaction.

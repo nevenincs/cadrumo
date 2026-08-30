@@ -31,8 +31,8 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time import coerce_utc_aware
-from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
+from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -42,7 +42,7 @@ from ...domain.buckets import (
     build_bucket_event,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification

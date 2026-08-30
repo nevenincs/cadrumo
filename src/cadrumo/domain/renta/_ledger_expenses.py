@@ -24,17 +24,9 @@ from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, 
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
-from ..categories import (
-    CategoryCitation,
-    CategoryProfile,
-    ProportionalityKind,
-    ProportionalityRule,
-    SpendingCategory,
-    SpendingCategoryFamily,
-    StatutoryCapPeriod,
-    StatutoryCapVariant,
-    family_for,
-)
+from ..categories.profile import CategoryProfile
+from ..categories.proportionality import CategoryCitation, ProportionalityKind, ProportionalityRule, StatutoryCapPeriod, StatutoryCapVariant
+from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError

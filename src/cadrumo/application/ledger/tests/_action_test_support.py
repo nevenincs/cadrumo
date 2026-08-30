@@ -39,12 +39,14 @@ from ....application.ledger.actions_manual import (
 from ....application.ledger.models import LedgerExportCommand, LedgerSourceImportCommand, ManualLedgerTransactionPatch
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.models import Attachment
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

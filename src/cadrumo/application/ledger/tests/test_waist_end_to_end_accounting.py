@@ -53,13 +53,8 @@ from ....application.invoices import (
 )
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS
-from ....domain.attachments import (
-    AttachmentFileContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    add_attachment,
-)
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import Invoice

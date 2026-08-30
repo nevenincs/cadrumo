@@ -29,7 +29,7 @@ from ....core.classification import SensitivityClass
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,

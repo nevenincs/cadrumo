@@ -36,7 +36,7 @@ from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profi
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
-from ...domain.categories import SpendingCategory
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
 from ...tests.registry_revision import active_registry_revision_id
@@ -45,7 +45,7 @@ from ..auth.operator import inspect_operator_auth
 from ..auth.operator import test_operator_auth as probe_operator_auth
 from ..ledger.actions_manual import create_manual_transaction
 from ..ledger.models import ManualLedgerTransactionCommand
-from ..modelo._work_lifecycle import (
+from ..modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )

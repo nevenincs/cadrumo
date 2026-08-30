@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....domain.censo import CertificadoCensalParseError
+from .....domain.censo.certificado import CertificadoCensalParseError
 from .. import parse_certificado_censal_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

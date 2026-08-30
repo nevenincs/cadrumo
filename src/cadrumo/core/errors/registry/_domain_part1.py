@@ -778,7 +778,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.censo._certificado.CertificadoCensalError",
+        "cadrumo.domain.censo.certificado.CertificadoCensalError",
         ErrorCode(
             code="ERROR_CERTIFICADO_CENSAL",
             category=ErrorCategory.ERROR,
@@ -788,7 +788,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.censo._certificado.CertificadoCensalParseError",
+        "cadrumo.domain.censo.certificado.CertificadoCensalParseError",
         ErrorCode(
             code="FAIL_CERTIFICADO_CENSAL_PARSE",
             category=ErrorCategory.FAIL,

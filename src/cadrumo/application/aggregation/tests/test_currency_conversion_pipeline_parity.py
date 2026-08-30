@@ -96,7 +96,7 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCashAccountingTreatment, IvaRateKind, OssIossRegime, TransactionKind
 from ....domain.renta import RentaDeductibilityContext, RentaDeductibleExpenseObservation

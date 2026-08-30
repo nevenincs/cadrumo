@@ -19,9 +19,9 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import UtcInstant
-from ._enums import AttachmentKind, AttachmentSource
-from ._models import Attachment
-from ._protocols import AttachmentStoreProtocol
+from .enums import AttachmentKind, AttachmentSource
+from .models import Attachment
+from .protocols import AttachmentStoreProtocol
 
 _logger = get_logger(__name__)
 

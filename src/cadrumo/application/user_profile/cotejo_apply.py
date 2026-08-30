@@ -44,7 +44,7 @@ from .profile_record_repository import ProfileRecordRepository
 from .validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
-    from ...domain.censo import CertificadoSituacionCensal
+    from ...domain.censo.certificado import CertificadoSituacionCensal
     from ...domain.user_profile.values import UserProfileRecord
     from .censal_operation import CensalReviewedOperand
 

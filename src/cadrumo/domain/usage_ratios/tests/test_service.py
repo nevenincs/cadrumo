@@ -22,7 +22,7 @@ from ....core import StorageCategory, storage_path
 from ....core.directory_scan import scan_directory
 from ....core.identity import BucketId
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...categories import SpendingCategory
+from ...categories.spending_category import SpendingCategory
 from .. import (
     UsageRatioPersistenceError,
     UsageRatioProfile,

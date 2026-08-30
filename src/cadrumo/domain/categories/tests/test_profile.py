@@ -17,15 +17,15 @@ from pydantic import ValidationError
 from ....core.citation_grounding import CitationGrounding
 from ....core.i18n import Translatable as tr
 from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
-from .. import (
+from ..profile import CategoryProfile
+from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    CategoryProfile,
     ProportionalityKind,
     ProportionalityRule,
-    SpendingCategory,
     parse_http_url,
 )
+from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

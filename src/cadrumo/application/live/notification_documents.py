@@ -48,14 +48,9 @@ from ...core.config import Settings
 from ...core.identity import AeatCertificadoId, BucketId
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.attachments import (
-    AttachmentBytesContent,
-    AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
-    AttachmentStoreProtocol,
-    add_attachment,
-)
+from ...domain.attachments.enums import AttachmentKind, AttachmentSource
+from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.notifications import SancionLiquidacion
 from .errors import (
     LiveApplicationInputError,

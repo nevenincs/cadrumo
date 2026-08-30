@@ -92,7 +92,8 @@ def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
     """
     from pydantic import ValidationError
 
-    from ....domain.categories import ProportionalityKind, SpendingCategory
+    from ....domain.categories.proportionality import ProportionalityKind
+    from ....domain.categories.spending_category import SpendingCategory
     from .._ledger_ratios_payloads import RatiosEligibleRowPayload, RatiosRowPayload
 
     with pytest.raises(ValidationError):
@@ -125,7 +126,7 @@ def test_ratios_payload_ratio_is_bound_by_the_domain_authority() -> None:
     """
     from pydantic import ValidationError
 
-    from ....domain.categories import SpendingCategory
+    from ....domain.categories.spending_category import SpendingCategory
     from .._ledger_ratios_payloads import RatiosRowPayload
 
     for bad in ("-1", "2", "1.5", "not-a-decimal"):
@@ -146,7 +147,7 @@ def test_ratios_validate_finding_requires_kind_and_detail() -> None:
     """An empty finding is indistinguishable from no finding, so it is refused."""
     from pydantic import ValidationError
 
-    from ....domain.categories import SpendingCategory
+    from ....domain.categories.spending_category import SpendingCategory
     from .._ledger_ratios_payloads import RatiosValidateFindingPayload
 
     with pytest.raises(ValidationError):

@@ -32,7 +32,7 @@ from ..application.aggregation import (
 )
 from ..core import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
-from ..domain.categories import SpendingCategory
+from ..domain.categories.spending_category import SpendingCategory
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.iva import IvaCategory
 from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

@@ -16,7 +16,7 @@ from click.testing import Result
 
 from ....application.ledger.llm_classification import reject_llm_suggestion
 from ....core.json_contract import NoticeSeverity
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....llm.suggestions import LLMClassificationSuggestion
 from ....tests.cli_envelope import unwrap_cli_result as _json_result

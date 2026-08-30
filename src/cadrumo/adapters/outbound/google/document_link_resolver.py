@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.external_constants import PDF_MIME_TYPE
-from ....domain.attachments import AttachmentSource
+from ....domain.attachments.enums import AttachmentSource
 from ..storage import (
     OutboundStorageError,
     OutboundStorageNetworkError,

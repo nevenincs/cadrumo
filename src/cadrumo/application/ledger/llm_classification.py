@@ -58,7 +58,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.categories import SpendingCategory
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
@@ -319,7 +319,7 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     model-missing failure escaped every CLI ``except`` clause as a raw
     ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
     an application evidence-input refusal when the probe confirms that the
-    reader is unavailable. The S33 provisioning verdict remains unmodified for
+    reader is unavailable. The provisioning verdict remains unmodified for
     later live-surface resolution. A call failure followed by an available probe
     is not misclassified as an unavailable-reader precondition.
     """
@@ -431,7 +431,7 @@ def classify_with_evidence(
         return response, vision.decided_by
     text = evidence.text if evidence is not None else None
     if text_classifier is None:
-        # S44: the LOCAL text reader, wired here for the first time. Before it
+        # The LOCAL text reader, wired here for the first time. Before it
         # existed this branch refused unless the operator supplied a cloud
         # provider, which is what made a text-layer PDF the one document class
         # whose contents left the host -- the more machine-readable document

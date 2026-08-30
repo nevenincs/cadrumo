@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....core import BindingSourceKind, Period
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction

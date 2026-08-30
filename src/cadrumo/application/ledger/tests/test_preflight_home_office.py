@@ -9,7 +9,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....domain.categories import SpendingCategory
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.usage_ratios import UsageRatioProfile

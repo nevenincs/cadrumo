@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._profile import CategoryProfile
-from ._registry import resolve_category_profiles
-from ._spending_category import SpendingCategory
+from .profile import CategoryProfile
+from .registry import resolve_category_profiles
+from .spending_category import SpendingCategory
 
 
 def load_category_profiles_from_manual(year: int) -> Mapping[SpendingCategory, CategoryProfile]:

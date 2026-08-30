@@ -12,9 +12,9 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
-from ._proportionality import ProportionalityRule
-from ._spending_category import SpendingCategory
 from .errors import CategoryValidationError
+from .proportionality import ProportionalityRule
+from .spending_category import SpendingCategory
 
 
 class _CategoryProfileStrictFrozenModel(BaseModel):

@@ -11,10 +11,11 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import _service as attachment_service
-from .._enums import AttachmentKind, AttachmentSource
-from .._models import Attachment
-from .._service import (
+from .. import service as attachment_service
+from ..enums import AttachmentKind, AttachmentSource
+from ..errors import AttachmentNotFoundError
+from ..models import Attachment
+from ..service import (
     AttachmentBytesContent,
     AttachmentFileContent,
     AttachmentIngestionRequest,
@@ -24,7 +25,6 @@ from .._service import (
     list_attachments,
     load_attachment,
 )
-from ..errors import AttachmentNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

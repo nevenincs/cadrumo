@@ -28,14 +28,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .._proportionality import (
+from ..proportionality import (
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
     StatutoryCapVariant,
 )
-from .._registry import load_category_profiles
-from .._spending_category import SpendingCategory
+from ..registry import load_category_profiles
+from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

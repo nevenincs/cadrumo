@@ -18,10 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from .. import SpendingCategory, load_category_profiles_from_manual, resolve_category_profiles
-from .._proportionality import ProportionalityKind
-from .._registry import load_category_profiles
+from ..corpus import load_category_profiles_from_manual
+from ..registry import resolve_category_profiles
+from ..spending_category import SpendingCategory
 from ..errors import CategoryValidationError
+from ..proportionality import ProportionalityKind
+from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

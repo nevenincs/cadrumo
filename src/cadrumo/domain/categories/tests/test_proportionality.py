@@ -16,7 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .. import (
+from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     ProportionalityKind,
@@ -203,7 +203,7 @@ def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:
     """effective_usage_ratio = chosen_ratio * statutory_multiplier;
     rule.None multiplier means no factor (effective = chosen)."""
 
-    from .. import effective_usage_ratio
+    from ..proportionality import effective_usage_ratio
 
     suministros = ProportionalityRule(
         kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
@@ -228,7 +228,7 @@ def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
     kinds (caller is responsible for routing rules to the right
     evaluator)."""
 
-    from .. import effective_usage_ratio
+    from ..proportionality import effective_usage_ratio
     from ..errors import CategoryValidationError
 
     rule = ProportionalityRule(

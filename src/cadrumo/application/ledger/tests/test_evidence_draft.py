@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import Settings
 from ....core.directory_scan import scan_directory
-from ....domain.attachments import load_attachment
+from ....domain.attachments.service import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

@@ -71,7 +71,7 @@ from ..application.ledger.models import ManualLedgerTransactionResult
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import FieldOrigin
 from ..core.identity import BucketId, TaxIdIdentityToken, TransactionId
-from ..domain.categories import SpendingCategory
+from ..domain.categories.spending_category import SpendingCategory
 from ..domain.iva import IvaCategory
 from ..domain.transactions.enums import BusinessClassification
 
