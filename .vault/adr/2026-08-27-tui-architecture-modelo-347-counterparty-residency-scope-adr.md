@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-08-30'
 body_schema: 'body-v2'
 body_hash: 'sha256:e9262c55d26bd6c6cd0fed67820711e77eaebdcfeb51d96d5c87131830a40c2d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-27-tui-architecture-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
+  - "[[2026-08-27-calculation-correctness-campaign-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
 ---
 
 # `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
