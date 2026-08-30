@@ -34,15 +34,13 @@ from ...domain.buckets import (
     BucketEventType,
     bucket_event_history_write,
 )
-from ...domain.currency import CurrencyNormalizationService
+from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
 from ...domain.iva import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,
 )
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError

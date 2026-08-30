@@ -18,7 +18,7 @@ from typing import Protocol
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
-from ._models import (
+from .models import (
     CurrencyNormalizationStatus,
     FxConversionStamp,
     MonetaryAmount,
@@ -53,6 +53,7 @@ class CurrencyNormalizationService:
     """Service to normalize foreign currencies to EUR."""
 
     def __init__(self, rate_provider: ExchangeRateProvider | None = None) -> None:
+        """Bind the rate source; without one the service can only report a missing rate."""
         self._rate_provider = rate_provider
 
     def normalize(self, amount: MonetaryAmount, rate_date: date) -> NormalizedAmount:

@@ -35,11 +35,8 @@ from ...domain.buckets import (
     BucketEventType,
     emit_bucket_events,
 )
-from ...domain.currency import (
-    CurrencyNormalizationService,
-    CurrencyNormalizationStatus,
-    MonetaryAmount,
-)
+from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
+from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_import_fingerprint, derive_movement_day_key, derive_transaction_id, existing_transaction_import_fingerprints
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

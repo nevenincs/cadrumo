@@ -134,7 +134,7 @@ from ...core.identity import ContentDigest, TaxIdIdentityToken, same_tax_identif
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
-from ...domain.currency import ExchangeRateProvider
+from ...domain.currency.service import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,

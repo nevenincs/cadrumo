@@ -45,7 +45,7 @@ from ....core.config import load_settings
 from ....core.errors import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ....core.parsing import normalise_iso_4217_currency, parse_iso8601_date
-from ....domain.currency import ExchangeRateProviderError
+from ....domain.currency.errors import ExchangeRateProviderError
 
 ECB_DATA_API_HOST = "data-api.ecb.europa.eu"
 ECB_EXR_ENDPOINT = f"https://{ECB_DATA_API_HOST}/service/data/EXR"

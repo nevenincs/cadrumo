@@ -43,9 +43,7 @@ from ....adapters.outbound.fx import EcbReferenceRateProvider
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.currency import (
-    CurrencyNormalizationService,
-)
+from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.ecb_stub import ecb_csv_fetch

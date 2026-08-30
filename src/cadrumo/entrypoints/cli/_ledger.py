@@ -319,7 +319,7 @@ def ledger_add(
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
     from ...adapters.outbound.fx import default_ecb_rate_provider
-    from ...domain.currency import CurrencyNormalizationService
+    from ...domain.currency.service import CurrencyNormalizationService
 
     try:
         result = create_manual_transaction(

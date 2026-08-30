@@ -27,7 +27,7 @@ from ._ledger_support import _ledger_transaction_validation_no_recovery
 from ._period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
-    from ...domain.currency import CurrencyNormalizationService
+    from ...domain.currency.service import CurrencyNormalizationService
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
@@ -191,7 +191,7 @@ def ledger_import(
     normalised_provider = _validate_import_provider(provider)
     context = _import_bucket_context(dry_run=dry_run)
     from ...adapters.outbound.fx import default_ecb_rate_provider
-    from ...domain.currency import CurrencyNormalizationService
+    from ...domain.currency.service import CurrencyNormalizationService
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
     canonical_period = _optional_canonical_period(period, year=year)

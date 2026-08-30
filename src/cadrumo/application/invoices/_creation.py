@@ -43,7 +43,7 @@ from ...domain.buckets import (
     BucketEventType,
     emit_bucket_event,
 )
-from ...domain.currency import ExchangeRateProvider, resolve_fx_conversion_stamp
+from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,

@@ -47,11 +47,8 @@ from ..application.aggregation import (
 )
 from ..core import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
-from ..domain.currency import (
-    CurrencyNormalizationService,
-    CurrencyNormalizationStatus,
-    MonetaryAmount,
-)
+from ..domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
+from ..domain.currency.service import CurrencyNormalizationService
 from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
 from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..domain.transactions.models import Transaction, TransactionCatalogue
