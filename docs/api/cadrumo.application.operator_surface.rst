@@ -13,13 +13,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.operator_surface._action_resolution
-   cadrumo.application.operator_surface._calculation_workflows
-   cadrumo.application.operator_surface._contract
-   cadrumo.application.operator_surface._crud_contract
-   cadrumo.application.operator_surface._crud_registry
-   cadrumo.application.operator_surface._help
-   cadrumo.application.operator_surface._manifest
-   cadrumo.application.operator_surface._models
+   cadrumo.application.operator_surface.action_resolution
+   cadrumo.application.operator_surface.calculation_workflows
+   cadrumo.application.operator_surface.contract
+   cadrumo.application.operator_surface.crud_contract
+   cadrumo.application.operator_surface.crud_registry
    cadrumo.application.operator_surface.errors
+   cadrumo.application.operator_surface.help
    cadrumo.application.operator_surface.help_models
+   cadrumo.application.operator_surface.manifest
+   cadrumo.application.operator_surface.models

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...application.operator_surface import RootLandingReport
+from ...application.operator_surface.help_models import RootLandingReport
 from ...core.i18n import tr
 
 

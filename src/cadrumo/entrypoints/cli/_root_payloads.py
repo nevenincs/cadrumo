@@ -36,14 +36,14 @@ from ...core.json_contract import OutputSchema
 
 def _help_document_branch() -> type[BaseModel]:
     """Resolve the ``HelpDocument`` branch DTO from its public facade."""
-    from ...application.operator_surface import HelpDocument
+    from ...application.operator_surface.help_models import HelpDocument
 
     return HelpDocument
 
 
 def _root_landing_report_branch() -> type[BaseModel]:
     """Resolve the ``RootLandingReport`` branch DTO from its public facade."""
-    from ...application.operator_surface import RootLandingReport
+    from ...application.operator_surface.help_models import RootLandingReport
 
     return RootLandingReport
 

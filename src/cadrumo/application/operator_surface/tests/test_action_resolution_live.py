@@ -10,14 +10,15 @@ from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionReference,
 )
-from .. import ManifestActionProfile, resolve_manifest_action_profiles
-from .._manifest import (
+from ..manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
     OperatorSurfaceReconciliation,
     ReconciledOperatorLeaf,
     ResultSchemaInventoryRow,
+    resolve_manifest_action_profiles,
 )
+from ..models import ManifestActionProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

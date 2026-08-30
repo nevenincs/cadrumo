@@ -86,7 +86,7 @@ def app_root(ctx: typer.Context, help_: bool = False) -> None:
         from ._tui_policy import enforce_tui_request
 
         enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["app"])
-        from ...application.operator_surface import build_help_document, render_help_text
+        from ...application.operator_surface.help import build_help_document, render_help_text
         from ...core.json_contract import strict_round_trip
         from ._common import emit_envelope
         from ._root_payloads import AppRootResult

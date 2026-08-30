@@ -8,7 +8,8 @@ import sys
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....application.operator_surface import RootLandingReport, build_help_document
+from ....application.operator_surface.help import build_help_document
+from ....application.operator_surface.help_models import RootLandingReport
 from ....application.overview import OverviewStatusReport
 from ....core.json_contract import strict_round_trip
 from .._root_payloads import AppRootResult, RootStatusResult
@@ -61,7 +62,7 @@ def test_app_root_payload_accepts_only_the_canonical_help_document() -> None:
 _HELP_BRANCH_IMPORT_PROBE = """
 import sys
 
-from cadrumo.application.operator_surface import build_help_document
+from cadrumo.application.operator_surface.help import build_help_document
 from cadrumo.core.json_contract import strict_round_trip
 from cadrumo.entrypoints.cli._root_payloads import RootStatusResult
 

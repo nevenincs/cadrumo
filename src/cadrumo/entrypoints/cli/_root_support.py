@@ -44,7 +44,7 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
     The operator-surface import is deferred so the help-document builder loads
     only on a help surface, not on every dispatch.
     """
-    from ...application.operator_surface import build_help_document, render_help_text
+    from ...application.operator_surface.help import build_help_document, render_help_text
     from ._root_payloads import RootStatusResult
 
     document = build_help_document("root")
@@ -147,7 +147,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     the lightweight core resolver to avoid importing workflow.
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...application.operator_surface import build_root_landing_report
+    from ...application.operator_surface.help import build_root_landing_report
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines

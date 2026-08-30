@@ -7,8 +7,8 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..operator_actions import ActionCatalogue, ActionCatalogueEntry
-from ._models import ManifestActionProfile, MountedCommandFamily
 from .errors import OperatorSurfaceContractError
+from .models import ManifestActionProfile, MountedCommandFamily
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

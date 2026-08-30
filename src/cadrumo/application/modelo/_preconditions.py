@@ -26,7 +26,7 @@ from ..operator_actions import (
     PreconditionVerdict,
     lookup_action,
 )
-from ..operator_surface import ManifestActionProfile
+from ..operator_surface.models import ManifestActionProfile
 
 
 class ModeloPreconditionFailure(BaseModel):

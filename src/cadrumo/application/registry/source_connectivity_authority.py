@@ -34,7 +34,7 @@ from ..modelo.calculation_route import (
     CalculationRouteDesignConstantOwnership,
     CalculationRouteManualOwnership,
 )
-from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
+from ..operator_surface.calculation_workflows import SupportedModeloCalculationWorkflowCatalogue
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

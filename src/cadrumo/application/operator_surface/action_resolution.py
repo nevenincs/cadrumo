@@ -15,7 +15,7 @@ from ...core.json_contract import (
     ResolvedNoticeAction,
 )
 from ..operator_actions import ActionArgumentBindingSpecification, ActionCatalogue, ActionReference
-from ._manifest import OperatorSurfaceReconciliation, ResolvedCatalogueAction
+from .manifest import OperatorSurfaceReconciliation, ResolvedCatalogueAction
 
 
 def resolve_catalogue_action(

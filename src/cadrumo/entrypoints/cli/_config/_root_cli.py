@@ -18,7 +18,7 @@ def config_root(
     from .._tui_policy import enforce_tui_request
 
     enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["config"])
-    from ....application.operator_surface import build_help_document, render_help_text
+    from ....application.operator_surface.help import build_help_document, render_help_text
     from .._config_help_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
 
     document = build_help_document("config")

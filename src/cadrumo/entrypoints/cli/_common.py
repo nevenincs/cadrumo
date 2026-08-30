@@ -406,7 +406,7 @@ def _resolve_cli_precondition_action_reference(
     if action is None:
         return None
     from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface import resolve_catalogue_action
+    from ...application.operator_surface.action_resolution import resolve_catalogue_action
     from ...core.json_contract import ResolvedActionReference
 
     resolution = resolve_catalogue_action(
@@ -783,7 +783,7 @@ def resolve_notice_action(
     hand-assemble a wire action or silently omit a live required input.
     """
     from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface import resolve_notice_action as resolve_application_notice_action
+    from ...application.operator_surface.action_resolution import resolve_notice_action as resolve_application_notice_action
 
     resolved = resolve_application_notice_action(
         action=action,

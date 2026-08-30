@@ -19,7 +19,8 @@ from ...core import BindingSourceKind
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._models import (
+from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
+from .models import (
     LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,
@@ -32,7 +33,6 @@ from ._models import (
     ServiceOwner,
     SourceKindAlias,
 )
-from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 
 LOGGER = get_logger(__name__)
 

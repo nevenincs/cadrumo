@@ -30,15 +30,8 @@ from ....domain.modelos.calculation_revision import (
 )
 from ...aggregation import BindingSourceDisposition
 from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-from ...operator_surface import (
-    LiveLeafInventoryRow,
-    ModeloCalculationRouteId,
-    OperatorSurfaceReconciliation,
-    ReconciledOperatorLeaf,
-    SupportedModeloCalculationWorkflow,
-    SupportedModeloCalculationWorkflowCatalogue,
-    build_supported_modelo_calculation_workflow_catalogue,
-)
+from ...operator_surface.calculation_workflows import ModeloCalculationRouteId, SupportedModeloCalculationWorkflow, SupportedModeloCalculationWorkflowCatalogue, build_supported_modelo_calculation_workflow_catalogue
+from ...operator_surface.manifest import LiveLeafInventoryRow, OperatorSurfaceReconciliation, ReconciledOperatorLeaf
 from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,

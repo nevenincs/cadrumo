@@ -10,7 +10,7 @@ import pytest
 import typer
 from typer.core import TyperGroup
 
-from ....application.operator_surface import get_operator_surface_contract
+from ....application.operator_surface.contract import get_operator_surface_contract
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json

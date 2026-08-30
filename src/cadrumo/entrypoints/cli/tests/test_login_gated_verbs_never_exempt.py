@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.operator_surface import MOUNTED_COMMAND_FAMILIES
+from ....application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
 from .._bootstrap_exempt import (
     BOOTSTRAP_EXEMPT_VERB_PATHS,
     LOGIN_GATED_VERB_PATHS,

@@ -5,16 +5,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    LiveLeafInventoryRow,
+from ..calculation_workflows import (
     ModeloCalculationRouteId,
-    OperatorSurfaceContractError,
-    OperatorSurfaceReconciliation,
-    ReconciledOperatorLeaf,
     SupportedModeloCalculationWorkflow,
     SupportedModeloCalculationWorkflowCatalogue,
     build_supported_modelo_calculation_workflow_catalogue,
 )
+from ..errors import OperatorSurfaceContractError
+from ..manifest import LiveLeafInventoryRow, OperatorSurfaceReconciliation, ReconciledOperatorLeaf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -183,12 +181,20 @@ def test_catalogue_support_requires_exact_route_path_and_command_identity() -> N
     )
 
 
-def test_public_facade_exposes_the_workflow_catalogue() -> None:
-    from .. import __all__
+def test_the_workflow_catalogue_is_reachable_at_its_owning_module() -> None:
+    """The names live where they are defined, not on a package facade.
 
-    assert {
+    This asserted the facade's ``__all__`` until the export map was retired.
+    The contract it was protecting -- that these four names are part of the
+    public surface -- still holds; what changed is where a consumer reaches
+    them, so the assertion moved rather than the guarantee.
+    """
+    from .. import calculation_workflows
+
+    for name in (
         "ModeloCalculationRouteId",
         "SupportedModeloCalculationWorkflow",
         "SupportedModeloCalculationWorkflowCatalogue",
         "build_supported_modelo_calculation_workflow_catalogue",
-    } <= set(__all__)
+    ):
+        assert hasattr(calculation_workflows, name), name
