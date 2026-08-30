@@ -37,7 +37,7 @@ from ...domain.bienes_inversion import (
 )
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.iva import m303_annual_settlement_period_tokens
+from ...domain.iva.m303_settlement import m303_annual_settlement_period_tokens
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

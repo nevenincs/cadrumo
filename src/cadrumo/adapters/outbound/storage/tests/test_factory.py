@@ -22,16 +22,9 @@ from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
-from ...google import (
-    DriveConfig,
-    GoogleAuthAdcUnavailableError,
-    GoogleCredentialSourceSelection,
-    GoogleImpersonationConfig,
-    OAuthClient,
-    save_client,
-    save_credential_source_selection,
-    save_drive_config,
-)
+from ...google.impersonation import GoogleAuthAdcUnavailableError, GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ...google.records import DriveConfig, OAuthClient
+from ...google.session_store import save_client, save_credential_source_selection, save_drive_config
 from .. import (
     OutboundStorageValidationError,
     ProviderKind,

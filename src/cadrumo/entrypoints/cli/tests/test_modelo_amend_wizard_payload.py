@@ -3,7 +3,7 @@
 ``WorkAmendWizardResult`` used to redeclare the amendment kind/reason,
 filing coordinates, actor, timestamps, status, supersession, evidence, and
 submission posture as bare strings instead of projecting the canonical
-``ModeloRecordPayload`` (:class:`~cadrumo.domain.modelos.ModeloRecord`) and
+``ModeloRecordPayload`` (:class:`~ModeloRecord`) and
 ``CalculationRevisionAmendmentKind``. It now derives from
 ``ModeloRecordPayload`` directly, so a malformed field is refused rather than
 accepted.
@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.modelos import ModeloRecordStatus
+from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from .._modelo_amend_wizard_payloads import WorkAmendWizardResult
 

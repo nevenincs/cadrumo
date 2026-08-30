@@ -19,7 +19,7 @@ from ....domain.calculations.registry.errors import RegistrySnapshotError, Regis
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ....domain.calculations.registry.schema import DataBindingDefinition
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._modelo_behavior_support import _date_binding_profile_requirements
 

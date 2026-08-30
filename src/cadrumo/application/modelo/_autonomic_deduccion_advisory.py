@@ -46,12 +46,8 @@ from decimal import Decimal
 
 from ...core import CasillaId
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema

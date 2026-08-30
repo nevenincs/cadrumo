@@ -10,7 +10,7 @@ lower a taxpayer's own declared liability. This module is the single place
 that:
 
 * refuses an operator-requested
-  :class:`~domain.modelos.CalculationRevisionAmendmentKind` that the
+  :class:`~CalculationRevisionAmendmentKind` that the
   resolved ``(modelo, period)`` does not legally permit, naming the accepted
   kind set in the refusal (never a bare "invalid" message); and
 * classifies, for a pre-rectificativa period, whether the requested
@@ -26,7 +26,7 @@ illegal kind can never reach the catalogue.
 See Also:
     :func:`~core.resolve_amendment_kind_regime`:
         Declared per-modelo, period-aware permitted-kind table this module
-        binds to :class:`~domain.modelos.CalculationRevisionAmendmentKind`.
+        binds to :class:`~CalculationRevisionAmendmentKind`.
     :func:`~application.modelo.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.

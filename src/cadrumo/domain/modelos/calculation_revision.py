@@ -74,12 +74,12 @@ from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId
 from ..identifiers import canonical_decimal_string as _canonical_decimal
-from ._calculation_revision_amendment import (
+from .calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
-from ._calculation_revision_m303_evidence import (
+from .calculation_revision_m303_evidence import (
     M303DANA2024EligibilityEvidence,
     M303DANA2024ReductionResult,
     M303Exonerado390ActivityRowEvidence,
@@ -91,22 +91,22 @@ from ._calculation_revision_m303_evidence import (
     M303RegimenSimplificadoCalculationResult,
     M303RegimenSimplificadoModuleCalculationResult,
 )
-from ._calculation_revision_m303_handoff import (
+from .calculation_revision_m303_handoff import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     FilingInstanceEvidence,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoFilingEvidence,
 )
-from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
-from ._row_models import (
+from .errors import ModeloError, ModeloValidationError
+from .filing_text import ModeloActorLabel, OperatorReason
+from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
+from .row_models import (
     Modelo210AgrupacionRentaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
 )
-from .errors import ModeloError, ModeloValidationError
-from .filing_text import ModeloActorLabel, OperatorReason
 
 
 class CalculationRevisionState(StrEnum):
@@ -1310,7 +1310,7 @@ class CalculationRevision(BaseModel):
             self.amendment_identity is not None
             and self.amendment_identity.kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
         ):
-            from ._calculation_revision_aggregate import (
+            from .calculation_revision_aggregate import (
                 CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
                 CalculationRevisionAggregateContext,
                 validate_calculation_revision_aggregate,
@@ -1499,7 +1499,7 @@ class CalculationRevision(BaseModel):
 def calculation_revision_identity_inputs_from_revision(
     revision: CalculationRevision,
 ) -> CalculationRevisionIdentityInputs:
-    """Project one persisted revision through the sole hash-input builder.
+    """Project one persisted :class:`~CalculationRevision` through the sole hash-input builder.
 
     Read-side integrity checks and the model's own invariant both use this
     function.  It prevents those consumers from independently enumerating the
@@ -1531,7 +1531,7 @@ def calculation_revision_identity_inputs_from_revision(
 
 
 def derive_calculation_revision_id_from_revision(revision: CalculationRevision) -> str:
-    """Derive a persisted revision's id from its complete canonical input set."""
+    """Derive a :class:`~CalculationRevision` id from its complete canonical input set."""
     return _derive_calculation_revision_id_from_identity_inputs(
         calculation_revision_identity_inputs_from_revision(revision),
     )

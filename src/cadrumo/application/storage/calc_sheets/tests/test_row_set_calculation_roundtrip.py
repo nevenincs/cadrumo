@@ -10,7 +10,7 @@ import pytest
 from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell
 
-from .....adapters.outbound.google import RowSetEdit
+from .....adapters.outbound.google.calc_sheets_pull import RowSetEdit
 from .....adapters.outbound.google.calc_sheets_pull import _decode_row_set_block
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -24,7 +24,7 @@ from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, 
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile
 from ....modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ....modelo._work_lifecycle import create_work_unit
+from ....modelo.work_lifecycle import create_work_unit
 from .._engine import build_export_plan
 from .._records import TabName
 from .._row_set_assembly import assemble_row_sets_for_snapshot

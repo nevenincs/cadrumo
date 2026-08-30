@@ -30,8 +30,9 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloCode, WorkUnitState
+from ...domain.filing.schema import ModeloScalar
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.work_unit import WorkUnitState
 from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference

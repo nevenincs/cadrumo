@@ -23,8 +23,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -35,7 +36,6 @@ from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditApplyRequestV1,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditExecutionUpdatedV1,
     ModeloEditMutationFamily,
     ModeloEditScalarAddressV1,
@@ -46,6 +46,7 @@ from .._edit_models import (
     ModeloScalarEditIntentV1,
 )
 from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
+from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import (
     ModeloWorkspaceCapabilityDisposition,

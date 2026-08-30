@@ -738,7 +738,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="direction",
                 declarations=("--direction",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions", "TransactionDirection")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "TransactionDirection")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.update.direction_help"),
                 metavar=None,

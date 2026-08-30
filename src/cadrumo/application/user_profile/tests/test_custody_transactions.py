@@ -41,7 +41,8 @@ from ....adapters.persistence.storage.master_key import (
 from ....core import Period
 from ....core.bucket_pointer import BucketPointer
 from ....core.config import Settings
-from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority

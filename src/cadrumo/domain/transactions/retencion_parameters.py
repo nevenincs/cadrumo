@@ -18,7 +18,7 @@ metadata, and Python consumers read them from here rather than from a bare
 auditable.
 
 The loaders follow the idiom of
-:mod:`domain.iva._recargo_equivalencia`: the registry parameter catalogue is
+:mod:`domain.iva.recargo_equivalencia`: the registry parameter catalogue is
 read through the cycle-safe ``load_legal_parameters_only`` entry point rather
 than by a direct ``tomllib`` load, and the result is a frozen pydantic record.
 The reads are memoised because the withheld-amount inference that consumes the
@@ -37,9 +37,9 @@ against ``base * general_rate`` and ``base * reduced_rate`` to confirm it
 matches one of the two statutory figures.
 
 See Also:
-    :mod:`domain.iva._components`
+    :mod:`domain.iva.components`
         Declares, per IVA category, whether a retención is expected at all.
-    :mod:`domain.iva._recargo_equivalencia`
+    :mod:`domain.iva.recargo_equivalencia`
         The loader idiom this module follows.
 """
 

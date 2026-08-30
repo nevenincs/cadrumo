@@ -16,23 +16,14 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.filing import ModeloValueKind
-from ....domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloCode,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnit,
-    derive_verification_report_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_verification_report,
-    upsert_work_unit,
-)
+from ....domain.filing.schema import ModeloValueKind
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
+from ....domain.modelos.verification_repository import upsert_verification_report
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

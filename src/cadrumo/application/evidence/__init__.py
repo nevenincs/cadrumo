@@ -7,9 +7,9 @@ filing for offline inspection and audit handoff. Bundles are durable
 artifacts stored inside the active bucket; they are not the source of
 relational truth.
 
-Bundle manifests can reference :class:`domain.modelos.WorkUnit`,
-:class:`domain.modelos.CalculationRevision`, and
-:class:`domain.modelos.ModeloRecord` payloads by stable id, with each
+Bundle manifests can reference :class:`~WorkUnit`,
+:class:`~CalculationRevision`, and
+:class:`~ModeloRecord` payloads by stable id, with each
 record typed by :class:`domain.buckets.BucketEventObjectType`. They are
 audit packaging records, not purchase-invoice evidence or official AEAT filing
 evidence claims.
@@ -43,7 +43,7 @@ See Also:
         Closed verification state vocabulary for bundle manifests.
     :class:`application.ledger.evidence.PurchaseInvoiceEvidence`
         Source-document evidence for ledger rows.
-    :class:`domain.modelos.ExternalEvidence`
+    :class:`~ExternalEvidence`
         Official filing evidence stamped on current modelo filing records.
 """
 

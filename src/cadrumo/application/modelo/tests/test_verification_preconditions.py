@@ -12,14 +12,7 @@ from ....core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ....domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    derive_verification_report_id,
-)
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
 from .._verification_preconditions import (
     ModeloVerificationResult,
     VerificationFindingPreconditionProjection,

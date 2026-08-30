@@ -38,7 +38,7 @@ from typing import ClassVar
 import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
-from cadrumo.domain.deadlines import TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 
 
 class SkillMetadataError(ValueError):

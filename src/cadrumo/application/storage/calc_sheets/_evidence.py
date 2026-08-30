@@ -11,7 +11,7 @@ each contributor to the canonical :class:`CasillaId` values it supports so this
 module never guesses modelo-specific tax meaning from row contents.
 
 See Also:
-    :class:`cadrumo.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`
+    :class:`cadrumo.domain.modelos.ledger_filing_snapshot.LedgerFilingEvidence`
         Bundled fact basis attached to a ledger-derived calculation revision.
     :class:`SheetEvidenceFacet`
         Workbook-plan evidence facet rendered into the Evidencia tab and JSON
@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ....core import CasillaId
-from ....domain.modelos import LedgerFilingEvidence
+from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence
 from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvidenceManualEntry
 from .errors import CalcSheetsEngineError
 

@@ -86,7 +86,7 @@ from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
 
 
 @dataclass(frozen=True, slots=True)

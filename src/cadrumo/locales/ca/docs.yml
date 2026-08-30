@@ -5,6 +5,7 @@ docs:
       bienes_inversion_regularizacion: des de la regularització de béns d'inversió
       borrador: des de l'esborrany de l'AEAT
       collectible_invoice: des de les factures emeses
+      design_constant: des d'una constant fixada pel disseny de registre de l'AEAT
       donativo_donor: des dels donants registrats
       foreign_asset: des dels seus béns a l'estranger
       gasto193_contributor: des de les despeses d'administració i dipòsit per contribuent

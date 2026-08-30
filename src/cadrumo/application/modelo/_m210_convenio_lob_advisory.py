@@ -39,12 +39,8 @@ from collections.abc import Mapping
 
 from ...core import CasillaId, TipoRentaIrnr
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

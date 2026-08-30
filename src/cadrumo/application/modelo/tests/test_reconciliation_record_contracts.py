@@ -26,7 +26,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.modelos import ModeloCode, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import derive_work_unit_id
 from ..reconciliation_records import (
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,

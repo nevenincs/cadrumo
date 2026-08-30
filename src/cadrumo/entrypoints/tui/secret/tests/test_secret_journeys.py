@@ -26,6 +26,7 @@ from .....application.user_profile.passphrase_rotation import (
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
 from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
 from ...components.widgets import ContentScroll
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
@@ -232,7 +233,7 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("size", [(80, 24), (120, 40), (200, 50)], ids=["narrow", "medium", "wide"])
+@pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 async def test_every_field_and_action_is_actually_reachable_not_only_present(
     tmp_path: Path,
     size: tuple[int, int],

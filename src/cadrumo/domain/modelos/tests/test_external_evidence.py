@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .._filing_record import (
+from ..filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
 )

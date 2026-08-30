@@ -19,36 +19,23 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....domain.buckets import (
-    BucketEventObjectType as BucketEventObjectType,
-)
-from ....domain.buckets import (
-    BucketEventType as BucketEventType,
-)
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from ....domain.calculations.registry.relations import relation_source_requirements
-from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.buckets.event import BucketEventObjectType as BucketEventObjectType
+from ....domain.buckets.event import BucketEventType as BucketEventType
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.temporal import select_revision
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    WorkUnit,
-    upsert_work_unit,
 )
-from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.cross_period_seeding import SEED_CLOCK, resolved_revision, seed_clean_cross_period_sources
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
-from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
 from ...workflow.abort import WorkflowAbortReason
 from ...workflow.engine import WorkflowEngine
 from ...workflow.run_models import WorkflowPurpose, WorkflowStage
@@ -73,13 +60,11 @@ from .._filing_actions import (
     list_verification_reports,
 )
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import (
+from .._workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
+from ..work_lifecycle import (
     create_work_unit,
     get_work_unit,
 )
-from .._workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
-from ..external_import_actions import import_external_filing_evidence
-from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -154,7 +139,6 @@ __all__ = [
     "mark_revision_verificado_completo",
     "registry_required_manual_casillas",
     "registry_required_manual_casillas_for",
-    "seed_clean_cross_period_sources",
     "seed_modelo_180_work_unit",
     "seed_work_unit",
     "target_filing_records",
@@ -166,7 +150,7 @@ __all__ = [
 ]
 
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = SEED_CLOCK
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
@@ -202,20 +186,6 @@ _READY_PROFILE_FACTS = (
 )
 
 
-def _resolved_revision(*, modelo: str, filing_year: int, period: str) -> ModeloRevision:
-    """Resolve a law-determined revision without touching the tree-wide authority.
-
-    ``load_registry_tree`` compiles the tree without validating it, and
-    ``select_revision`` is a pure function with no validation of its own -- this
-    works for any modelo, layout-bearing or not, unlike
-    ``bundled_authority()``, whose ``.load()`` validates the entire
-    registry tree and currently refuses unconditionally as a result.
-    """
-    modelos, _catalogues = bundled_registry_tree()
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    return select_revision(modelo_definition, filing_year=filing_year, period=period)
-
-
 def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
     """Return required numeric manual casillas for M180 calculate-input fixtures.
 
@@ -224,14 +194,14 @@ def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
     before verification.
     """
 
-    revision = _resolved_revision(modelo=_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
+    revision = resolved_revision(modelo=_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
     return tuple(
         c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL and c.data_type == "money"
     )
 
 
 def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[CasillaId, ...]:
-    revision = _resolved_revision(modelo=modelo, filing_year=filing_year, period=period)
+    revision = resolved_revision(modelo=modelo, filing_year=filing_year, period=period)
     return tuple(c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
@@ -394,137 +364,6 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str], set[CasillaId]]:
-    revision = _resolved_revision(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    )
-    groups: dict[tuple[str, int, str], set[CasillaId]] = {}
-    for requirement in previous_filing_observation_requirements(
-        revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    ):
-        groups.setdefault(
-            (requirement.source_modelo, requirement.filing_year, requirement.periods[0]),
-            set(),
-        ).update(requirement.source_casilla_ids)
-    for requirement in relation_source_requirements(
-        revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    ):
-        for period in requirement.periods:
-            groups.setdefault(
-                (requirement.source_modelo, requirement.filing_year, period),
-                set(),
-            ).update(requirement.source_casilla_ids)
-    return groups
-
-
-def _source_casilla_values(source_casilla_ids: set[CasillaId]) -> dict[CasillaId, Decimal]:
-    return {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))}
-
-
-def _seed_clean_cross_period_sources(
-    work_unit: WorkUnit,
-    *,
-    work_unit_repository: WorkUnitCatalogueRepository,
-    calculation_repository: CalculationRevisionCatalogueRepository,
-    filing_repository: ModeloRecordCatalogueRepository,
-    bucket_event_repository: BucketEventHistoryRepository,
-) -> None:
-    groups = _cross_period_source_groups(work_unit)
-    if not groups:
-        return
-    observation_repository = CalculationObservationRepository()
-    filing_catalogue = filing_repository.load()
-    for (source_modelo, filing_year, period), source_casilla_ids in sorted(groups.items()):
-        source_period = Period.from_year_and_code(filing_year, period)
-        source_revision = _resolved_revision(modelo=source_modelo, filing_year=filing_year, period=period)
-        values = _source_casilla_values(source_casilla_ids)
-        current = filing_catalogue.current_for(
-            bucket_id=work_unit.bucket_id,
-            modelo=source_modelo,
-            filing_year=filing_year,
-            period=source_period,
-        )
-        evidence_reference_id = f"CSV{source_modelo}{filing_year}{period}".upper()
-        if current is None:
-            persist_justificante_metadata(
-                evidence_reference_id,
-                modelo=source_modelo,
-                filing_year=filing_year,
-                period=period,
-                captured_at=_T0,
-            )
-            source_work_unit = create_work_unit(
-                bucket_id=work_unit.bucket_id,
-                modelo=source_modelo,
-                filing_year=filing_year,
-                period=source_period,
-                revision_id=source_revision.id,
-                repository=work_unit_repository,
-                clock=_T0,
-            )
-            import_external_filing_evidence(
-                work_unit_id=source_work_unit.work_unit_id,
-                casilla_values=values,
-                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                evidence_reference_id=evidence_reference_id,
-                actor="aeat-import-test",
-                work_unit_repository=work_unit_repository,
-                calculation_repository=calculation_repository,
-                filing_repository=filing_repository,
-                bucket_event_repository=bucket_event_repository,
-                expected_tax_id="X1234567L",
-                clock=_T0,
-            )
-            filing_catalogue = filing_repository.load()
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo=source_modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=source_modelo,
-                        filing_year=filing_year,
-                        period=period,
-                        casilla_values=values,
-                    ),
-                ),
-                source_kind="aeat_sede_justificante",
-                captured_at=_T0,
-                stamped_revision_id=source_revision.id,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
-                    "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
-                },
-            )
-        )
-
-
-def seed_clean_cross_period_sources(
-    work_unit: WorkUnit,
-    *,
-    work_unit_repository: WorkUnitCatalogueRepository,
-    calculation_repository: CalculationRevisionCatalogueRepository,
-    filing_repository: ModeloRecordCatalogueRepository,
-    bucket_event_repository: BucketEventHistoryRepository,
-) -> None:
-    _seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        bucket_event_repository=bucket_event_repository,
-    )
-
-
 def _target_filing_records(
     records: tuple[object, ...],
     work_unit: WorkUnit,
@@ -579,7 +418,7 @@ def _file_revision(
     bucket_event_repository: BucketEventHistoryRepository,
     clock: datetime,
 ):
-    _seed_clean_cross_period_sources(
+    seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
@@ -618,7 +457,7 @@ def _verify_revision(
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     clock: datetime,
 ):
-    _seed_clean_cross_period_sources(
+    seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,

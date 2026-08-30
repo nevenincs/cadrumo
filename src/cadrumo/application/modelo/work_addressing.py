@@ -3,7 +3,7 @@
 The address facade converts visible modelo/year/period filing targets and exact
 work-unit ids into :class:`ModeloWorkAddress` values, resolves them through the
 central selector contract, and returns the matching
-:class:`~cadrumo.domain.modelos.WorkUnit` or :class:`CalculationRevision`.
+:class:`~WorkUnit` or :class:`CalculationRevision`.
 
 This module is the application facade over the accepted addressing policy:
 operators address the active bucket/profile plus modelo, filing year, and period;
@@ -47,7 +47,8 @@ from ...domain.calculations.registry.authority import RegistryAuthorityCapture, 
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente.ccaa import CCAA
-from ...domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.calculation_revision import (
     CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
@@ -73,7 +74,7 @@ from ._selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
-from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 from .registry_discovery import declared_modelo_period_tokens
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
@@ -511,7 +512,7 @@ class ModeloResolvedWorkProjection:
     def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
         """Project a Cadrumo work unit into a resolved-work projection.
 
-        Converts :class:`~cadrumo.domain.modelos.WorkUnit` into
+        Converts :class:`~WorkUnit` into
         :class:`ModeloResolvedWorkProjection`.
         """
         return cls(
@@ -724,7 +725,7 @@ def resolve_modelo_work_unit_for_operator_target(
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
 ) -> WorkUnit:
-    """Resolve exact or visible operator input to one active :class:`~cadrumo.domain.modelos.WorkUnit`.
+    """Resolve exact or visible operator input to one active :class:`~WorkUnit`.
 
     The result comes from the shared selector boundary, so ambiguity and
     exact-id/natural-key contradictions surface as typed selector errors.
@@ -1468,7 +1469,7 @@ def resolve_modelo_work_address_unit(
     catalogue: WorkUnitCatalogue,
     bucket_id: str,
 ) -> WorkUnit:
-    """Resolve an operator-facing modelo work address to one :class:`~cadrumo.domain.modelos.WorkUnit`."""
+    """Resolve an operator-facing modelo work address to one :class:`~WorkUnit`."""
     resolution = resolve_modelo_work_address(address, catalogue=catalogue, bucket_id=bucket_id)
     assert resolution.work_unit is not None
     return resolution.work_unit

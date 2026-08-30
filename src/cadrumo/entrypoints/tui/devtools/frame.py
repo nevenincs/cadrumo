@@ -25,7 +25,6 @@ from typing import Any
 
 from rich.console import Console
 from textual.app import App
-from textual.containers import ScrollableContainer
 from textual.widget import Widget
 
 
@@ -133,8 +132,16 @@ def geometry_band(app: App[Any], width: int) -> list[str]:
     if offenders:
         findings.append(f"painted past the side edges: {', '.join(offenders)}")
 
+    # Both scroll checks judge BEHAVIOUR, not class. Filtering on
+    # ``ScrollableContainer`` asked which widgets subclass a container while
+    # the findings are about which widgets scroll, and the two diverge: a
+    # ``Static`` carrying ``overflow-y`` reports allow_vertical_scroll True,
+    # a positive max_scroll_y and a painted scrollbar while failing the
+    # isinstance test. A screen once carried two visible vertical scrollbars,
+    # one of them such a Static, and this reader called it clean -- a gate
+    # whose name promises a behaviour must not filter on a type.
     for host in app.screen.walk_children():
-        if not isinstance(host, ScrollableContainer) or not host.display:
+        if not getattr(host, "allow_vertical_scroll", False) or not host.display:
             continue
         if host.virtual_size.height > host.container_size.height and host.max_scroll_y <= 0:
             findings.append(
@@ -143,9 +150,7 @@ def geometry_band(app: App[Any], width: int) -> list[str]:
             )
 
     vertical_owners = [
-        host
-        for host in app.screen.walk_children()
-        if isinstance(host, ScrollableContainer) and host.display and host.show_vertical_scrollbar
+        host for host in app.screen.walk_children() if host.display and getattr(host, "show_vertical_scrollbar", False)
     ]
     if len(vertical_owners) > 1:
         findings.append(

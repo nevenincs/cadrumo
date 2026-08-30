@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
@@ -23,6 +23,7 @@ from ...adapters.persistence.operations.secure_references import operation_secur
 from ...adapters.persistence.storage import SecureObjectRepository
 from ...application.auth.operation_definitions import build_auth_operation_definitions
 from ...application.export import build_google_sheets_export_operation_definition
+from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -68,14 +69,16 @@ from ...application.user_profile.custody_ports import profile_custody_secure_obj
 from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
-from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition, Period
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...core.time import now
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
+from ...tests.cross_period_seeding import resolved_revision
 from ...tests.secure_sql import isolated_profile_storage_root
-from ..operation_composition import build_production_operation_registry
 from ..censal_review import _run as run_censal_review_through_services
+from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,60 +96,112 @@ class _RegisteredExecutorConformanceCase:
     expected_refusal_ref: str | None = None
 
 
-_MATRIX = (
-    _RegisteredExecutorConformanceCase(
-        "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "auth.session.acquire",
-        OperationTerminalCondition.REFUSED,
-        OperationEffect.UNKNOWN,
-        expected_refusal_ref="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
-    ),
-    _RegisteredExecutorConformanceCase(
-        "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
-    ),
-    _RegisteredExecutorConformanceCase(
-        "auth.session.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
-    ),
-    _RegisteredExecutorConformanceCase(
-        "user-profile.field-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "user-profile.repeatable-row-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-    _RegisteredExecutorConformanceCase(
-        "live.filed-history.pull",
-        OperationTerminalCondition.REFUSED,
-        OperationEffect.NONE,
-        expected_refusal_ref="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
-    ),
-    _RegisteredExecutorConformanceCase(
-        "export.google-sheets",
-        OperationTerminalCondition.FAILED,
-        OperationEffect.UNKNOWN,
-        (
-            "export.google-sheets.preflight",
-            "export.google-sheets.plan",
-            "export.google-sheets.apply",
+_MODELO = "130"
+_MODELO_FILING_YEAR = 2025
+_MODELO_PERIOD = "1T"
+
+
+def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
+    """Create one real work unit in the active bucket through the production door.
+
+    The modelo lifecycle operations address a work unit by id, so a payload
+    for any of them needs one to exist. It is created through
+    ``create_work_unit`` rather than written into the catalogue directly:
+    a hand-written unit could carry a revision the law-determined resolver
+    would never select, and every one of these executors resolves its
+    revision from the unit.
+    """
+    revision = resolved_revision(modelo=_MODELO, filing_year=_MODELO_FILING_YEAR, period=_MODELO_PERIOD)
+    return create_work_unit(
+        bucket_id=str(profile_id),
+        modelo=_MODELO,
+        filing_year=_MODELO_FILING_YEAR,
+        period=Period.from_year_and_code(_MODELO_FILING_YEAR, _MODELO_PERIOD),
+        revision_id=revision.id,
+        actor=_ACTOR,
+    )
+
+
+def _registered_definition_ids() -> tuple[str, ...]:
+    """Every definition the production registry actually composes.
+
+    The matrix is parametrised from this rather than from a hand-listed
+    tuple. A hardcoded item list encodes the registry as it stood on the
+    day it was written and then detects nothing: this test's own name
+    claims it covers EVERY production registered executor, and while the
+    list was hand-maintained it silently covered none of the modelo
+    family. Deriving the subjects means a newly composed operation joins
+    the matrix by existing, and reports a missing scenario rather than
+    reconciling quietly.
+    """
+    return tuple(sorted(definition.definition_id for definition in build_production_operation_registry().definitions))
+
+
+_EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
+    case.definition_id: case
+    for case in (
+        _RegisteredExecutorConformanceCase(
+            "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-    ),
-    _RegisteredExecutorConformanceCase(
-        "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-    ),
-)
+        _RegisteredExecutorConformanceCase(
+            "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "auth.session.acquire",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.UNKNOWN,
+            expected_refusal_ref="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
+        ),
+        _RegisteredExecutorConformanceCase(
+            "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        _RegisteredExecutorConformanceCase(
+            "auth.session.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        _RegisteredExecutorConformanceCase(
+            "user-profile.field-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "user-profile.repeatable-row-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "live.filed-history.pull",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            expected_refusal_ref="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
+        ),
+        _RegisteredExecutorConformanceCase(
+            "export.google-sheets",
+            OperationTerminalCondition.FAILED,
+            OperationEffect.UNKNOWN,
+            (
+                "export.google-sheets.preflight",
+                "export.google-sheets.plan",
+                "export.google-sheets.apply",
+            ),
+        ),
+        _RegisteredExecutorConformanceCase(
+            "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+    )
+}
+"""The settlement each registered executor is expected to reach.
+
+Keyed by definition id, never ordered or counted. Coverage is asserted
+against the live registry below, so an operation that gains a definition
+without gaining a scenario fails by name instead of by tally."""
 
 
 @dataclass(slots=True)
@@ -338,8 +393,16 @@ def _payload(
                     for path in CENSAL_ADOPTABLE_PATHS
                 ),
             }
-        case _:  # pragma: no cover - matrix completeness assertion below prevents this branch.
-            raise AssertionError(f"no S45 public scenario for {definition.definition_id}")
+        case "modelo.work.rename":
+            unit = _seeded_modelo_work_unit(profile_id)
+            subject_ref = unit.work_unit_id
+            values = {
+                "work_unit_id": unit.work_unit_id,
+                "new_name": "Conformance renamed unit",
+                "actor": _ACTOR,
+            }
+        case _:  # pragma: no cover - the coverage census names any definition missing a scenario.
+            raise AssertionError(f"no conformance scenario for {definition.definition_id}")
     return subject_ref, definition.request_type.model_validate(values, strict=True), secret
 
 
@@ -474,17 +537,41 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_p
             )
 
 
-@pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.definition_id)
+def test_every_registered_definition_has_a_conformance_scenario() -> None:
+    """The matrix's subjects are the registry's, in both directions.
+
+    This is the census the hardcoded item list used to stand in for. It
+    asserts membership, never a count: a tally would have to be edited
+    every time an operation is composed, which trains everyone to update
+    the constant and then detects nothing.
+    """
+    registered = set(_registered_definition_ids())
+    declared = set(_EXPECTATIONS)
+
+    assert not registered - declared, (
+        "registered operations run through the supervisor with no conformance scenario, so this "
+        f"matrix does not cover what its name claims: {sorted(registered - declared)}"
+    )
+    assert not declared - registered, (
+        f"conformance scenarios name operations the production registry does not compose: {sorted(declared - registered)}"
+    )
+
+
+@pytest.mark.parametrize("definition_id", _registered_definition_ids())
 @pytest.mark.timeout(90)
 def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
-    tmp_path: Path, case: _RegisteredExecutorConformanceCase
+    tmp_path: Path, definition_id: str
 ) -> None:
     """Actual execution, effects, settlement, review, cleanup, and truthful control refusal."""
-    assert len({case.definition_id for case in _MATRIX}) == len(_MATRIX)
+    case = _EXPECTATIONS.get(definition_id)
+    if case is None:
+        pytest.fail(
+            f"{definition_id} is composed into the production registry but declares no conformance "
+            "scenario, so nothing proves its executor settles, cleans up, or refuses truthfully"
+        )
     cleanup = _CloseWitness()
     with _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
-        assert set(definitions) == {item.definition_id for item in _MATRIX}
         definition = definitions[case.definition_id]
         subject_ref, payload, secret = _payload(
             definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id

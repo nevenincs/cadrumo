@@ -28,7 +28,7 @@ See Also:
         Owns :func:`~application.ledger.preflight.preflight_ledger_tax_readiness`,
         the classification/category/IVA-fact readiness gate this walkthrough's
         "classify" step reuses rather than re-deriving.
-    :class:`~domain.modelos.WorkUnit`
+    :class:`~WorkUnit`
         The modelo work-unit record the final step resolves against.
 """
 
@@ -41,7 +41,8 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...domain.modelos import ModeloCode, WorkUnitCatalogue
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..modelo.work_addressing import (
     ModeloWorkSelectionMode,
@@ -55,7 +56,7 @@ from .next_actions import declare_next_action
 if TYPE_CHECKING:
     from ...application.ledger.evidence import PurchaseInvoiceEvidence
     from ...application.ledger.preflight import LedgerPreflightReport
-    from ...domain.invoices import InvoiceCatalogue
+    from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import Transaction
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 

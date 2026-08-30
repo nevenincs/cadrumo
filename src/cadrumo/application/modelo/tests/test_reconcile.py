@@ -15,13 +15,10 @@ from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.buckets import BucketEventType
-from ....domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_work_unit,
-)
+from ....domain.buckets.event import BucketEventType
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (

@@ -9,11 +9,8 @@ from datetime import UTC, date, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.outbound.aeat.sede import (
-    Declaracion,
-    NotificationsSnapshot,
-    RemoteNotification,
-)
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.notifications import NotificationsSnapshot, RemoteNotification
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
@@ -32,10 +29,8 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import clear_output_language_cache
 from ....core.time import frozen_clock, now, today_madrid
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ExternalEvidenceKind,
-    upsert_filing_record,
-)
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session

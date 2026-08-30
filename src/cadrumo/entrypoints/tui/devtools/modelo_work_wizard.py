@@ -25,7 +25,7 @@ from ..launcher import load_modelo_work_unit_catalogue
 from .fixture import harness_storage, passphrase
 
 if TYPE_CHECKING:
-    from ....domain.modelos import WorkUnit
+    from ....domain.modelos.work_unit import WorkUnit
 
 _MODELO = Modelo.M130.value
 _FILING_YEAR = 2025

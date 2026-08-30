@@ -36,9 +36,9 @@ See Also:
     :class:`cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
         Shared encrypted snapshot repository used by this bucket-scoped
         capture repository.
-    :class:`~cadrumo.domain.modelos.ModeloRecord`
+    :class:`~ModeloRecord`
         Local filing record stamped with live
-        :class:`~cadrumo.domain.modelos.ExternalEvidence` only after the receipt
+        :class:`~ExternalEvidence` only after the receipt
         matches the current filing axis.
 """
 
@@ -54,17 +54,14 @@ from typing import TYPE_CHECKING, override
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede import Declaracion, Expediente
+    from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
+    from ...adapters.outbound.aeat.sede.schema import Expediente
     from ...domain.justificante import Justificante
-    from ...domain.modelos import ModeloRecord
+    from ...domain.modelos.filing_record import ModeloRecord
     from ..modelo.reconciliation import ModeloReconciliationReport
 
-from ...adapters.outbound.aeat.sede import (
-    capture_justificante,
-    open_declarations_register,
-    shared_playwright,
-    walk_expedientes_tree,
-)
+from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
@@ -705,7 +702,7 @@ def register_capture_as_filing_evidence(
     referenced justificante record loads. Emits a
     ``MODELO_LIVE_EVIDENCE_STAMPED`` bucket event recording the action.
 
-    Returns the stamped :class:`~cadrumo.domain.modelos.ModeloRecord`.
+    Returns the stamped :class:`~ModeloRecord`.
 
     Raises:
         LiveApplicationInputError: when no current filing record exists for the
@@ -716,18 +713,10 @@ def register_capture_as_filing_evidence(
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core.time import now
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        BucketEventType,
-        derive_bucket_event_id,
-        emit_bucket_events,
-    )
-    from ...domain.modelos import (
-        ExternalEvidence,
-        ExternalEvidenceKind,
-        upsert_filing_record,
-    )
+    from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
+    from ...domain.buckets.event_repository import emit_bucket_events
+    from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
+    from ...domain.modelos.filing_repository import upsert_filing_record
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(

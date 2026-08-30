@@ -30,11 +30,13 @@ from ....application.invoices import build_catalogue_invoice, create_catalogue_i
 from ....application.modelo._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo._work_lifecycle import create_work_unit
+from ....application.modelo.work_lifecycle import create_work_unit
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record

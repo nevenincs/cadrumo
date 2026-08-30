@@ -2,7 +2,7 @@
 
 These lock the ``reconcile-declaration-casillas`` contract: a filed declaración
 PDF is compared casilla-by-casilla against the
-persisted computed :class:`~cadrumo.domain.modelos.CalculationRevision`, not only
+persisted computed :class:`~CalculationRevision`, not only
 at the header / total level. Modelo 130 is the first modelo enrolled in
 :data:`cadrumo.application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`
 because its ``declaracion_pdf`` extraction profile targets registry casilla ids
@@ -36,7 +36,10 @@ from ....core import Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.time import now
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

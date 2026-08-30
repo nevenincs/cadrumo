@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....core import Modelo, OutputLanguage, Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos import ModeloCode
+from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloBindingEditIntentV1,

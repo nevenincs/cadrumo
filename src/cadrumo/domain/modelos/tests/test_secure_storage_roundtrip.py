@@ -28,9 +28,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, SensitivityClass
 from ....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._codes import ModeloCode
-from .._repository import WorkUnitPersistenceError
-from .._work_unit import (
+from ..codes import ModeloCode
+from ..repository import WorkUnitPersistenceError
+from ..work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,

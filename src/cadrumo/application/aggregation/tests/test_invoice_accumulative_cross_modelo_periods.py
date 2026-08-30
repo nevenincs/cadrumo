@@ -60,9 +60,10 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -77,7 +78,7 @@ from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket
 from ...modelo._filed_revision_observation import persist_filed_revision_observation
 from ...modelo._m303_regimen_simplificado_scope import active_taxpayer_profile
 from ...modelo._result_disposition_resolution import resolve_modelo_result_disposition
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

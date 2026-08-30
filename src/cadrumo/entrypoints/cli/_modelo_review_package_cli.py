@@ -124,7 +124,7 @@ from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
 )
-from ...application.modelo._work_lifecycle import get_work_unit
+from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,

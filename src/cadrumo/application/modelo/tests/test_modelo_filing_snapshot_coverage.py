@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.modelos import derive_work_unit_id
+from ....domain.modelos.work_unit import derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

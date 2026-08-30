@@ -1,14 +1,14 @@
 """Encrypted roundtrip coverage for calculation-revision source-mesh provenance.
 
 Exercises the ``source_provenance`` field on
-:class:`~domain.modelos.CalculationRevision`: the
+:class:`~CalculationRevision`: the
 resolver-to-source-object-to-fingerprint trace must survive the real encrypted
 ``SecureObjectRepository`` -> SQLite -> decrypt cycle with strict model equality,
 and a corrupted on-disk payload must be refused on load so the field's
 constraints are proven non-tautological.
 
 See Also:
-    :class:`~domain.modelos.CalculationSourceRef`
+    :class:`~CalculationSourceRef`
         Domain provenance row whose non-default fields are round-tripped here.
     :func:`~domain.modelos.derive_calculation_revision_id`
         Content-addressed id derivation over complete canonical provenance.
@@ -39,7 +39,8 @@ from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
 from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.modelos import CalculationRevisionPersistenceError, derive_work_unit_id
+from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
+from .....domain.modelos.work_unit import derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

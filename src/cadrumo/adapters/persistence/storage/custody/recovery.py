@@ -244,7 +244,7 @@ def create_profile_custody_recovery_envelope(
     previous_recovery_digest: str | None = None,
     settings: Settings | None = None,
 ) -> ProfileCustodyRecoveryEnvelope:
-    """Create the mandatory creation-time recovery wrapper through the supervised S03 KDF owner."""
+    """Create the mandatory creation-time recovery wrapper through the supervised KDF owner."""
     aad = profile_custody_recovery_aad_for(
         profile_id=profile_id,
         dek_epoch=dek_epoch,
@@ -312,7 +312,7 @@ def unlock_profile_custody_recovery(
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
 ) -> ProfileCustodyRecoveryUnlock:
-    """Use the S03 supervised unwrap boundary for an explicit recovery secret."""
+    """Use the supervised unwrap boundary for an explicit recovery secret."""
     dek = unlock_profile_custody_recovery_material(
         profile_id=envelope.profile_id,
         dek_epoch=envelope.dek_epoch,

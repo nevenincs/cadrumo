@@ -146,7 +146,7 @@ modelo:
                 title: null
           field:
             label: null
-        2023-2024:
+        2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Es consigna una C quan la declaració inclou registres completament

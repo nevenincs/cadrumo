@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.application.modelo._preconditions import MODELO_PRECONDITION_PROFILES
 from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE
-from cadrumo.application.operator_surface import (
+from cadrumo.application.operator_surface.manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
     OperatorSurfaceReconciliation,
@@ -21,7 +21,8 @@ from cadrumo.application.operator_surface import (
 )
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.i18n import extract_placeholders, lookup_translation_entry
-from cadrumo.entrypoints.cli import build_verb_input_schemas, command_schema_refs
+from cadrumo.entrypoints.cli import command_schema_refs
+from cadrumo.entrypoints.cli._verb_input_schema import build_verb_input_schemas
 
 from .._paths import REPO_ROOT
 

@@ -129,7 +129,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth.catalogue import AuthProviderListing
-    from ...application.modelo._work_lifecycle import ModeloWorkLifecycleContinuation
+    from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions import (
         ActionArgumentBinding,
         ActionArgumentBindingSpecification,
@@ -138,9 +138,9 @@ if TYPE_CHECKING:
     )
     from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
-    from ...domain.deadlines import TaxpayerProfile
-    from ...domain.filing import ModeloDraft
-    from ...domain.invoices import InvoiceCatalogue
+    from ...domain.deadlines.models import TaxpayerProfile
+    from ...domain.filing.schema import ModeloDraft
+    from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
     from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema

@@ -570,7 +570,8 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
 
 
 def test_list_filing_records_orders_multiple_periods_without_period_comparison(repos: Repos) -> None:
-    from ....domain.modelos import ModeloCode, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 
     _, _, fr_repo, _, _ = repos
     q1 = Period.from_year_and_code(2025, "1T")
@@ -620,7 +621,8 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
 
 
 def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
-    from ....domain.modelos import ModeloCode, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 
     _, _, fr_repo, _, _ = repos
     period = Period.from_year_and_code(2025, "0A")

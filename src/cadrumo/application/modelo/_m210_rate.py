@@ -7,7 +7,7 @@ application helper replays the same single tipo-de-gravamen resolution path over
 ``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
 :class:`~cadrumo.domain.calculations.registry.ConvenioAuthority` treaty projection for
 the profile's ``country_of_fiscal_residence``, and returns either a scalar IRNR
-rate or blocking :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` records for
+rate or blocking :class:`~ModeloVerificationFinding` records for
 deferred baseline coverage or missing treaty rows.
 
 Base-dependent branches — the ``allocation_domestic_tariff`` pension delegation and
@@ -37,12 +37,8 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 
 if TYPE_CHECKING:
     from ...core import CasillaId
@@ -61,7 +57,7 @@ def _m210_blocking_finding(
 ) -> ModeloVerificationFinding:
     """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
 
-    The returned :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` is the
+    The returned :class:`~ModeloVerificationFinding` is the
     application-facing companion to the formula-runtime unresolved outcome:
     callers surface it to the operator instead of letting an unavailable M210
     rate silently produce filing output.
@@ -188,7 +184,7 @@ def resolve_m210_rate(
     :class:`~cadrumo.domain.deadlines.TaxpayerProfile` supplies
     ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
     findings)`` where ``findings`` contains blocking
-    :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` records when a
+    :class:`~ModeloVerificationFinding` records when a
     required rate is deferred or unavailable.
 
     A profile with no treaty country uses the baseline table. A profile with a

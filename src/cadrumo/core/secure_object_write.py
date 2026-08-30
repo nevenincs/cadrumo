@@ -14,10 +14,10 @@ See Also:
         Public core facade export for this DTO.
     :class:`~core.classification.SensitivityClass`
         Classification carried by every prepared secure-object write.
-    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`
+    :class:`~CalculationRevisionCatalogueRepositoryProtocol`
         Domain repository port that can prepare a calculation catalogue write
         without importing adapters.
-    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`
+    :class:`~ModeloRecordCatalogueRepositoryProtocol`
         Domain repository port that can co-write filing records through the same
         DTO.
     :class:`~adapters.persistence.storage.SecureObjectRepository`

@@ -17,14 +17,8 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ExternalEvidence,
-        ExternalEvidenceKind,
-        ModeloCode,
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
     from .._modelo_payloads import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult
     from .._modelo_rendering import filing_record_payload as _filing_record_payload
 
@@ -92,7 +86,7 @@ def test_import_payload_rejects_external_evidence_that_differs_from_import_metad
 
     from pydantic import ValidationError
 
-    from ....domain.modelos import ExternalEvidenceKind, ModeloRecordStatus
+    from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
     from .._modelo_payloads import FilingRecordImportResult
 
     payload = {
@@ -127,12 +121,8 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ModeloCode,
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
     from .._modelo_payloads import ModeloRecordShowResult, WorkFileResult
     from .._modelo_rendering import filing_record_payload as _filing_record_payload
 
@@ -178,14 +168,8 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
 
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ExternalEvidence,
-        ExternalEvidenceKind,
-        ModeloCode,
-        ModeloRecord,
-        ModeloRecordStatus,
-        derive_filing_record_id,
-    )
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
     from .._modelo_rendering import filing_record_lines as _filing_record_lines
 
     imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)

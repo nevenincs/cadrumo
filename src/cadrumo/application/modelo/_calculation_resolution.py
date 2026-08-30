@@ -39,7 +39,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
 from ._binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,

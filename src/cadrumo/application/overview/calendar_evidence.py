@@ -43,7 +43,7 @@ from ...core.i18n import tr
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.applicability_routes import TaxRoute
-from ...domain.modelos import is_justificante_backed_external_evidence
+from ...domain.modelos.filing_record import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from .calendar_models import (
     OverviewAeatSubmissionState,
@@ -54,9 +54,9 @@ from .calendar_models import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
     from ...domain.justificante import Justificante
-    from ...domain.modelos import ModeloRecord
+    from ...domain.modelos.filing_record import ModeloRecord
     from ..calculations import ObservationEnvelopePayload
     from ..live.justificante import JustificanteCaptureSnapshot
 
@@ -197,7 +197,7 @@ def calendar_filing_evidence_from_sources(
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles
-    the existing local :class:`~cadrumo.domain.modelos.ModeloRecord` catalogue,
+    the existing local :class:`~ModeloRecord` catalogue,
     calendar-visible AEAT register events,
     :class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     rows, persisted calculation observations from justificante capture,

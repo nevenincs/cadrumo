@@ -28,11 +28,7 @@ from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ids import RelationId
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
-from ...iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
+from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -1308,7 +1304,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     """Regression: sort key must work for all four row types (M184/M232 use nif,
     M349 uses nif_comunitario, M347 uses nif). This test verifies the sort key
     accessor correctly extracts the identifier field for each row type."""
-    from .._row_models import (
+    from ..row_models import (
         Modelo184MemberRow,
         Modelo232VinculadaRow,
         Modelo347ContraparteRow,

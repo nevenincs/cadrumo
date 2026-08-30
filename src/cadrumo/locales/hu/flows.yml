@@ -112,6 +112,7 @@ flows:
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet
           collectible_invoice: Kimenő számla
+          design_constant: Tervezeti állandó
           donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
           gasto193_contributor: Adózónkénti költségek (193-as modelo)
@@ -201,9 +202,11 @@ flows:
       unresolved: Feloldatlan
     summary:
       calculation_revision: Számítási verzió
+      denominator_source: Nevező forrása
       lifecycle_state: Életciklus-állapot
       progress: Előrehaladás
       registry_revision: Nyilvántartás verziója
+      section: Összefoglaló
       verification_outcome: Ellenőrzés eredménye
       work_unit: Munkamegység
     title: Modelo {modelo} · {filing_year} · {period}
@@ -216,6 +219,113 @@ flows:
       state: Állapot
     empty: Ehhez a profilhoz még nincs regisztrált munkaegység.
     title: Modell munkaegység kiválasztása
+  modelo_workspace_filing:
+    column:
+      capability: Képesség
+      disposition: Diszpozíció
+      producer: Előállító
+      why: Indok
+    handoff: A benyújtás ezen az alkalmazáson kívül történik. Itt építsen, ellenőrizzen
+      és exportáljon, majd saját maga nyújtsa be az AEAT felé.
+    state_not_carried: Ez az olvasás nem tartalmaz benyújtási állapotot vagy előzményt.
+      Egyetlen előállító sem adja meg.
+    title: Benyújtás — {modelo} modelo
+    why:
+      draft_structural: 'Tartósan nincs mérve: a piszkozat építése állapotmentes,
+        így egyetlen előállító sem rögzít kiolvasható verdiktet.'
+      export_pending_port: Nincs mérve, amíg nincs az exporttörténetet olvasó közreműködő.
+  modelo_workspace_inputs:
+    column:
+      address: Cím
+      input_kind: Deklarált bemeneti típus
+      label: Címke
+      value: Érték
+    empty: Ez a revízió nem deklarál materializált értékeket.
+    input_kind_unmeasured: nincs mérve
+    page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
+      olvasásból nem érhető el.'
+    section:
+      unsectioned: Szakasz nélkül
+    title: Bemenetek — {modelo} modelo
+    values_unmeasured: Ebben az olvasásban nem mértünk értéket. A statikus vizsgálat
+      csak a sémát olvassa.
+  modelo_workspace_overview:
+    actions_not_carried: Egyetlen előállító sem ad helyreállítási műveletet ehhez
+      az olvasáshoz. Ez nem állítja, hogy nincsenek.
+    column:
+      capability: Képesség
+      disposition: Diszpozíció
+      field: Mező
+      producer: Előállító
+      value: Érték
+    label:
+      filing_year: Adóév
+      law_selected: Jogszabály által kiválasztott revízió
+      modelo: Modelo
+      period: Időszak
+      requested_assertion: Kért revíziós állítás
+      review_status: Felülvizsgálati állapot
+      stored_assertion: Tárolt revíziós állítás
+      work_state: Munkaegység állapota
+      work_unit: Munkaegység
+    section:
+      address: Cím
+      capabilities: Képességek
+      revision: Revíziós koordináták
+    title: Áttekintés — {modelo} modelo
+    value:
+      no_work_unit: még nincs munkaegység
+  modelo_workspace_provenance:
+    column:
+      resolver: Feloldó
+      source_ref: Forráshivatkozás
+      subject: Alany
+    empty: Ez a számítás nem rögzített közreműködő forrást.
+    not_applicable: Erre az olvasásra nem alkalmazható. Ez az admisszió nem tartalmaz
+      eredet-facettát.
+    page_bounded: '{shown} sor látható egy nagyobb halmazból. Egy forrás sok sort
+      adhat, ezért a sorszám nem jelzi a teljességet.'
+    title: Eredet — {modelo} modelo
+    value:
+      unattributed: nincs hozzárendelve
+  modelo_workspace_results:
+    column:
+      casilla: Casilla
+      formula: Képlet
+      value: Érték
+    empty: Ez a számítás nem hozott létre számított casillát.
+    not_applicable: Erre az olvasásra nem alkalmazható. A számított eredmények és
+      az operátori bemenetek szétválasztásához a munkafelülvizsgálat kell, amelyet
+      a statikus vizsgálat nem tartalmaz.
+    page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
+      olvasásból nem érhető el.'
+    title: Eredmények — {modelo} modelo
+  modelo_workspace_verification:
+    axis:
+      binding_ready: Kötések készek
+      ledger_ready: Főkönyv kész
+      profile_ready: Profil kész
+      ready: Kész (előállítói verdikt)
+      registry_ready: Nyilvántartás kész
+    capability_line: 'Ellenőrzési készenlét: {glyph} {disposition} (forrás: {producer})'
+    column:
+      axis: Tengely
+      casilla: Casilla
+      kind: Típus
+      severity: Súlyosság
+      value: Érték
+    evidence_not_carried: Egyetlen előállító sem ad bizonyítékot vagy helyreállítási
+      műveletet ezekhez a rekordokhoz. Ez nem állítja, hogy nincsenek.
+    findings_none: A munkafelülvizsgálat nem rögzített megállapítást.
+    findings_unmeasured: Ebben az olvasásban nem mértünk megállapítást. Ez az admisszió
+      nem tartalmaz munkafelülvizsgálatot.
+    readiness_unmeasured: A készenlétet ebben az olvasásban nem mértük.
+    section:
+      findings: Megállapítások
+      readiness: Készenléti tengelyek
+    title: Ellenőrzés — {modelo} modelo
+    value:
+      unmeasured: nincs mérve
   passphrase:
     cancel_button: Mégse
     change_button: Jelszó módosítása

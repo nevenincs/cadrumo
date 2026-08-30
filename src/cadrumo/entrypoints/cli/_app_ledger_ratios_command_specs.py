@@ -152,7 +152,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             ArgumentSpec(
                 name="category",
-                value=ValueContract(DeferredTarget("cadrumo.domain.categories", "SpendingCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.categories.spending_category", "SpendingCategory")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.ratios.category_help"),
                 metavar=None,
@@ -206,7 +206,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(
             ArgumentSpec(
                 name="category",
-                value=ValueContract(DeferredTarget("cadrumo.domain.categories", "SpendingCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.categories.spending_category", "SpendingCategory")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.ratios.unset_category_help"),
                 metavar=None,

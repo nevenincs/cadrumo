@@ -17,16 +17,9 @@ from ....application.calculations import (
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    WorkUnit,
-    derive_filing_record_id,
-    derive_work_unit_id,
-    upsert_filing_record,
-)
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

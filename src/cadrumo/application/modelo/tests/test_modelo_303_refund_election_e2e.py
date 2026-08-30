@@ -47,13 +47,7 @@ from ....core import AuthProviderKind, CasillaId, Period, RefundElection, Result
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.deadlines import (
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
+from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
@@ -68,7 +62,7 @@ from .._calculation_actions import calculate_modelo_revision
 from .._filing_actions import file_modelo_revision
 from .._result_disposition_resolution import resolve_modelo_result_disposition
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

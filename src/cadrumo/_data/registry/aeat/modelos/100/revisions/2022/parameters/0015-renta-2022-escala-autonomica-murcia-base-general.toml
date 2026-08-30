@@ -1,3 +1,19 @@
+# Escala autonómica de la Región de Murcia para 2022, deflactada un 4,1 % por el
+# Decreto-ley 4/2022, de 22 de septiembre (BORM 29-09-2022, art. único, que
+# modifica la DA quinta.4 del Decreto Legislativo 1/2010). LIRPF art. 74 es el
+# artículo que APLICA la escala autonómica; la norma que la ESTABLECE es
+# autonómica y no está empaquetada — el corpus no incluye texto normativo de
+# ninguna comunidad autónoma. Por eso la evidencia se ancla en el Manual
+# práctico de Renta 2022 de la AEAT (pág. 979), que reproduce la escala y su
+# frase de cierre literalmente.
+#
+# El último tramo declara 8.716,67 € de cuota íntegra a 60.000,00 €, mientras
+# que los tramos inferiores acumulan 8.625,84 €. La discontinuidad está en la
+# norma, no en esta tabla: Murcia deflactó límites y tipos y arrastró la cuota
+# acumulada sin deflactar a la frase final. Sólo 8.716,67 está promulgado y es
+# lo que aplica la AEAT. NO corregir hacia la aritmética. Ver la entrada
+# FAITHFUL TO SOURCE en test_bracket_accumulated_cuota_continuity.py y las dos
+# pruebas que fijan el valor contra el manual empaquetado.
 [[revisions."2022".parameters]]
 id = "renta-2022-escala-autonomica-murcia-base-general"
 data_type = "bracket_table"
@@ -8,7 +24,7 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
-required_text = ["Región de Murcia", "escala autonómica"]
+required_text = ["Región de Murcia", "escala autonómica", "8.716,67", "22,70"]
 
 [[revisions."2022".parameters.brackets]]
 lower_bound = "0"

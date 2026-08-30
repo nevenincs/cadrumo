@@ -11,17 +11,10 @@ import pytest
 from ....core import M303RegimenSimplificadoFact, Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.deadlines import M303RegimeComposition
+from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    ActividadNoAgricolaSimplificado,
-    EntradaModuloSimplificado,
-    HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303Exonerado390ActivityRowEvidence,

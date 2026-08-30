@@ -54,12 +54,10 @@ from ....core import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva import (
-    IvaDeductionClassificationProvenance,
-)
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -74,7 +72,7 @@ from .._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

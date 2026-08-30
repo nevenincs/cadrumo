@@ -1461,12 +1461,18 @@ def test_source_tests_do_not_reference_retired_marker_names(marker_policy_invent
 def test_campaign_metadata_scan_ignores_noqa_lint_codes() -> None:
     """Lint suppression codes are not campaign process identifiers."""
     lint_comment = "# noqa: " + "S" + "603 - subprocess invocation is intentional"
+    file_level_lint_comment = "# ruff: noqa: " + "S" + "106 - command tokens are operator verbs"
     campaign_comment = "# carried campaign step " + "S" + "603"
 
     lint_scan_text = _campaign_metadata_scan_text(lint_comment)
+    file_level_scan_text = _campaign_metadata_scan_text(file_level_lint_comment)
     campaign_scan_text = _campaign_metadata_scan_text(campaign_comment)
 
     assert not any(pattern.search(lint_scan_text) for pattern in _CAMPAIGN_METADATA_PATTERNS)
+    # The file-level form carries the tool name between the hash and ``noqa``.
+    # It is the shape 49 modules in this tree use, and reading its rule code as
+    # a campaign id is what made the bare-code pattern unusable in production.
+    assert not any(pattern.search(file_level_scan_text) for pattern in _CAMPAIGN_METADATA_PATTERNS)
     assert any(pattern.search(campaign_scan_text) for pattern in _CAMPAIGN_METADATA_PATTERNS)
 
 
@@ -1565,10 +1571,11 @@ def test_production_source_does_not_cite_dated_vault_documents() -> None:
     """Shipped source must not name a dated record from this repo's own vault.
 
     The citation direction is one-way: a vault document cites code by locator,
-    and code never cites the vault. Every other pattern in the table stays
-    test-scoped; this check is the dated-document-stem family only, because
-    that is the only shape measured at a zero false-positive rate over real
-    production source.
+    and code never cites the vault. This check enforces every family the table
+    marks production-scoped, not the dated-document-stem family alone: the
+    step-notation addresses joined it once their sweep was complete. The set is
+    derived from the table rather than restated here, so a family added there
+    is enforced here without touching this test.
     """
     violations = _production_campaign_metadata_violations()
     assert not violations, "production modules must not name a dated vault document:\n" + "\n".join(violations)
@@ -1690,7 +1697,7 @@ def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose(
         "landed in PR",
         "recorded in the ADR",
         "Ste" + "p 4 of the campaign",
-        "carried in W01.P02.S03",
+        "closed by S08",
     )
     for probe in test_scoped_only:
         assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (
@@ -1700,14 +1707,34 @@ def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose(
             f"{probe!r} reached the production scope; only the document-naming families were widened"
         )
 
+    # The dotted step-notation families ARE production-scoped, and the assertion
+    # runs the same both ways as the exclusions above: reaching production proves
+    # the widening took effect, and matching the full table proves the pattern
+    # still discriminates rather than having quietly stopped matching. The bare
+    # single-code family stays test-scoped and is probed among the exclusions
+    # above, because it reaches 22 production modules that have not been swept.
+    production_scoped_too = (
+        "carried in W01.P02.S03",
+        "see P02.S14",
+    )
+    for probe in production_scoped_too:
+        assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (
+            f"{probe!r} is matched by no pattern at all, so its production scope measures nothing"
+        )
+        assert any(pattern.search(probe) for pattern in _PRODUCTION_SCOPED_PATTERNS), (
+            f"{probe!r} did not reach the production scope, so shipped source is unguarded against it"
+        )
+
     # Real domain prose from the shipped tree that the noisy families flag and
     # the production scope must never see: a Spanish tax-law citation, a
-    # custody protocol describing itself as two-phase, and a bare constraint
-    # statement naming no document.
+    # custody protocol describing itself as two-phase, a bare constraint
+    # statement naming no document, and the standards body whose name is the
+    # one real near-miss for the newly-widened step-notation family.
     domain_prose = (
         "RD-ley 4/2024 phase-out",
         "Two-phase like :func:`recovery_create`",
         "needs a superseding ADR",
+        "the W3C standard",
     )
     for probe in domain_prose:
         assert not any(pattern.search(probe) for pattern in _PRODUCTION_SCOPED_PATTERNS), (

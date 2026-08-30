@@ -21,13 +21,10 @@ from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
-from ...domain.iva import ActividadAgricolaSimplificado
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloRecordStatus,
-    WorkUnit,
-)
+from ...domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado
+from ...domain.modelos.filing_record import ModeloRecordStatus
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,

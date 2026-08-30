@@ -67,12 +67,26 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
     PatternCase(
         re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE), ("def test_w01_p02_thing",), ("def test_workbook_parity",)
     ),
+    # Production-scoped on a measurement rather than on judgement: across the
+    # 1953 non-test modules under ``src/cadrumo`` this shape hit exactly one
+    # site, a campaign address in a comment, and an exhaustive read of that hit
+    # found nothing a tax module could legitimately want. The whole risk sits in
+    # the near-miss below -- a bare ``W`` and digits is otherwise ordinary prose
+    # -- and the control already discriminates it.
     PatternCase(
         re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
         ("carried in W01.P02.S03",),
         ("the W3C standard",),
+        scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
     ),
-    PatternCase(re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"), ("see P02.S14",), ("only P02 here",)),
+    # Production-scoped with its sibling above: the dotted phase-step pair is
+    # unambiguous, and the same tree-wide read found no legitimate use of it.
+    PatternCase(
+        re.compile(r"\bP\d{1,3}\.S\d{1,4}\b"),
+        ("see P02.S14",),
+        ("only P02 here",),
+        scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
+    ),
     PatternCase(re.compile(r"\bS\d{2,4}\b"), ("closed by S08",), ("the S1 bucket",)),
     PatternCase(re.compile(r"\blegacy-(?:plan|step)"), ("a legacy-plan carry",), ("a legacy-format reader",)),
     PatternCase(
@@ -215,7 +229,18 @@ PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = tuple(
     case for case in CAMPAIGN_METADATA_CASES if case.scope is MarkerScanScope.TEST_AND_PRODUCTION_MODULES
 )
 PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES)
-_NOQA_LINT_CODE_PATTERN = re.compile(r"(#\s*noqa(?::\s*)?)([A-Z]+[0-9]+(?:\s*,\s*[A-Z]+[0-9]+)*)")
+#: Ruff writes suppressions in two shapes and both carry rule codes that look
+#: exactly like a campaign step id. The trailing form suppresses one line and
+#: puts the directive straight after the hash; the file-level form sits at
+#: module top and inserts the tool name between the hash and the directive,
+#: as in hash-space-``ruff:``-space-directive. Anchoring on a hash immediately
+#: followed by the directive sees only the first shape, so all 49 file-level
+#: suppressions in this tree read as campaign metadata -- which is what kept
+#: the bare-``S``-code pattern from being production-scoped, because those
+#: false positives swamped the genuine hits.
+_NOQA_LINT_CODE_PATTERN = re.compile(
+    r"(#\s*(?:[a-z][a-z0-9_]*\s*:\s*)?noqa(?::\s*)?)([A-Z]+[0-9]+(?:\s*,\s*[A-Z]+[0-9]+)*)",
+)
 #: Process nouns that must not name a durable test symbol or pytest id.
 #:
 #: The plan entry is narrower than its four siblings on purpose. Those four name

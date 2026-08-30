@@ -112,6 +112,7 @@ flows:
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft
           collectible_invoice: Customer invoice
+          design_constant: Design constant
           donativo_donor: Donation donor
           foreign_asset: Foreign asset
           gasto193_contributor: Expenses per contribuyente (modelo 193)
@@ -200,9 +201,11 @@ flows:
       unresolved: Unresolved
     summary:
       calculation_revision: Calculation revision
+      denominator_source: Denominator source
       lifecycle_state: Lifecycle state
       progress: Progress
       registry_revision: Registry revision
+      section: Summary
       verification_outcome: Verification outcome
       work_unit: Work unit
     title: Modelo {modelo} · {filing_year} · {period}
@@ -215,6 +218,112 @@ flows:
       state: State
     empty: No work units are registered on this profile yet.
     title: Select a modelo work unit
+  modelo_workspace_filing:
+    column:
+      capability: Capability
+      disposition: Disposition
+      producer: Producer
+      why: Why
+    handoff: Filing happens outside this application. Build, verify and export here,
+      then file with the AEAT yourself.
+    state_not_carried: Filing state and filing history are not carried by this reading.
+      No producer supplies them.
+    title: Filing — modelo {modelo}
+    why:
+      draft_structural: 'Permanently unmeasured: draft building is stateless, so no
+        producer records a verdict to read.'
+      export_pending_port: Unmeasured pending a contributor that reads export history.
+  modelo_workspace_inputs:
+    column:
+      address: Address
+      input_kind: Declared input kind
+      label: Label
+      value: Value
+    empty: This revision declares no materialized values.
+    input_kind_unmeasured: not measured
+    page_bounded: Showing {shown} of a larger set; the remaining rows are not reachable
+      from this reading.
+    section:
+      unsectioned: Unsectioned
+    title: Inputs — modelo {modelo}
+    values_unmeasured: No values were measured for this reading. Static inspection
+      reads the schema only.
+  modelo_workspace_overview:
+    actions_not_carried: No producer supplies recovery actions for this reading. This
+      is not a claim that none exist.
+    column:
+      capability: Capability
+      disposition: Disposition
+      field: Field
+      producer: Producer
+      value: Value
+    label:
+      filing_year: Filing year
+      law_selected: Law-selected revision
+      modelo: Modelo
+      period: Period
+      requested_assertion: Requested revision assertion
+      review_status: Review status
+      stored_assertion: Stored revision assertion
+      work_state: Work state
+      work_unit: Work unit
+    section:
+      address: Address
+      capabilities: Capabilities
+      revision: Revision coordinates
+    title: Overview — modelo {modelo}
+    value:
+      no_work_unit: no work unit yet
+  modelo_workspace_provenance:
+    column:
+      resolver: Resolver
+      source_ref: Source reference
+      subject: Subject
+    empty: This calculation recorded no contributing sources.
+    not_applicable: Not applicable to this reading. This admission carries no provenance
+      facet.
+    page_bounded: Showing {shown} of a larger set. One source can contribute many
+      rows, so the row count does not indicate completeness.
+    title: Provenance — modelo {modelo}
+    value:
+      unattributed: unattributed
+  modelo_workspace_results:
+    column:
+      casilla: Casilla
+      formula: Formula
+      value: Value
+    empty: This calculation produced no computed casillas.
+    not_applicable: Not applicable to this reading. Separating computed results from
+      operator inputs needs the work review, which a static inspection does not carry.
+    page_bounded: Showing {shown} of a larger set; the remaining rows are not reachable
+      from this reading.
+    title: Results — modelo {modelo}
+  modelo_workspace_verification:
+    axis:
+      binding_ready: Bindings ready
+      ledger_ready: Ledger ready
+      profile_ready: Profile ready
+      ready: Ready (producer verdict)
+      registry_ready: Registry ready
+    capability_line: 'Verification readiness: {glyph} {disposition} (from {producer})'
+    column:
+      axis: Axis
+      casilla: Casilla
+      kind: Kind
+      severity: Severity
+      value: Value
+    evidence_not_carried: No producer supplies evidence or recovery actions on these
+      records. This is not a claim that none exist.
+    findings_none: The work review recorded no findings.
+    findings_unmeasured: No findings were measured for this reading. This admission
+      carries no work review.
+    readiness_unmeasured: Readiness was not measured for this reading.
+    section:
+      findings: Findings
+      readiness: Readiness axes
+    title: Verification — modelo {modelo}
+    value:
+      unmeasured: not measured
   passphrase:
     cancel_button: Cancel
     change_button: Change password

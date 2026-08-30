@@ -24,7 +24,10 @@ from ....adapters.persistence.profile.participation_index import TransactionPart
 from ....application.ledger.actions_common import blocking_modelo_references
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

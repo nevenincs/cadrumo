@@ -26,13 +26,13 @@ The projection is pure read: building it mutates no store.
 Background: ``overview status`` once reconstructed workspace
 counters from a different store subset than ``modelo work`` writes:
 it read the :class:`~cadrumo.domain.filing.ModeloDraft` store but never the
-:class:`~cadrumo.domain.modelos.WorkUnitCatalogue` or
-:class:`~cadrumo.domain.modelos.CalculationRevisionCatalogue` stores, so an
+:class:`~WorkUnitCatalogue` or
+:class:`~CalculationRevisionCatalogue` stores, so an
 operator who used
 ``modelo work create`` / ``calculate`` saw ``drafts: 0``. This
 projection carries ``drafts`` (the declaration-draft
 :class:`~cadrumo.domain.filing.ModeloDraft` store) and ``work_units`` (the
-:class:`~cadrumo.domain.modelos.WorkUnitCatalogue` store) as distinct counters, so
+:class:`~WorkUnitCatalogue` store) as distinct counters, so
 neither is silently zero.
 
 See Also:
@@ -101,14 +101,9 @@ from ..core.logging import get_logger
 from ..core.time import today_madrid
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.ids import RevisionId
-from ..domain.deadlines import (
-    DeadlineEngine,
-    ObligationStatus,
-    Schedule,
-    TaxpayerProfile,
-    compute_obligation_schedule,
-)
-from ..domain.modelos import WorkUnitState
+from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
+from ..domain.deadlines.models import ObligationStatus, Schedule, TaxpayerProfile
+from ..domain.modelos.work_unit import WorkUnitState
 from ._state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from ._state_projection_readiness import (
     one_line_error_message,
@@ -169,9 +164,9 @@ class ProjectionWorkspaceSummary(BaseModel):
     ``modelo file`` writes the declaration-draft
     :class:`~cadrumo.domain.filing.ModeloDraft` store while
     ``modelo work create`` / ``calculate`` write the
-    :class:`~cadrumo.domain.modelos.WorkUnitCatalogue` store. Calculation output is
+    :class:`~WorkUnitCatalogue` store. Calculation output is
     counted separately through
-    :class:`~cadrumo.domain.modelos.CalculationRevisionCatalogue`. A single
+    :class:`~CalculationRevisionCatalogue`. A single
     ``drafts`` counter that read only the first store reported ``0`` for an
     operator who used the ``modelo work`` flow.
 
@@ -181,15 +176,15 @@ class ProjectionWorkspaceSummary(BaseModel):
         drafts: Count of declaration-draft :class:`~cadrumo.domain.filing.ModeloDraft`
             entries.
         work_units: Count of *active* (``BORRADOR``)
-            :class:`~cadrumo.domain.modelos.WorkUnitCatalogue` entries written by
+            :class:`~WorkUnitCatalogue` entries written by
             ``modelo work create``. Discarded units are excluded so the counter
             is never inflated by units the operator has abandoned.
         discarded_work_units: Count of ``DESCARTADO``
-            :class:`~cadrumo.domain.modelos.WorkUnitCatalogue` entries, carried
+            :class:`~WorkUnitCatalogue` entries, carried
             distinctly so a surface can state the active / discarded split
             rather than a misleading total.
         calculation_revisions: Count of
-            :class:`~cadrumo.domain.modelos.CalculationRevisionCatalogue`
+            :class:`~CalculationRevisionCatalogue`
             entries written by ``modelo work calculate``.
         unreadable_rows: Count of secure-object rows that failed to
             decrypt — an integrity warning.

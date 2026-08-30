@@ -278,7 +278,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._repository.WorkUnitPersistenceError",
+        "cadrumo.domain.modelos.repository.WorkUnitPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_WORK_UNIT_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -638,7 +638,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._calculation_repository.CalculationRevisionPersistenceError",
+        "cadrumo.domain.modelos.calculation_repository.CalculationRevisionPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_CALCULATION_REVISION_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -648,7 +648,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._participation_index.TransactionParticipationIndexPersistenceError",
+        "cadrumo.domain.modelos.participation_index.TransactionParticipationIndexPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_PARTICIPATION_INDEX_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._filing_repository.ModeloRecordPersistenceError",
+        "cadrumo.domain.modelos.filing_repository.ModeloRecordPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -688,7 +688,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._verification_repository.VerificationReportPersistenceError",
+        "cadrumo.domain.modelos.verification_repository.VerificationReportPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_VERIFICATION_REPORT_PERSISTENCE",
             category=ErrorCategory.FAIL,

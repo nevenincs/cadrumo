@@ -1091,7 +1091,7 @@ _STORAGE_SESSION_NO_ACTIONS: Final[Mapping[str, tuple[CliExceptionPrecondition, 
 
 
 def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict | None:
-    """Project S70 storage observations without letting adapters author actions.
+    """Project storage-session observations without letting adapters author actions.
 
     Only absence and idle expiry establish a real profile-session refusal.  A
     login action is therefore valid only when the CLI can resolve the public

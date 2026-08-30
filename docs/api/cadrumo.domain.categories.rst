@@ -13,9 +13,9 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.categories._corpus
-   cadrumo.domain.categories._profile
-   cadrumo.domain.categories._proportionality
-   cadrumo.domain.categories._registry
-   cadrumo.domain.categories._spending_category
+   cadrumo.domain.categories.corpus
    cadrumo.domain.categories.errors
+   cadrumo.domain.categories.profile
+   cadrumo.domain.categories.proportionality
+   cadrumo.domain.categories.registry
+   cadrumo.domain.categories.spending_category

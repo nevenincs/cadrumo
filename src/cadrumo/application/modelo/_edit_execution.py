@@ -38,8 +38,9 @@ from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditRece
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import CasillaId
 from ...core.hashing import content_hash_hex
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol, ModeloDetailRow
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ._edit_models import (

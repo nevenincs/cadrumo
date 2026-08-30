@@ -45,7 +45,7 @@ def _current_operator_surface_input_schemas() -> tuple[
     tuple[str, ...],
     Mapping[str, VerbInputSchema],
 ]:
-    """Collect the live result-schema and S05 input-schema projections.
+    """Collect the live result-schema and verb input-schema projections.
 
     A key in :data:`~._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES` carries
     a graph-declared result schema while its verb is knowingly absent, so the live
@@ -86,7 +86,7 @@ def _current_operator_surface_callback_aliases() -> dict[str, set[tuple[str, ...
 def _current_operator_surface_primary_paths(
     input_schemas: Mapping[str, VerbInputSchema],
 ) -> dict[str, tuple[str, ...]]:
-    """Require each S05 schema to retain its result-schema command identity."""
+    """Require each verb input schema to retain its result-schema command identity."""
     primary_paths: dict[str, tuple[str, ...]] = {}
     for command_key, schema in input_schemas.items():
         resolved_leaf = schema.resolved_leaf

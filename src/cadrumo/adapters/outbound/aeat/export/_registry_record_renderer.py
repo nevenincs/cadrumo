@@ -14,7 +14,7 @@ input it reads - field coordinates, ``kind``, ``data_type``, ``justification``,
 whose layout is fixed-width renders through the same path. Modelo 145 is the
 first caller, not a special case.
 
-Failures surface as :class:`domain.modelos.ModeloExportError`. The renderer sits behind an
+Failures surface as :class:`~ModeloExportError`. The renderer sits behind an
 application-declared port, and a port that leaked an adapter-owned error type
 would force its callers to import the adapter to catch it - reintroducing the
 coupling the port removes. The domain error carries the same diagnosis in its

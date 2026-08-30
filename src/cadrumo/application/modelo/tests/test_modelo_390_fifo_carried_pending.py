@@ -69,10 +69,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.iva_compensation import (
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_CASILLA,
-)
+from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -80,7 +77,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

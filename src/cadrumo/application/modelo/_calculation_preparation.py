@@ -34,11 +34,8 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.deadlines import IVARegime
-from ...domain.modelos import (
-    WorkUnit,
-    WorkUnitCatalogue,
-)
+from ...domain.deadlines.models import IVARegime
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState

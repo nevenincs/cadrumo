@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.operator_surface import OperatorMutability
+from cadrumo.application.operator_surface.models import OperatorMutability
 
 from .._persona_scope import (
     PERSONA_TOOL_SCOPES,

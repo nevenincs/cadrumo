@@ -1,12 +1,12 @@
 """Shared calculation helpers for modelo application actions.
 
-The helpers load mutable :class:`~cadrumo.domain.modelos.WorkUnit` records, resolve
+The helpers load mutable :class:`~WorkUnit` records, resolve
 their law-determined
 :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`, and project engine,
 imported, or amended values into
 :class:`~cadrumo.domain.calculations.registry.CasillaObservation` provenance rows.
 Amendment helpers reuse the baseline
-:class:`~cadrumo.domain.modelos.CalculationRevision` where a corrected casilla was
+:class:`~CalculationRevision` where a corrected casilla was
 not overridden, and rebuild overridden rows from the selected snapshot so
 legal/source grounding is never silently erased.
 
@@ -37,7 +37,7 @@ from ...domain.calculations.registry.formula_runtime import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ._action_errors import (
     CalculationRegistryUnavailableError,
@@ -47,7 +47,7 @@ from ._action_errors import (
 from ._registry_resources import (
     registry_root as _registry_root,
 )
-from ._work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
+from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 
 def load_work_unit_for_calculation(
@@ -131,7 +131,7 @@ def resolve_registry_snapshot_for_work_unit(
     unit's pinned ``revision_id`` via :func:`assert_snapshot_matches_work_unit_revision`
     (a calc-time assertion).
 
-    The :class:`cadrumo.domain.modelos.WorkUnit` ``revision_id`` is never passed
+    The :class:`~WorkUnit` ``revision_id`` is never passed
     into the snapshot resolution call; it is only compared against the
     law-determined resolver answer.
 
@@ -286,7 +286,7 @@ def amendment_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build amendment :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
 
-    The baseline :class:`~cadrumo.domain.modelos.CalculationRevision` contributes
+    The baseline :class:`~CalculationRevision` contributes
     unchanged observations for casillas the amendment did not override. Newly
     overridden casillas are rebuilt from the
     :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` so the persisted

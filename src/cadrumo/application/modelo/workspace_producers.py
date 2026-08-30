@@ -20,11 +20,8 @@ from ...core.identity import BucketId, CalculationRevisionId, ContentDigest
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloCode,
-    VerificationReportCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..filing import FilingExportProofAuthority

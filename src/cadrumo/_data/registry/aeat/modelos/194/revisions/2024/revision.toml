@@ -4,8 +4,7 @@
 # not declare an export layout or infer any unbundled design year.
 authority_grade = "applicability"
 valid_from = 2024-01-01
-valid_to = 2024-12-31
-period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }
+period_selector = { year_from = 2024, periods = ["0A"] }
 orden_aplicabilidad = ["orden-1999-11-18:apartado-cuarto"]
 legal_refs = [
     "orden-1999-11-18:apartado-cuarto",
@@ -21,8 +20,18 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2024 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. No 2025 successor is bundled or declared, so every 2025-and-later selection is refused rather than inheriting this source."""
-reviewed_at = 2026-08-25
+agent: inspected the official AEAT hash-pinned Modelo 194 design and the cited full BOE amendment. \
+The era is OPEN-ENDED because Orden HAC/1504/2024 disposicion final unica declares the amended \
+design "aplicable, POR PRIMERA VEZ, a las declaraciones informativas correspondientes al ejercicio \
+2024, que se presentaran en el ejercicio 2025" -- por primera vez opens a continuing window that \
+runs until an orden amends it, and BOE's consolidated Referencias posteriores for BOE-A-1999-22309 \
+(read 2026-08-30) records NO amendment to anexo X after it. Corroborated against the AEAT \
+diseno-de-registro pages captured 2026-08-15: "194 - Diseno de registro actualizado en 2024" is the \
+artefact on the CURRENT modelos-100-199 page, while the 2023 and 1999/2019 designs sit on the \
+ejercicios-anteriores page. Closing this era at 2024 would refuse ejercicio 2025 under an authority \
+that no orden has withdrawn. The five hoja-resumen casillas remain manual input, no export layout is \
+declared, and no authority grade is promoted."""
+reviewed_at = 2026-08-30
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
 reason = """

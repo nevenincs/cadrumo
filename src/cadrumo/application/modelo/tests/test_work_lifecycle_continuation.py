@@ -8,8 +8,8 @@ import pytest
 
 from ....core import NoRecoveryOutcome, Period
 from ....core.i18n import extract_placeholders, tr
-from ....domain.modelos import WorkUnit, WorkUnitState, derive_work_unit_id
-from .._work_lifecycle import (
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ..work_lifecycle import (
     lifecycle_continuation_for_work_history,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,

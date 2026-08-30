@@ -21,17 +21,13 @@ from ....core import IntracomOperationType, Period
 from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
-from ....domain.invoices import (
-    InvoiceClass,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    InvoiceValidationError,
-    IvaRate,
-    PaymentStatus,
-    decompose_invoice,
-)
-from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.modelos import Modelo349OperadorRow
+from ....domain.invoices.decomposition import decompose_invoice
+from ....domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.errors import InvoiceValidationError
+from ....domain.invoices.models import InvoiceLine
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
+from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
@@ -868,7 +864,7 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
     the wrong event, which is the same silent mis-attribution the campaign has
     already found on other axes.
     """
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         result = create_catalogue_invoice(

@@ -1,10 +1,10 @@
-"""Unit tests for :class:`cadrumo.domain.modelos._codes.ModeloCode`."""
+"""Unit tests for :class:`cadrumo.domain.modelos.codes.ModeloCode`."""
 
 from __future__ import annotations
 
 import pytest
 
-from .._codes import ModeloCode
+from ..codes import ModeloCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

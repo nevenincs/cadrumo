@@ -72,7 +72,7 @@ from ...core.aggregation import (
 )
 from ...domain.calculations import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ...domain.modelos import LedgerFilingSnapshot
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ._atribucion_member import AtribucionMemberSourceResolver
 from ._business_proportion import business_proportion
 from ._counterpart import (

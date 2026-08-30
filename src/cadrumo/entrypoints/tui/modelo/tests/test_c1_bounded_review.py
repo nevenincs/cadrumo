@@ -27,7 +27,8 @@ from textual.widgets import DataTable, Static
 from .....core import Period
 from .....core.config import override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from .....domain.modelos import WorkUnit, WorkUnitState, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..view.work_select import ModeloWorkSelectApp, ModeloWorkSelectScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -152,7 +153,7 @@ async def test_four_locales_localize_title_and_columns_and_stay_reachable() -> N
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("size", [(80, 24), (100, 30), (160, 48)], ids=["narrow", "medium", "wide"])
+@pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 async def test_three_geometries_keep_the_table_visible_and_navigable(size: tuple[int, int]) -> None:
     units = _real_units()
     app = ModeloWorkSelectApp(units)

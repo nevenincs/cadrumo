@@ -154,7 +154,7 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
-    from cadrumo.domain.iva import IvaCategory
+    from cadrumo.domain.iva.schema import IvaCategory
 
     for category in sorted(IvaCategory, key=lambda member: member.value):
         yield EnrolmentCandidate(

@@ -40,8 +40,9 @@ from ....core import (
 )
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile

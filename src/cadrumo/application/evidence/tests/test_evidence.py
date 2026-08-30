@@ -13,7 +13,8 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from ....core import Period
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     BundleVerificationState,
@@ -480,7 +481,7 @@ class TestBucketIsolation:
 
 class TestDeriveBundleId:
     def test_derive_changes_when_record_digest_changes(self) -> None:
-        from ....domain.buckets import BucketEventObjectType
+        from ....domain.buckets.event import BucketEventObjectType
         from .._models import EvidenceRecordRef
 
         rec_a = EvidenceRecordRef(

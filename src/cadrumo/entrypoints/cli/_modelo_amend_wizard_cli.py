@@ -13,7 +13,7 @@ amendment kind and a free-text reason, then calls the exact same
 path, not a second one (``aeat-architecture-boundaries``).
 
 The baseline casilla values the wizard displays are read from the filing
-record's :class:`~domain.modelos.CalculationRevision`, so the operator
+record's :class:`~CalculationRevision`, so the operator
 edits the exact attested figures rather than a re-computed draft.
 
 Once the amendment is filed, the wizard points the operator at the existing
@@ -80,7 +80,7 @@ from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWid
 from ...core.i18n import tr
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
-from ...domain.modelos import m303_rectificativa_motive_is_applicable
+from ...domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
@@ -89,7 +89,8 @@ from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 
 if TYPE_CHECKING:
-    from ...domain.modelos import ModeloRecord, WorkUnit
+    from ...domain.modelos.filing_record import ModeloRecord
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
 __all__ = ["work_amend_wizard"]
 
@@ -685,9 +686,9 @@ def work_amend_wizard(
 
     Resolves (or reuses) a work unit exactly as ``work create`` /
     ``work wizard`` do, loads its current filing record (the same
-    :class:`~domain.modelos.ModeloRecord` ``work amend``
+    :class:`~ModeloRecord` ``work amend``
     requires — it must carry
-    :class:`~domain.modelos.ExternalEvidence`), shows every
+    :class:`~ExternalEvidence`), shows every
     baseline casilla value, prompts which casillas changed and their
     corrected values, confirms the amendment kind and reason, then
     calls :func:`~application.modelo.amend_modelo_revision`

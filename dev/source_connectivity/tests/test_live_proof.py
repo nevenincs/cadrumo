@@ -11,8 +11,10 @@ import pytest
 
 from cadrumo.core import BindingSourceKind, IntracomOperationType
 from cadrumo.core._calculation_route import ModeloCalculationRouteId
-from cadrumo.domain.invoices import PaymentStatus, derive_invoice_id
-from cadrumo.domain.iva import InvoiceKind, IvaCategory
+from cadrumo.domain.invoices.enums import PaymentStatus
+from cadrumo.domain.invoices.models import derive_invoice_id
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import IvaCategory
 
 from ..live_proof import (
     ConnectedProofCompositionError,

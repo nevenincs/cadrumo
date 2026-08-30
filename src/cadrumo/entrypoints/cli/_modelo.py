@@ -27,7 +27,7 @@ from ...application.modelo._action_errors import (
     WorkUnitNotFoundError,
 )
 from ...application.modelo._amendment_actions import amend_modelo_revision
-from ...application.modelo._work_lifecycle import lifecycle_continuation_for_work_history
+from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -450,7 +450,7 @@ def modelo_history(
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...domain.buckets import BucketEvent, BucketEventType
+    from ...domain.buckets.event import BucketEvent, BucketEventType
 
     def _event_filing_year(payload: dict[str, str]) -> str:
         return (payload.get("filing_year") or payload.get("year") or "").strip()

@@ -55,21 +55,15 @@ from ...core import (
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloRecordStatus,
-    VerificationReport,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnit,
-)
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.verification_report import VerificationReport
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -104,7 +98,7 @@ from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
     require_cross_period_clean_state,
 )
-from ._work_lifecycle import RevisionParentOperation, require_revision_parent_active
+from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 

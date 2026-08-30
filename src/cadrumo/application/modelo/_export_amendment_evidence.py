@@ -7,17 +7,12 @@ from typing import NoReturn, Protocol
 from ...application.filing import AmendmentEvidence
 from ...core import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
-from ...domain.modelos import (
-    CalculationRevisionAggregateContext,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepositoryProtocol,
-    WorkUnit,
-    is_justificante_backed_external_evidence,
-    validate_calculation_revision_aggregate,
-)
+from ...domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext, validate_calculation_revision_aggregate
+from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, is_justificante_backed_external_evidence
+from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

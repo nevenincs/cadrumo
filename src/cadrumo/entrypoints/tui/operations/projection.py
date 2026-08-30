@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
 from ....application.operations.events import OperationEventCode
 from ....application.operations.frontend_contracts import (
@@ -23,14 +23,13 @@ from ....application.operations.frontend_contracts import (
     OperationUnsupportedInteractionV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationReference
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationClosePolicy,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
-_VIEW_MODEL_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 type OperationModalInteractionAffordanceV1 = Literal["none", "review_available", "unsupported"]
 """Which interaction control the modal may render, taken from the projection's
@@ -74,7 +73,7 @@ class OperationModalViewModelV1(BaseModel):
     reclassifies lifecycle truth the projection itself does not already carry.
     """
 
-    model_config = _VIEW_MODEL_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     projection: OperationPublicProjectionV1
     spinner_visible: bool

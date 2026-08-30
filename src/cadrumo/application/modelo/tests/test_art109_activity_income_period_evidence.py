@@ -16,7 +16,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain.modelos import ModeloVerificationFinding, ModeloVerificationFindingKind
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -28,7 +28,7 @@ from .._art109_activity_income import (
 )
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._verification_substance_support import (
     _CASILLA_01,
     _CASILLA_02,

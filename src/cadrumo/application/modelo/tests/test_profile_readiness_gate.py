@@ -12,7 +12,10 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, NoRecoveryOutcome, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -39,7 +42,7 @@ from .._profile_readiness_gate import (
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..work_addressing import ensure_modelo_work_unit_for_active_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

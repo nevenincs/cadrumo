@@ -84,7 +84,7 @@ def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
     source_root = Path(__file__).parents[3]
     omissions: list[str] = []
     for path in scan_directory(source_root, pattern="*.py", recursive=True):
-        if path.name == "_calculation_revision.py":
+        if path.name == "calculation_revision.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
@@ -118,7 +118,7 @@ def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
     source_root = Path(__file__).parents[3]
     omissions: list[str] = []
     for path in scan_directory(source_root, pattern="*.py", recursive=True):
-        if path.name == "_calculation_revision.py":
+        if path.name == "calculation_revision.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):

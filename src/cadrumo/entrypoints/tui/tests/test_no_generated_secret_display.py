@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
     ("cadrumo.application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
-    ("cadrumo.application.user_profile", "mint_profile_creation_recovery"),
+    ("cadrumo.application.user_profile.recovery_custody", "mint_profile_creation_recovery"),
     # The primitive beneath both, and a SECOND reachable path: it is exported from
     # the storage facade in its own right, so a prohibition naming only
     # application-layer callables could be walked around by importing this
@@ -52,8 +52,8 @@ _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
 #: gate cannot quietly become "no custody symbol is reachable", which would pass
 #: vacuously if the whole custody facade were renamed away.
 _COLLECTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile", "prove_profile_recovery_artifact"),
-    ("cadrumo.application.user_profile", "restore_profile_from_recovery_artifact"),
+    ("cadrumo.application.user_profile.custody_ports", "prove_profile_recovery_artifact"),
+    ("cadrumo.application.user_profile.recovery_custody", "restore_profile_from_recovery_artifact"),
 )
 
 _TUI_PACKAGE = Path(__file__).resolve().parents[3] / "entrypoints" / "tui"

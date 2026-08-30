@@ -30,7 +30,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.aggregation import row_fingerprint
-from ....domain.modelos import ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
+from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction

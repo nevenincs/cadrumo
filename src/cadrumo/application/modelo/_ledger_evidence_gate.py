@@ -12,15 +12,9 @@ from enum import StrEnum
 from typing import cast
 
 from ...core import ActionEvidenceProvenance
-from ...domain.iva import (
-    EVIDENCE_EXEMPT_IVA_CATEGORIES,
-    IvaCategory,
-    IvaFlowDirection,
-    derive_flow_for_classification,
-    flow_direction_for_invoice_kind,
-    is_deducible_flow,
-)
-from ...domain.modelos import LedgerEvidenceRow
+from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification, flow_direction_for_invoice_kind, is_deducible_flow
+from ...domain.iva.schema import EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
+from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionDirection, TransactionLifecycleState

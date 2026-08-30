@@ -1,7 +1,7 @@
 """Review-package build and integrity verification for accountant handoff.
 
 A review package is a shareable, checksum-verifiable ZIP archive assembled
-from an already-verified or filed :class:`~domain.modelos.CalculationRevision`:
+from an already-verified or filed :class:`~CalculationRevision`:
 the fichero-BOE draft export bytes, the revision's typed casilla observations
 (regulatory grounding included), its bundled ledger filing evidence (when
 present), and a small package-info descriptor binding everything to the
@@ -31,7 +31,7 @@ catalogue record; the ZIP is written directly to the caller-supplied path.
 See Also:
     :func:`~application.modelo.export_modelo_revision`:
         Produces the fichero-BOE draft bytes bundled into the package.
-    :class:`~domain.modelos.LedgerFilingEvidence`:
+    :class:`~LedgerFilingEvidence`:
         The bundled ledger fact basis included when present on the revision.
     :func:`~core.corpus_manifest.build_corpus_bundle`:
         The reused checksum-manifest zip-build primitive.
@@ -61,7 +61,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import now as _utc_now
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 
 #: Wire-format version of the review-package descriptor. Bumped when the
@@ -215,7 +215,7 @@ def build_review_package(
       its typed ``observations`` (legal_refs / source_refs grounding for
       every casilla).
     * ``evidence.json`` — the revision's bundled
-      :class:`~domain.modelos.LedgerFilingEvidence` when present, or an
+      :class:`~LedgerFilingEvidence` when present, or an
       explicit ``{"present": false}`` marker when the revision carries no
       ledger evidence (a non-ledger modelo, or a manual-only filing).
     * ``package-info.json`` — the :class:`ReviewPackageManifest` descriptor.

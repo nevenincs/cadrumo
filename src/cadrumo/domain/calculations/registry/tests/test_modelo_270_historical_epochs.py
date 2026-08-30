@@ -90,12 +90,28 @@ def test_modelo_270_official_designs_are_hash_pinned_and_completely_extracted() 
     assert current.authority == "aeat"
     assert current.kind == "record_design"
     assert current.record_design_epoch == "2023"
-    assert (current.applies_from, current.applies_to) == (date(2023, 1, 1), date(2024, 12, 31))
+    assert (current.applies_from, current.applies_to) == (date(2023, 1, 1), None)
     assert hash_file(bundled_path() / current.corpus_path) == (current.sha256, current.bytes)
 
 
-def test_modelo_270_selects_each_proven_epoch_and_refuses_2025() -> None:
-    """Never backdate the shifted 2023 layout or extrapolate an unproven one."""
+def test_modelo_270_selects_each_proven_epoch_and_carries_2025() -> None:
+    """Never backdate the shifted 2023 layout; do carry it where the orden carries it.
+
+    The 2025 half of this test previously asserted a REFUSAL, on the reading that
+    Orden HAC/1431/2025 opened an era whose record design was not bundled. The
+    bundled BOE-A-2025-25390 text settles it the other way: article 3 rewrites ONLY
+    four province rotulos inside CODIGO DE PROVINCIA, and names that field's
+    positions 118-119 of tipo de registro 2 WITHOUT altering them. The geometry is
+    untouched, so carrying the 2023 design into 2025 extrapolates nothing -- and
+    AEAT agrees in the strongest available way: it reissued a design for modelo 347
+    under that same orden and did NOT for modelo 270, whose 2023 design is still the
+    one published on the CURRENT disenos-de-registro page (captured 2026-08-26). Its
+    disposicion final unica applies the orden "por primera vez ... al ejercicio 2025
+    y siguientes", which OPENS a continuing window rather than closing one.
+
+    Refusing 2025 was therefore not conservatism, it was a hole: modelo 270 could not
+    be filed at all for a year AEAT governs by an orden this repository bundles.
+    """
     modelo, _catalogues = _committed_modelo("270")
 
     historical_start = select_revision(modelo, filing_year=2013, period="0A", on=date(2013, 1, 1))
@@ -104,12 +120,18 @@ def test_modelo_270_selects_each_proven_epoch_and_refuses_2025() -> None:
     current_end = select_revision(modelo, filing_year=2024, period="0A", on=date(2024, 12, 31))
 
     assert historical_start.id == historical_end.id == "2013-2022"
-    assert current_start.id == current_end.id == "2023-2024"
+    assert current_start.id == current_end.id == "2023-y-siguientes"
     assert {ref for layout in historical_start.export_layouts for ref in layout.source_refs} == {_HISTORICAL_SOURCE_REF}
     assert {ref for layout in current_start.export_layouts for ref in layout.source_refs} == {_CURRENT_SOURCE_REF}
 
-    with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2025, period="0A", on=date(2025, 1, 1))
+    # 2025 resolves to the SAME era, under Orden HAC/1431/2025 (province rotulos only).
+    carried = select_revision(modelo, filing_year=2025, period="0A", on=date(2025, 1, 1))
+    assert carried.id == current_start.id
+    assert {ref for layout in carried.export_layouts for ref in layout.source_refs} == {_CURRENT_SOURCE_REF}
+    # The carry is GROUNDED, not inherited: the era must cite the orden that governs
+    # 2025, so a later re-narrowing cannot quietly keep serving 2025 without authority.
+    assert "orden-hac-1431-2025:art-3" in carried.legal_refs
+    assert "orden-hac-1431-2025:df-unica" in carried.orden_aplicabilidad
 
     # HFP/1286/2023 reserves monthly period codes for convention-backed SELAE
     # and ONCE reporting. This ordinary annual Modelo 270 surface deliberately
@@ -122,7 +144,7 @@ def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -
     """Pin the Type 1 PERIODO insertion and the corresponding shifted summary."""
     modelo, _catalogues = _committed_modelo("270")
     historical = modelo.revisions["2013-2022"]
-    current = modelo.revisions["2023-2024"]
+    current = modelo.revisions["2023-y-siguientes"]
 
     def declarante_offsets(revision_id: str) -> dict[str, tuple[int, int]]:
         revision = modelo.revisions[revision_id]
@@ -154,7 +176,7 @@ def test_modelo_270_type_1_geometry_changes_only_at_the_proven_2023_boundary() -
 def test_modelo_270_2023_type_1_change_is_legally_load_bearing() -> None:
     """Removing the amendment reference makes the shifted geometry ungrounded."""
     modelo, catalogues = _committed_modelo("270")
-    current = modelo.revisions["2023-2024"]
+    current = modelo.revisions["2023-y-siguientes"]
     layout = next(layout for layout in current.export_layouts if layout.id == "modelo-270-fichero-boe")
     record = next(record for record in layout.records if record.record_type == "declarante")
     shifted_ids = {
@@ -194,7 +216,7 @@ def test_modelo_270_split_epochs_have_shipped_locale_labels() -> None:
     """The generated locale move must leave no live epoch on the retired key."""
     modelo, _catalogues = _committed_modelo("270")
 
-    for revision_id in ("2013-2022", "2023-2024"):
+    for revision_id in ("2013-2022", "2023-y-siguientes"):
         revision = modelo.revisions[revision_id]
         assert revision.casillas
         for locale in ("es", "en", "ca", "hu"):

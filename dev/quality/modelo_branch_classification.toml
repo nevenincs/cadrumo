@@ -287,7 +287,7 @@ group = "modelo-scope-guard"
 selects = "extract_modelo_303_local_iva_compensation_recurrence"
 
 [[branch]]
-path = "src/cadrumo/application/calculations/_cross_period_clean_state.py"
+path = "src/cadrumo/application/calculations/cross_period_clean_state.py"
 enclosing_symbol = "_qualifies_for_first_year_fractional_suppression"
 modelo_codes = "M202"
 group = "obligation-condition"
@@ -300,7 +300,7 @@ group = "modelo-scope-guard"
 selects = "resolve_iva_compensation_annual_partition_binding_values"
 
 [[branch]]
-path = "src/cadrumo/application/calculations/_iva_compensation_history.py"
+path = "src/cadrumo/application/calculations/iva_compensation_history.py"
 enclosing_symbol = "iva_compensation_annual_summary_from_filed_observation"
 modelo_codes = "M390"
 group = "modelo-scope-guard"
@@ -321,7 +321,7 @@ group = "modelo-scope-guard"
 selects = "resolve"
 
 [[branch]]
-path = "src/cadrumo/application/calculations/_m111_no_retenciones.py"
+path = "src/cadrumo/application/calculations/m111_no_retenciones.py"
 enclosing_symbol = "is_m111_no_retenciones_period"
 modelo_codes = "M111"
 group = "modelo-scope-guard"
@@ -993,7 +993,7 @@ group = "modelo-scope-guard"
 selects = "modelo_work_create_refusal_locale_key"
 
 [[branch]]
-path = "src/cadrumo/application/overview/_next_actions.py"
+path = "src/cadrumo/application/overview/next_actions.py"
 enclosing_symbol = "_start_work_unit_step"
 modelo_codes = "M210"
 group = "modelo-path-routing"

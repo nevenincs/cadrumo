@@ -22,13 +22,6 @@ from ...application.modelo._work_create_policy import (
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
 )
-from ...application.modelo._work_lifecycle import (
-    discard_work_unit,
-    lifecycle_continuation_for_work_list,
-    lifecycle_continuation_for_work_status,
-    list_work_units,
-    rename_work_unit,
-)
 from ...application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     ModeloWorkRevisionConflictError,
@@ -38,14 +31,22 @@ from ...application.modelo.work_addressing import (
     ensure_modelo_work_unit_for_active_target,
     law_selected_revision_for_work_target,
 )
+from ...application.modelo.work_lifecycle import (
+    discard_work_unit,
+    lifecycle_continuation_for_work_list,
+    lifecycle_continuation_for_work_status,
+    list_work_units,
+    rename_work_unit,
+)
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.tax_residence import parse_tax_region
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ._common import (
     activate_subcommand_output_language,
     active_profile_label,
@@ -66,9 +67,6 @@ from ._modelo_cli_support import (
 from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
 
-_FILING_YEAR_MIN = 2000
-_FILING_YEAR_MAX = 2099
-
 
 @dataclass(frozen=True, slots=True)
 class _LifecycleDeps:
@@ -83,9 +81,9 @@ class _LifecycleDeps:
 
 
 def _validate_filing_year(year: int) -> None:
-    if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
+    if not FILING_YEAR_MIN <= year <= FILING_YEAR_MAX:
         raise typer.BadParameter(
-            tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=_FILING_YEAR_MIN, maximum=_FILING_YEAR_MAX)
+            tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX)
         )
 
 

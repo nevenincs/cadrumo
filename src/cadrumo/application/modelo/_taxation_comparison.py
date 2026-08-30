@@ -61,7 +61,7 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.modelos import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_semantic_role,

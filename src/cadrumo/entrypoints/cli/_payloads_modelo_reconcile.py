@@ -104,7 +104,7 @@ class WorkCompareTaxationResult(OutputSchema):
     """
 
     operation: str = "modelo.work.compare_taxation"
-    # Same bound the canonical :class:`~domain.modelos.WorkUnit` declares, so a
+    # Same bound the canonical :class:`~WorkUnit` declares, so a
     # transport row cannot carry a filing year the work unit itself refuses.
     filing_year: FilingYear
     modelo: Modelo

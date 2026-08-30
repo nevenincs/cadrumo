@@ -43,9 +43,9 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.filing import FilingExportValidationError
+from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
-from cadrumo.domain.iva import (
+from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
@@ -53,7 +53,7 @@ from cadrumo.domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from cadrumo.domain.modelos import M303RegimenSimplificadoFilingEvidence
+from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from cadrumo.domain.prorrata_register import (
     ProrrataActivityRow,
     ProrrataRegister,

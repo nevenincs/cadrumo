@@ -15,8 +15,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import Modelo210AgrupacionRentaRow
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.m210_income_classification import M210IncomeClassification
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -28,7 +28,7 @@ from ...ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransac
 from ...modelo._action_errors import ModeloAggregationBindingError
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo._verification_actions import verify_modelo_revision
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from ...tests import register_wizard_catalogue
 from .. import (
     compute_ledger_filing_evidence,

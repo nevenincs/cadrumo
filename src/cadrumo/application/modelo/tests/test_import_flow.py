@@ -16,16 +16,13 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId
-from ....domain.buckets import (
-    BucketEventObjectType,
-    BucketEventType,
-)
-from ....domain.modelos import ExternalEvidenceKind, ModeloRecordStatus
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, CalculationRevisionState
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
 from .._filing_actions import get_filing_record
-from .._work_lifecycle import get_work_unit
+from ..work_lifecycle import get_work_unit
 from ._import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,

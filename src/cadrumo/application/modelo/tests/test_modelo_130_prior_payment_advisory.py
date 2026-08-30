@@ -63,7 +63,7 @@ from .._calculation_actions import (
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -25,7 +25,7 @@ _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
-_PART = ValueContract(DeferredTarget("cadrumo.domain.manuals", "ManualPart"))
+_PART = ValueContract(DeferredTarget("cadrumo.domain.manuals._ids", "ManualPart"))
 
 
 def _key(value: str) -> TranslationKey:

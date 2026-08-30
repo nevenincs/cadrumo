@@ -1,10 +1,10 @@
 """Projection helpers shared by modelo CLI command groups.
 
 This module turns modelo application/domain records such as
-:class:`~cadrumo.domain.modelos.WorkUnit`,
-:class:`~cadrumo.domain.modelos.CalculationRevision`,
-:class:`~cadrumo.domain.modelos.ModeloRecord`,
-:class:`~cadrumo.domain.modelos.VerificationReport`, and
+:class:`~WorkUnit`,
+:class:`~CalculationRevision`,
+:class:`~ModeloRecord`,
+:class:`~VerificationReport`, and
 :class:`~cadrumo.application.modelo.ModeloWorkDeadlinePosture` into CLI text lines
 and CommandSpec-declared JSON payload fragments. The payload side feeds
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
@@ -33,7 +33,10 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.modelos import Modelo184MemberRow, ModeloRecord, ModeloVerificationFinding, VerificationReport, WorkUnit
+from ...domain.modelos.filing_record import ModeloRecord
+from ...domain.modelos.row_models import Modelo184MemberRow
+from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
@@ -821,9 +824,9 @@ def calculation_observation_lines(rev: CalculationRevision) -> list[str]:
 
 
 def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
-    """Project a :class:`~cadrumo.domain.modelos.ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
+    """Project a :class:`~ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
 
-    When the record carries :class:`~cadrumo.domain.modelos.ExternalEvidence`, the
+    When the record carries :class:`~ExternalEvidence`, the
     evidence fields are nested in :class:`ExternalEvidencePayload`; local filing
     records still render with ``live_submission=False``.
     """
@@ -857,7 +860,7 @@ def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
 
 
 def filing_record_lines(record: ModeloRecord) -> list[str]:
-    """Render a :class:`~cadrumo.domain.modelos.ModeloRecord` as stable text lines.
+    """Render a :class:`~ModeloRecord` as stable text lines.
 
     External evidence, when present, is printed as explicit
     ``external_evidence.*`` fields rather than being folded into local filing
@@ -904,7 +907,7 @@ def verification_findings_notices(findings: Sequence[ModeloVerificationFinding])
     :func:`cadrumo.core.json_contract.derive_status`, which derives the
     envelope ``status`` from notice severity in lock-step with the
     core error-category exit mapping. Each
-    :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` becomes one
+    :class:`~ModeloVerificationFinding` becomes one
     :class:`~cadrumo.core.json_contract.Notice`.
 
     Severity mapping: both ``BLOCKING`` and ``WARNING`` finding severities
@@ -998,7 +1001,7 @@ def verification_report_payload(
     """Project a domain report into the shared verification JSON payload.
 
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
-    use this function so persisted :class:`cadrumo.domain.modelos.VerificationReport`
+    use this function so persisted :class:`~VerificationReport`
     rows expose identical factual
     :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
     fields, including nested

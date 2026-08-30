@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 
 class CalculationRevisionCatalogueRepositoryFactory(Protocol):

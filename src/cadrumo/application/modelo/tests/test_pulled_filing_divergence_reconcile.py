@@ -63,13 +63,9 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
-    derive_work_unit_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

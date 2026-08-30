@@ -25,7 +25,7 @@ from cadrumo.application.operator_actions import (
     ActionArgumentBindingSpecification,
     ActionCatalogue,
 )
-from cadrumo.application.operator_surface import (
+from cadrumo.application.operator_surface.manifest import (
     CommandSchemaRef,
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,

@@ -14,3 +14,11 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.modelo.view
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.entrypoints.tui.modelo.routes

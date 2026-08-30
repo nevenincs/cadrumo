@@ -24,19 +24,14 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva import InvoiceKind, IvaDeductionClassificationProvenance
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-)
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -66,7 +61,7 @@ from .._verification_actions import (
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,
 )
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

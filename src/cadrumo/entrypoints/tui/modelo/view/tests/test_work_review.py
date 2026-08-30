@@ -30,10 +30,11 @@ from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ......domain.calculations.registry.handoffs import RelationConsumptionChannel
 from ......domain.calculations.registry.schema_input_kind import InputKind
-from ......domain.filing import ModeloValueKind
-from ......domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ......domain.filing.schema import ModeloValueKind
+from ......domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ......tests.locales_root_fixture import locales_root_scope
 from ......tests.modelo_work_review import build_real_modelo_work_review
+from ......tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES
 from ....components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
@@ -568,7 +569,7 @@ async def test_large_outlier_frame_scroll_focus_and_last_row_are_usable_at_three
     """The real M100 surface remains operable, not merely populated, at every target size."""
     review = build_real_modelo_work_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
 
-    for size in ((80, 24), (120, 36), (160, 48)):
+    for size in SUPPORTED_TERMINAL_SIZES:
         app = ModeloWorkReviewApp(review)
         async with app.run_test(size=size) as pilot:
             await pilot.pause()

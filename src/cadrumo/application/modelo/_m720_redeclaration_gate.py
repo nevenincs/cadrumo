@@ -36,7 +36,8 @@ from __future__ import annotations
 from ...core import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.modelos import ModeloVerificationFinding, WorkUnit
+from ...domain.modelos.verification_report import ModeloVerificationFinding
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations import (
     CalculationObservationRepository,

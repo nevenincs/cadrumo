@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from ....domain.modelos import WorkUnit
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ..review_package import build_review_package
 

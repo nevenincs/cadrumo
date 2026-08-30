@@ -12,7 +12,7 @@ The filing path runs here only after its caller has passed readiness, workflow,
 and clean-state gates. It records the local/internal filing transition: create a
 current :class:`ModeloRecord`, supersede any prior current filing for the work
 target, move calculation revisions into ``PRESENTADO`` states, and co-emit
-the :class:`~domain.modelos.TransactionRevisionParticipationIndex` writes,
+the :class:`~TransactionRevisionParticipationIndex` writes,
 cross-period observation projections, and Modelo 303 settlement prorrata
 register writeback. It never submits to AEAT and never turns the non-official
 ``app_filing`` carry projection into filing-grade external evidence.
@@ -23,7 +23,7 @@ See Also:
         delegating successful mutations here.
     :func:`~application.modelo.import_external_filing_evidence`:
         Separate import boundary that creates current records with
-        :class:`~domain.modelos.ExternalEvidence`; this persistence helper
+        :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
     :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
@@ -53,15 +53,11 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.hashing import sha256_hex
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_history_write,
-)
-from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
-from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
+from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations import (
     DirectRowMaterializationProvenance,
     RowBindingKey,
@@ -74,24 +70,16 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.iva import is_m303_annual_settlement_period
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    LedgerFilingSnapshot,
-    ModeloDetailRow,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloRecordStatus,
-    TransactionRevisionParticipation,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-    upsert_transaction_participation,
-    upsert_work_unit,
-)
+from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
+from ...domain.modelos.calculation_repository import upsert_calculation_revision
+from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
+from ...domain.modelos.filing_repository import upsert_filing_record
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -271,7 +259,7 @@ def persist_calculation_revision(
     persisted with a new calculation revision.
 
     The ``source_provenance`` tuple carries the resolver-level source-mesh trace
-    (:class:`~domain.modelos.CalculationSourceRef` rows projected from the
+    (:class:`~CalculationSourceRef` rows projected from the
     calculation source mesh) so the persisted revision records which resolver
     mesh and which upstream source objects produced it. The tuple is required at
     every call site (including an explicit empty decision) and participates in
@@ -539,7 +527,7 @@ def _build_filed_participation_writes(
 
     For each ``source_transaction_id`` of the filed revision, load that
     transaction's
-    :class:`~domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~TransactionRevisionParticipationIndex`, upsert
     the ``PRESENTADO`` participation carrying the ``filing_record_id``
     (replacing the prior verified entry for the same revision in place), and
     return the resulting ``SecureObjectWrite`` so the caller co-emits them in
@@ -830,7 +818,7 @@ def persist_filed_revision(
     cross-period clean-state filing gate; use
     :func:`~application.modelo.import_external_filing_evidence` when the
     current record must carry
-    :class:`~domain.modelos.ExternalEvidence`.
+    :class:`~ExternalEvidence`.
 
     ``result_disposition`` is resolved once at the calculate/file boundary by
     ``resolve_modelo_result_disposition``. Modelo 303 observation persistence

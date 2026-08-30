@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -25,7 +26,6 @@ from ._file_flow_support import (
     file_modelo_revision,
     get_work_unit,
     list_calculation_revisions,
-    seed_clean_cross_period_sources,
     seed_work_unit,
     upsert_work_unit,
     verify_revision,
@@ -163,7 +163,7 @@ def test_calculate_refused_on_discarded_work_unit(repos: Repos) -> None:
     operator must create a fresh work unit to continue."""
 
     from .._action_errors import WorkUnitMutationRefusedError
-    from .._work_lifecycle import discard_work_unit
+    from ..work_lifecycle import discard_work_unit
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
@@ -190,8 +190,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos: Repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
-    from ....domain.buckets import BucketEventObjectType, BucketEventType
-    from .._work_lifecycle import discard_work_unit
+    from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+    from ..work_lifecycle import discard_work_unit
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)

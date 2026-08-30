@@ -1,7 +1,7 @@
 """Read-only Textual work-unit picker preceding the canonical review.
 
 This entrypoint projection accepts an already-resolved tuple of
-:class:`~cadrumo.domain.modelos.WorkUnit` records and lets the operator pick
+:class:`~WorkUnit` records and lets the operator pick
 one with the keyboard. It performs no repository read, no catalogue query,
 and no lifecycle mutation: the CLI layer resolves the work-unit catalogue and
 this screen only renders and selects from it, exactly as
@@ -19,7 +19,7 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from .....core.i18n import tr
-from .....domain.modelos import WorkUnit
+from .....domain.modelos.work_unit import WorkUnit
 from ...components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ...components.widgets import ContentDataTable, ContentScroll
 

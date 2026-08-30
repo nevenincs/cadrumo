@@ -64,7 +64,8 @@ from ...core import ActionEvidenceProvenance, BindingSourceKind, CasillaId, M210
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
@@ -76,28 +77,16 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ManualFactBasisEntry,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    TransactionRevisionParticipation,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    VerificationReportCatalogue,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_verification_report_id,
-    upsert_calculation_revision,
-    upsert_transaction_participation,
-    upsert_verification_report,
-    upsert_work_unit,
-)
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
+from ...domain.modelos.calculation_repository import upsert_calculation_revision
+from ...domain.modelos.ledger_filing_snapshot import ManualFactBasisEntry
+from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, VerificationReportCatalogue, derive_verification_report_id
+from ...domain.modelos.verification_repository import upsert_verification_report
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -194,7 +183,7 @@ from ._verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
-from ._work_lifecycle import RevisionParentOperation, require_revision_parent_active
+from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -1194,7 +1183,7 @@ def _build_participation_writes(
 
     For each ``source_transaction_id`` of the verified revision, load that
     transaction's existing
-    :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~TransactionRevisionParticipationIndex`, upsert
     the new ``VERIFICADO_COMPLETO`` participation (replacing any prior entry for
     the same revision), and return the resulting ``SecureObjectWrite`` so the
     caller co-emits them in the same atomic unit of work as the revision save. A

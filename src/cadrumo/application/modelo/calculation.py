@@ -1,7 +1,7 @@
 """Public calculation materialization capture for one persisted revision.
 
 This module owns the operator-facing capture contract over a materialized
-:class:`~cadrumo.domain.modelos.CalculationRevision`. It computes nothing: the
+:class:`~CalculationRevision`. It computes nothing: the
 revision and its provenance come from the sole calculation-revision authority
 in :mod:`cadrumo.application.modelo._calculation_actions`, which remains a
 package-private implementation collaborator. There is no parallel calculation,
@@ -13,7 +13,7 @@ provenance, so no separate graph projection is derived and no locator is
 re-exposed outside the record that owns it.
 
 See Also:
-    :class:`~cadrumo.domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         The materialized record this module captures without reconstruction.
 """
 
@@ -31,7 +31,7 @@ from ._calculation_actions import get_calculation_revision
 
 if TYPE_CHECKING:
     from ...core.identity import CalculationRevisionId
-    from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+    from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 _CALCULATION_CAPTURE_MAX_ATTEMPTS = 8

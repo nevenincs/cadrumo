@@ -22,15 +22,9 @@ from cadrumo.application.operator_actions import no_action_precondition_verdict
 from cadrumo.core import ActionEvidenceProvenance
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
-from cadrumo.domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.cli_envelope import require_schema_envelope

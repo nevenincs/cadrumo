@@ -18,12 +18,12 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import NoRecoveryOutcome, Period
-from ....domain.modelos import WorkUnit, WorkUnitState
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitMutationRefusedError
-from .._work_lifecycle import create_work_unit, discard_work_unit, list_work_units
+from ..work_lifecycle import create_work_unit, discard_work_unit, list_work_units
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

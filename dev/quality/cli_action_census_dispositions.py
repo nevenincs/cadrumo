@@ -15,7 +15,7 @@ import ast
 import json
 import tomllib
 from collections.abc import Iterable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast, override
@@ -106,9 +106,26 @@ class ExceptionOverrideRole(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class CandidateKey:
-    """The location-independent identity emitted by the canonical census."""
+    """The relocation-immune identity emitted by the canonical census.
 
-    path: str
+    ``path`` is carried for diagnostics but deliberately excluded from
+    identity. Every adjudication in the ledger is a judgement about a
+    piece of BEHAVIOUR -- which action a site reaches, in which enclosing
+    symbol, in which role -- and none of that changes when the module it
+    lives in is renamed. Keying on the file path made a private-to-public
+    promotion orphan every judgement it held, thirty-four in one sweep,
+    even though not one of them had changed its mind.
+
+    ``enclosing_symbol`` stays in the identity, and is what keeps the key
+    unique: ``alias`` is frequently the ``<command-literal>`` placeholder,
+    so role plus alias plus action identity alone collide across 38
+    distinct triples in the live ledger. Symbol survives a module rename
+    and does not survive a function rename -- which is the correct line,
+    because renaming the enclosing function is a real change to the thing
+    being judged and deserves re-adjudication.
+    """
+
+    path: str = field(compare=False)
     enclosing_symbol: str
     candidate_role: str
     alias: str

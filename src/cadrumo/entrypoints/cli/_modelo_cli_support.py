@@ -12,7 +12,7 @@ import re
 import shlex
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, get_args
 
 import typer
 from pydantic import TypeAdapter, ValidationError
@@ -28,7 +28,6 @@ from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelectorAmbiguousError,
 )
 from ...application.modelo._work_create_policy import modelo_work_create_refusal_locale_key
-from ...application.modelo._work_lifecycle import get_work_unit
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
@@ -36,6 +35,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkUnitCandidate,
     ModeloWorkVisibleTargetAmbiguousError,
 )
+from ...application.modelo.work_lifecycle import get_work_unit
 from ...core import (
     HEX_PATTERN_64,
     CasillaId,
@@ -49,9 +49,9 @@ from ...core.errors import CadrumoError, resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
-from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.ids import BindingId, RelationId
-from ...domain.modelos import (
+from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
@@ -88,8 +88,26 @@ MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     },
 )
 
-_BINDING_MAX_LEN = 128
-_CASILLA_MAX_LEN = 64
+def _declared_max_length(alias: object) -> int:
+    """Read the max_length a constrained string alias declares.
+
+    The refusal messages below quote this bound to the operator. Restating it
+    as a literal makes the message a second declaration that can drift from the
+    type actually enforcing it -- and because the number is only ever printed,
+    nothing would fail when it went wrong. Reading it off the alias keeps one
+    declaration, in the type.
+    """
+    annotated = getattr(alias, "__value__", alias)
+    for field in get_args(annotated)[1:]:
+        for constraint in getattr(field, "metadata", ()):
+            length = getattr(constraint, "max_length", None)
+            if length is not None:
+                return int(length)
+    raise AssertionError(f"{alias} declares no max_length for its refusal message")
+
+
+_BINDING_MAX_LEN = _declared_max_length(BindingId)
+_CASILLA_MAX_LEN = _declared_max_length(CasillaId)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
 _ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "rectificacion", "contraparte"})

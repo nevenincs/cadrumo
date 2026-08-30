@@ -48,7 +48,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
+from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
+from cadrumo.application.operator_surface.models import FamilyMountState
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
 from .._paths import REPO_ROOT

@@ -12,9 +12,10 @@ from pydantic import SecretStr
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import AuthProviderKind
 from ....core.config import Settings
-from ....domain.modelos import ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
+from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....tests import general_m303_filing_evidence
+from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -25,7 +26,6 @@ from .._calculation_actions import calculate_modelo_revision
 from .._filing_actions import file_modelo_revision
 from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .._verification_actions import verify_modelo_revision
-from ._file_flow_support import seed_clean_cross_period_sources
 from ._iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,

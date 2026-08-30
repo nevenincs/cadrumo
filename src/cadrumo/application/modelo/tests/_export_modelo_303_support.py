@@ -17,21 +17,12 @@ from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationReconciliationDecision,
-)
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-    upsert_work_unit,
-)
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationReconciliationDecision
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -48,7 +39,7 @@ from ...calculations import (
 from .._calculation_actions import calculate_modelo_revision
 from .._calculation_helpers import external_filing_observations
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata
 

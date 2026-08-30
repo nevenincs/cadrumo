@@ -52,7 +52,7 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="classification",
                 declarations=("--classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions", "BusinessClassification")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "BusinessClassification")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.rule.classification_help"),
                 metavar=None,

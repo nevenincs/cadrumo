@@ -33,7 +33,9 @@ from cadrumo.application.modelo._calculation_actions import (
 from cadrumo.application.modelo._calculation_helpers import build_typed_observations
 from cadrumo.application.modelo._calculation_resolution import build_calculation_replay_payloads
 from cadrumo.application.modelo._revision_persistence import persist_calculation_revision
-from cadrumo.application.operator_surface import build_supported_modelo_calculation_workflow_catalogue
+from cadrumo.application.operator_surface.calculation_workflows import (
+    build_supported_modelo_calculation_workflow_catalogue,
+)
 from cadrumo.application.registry.source_connectivity_authority import (
     LiveSourceConnectivityProofAuthority,
     LiveSourceConnectivityProofExpectation,
@@ -53,9 +55,11 @@ from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentit
 from cadrumo.core.time import now
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.invoices import PaymentStatus
-from cadrumo.domain.iva import InvoiceKind, IvaCategory
-from cadrumo.domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from cadrumo.domain.invoices.enums import PaymentStatus
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 
 

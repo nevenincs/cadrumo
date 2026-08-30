@@ -13,13 +13,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.fincas._aggregates
-   cadrumo.domain.fincas._amortization_ledger
-   cadrumo.domain.fincas._enums
-   cadrumo.domain.fincas._expense_rollup
-   cadrumo.domain.fincas._imputacion_parameters
-   cadrumo.domain.fincas._models
-   cadrumo.domain.fincas._repository_ports
-   cadrumo.domain.fincas._source_readiness
-   cadrumo.domain.fincas._tier_resolver
+   cadrumo.domain.fincas.aggregates
+   cadrumo.domain.fincas.amortization_ledger
+   cadrumo.domain.fincas.enums
    cadrumo.domain.fincas.errors
+   cadrumo.domain.fincas.expense_rollup
+   cadrumo.domain.fincas.imputacion_parameters
+   cadrumo.domain.fincas.models
+   cadrumo.domain.fincas.repository_ports
+   cadrumo.domain.fincas.source_readiness
+   cadrumo.domain.fincas.tier_resolver

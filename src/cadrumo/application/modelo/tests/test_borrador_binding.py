@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.errors import ErrorCategory, get_registered_error_code
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId, RelationId
@@ -32,7 +32,7 @@ from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotReposit
 from ...live.snapshot_base import SnapshotLifecycleState
 from .._calculation_actions import calculate_modelo_revision
 from .._registry_helpers import validate_casilla_input_ids
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,

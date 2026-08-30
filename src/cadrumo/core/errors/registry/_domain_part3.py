@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._row_models.Modelo349CountryPrefixContextError",
+        "cadrumo.domain.modelos.row_models.Modelo349CountryPrefixContextError",
         ErrorCode(
             code="REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT",
             category=ErrorCategory.REFUSED,
@@ -508,7 +508,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._row_models.Modelo347ThresholdError",
+        "cadrumo.domain.modelos.row_models.Modelo347ThresholdError",
         ErrorCode(
             code="REFUSED_MODELO_347_THRESHOLD",
             category=ErrorCategory.REFUSED,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._row_models.Modelo184ShareSumError",
+        "cadrumo.domain.modelos.row_models.Modelo184ShareSumError",
         ErrorCode(
             code="REFUSED_MODELO_184_SHARE_SUM",
             category=ErrorCategory.REFUSED,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._row_models.Modelo210AgrupacionRentaRowsError",
+        "cadrumo.domain.modelos.row_models.Modelo210AgrupacionRentaRowsError",
         ErrorCode(
             code="REFUSED_MODELO_210_AGRUPACION_RENTA_ROWS",
             category=ErrorCategory.REFUSED,

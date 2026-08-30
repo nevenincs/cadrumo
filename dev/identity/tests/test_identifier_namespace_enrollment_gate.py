@@ -491,7 +491,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/modelos/_ledger_filing_snapshot.py",
+        path="src/cadrumo/domain/modelos/ledger_filing_snapshot.py",
         model="LedgerEvidenceRow",
         field="invoice_id",
         group="open ledger-source references",

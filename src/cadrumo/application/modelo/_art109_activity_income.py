@@ -34,7 +34,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, IRPF_CATEGORY_TRABAJO
 from ...domain.transactions.models import Transaction, TransactionCatalogue

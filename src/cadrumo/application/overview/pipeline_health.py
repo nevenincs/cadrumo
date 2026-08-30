@@ -9,14 +9,14 @@ composing three already-existing read models for the requested
 * ledger health — :func:`~application.ledger.actions_manual.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per
-  :class:`~domain.modelos.WorkUnit`
+  :class:`~WorkUnit`
   targeting the requested period. Filing state comes from the persisted
-  :class:`~domain.modelos.CalculationRevision`; otherwise readiness comes from
-  the latest persisted :class:`~domain.modelos.VerificationReport`, with no
+  :class:`~CalculationRevision`; otherwise readiness comes from
+  the latest persisted :class:`~VerificationReport`, with no
   report rendered as never verified.
 * outstanding findings — every ``BLOCKING`` / ``WARNING``
-  :class:`~domain.modelos.ModeloVerificationFinding` from the latest
-  :class:`~domain.modelos.VerificationReport` against each period work
+  :class:`~ModeloVerificationFinding` from the latest
+  :class:`~VerificationReport` against each period work
   unit's current revision.
 
 The builder is READ-ONLY: it inspects the transaction catalogue, the modelo
@@ -35,9 +35,9 @@ See Also:
     :func:`~application.ledger.actions_manual.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
-    :class:`~domain.modelos.WorkUnit`
+    :class:`~WorkUnit`
         The modelo work-unit record the readiness rows resolve against.
-    :class:`~domain.modelos.VerificationReport`
+    :class:`~VerificationReport`
         The findings source each readiness row's outstanding-findings list
         is drawn from.
 """
@@ -53,14 +53,15 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.i18n import tr
 from ...core.identity import BucketId, WorkUnitId
-from ...domain.modelos import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
+from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ..ledger.models import LedgerStatusReport
 from ..operator_actions import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.modelos import VerificationReport, WorkUnit
+    from ...domain.modelos.verification_report import VerificationReport
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 
@@ -68,7 +69,7 @@ class ModeloReadinessState(StrEnum):
     """Closed lifecycle state for one modelo's readiness within a period.
 
     Attributes:
-        NOT_STARTED: No :class:`~domain.modelos.WorkUnit` exists yet for
+        NOT_STARTED: No :class:`~WorkUnit` exists yet for
             this ``(modelo, filing_year, period)``.
         CALCULATED: A work unit exists and its current revision has computed
             casilla values but has no persisted verification report.
@@ -77,7 +78,7 @@ class ModeloReadinessState(StrEnum):
         VERIFIED: The latest persisted verification report granted the
             ``verificado_completo`` transition.
         FILED: The work unit's filed revision matches its current revision
-            (:attr:`~domain.modelos.CalculationRevisionState.PRESENTADO` or
+            (:attr:`~CalculationRevisionState.PRESENTADO` or
             superseded by a later filed revision of the same unit).
         BLOCKED: The latest persisted verification report has a ``BLOCKED``
             completeness outcome.
@@ -96,7 +97,7 @@ class ModeloHealthRow(BaseModel):
 
     Attributes:
         modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
-        work_unit_id: The matching :class:`~domain.modelos.WorkUnit`
+        work_unit_id: The matching :class:`~WorkUnit`
             id, or ``None`` when :attr:`state` is
             :attr:`~application.overview.ModeloReadinessState.NOT_STARTED`.
         state: Current :class:`ModeloReadinessState` for this modelo/period.
@@ -300,16 +301,16 @@ def build_pipeline_health_report(
             :class:`~application.ledger.models.LedgerStatusReport` for
             ``(bucket_id, period)`` (period-scoped, so ``ready`` and
             ``readiness_issue_count`` are populated).
-        work_units: Non-discarded :class:`~domain.modelos.WorkUnit` rows
+        work_units: Non-discarded :class:`~WorkUnit` rows
             for ``bucket_id`` matching ``(filing_year, period)``. Callers
             filter to the requested scope; this builder does not re-filter.
         revisions_by_id: Mapping of ``calculation_revision_id`` to the loaded
-            :class:`~domain.modelos.CalculationRevision`, covering every
+            :class:`~CalculationRevision`, covering every
             work unit's ``current_calculation_revision_id``. A work unit
             whose id is absent from this mapping is treated as having no
             revision yet.
         reports_by_revision_id: Mapping of ``calculation_revision_id`` to its
-            :class:`~domain.modelos.VerificationReport` rows, sorted
+            :class:`~VerificationReport` rows, sorted
             oldest-first (the shape :func:`~application.modelo.list_verification_reports`
             returns). The latest (last) report is used.
 

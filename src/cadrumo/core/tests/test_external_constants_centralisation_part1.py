@@ -55,7 +55,7 @@ _STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
 _M347_PUBLIC_FACADE_CONSUMERS = (
     ("src/cadrumo/application/aggregation/_counterpart.py", 3),
     ("src/cadrumo/application/modelo/_calculate_input.py", 3),
-    ("src/cadrumo/domain/modelos/_row_models.py", 3),
+    ("src/cadrumo/domain/modelos/row_models.py", 3),
     # The two binding families used to read the constant directly and compare it
     # themselves, byte-identically. 5c6873b64c collapsed that onto the leaf
     # _m347_threshold module, so the constant now has ONE registry consumer and
@@ -166,7 +166,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
     # 0c21a98804; the constant travelled with the code that uses it, so this
     # names the module that reads it today rather than the one it left.
     _assert_module_constant_identity(
-        module_name="cadrumo.adapters.outbound.aeat.sede._declarations_fetch",
+        module_name="cadrumo.adapters.outbound.aeat.sede.declarations_fetch",
         attr_name="_BINARY_MIME_TYPE",
         expected=BINARY_MIME_TYPE,
         import_message="_declarations_fetch must import BINARY_MIME_TYPE under the alias _BINARY_MIME_TYPE",
@@ -174,7 +174,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     sig = inspect.signature(EncryptedBlobStore.put)
     assert sig.parameters["content_type"].default == BINARY_MIME_TYPE
-    declarations_fetch = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations_fetch")
+    declarations_fetch = importlib.import_module("cadrumo.adapters.outbound.aeat.sede.declarations_fetch")
     assert declarations_fetch._BINARY_MIME_TYPE == "application/octet-stream"
 
 
@@ -196,7 +196,7 @@ def test_default_currency_consumers_alias_core_constant() -> None:
             "_models module must import DEFAULT_CURRENCY from external_constants",
         ),
         (
-            "cadrumo.domain.currency._service",
+            "cadrumo.domain.currency.service",
             "DEFAULT_CURRENCY",
             "_service module must import DEFAULT_CURRENCY from external_constants",
         ),
@@ -243,7 +243,7 @@ def test_classified_by_manual_consumers_alias_core_constant() -> None:
     for module_name, message in (
         ("cadrumo.application.ledger.models", "_models must import CLASSIFIED_BY_MANUAL from core"),
         (
-            "cadrumo.domain.transactions._service",
+            "cadrumo.domain.transactions.service",
             "_service must import CLASSIFIED_BY_MANUAL from cadrumo.core.external_constants",
         ),
     ):
@@ -310,7 +310,7 @@ def test_export_mime_consumers_alias_core_constants() -> None:
 
     for module_name, attr_name, constant_name, message in (
         (
-            "cadrumo.adapters.outbound.aeat.sede._declarations",
+            "cadrumo.adapters.outbound.aeat.sede.declarations",
             "_JSON_MIME_TYPE",
             "JSON_MIME_TYPE",
             "_declarations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
@@ -341,7 +341,7 @@ def test_export_mime_consumers_alias_core_constants() -> None:
             import_message=message,
         )
 
-    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
+    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede.declarations")
     tabular = importlib.import_module("cadrumo.application.export.tabular")
     assert declarations._JSON_MIME_TYPE == "application/json"
     assert tabular._CSV_MIME_TYPE == "text/csv"
@@ -356,7 +356,7 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
 
     offenders: list[str] = []
     for relative_path, literal, replacement in (
-        ("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
+        ("src/cadrumo/adapters/outbound/aeat/sede/declarations.py", "application/json", "_JSON_MIME_TYPE"),
         ("src/cadrumo/application/export/tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
         offenders.extend(
@@ -399,7 +399,7 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "_calculate_input must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "cadrumo.domain.modelos._row_models",
+            "cadrumo.domain.modelos.row_models",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
             "_row_models must import M347_THRESHOLD_EUR from cadrumo.core",
@@ -423,7 +423,7 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "cadrumo.domain.renta must re-export ART_7P_EXEMPTION_CAP_EUR",
         ),
         (
-            "cadrumo.domain.deadlines._models",
+            "cadrumo.domain.deadlines.models",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
             "_models must import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from cadrumo.core.external_constants",
@@ -461,7 +461,7 @@ def test_m347_consumers_use_public_core_facade_in_source(source_tree_ast: Mappin
         assert len(facade_imports) == 1, relative_path
         assert private_leaf_imports == [], relative_path
 
-    row_models_tree = _read_ast(repo_path("src/cadrumo/domain/modelos/_row_models.py"), source_tree_ast)
+    row_models_tree = _read_ast(repo_path("src/cadrumo/domain/modelos/row_models.py"), source_tree_ast)
     assert isinstance(row_models_tree, ast.Module)
     export_assignments = [
         node
@@ -488,7 +488,7 @@ def test_no_bare_threshold_decimal_literals_in_consumers(source_tree_ast: Mappin
         ("src/cadrumo/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
         ("src/cadrumo/domain/renta/_maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
         (
-            "src/cadrumo/domain/deadlines/_models.py",
+            "src/cadrumo/domain/deadlines/models.py",
             "1500",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
         ),

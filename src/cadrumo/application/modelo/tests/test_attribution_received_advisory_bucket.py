@@ -17,7 +17,8 @@ import pytest
 
 from ....core import Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile

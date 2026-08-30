@@ -20,7 +20,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from ...core import CasillaId, OutputLanguage, Period
 from ...core.filing_year import FilingYear
@@ -29,18 +29,23 @@ from ...core.identity import (
     CalculationRevisionId,
     ContentDigest,
     ModeloEditBaselineId,
-    ModeloEditMutationResultReceiptId,
     WorkUnitId,
 )
 from ...core.time import validate_utc_aware
-from ...domain.buckets import BucketEventId
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloCode, ModeloDetailRow
-from ..operations.models import OperationDefinitionId, OperationId, OperationReference
-from ..operations.registry import OperationSchemaIdentityV1
+from ...domain.filing.schema import ModeloScalar
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.row_models import ModeloDetailRow
+from ..operations.models import OperationDefinitionId, OperationId
 from ..operator_actions import ActionReference
+from .edit_contract import (
+    ModeloEditCompatibilityTupleV1,
+    ModeloEditExecutionEffect,
+    ModeloEditMutationFamily,
+    ModeloEditMutationResultReceiptV1,
+    _EditModel,
+)
 from .workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceTargetV1,
@@ -58,19 +63,6 @@ type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
 type _ClientRowCorrelationId = Annotated[str, Field(min_length=1, max_length=128)]
 type _BoundedRefList = Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_EVIDENCE_REFERENCES)]
-
-
-class _EditModel(BaseModel):
-    """The common fail-closed boundary posture for Edit Contract V1 records."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-
-
-class ModeloEditMutationFamily(StrEnum):
-    """The closed set of edit-executed effects this V1 contract covers."""
-
-    CALCULATE = "calculate"
-    RECALCULATE = "recalculate"
 
 
 class ModeloEditScalarIntentKind(StrEnum):
@@ -159,13 +151,6 @@ class ModeloEditFindingSeverity(StrEnum):
     INFO = "info"
 
 
-class ModeloEditExecutionEffect(StrEnum):
-    """The two possible outcomes of one guarded compare-and-swap execution."""
-
-    UPDATED = "updated"
-    NONE = "none"
-
-
 class ModeloEditRefusalCode(StrEnum):
     """The closed refusal-boundary denominator for the edit contract.
 
@@ -195,51 +180,6 @@ class ModeloEditVersionHeader(_EditModel):
     """Minimal pre-dispatch shape read before target or financial input parsing."""
 
     edit_contract_version: Annotated[int, Field(ge=1)]
-
-
-class ModeloEditCompatibilityTupleV1(_EditModel):
-    """Every distinct current-only version and digest axis this edit binds to.
-
-    No member is collapsed into a generic shared ``version``, and a manifest
-    version never substitutes for a definition or contract-set digest.
-    """
-
-    workspace_contract_version: Literal[1] = 1
-    edit_contract_version: Literal[1] = 1
-    operation_manifest_version: Literal[1] = 1
-    contract_set_digest: ContentDigest
-    operation_definition_id: OperationDefinitionId
-    definition_contract_digest: ContentDigest
-    request_schema: OperationSchemaIdentityV1
-    result_schema: OperationSchemaIdentityV1
-    observation_contract_version: Literal[1] = 1
-    review_projection_contract_version: Literal[1] | None
-    review_schema: OperationSchemaIdentityV1 | None
-    workspace_refresh_target_version: Literal[1] = 1
-    workspace_refresh_target_schema: OperationSchemaIdentityV1
-    financial_operand_protocol_version: Literal[1] = 1
-    financial_operand_schema: OperationSchemaIdentityV1
-
-    @model_validator(mode="after")
-    def _require_consistent_review_declaration(self) -> ModeloEditCompatibilityTupleV1:
-        has_version = self.review_projection_contract_version is not None
-        has_schema = self.review_schema is not None
-        if has_version != has_schema:
-            raise ValueError("edit compatibility REVIEW axis must declare version and schema together or neither")
-        return self
-
-
-def read_modelo_edit_version_header(payload: dict[str, object]) -> ModeloEditVersionHeader | None:
-    """Return the version header if present, without parsing anything else.
-
-    The exact version dispatcher reads only ``edit_contract_version`` before a
-    target or financial input is parsed, so an unsupported version refuses
-    before any secure state is touched.
-    """
-    value = payload.get("edit_contract_version")
-    if not isinstance(value, int):
-        return None
-    return ModeloEditVersionHeader(edit_contract_version=value)
 
 
 class ModeloEditScalarAddressV1(_EditModel):
@@ -981,37 +921,6 @@ class ModeloMutationCapabilityProjectionV1(_EditModel):
         return value
 
 
-class ModeloEditMutationResultReceiptV1(_EditModel):
-    """The safe domain proof co-committed with one guarded compare-and-swap edit.
-
-    Carries no financial value, raw input, row content, or input digest. A
-    matching receipt proves ``UPDATED``; a proven failed compare-and-swap
-    proves ``NONE``.
-
-    ``bucket_event_id`` is ``None`` on a duplicate-result confirmation: an
-    identical content-addressed revision already exists, so this commit
-    advances or confirms only the work-unit pointer and emits no fresh
-    ``MODELO_CALCULATION_CREATED`` event to reference. It is always present
-    when the commit created the revision.
-    """
-
-    receipt_id: ModeloEditMutationResultReceiptId
-    operation_id: OperationId
-    mutation_family: ModeloEditMutationFamily
-    baseline_id: ModeloEditBaselineId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    bucket_event_id: BucketEventId | None
-    effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
-    committed_at: datetime
-    result_destination: OperationReference
-
-    @model_validator(mode="after")
-    def _require_utc_commit_time(self) -> ModeloEditMutationResultReceiptV1:
-        validate_utc_aware(self.committed_at)
-        return self
-
-
 class ModeloEditExecutionUpdatedV1(_EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
@@ -1030,6 +939,19 @@ type ModeloEditExecutionResultV1 = Annotated[
     ModeloEditExecutionUpdatedV1 | ModeloEditExecutionNoEffectV1,
     Field(discriminator="effect"),
 ]
+
+
+def read_modelo_edit_version_header(payload: dict[str, object]) -> ModeloEditVersionHeader | None:
+    """Return the version header if present, without parsing anything else.
+
+    The exact version dispatcher reads only ``edit_contract_version`` before a
+    target or financial input is parsed, so an unsupported version refuses
+    before any secure state is touched.
+    """
+    value = payload.get("edit_contract_version")
+    if not isinstance(value, int):
+        return None
+    return ModeloEditVersionHeader(edit_contract_version=value)
 
 
 __all__ = [

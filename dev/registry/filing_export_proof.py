@@ -67,7 +67,8 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     GeneratedArtifactInspection,
     RegistryRevisionInspection,
 )
-from cadrumo.domain.filing import FilingExportError, ModeloDraft
+from cadrumo.domain.filing.errors import FilingExportError
+from cadrumo.domain.filing.schema import ModeloDraft
 
 from .pipeline._provenance_manifest import (
     ExportFragmentProvenanceManifest,

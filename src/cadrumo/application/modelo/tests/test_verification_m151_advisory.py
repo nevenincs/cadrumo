@@ -11,10 +11,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.modelos import (
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 

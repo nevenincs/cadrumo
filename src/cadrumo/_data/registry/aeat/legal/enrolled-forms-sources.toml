@@ -40,19 +40,23 @@ bytes = 288829
 retrieved_at = 2026-08-15
 # The AEAT historical-index title is retained verbatim despite the PDF filename
 # (DR194_2016.pdf); the document itself identifies its design as Ejercicio 2019.
-# UNRESOLVED, and it blocks bounding this design: that retained AEAT title says
-# "Orden de 18 de ENERO de 1999", while BOE consistently names modelo 194's
-# approving orden the "Orden de 18 de NOVIEMBRE de 1999" -- including Orden
-# HAC/1504/2024 (BOE-A-2024-27528), which modifies "la Orden de 18 de noviembre de
-# 1999, por la que se aprueba el modelo 194". Do NOT successor-bound this design
-# across the 2020-2022 gap until that is settled: the argument for extending rests
-# on knowing which orden governs, and the consolidated amendment list could not be
-# reached to confirm no intervening modification (the ELI consolidated URL 404s, and
-# the doc.php hit for an 18-November-1999 orden resolves to BOE-A-1999-22309, which
-# approves modelos 123 and 193 -- a different orden of the same date). Searched
-# 2026-08-27.
+# The AEAT index's "Orden de 18 de ENERO de 1999" is an index typo: BOE names the
+# approving norm "Orden de 18 de NOVIEMBRE de 1999" throughout, and that orden is
+# BOE-A-1999-22309 -- NOT "a different orden of the same date". Its long title
+# enumerates modelos 123 and 193 first, but modelo 194 is approved by the same
+# orden, in anexos VII/VIII, with its record designs in ANEXO X; Orden HFP/1284/2023
+# says so verbatim ("los disenos de registro del modelo 194, contenidos en el anexo
+# X de la Orden de 18 de noviembre de 1999").
+#
+# The design is successor-bounded at 2022 on BOE's own consolidated "Referencias
+# posteriores" list for BOE-A-1999-22309, read 2026-08-30 -- the amendment list an
+# earlier pass could not reach. Anexo X is modified in 2016 (HFP/1822/2016), 2019
+# (HAC/1276/2019), 2023 (HFP/1284/2023) and 2024 (HAC/1504/2024), and by NOTHING
+# between 2020 and 2022. So this edition governs 2019-2022: HAC/1276/2019 df unica
+# applies it "por primera vez" to ejercicio 2019, which opens a continuing window,
+# and HFP/1284/2023 is the first later amendment, closing it at 2022.
 applies_from = 2019-01-01
-applies_to = 2019-12-31
+applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR194_2016.pdf"
 review_status = "reviewed"
 
@@ -86,10 +90,16 @@ sha256 = "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651"
 bytes = 183268
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
-# This official edition identifies ejercicio 2024 only. No successor is
-# bundled, so retaining an open-ended application window would manufacture
-# 2025-and-later design authority.
-applies_to = 2024-12-31
+# OPEN-ENDED, and that is a positive finding rather than an absent successor. BOE's
+# consolidated "Referencias posteriores" for BOE-A-1999-22309 (read 2026-08-30)
+# records NO amendment to anexo X after HAC/1504/2024, whose df unica applies this
+# edition "por primera vez" to ejercicio 2024 -- por primera vez opens a continuing
+# window, it does not confine the design to its first ejercicio. AEAT agrees: this
+# file is the artefact on the CURRENT disenos-de-registro page (captured 2026-08-15)
+# while the 2023 and 2019 editions sit under "ejercicios anteriores". The page header
+# reads "Ejercicio 2024", but positions 5-8 are a FILER-supplied EJERCICIO field, so
+# the year is not baked into the record -- exactly as for "aeat-dr-188-2023", whose
+# header reads "Ejercicio 2023" and which is correctly left open here.
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf"
 review_status = "reviewed"
 

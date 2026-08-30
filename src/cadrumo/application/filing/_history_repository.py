@@ -4,7 +4,7 @@ This repository persists lightweight :class:`application.filing.ModeloHistory`
 payloads keyed by modelo. Each payload contains submitted modelos, typed
 periods, timestamps, and recorded status strings; richer current /
 superseded filing lifecycle records live in
-:class:`domain.modelos.ModeloRecordCatalogue`.
+:class:`~ModeloRecordCatalogue`.
 
 Records are stored as encrypted byte objects in the primary SQL backend at
 ``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass` via a

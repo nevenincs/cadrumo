@@ -35,17 +35,14 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....core.config import override_settings
 from ....core.errors import resolve_error_message
-from ....domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_work_unit,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitRevisionDivergenceError
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     law_selected_revision_for_work_target,

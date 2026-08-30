@@ -12,12 +12,8 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core import Period
 from ....core.config import override_settings
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    derive_filing_record_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -48,9 +48,9 @@ support that no bundled source confirms.
 See Also:
     :func:`~application.modelo._amendment_kind_resolution.assert_amendment_kind_permitted`:
         Application-layer guard that binds this table to
-        :class:`~domain.modelos.CalculationRevisionAmendmentKind` and
+        :class:`~CalculationRevisionAmendmentKind` and
         refuses an operator-requested kind the period does not permit.
-    :class:`~domain.modelos.CalculationRevisionAmendmentKind`:
+    :class:`~CalculationRevisionAmendmentKind`:
         The domain enum this module's string values back.
 """
 
@@ -105,7 +105,7 @@ class AmendmentKindRegime:
 
     Attributes:
         permitted_kinds: The closed set of
-            :class:`~domain.modelos.CalculationRevisionAmendmentKind`
+            :class:`~CalculationRevisionAmendmentKind`
             string values legally available for this modelo and period.
             ``"sustitutiva"`` is always permitted (a material restatement is
             never barred by the rectificativa timeline); ``"rectificativa"``
@@ -183,7 +183,7 @@ def resolve_amendment_kind_regime(
     """Resolve the codified amendment-kind regime for ``modelo`` at ``period``.
 
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
-    :class:`~domain.modelos.CalculationRevisionAmendmentKind` string
+    :class:`~CalculationRevisionAmendmentKind` string
     values for this ``(modelo, period)`` pair. A modelo with no codified
     boundary (:func:`modelo_has_codified_amendment_regime` is ``False``)
     always resolves to the pre-rectificativa pair, never asserting

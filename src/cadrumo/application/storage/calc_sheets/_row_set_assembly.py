@@ -58,7 +58,7 @@ def assemble_row_sets_for_snapshot(
     ``collect_row_sets`` projection that produced the workbook.  A cell cannot
     be repurposed by placing a binding from another grouping beneath a chosen
     header, and a second input block cannot overwrite part of an already-owned
-    row.  After those ingress checks, the existing S87 command remains the one
+    row.  After those ingress checks, the existing observation assembler remains the one
     authority for typed row validation and observation construction.
 
     Returns the existing assembled-observation union once for each supplied
@@ -98,7 +98,7 @@ def assemble_row_sets_for_snapshot(
         prepared.append((grouping, cells))
 
     # ``application.calculations`` imports this storage facade for relation
-    # prefill, so defer the established S87 command until that package has
+    # prefill, so defer the observation assembler until that package has
     # completed initialization.
     from ...calculations import assemble_observations_for_snapshot
 
@@ -120,7 +120,7 @@ def _validate_cells(
     allowed_bindings: frozenset[str],
     grouping_by_binding: Mapping[str, str],
 ) -> None:
-    """Refuse unowned fields and duplicate coordinates before S87 can drop them."""
+    """Refuse unowned fields and duplicate coordinates before the observation assembler can drop them."""
     claimed_cells: set[tuple[str, int]] = set()
     for cell in cells:
         binding_id = str(cell.binding)

@@ -72,7 +72,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._calculation_actions import calculate_modelo_revision
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository

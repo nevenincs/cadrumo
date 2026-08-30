@@ -1,12 +1,12 @@
 """Calculation revision actions for modelo work units.
 
 The calculate paths resolve a law-determined :class:`~domain.calculations.registry.RegistrySnapshot` from
-each :class:`~domain.modelos.WorkUnit`, merge manual inputs with profile,
+each :class:`~WorkUnit`, merge manual inputs with profile,
 borrador, IVA-wallet, and bucket aggregation channels, and execute
 :func:`~domain.calculations.registry.calculate_registry_snapshot` against
 the asserted :class:`~domain.calculations.registry.ModeloRevision`.
 
-Persistence is centralized through :class:`~domain.modelos.CalculationRevision`,
+Persistence is centralized through :class:`~CalculationRevision`,
 :class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`,
 and :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`, so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
@@ -61,7 +61,7 @@ from ...core import (
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations import (
     DirectRowMaterializationProvenance,
     RowBindingKey,
@@ -88,15 +88,11 @@ from ...domain.calculations.registry.iva_wallet_relation_targets import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    LedgerFilingSnapshot,
-    Modelo210AgrupacionRentaRow,
-    ModeloDetailRow,
-    ModeloRecordCatalogueRepositoryProtocol,
-    WorkUnit,
-    upsert_calculation_revision,
-)
+from ...domain.modelos.calculation_repository import upsert_calculation_revision
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -997,9 +993,9 @@ def _source_provenance_refs(
 
     Maps each :class:`~application.aggregation.CalculationSourceProvenance`
     row (the resolver→source-object→fingerprint trace) into the domain-side
-    :class:`~domain.modelos.CalculationSourceRef` that
+    :class:`~CalculationSourceRef` that
     :func:`~application.modelo._revision_persistence.persist_calculation_revision`
-    persists on the :class:`~domain.modelos.CalculationRevision`. This is the
+    persists on the :class:`~CalculationRevision`. This is the
     application→domain boundary map: the domain never imports the application
     provenance model, and the compact ref deliberately drops the per-casilla
     ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)

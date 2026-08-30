@@ -54,7 +54,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -64,7 +64,7 @@ from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionRepository
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

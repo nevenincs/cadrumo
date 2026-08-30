@@ -53,7 +53,7 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos import WorkUnitState
+from ...domain.modelos.work_unit import WorkUnitState
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._calculate_input import (
     ModeloCalculateBindingInputError,
@@ -66,7 +66,7 @@ from ._calculate_input import (
 )
 from ._calculation_actions import list_calculation_revisions
 from ._registry_helpers import validate_casilla_input_ids
-from ._work_lifecycle import list_work_units
+from .work_lifecycle import list_work_units
 from .profile_binding import resolve_profile_sourced_bindings
 
 _LOG = get_logger(__name__)

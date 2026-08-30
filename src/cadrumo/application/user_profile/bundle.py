@@ -39,7 +39,8 @@ from typing import TYPE_CHECKING, Final
 from ...core import STR_KEYED_MAPPING_ADAPTER, StorageCustodyProfile
 from ...core.errors import CadrumoError
 from ...core.time import now
-from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType, emit_bucket_event
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_event
 
 __all__ = [
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
@@ -375,9 +376,7 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
 
 
 def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos import (
-        upsert_work_unit,
-    )
+    from ...domain.modelos.repository import upsert_work_unit
     from ..modelo.work_unit_repository import work_unit_catalogue_repository
 
     if not bundle.work_units:
@@ -404,7 +403,7 @@ def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_buc
 
 
 def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos import upsert_calculation_revision
+    from ...domain.modelos.calculation_repository import upsert_calculation_revision
     from ..modelo.calculation_repository import calculation_revision_catalogue_repository
 
     if not bundle.calculation_revisions:
@@ -417,9 +416,7 @@ def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_b
 
 
 def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos import (
-        upsert_filing_record,
-    )
+    from ...domain.modelos.filing_repository import upsert_filing_record
     from ..modelo.filing_repository import modelo_record_catalogue_repository
 
     if not bundle.filing_records:

@@ -13,7 +13,7 @@ lifecycle refusal an operator sees would depend on which door they came
 through.
 
 See Also:
-    :func:`~cadrumo.application.modelo._work_lifecycle.rename_work_unit`
+    :func:`~cadrumo.application.modelo.work_lifecycle.rename_work_unit`
         The single writer this operation supervises.
 """
 
@@ -51,7 +51,9 @@ from ...core.identity import (
 )
 from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos import (
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.row_models import (
     M184Clave,
     M184ClaveDeclarado,
     M184NaturalezaInmueble,
@@ -63,9 +65,7 @@ from ...domain.modelos import (
     Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    ModeloCode,
 )
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -93,7 +93,6 @@ from ._edit_models import (
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
     ModeloEditExecutionNoEffectV1,
@@ -113,12 +112,13 @@ from ._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
-from ._work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
+from .edit_contract import ModeloEditCompatibilityTupleV1
+from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
-    from ...domain.deadlines import TaxpayerProfile
-    from ...domain.modelos import VerificationReport
+    from ...domain.deadlines.models import TaxpayerProfile
+    from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
     from ._export import ModeloExportCommand, ModeloExportResult

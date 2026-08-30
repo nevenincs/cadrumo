@@ -2,7 +2,8 @@
 
 import pytest
 
-from cadrumo.domain.deadlines import FiscalResidency, LegalEntityForm
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import LegalEntityForm
 
 from .. import get_registered_keys
 

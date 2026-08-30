@@ -24,9 +24,11 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
 from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
 from ....application.ledger.preflight import preflight_ledger_tax_readiness
 from ....core import BindingSourceKind, Period
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -28,7 +28,7 @@ from ....application.modelo._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ....application.modelo._work_lifecycle import (
+from ....application.modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
     get_work_unit,
@@ -41,18 +41,18 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry.ids import RevisionId
 from ...user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._codes import ModeloCode
-from .._repository import (
+from ..codes import ModeloCode
+from ..errors import ModeloValidationError
+from ..repository import (
     remove_work_unit,
     upsert_work_unit,
 )
-from .._work_unit import (
+from ..work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
     derive_work_unit_id,
 )
-from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -566,14 +566,14 @@ def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None
 
 
 def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
-    """``WorkUnit`` lives in ``cadrumo.domain.modelos._work_unit``. Any
+    """``WorkUnit`` lives in ``cadrumo.domain.modelos.work_unit``. Any
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
     from ....tests import REPO_ROOT
 
     source_root = REPO_ROOT / "src" / "cadrumo"
-    canonical = source_root / "domain" / "modelos" / "_work_unit.py"
+    canonical = source_root / "domain" / "modelos" / "work_unit.py"
     forbidden = "class WorkUnit("
     offenders = []
     for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
@@ -641,7 +641,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     """
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...buckets import BucketEventType
+    from ...buckets.event import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
         _seed_ready_profile(profile.bucket_id)

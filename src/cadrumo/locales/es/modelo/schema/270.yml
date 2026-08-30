@@ -152,7 +152,7 @@ modelo:
                 title: Modelo 270 declaración informativa
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 a 2022
-        2023-2024:
+        2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Se consigna una C cuando la declaración incluye registros completamente

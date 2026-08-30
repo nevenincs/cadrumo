@@ -1,8 +1,8 @@
 """Cross-period clean-state findings for modelo verification gates.
 
 This module adapts :func:`~application.calculations.evaluate_cross_period_clean_state`
-into :class:`~domain.modelos.ModeloVerificationFinding` rows. It can inspect
-the target :class:`~domain.modelos.CalculationRevision` for explicit zero
+into :class:`~ModeloVerificationFinding` rows. It can inspect
+the target :class:`~CalculationRevision` for explicit zero
 previous-filing binding overrides before deciding whether a prior-year carry
 requires upstream filing evidence.
 
@@ -31,16 +31,10 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnit,
-)
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations import (
     M111_NO_RETENCIONES_PROFILE_PATH,

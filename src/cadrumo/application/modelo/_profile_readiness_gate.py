@@ -15,7 +15,7 @@ verification, filing, or export state.
 See Also:
     :func:`require_profile_ready_for_work_unit`:
         Replays the same readiness checks for an existing
-        :class:`domain.modelos.WorkUnit`.
+        :class:`~WorkUnit`.
     :class:`application.user_profile.ProfilePreflightReport`:
         User-profile preflight result consumed by this application gate.
 """
@@ -41,8 +41,8 @@ from ...domain.calculations.registry.profile_grounding import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.deadlines import EntityType, IrpfIncomeCategory
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines.models import EntityType, IrpfIncomeCategory
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
@@ -681,7 +681,7 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicab
     """Run the profile readiness gate for an existing work unit.
 
     Calculation, verification, filing, and export services call this wrapper so
-    a previously created :class:`domain.modelos.WorkUnit` is rechecked
+    a previously created :class:`~WorkUnit` is rechecked
     against the current :class:`domain.user_profile.values.UserProfileRecord`
     before any filing-grade mutation proceeds.
     """

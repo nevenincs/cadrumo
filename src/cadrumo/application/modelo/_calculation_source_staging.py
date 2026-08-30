@@ -47,7 +47,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ..aggregation import (
     CalculationSourceContext,

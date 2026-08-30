@@ -28,26 +28,12 @@ from ....core import (
 from ....core.directory_scan import (
     iter_directory,
 )
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines import (
-    ChargeAccount,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    RefundAccount,
-    TaxpayerProfile,
-)
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-)
+from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,

@@ -17,14 +17,9 @@ import pytest
 from ....core import Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
-    derive_work_unit_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
 

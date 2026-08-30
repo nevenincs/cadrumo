@@ -14,7 +14,7 @@ copied from a Workspace read.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 from ...core.decimal import (
     european_thousands_reading_is_ambiguous,
@@ -22,15 +22,17 @@ from ...core.decimal import (
     try_parse_canonical_decimal,
 )
 from ...core.hashing import content_hash_hex
+from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import now as clock_now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
-from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloDetailRow, WorkUnit, WorkUnitCatalogue
+from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..operations.registry import OperationSchemaIdentityV1
 from ._calculation_modelo_adjustments import DETAIL_ROW_OWNING_MODELO
 from ._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
@@ -43,7 +45,6 @@ from ._edit_models import (
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
     ModeloEditCompatibilityRefusalV1,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
@@ -75,6 +76,7 @@ from ._edit_models import (
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .edit_contract import ModeloEditCompatibilityTupleV1
 from .work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkTarget,
@@ -523,17 +525,15 @@ def _parse_scalar_lexeme(*, data_type: str, raw_lexeme: str) -> ModeloScalar:
         except ValueError as error:
             raise ValueError("does not conform to the integer grammar") from error
     if data_type == "boolean":
-        lowered = text.lower()
-        if lowered in {"true", "1"}:
-            return True
-        if lowered in {"false", "0"}:
-            return False
-        raise ValueError("does not conform to the boolean grammar")
+        parsed_bool = parse_bool(text)
+        if parsed_bool is None:
+            raise ValueError("does not conform to the boolean grammar")
+        return parsed_bool
     if data_type == "date":
-        try:
-            return date.fromisoformat(text)
-        except ValueError as error:
-            raise ValueError("does not conform to the ISO date grammar") from error
+        parsed_date = parse_iso8601_date(text)
+        if parsed_date is None:
+            raise ValueError("does not conform to the ISO date grammar")
+        return parsed_date
     return text
 
 

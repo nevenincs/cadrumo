@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from .....application.modelo._edit_models import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
+from .....application.modelo.edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .....tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,

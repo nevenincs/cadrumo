@@ -33,16 +33,9 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import CalculationRevisionId
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ExternalEvidence,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordCatalogueRepositoryProtocol,
-    TransactionRevisionParticipation,
-    TransactionRevisionParticipationIndex,
-    upsert_transaction_participation,
-)
+from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
+from ...domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex, upsert_transaction_participation
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 

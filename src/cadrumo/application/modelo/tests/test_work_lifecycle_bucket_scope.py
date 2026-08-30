@@ -21,10 +21,11 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos import WorkUnit, WorkUnitState, derive_work_unit_id, upsert_work_unit
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import WorkUnitNotFoundError
-from .._work_lifecycle import (
+from ..work_lifecycle import (
     discard_work_unit,
     get_work_unit,
     list_work_units,

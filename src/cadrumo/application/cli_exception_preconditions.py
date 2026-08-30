@@ -104,7 +104,7 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
 
 
 def cli_exception_envelope_view(error: BaseException) -> BaseException:
-    """Return the narrow envelope-safe view for S114 producer families."""
+    """Return the narrow envelope-safe view for the exception producer families."""
     from ..core import MissingOptionalExtraError
     from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
 

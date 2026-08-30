@@ -5,6 +5,8 @@ docs:
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
       borrador: desde el borrador de la AEAT
       collectible_invoice: desde las facturas emitidas
+      design_constant: desde una constante fijada por el diseño de registro de la
+        AEAT
       donativo_donor: desde los donantes registrados
       foreign_asset: desde sus bienes en el extranjero
       gasto193_contributor: desde los gastos de administración y depósito por contribuyente

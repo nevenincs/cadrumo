@@ -18,7 +18,8 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.modelos import ExternalEvidenceKind, VerificationCompletenessStatus
+from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from .observations_repository import ObservationSourceKind
 
@@ -216,7 +217,7 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
     are suppressed. A period is strictly-prior when its entire inclusive span ends
     before the activity-start date - mirroring the deadline engine's pre-start
     gate (``closes_on < activity_start_date``,
-    :func:`domain.deadlines._engine._window_outside_activity_period`) against
+    :func:`domain.deadlines.engine._window_outside_activity_period`) against
     the same operator-declared
     field. The comparison is routed through :class:`Period` boundary authority
     (:attr:`Period.end_date`) per ``aeat-registry-authority-flow`` - no

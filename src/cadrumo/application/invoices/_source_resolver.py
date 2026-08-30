@@ -52,15 +52,12 @@ from ...domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceDecomposition,
-    InvoiceDecompositionDefect,
-    decompose_invoice,
-)
-from ...domain.iva import InvoiceKind, IvaCategory
-from ...domain.modelos import Modelo349OperadorRow, validate_m349_country_prefix_context
+from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
+from ...domain.invoices.models import Invoice
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory
+from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

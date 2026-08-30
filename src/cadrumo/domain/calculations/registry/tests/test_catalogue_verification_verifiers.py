@@ -192,7 +192,7 @@ def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> 
     can only ever make a match easier to find (the token is compared as a
     substring, and removing noise around it never helps), never harder --
     unlike the live-scraped click-safety guard in
-    ``adapters.outbound.aeat.sede._renta_web_open_safety``, this module
+    ``adapters.outbound.aeat.sede.renta_web_open_safety``, this module
     reads registry-authored TOML prose, not browser-rendered text, so it
     carries none of that guard's soft-hyphen/decorative-glyph exposure.
     """

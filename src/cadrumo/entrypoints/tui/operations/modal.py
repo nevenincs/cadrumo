@@ -16,7 +16,7 @@ from contextlib import suppress
 from datetime import timedelta
 from typing import ClassVar, Literal, override
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import ItemGrid, Vertical
@@ -33,6 +33,7 @@ from ....application.operations.frontend_contracts import (
     OperationResponseRejectRequestV1,
 )
 from ....application.operations.models import OperationId, OperationRevision
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.i18n import tr
 from ....core.operations import OperationLifecycle
 from ....core.time import now
@@ -47,13 +48,12 @@ from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_pa
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
 
 _POLL_INTERVAL = timedelta(milliseconds=200)
-_MODAL_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class OperationModalSettledOutcomeV1(BaseModel):
     """The modal closed because its bound operation reached settlement."""
 
-    model_config = _MODAL_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["settled"] = "settled"
     view_model: OperationModalViewModelV1
 
@@ -61,7 +61,7 @@ class OperationModalSettledOutcomeV1(BaseModel):
 class OperationModalDetachedOutcomeV1(BaseModel):
     """The modal closed because the operator detached from a live operation."""
 
-    model_config = _MODAL_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["detached"] = "detached"
     operation_id: OperationId
     revision: OperationRevision
@@ -118,7 +118,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         self._view_model: OperationModalViewModelV1 | None = None
         self._log_view: OperationModalLogViewV1 = build_initial_log_view(controller.operation_id)
         self._interaction: OperationModalInteractionStateV1 | None = None
-        self._closing = False
+        # NOT `_closing`: that name is Textual's own on ``MessagePump``, and
+        # setting it here made the framework's `_close_messages` return early
+        # without posting its stop sentinel, so the screen could never be
+        # removed and app shutdown waited on it forever.
+        self._observation_stopped = False
         self._poll_worker: Worker[None] | None = None
 
     @override
@@ -144,7 +148,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
 
     async def _poll_loop(self) -> None:
         cursor = self._log_view.next_cursor
-        while not self._closing:
+        while not self._observation_stopped:
             observed = await self._controller.observe(cursor)
             if not isinstance(observed, OperationObservationSuccessV1):
                 await asyncio.sleep(_POLL_INTERVAL.total_seconds())
@@ -167,7 +171,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
 
     async def _stop_poll_worker(self) -> None:
         """End the poll worker and wait for it, so teardown never races a live poll."""
-        self._closing = True
+        self._observation_stopped = True
         worker = self._poll_worker
         if worker is None:
             return
@@ -261,6 +265,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1]):
         if view_model is not None and view_model.detach_control_enabled:
             await self._request_detach()
         elif view_model is not None and not view_model.spinner_visible:
+            # Reap before dismissing for the same reason the detach path does:
+            # dismissing alone pops the screen while the worker may still be
+            # parked in its sleep or inside the observation read.
+            await self._stop_poll_worker()
             self.dismiss(OperationModalSettledOutcomeV1(view_model=view_model))
 
     async def _request_cancel(self) -> None:

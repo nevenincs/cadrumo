@@ -1,8 +1,8 @@
 """Encrypted SQL repository for the calculation-revision catalogue.
 
 :class:`CalculationRevisionCatalogueRepository` persists and loads
-:class:`~domain.modelos.CalculationRevision` records in a
-:class:`~domain.modelos.CalculationRevisionCatalogue` via
+:class:`~CalculationRevision` records in a
+:class:`~CalculationRevisionCatalogue` via
 :class:`~adapters.persistence.storage.SecureObjectRepository` at
 ``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`.
 Each catalogue is wrapped in
@@ -10,12 +10,12 @@ Each catalogue is wrapped in
 the encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`. It
+:class:`~CalculationRevisionCatalogueRepositoryProtocol`. It
 lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
-typed :class:`~domain.modelos.CalculationRevisionCatalogue` model, the pure
+typed :class:`~CalculationRevisionCatalogue` model, the pure
 :func:`~domain.modelos.upsert_calculation_revision` mutator, and the
-:class:`~domain.modelos.CalculationRevisionPersistenceError` boundary error.
+:class:`~CalculationRevisionPersistenceError` boundary error.
 The namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning persisted envelopes.
 
@@ -23,9 +23,9 @@ See Also:
     :mod:`~adapters.persistence.profile._modelo_runtime`
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
-    :class:`~domain.modelos.CalculationRevisionCatalogue`
+    :class:`~CalculationRevisionCatalogue`
         Domain catalogue payload encrypted by this repository.
-    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`
+    :class:`~CalculationRevisionCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
     :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
@@ -47,11 +47,8 @@ from ....core.identity import SubjectTaxId
 from ....core.logging import get_logger
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.modelos import (
-    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-    CalculationRevisionAggregateContext,
-    CalculationRevisionPersistenceError,
-)
+from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
+from ....domain.modelos.calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY, CalculationRevisionAggregateContext
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     assert_revision_snapshot_evidence_coverage,
@@ -87,7 +84,7 @@ class CalculationRevisionCatalogueRepository:
     (:func:`~domain.modelos.assert_revision_snapshot_evidence_coverage`) the
     shared kernel has no domain knowledge of. The class exposes the concrete
     load/save implementation behind
-    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`.
+    :class:`~CalculationRevisionCatalogueRepositoryProtocol`.
     """
 
     def __init__(
@@ -160,7 +157,7 @@ class CalculationRevisionCatalogueRepository:
             record exists.
 
         Raises:
-            :class:`~domain.modelos.CalculationRevisionPersistenceError`: If
+            :class:`~CalculationRevisionPersistenceError`: If
                 the stored record fails the FINANCIAL classification check, or its
                 envelope schema version exceeds the version this consumer
                 supports, or an integrity error surfaces while decrypting and

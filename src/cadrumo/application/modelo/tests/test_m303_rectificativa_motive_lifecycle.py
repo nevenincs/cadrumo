@@ -37,23 +37,13 @@ from ....domain.calculations.registry.m303_orden_manifest import load_m303_annua
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-    CalculationRevisionAggregateContext,
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_filing_record_id,
-    derive_work_unit_id,
-    m303_rectificativa_motive_is_applicable,
-    m303_rectificativa_record_design_from_snapshot,
-)
+from ....domain.modelos.calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY, CalculationRevisionAggregateContext
+from ....domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable, m303_rectificativa_record_design_from_snapshot
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

@@ -10,14 +10,9 @@ import pytest
 from ....core import CasillaId, PaymentElection, Period, RefundElection
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.deadlines import (
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

@@ -11,10 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...calculations import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,

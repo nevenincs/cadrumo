@@ -32,16 +32,12 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ..aggregation import evaluate_ledger_filing_staleness
 
 if TYPE_CHECKING:
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 #: Grounding for the drift refusal. A declaración must reflect the operator's

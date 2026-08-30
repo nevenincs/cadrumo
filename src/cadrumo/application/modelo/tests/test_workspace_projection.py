@@ -38,7 +38,10 @@ import pytest
 from ....core import ModeloWorkProgressState, OutputLanguage, Period, RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ...registry.closure_capture import capture_registry_closure
 from ...registry.source_connectivity import load_source_connectivity_census
@@ -422,7 +425,7 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
     exact field ``ModeloWorkspaceResolvedTargetV1.work_state`` reads and this
     test asserts against below -- not a field the projection never read.
     """
-    from ....domain.modelos import WorkUnitState
+    from ....domain.modelos.work_unit import WorkUnitState
 
     work_unit, _revision = _seed_and_calculate(repos)
     work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos

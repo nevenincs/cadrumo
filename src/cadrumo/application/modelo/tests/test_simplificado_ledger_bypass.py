@@ -26,12 +26,8 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
-    derive_work_unit_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

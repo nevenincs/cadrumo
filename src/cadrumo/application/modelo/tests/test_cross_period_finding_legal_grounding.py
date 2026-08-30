@@ -23,7 +23,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.calculations.registry.legal import verify_legal_catalogue
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ...calculations import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,

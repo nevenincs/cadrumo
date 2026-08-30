@@ -157,10 +157,10 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.core import StorageArea
     from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from cadrumo.domain.contribuyente import CCAA
-    from cadrumo.domain.deadlines import (
+    from cadrumo.domain.contribuyente.ccaa import CCAA
+    from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+    from cadrumo.domain.deadlines.models import (
         EntityType,
-        FiscalResidency,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
         IrpfSpecialRegime,
@@ -284,8 +284,11 @@ def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.core import BindingSourceKind, EstadoCasillaOficial, OperatorActionAxis
     from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-    from cadrumo.domain.filing import ModeloValueKind
-    from cadrumo.domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+    from cadrumo.domain.filing.schema import ModeloValueKind
+    from cadrumo.domain.modelos.verification_report import (
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
 
     axes = (
         ("input_kind", tuple(member.value for member in InputKind)),

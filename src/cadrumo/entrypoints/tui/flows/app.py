@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, ClassVar, Protocol, override
 from pydantic import TypeAdapter, ValidationError
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.binding import Binding, BindingsMap
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import (
@@ -72,6 +72,7 @@ from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
 from ..components.host import ScreenHostApp
+from ..components.keyboard import localize_key_descriptions
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 
@@ -765,20 +766,16 @@ class QuestionScreen(Screen[None]):
         self.render_page()
 
     def _localize_bindings(self) -> None:
-        self._bindings = BindingsMap(
-            [
-                # Rebuilt wholesale at mount, so the appearance binding has to
-                # be listed here too: a class-level entry alone would be
-                # discarded by this map and F3 would silently stop working.
-                _APPEARANCE_BINDING,
-                Binding("escape", "go_back", tr("flows.tui.binding_back")),
-                Binding("f2", "go_review", tr("flows.tui.binding_review")),
-                Binding("ctrl+r", "reset_page", tr("flows.tui.binding_reset")),
-                Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
-                Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
-            ],
+        localize_key_descriptions(
+            self,
+            {
+                "go_back": tr("flows.tui.binding_back"),
+                "go_review": tr("flows.tui.binding_review"),
+                "reset_page": tr("flows.tui.binding_reset"),
+                "restart_flow": tr("flows.tui.binding_restart"),
+                "save_exit": tr("flows.tui.binding_save_exit"),
+            },
         )
-        self.refresh_bindings()
 
     @property
     def presenter(self) -> FlowPresenter:
@@ -1122,16 +1119,15 @@ class ReviewScreen(Screen[None]):
         self.render_review()
 
     def _localize_bindings(self) -> None:
-        self._bindings = BindingsMap(
-            [
-                _APPEARANCE_BINDING,
-                Binding("escape", "back_to_question", tr("flows.tui.binding_return")),
-                Binding("s", "submit_flow", tr("flows.tui.binding_submit")),
-                Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
-                Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
-            ],
+        localize_key_descriptions(
+            self,
+            {
+                "back_to_question": tr("flows.tui.binding_return"),
+                "submit_flow": tr("flows.tui.binding_submit"),
+                "save_exit": tr("flows.tui.binding_save_exit"),
+                "restart_flow": tr("flows.tui.binding_restart"),
+            },
         )
-        self.refresh_bindings()
 
     @property
     def presenter(self) -> FlowPresenter:

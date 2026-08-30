@@ -27,14 +27,14 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from .._calculation_actions import calculate_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

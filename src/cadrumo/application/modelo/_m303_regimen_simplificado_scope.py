@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core import ActionEvidenceProvenance, Modelo
-from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
-from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
+from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState
 from ..user_profile.profile_record_repository import ProfileRecordRepository

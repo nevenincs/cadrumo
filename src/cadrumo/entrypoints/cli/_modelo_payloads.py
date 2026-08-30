@@ -59,12 +59,7 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr
-from ...domain.buckets import (
-    BucketActorLabel,
-    BucketEventId,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -78,15 +73,9 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
-from ...domain.modelos import (
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecordStatus,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus
 from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
 from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ._decimal_wire import DecimalWireText

@@ -6,8 +6,8 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import Declaracion
-from ....domain.modelos import ExternalEvidenceKind
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources

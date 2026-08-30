@@ -40,8 +40,8 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
 )
 from ...domain.calculations.registry.schema_references import SourceReference
-from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from ...domain.modelos import m303_rectificativa_motive_is_applicable
+from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ...domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable
 from ...domain.modelos.calculation_revision import (
     CalculationRevisionAmendmentKind,
     FilingInstanceEvidence,

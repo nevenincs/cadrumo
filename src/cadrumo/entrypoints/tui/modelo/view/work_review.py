@@ -20,7 +20,7 @@ from enum import StrEnum
 from typing import ClassVar, cast, get_args, override
 
 from textual.app import App, ComposeResult
-from textual.binding import Binding, BindingsMap
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Collapsible, Footer, Label, Select, Static
@@ -37,12 +37,13 @@ from .....core.aggregation import BindingSourceKind
 from .....core.i18n import tr
 from .....domain.calculations.registry.handoffs import RelationConsumptionChannel
 from .....domain.calculations.registry.schema_input_kind import InputKind
-from .....domain.filing import ModeloValueKind
-from .....domain.modelos import (
+from .....domain.filing.schema import ModeloValueKind
+from .....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...components.keyboard import localize_key_descriptions
 from ...components.theme import (
     BASE_CSS,
     install_cadrumo_themes,
@@ -113,7 +114,13 @@ class ModeloWorkReviewScreen(Screen[None]):
                 classes="cadrumo-column",
             ),
         ):
-            yield Static(id="modelo-review-summary", classes="cadrumo-panel")
+            with Collapsible(
+                title=tr("flows.modelo_review.summary.section"),
+                collapsed=True,
+                id="modelo-review-summary",
+                classes="cadrumo-panel",
+            ):
+                yield Static("", id="modelo-review-summary-lines", markup=False)
             with (
                 Collapsible(
                     title=tr("flows.modelo_review.filter.filters"),
@@ -270,14 +277,7 @@ class ModeloWorkReviewScreen(Screen[None]):
         return _require_review_app(cast(object, self.app))
 
     def _localize_bindings(self) -> None:
-        self._bindings = BindingsMap(
-            [
-                Binding("q", "quit_review", tr("flows.status.binding_quit")),
-                Binding("escape", "quit_review", tr("flows.status.binding_quit")),
-                Binding("f3", "toggle_appearance", "", show=False),
-            ],
-        )
-        self.refresh_bindings()
+        localize_key_descriptions(self, {"quit_review": tr("flows.status.binding_quit")})
 
     def _selected(self, selector: str) -> str | None:
         value = cast("Select[str]", self.query_one(selector, Select)).value
@@ -377,21 +377,29 @@ class ModeloWorkReviewScreen(Screen[None]):
 
     def _mount_summary(self, review: ModeloWorkReview) -> None:
         progress = review.progress
+        source_line: str | None = None
         if progress.state is ModeloWorkProgressState.UNDEFINED:
             progress_line = progress.state.value
         else:
             denominator = cast(ModeloWorkProgressDenominator, progress.denominator)
             materialised_count = cast(int, progress.materialised_count)
             target_count = cast(int, progress.target_count)
+            # The count keeps its NAMED denominator beside it, which this
+            # module's own invariant requires. Two things that were also on
+            # this line are not: the registry revision, which is already its
+            # own summary line above and added no fact by repeating; and the
+            # denominator's source reference, which is grounding and moves to
+            # a labelled line of its own rather than being dropped. Carrying
+            # all four made this the widest line on the panel by a margin, and
+            # it governed where the whole summary began to wrap.
             progress_line = " · ".join(
                 (
                     progress.state.value,
                     f"{materialised_count}/{target_count}",
                     denominator.kind,
-                    str(denominator.source_ref),
-                    str(denominator.registry_revision_id),
                 ),
             )
+            source_line = f"{tr('flows.modelo_review.summary.denominator_source')}\t{denominator.source_ref}"
         lines = (
             f"{tr('flows.modelo_review.summary.work_unit')}\t{review.work_unit_id}",
             f"{tr('flows.modelo_review.summary.registry_revision')}\t{review.registry_revision_id}",
@@ -401,10 +409,9 @@ class ModeloWorkReviewScreen(Screen[None]):
             f"{tr('flows.modelo_review.summary.verification_outcome')}\t"
             f"{review.verification_outcome.value if review.verification_outcome is not None else ''}",
             f"{tr('flows.modelo_review.summary.progress')}\t{progress_line}",
+            *((source_line,) if source_line is not None else ()),
         )
-        self.query_one("#modelo-review-summary", Static).mount(
-            Static("\n".join(lines), id="modelo-review-summary-lines", markup=False),
-        )
+        self.query_one("#modelo-review-summary-lines", Static).update("\n".join(lines))
 
     def _mount_casillas(self, review: ModeloWorkReview) -> None:
         panel = self.query_one("#modelo-review-casillas", Static)
@@ -632,6 +639,7 @@ class ModeloWorkReviewApp(App[None]):
         BASE_CSS
         + """
     #modelo-review-body { width: 100%; height: 1fr; }
+#modelo-review-summary { height: auto; overflow-y: auto; }
     #modelo-review-summary-lines { height: auto; }
     #modelo-review-filters {
         height: auto;

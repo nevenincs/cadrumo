@@ -8,18 +8,15 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    FiledDeclaracionObservationStore,
-)
+from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import CalculationObservationRepository
 from ....core import Period
 from ....core.config import load_settings
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.modelos import upsert_filing_record
+from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile

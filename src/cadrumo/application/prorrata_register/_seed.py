@@ -39,7 +39,7 @@ from ...core import (
     validated_casilla_id,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.iva import m303_annual_settlement_order_key
+from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register import ProrrataRegisterEntry
 from ..calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, revision_carry_outcome
 

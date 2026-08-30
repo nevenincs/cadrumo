@@ -13,7 +13,7 @@ replacement links, and complete coverage of every :class:`Portal` member. Use
 :func:`get_portal` for one entry, :func:`portals_by_category` for taxonomy
 views, and :func:`portals_for_modelo` for filing and borrador portals declared
 by validated :mod:`domain.calculations.registry` application links for a
-:class:`domain.modelos.ModeloCode`.
+:class:`~ModeloCode`.
 
 Consumers import from the owning module -- :mod:`categories`, :mod:`codes`,
 :mod:`drift`, :mod:`hosts`, :mod:`metadata`, :mod:`registry`, :mod:`errors` --

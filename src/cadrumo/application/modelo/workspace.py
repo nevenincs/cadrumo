@@ -40,11 +40,8 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloCode,
-    VerificationReportCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
@@ -472,7 +469,7 @@ def capture_modelo_workspace_locale_summary(
     return summary
 
 
-# S279 (ADR amendment "Canonical capability and refusal facade"): the
+# Canonical capability and refusal facade: the
 # capability-to-producer mapping is fixed by which of the eight contributors
 # static inspection structurally never reads ("Static inspection captures
 # exactly registry, work, locale_catalogue, and field_manifest; it does not
@@ -485,7 +482,7 @@ def capture_modelo_workspace_locale_summary(
 # it is reserved for a producer that DID run and declared the fact
 # inapplicable to the specific target.
 #
-# SCHEMA_INSPECTION is AVAILABLE (W03.P20.S278 resolved static inspection's
+# SCHEMA_INSPECTION is AVAILABLE (static inspection has its
 # own field-manifest root, generate_modelo_workspace_field_manifest_for_inspection):
 # field_manifest is a real contributor for this admission, so schema_inspection
 # is the one capability static inspection answers AVAILABLE for.
@@ -527,9 +524,9 @@ def static_inspection_modelo_workspace_capabilities(
     """Return the complete STATIC_INSPECTION capability denominator.
 
     Every row cites the capability's own canonical producer contributor per
-    the S279 ADR amendment; see the module-level comment above this function.
+    the canonical capability mapping; see the module-level comment above this function.
     ``schema_inspection`` is ``AVAILABLE`` -- field_manifest is a real
-    STATIC_INSPECTION contributor per S278. The other four are ``UNMEASURED``:
+    STATIC_INSPECTION contributor. The other four are ``UNMEASURED``:
     their producers are contributors this admission structurally never reads.
     GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered question
     and MUST NOT be derived from this table.
@@ -554,7 +551,7 @@ def graded_snapshot_modelo_workspace_capabilities(
 ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
     """Return the complete GRADED_SNAPSHOT capability denominator.
 
-    S287: ``available`` requires reading what a canonical producer WROTE,
+    ``available`` requires reading what a canonical producer WROTE,
     never deriving a verdict from downstream state. Per capability:
 
     - ``SCHEMA_INSPECTION`` is ``AVAILABLE`` unconditionally, same as
@@ -576,13 +573,13 @@ def graded_snapshot_modelo_workspace_capabilities(
       no producer to read a verdict FROM, and calling it to see whether it
       raises would be exactly the derivation this rule forbids. This is a
       structural finding, not a placeholder pending future wiring here -- see
-      the S287 ADR amendment.
+      the producer-authority rule above.
     - ``FILING_EXPORT_READINESS`` is ``UNMEASURED`` pending a producer port:
       the approved stamp is a ``MODELO_EXPORTED`` bucket event carrying the
-      exact revision id, but no S126 contributor currently reads bucket event
+      exact revision id, but no declared contributor currently reads bucket event
       history, so this capability cannot yet cite a captured, epoch-safe
       projection the way the other four do. Wiring a ninth contributor is out
-      of this change's scope; see the S287 ADR amendment.
+      of this change's scope; see the producer-authority rule above.
     """
     calculation_available = (
         calculation_revision is not None and calculation_revision.work_unit_id == resolved_target.work_unit_id
@@ -662,7 +659,7 @@ __all__ = [
     "graded_snapshot_readiness",
     "graded_snapshot_schema_records",
     "modelo_work_selector_request_for_target",
-    "paginate_static_inspection_schema_facet",
+    "paginate_modelo_workspace_facet",
     "parameter_schema_records",
     "relation_schema_records",
     "relation_source_endpoints_for_casilla",
@@ -684,8 +681,8 @@ __all__ = [
 ]
 
 
-# --- S277 (ADR amendment "Schema, materialization, and provenance
-# projection"): schema-record join semantics, each derived from the
+# --- Schema, materialization and provenance projection:
+# schema-record join semantics, each derived from the
 # registry's own declared edge direction ---
 
 
@@ -813,7 +810,7 @@ def resolve_static_inspection_schema_identity(
     ``_edit_services.py`` uses for its own, differently-typed
     ``ModeloEditSchemaIdentityV1`` (interface-ADR-governed), adapted to the
     flatter STATIC_INSPECTION type. ``field_manifest_digest`` is exclusively
-    the S278 inspection-rooted field manifest's own digest; the edit
+    the inspection-rooted field manifest's own digest; the edit
     contract's ``CalculationCompletenessManifest`` digest has its own field
     (``completeness_manifest_digest``) on its own type and no longer shares
     this one.
@@ -867,7 +864,7 @@ def resolve_graded_snapshot_schema_identity(snapshot: RegistrySnapshot) -> Model
     the snapshot's own declared identity sets. Unlike the inspection (which
     carries ``casilla_ids``/``binding_ids`` as bare id frozensets), the
     snapshot's ``revision.casillas``/``.bindings`` are full definition
-    tuples (S296); the fingerprint reduces them to the same id-set shape so
+    tuples; the fingerprint reduces them to the same id-set shape so
     the two admissions' schema fingerprints are comparable in kind.
     """
     field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=snapshot)
@@ -938,7 +935,7 @@ STATIC_INSPECTION_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
     disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
     review=None,
 )
-"""STATIC_INSPECTION never reads bounded_review (S279); this is the fixed, non-varying facet value."""
+"""STATIC_INSPECTION never reads bounded_review; this is the fixed, non-varying facet value."""
 
 
 def resolve_static_inspection_baseline(
@@ -1096,10 +1093,10 @@ def static_inspection_casilla_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per casilla identity, sorted for stable pagination.
 
-    Bounded to identity per S283: ``legal_refs`` and ``constraints`` are
+    Bounded to identity: ``legal_refs`` and ``constraints`` are
     ``None`` (this admission's producer never carries `CasillaDefinition`
     data), never ``()``. ``formula_operands`` and ``relation_endpoints``
-    consume the S277 join functions directly rather than re-deriving either
+    consume the shared join functions directly rather than re-deriving either
     edge here.
     """
     formulas = inspection.formulas
@@ -1139,16 +1136,16 @@ def graded_snapshot_casilla_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per casilla DEFINITION, sorted for stable pagination.
 
-    S296: a ``RegistrySnapshot`` carries the full ``CasillaDefinition`` --
+    A ``RegistrySnapshot`` carries the full ``CasillaDefinition`` --
     including ``legal_refs`` and ``constraints`` -- that
-    ``RegistryRevisionInspection`` deliberately excludes (S283). This is the
-    richer half the S283 ``None``-vs-``()`` arms were designed to
+    ``RegistryRevisionInspection`` deliberately excludes. This is the
+    richer half the ``None``-vs-``()`` arms were designed to
     accommodate: ``legal_refs`` is the definition's own real tuple, and
     ``constraints`` is a single self-referential
     :class:`ModeloWorkspaceConstraintReferenceV1` when the definition
     declares a ``CasillaConstraints`` block, empty when it declares none --
     never ``None``, since this admission's producer DOES carry the data.
-    ``formula_operands``/``relation_endpoints`` reuse the identical S277
+    ``formula_operands``/``relation_endpoints`` reuse the identical
     join functions the static walk uses, over the same registry-declared
     edges, so the two walks cannot disagree about which formula or relation
     touches a given casilla.
@@ -1196,7 +1193,7 @@ def graded_snapshot_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Return the complete GRADED_SNAPSHOT schema_facet across all five reference kinds.
 
-    S296: BINDING, FORMULA, RELATION and PARAMETER rows call the exact same
+    BINDING, FORMULA, RELATION and PARAMETER rows call the exact same
     shared functions STATIC_INSPECTION calls (``binding_schema_records``,
     ``formula_schema_records``, ``relation_schema_records``,
     ``parameter_schema_records``) -- one implementation, not a parallel copy
@@ -1220,15 +1217,15 @@ def binding_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per binding identity, sorted for stable pagination.
 
-    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
     tuples it read internally -- ``DataBindingDefinition`` and
     ``RelationDefinition`` are the identical type on both
     ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
     is ONE shared implementation both admissions call, never two copies that
     could drift. Unlike a casilla, ``DataBindingDefinition`` IS retained
     whole by both admissions, so ``legal_refs`` is the binding's own real
-    (possibly empty) tuple, never ``None`` -- S283's absence rule applies
-    only where an admission genuinely carries no such data. Per S284, the
+    (possibly empty) tuple, never ``None`` -- the absence rule applies
+    only where an admission genuinely carries no such data. The
     label is ``ModeloWorkspaceTechnicalLabelV1``: no locale convention exists
     for binding identities.
     """
@@ -1258,14 +1255,14 @@ def formula_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per formula, carrying its own full operand set.
 
-    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
     ``formulas`` tuple -- ``FormulaDefinition`` is the identical type on both
     admissions, so this is ONE shared implementation. A FORMULA row's
     ``formula_operands`` is that formula's own complete input list (every
     operand its expression declares, of every kind) -- the mirror of a
     CASILLA row's ``formula_operands``, which lists only the subset naming
     that one casilla. Both readings are the same field walked from opposite
-    ends of the identical S277 join.
+    ends of the identical join.
     """
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for formula in sorted(formulas, key=lambda item: item.id):
@@ -1290,7 +1287,7 @@ def relation_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per relation, carrying both of its own endpoints.
 
-    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
     ``relations`` tuple -- ``RelationDefinition`` is the identical type on
     both admissions, so this is ONE shared implementation. A RELATION row
     states its own two endpoints directly from the registry-declared fields
@@ -1331,7 +1328,7 @@ def parameter_schema_records(
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per parameter, keyed off every formula that dispatches to it.
 
-    S296: narrowed from ``inspection: RegistryRevisionInspection`` to the raw
+    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
     ``parameters``/``formulas`` tuples -- ``ParameterDefinition`` and
     ``FormulaDefinition`` are the identical type on both admissions, so this
     is ONE shared implementation. A parameter has no direct outbound edge of
@@ -1390,9 +1387,11 @@ def static_inspection_schema_records(
     return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))
 
 
-def paginate_static_inspection_schema_facet(
-    records: tuple[ModeloWorkspaceSchemaRecordV1, ...],
+def paginate_modelo_workspace_facet[RecordT](
+    facet_type: type[ModeloWorkspaceBoundedFacetV1[RecordT]],
+    records: tuple[RecordT, ...],
     *,
+    facet: ModeloWorkspaceFacetName,
     target: ModeloWorkspaceResolvedTargetV1,
     schema_identity: ModeloWorkspaceSchemaIdentityV1,
     baseline: ModeloWorkspaceBaselineV1,
@@ -1400,25 +1399,42 @@ def paginate_static_inspection_schema_facet(
     disposition: ModeloWorkspaceCapabilityDisposition,
     page_size: int,
     cursor: ModeloWorkspaceCursorV1 | None = None,
-) -> ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]:
+) -> ModeloWorkspaceBoundedFacetV1[RecordT]:
     """Return one bounded, cursor-consistent page from the complete ``records`` sequence.
 
     ``records`` MUST already be in the caller's canonical stable order --
     pagination consumes an offset over that fixed order, never re-derives it.
-    A ``cursor`` from a DIFFERENT baseline, revision, schema identity, or
-    contributor epoch refuses outright rather than silently starting over or
-    returning a page from the wrong coordinate.
+    A ``cursor`` from a DIFFERENT baseline, revision, schema identity, facet,
+    or contributor epoch refuses outright rather than silently starting over
+    or returning a page from the wrong coordinate.
+
+    This is the ONE paginator for every bounded facet. It exists as a single
+    authority because ``ModeloWorkspaceBoundedFacetV1`` requires ``has_more``
+    to agree with ``next_cursor``: a facet built by truncating records and
+    setting ``has_more`` without minting the matching cursor does not merely
+    lose pagination, it fails model validation outright and takes the whole
+    projection down with it. Minting the cursor is therefore not a
+    convenience this helper offers, it is the only way to construct an
+    overflowing facet at all, and every facet routes through here so that no
+    call site can rediscover that the hard way.
+
+    ``facet_type`` is the caller's own concrete parametrization (for example
+    ``ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]``). It is
+    passed rather than parametrized here from ``RecordT`` because a type
+    parameter is only a ``TypeVar`` at runtime: pydantic would build the
+    model with the record field effectively unvalidated, silently trading
+    this boundary's strictness for the generalisation.
     """
     if cursor is not None:
         if (
             cursor.baseline != baseline
             or cursor.selected_revision_id != target.law_selected_revision_id
             or cursor.schema_identity != schema_identity
-            or cursor.facet is not ModeloWorkspaceFacetName.SCHEMA
+            or cursor.facet is not facet
             or cursor.contributor_epoch_digest != baseline.contributor_epoch_digest
         ):
             raise ModeloWorkspaceStaleCursorError(
-                "workspace schema facet cursor no longer matches the current baseline coordinate"
+                f"workspace {facet.value} facet cursor no longer matches the current baseline coordinate"
             )
         offset = int(cursor.continuation)
     else:
@@ -1432,20 +1448,20 @@ def paginate_static_inspection_schema_facet(
             baseline=baseline,
             selected_revision_id=target.law_selected_revision_id,
             schema_identity=schema_identity,
-            facet=ModeloWorkspaceFacetName.SCHEMA,
+            facet=facet,
             contributor_epoch_digest=baseline.contributor_epoch_digest,
             continuation=str(next_offset),
         )
         if has_more
         else None
     )
-    return ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+    return facet_type(
         selected_revision_id=target.law_selected_revision_id,
         schema_identity=schema_identity,
         baseline=baseline,
         contributor_epoch_digest=baseline.contributor_epoch_digest,
         contributors=contributors,
-        facet=ModeloWorkspaceFacetName.SCHEMA,
+        facet=facet,
         disposition=disposition,
         records=page,
         page_size=page_size,
@@ -1459,7 +1475,7 @@ def _not_applicable_family_dispositions(
 ) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
     """Project only the family dispositions the declarations mapping can honestly attest to.
 
-    S296 verified ``RegistryRevisionInspection.family_dispositions`` and
+    ``RegistryRevisionInspection.family_dispositions`` and
     ``ModeloRevision.family_dispositions`` are the identical mapping (the
     inspection copies it straight from the revision at construction), so
     this one function is shared by both admissions rather than written
@@ -1525,7 +1541,7 @@ def resolve_static_inspection_result(
     (``ModeloWorkspaceBoundedFacetV1``'s ``_MAX_FACET_PAGE_SIZE``), so a
     revision whose schema fits within that bound returns in one page; a
     caller working through a larger schema paginates via ``next_cursor``
-    exactly as :func:`paginate_static_inspection_schema_facet` proves.
+    exactly as :func:`paginate_modelo_workspace_facet` proves.
 
     Captures WORK then REGISTRY exactly once each (the ordering-critical
     core), then builds every remaining piece from that one REGISTRY
@@ -1588,8 +1604,10 @@ def resolve_static_inspection_result(
     contributors = static_inspection_contributors()
 
     records = static_inspection_schema_records(inspection, resolved_target, output_language=output_language)
-    schema_facet = paginate_static_inspection_schema_facet(
+    schema_facet = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1841,8 +1859,10 @@ def resolve_graded_snapshot_result(
         resolved_target,
         output_language=output_language,
     )
-    schema_facet = paginate_static_inspection_schema_facet(
+    schema_facet = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1858,31 +1878,29 @@ def resolve_graded_snapshot_result(
     )
 
     materialization_records = graded_snapshot_materialization_facet(calculation_revision)
-    materialization_facet = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1](
-        selected_revision_id=resolved_target.law_selected_revision_id,
+    materialization_facet = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1],
+        materialization_records,
+        facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
         contributors=contributors,
-        facet=ModeloWorkspaceFacetName.MATERIALIZATION,
         disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        records=materialization_records[:page_size],
         page_size=page_size,
-        has_more=len(materialization_records) > page_size,
     )
 
     provenance_records = graded_snapshot_provenance_facet(calculation_revision.source_provenance)
-    provenance_facet = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1](
-        selected_revision_id=resolved_target.law_selected_revision_id,
+    provenance_facet = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1],
+        provenance_records,
+        facet=ModeloWorkspaceFacetName.PROVENANCE,
+        target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
-        contributor_epoch_digest=baseline.contributor_epoch_digest,
         contributors=contributors,
-        facet=ModeloWorkspaceFacetName.PROVENANCE,
         disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        records=provenance_records[:page_size],
         page_size=page_size,
-        has_more=len(provenance_records) > page_size,
     )
 
     projection = ModeloWorkspaceProjectionV1(
@@ -1969,8 +1987,8 @@ def graded_snapshot_provenance_facet(
 ) -> tuple[ModeloWorkspaceProvenanceRecordV1, ...]:
     """Project the persisted resolver-mesh lineage into per-casilla provenance records.
 
-    S290: a :class:`CalculationSourceRef` carries ``source_casilla_ids``
-    (added by S290 -- previously dropped at the application->domain boundary,
+    A :class:`CalculationSourceRef` carries ``source_casilla_ids``
+    (previously dropped at the application->domain boundary,
     an omission rather than a documented decision) naming which casilla(s), if
     any, its resolution feeds. One ref fans out into one
     :class:`ModeloWorkspaceProvenanceRecordV1` per casilla it names. A ref
@@ -1999,7 +2017,7 @@ def graded_snapshot_provenance_facet(
 def _graded_snapshot_ledger_issue(issue: LedgerPreflightIssue) -> ModeloWorkspaceLedgerIssueV1:
     """Project one canonical ledger-preflight issue, preserving its subject axis.
 
-    S291: ``LedgerPreflightIssue.transaction_id`` is
+    ``LedgerPreflightIssue.transaction_id`` is
     ``TransactionId | Literal["__period__"]`` for the period-level case (an
     unsupported period with no date span). The Workspace subject is a
     discriminated union rather than a bare id so that case is represented as
@@ -2043,7 +2061,7 @@ def graded_snapshot_readiness(readiness: ProjectionModeloReadiness) -> ModeloWor
     axis-preserving pass-through over the one existing readiness producer,
     never a re-derivation of any readiness axis. ``ledger_issues`` is the one
     axis that needed a shape change rather than a straight copy, since its
-    subject can be a period rather than a transaction (S291).
+    subject can be a period rather than a transaction.
     """
     return ModeloWorkspaceReadinessV1(
         profile_id=readiness.profile_id,

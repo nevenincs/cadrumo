@@ -64,12 +64,9 @@ from ...domain.calculations.registry.casilla_membership import (
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.iva import (
-    is_last_filing_period_of_year,
-    refund_disposition_available,
-)
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ._action_errors import (
     CalculationRegistryUnavailableError,

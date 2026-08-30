@@ -1321,8 +1321,8 @@ _TUI_LAUNCH_SEAMS: Final[dict[tuple[str, str], str]] = {
     ): "the CLI is the launcher for the work picker; the import is function-local to that seam",
     (
         "cadrumo/entrypoints/cli/_modelo_work_select_cli.py",
-        "_run_review_destination_for_selected_unit",
-    ): "the picker hands off to the review host; the import is function-local to that seam",
+        "_run_workspace_destination_for_selected_unit",
+    ): "the picker hands off to the workspace host; the import is function-local to that seam",
 }
 
 
@@ -1362,7 +1362,18 @@ def _tracked_pkg_py_files() -> tuple[Path, ...]:
         text=True,
     )
     entries = completed.stdout.split("\x00")
-    return tuple(sorted(REPO_ROOT / entry for entry in entries if entry.endswith(".py")))
+    return tuple(
+        sorted(
+            path
+            for entry in entries
+            if entry.endswith(".py")
+            # A path git still tracks can be absent from the working tree while
+            # a peer's relocation is in flight.  It carries no content to scan,
+            # and reading it would fail the gate on someone else's staging
+            # state rather than on a real boundary violation.
+            if (path := REPO_ROOT / entry).is_file()
+        )
+    )
 
 
 def _live_tui_boundary_violations() -> list[TuiBoundaryViolation]:

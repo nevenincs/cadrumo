@@ -46,9 +46,9 @@ this facade. They constrain model choices to typed
 numbers are derived by application services, not originated by this package.
 
 Downstream modelo calculation records keep only forward transaction ids on
-:class:`~domain.modelos.CalculationRevision`. Aggregation services consume
+:class:`~CalculationRevision`. Aggregation services consume
 this catalogue to produce registry binding values and ledger filing snapshots,
-while :class:`~domain.modelos.TransactionRevisionParticipationIndex`
+while :class:`~TransactionRevisionParticipationIndex`
 provides the rebuildable inverse audit lookup from one ledger transaction to
 finalized revisions and filing records.
 

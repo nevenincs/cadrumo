@@ -13,10 +13,7 @@ from ....core import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.modelos import (
-    ModeloRecordCatalogue,
-    ModeloRecordStatus,
-)
+from ....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     CalculationObservationRepository,

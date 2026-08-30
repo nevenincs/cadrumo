@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
-from ....domain.modelos import ModeloVerificationFindingSeverity
+from ....domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
+from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

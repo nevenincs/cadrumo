@@ -21,7 +21,7 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.operator_surface import OperatorMutability
+from cadrumo.application.operator_surface.models import OperatorMutability
 
 from ._command_policy import CommandPolicyProjection
 

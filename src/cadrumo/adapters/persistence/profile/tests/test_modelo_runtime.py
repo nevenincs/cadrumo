@@ -8,7 +8,7 @@ import pytest
 
 from .....core.bucket_pointer import resolve_repository_bucket_id
 from .....core.config import override_settings
-from .....domain.modelos import WorkUnitPersistenceError
+from .....domain.modelos.repository import WorkUnitPersistenceError
 from .....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from ...storage import StorageRuntimeReadinessCode, StorageValidationError, secure_object_repository_for_bucket
 

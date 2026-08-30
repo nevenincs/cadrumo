@@ -21,7 +21,7 @@ See Also:
         resolution.
     :func:`~application.modelo.amend_modelo_revision`
         Public application composition path exercised end to end here.
-    :class:`~domain.modelos.CalculationRevisionAmendmentKind`
+    :class:`~CalculationRevisionAmendmentKind`
         Domain enum for ``complementaria``, ``rectificativa``, and
         ``sustitutiva`` values.
 """
@@ -41,16 +41,10 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    WorkUnit,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -66,7 +60,7 @@ from .._action_errors import (
     AmendmentKindNotPermittedError,
 )
 from .._amendment_actions import amend_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

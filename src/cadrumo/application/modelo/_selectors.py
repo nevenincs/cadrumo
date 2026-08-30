@@ -20,7 +20,8 @@ from pydantic import BaseModel
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol, WorkUnit
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError
 
@@ -109,7 +110,7 @@ def select_modelo_calculation_revision(
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
 
     ``EXPLICIT`` requires ``calculation_revision_id`` and verifies the revision
-    belongs to the supplied :class:`cadrumo.domain.modelos.WorkUnit`. Non-explicit
+    belongs to the supplied :class:`~WorkUnit`. Non-explicit
     selectors resolve through the work unit's current/filed pointers or by
     latest state, and refuse missing or mismatched state instead of falling back
     to another revision.

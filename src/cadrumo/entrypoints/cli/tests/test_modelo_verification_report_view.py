@@ -19,11 +19,7 @@ _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
 def test_verification_finding_message_resolves_from_each_supported_locale_catalogue() -> None:
     """The CLI boundary renders typed facts through the selected locale catalogue."""
     from ....core.config import override_settings
-    from ....domain.modelos import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-    )
+    from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
     from .._modelo_rendering import _render_verification_finding_message
 
     locale_key = "application.modelo.findings.cross_casilla_invariant_violated"
@@ -51,14 +47,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
     """Report history renders factual findings and never invents a recovery command."""
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
     from .._modelo_rendering import verification_report_lines as _verification_report_lines
     from .._modelo_rendering import verification_report_payload as _verification_report_payload
@@ -118,14 +107,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         build_verification_precondition_failure,
     )
     from ....core import ActionEvidenceProvenance
-    from ....domain.modelos import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._action_rendering import resolved_precondition_action_json_cell
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
@@ -199,11 +181,7 @@ def test_verification_report_lines_omits_recovery_when_granted() -> None:
     """A granted verification report has neither findings nor a recovery field."""
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._modelo_rendering import verification_report_lines as _verification_report_lines
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
@@ -240,14 +218,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     """
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._modelo_payloads import VerificationReportShowResult
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
@@ -317,11 +288,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     """
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
     from .._modelo_payloads import VerificationReportShowResult
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
@@ -378,14 +345,7 @@ def _blocked_report() -> object:
     """Build one real, fully-validated canonical report to project."""
     from datetime import UTC, datetime
 
-    from ....domain.modelos import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-        VerificationCompletenessStatus,
-        VerificationReport,
-        derive_verification_report_id,
-    )
+    from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
 
     calculation_revision_id = "a" * 64
     findings = (
@@ -420,7 +380,7 @@ def test_the_projected_completeness_status_is_the_canonical_enum_not_a_free_stri
     and the one field an operator reads to decide whether a revision earned
     verificado-completo is the last place a lookalike should pass.
     """
-    from ....domain.modelos import VerificationCompletenessStatus
+    from ....domain.modelos.verification_report import VerificationCompletenessStatus
     from .._modelo_rendering import verification_report_payload
 
     payload = verification_report_payload(_blocked_report())

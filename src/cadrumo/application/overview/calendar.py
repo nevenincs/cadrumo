@@ -26,7 +26,7 @@ See Also:
     :class:`~cadrumo.application.live.JustificanteCaptureSnapshot`
         Persisted live justificante capture projected as AEAT-side evidence
         only when matching metadata is already loaded.
-    :class:`~cadrumo.domain.modelos.ModeloRecord`
+    :class:`~ModeloRecord`
         Local filing record projected on the local filing axis, separate from
         AEAT submission state.
 """
@@ -51,19 +51,19 @@ from ...core.time import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict as _ApplicabilityVerdict
 from ...domain.calculations.registry.applicability import derive_modelo_applicability as _derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
-from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
-from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
-from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
-from ...domain.deadlines import NoDeadlineWindowsError as _NoDeadlineWindowsError
-from ...domain.deadlines import ObligationStatus as _ObligationStatus
-from ...domain.deadlines import Schedule as _Schedule
-from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
-from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
-from ...domain.deadlines import classify_obligation_status as _classify_obligation_status
-from ...domain.deadlines import resolve_filing_window as _resolve_filing_window
-from ...domain.deadlines import shift_deadline as _shift_deadline
-from ...domain.modelos import WorkUnit as _WorkUnit
-from ...domain.modelos import WorkUnitState as _WorkUnitState
+from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
+from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValidationError
+from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
+from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
+from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
+from ...domain.deadlines.models import Schedule as _Schedule
+from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
+from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
+from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
+from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
+from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
+from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
+from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
 from .calendar_evidence import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
@@ -138,7 +138,7 @@ from .next_actions import declare_next_action as _declare_next_action
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos import ModeloRecord
+    from ...domain.modelos.filing_record import ModeloRecord
     from ..live.expedientes import PersistedExpedientesSnapshot
     from ..live.justificante import JustificanteCaptureSnapshot
     from ..live.notifications import PersistedNotificationsSnapshot
@@ -658,14 +658,14 @@ def calendar_events_from_modelo_records(
 ) -> tuple[_OverviewCalendarEvent, ...]:
     """Project persisted Modelo filing records into calendar filing events.
 
-    A :class:`~cadrumo.domain.modelos.ModeloRecord` always contributes on the
+    A :class:`~ModeloRecord` always contributes on the
     :class:`OverviewLocalFilingState` axis. It only contributes
     :class:`OverviewAeatSubmissionState` when its external evidence reference is
     corroborated by loaded :class:`~cadrumo.domain.justificante.Justificante`
     metadata for the same taxpayer and filing target.
 
     Args:
-        filing_records: The persisted :class:`~cadrumo.domain.modelos.ModeloRecord`
+        filing_records: The persisted :class:`~ModeloRecord`
             filings to project.
         calendar_range: The window that bounds which records become events.
         justificantes: Optional AEAT justificantes corroborating the filings.

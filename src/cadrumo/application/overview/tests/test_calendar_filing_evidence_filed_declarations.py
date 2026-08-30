@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core import Period
-from ....domain.modelos import ExternalEvidenceKind
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from .calendar_test_support import (

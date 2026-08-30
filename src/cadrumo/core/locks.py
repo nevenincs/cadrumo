@@ -2,7 +2,11 @@
 
 The helper exposes :func:`exclusive_file_lock`, a context manager that
 acquires an OS-level exclusive lock on a sidecar file alongside a
-protected resource. Two operating-system primitives back the helper:
+protected resource, and :func:`exclusive_file_lock_async`, its awaitable
+twin for callers running on an event loop. The two share one sidecar
+path, one OS primitive, one deadline and one refusal; they differ only
+in how they wait between attempts. Two operating-system primitives back
+the helper:
 
 - POSIX (Linux, macOS): :func:`fcntl.flock` with ``LOCK_EX | LOCK_NB``.
 - Windows: :func:`msvcrt.locking` with ``LK_NBLCK`` against a one-byte
@@ -29,11 +33,12 @@ TTL semantics own those protocols above this OS-lock layer.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 import time
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final, override
 
@@ -121,6 +126,68 @@ else:  # POSIX
             _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
 
 
+def _resolved_lock_budget(
+    timeout: float | _DefaultLockTimeout,
+    retry_backoff: float | _DefaultLockTimeout,
+) -> tuple[float, float]:
+    """Resolve sentinel defaults from settings and enforce both bounds."""
+    # Resolve sentinel defaults via load_settings() so override_settings()
+    # blocks (test scope) propagate. A literal float passed by the caller
+    # bypasses settings entirely.
+    if isinstance(timeout, _DefaultLockTimeout):
+        timeout = _default_lock_timeout()
+    if isinstance(retry_backoff, _DefaultLockTimeout):
+        retry_backoff = _default_retry_backoff()
+    if timeout < 0:
+        raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
+    # The Settings field that supplies the default is bound `gt=0`, but a
+    # caller-supplied value bypassed settings entirely and reached the sleep,
+    # which raises a bare ValueError on a negative interval — surfacing as an
+    # unhandled crash instead of this primitive's documented refusal. The bound
+    # is enforced here so both routes carry one contract. Zero is refused too:
+    # a zero interval is a busy-spin the typed field does not permit.
+    if retry_backoff <= 0:
+        raise LockAcquisitionError(f"retry_backoff must be strictly positive; got {retry_backoff}")
+    return timeout, retry_backoff
+
+
+def _open_lock_fd(target: Path) -> tuple[int, Path]:
+    """Open the sidecar lock descriptor for ``target``."""
+    lock_path = _lock_path_for(target)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    # Add the close-on-exec / no-inherit flag so the lock-file descriptor
+    # cannot leak into a subprocess spawned while the lock is held.
+    # POSIX: O_CLOEXEC; Windows: O_NOINHERIT. A leaked descriptor would
+    # extend the lock's lifetime to the child process and could deadlock
+    # an unrelated writer if the child outlives the parent.
+    open_flags = os.O_RDWR | os.O_CREAT
+    open_flags |= getattr(os, "O_CLOEXEC", 0)
+    open_flags |= getattr(os, "O_NOINHERIT", 0)
+    return os.open(lock_path, open_flags, 0o600), lock_path
+
+
+def _lock_acquired_before_deadline(fd: int, lock_path: Path, *, deadline: float, timeout: float) -> bool:
+    """Attempt one non-blocking acquire; refuse once the deadline has passed.
+
+    Returns ``True`` when the lock is held and ``False`` when the caller
+    should back off and retry. The waiting itself belongs to the caller,
+    which is what lets the synchronous and awaitable acquisitions share
+    one deadline and one refusal without sharing a sleep.
+    """
+    if _try_lock(fd):
+        return True
+    if time.monotonic() >= deadline:
+        _log.warning(
+            "exclusive_file_lock: timed out waiting for %s after %.2fs",
+            lock_path,
+            timeout,
+        )
+        raise LockAcquisitionError(
+            f"failed to acquire exclusive lock on {lock_path} within {timeout:.2f}s",
+        )
+    return False
+
+
 @contextmanager
 def exclusive_file_lock(
     target: Path,
@@ -173,48 +240,11 @@ def exclusive_file_lock(
             shortly and the operation could succeed on retry"; consumers
             that retry MUST bound the retry budget themselves.
     """
-    # Resolve sentinel defaults via load_settings() so override_settings()
-    # blocks (test scope) propagate. A literal float passed by the caller
-    # bypasses settings entirely.
-    if isinstance(timeout, _DefaultLockTimeout):
-        timeout = _default_lock_timeout()
-    if isinstance(retry_backoff, _DefaultLockTimeout):
-        retry_backoff = _default_retry_backoff()
-    if timeout < 0:
-        raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
-    # The Settings field that supplies the default is bound `gt=0`, but a
-    # caller-supplied value bypassed settings entirely and reached time.sleep,
-    # which raises a bare ValueError on a negative interval — surfacing as an
-    # unhandled crash instead of this primitive's documented refusal. The bound
-    # is enforced here so both routes carry one contract. Zero is refused too:
-    # a zero interval is a busy-spin the typed field does not permit.
-    if retry_backoff <= 0:
-        raise LockAcquisitionError(f"retry_backoff must be strictly positive; got {retry_backoff}")
-    lock_path = _lock_path_for(target)
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    # Add the close-on-exec / no-inherit flag so the lock-file descriptor
-    # cannot leak into a subprocess spawned while the lock is held.
-    # POSIX: O_CLOEXEC; Windows: O_NOINHERIT. A leaked descriptor would
-    # extend the lock's lifetime to the child process and could deadlock
-    # an unrelated writer if the child outlives the parent.
-    open_flags = os.O_RDWR | os.O_CREAT
-    open_flags |= getattr(os, "O_CLOEXEC", 0)
-    open_flags |= getattr(os, "O_NOINHERIT", 0)
-    fd = os.open(lock_path, open_flags, 0o600)
+    timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
+    fd, lock_path = _open_lock_fd(target)
     try:
         deadline = time.monotonic() + timeout
-        while True:
-            if _try_lock(fd):
-                break
-            if time.monotonic() >= deadline:
-                _log.warning(
-                    "exclusive_file_lock: timed out waiting for %s after %.2fs",
-                    lock_path,
-                    timeout,
-                )
-                raise LockAcquisitionError(
-                    f"failed to acquire exclusive lock on {lock_path} within {timeout:.2f}s",
-                )
+        while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout):
             time.sleep(retry_backoff)
         _log.debug("exclusive_file_lock: acquired %s", lock_path)
         try:
@@ -222,5 +252,56 @@ def exclusive_file_lock(
         finally:
             _release_lock(fd)
             _log.debug("exclusive_file_lock: released %s", lock_path)
+    finally:
+        os.close(fd)
+
+
+@asynccontextmanager
+async def exclusive_file_lock_async(
+    target: Path,
+    *,
+    timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
+    retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
+) -> AsyncIterator[Path]:
+    """Acquire the same OS-level exclusive lock without blocking the event loop.
+
+    This is the awaitable twin of :func:`exclusive_file_lock`, not a
+    replacement for it: identical sidecar path, identical OS primitive,
+    identical deadline and refusal. The only difference is that the wait
+    between non-blocking attempts is :func:`asyncio.sleep` rather than
+    :func:`time.sleep`, so a coroutine waiting on a contended lock yields
+    to the loop instead of stalling every other task on it.
+
+    Use this from a coroutine. Use the synchronous form everywhere else —
+    a synchronous caller has no loop to block and gains nothing here.
+
+    Cancellation: the wait is a cancellation point, so a cancelled task
+    stops waiting promptly and the descriptor is closed on the way out.
+    The synchronous form cannot be cancelled at all, which is what makes
+    it unsuitable for a polling UI worker.
+
+    An executor hop (:func:`asyncio.to_thread`, ``run_in_executor``) is
+    deliberately NOT the mechanism here. It pays a thread hop per call,
+    and it drops the :mod:`contextvars` context that carries the active
+    run id, so an offloaded read that records an observability event
+    raises instead of recording it.
+
+    Args and refusals are exactly those of :func:`exclusive_file_lock`.
+
+    Yields:
+        The :class:`Path` of the acquired lock sidecar.
+    """
+    timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
+    fd, lock_path = _open_lock_fd(target)
+    try:
+        deadline = time.monotonic() + timeout
+        while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout):
+            await asyncio.sleep(retry_backoff)
+        _log.debug("exclusive_file_lock_async: acquired %s", lock_path)
+        try:
+            yield lock_path
+        finally:
+            _release_lock(fd)
+            _log.debug("exclusive_file_lock_async: released %s", lock_path)
     finally:
         os.close(fd)
