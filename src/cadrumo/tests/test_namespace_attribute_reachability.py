@@ -116,11 +116,7 @@ def _unreachable_attribute_reads() -> dict[str, list[str]]:
             continue
         reads: dict[str, set[str]] = {}
         for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.value, ast.Name)
-                and node.value.id in bound_packages
-            ):
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in bound_packages:
                 reads.setdefault(node.value.id, set()).add(node.attr)
         for binding, attributes in reads.items():
             package = bound_packages[binding]
@@ -139,6 +135,63 @@ def test_no_attribute_is_read_through_a_namespace_that_lacks_it() -> None:
         "these modules read an attribute through a package namespace that does "
         "not expose it, which raises AttributeError only when the path runs. "
         "Import the owning submodule directly: "
+        f"{findings}"
+    )
+
+
+def _dynamic_attribute_reads() -> dict[str, list[str]]:
+    """Attributes read straight off a dynamically imported cadrumo module.
+
+    ``import_module("cadrumo.x.y").Thing`` is not an import statement, so the
+    static resolution above cannot see it and neither can a repointer that
+    rewrites import lines. This shape is what survived the contribuyente
+    retirement and broke roughly forty tests: the module still resolved, and
+    only the attribute was gone.
+
+    Only literal targets are checked. A computed module name is a dispatch
+    mechanism whose targets are not knowable here, and pretending otherwise
+    would make this check lie about its coverage.
+    """
+    findings: dict[str, list[str]] = {}
+    for path in sorted(_SRC.rglob("*.py")):
+        relative = path.relative_to(_SRC).as_posix()
+        if "tests" in path.relative_to(_SRC).parts or path.name.startswith("test_"):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Attribute) or not isinstance(node.value, ast.Call):
+                continue
+            call = node.value
+            func = call.func
+            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+            if name != "import_module" or not call.args:
+                continue
+            target = call.args[0]
+            if not (isinstance(target, ast.Constant) and isinstance(target.value, str)):
+                continue
+            if not target.value.startswith("cadrumo."):
+                continue
+            module_path = _SRC.parent / Path(target.value.replace(".", "/"))
+            init = module_path / "__init__.py"
+            source = init if init.is_file() else module_path.with_suffix(".py")
+            if not source.is_file():
+                findings.setdefault(relative, []).append(f"{target.value} (module not found)")
+                continue
+            if node.attr not in _reachable_names(source):
+                findings.setdefault(relative, []).append(f"{target.value}.{node.attr}")
+    return findings
+
+
+def test_no_attribute_is_read_off_a_dynamically_imported_module_that_lacks_it() -> None:
+    """A string import hides a broken reach from every static check."""
+    findings = _dynamic_attribute_reads()
+    assert not findings, (
+        "these modules read an attribute off a dynamically imported module that "
+        "does not expose it. A string import resolves at runtime, so this fails "
+        "only on the path that runs it: name the owning module instead. "
         f"{findings}"
     )
 
