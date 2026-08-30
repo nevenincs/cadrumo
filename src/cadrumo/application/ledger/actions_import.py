@@ -23,6 +23,8 @@ from ...core.hashing import sha256_hex
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
 
+from collections.abc import Sequence
+
 from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -34,7 +36,15 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_import_fingerprint, derive_movement_day_key, derive_transaction_id, existing_transaction_import_fingerprints
+from ...domain.transactions.models import (
+    BucketTransactionRef,
+    Transaction,
+    TransactionCatalogue,
+    derive_import_fingerprint,
+    derive_movement_day_key,
+    derive_transaction_id,
+    existing_transaction_import_fingerprints,
+)
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
@@ -601,8 +611,76 @@ def _import_batch_id(
 
 apply_fx_conversion = _apply_fx_conversion
 
+
+def aggregate_ledger_import_results(
+    results: Sequence[LedgerSourceImportResult],
+) -> LedgerSourceImportResult:
+    """Fold the per-file results of a directory import into one result.
+
+    :func:`import_ledger_source` produces one result per file, so a directory
+    import holds several and the operator is owed a single answer. Summing them
+    is a statement about what an import IS -- which counts add, which references
+    concatenate, and which fields may not differ between files -- so it belongs
+    beside the function that produces them rather than beside the command that
+    happens to call it more than once.
+
+    The invocation-wide fields are ASSERTED rather than assumed. ``dry_run``,
+    ``verify``, ``period``, ``bucket_id`` and ``import_batch_id`` describe the
+    invocation, not the file, so two results disagreeing on any of them did not
+    come from one import and folding them would report the first file's answer
+    for all of them.
+
+    Args:
+        results: The per-file results, in the order the files were read.
+
+    Returns:
+        One result whose counts are sums and whose reference tuples are the
+        concatenation, in file order.
+
+    Raises:
+        TransactionValidationError: If ``results`` is empty, or if the results
+            disagree on a field that describes the invocation.
+    """
+    if not results:
+        raise TransactionValidationError("cannot aggregate an empty set of import results")
+    first = results[0]
+    for field in ("dry_run", "verify", "period", "bucket_id", "import_batch_id"):
+        values = {getattr(result, field) for result in results}
+        if len(values) > 1:
+            raise TransactionValidationError(
+                f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
+            )
+
+    def _concat(field: str) -> tuple[object, ...]:
+        return tuple(entry for result in results for entry in getattr(result, field))
+
+    return LedgerSourceImportResult(
+        rows=sum(result.rows for result in results),
+        imported=sum(result.imported for result in results),
+        skipped=sum(result.skipped for result in results),
+        likely_duplicates=sum(result.likely_duplicates for result in results),
+        dry_run=first.dry_run,
+        verify=first.verify,
+        period=first.period,
+        bucket_id=first.bucket_id,
+        import_batch_id=first.import_batch_id,
+        bucket_event_ids=_concat("bucket_event_ids"),
+        imported_transaction_refs=_concat("imported_transaction_refs"),
+        skipped_transaction_refs=_concat("skipped_transaction_refs"),
+        likely_duplicate_transaction_refs=_concat("likely_duplicate_transaction_refs"),
+        # NARROWING: validation and source are per-FILE reports and only the
+        # first survives the fold. The result model carries one of each, so a
+        # directory import cannot currently report the other files' findings;
+        # widening those fields to tuples is a shape change this fold cannot
+        # make on its own.
+        validation=first.validation,
+        source=first.source,
+        diagnostics=_concat("diagnostics"),
+    )
+
 __all__ = [
     "LedgerProviderID",
+    "aggregate_ledger_import_results",
     "import_ledger_source",
     "import_ledger_transactions",
 ]
